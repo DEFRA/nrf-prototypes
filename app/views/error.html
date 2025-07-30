@@ -1,0 +1,30 @@
+{% extends "layouts/main.html" %}
+
+{% set pageName="Error" %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-xl">
+            Page not found
+        </h1>
+
+        <p class="govuk-body">
+            {{ message or 'The page you are looking for could not be found.' }}
+        </p>
+
+        <div class="govuk-button-group">
+            <a href="/" class="govuk-button" data-module="govuk-button">
+                Go to homepage
+            </a>
+            <a href="/applications" class="govuk-button govuk-button--secondary" data-module="govuk-button">
+                View applications
+            </a>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

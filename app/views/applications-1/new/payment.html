@@ -1,0 +1,143 @@
+{% extends "layouts/main.html" %}
+
+{% set pageName="New Application - Payment" %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-xl">
+            Complete your payment
+        </h1>
+
+        <p class="govuk-body">
+            You're about to be redirected to GOV.UK Pay to complete your payment securely.
+        </p>
+
+        <!-- Payment Summary -->
+        <div class="govuk-panel govuk-panel--confirmation">
+            <h2 class="govuk-panel__title">
+                Payment Amount
+            </h2>
+            <div class="govuk-panel__body">
+                <strong>{{ quote.total | formatCurrency }}</strong>
+            </div>
+        </div>
+
+        <!-- Application Summary -->
+        <h2 class="govuk-heading-l">Application summary</h2>
+
+        <dl class="govuk-summary-list">
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Application reference</dt>
+                <dd class="govuk-summary-list__value">{{ applicationId }}</dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Development name</dt>
+                <dd class="govuk-summary-list__value">{{ developmentName }}</dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Environmental levy</dt>
+                <dd class="govuk-summary-list__value">{{ quote.total | formatCurrency }}</dd>
+            </div>
+        </dl>
+
+        <!-- Payment Methods -->
+        <h2 class="govuk-heading-l">Payment methods</h2>
+
+        <p class="govuk-body">
+            GOV.UK Pay accepts the following payment methods:
+        </p>
+
+        <ul class="govuk-list govuk-list--bullet">
+            <li>Credit and debit cards (Visa, Mastercard, American Express)</li>
+            <li>Digital wallets (Apple Pay, Google Pay)</li>
+            <li>Bank transfers (for larger amounts)</li>
+        </ul>
+
+        <!-- Security Notice -->
+        <div class="govuk-inset-text">
+            <p class="govuk-body">
+                <strong>Your payment is secure</strong>
+            </p>
+            <p class="govuk-body">
+                GOV.UK Pay is a secure payment service used by government departments. Your card details are encrypted
+                and never stored by this service.
+            </p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="govuk-button-group">
+            <button class="govuk-button" data-module="govuk-button" onclick="proceedToPayment()">
+                Proceed to GOV.UK Pay
+            </button>
+            <a href="/applications-1/new/summary" class="govuk-button govuk-button--secondary"
+                data-module="govuk-button">
+                Back to quote
+            </a>
+        </div>
+
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Application progress</h2>
+                <ol class="govuk-list govuk-list--number">
+                    <li>Location</li>
+                    <li>EDP check</li>
+                    <li>Additional details</li>
+                    <li>Review quote</li>
+                    <li><strong>Payment</strong> ← You are here</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">What happens next</h2>
+                <p class="govuk-body">After payment:</p>
+                <ol class="govuk-list govuk-list--number">
+                    <li>You'll receive a payment confirmation</li>
+                    <li>Your application will be submitted</li>
+                    <li>You'll get an email confirmation</li>
+                    <li>Your application will be reviewed</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Need help?</h2>
+                <p class="govuk-body">If you have payment issues:</p>
+                <ul class="govuk-list">
+                    <li><a href="#" class="govuk-link">Contact GOV.UK Pay support</a></li>
+                    <li><a href="#" class="govuk-link">View payment guidance</a></li>
+                    <li><a href="#" class="govuk-link">Contact our support team</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function proceedToPayment() {
+        // Mock GOV.UK Pay redirect
+        // In a real implementation, this would redirect to GOV.UK Pay
+
+        // Show loading state
+        const button = event.target;
+        const originalText = button.textContent;
+        button.textContent = 'Redirecting...';
+        button.disabled = true;
+
+        // Simulate redirect delay
+        setTimeout(() => {
+            // For demo purposes, redirect to a mock payment confirmation
+            window.location.href = '/applications-1/new/payment-confirmation';
+        }, 2000);
+    }
+</script>
+
+{% endblock %}

@@ -1,0 +1,476 @@
+{% extends "layouts/main.html" %}
+
+{% set pageName="Application Details" %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-xl">
+            Application {{ application.id }}
+        </h1>
+
+        <!-- Status Banner -->
+        <div class="govuk-notification-banner" role="region" aria-labelledby="govuk-notification-banner-title"
+            data-module="govuk-notification-banner">
+            <div class="govuk-notification-banner__header">
+                <h2 class="govuk-notification-banner__title" id="govuk-notification-banner-title">
+                    Application status
+                </h2>
+            </div>
+            <div class="govuk-notification-banner__content">
+                <p class="govuk-notification-banner__heading">
+                    {% if application.status == 'pending_payment' %}
+                    <strong class="govuk-tag govuk-tag--orange">Pending Payment</strong> - Payment required to proceed
+                    {% elif application.status == 'paid' %}
+                    <strong class="govuk-tag govuk-tag--green">Paid</strong> - Application under review
+                    {% elif application.status == 'approved' %}
+                    <strong class="govuk-tag govuk-tag--blue">Approved</strong> - Environmental permit issued
+                    {% elif application.status == 'draft' %}
+                    <strong class="govuk-tag govuk-tag--grey">Draft</strong> - Application in progress
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <!-- Development Information -->
+        <h2 class="govuk-heading-l">Development information</h2>
+
+        <dl class="govuk-summary-list">
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Development name</dt>
+                <dd class="govuk-summary-list__value">{{ application.developmentName }}</dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Number of houses</dt>
+                <dd class="govuk-summary-list__value">{{ application.houseCount }}</dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Date submitted</dt>
+                <dd class="govuk-summary-list__value">{{ application.createdAt | formatDate }}</dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Last updated</dt>
+                <dd class="govuk-summary-list__value">{{ application.updatedAt | formatDate }}</dd>
+            </div>
+        </dl>
+
+        <!-- Location Information -->
+        <h2 class="govuk-heading-l">Location</h2>
+
+        <div class="govuk-summary-list">
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Development site</dt>
+                <dd class="govuk-summary-list__value">
+                    {% if application.location.center %}
+                    {{ application.location.center[1] | round(4) }}, {{ application.location.center[0] | round(4) }}
+                    {% else %}
+                    Boundary provided
+                    {% endif %}
+                </dd>
+            </div>
+        </div>
+
+        <!-- Development Boundary Map -->
+        <h3 class="govuk-heading-m">Development boundary map</h3>
+
+        <div id="map-container" style="height: 400px; width: 100%; border: 2px solid #0b0c0c; margin-bottom: 20px;">
+            <div id="map" style="height: 100%; width: 100%;"></div>
+        </div>
+
+        <div id="application-data" style="display: none;"></div>
+
+        <script type="application/json" id="application-location-data">
+            {{ application.location | safe }}
+        </script>
+        <script type="application/json" id="application-edps-data">
+            {{ application.applicableEDPs | safe }}
+        </script>
+
+        <div class="govuk-hint">
+            The map shows your development boundary and applicable Environmental Development Plan areas.
+        </div>
+
+        <!-- Environmental Development Plans -->
+        <h2 class="govuk-heading-l">Environmental Development Plans</h2>
+
+        {% if application.applicableEDPs and application.applicableEDPs.length > 0 %}
+
+        <div class="govuk-table__container">
+            <table class="govuk-table">
+                <thead class="govuk-table__head">
+                    <tr class="govuk-table__row">
+                        <th scope="col" class="govuk-table__header">EDP Type</th>
+                        <th scope="col" class="govuk-table__header">Name</th>
+                        <th scope="col" class="govuk-table__header">Rate per house</th>
+                        <th scope="col" class="govuk-table__header">Impact</th>
+                    </tr>
+                </thead>
+                <tbody class="govuk-table__body">
+                    {% for edp in application.applicableEDPs %}
+                    <tr class="govuk-table__row">
+                        <td class="govuk-table__cell">
+                            <strong>{{ edp.type }}</strong>
+                        </td>
+                        <td class="govuk-table__cell">
+                            {{ edp.name }}
+                        </td>
+                        <td class="govuk-table__cell">
+                            {{ edp.rate | formatCurrency }}
+                        </td>
+                        <td class="govuk-table__cell">
+                            <strong>{{ edp.impact | formatCurrency }}</strong>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% else %}
+
+        <div class="govuk-inset-text">
+            <p class="govuk-body">
+                <strong>No Environmental Development Plans apply</strong>
+            </p>
+            <p class="govuk-body">
+                Your development does not fall within any Environmental Development Plan boundaries.
+            </p>
+        </div>
+
+        {% endif %}
+
+        <!-- Quote Information -->
+        {% if application.quote %}
+        <h2 class="govuk-heading-l">Environmental levy quote</h2>
+
+        <div class="govuk-panel govuk-panel--confirmation">
+            <h3 class="govuk-panel__title">
+                Total Environmental Levy
+            </h3>
+            <div class="govuk-panel__body">
+                <strong>{{ application.quote.total | formatCurrency }}</strong>
+            </div>
+        </div>
+
+        <div class="govuk-table__container">
+            <table class="govuk-table">
+                <thead class="govuk-table__head">
+                    <tr class="govuk-table__row">
+                        <th scope="col" class="govuk-table__header">EDP Type</th>
+                        <th scope="col" class="govuk-table__header">Description</th>
+                        <th scope="col" class="govuk-table__header">Rate per house</th>
+                        <th scope="col" class="govuk-table__header">Amount</th>
+                    </tr>
+                </thead>
+                <tbody class="govuk-table__body">
+                    {% for item in application.quote.breakdown %}
+                    <tr class="govuk-table__row">
+                        <td class="govuk-table__cell">
+                            <strong>{{ item.edpType }}</strong>
+                        </td>
+                        <td class="govuk-table__cell">
+                            {{ item.description }}
+                        </td>
+                        <td class="govuk-table__cell">
+                            {{ item.rate | formatCurrency }}
+                        </td>
+                        <td class="govuk-table__cell">
+                            <strong>{{ item.amount | formatCurrency }}</strong>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="govuk-table__foot">
+                    <tr class="govuk-table__row">
+                        <th scope="row" class="govuk-table__header" colspan="3">Total</th>
+                        <td class="govuk-table__cell">
+                            <strong>{{ application.quote.total | formatCurrency }}</strong>
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        {% endif %}
+
+        <!-- Payment Information -->
+        {% if application.paymentStatus %}
+        <h2 class="govuk-heading-l">Payment information</h2>
+
+        <dl class="govuk-summary-list">
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Payment status</dt>
+                <dd class="govuk-summary-list__value">
+                    {% if application.paymentStatus == 'pending' %}
+                    <strong class="govuk-tag govuk-tag--orange">Pending</strong>
+                    {% elif application.paymentStatus == 'completed' %}
+                    <strong class="govuk-tag govuk-tag--green">Completed</strong>
+                    {% endif %}
+                </dd>
+            </div>
+            {% if application.paymentReference %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Payment reference</dt>
+                <dd class="govuk-summary-list__value">{{ application.paymentReference }}</dd>
+            </div>
+            {% endif %}
+        </dl>
+        {% endif %}
+
+        <!-- Additional Details -->
+        {% if application.wastewaterTreatmentSite or application.pondBoundaries %}
+        <h2 class="govuk-heading-l">Additional details</h2>
+
+        <dl class="govuk-summary-list">
+            {% if application.wastewaterTreatmentSite %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Wastewater treatment site</dt>
+                <dd class="govuk-summary-list__value">{{ application.wastewaterTreatmentSite }}</dd>
+            </div>
+            {% endif %}
+            {% if application.pondBoundaries %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Pond boundaries</dt>
+                <dd class="govuk-summary-list__value">Provided</dd>
+            </div>
+            {% endif %}
+        </dl>
+        {% endif %}
+
+        <!-- Action Buttons -->
+        <div class="govuk-button-group">
+            {% if application.status == 'pending_payment' %}
+            <a href="/applications/{{ application.id }}/payment" class="govuk-button" data-module="govuk-button">
+                Make payment
+            </a>
+            {% endif %}
+            <a href="/applications" class="govuk-button govuk-button--secondary" data-module="govuk-button">
+                Back to applications
+            </a>
+            <button class="govuk-button govuk-button--secondary" data-module="govuk-button" onclick="window.print()">
+                Print details
+            </button>
+        </div>
+
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Application timeline</h2>
+                <ol class="govuk-list govuk-list--number">
+                    <li><strong>Submitted</strong> - {{ application.createdAt | formatDate }}</li>
+                    {% if application.paymentStatus == 'completed' %}
+                    <li><strong>Payment completed</strong> - {{ application.updatedAt | formatDate }}</li>
+                    {% endif %}
+                    {% if application.status == 'approved' %}
+                    <li><strong>Approved</strong> - {{ application.updatedAt | formatDate }}</li>
+                    {% endif %}
+                </ol>
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Need help?</h2>
+                <p class="govuk-body">If you need assistance:</p>
+                <ul class="govuk-list">
+                    <li><a href="#" class="govuk-link">Contact support</a></li>
+                    <li><a href="#" class="govuk-link">View guidance</a></li>
+                    <li><a href="#" class="govuk-link">FAQs</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Related services</h2>
+                <ul class="govuk-list">
+                    <li><a href="#" class="govuk-link">Planning permission guidance</a></li>
+                    <li><a href="#" class="govuk-link">Environmental impact assessment</a></li>
+                    <li><a href="#" class="govuk-link">Nature Restoration Fund</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<!-- Leaflet JavaScript -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initialize the map
+        const map = L.map('map').setView([54.0, -2.0], 6);
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Application data from the server
+        const applicationData = {
+            location: JSON.parse(document.getElementById('application-location-data').textContent),
+            applicableEDPs: JSON.parse(document.getElementById('application-edps-data').textContent)
+        };
+
+        console.log('Application data:', applicationData);
+
+        // Add development boundary if available
+        if (applicationData.location && applicationData.location.boundary) {
+            const developmentBoundary = L.geoJSON(applicationData.location.boundary, {
+                style: {
+                    color: '#d4351c',
+                    weight: 3,
+                    fillColor: '#d4351c',
+                    fillOpacity: 0.3
+                }
+            }).addTo(map);
+
+            // Fit map to development boundary
+            map.fitBounds(developmentBoundary.getBounds());
+        } else if (applicationData.location && applicationData.location.center) {
+            // If no boundary, center on the development location
+            map.setView(applicationData.location.center.reverse(), 12);
+
+            // Add a marker for the development site
+            L.marker(applicationData.location.center.reverse())
+                .addTo(map)
+                .bindPopup('Development site location');
+        }
+
+        // Add EDP boundaries
+        const edpBoundaries = {
+            dll: [
+                {
+                    name: 'District Level Licensing - Thames Valley',
+                    boundary: {
+                        type: 'Polygon',
+                        coordinates: [[
+                            [-0.6, 51.3],
+                            [-0.2, 51.3],
+                            [-0.2, 51.7],
+                            [-0.6, 51.7],
+                            [-0.6, 51.3]
+                        ]]
+                    },
+                    color: '#00703c'
+                },
+                {
+                    name: 'District Level Licensing - South East',
+                    boundary: {
+                        type: 'Polygon',
+                        coordinates: [[
+                            [-0.1, 50.8],
+                            [0.6, 50.8],
+                            [0.6, 51.4],
+                            [-0.1, 51.4],
+                            [-0.1, 50.8]
+                        ]]
+                    },
+                    color: '#00703c'
+                },
+                {
+                    name: 'District Level Licensing - Midlands',
+                    boundary: {
+                        type: 'Polygon',
+                        coordinates: [[
+                            [-2.0, 52.0],
+                            [-1.5, 52.0],
+                            [-1.5, 52.5],
+                            [-2.0, 52.5],
+                            [-2.0, 52.0]
+                        ]]
+                    },
+                    color: '#00703c'
+                }
+            ],
+            nutrientMitigation: [
+                {
+                    name: 'Nutrient Mitigation - Hampshire',
+                    boundary: {
+                        type: 'Polygon',
+                        coordinates: [[
+                            [-1.2, 50.6],
+                            [-0.4, 50.6],
+                            [-0.4, 51.4],
+                            [-1.2, 51.4],
+                            [-1.2, 50.6]
+                        ]]
+                    },
+                    color: '#1d70b8'
+                },
+                {
+                    name: 'Nutrient Mitigation - Sussex',
+                    boundary: {
+                        type: 'Polygon',
+                        coordinates: [[
+                            [-0.8, 50.7],
+                            [-0.2, 50.7],
+                            [-0.2, 51.1],
+                            [-0.8, 51.1],
+                            [-0.8, 50.7]
+                        ]]
+                    },
+                    color: '#1d70b8'
+                }
+            ]
+        };
+
+        // Add all EDP boundaries to the map
+        edpBoundaries.dll.forEach(edp => {
+            L.geoJSON(edp.boundary, {
+                style: {
+                    color: edp.color,
+                    weight: 2,
+                    fillColor: edp.color,
+                    fillOpacity: 0.1
+                }
+            }).addTo(map).bindPopup(edp.name);
+        });
+
+        edpBoundaries.nutrientMitigation.forEach(edp => {
+            L.geoJSON(edp.boundary, {
+                style: {
+                    color: edp.color,
+                    weight: 2,
+                    fillColor: edp.color,
+                    fillOpacity: 0.1
+                }
+            }).addTo(map).bindPopup(edp.name);
+        });
+
+        // Add legend
+        const legend = L.control({ position: 'bottomright' });
+        legend.onAdd = function (map) {
+            const div = L.DomUtil.create('div', 'info legend');
+            div.style.backgroundColor = 'white';
+            div.style.padding = '10px';
+            div.style.border = '2px solid #ccc';
+            div.style.borderRadius = '5px';
+            div.innerHTML = `
+                <h4 style="margin: 0 0 10px 0;">Legend</h4>
+                <div style="margin-bottom: 5px;">
+                    <span style="display: inline-block; width: 20px; height: 20px; background-color: #d4351c; margin-right: 5px;"></span>
+                    Development boundary
+                </div>
+                <div style="margin-bottom: 5px;">
+                    <span style="display: inline-block; width: 20px; height: 20px; background-color: #00703c; margin-right: 5px;"></span>
+                    DLL areas
+                </div>
+                <div style="margin-bottom: 5px;">
+                    <span style="display: inline-block; width: 20px; height: 20px; background-color: #1d70b8; margin-right: 5px;"></span>
+                    Nutrient Mitigation areas
+                </div>
+            `;
+            return div;
+        };
+        legend.addTo(map);
+    });
+</script>
+
+{% endblock %}

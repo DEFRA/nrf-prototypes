@@ -1,0 +1,300 @@
+{% extends "layouts/main.html" %}
+
+{% set pageName="Development Site Assessment - Details" %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-xl">
+            Development details
+        </h1>
+
+        <p class="govuk-body">
+            Based on your development site location, we need some additional information to calculate your environmental
+            impact costs.
+        </p>
+
+        <div id="edp-checking" class="govuk-inset-text">
+            <p class="govuk-body">Checking for applicable Environmental Development Plans...</p>
+        </div>
+
+        <div id="edp-results" style="display: none;">
+            <div id="applicable-edps"></div>
+
+            <form action="/edp-search/summary" method="post" id="details-form">
+                <div id="dll-form" style="display: none;">
+                    <h2 class="govuk-heading-l">District Level Licensing (DLL)</h2>
+                    <p class="govuk-body">Your development falls within a District Level Licensing boundary. Please
+                        provide the number of houses in your development.</p>
+
+                    <div class="govuk-form-group">
+                        <label class="govuk-label" for="house-count">
+                            Number of houses
+                        </label>
+                        <div id="house-count-hint" class="govuk-hint">
+                            Enter the total number of houses in your development
+                        </div>
+                        <input class="govuk-input govuk-input--width-5" id="house-count" name="house-count"
+                            type="number" min="1" max="10000" aria-describedby="house-count-hint">
+                    </div>
+                </div>
+
+                <div id="nutrient-mitigation-form" style="display: none;">
+                    <h2 class="govuk-heading-l">Nutrient Mitigation</h2>
+                    <p class="govuk-body">Your development falls within a Nutrient Mitigation boundary. Please select
+                        the wastewater treatment site that will be used by your development.</p>
+
+                    <div class="govuk-form-group">
+                        <label class="govuk-label" for="wastewater-site">
+                            Wastewater treatment site
+                        </label>
+                        <div id="wastewater-site-hint" class="govuk-hint">
+                            Select the treatment site within 50 miles of your development
+                        </div>
+                        <select class="govuk-select" id="wastewater-site" name="wastewater-site"
+                            aria-describedby="wastewater-site-hint">
+                            <option value="">Select a treatment site</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="no-edp-message" style="display: none;">
+                    <div class="govuk-inset-text">
+                        <h2 class="govuk-heading-s">No applicable EDPs found</h2>
+                        <p class="govuk-body">Your development site does not fall within any Environmental Development
+                            Plan boundaries. No additional environmental impact costs are required.</p>
+                    </div>
+                </div>
+
+                <div class="govuk-button-group">
+                    <button class="govuk-button" data-module="govuk-button" type="submit" id="continue-button" disabled>
+                        Continue to summary
+                    </button>
+                    <a href="/edp-search/location/draw" class="govuk-button govuk-button--secondary"
+                        data-module="govuk-button">
+                        Back
+                    </a>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">What are EDPs?</h2>
+                <p class="govuk-body">Environmental Development Plans (EDPs) are areas where developers must pay for
+                    environmental mitigation:</p>
+                <ul class="govuk-list govuk-list--bullet">
+                    <li><strong>DLL:</strong> District Level Licensing for biodiversity</li>
+                    <li><strong>Nutrient Mitigation:</strong> Water quality protection</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Development information</h2>
+                <div id="development-info">
+                    <p class="govuk-body">Loading development details...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        checkEDPApplicability();
+        loadDevelopmentInfo();
+    });
+
+    function checkEDPApplicability() {
+        // Get development boundary from session storage
+        const boundaryData = sessionStorage.getItem('developmentBoundary');
+
+        if (!boundaryData) {
+            showError(['No development boundary found. Please go back and draw your boundary.']);
+            return;
+        }
+
+        const boundary = JSON.parse(boundaryData);
+
+        // Simulate EDP checking (in real implementation, this would call the backend)
+        setTimeout(() => {
+            const applicableEDPs = simulateEDPCheck(boundary.center);
+            displayEDPResults(applicableEDPs);
+        }, 2000);
+    }
+
+    function simulateEDPCheck(center) {
+        // Mock EDP data - in real implementation this would come from spatial database
+        const mockEDPs = [
+            {
+                id: 'dll-001',
+                name: 'District Level Licensing - Thames Valley',
+                type: 'DLL',
+                rate: 2500,
+                applies: center[0] >= 51.4 && center[0] <= 51.6 && center[1] >= -0.5 && center[1] <= -0.3
+            },
+            {
+                id: 'nm-001',
+                name: 'Nutrient Mitigation - Hampshire',
+                type: 'Nutrient Mitigation',
+                rate: 1500,
+                applies: center[0] >= 50.8 && center[0] <= 51.2 && center[1] >= -1.0 && center[1] <= -0.5
+            }
+        ];
+
+        return mockEDPs.filter(edp => edp.applies);
+    }
+
+    function displayEDPResults(applicableEDPs) {
+        // Hide checking message
+        document.getElementById('edp-checking').style.display = 'none';
+
+        // Show results
+        document.getElementById('edp-results').style.display = 'block';
+
+        if (applicableEDPs.length === 0) {
+            // No EDPs apply
+            document.getElementById('no-edp-message').style.display = 'block';
+            document.getElementById('continue-button').disabled = false;
+            return;
+        }
+
+        // Display applicable EDPs
+        const applicableEDPsDiv = document.getElementById('applicable-edps');
+        applicableEDPsDiv.innerHTML = `
+    <div class="govuk-inset-text">
+      <h2 class="govuk-heading-s">Applicable Environmental Development Plans</h2>
+      <ul class="govuk-list govuk-list--bullet">
+        ${applicableEDPs.map(edp => `<li>${edp.name}</li>`).join('')}
+      </ul>
+    </div>
+  `;
+
+        // Show relevant forms
+        applicableEDPs.forEach(edp => {
+            if (edp.type === 'DLL') {
+                document.getElementById('dll-form').style.display = 'block';
+                setupDLLForm();
+            }
+            if (edp.type === 'Nutrient Mitigation') {
+                document.getElementById('nutrient-mitigation-form').style.display = 'block';
+                setupNutrientMitigationForm();
+            }
+        });
+
+        // Store EDP data in session storage
+        sessionStorage.setItem('applicableEDPs', JSON.stringify(applicableEDPs));
+    }
+
+    function setupDLLForm() {
+        const houseCountInput = document.getElementById('house-count');
+        const continueButton = document.getElementById('continue-button');
+
+        houseCountInput.addEventListener('input', function () {
+            validateForm();
+        });
+    }
+
+    function setupNutrientMitigationForm() {
+        const wastewaterSelect = document.getElementById('wastewater-site');
+        const continueButton = document.getElementById('continue-button');
+
+        // Populate wastewater treatment sites
+        const treatmentSites = [
+            { id: 'wwt-001', name: 'Thames Valley Treatment Works (5 miles)', distance: 5 },
+            { id: 'wwt-002', name: 'South East Regional Treatment (12 miles)', distance: 12 },
+            { id: 'wwt-003', name: 'Hampshire Coastal Treatment (25 miles)', distance: 25 },
+            { id: 'wwt-004', name: 'Berkshire Treatment Facility (35 miles)', distance: 35 },
+            { id: 'wwt-005', name: 'Surrey Treatment Works (45 miles)', distance: 45 }
+        ];
+
+        treatmentSites.forEach(site => {
+            const option = document.createElement('option');
+            option.value = site.id;
+            option.textContent = site.name;
+            wastewaterSelect.appendChild(option);
+        });
+
+        wastewaterSelect.addEventListener('change', function () {
+            validateForm();
+        });
+    }
+
+    function validateForm() {
+        const continueButton = document.getElementById('continue-button');
+        const dllForm = document.getElementById('dll-form');
+        const nutrientForm = document.getElementById('nutrient-mitigation-form');
+
+        let isValid = true;
+
+        // Check DLL form if visible
+        if (dllForm.style.display !== 'none') {
+            const houseCount = document.getElementById('house-count').value;
+            if (!houseCount || houseCount < 1) {
+                isValid = false;
+            }
+        }
+
+        // Check Nutrient Mitigation form if visible
+        if (nutrientForm.style.display !== 'none') {
+            const wastewaterSite = document.getElementById('wastewater-site').value;
+            if (!wastewaterSite) {
+                isValid = false;
+            }
+        }
+
+        continueButton.disabled = !isValid;
+    }
+
+    function loadDevelopmentInfo() {
+        const boundaryData = sessionStorage.getItem('developmentBoundary');
+        const locationData = sessionStorage.getItem('developmentLocation');
+
+        const developmentInfo = document.getElementById('development-info');
+
+        if (boundaryData && locationData) {
+            const boundary = JSON.parse(boundaryData);
+            const location = JSON.parse(locationData);
+
+            const areaHectares = boundary.area / 10000;
+
+            developmentInfo.innerHTML = `
+      <p class="govuk-body"><strong>Location:</strong> ${location.address || `${location.coordinates.lat.toFixed(6)}, ${location.coordinates.lng.toFixed(6)}`}</p>
+      <p class="govuk-body"><strong>Area:</strong> ${areaHectares.toFixed(2)} hectares</p>
+      <p class="govuk-body"><strong>Boundary points:</strong> ${boundary.points.length}</p>
+    `;
+        } else {
+            developmentInfo.innerHTML = '<p class="govuk-body">No development information available</p>';
+        }
+    }
+
+    function showError(errors) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'govuk-error-summary';
+        errorDiv.setAttribute('aria-labelledby', 'error-summary-title');
+        errorDiv.setAttribute('role', 'alert');
+        errorDiv.setAttribute('tabindex', '-1');
+        errorDiv.innerHTML = `
+    <h2 class="govuk-error-summary__title" id="error-summary-title">
+      There is a problem
+    </h2>
+    <div class="govuk-error-summary__body">
+      <ul class="govuk-list govuk-error-summary__list">
+        ${errors.map(error => `<li><a href="#">${error}</a></li>`).join('')}
+      </ul>
+    </div>
+  `;
+
+        const content = document.querySelector('.govuk-grid-column-two-thirds');
+        content.insertBefore(errorDiv, content.firstChild);
+    }
+</script>
+
+{% endblock %}

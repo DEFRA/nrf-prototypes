@@ -1,0 +1,110 @@
+{% extends "layouts/main.html" %}
+
+{% set pageName="Development Site Assessment - Start" %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-xl">
+            Development Site Assessment
+        </h1>
+
+        <p class="govuk-body">
+            Use this service to check if your development site falls within Environmental Development Plan (EDP)
+            boundaries and calculate the environmental impact costs you will be required to pay.
+        </p>
+
+        <div class="govuk-inset-text">
+            <p class="govuk-body">
+                This service helps you understand:
+            </p>
+            <ul class="govuk-list govuk-list--bullet">
+                <li>Whether your development is within District Level Licensing (DLL) boundaries</li>
+                <li>Whether your development is within Nutrient Mitigation boundaries</li>
+                <li>The environmental impact costs for your development</li>
+                <li>Which wastewater treatment sites are available for your development</li>
+            </ul>
+        </div>
+
+        <h2 class="govuk-heading-l">Before you start</h2>
+
+        <p class="govuk-body">You'll need:</p>
+        <ul class="govuk-list govuk-list--bullet">
+            <li>Your development site location (postcode, coordinates, or boundary file)</li>
+            <li>The number of houses in your development</li>
+            <li>Information about your wastewater treatment arrangements (if applicable)</li>
+        </ul>
+
+        <h2 class="govuk-heading-l">How to provide your development site</h2>
+
+        <p class="govuk-body">You can provide your development site location in several ways:</p>
+
+        <div class="govuk-grid-row">
+            <div class="govuk-grid-column-one-half">
+                <div class="govuk-card govuk-card--contained">
+                    <div class="govuk-card__content">
+                        <h3 class="govuk-heading-s">Upload a file</h3>
+                        <p class="govuk-body">Upload a shape file (.shp), KML file (.kml), or GeoJSON file (.geojson)
+                            containing your development boundary.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="govuk-grid-column-one-half">
+                <div class="govuk-card govuk-card--contained">
+                    <div class="govuk-card__content">
+                        <h3 class="govuk-heading-s">Enter postcode</h3>
+                        <p class="govuk-body">Enter the postcode of your development site and draw the boundary on a
+                            map.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="govuk-grid-row">
+            <div class="govuk-grid-column-one-half">
+                <div class="govuk-card govuk-card--contained">
+                    <div class="govuk-card__content">
+                        <h3 class="govuk-heading-s">Enter coordinates</h3>
+                        <p class="govuk-body">Enter the latitude and longitude coordinates of your development site and
+                            draw the boundary.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="govuk-grid-column-one-half">
+                <div class="govuk-card govuk-card--contained">
+                    <div class="govuk-card__content">
+                        <h3 class="govuk-heading-s">Draw on map</h3>
+                        <p class="govuk-body">Use an interactive map to locate and draw your development boundary.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="govuk-button-group">
+            <a href="/edp-search/location" class="govuk-button" data-module="govuk-button">
+                Start assessment
+            </a>
+            <a href="/" class="govuk-button govuk-button--secondary" data-module="govuk-button">
+                Back to index
+            </a>
+        </div>
+
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Related services</h2>
+                <ul class="govuk-list">
+                    <li><a href="#" class="govuk-link">Planning permission guidance</a></li>
+                    <li><a href="#" class="govuk-link">Environmental impact assessment</a></li>
+                    <li><a href="#" class="govuk-link">Nature Restoration Fund</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

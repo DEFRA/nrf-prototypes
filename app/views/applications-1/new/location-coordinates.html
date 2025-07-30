@@ -1,0 +1,105 @@
+{% extends "layouts/main.html" %}
+
+{% set pageName="New Application - Enter Coordinates" %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-xl">
+            Enter your development site coordinates
+        </h1>
+
+        <p class="govuk-body">
+            Enter the latitude and longitude coordinates of your development site. We'll use this to locate your site on
+            a map where you can draw the boundary.
+        </p>
+
+        <form method="post" action="/applications-1/new/location-coordinates">
+
+            <div class="govuk-form-group">
+                <label class="govuk-label" for="latitude">
+                    Latitude
+                </label>
+                <input class="govuk-input govuk-input--width-10" id="latitude" name="latitude" type="number" step="any"
+                    value="{{ session.userData.latitude or '' }}" required>
+                <div class="govuk-hint">
+                    Enter the latitude (e.g., 51.5074)
+                </div>
+            </div>
+
+            <div class="govuk-form-group">
+                <label class="govuk-label" for="longitude">
+                    Longitude
+                </label>
+                <input class="govuk-input govuk-input--width-10" id="longitude" name="longitude" type="number"
+                    step="any" value="{{ session.userData.longitude or '' }}" required>
+                <div class="govuk-hint">
+                    Enter the longitude (e.g., -0.1278)
+                </div>
+            </div>
+
+            <div class="govuk-inset-text">
+                <p class="govuk-body">
+                    <strong>Coordinate format:</strong> Decimal degrees (e.g., 51.5074, -0.1278)
+                </p>
+                <p class="govuk-body">
+                    You can find coordinates using online mapping services like Google Maps or Ordnance Survey.
+                </p>
+            </div>
+
+            <div class="govuk-button-group">
+                <button class="govuk-button" data-module="govuk-button" type="submit">
+                    Continue
+                </button>
+                <a href="/applications-1/new/location" class="govuk-button govuk-button--secondary"
+                    data-module="govuk-button">
+                    Back
+                </a>
+            </div>
+
+        </form>
+
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Coordinate lookup</h2>
+                <p class="govuk-body-s">
+                    We'll use your coordinates to:
+                </p>
+                <ul class="govuk-list govuk-list--bullet govuk-body-s">
+                    <li>Locate your development site</li>
+                    <li>Show you a map of the area</li>
+                    <li>Help you draw the boundary</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Find coordinates</h2>
+                <ul class="govuk-list">
+                    <li><a href="#" class="govuk-link">Google Maps</a></li>
+                    <li><a href="#" class="govuk-link">Ordnance Survey</a></li>
+                    <li><a href="#" class="govuk-link">GPS device</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Need help?</h2>
+                <ul class="govuk-list">
+                    <li><a href="#" class="govuk-link">Coordinate guidance</a></li>
+                    <li><a href="#" class="govuk-link">Contact support</a></li>
+                    <li><a href="#" class="govuk-link">FAQs</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

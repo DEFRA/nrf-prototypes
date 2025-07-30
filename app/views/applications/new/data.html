@@ -1,0 +1,218 @@
+{% extends "layouts/main.html" %}
+
+{% set pageName="New Application - Additional Details" %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-xl">
+            Additional development details
+        </h1>
+
+        <p class="govuk-body">
+            Based on your development location, we need some additional information to calculate your environmental
+            levy.
+        </p>
+
+        {% if applicableEDPs and applicableEDPs.length > 0 %}
+
+        <div class="govuk-inset-text">
+            <p class="govuk-body">
+                <strong>Your development falls within the following Environmental Development Plans:</strong>
+            </p>
+            <ul class="govuk-list govuk-list--bullet">
+                {% for edp in applicableEDPs %}
+                <li>{{ edp.name }} ({{ edp.type }})</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <form method="post" action="/applications/new/data">
+
+            <!-- Basic development information -->
+            <div class="govuk-form-group">
+                <label class="govuk-label" for="development-name">
+                    Development name
+                </label>
+                <input class="govuk-input" id="development-name" name="development-name" type="text"
+                    value="{{ session.userData.developmentName or '' }}" required>
+            </div>
+
+            <div class="govuk-form-group">
+                <label class="govuk-label" for="house-count">
+                    Number of houses in the development
+                </label>
+                <input class="govuk-input govuk-input--width-5" id="house-count" name="house-count" type="number"
+                    value="{{ session.userData.houseCount or '' }}" min="1" max="10000" required>
+                <div class="govuk-hint">
+                    Enter the total number of residential units in your development
+                </div>
+            </div>
+
+            <!-- DLL specific requirements -->
+            {% set hasDLL = false %}
+            {% for edp in applicableEDPs %}
+            {% if edp.type == 'DLL' %}
+            {% set hasDLL = true %}
+            {% endif %}
+            {% endfor %}
+
+            {% if hasDLL %}
+            <h2 class="govuk-heading-l">District Level Licensing (DLL) requirements</h2>
+
+            <p class="govuk-body">
+                Your development falls within a District Level Licensing area. You need to provide pond location
+                details.
+            </p>
+
+            <div class="govuk-form-group">
+                <fieldset class="govuk-fieldset">
+                    <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
+                        <h3 class="govuk-fieldset__heading">
+                            How would you like to provide pond location details?
+                        </h3>
+                    </legend>
+                    <div class="govuk-radios" data-module="govuk-radios">
+                        <div class="govuk-radios__item">
+                            <input class="govuk-radios__input" id="pond-method-draw" name="pond-method" type="radio"
+                                value="draw">
+                            <label class="govuk-label govuk-radios__label" for="pond-method-draw">
+                                <strong>Draw on a map</strong>
+                            </label>
+                            <div class="govuk-hint govuk-radios__hint">
+                                Use an interactive map to draw the pond boundaries
+                            </div>
+                        </div>
+                        <div class="govuk-radios__item">
+                            <input class="govuk-radios__input" id="pond-method-file" name="pond-method" type="radio"
+                                value="file">
+                            <label class="govuk-label govuk-radios__label" for="pond-method-file">
+                                <strong>Upload a file</strong>
+                            </label>
+                            <div class="govuk-hint govuk-radios__hint">
+                                Upload a shape file containing pond boundaries
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+            {% endif %}
+
+            <!-- Nutrient Mitigation specific requirements -->
+            {% set hasNutrientMitigation = false %}
+            {% for edp in applicableEDPs %}
+            {% if edp.type == 'Nutrient Mitigation' %}
+            {% set hasNutrientMitigation = true %}
+            {% endif %}
+            {% endfor %}
+
+            {% if hasNutrientMitigation %}
+            <h2 class="govuk-heading-l">Nutrient Mitigation requirements</h2>
+
+            <p class="govuk-body">
+                Your development falls within a Nutrient Mitigation area. You need to select a wastewater treatment
+                site.
+            </p>
+
+            <div class="govuk-form-group">
+                <label class="govuk-label" for="wastewater-site">
+                    Select wastewater treatment site
+                </label>
+                <select class="govuk-select" id="wastewater-site" name="wastewater-site" required>
+                    <option value="">Select a site</option>
+                    {% for site in wastewaterSites %}
+                    <option value="{{ site.id }}" {% if session.userData.wastewaterTreatmentSite==site.id %}selected{%
+                        endif %}>
+                        {{ site.name }} ({{ site.distance }} miles away)
+                    </option>
+                    {% endfor %}
+                </select>
+                <div class="govuk-hint">
+                    Choose the wastewater treatment site that will serve your development
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="govuk-button-group">
+                <button class="govuk-button" data-module="govuk-button" type="submit">
+                    Continue
+                </button>
+                <a href="/applications/new/location" class="govuk-button govuk-button--secondary"
+                    data-module="govuk-button">
+                    Back
+                </a>
+            </div>
+
+        </form>
+
+        {% else %}
+
+        <div class="govuk-inset-text">
+            <p class="govuk-body">
+                <strong>Good news!</strong> Your development site does not fall within any Environmental Development
+                Plan boundaries.
+            </p>
+            <p class="govuk-body">
+                This means you are not required to pay an environmental levy for this development.
+            </p>
+        </div>
+
+        <div class="govuk-button-group">
+            <a href="/applications" class="govuk-button" data-module="govuk-button">
+                Return to applications
+            </a>
+            <a href="/applications/new/start" class="govuk-button govuk-button--secondary" data-module="govuk-button">
+                Start new application
+            </a>
+        </div>
+
+        {% endif %}
+
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Application progress</h2>
+                <ol class="govuk-list govuk-list--number">
+                    <li>Location</li>
+                    <li><strong>EDP check</strong> ← You are here</li>
+                    <li>Additional details</li>
+                    <li>Review quote</li>
+                    <li>Payment</li>
+                </ol>
+            </div>
+        </div>
+
+        {% if applicableEDPs and applicableEDPs.length > 0 %}
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">What happens next</h2>
+                <p class="govuk-body">After providing these details:</p>
+                <ol class="govuk-list govuk-list--number">
+                    <li>We'll calculate your environmental levy</li>
+                    <li>You'll see a detailed quote breakdown</li>
+                    <li>You can review and accept the quote</li>
+                    <li>Complete payment through GOV.UK Pay</li>
+                </ol>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Need help?</h2>
+                <p class="govuk-body">If you need assistance:</p>
+                <ul class="govuk-list">
+                    <li><a href="#" class="govuk-link">Contact support</a></li>
+                    <li><a href="#" class="govuk-link">View guidance</a></li>
+                    <li><a href="#" class="govuk-link">FAQs</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

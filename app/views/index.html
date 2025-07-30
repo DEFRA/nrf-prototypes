@@ -1,19 +1,77 @@
 {% extends "layouts/main.html" %}
 
-{% set pageName="Home" %}
+{% set pageName="User Journey Index" %}
 
 {% block content %}
 
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-two-thirds">
 
-    {% include "govuk-prototype-kit/includes/homepage-top.njk" %}
-
     <h1 class="govuk-heading-xl">
-      {{ serviceName }}
+      User Journey Experiments
     </h1>
 
-    {% include "govuk-prototype-kit/includes/homepage-bottom.njk" %}
+    <p class="govuk-body">
+      This prototype contains different user journeys that will be trialled with stakeholders.
+      Select a journey below to access the journey.
+    </p>
+
+    <div class="govuk-table__container">
+      <table class="govuk-table">
+        <thead class="govuk-table__head">
+          <tr class="govuk-table__row">
+            <th scope="col" class="govuk-table__header">User Journey</th>
+            <th scope="col" class="govuk-table__header">Description</th>
+          </tr>
+        </thead>
+        <tbody class="govuk-table__body">
+          <tr class="govuk-table__row">
+            <td class="govuk-table__cell">
+              <a href="/user-journey-1/start" class="govuk-link">
+                Sample page
+              </a>
+            </td>
+            <td class="govuk-table__cell">
+              This is a sample page to demonstrate the concept of a user journey.
+            </td>
+          </tr>
+          <tr class="govuk-table__row">
+            <td class="govuk-table__cell">
+              <a href="/edp-search/start" class="govuk-link">
+                Development Site Assessment
+              </a>
+            </td>
+            <td class="govuk-table__cell">
+              Check if your development falls within Environmental Development Plan boundaries and calculate
+              environmental impact costs.
+            </td>
+          </tr>
+          <tr class="govuk-table__row">
+            <td class="govuk-table__cell">
+              <a href="/applications" class="govuk-link">
+                Environmental Development Plan Levy Calculator (Original)
+              </a>
+            </td>
+            <td class="govuk-table__cell">
+              Submit development applications, receive environmental levy quotes, and complete payments for
+              Environmental Development Plans.
+            </td>
+          </tr>
+          <tr class="govuk-table__row">
+            <td class="govuk-table__cell">
+              <a href="/applications-1" class="govuk-link">
+                Environmental Development Plan Levy Calculator (Updated)
+              </a>
+            </td>
+            <td class="govuk-table__cell">
+              Updated implementation of the Environmental Development Plan Levy Calculator with enhanced features and
+              improved user experience.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
   </div>
 </div>
 

@@ -1,0 +1,97 @@
+{% extends "layouts/main.html" %}
+
+{% set pageName="New Application - Upload Boundary File" %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-xl">
+            Upload your development boundary file
+        </h1>
+
+        <p class="govuk-body">
+            Upload a file containing your development site boundary. We support shape files, KML files, and GeoJSON
+            files.
+        </p>
+
+        <form method="post" action="/applications-1/new/location-file-upload" enctype="multipart/form-data">
+
+            <div class="govuk-form-group">
+                <label class="govuk-label" for="boundary-file">
+                    Choose a file
+                </label>
+                <input class="govuk-file-upload" id="boundary-file" name="boundary-file" type="file"
+                    accept=".shp,.kml,.geojson,.zip" required>
+                <div class="govuk-hint">
+                    Upload a shape file (.shp), KML file (.kml), GeoJSON file (.geojson), or ZIP file containing shape
+                    files
+                </div>
+            </div>
+
+            <div class="govuk-inset-text">
+                <p class="govuk-body">
+                    <strong>File requirements:</strong>
+                </p>
+                <ul class="govuk-list govuk-list--bullet">
+                    <li>Maximum file size: 10MB</li>
+                    <li>Supported formats: .shp, .kml, .geojson, .zip</li>
+                    <li>The file should contain a single polygon boundary</li>
+                    <li>Coordinates should be in British National Grid or WGS84</li>
+                </ul>
+            </div>
+
+            <div class="govuk-button-group">
+                <button class="govuk-button" data-module="govuk-button" type="submit">
+                    Upload and continue
+                </button>
+                <a href="/applications-1/new/location" class="govuk-button govuk-button--secondary"
+                    data-module="govuk-button">
+                    Back
+                </a>
+            </div>
+
+        </form>
+
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Supported file formats</h2>
+                <ul class="govuk-list govuk-list--bullet">
+                    <li><strong>Shape files (.shp)</strong> - ESRI shape file format</li>
+                    <li><strong>KML files (.kml)</strong> - Google Earth format</li>
+                    <li><strong>GeoJSON (.geojson)</strong> - Web mapping format</li>
+                    <li><strong>ZIP files (.zip)</strong> - Containing shape files</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">File preparation</h2>
+                <ul class="govuk-list govuk-list--bullet">
+                    <li>Ensure your boundary is a single polygon</li>
+                    <li>Check coordinate system compatibility</li>
+                    <li>Remove any unnecessary layers</li>
+                    <li>Test the file in a GIS application</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Need help?</h2>
+                <ul class="govuk-list">
+                    <li><a href="#" class="govuk-link">File format guidance</a></li>
+                    <li><a href="#" class="govuk-link">Contact support</a></li>
+                    <li><a href="#" class="govuk-link">FAQs</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

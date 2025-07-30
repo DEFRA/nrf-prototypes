@@ -1,0 +1,241 @@
+{% extends "layouts/main.html" %}
+
+{% set pageName="Development Site Assessment - Coordinates" %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-xl">
+            Enter your development site coordinates
+        </h1>
+
+        <p class="govuk-body">
+            Enter the latitude and longitude coordinates of your development site. We'll show you the location on a map
+            where you can draw your development boundary.
+        </p>
+
+        <form action="/edp-search/location/draw" method="post">
+            <div class="govuk-form-group">
+                <label class="govuk-label" for="latitude">
+                    Latitude
+                </label>
+                <div id="latitude-hint" class="govuk-hint">
+                    Enter latitude in decimal degrees (e.g., 51.5074)
+                </div>
+                <input class="govuk-input govuk-input--width-10" id="latitude" name="latitude" type="number" step="any"
+                    min="-90" max="90" aria-describedby="latitude-hint" placeholder="51.5074">
+            </div>
+
+            <div class="govuk-form-group">
+                <label class="govuk-label" for="longitude">
+                    Longitude
+                </label>
+                <div id="longitude-hint" class="govuk-hint">
+                    Enter longitude in decimal degrees (e.g., -0.1278)
+                </div>
+                <input class="govuk-input govuk-input--width-10" id="longitude" name="longitude" type="number"
+                    step="any" min="-180" max="180" aria-describedby="longitude-hint" placeholder="-0.1278">
+            </div>
+
+            <div id="coordinates-error" class="govuk-error-summary" style="display: none;"
+                aria-labelledby="error-summary-title" role="alert" tabindex="-1">
+                <h2 class="govuk-error-summary__title" id="error-summary-title">
+                    There is a problem
+                </h2>
+                <div class="govuk-error-summary__body">
+                    <ul class="govuk-list govuk-error-summary__list" id="error-list">
+                    </ul>
+                </div>
+            </div>
+
+            <div id="coordinates-result" class="govuk-inset-text" style="display: none;">
+                <h3 class="govuk-heading-s">Location confirmed</h3>
+                <div id="result-content"></div>
+            </div>
+
+            <div class="govuk-button-group">
+                <button class="govuk-button" data-module="govuk-button" type="button" onclick="validateCoordinates()">
+                    Validate coordinates
+                </button>
+                <button class="govuk-button" data-module="govuk-button" type="submit" id="continue-button" disabled>
+                    Continue to map
+                </button>
+                <a href="/edp-search/location" class="govuk-button govuk-button--secondary" data-module="govuk-button">
+                    Back
+                </a>
+            </div>
+        </form>
+
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Coordinate format</h2>
+                <p class="govuk-body">Enter coordinates in decimal degrees:</p>
+                <ul class="govuk-list govuk-list--bullet">
+                    <li><strong>Latitude:</strong> -90 to +90</li>
+                    <li><strong>Longitude:</strong> -180 to +180</li>
+                    <li>Use decimal point (not comma)</li>
+                    <li>Include negative sign for South/West</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Example coordinates</h2>
+                <ul class="govuk-list govuk-list--bullet">
+                    <li><strong>London:</strong> 51.5074, -0.1278</li>
+                    <li><strong>Manchester:</strong> 53.4808, -2.2426</li>
+                    <li><strong>Birmingham:</strong> 52.4862, -1.8904</li>
+                    <li><strong>Edinburgh:</strong> 55.9533, -3.1883</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Coordinate systems</h2>
+                <p class="govuk-body">This service accepts coordinates in:</p>
+                <ul class="govuk-list govuk-list--bullet">
+                    <li>WGS84 (EPSG:4326)</li>
+                    <li>British National Grid (EPSG:27700)</li>
+                </ul>
+                <p class="govuk-body">Coordinates will be automatically converted to the appropriate system.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const latitudeInput = document.getElementById('latitude');
+        const longitudeInput = document.getElementById('longitude');
+        const continueButton = document.getElementById('continue-button');
+
+        // Validate coordinates on input
+        [latitudeInput, longitudeInput].forEach(input => {
+            input.addEventListener('input', function () {
+                validateCoordinateInput();
+            });
+        });
+    });
+
+    function validateCoordinates() {
+        const latitudeInput = document.getElementById('latitude');
+        const longitudeInput = document.getElementById('longitude');
+        const latitude = parseFloat(latitudeInput.value);
+        const longitude = parseFloat(longitudeInput.value);
+
+        // Clear previous results
+        hideResult();
+        hideError();
+
+        const errors = [];
+
+        // Check if coordinates are provided
+        if (!latitudeInput.value || !longitudeInput.value) {
+            errors.push('Please enter both latitude and longitude');
+        }
+
+        // Check latitude range
+        if (latitude < -90 || latitude > 90) {
+            errors.push('Latitude must be between -90 and 90 degrees');
+        }
+
+        // Check longitude range
+        if (longitude < -180 || longitude > 180) {
+            errors.push('Longitude must be between -180 and 180 degrees');
+        }
+
+        // Check if coordinates are valid numbers
+        if (isNaN(latitude) || isNaN(longitude)) {
+            errors.push('Please enter valid numeric coordinates');
+        }
+
+        if (errors.length > 0) {
+            showError(errors);
+            return;
+        }
+
+        // Show success result
+        showResult(latitude, longitude);
+    }
+
+    function validateCoordinateInput() {
+        const latitudeInput = document.getElementById('latitude');
+        const longitudeInput = document.getElementById('longitude');
+        const continueButton = document.getElementById('continue-button');
+
+        const latitude = parseFloat(latitudeInput.value);
+        const longitude = parseFloat(longitudeInput.value);
+
+        // Enable continue button if both coordinates are valid
+        if (!isNaN(latitude) && !isNaN(longitude) &&
+            latitude >= -90 && latitude <= 90 &&
+            longitude >= -180 && longitude <= 180) {
+            continueButton.disabled = false;
+        } else {
+            continueButton.disabled = true;
+        }
+    }
+
+    function showResult(latitude, longitude) {
+        const resultContent = document.getElementById('result-content');
+        const coordinatesResult = document.getElementById('coordinates-result');
+        const continueButton = document.getElementById('continue-button');
+
+        // Determine hemisphere labels
+        const latHemisphere = latitude >= 0 ? 'N' : 'S';
+        const lngHemisphere = longitude >= 0 ? 'E' : 'W';
+
+        resultContent.innerHTML = `
+    <p class="govuk-body"><strong>Latitude:</strong> ${Math.abs(latitude).toFixed(6)}° ${latHemisphere}</p>
+    <p class="govuk-body"><strong>Longitude:</strong> ${Math.abs(longitude).toFixed(6)}° ${lngHemisphere}</p>
+    <p class="govuk-body"><strong>Decimal:</strong> ${latitude.toFixed(6)}, ${longitude.toFixed(6)}</p>
+  `;
+
+        coordinatesResult.style.display = 'block';
+
+        // Store coordinates in session storage for the map page
+        sessionStorage.setItem('developmentLocation', JSON.stringify({
+            type: 'coordinates',
+            latitude: latitude,
+            longitude: longitude,
+            coordinates: { lat: latitude, lng: longitude }
+        }));
+
+        continueButton.disabled = false;
+    }
+
+    function showError(errors) {
+        const errorList = document.getElementById('error-list');
+        errorList.innerHTML = '';
+        errors.forEach(error => {
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.href = '#latitude';
+            a.textContent = error;
+            li.appendChild(a);
+            errorList.appendChild(li);
+        });
+        document.getElementById('coordinates-error').style.display = 'block';
+    }
+
+    function hideError() {
+        document.getElementById('coordinates-error').style.display = 'none';
+    }
+
+    function showResult() {
+        document.getElementById('coordinates-result').style.display = 'block';
+    }
+
+    function hideResult() {
+        document.getElementById('coordinates-result').style.display = 'none';
+    }
+</script>
+
+{% endblock %}

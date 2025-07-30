@@ -1,0 +1,235 @@
+{% extends "layouts/main.html" %}
+
+{% set pageName="Development Site Assessment - Postcode" %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-xl">
+            Enter your development site postcode
+        </h1>
+
+        <p class="govuk-body">
+            Enter the postcode of your development site. We'll show you the location on a map where you can draw your
+            development boundary.
+        </p>
+
+        <form action="/edp-search/location/draw" method="post">
+            <div class="govuk-form-group">
+                <label class="govuk-label" for="postcode">
+                    Postcode
+                </label>
+                <div id="postcode-hint" class="govuk-hint">
+                    For example, SW1A 1AA
+                </div>
+                <input class="govuk-input govuk-input--width-10" id="postcode" name="postcode" type="text"
+                    spellcheck="false" aria-describedby="postcode-hint"
+                    pattern="[A-Za-z]{1,2}[0-9Rr][0-9A-Za-z]? [0-9][A-Za-z]{2}" placeholder="SW1A 1AA">
+            </div>
+
+            <div id="postcode-error" class="govuk-error-summary" style="display: none;"
+                aria-labelledby="error-summary-title" role="alert" tabindex="-1">
+                <h2 class="govuk-error-summary__title" id="error-summary-title">
+                    There is a problem
+                </h2>
+                <div class="govuk-error-summary__body">
+                    <ul class="govuk-list govuk-error-summary__list" id="error-list">
+                    </ul>
+                </div>
+            </div>
+
+            <div id="postcode-result" class="govuk-inset-text" style="display: none;">
+                <h3 class="govuk-heading-s">Location found</h3>
+                <div id="result-content"></div>
+            </div>
+
+            <div class="govuk-button-group">
+                <button class="govuk-button" data-module="govuk-button" type="button" onclick="findPostcode()">
+                    Find address
+                </button>
+                <button class="govuk-button" data-module="govuk-button" type="submit" id="continue-button" disabled>
+                    Continue to map
+                </button>
+                <a href="/edp-search/location" class="govuk-button govuk-button--secondary" data-module="govuk-button">
+                    Back
+                </a>
+            </div>
+        </form>
+
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Postcode format</h2>
+                <p class="govuk-body">Enter a valid UK postcode in the format:</p>
+                <ul class="govuk-list govuk-list--bullet">
+                    <li>SW1A 1AA</li>
+                    <li>M1 1AA</li>
+                    <li>B33 8TH</li>
+                    <li>CR2 6XH</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">What happens next?</h2>
+                <p class="govuk-body">After entering your postcode:</p>
+                <ol class="govuk-list govuk-list--number">
+                    <li>We'll show you the location on a map</li>
+                    <li>You can draw your development boundary</li>
+                    <li>We'll check for EDP overlaps</li>
+                    <li>You'll provide development details</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const postcodeInput = document.getElementById('postcode');
+        const continueButton = document.getElementById('continue-button');
+        const postcodeResult = document.getElementById('postcode-result');
+        const resultContent = document.getElementById('result-content');
+        const postcodeError = document.getElementById('postcode-error');
+        const errorList = document.getElementById('error-list');
+
+        // Auto-format postcode as user types
+        postcodeInput.addEventListener('input', function (e) {
+            let value = e.target.value.toUpperCase();
+
+            // Remove all non-alphanumeric characters
+            value = value.replace(/[^A-Z0-9]/g, '');
+
+            // Format the postcode
+            if (value.length > 5) {
+                value = value.slice(0, -3) + ' ' + value.slice(-3);
+            }
+
+            e.target.value = value;
+        });
+
+        // Validate postcode format
+        postcodeInput.addEventListener('blur', function () {
+            const postcode = this.value.trim();
+            if (postcode && !isValidPostcode(postcode)) {
+                showError(['Please enter a valid UK postcode']);
+            } else {
+                hideError();
+            }
+        });
+    });
+
+    function findPostcode() {
+        const postcodeInput = document.getElementById('postcode');
+        const postcode = postcodeInput.value.trim();
+        const continueButton = document.getElementById('continue-button');
+        const postcodeResult = document.getElementById('postcode-result');
+        const resultContent = document.getElementById('result-content');
+        const postcodeError = document.getElementById('postcode-error');
+
+        // Clear previous results
+        hideResult();
+        hideError();
+
+        if (!postcode) {
+            showError(['Please enter a postcode']);
+            return;
+        }
+
+        if (!isValidPostcode(postcode)) {
+            showError(['Please enter a valid UK postcode']);
+            return;
+        }
+
+        // Simulate postcode lookup (in a real implementation, this would call an API)
+        simulatePostcodeLookup(postcode);
+    }
+
+    function simulatePostcodeLookup(postcode) {
+        const resultContent = document.getElementById('result-content');
+        const postcodeResult = document.getElementById('postcode-result');
+        const continueButton = document.getElementById('continue-button');
+
+        // Show loading state
+        resultContent.innerHTML = '<p class="govuk-body">Looking up postcode...</p>';
+        postcodeResult.style.display = 'block';
+
+        // Simulate API delay
+        setTimeout(() => {
+            // Mock result - in real implementation this would come from Ordnance Survey API
+            const mockResults = {
+                'SW1A 1AA': {
+                    address: 'Buckingham Palace, Westminster, London',
+                    coordinates: { lat: 51.501, lng: -0.124 }
+                },
+                'M1 1AA': {
+                    address: 'Manchester City Centre, Manchester',
+                    coordinates: { lat: 53.480, lng: -2.242 }
+                },
+                'B33 8TH': {
+                    address: 'Birmingham, West Midlands',
+                    coordinates: { lat: 52.486, lng: -1.890 }
+                }
+            };
+
+            const result = mockResults[postcode] || {
+                address: `${postcode} - Location found`,
+                coordinates: { lat: 51.507, lng: -0.127 } // Default to London
+            };
+
+            resultContent.innerHTML = `
+      <p class="govuk-body"><strong>Address:</strong> ${result.address}</p>
+      <p class="govuk-body"><strong>Coordinates:</strong> ${result.coordinates.lat.toFixed(6)}, ${result.coordinates.lng.toFixed(6)}</p>
+    `;
+
+            // Store coordinates in session storage for the map page
+            sessionStorage.setItem('developmentLocation', JSON.stringify({
+                type: 'postcode',
+                postcode: postcode,
+                address: result.address,
+                coordinates: result.coordinates
+            }));
+
+            continueButton.disabled = false;
+        }, 1000);
+    }
+
+    function isValidPostcode(postcode) {
+        // UK postcode regex pattern
+        const postcodePattern = /^[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][A-Z]{2}$/i;
+        return postcodePattern.test(postcode);
+    }
+
+    function showError(errors) {
+        const errorList = document.getElementById('error-list');
+        errorList.innerHTML = '';
+        errors.forEach(error => {
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.href = '#postcode';
+            a.textContent = error;
+            li.appendChild(a);
+            errorList.appendChild(li);
+        });
+        document.getElementById('postcode-error').style.display = 'block';
+    }
+
+    function hideError() {
+        document.getElementById('postcode-error').style.display = 'none';
+    }
+
+    function showResult() {
+        document.getElementById('postcode-result').style.display = 'block';
+    }
+
+    function hideResult() {
+        document.getElementById('postcode-result').style.display = 'none';
+    }
+</script>
+
+{% endblock %}

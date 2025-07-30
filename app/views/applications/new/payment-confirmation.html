@@ -1,0 +1,130 @@
+{% extends "layouts/main.html" %}
+
+{% set pageName="New Application - Payment Confirmation" %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <div class="govuk-panel govuk-panel--confirmation">
+            <h1 class="govuk-panel__title">
+                Payment successful
+            </h1>
+            <div class="govuk-panel__body">
+                Your environmental levy payment has been completed
+            </div>
+        </div>
+
+        <h2 class="govuk-heading-l">Application submitted</h2>
+
+        <p class="govuk-body">
+            Your development application has been successfully submitted and is now under review.
+        </p>
+
+        <!-- Application Details -->
+        <h3 class="govuk-heading-m">Application details</h3>
+
+        <dl class="govuk-summary-list">
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Application reference</dt>
+                <dd class="govuk-summary-list__value">{{ applicationId }}</dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Development name</dt>
+                <dd class="govuk-summary-list__value">{{ developmentName }}</dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Payment reference</dt>
+                <dd class="govuk-summary-list__value">{{ paymentReference }}</dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Amount paid</dt>
+                <dd class="govuk-summary-list__value">{{ quote.total | formatCurrency }}</dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Date submitted</dt>
+                <dd class="govuk-summary-list__value">{{ submissionDate | formatDate }}</dd>
+            </div>
+        </dl>
+
+        <!-- What happens next -->
+        <h3 class="govuk-heading-m">What happens next</h3>
+
+        <ol class="govuk-list govuk-list--number">
+            <li><strong>Application review</strong> - Your application will be reviewed by our team</li>
+            <li><strong>Confirmation email</strong> - You'll receive a confirmation email with your application details
+            </li>
+            <li><strong>Status updates</strong> - You can track your application status in your dashboard</li>
+            <li><strong>Approval</strong> - Once approved, you'll receive your environmental permit</li>
+        </ol>
+
+        <!-- Contact information -->
+        <div class="govuk-inset-text">
+            <p class="govuk-body">
+                <strong>Keep your application reference safe</strong>
+            </p>
+            <p class="govuk-body">
+                You'll need this reference number if you need to contact us about your application.
+            </p>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="govuk-button-group">
+            <a href="/applications" class="govuk-button" data-module="govuk-button">
+                View all applications
+            </a>
+            <a href="/applications/{{ applicationId }}" class="govuk-button govuk-button--secondary"
+                data-module="govuk-button">
+                View application details
+            </a>
+        </div>
+
+        <!-- Print option -->
+        <div class="govuk-form-group">
+            <button class="govuk-button govuk-button--secondary" data-module="govuk-button" onclick="window.print()">
+                Print confirmation
+            </button>
+        </div>
+
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Application status</h2>
+                <p class="govuk-body">
+                    <strong class="govuk-tag govuk-tag--green">Paid</strong>
+                </p>
+                <p class="govuk-body">
+                    Your payment has been received and your application is now under review.
+                </p>
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Need help?</h2>
+                <p class="govuk-body">If you need assistance:</p>
+                <ul class="govuk-list">
+                    <li><a href="#" class="govuk-link">Contact support</a></li>
+                    <li><a href="#" class="govuk-link">View application guidance</a></li>
+                    <li><a href="#" class="govuk-link">FAQs</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Related services</h2>
+                <ul class="govuk-list">
+                    <li><a href="#" class="govuk-link">Planning permission guidance</a></li>
+                    <li><a href="#" class="govuk-link">Environmental impact assessment</a></li>
+                    <li><a href="#" class="govuk-link">Nature Restoration Fund</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

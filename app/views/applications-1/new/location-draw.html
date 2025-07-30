@@ -1,0 +1,288 @@
+{% extends "layouts/main.html" %}
+
+{% set pageName="New Application - Draw Location" %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-xl">
+            Draw your development boundary
+        </h1>
+
+        <p class="govuk-body">
+            Use the map below to draw the boundary of your development site. Click on the map to add points and create a
+            polygon.
+        </p>
+
+        <div class="govuk-inset-text">
+            <p class="govuk-body">
+                <strong>Instructions:</strong>
+            </p>
+            <ol class="govuk-list govuk-list--number">
+                <li>Click on the map to add points to your boundary</li>
+                <li>Continue clicking to create a polygon around your development site</li>
+                <li>Double-click to complete the boundary</li>
+                <li>You can drag points to adjust the boundary if needed</li>
+            </ol>
+        </div>
+
+        <!-- Map Container -->
+        <div id="map-container" style="height: 500px; width: 100%; border: 2px solid #0b0c0c; margin-bottom: 20px;">
+            <div id="map" style="height: 100%; width: 100%;"></div>
+        </div>
+
+        <!-- Boundary Data Form -->
+        <form method="post" action="/applications-1/new/location-draw" id="boundary-form">
+            <input type="hidden" id="boundary-data" name="boundary-data" value="">
+
+            <div class="govuk-form-group">
+                <label class="govuk-label" for="development-name">
+                    Development name (optional)
+                </label>
+                <input class="govuk-input" id="development-name" name="development-name" type="text"
+                    placeholder="e.g., Riverside Housing Development">
+                <div class="govuk-hint">
+                    This will help you identify your development later
+                </div>
+            </div>
+
+            <div class="govuk-button-group">
+                <button class="govuk-button" data-module="govuk-button" type="submit" id="submit-button" disabled>
+                    Continue
+                </button>
+                <a href="/applications-1/new/location" class="govuk-button govuk-button--secondary"
+                    data-module="govuk-button">
+                    Back
+                </a>
+            </div>
+        </form>
+
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Drawing tips</h2>
+                <ul class="govuk-list govuk-list--bullet">
+                    <li>Make sure your boundary includes the entire development site</li>
+                    <li>The boundary should be a closed polygon</li>
+                    <li>You can adjust points by dragging them</li>
+                    <li>Use the zoom controls to get a better view</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Boundary status</h2>
+                <p class="govuk-body" id="boundary-status">
+                    <strong class="govuk-tag govuk-tag--grey">No boundary drawn</strong>
+                </p>
+                <p class="govuk-body" id="boundary-info">
+                    Click on the map to start drawing your development boundary.
+                </p>
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Need help?</h2>
+                <ul class="govuk-list">
+                    <li><a href="#" class="govuk-link">View drawing guidance</a></li>
+                    <li><a href="#" class="govuk-link">Contact support</a></li>
+                    <li><a href="#" class="govuk-link">FAQs</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="application/json" id="development-location-data">
+    {{ session.userData.developmentLocation | safe }}
+</script>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<!-- Leaflet JavaScript -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    let map;
+    let drawingLayer;
+    let boundaryPolygon;
+    let boundaryPoints = [];
+
+    document.addEventListener('DOMContentLoaded', function () {
+        initializeMap();
+        loadDevelopmentLocation();
+
+        // Add form submission handler
+        document.getElementById('boundary-form').addEventListener('submit', function (e) {
+            const boundaryData = document.getElementById('boundary-data').value;
+            console.log('Form submission - boundary data:', boundaryData);
+
+            if (!boundaryData) {
+                e.preventDefault();
+                alert('Please complete your boundary by double-clicking on the map before continuing.');
+                return false;
+            }
+
+            console.log('Form submitting with boundary data');
+        });
+    });
+
+    function initializeMap() {
+        // Initialize the map centered on the UK
+        map = L.map('map').setView([54.0, -2.0], 6);
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Create a layer for drawing
+        drawingLayer = L.layerGroup().addTo(map);
+
+        // Add click event to map for drawing
+        map.on('click', function (e) {
+            addPointToBoundary(e.latlng);
+        });
+
+        // Add double-click event to complete boundary
+        map.on('dblclick', function (e) {
+            e.originalEvent.preventDefault();
+            completeBoundary();
+        });
+    }
+
+    function loadDevelopmentLocation() {
+        // Check for development location from session data
+        const developmentLocationData = document.getElementById('development-location-data');
+
+        if (developmentLocationData && developmentLocationData.textContent.trim() !== '') {
+            try {
+                const developmentLocation = JSON.parse(developmentLocationData.textContent);
+
+                if (developmentLocation && developmentLocation.center) {
+                    // Center map on the development location
+                    const [lng, lat] = developmentLocation.center;
+                    map.setView([lat, lng], 14);
+
+                    // Add a marker for the development site
+                    const marker = L.marker([lat, lng])
+                        .addTo(drawingLayer)
+                        .bindPopup('Development site location');
+                }
+            } catch (error) {
+                console.log('No development location data available');
+            }
+        }
+    }
+
+    function addPointToBoundary(latlng) {
+        boundaryPoints.push(latlng);
+
+        // Add marker for the point
+        const marker = L.marker(latlng)
+            .addTo(drawingLayer)
+            .bindPopup(`Point ${boundaryPoints.length}`);
+
+        // Update the polygon if we have enough points
+        if (boundaryPoints.length >= 3) {
+            updateBoundaryPolygon();
+        }
+
+        // Enable continue button if we have a valid boundary
+        updateContinueButton();
+    }
+
+    function updateBoundaryPolygon() {
+        // Remove existing polygon
+        if (boundaryPolygon) {
+            drawingLayer.removeLayer(boundaryPolygon);
+        }
+
+        // Create new polygon
+        boundaryPolygon = L.polygon(boundaryPoints, {
+            color: 'red',
+            weight: 3,
+            fillColor: '#d4351c',
+            fillOpacity: 0.3
+        }).addTo(drawingLayer);
+    }
+
+    function completeBoundary() {
+        console.log('completeBoundary called with', boundaryPoints.length, 'points');
+
+        if (boundaryPoints.length >= 3) {
+            // Calculate center point
+            const center = calculateCenter(boundaryPoints);
+
+            const boundaryData = {
+                center: [center.lng, center.lat],
+                points: boundaryPoints.map(point => [point.lng, point.lat])
+            };
+
+            console.log('Setting boundary data:', boundaryData);
+            document.getElementById('boundary-data').value = JSON.stringify(boundaryData);
+
+            updateBoundaryStatus();
+
+            // Enable the submit button
+            document.getElementById('submit-button').disabled = false;
+            console.log('Submit button enabled');
+        } else {
+            console.log('Not enough points to complete boundary');
+        }
+    }
+
+    function calculateCenter(points) {
+        let lat = 0, lng = 0;
+        points.forEach(point => {
+            lat += point.lat;
+            lng += point.lng;
+        });
+        return {
+            lat: lat / points.length,
+            lng: lng / points.length
+        };
+    }
+
+    function updateBoundaryStatus() {
+        const statusElement = document.getElementById('boundary-status');
+        const infoElement = document.getElementById('boundary-info');
+        const submitButton = document.getElementById('submit-button');
+
+        if (boundaryPoints.length === 0) {
+            statusElement.innerHTML = '<strong class="govuk-tag govuk-tag--grey">No boundary drawn</strong>';
+            infoElement.textContent = 'Click on the map to start drawing your development boundary.';
+            submitButton.disabled = true;
+        } else if (boundaryPoints.length < 3) {
+            statusElement.innerHTML = '<strong class="govuk-tag govuk-tag--orange">Drawing in progress</strong>';
+            infoElement.textContent = `Added ${boundaryPoints.length} points. Double-click to complete.`;
+            submitButton.disabled = true;
+        } else {
+            // Check if boundary data is set (meaning boundary is completed)
+            const boundaryData = document.getElementById('boundary-data').value;
+            if (boundaryData) {
+                statusElement.innerHTML = '<strong class="govuk-tag govuk-tag--green">Boundary complete</strong>';
+                infoElement.textContent = `${boundaryPoints.length} points added. Boundary ready to submit.`;
+                submitButton.disabled = false;
+            } else {
+                statusElement.innerHTML = '<strong class="govuk-tag govuk-tag--orange">Drawing in progress</strong>';
+                infoElement.textContent = `${boundaryPoints.length} points added. Double-click to complete.`;
+                submitButton.disabled = true;
+            }
+        }
+    }
+
+    function updateContinueButton() {
+        const submitButton = document.getElementById('submit-button');
+        submitButton.disabled = boundaryPoints.length < 3;
+    }
+</script>
+
+{% endblock %}

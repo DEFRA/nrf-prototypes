@@ -1,0 +1,234 @@
+{% extends "layouts/main.html" %}
+
+{% set pageName="New Application - Quote Summary" %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-xl">
+            Your environmental levy quote
+        </h1>
+
+        <p class="govuk-body">
+            Based on your development details, here is your environmental levy calculation.
+        </p>
+
+        {% if quote %}
+
+        <!-- Quote Summary Panel -->
+        <div class="govuk-panel govuk-panel--confirmation">
+            <h2 class="govuk-panel__title">
+                Total Environmental Levy
+            </h2>
+            <div class="govuk-panel__body">
+                <strong>{{ quote.total | formatCurrency }}</strong>
+            </div>
+        </div>
+
+        <!-- Development Summary -->
+        <h2 class="govuk-heading-l">Development summary</h2>
+
+        <dl class="govuk-summary-list">
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Development name</dt>
+                <dd class="govuk-summary-list__value">{{ developmentName }}</dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Number of houses</dt>
+                <dd class="govuk-summary-list__value">{{ houseCount }}</dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Location</dt>
+                <dd class="govuk-summary-list__value">
+                    {% if developmentLocation %}
+                    {{ developmentLocation.lat | round(4) }}, {{ developmentLocation.lng | round(4) }}
+                    {% else %}
+                    Boundary provided
+                    {% endif %}
+                </dd>
+            </div>
+        </dl>
+
+        <!-- EDP Breakdown -->
+        <h2 class="govuk-heading-l">Environmental Development Plan breakdown</h2>
+
+        <div class="govuk-table__container">
+            <table class="govuk-table">
+                <thead class="govuk-table__head">
+                    <tr class="govuk-table__row">
+                        <th scope="col" class="govuk-table__header">EDP Type</th>
+                        <th scope="col" class="govuk-table__header">Description</th>
+                        <th scope="col" class="govuk-table__header">Rate per house</th>
+                        <th scope="col" class="govuk-table__header">Amount</th>
+                    </tr>
+                </thead>
+                <tbody class="govuk-table__body">
+                    {% for item in quote.breakdown %}
+                    <tr class="govuk-table__row">
+                        <td class="govuk-table__cell">
+                            <strong>{{ item.edpType }}</strong>
+                        </td>
+                        <td class="govuk-table__cell">
+                            {{ item.description }}
+                        </td>
+                        <td class="govuk-table__cell">
+                            {{ item.rate | formatCurrency }}
+                        </td>
+                        <td class="govuk-table__cell">
+                            <strong>{{ item.amount | formatCurrency }}</strong>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="govuk-table__foot">
+                    <tr class="govuk-table__row">
+                        <th scope="row" class="govuk-table__header" colspan="3">Total</th>
+                        <td class="govuk-table__cell">
+                            <strong>{{ quote.total | formatCurrency }}</strong>
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- Additional Details -->
+        {% if wastewaterTreatmentSite %}
+        <h2 class="govuk-heading-l">Additional details</h2>
+
+        <dl class="govuk-summary-list">
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Wastewater treatment site</dt>
+                <dd class="govuk-summary-list__value">{{ wastewaterTreatmentSite.name }}</dd>
+            </div>
+        </dl>
+        {% endif %}
+
+        <!-- Terms and Conditions -->
+        <h2 class="govuk-heading-l">Terms and conditions</h2>
+
+        <div class="govuk-checkboxes" data-module="govuk-checkboxes">
+            <div class="govuk-checkboxes__item">
+                <input class="govuk-checkboxes__input" id="terms-accepted" name="terms-accepted" type="checkbox"
+                    value="accepted">
+                <label class="govuk-label govuk-checkboxes__label" for="terms-accepted">
+                    I accept the terms and conditions for this environmental levy
+                </label>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="govuk-button-group">
+            <button class="govuk-button" data-module="govuk-button" onclick="acceptQuote()">
+                Accept quote and proceed to payment
+            </button>
+            <a href="/applications/new/data" class="govuk-button govuk-button--secondary" data-module="govuk-button">
+                Back to edit details
+            </a>
+        </div>
+
+        {% else %}
+
+        <div class="govuk-inset-text">
+            <p class="govuk-body">
+                <strong>No quote available</strong>
+            </p>
+            <p class="govuk-body">
+                We couldn't calculate a quote for your development. Please check your details and try again.
+            </p>
+        </div>
+
+        <div class="govuk-button-group">
+            <a href="/applications/new/data" class="govuk-button" data-module="govuk-button">
+                Back to edit details
+            </a>
+            <a href="/applications" class="govuk-button govuk-button--secondary" data-module="govuk-button">
+                Return to applications
+            </a>
+        </div>
+
+        {% endif %}
+
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Application progress</h2>
+                <ol class="govuk-list govuk-list--number">
+                    <li>Location</li>
+                    <li>EDP check</li>
+                    <li>Additional details</li>
+                    <li><strong>Review quote</strong> ← You are here</li>
+                    <li>Payment</li>
+                </ol>
+            </div>
+        </div>
+
+        {% if quote %}
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">What happens next</h2>
+                <p class="govuk-body">After accepting the quote:</p>
+                <ol class="govuk-list govuk-list--number">
+                    <li>You'll be redirected to GOV.UK Pay</li>
+                    <li>Complete your payment securely</li>
+                    <li>Receive confirmation of your application</li>
+                    <li>Your application will be reviewed</li>
+                </ol>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Need help?</h2>
+                <p class="govuk-body">If you need assistance:</p>
+                <ul class="govuk-list">
+                    <li><a href="#" class="govuk-link">Contact support</a></li>
+                    <li><a href="#" class="govuk-link">View guidance</a></li>
+                    <li><a href="#" class="govuk-link">FAQs</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function acceptQuote() {
+        const termsAccepted = document.getElementById('terms-accepted').checked;
+
+        if (!termsAccepted) {
+            // Show error message
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'govuk-error-summary';
+            errorDiv.setAttribute('aria-labelledby', 'error-summary-title');
+            errorDiv.setAttribute('role', 'alert');
+            errorDiv.setAttribute('tabindex', '-1');
+            errorDiv.innerHTML = `
+            <h2 class="govuk-error-summary__title" id="error-summary-title">
+                There is a problem
+            </h2>
+            <div class="govuk-error-summary__body">
+                <ul class="govuk-list govuk-error-summary__list">
+                    <li>
+                        <a href="#terms-accepted">You must accept the terms and conditions to proceed</a>
+                    </li>
+                </ul>
+            </div>
+        `;
+
+            const content = document.querySelector('.govuk-grid-column-two-thirds');
+            if (content) {
+                content.insertBefore(errorDiv, content.firstChild);
+            }
+            return;
+        }
+
+        // Proceed to payment
+        window.location.href = '/applications/new/payment';
+    }
+</script>
+
+{% endblock %}

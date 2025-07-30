@@ -1,0 +1,302 @@
+{% extends "layouts/main.html" %}
+
+{% set pageName="New Application - Quote Summary" %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-xl">
+            Your environmental levy quote
+        </h1>
+
+        <p class="govuk-body">
+            Based on your development details, here is your environmental levy calculation.
+        </p>
+
+        {% if quote %}
+
+        <!-- Quote Summary Panel -->
+        <div class="govuk-panel govuk-panel--confirmation">
+            <h2 class="govuk-panel__title">
+                Total Environmental Levy
+            </h2>
+            <div class="govuk-panel__body">
+                <strong>{{ quote.total | formatCurrency }}</strong>
+            </div>
+        </div>
+
+        <!-- Development Summary -->
+        <h2 class="govuk-heading-l">Development summary</h2>
+
+        <dl class="govuk-summary-list">
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Development name</dt>
+                <dd class="govuk-summary-list__value">{{ developmentName }}</dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Number of houses</dt>
+                <dd class="govuk-summary-list__value">{{ houseCount }}</dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Location</dt>
+                <dd class="govuk-summary-list__value">
+                    {% if developmentLocation and developmentLocation.center %}
+                    {{ developmentLocation.center[1] | round(4) }}, {{ developmentLocation.center[0] | round(4) }}
+                    {% else %}
+                    Boundary provided
+                    {% endif %}
+                </dd>
+            </div>
+        </dl>
+
+        <!-- EDP Breakdown -->
+        <h2 class="govuk-heading-l">Environmental Development Plan breakdown</h2>
+
+        <div class="govuk-table__container">
+            <table class="govuk-table">
+                <thead class="govuk-table__head">
+                    <tr class="govuk-table__row">
+                        <th scope="col" class="govuk-table__header">EDP Type</th>
+                        <th scope="col" class="govuk-table__header">Description</th>
+                        <th scope="col" class="govuk-table__header">Rate per house</th>
+                        <th scope="col" class="govuk-table__header">Amount</th>
+                    </tr>
+                </thead>
+                <tbody class="govuk-table__body">
+                    {% for item in quote.breakdown %}
+                    <tr class="govuk-table__row">
+                        <td class="govuk-table__cell">
+                            <strong>{{ item.edpType }}</strong>
+                        </td>
+                        <td class="govuk-table__cell">
+                            {{ item.description }}
+                        </td>
+                        <td class="govuk-table__cell">
+                            {{ item.rate | formatCurrency }}
+                        </td>
+                        <td class="govuk-table__cell">
+                            <strong>{{ item.amount | formatCurrency }}</strong>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="govuk-table__foot">
+                    <tr class="govuk-table__row">
+                        <th scope="row" class="govuk-table__header" colspan="3">Total</th>
+                        <td class="govuk-table__cell">
+                            <strong>{{ quote.total | formatCurrency }}</strong>
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- Development Boundary Map -->
+        <h2 class="govuk-heading-l">Development boundary</h2>
+
+        <div id="map-container" style="height: 400px; width: 100%; border: 2px solid #0b0c0c; margin-bottom: 20px;">
+            <div id="map" style="height: 100%; width: 100%;"></div>
+        </div>
+
+        <!-- Data attributes for JavaScript -->
+        <div id="development-location-data" data-development-location='{{ developmentLocation | safe }}'
+            data-applicable-edps='{{ applicableEDPs | safe }}' style="display: none;"></div>
+
+        <!-- Debug output -->
+        <div style="display: none;">
+            <p>Debug - Development Location: {{ developmentLocation | safe }}</p>
+            <p>Debug - Applicable EDPs: {{ applicableEDPs | safe }}</p>
+        </div>
+
+        <div class="govuk-hint">
+            The map shows your development boundary and applicable Environmental Development Plan areas.
+        </div>
+
+        <!-- Additional Details -->
+        {% if session.userData.wastewaterTreatmentSite %}
+        <h2 class="govuk-heading-l">Additional details</h2>
+
+        <dl class="govuk-summary-list">
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Wastewater treatment site</dt>
+                <dd class="govuk-summary-list__value">{{ session.userData.wastewaterTreatmentSite }}</dd>
+            </div>
+        </dl>
+        {% endif %}
+
+        <!-- Actions -->
+        <div class="govuk-button-group">
+            <a href="/applications-1/new/payment" class="govuk-button" data-module="govuk-button">
+                Accept quote and pay
+            </a>
+            <a href="/applications-1/new/data" class="govuk-button govuk-button--secondary" data-module="govuk-button">
+                Back to edit details
+            </a>
+        </div>
+
+        {% else %}
+
+        <div class="govuk-inset-text">
+            <p class="govuk-body">
+                <strong>No quote available.</strong>
+            </p>
+            <p class="govuk-body">
+                Please go back and provide the required development details.
+            </p>
+        </div>
+
+        <div class="govuk-button-group">
+            <a href="/applications-1/new/data" class="govuk-button" data-module="govuk-button">
+                Back to details
+            </a>
+        </div>
+
+        {% endif %}
+
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Quote summary</h2>
+                {% if quote %}
+                <p class="govuk-body-s">
+                    <strong>Total levy:</strong> {{ quote.total | formatCurrency }}<br>
+                    <strong>Houses:</strong> {{ houseCount }}<br>
+                    <strong>EDPs:</strong> {{ applicableEDPs.length }}
+                </p>
+                {% else %}
+                <p class="govuk-body-s">
+                    Quote not available
+                </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">What happens next</h2>
+                <ol class="govuk-list govuk-list--number">
+                    <li>Review your quote</li>
+                    <li>Accept the terms</li>
+                    <li>Complete payment</li>
+                    <li>Receive confirmation</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<!-- Leaflet JavaScript -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        try {
+            // Initialize the map
+            const map = L.map('map').setView([54.0, -2.0], 6);
+
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Development data from the server
+            const dataElement = document.getElementById('development-location-data');
+            let developmentData;
+
+            // Check if the data is valid JSON
+            try {
+                const developmentLocation = JSON.parse(dataElement.getAttribute('data-development-location'));
+                const applicableEDPs = JSON.parse(dataElement.getAttribute('data-applicable-edps'));
+
+                developmentData = {
+                    location: developmentLocation,
+                    applicableEDPs: applicableEDPs
+                };
+            } catch (error) {
+                console.error('Error parsing map data:', error);
+                // Fallback to empty data
+                developmentData = {
+                    location: null,
+                    applicableEDPs: []
+                };
+            }
+
+            // Add development boundary if available
+            if (developmentData.location && developmentData.location.boundary) {
+                const developmentBoundary = L.geoJSON(developmentData.location.boundary, {
+                    style: {
+                        color: '#d4351c',
+                        weight: 3,
+                        fillColor: '#d4351c',
+                        fillOpacity: 0.3
+                    }
+                }).addTo(map);
+
+                // Add popup for development boundary
+                developmentBoundary.bindPopup('<strong>Development Boundary</strong><br>Your proposed development site');
+
+                // Fit map to development boundary
+                map.fitBounds(developmentBoundary.getBounds());
+            } else if (developmentData.location && developmentData.location.center) {
+                // If no boundary, center on the development location
+                const [lng, lat] = developmentData.location.center;
+                map.setView([lat, lng], 12);
+
+                // Add a marker for the development site
+                L.marker([lat, lng])
+                    .addTo(map)
+                    .bindPopup('Development site location');
+            }
+
+            // Add applicable EDP boundaries to map
+            if (developmentData.applicableEDPs && developmentData.applicableEDPs.length > 0) {
+                developmentData.applicableEDPs.forEach((edp) => {
+                    if (edp.boundary) {
+                        const color = edp.type === 'DLL' ? '#00703c' : '#1d70b8';
+                        const layer = L.geoJSON(edp.boundary, {
+                            style: {
+                                color: color,
+                                weight: 2,
+                                fillColor: color,
+                                fillOpacity: 0.1
+                            }
+                        }).addTo(map);
+
+                        // Add popup for EDP boundary
+                        layer.bindPopup(`<strong>${edp.name}</strong><br>${edp.type} area<br>Rate: £${edp.rate} per house`);
+                    }
+                });
+            }
+
+            // Add legend
+            const legend = L.control({ position: 'bottomright' });
+            legend.onAdd = function (map) {
+                const div = L.DomUtil.create('div', 'info legend');
+                div.style.backgroundColor = 'white';
+                div.style.padding = '10px';
+                div.style.border = '2px solid #ccc';
+                div.style.borderRadius = '5px';
+                div.style.fontSize = '12px';
+
+                div.innerHTML = '<h4 style="margin: 0 0 10px 0;">Map Legend</h4>' +
+                    '<div style="margin-bottom: 5px;"><span style="display: inline-block; width: 20px; height: 3px; background-color: #d4351c; margin-right: 5px;"></span> Development Boundary</div>' +
+                    '<div style="margin-bottom: 5px;"><span style="display: inline-block; width: 20px; height: 2px; background-color: #00703c; margin-right: 5px;"></span> DLL Area</div>' +
+                    '<div style="margin-bottom: 5px;"><span style="display: inline-block; width: 20px; height: 2px; background-color: #1d70b8; margin-right: 5px;"></span> Nutrient Mitigation Area</div>';
+
+                return div;
+            };
+            legend.addTo(map);
+        } catch (error) {
+            console.error('Map initialization failed:', error);
+        }
+    });
+</script>
+
+{% endblock %}

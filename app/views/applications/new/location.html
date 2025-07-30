@@ -1,0 +1,170 @@
+{% extends "layouts/main.html" %}
+
+{% set pageName="New Application - Location" %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-xl">
+            How would you like to provide your development site location?
+        </h1>
+
+        <p class="govuk-body">
+            Choose the method that works best for you. You can upload a file with your development boundary, enter a
+            postcode, provide coordinates, or draw on a map.
+        </p>
+
+        <form method="post" action="/applications/new/location" id="location-form">
+            <div class="govuk-form-group">
+                <fieldset class="govuk-fieldset">
+                    <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
+                        <h2 class="govuk-fieldset__heading">
+                            Select your preferred method
+                        </h2>
+                    </legend>
+                    <div class="govuk-radios" data-module="govuk-radios">
+                        <div class="govuk-radios__item">
+                            <input class="govuk-radios__input" id="location-method-file" name="location-method"
+                                type="radio" value="file-upload">
+                            <label class="govuk-label govuk-radios__label" for="location-method-file">
+                                <strong>Upload a boundary file</strong>
+                            </label>
+                            <div id="location-method-file-hint" class="govuk-hint govuk-radios__hint">
+                                Upload a shape file (.shp), KML file (.kml), or GeoJSON file (.geojson) containing your
+                                development boundary.
+                            </div>
+                        </div>
+                        <div class="govuk-radios__item">
+                            <input class="govuk-radios__input" id="location-method-postcode" name="location-method"
+                                type="radio" value="postcode">
+                            <label class="govuk-label govuk-radios__label" for="location-method-postcode">
+                                <strong>Enter a postcode</strong>
+                            </label>
+                            <div id="location-method-postcode-hint" class="govuk-hint govuk-radios__hint">
+                                Enter the postcode of your development site and draw the boundary on a map.
+                            </div>
+                        </div>
+                        <div class="govuk-radios__item">
+                            <input class="govuk-radios__input" id="location-method-coordinates" name="location-method"
+                                type="radio" value="coordinates">
+                            <label class="govuk-label govuk-radios__label" for="location-method-coordinates">
+                                <strong>Enter coordinates</strong>
+                            </label>
+                            <div id="location-method-coordinates-hint" class="govuk-hint govuk-radios__hint">
+                                Enter the latitude and longitude coordinates of your development site and draw the
+                                boundary.
+                            </div>
+                        </div>
+                        <div class="govuk-radios__item">
+                            <input class="govuk-radios__input" id="location-method-draw" name="location-method"
+                                type="radio" value="draw">
+                            <label class="govuk-label govuk-radios__label" for="location-method-draw">
+                                <strong>Draw on a map</strong>
+                            </label>
+                            <div id="location-method-draw-hint" class="govuk-hint govuk-radios__hint">
+                                Use an interactive map to locate and draw your development boundary.
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+
+            <div class="govuk-button-group">
+                <button class="govuk-button" data-module="govuk-button" type="submit"
+                    onclick="handleLocationMethod(event)">
+                    Continue
+                </button>
+                <a href="/applications/new/start" class="govuk-button govuk-button--secondary"
+                    data-module="govuk-button">
+                    Back
+                </a>
+            </div>
+        </form>
+
+        <script>
+            function handleLocationMethod(event) {
+                event.preventDefault();
+
+                const selectedMethod = document.querySelector('input[name="location-method"]:checked');
+
+                if (!selectedMethod) {
+                    // Show error message
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'govuk-error-summary';
+                    errorDiv.setAttribute('aria-labelledby', 'error-summary-title');
+                    errorDiv.setAttribute('role', 'alert');
+                    errorDiv.setAttribute('tabindex', '-1');
+                    errorDiv.innerHTML = `
+                        <h2 class="govuk-error-summary__title" id="error-summary-title">
+                            There is a problem
+                        </h2>
+                        <div class="govuk-error-summary__body">
+                            <ul class="govuk-list govuk-error-summary__list">
+                                <li>
+                                    <a href="#location-method-file">Please select a method to provide your development site location</a>
+                                </li>
+                            </ul>
+                        </div>
+                    `;
+
+                    const formGroup = document.querySelector('.govuk-form-group');
+                    formGroup.parentNode.insertBefore(errorDiv, formGroup);
+                    return;
+                }
+
+                // Navigate to the appropriate page based on method
+                const method = selectedMethod.value;
+
+                if (method === 'draw') {
+                    // For drawing, go directly to the map drawing page
+                    window.location.href = '/applications/new/location-draw';
+                } else if (method === 'postcode') {
+                    // For postcode, go to postcode input page
+                    window.location.href = '/applications/new/location-postcode';
+                } else if (method === 'coordinates') {
+                    // For coordinates, go to coordinates input page
+                    window.location.href = '/applications/new/location-coordinates';
+                } else if (method === 'file-upload') {
+                    // For file upload, go to file upload page
+                    window.location.href = '/applications/new/location-file-upload';
+                } else {
+                    // For other methods, submit the form to the server
+                    document.getElementById('location-form').submit();
+                }
+            }
+        </script>
+
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Need help?</h2>
+                <p class="govuk-body">If you're unsure which method to use:</p>
+                <ul class="govuk-list govuk-list--bullet">
+                    <li><strong>File upload</strong> - Best if you have a digital boundary file</li>
+                    <li><strong>Postcode</strong> - Best if you know the postcode of your site</li>
+                    <li><strong>Coordinates</strong> - Best if you have GPS coordinates</li>
+                    <li><strong>Draw on map</strong> - Best if you want to define the boundary visually</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Application progress</h2>
+                <ol class="govuk-list govuk-list--number">
+                    <li><strong>Location</strong> ← You are here</li>
+                    <li>EDP check</li>
+                    <li>Additional details</li>
+                    <li>Review quote</li>
+                    <li>Payment</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

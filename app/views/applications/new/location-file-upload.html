@@ -1,0 +1,229 @@
+{% extends "layouts/main.html" %}
+
+{% set pageName="New Application - File Upload" %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-xl">
+            Upload your development boundary file
+        </h1>
+
+        <p class="govuk-body">
+            Upload a file containing your development site boundary. We support shape files (.shp), KML files (.kml),
+            and GeoJSON files (.geojson).
+        </p>
+
+        <form action="/applications/new/location-file-upload" method="post" enctype="multipart/form-data">
+            <div class="govuk-form-group">
+                <label class="govuk-label" for="boundary-file">
+                    Choose a file
+                </label>
+                <div id="boundary-file-hint" class="govuk-hint">
+                    Upload a shape file (.shp), KML file (.kml), or GeoJSON file (.geojson). Maximum file size: 10MB.
+                </div>
+                <input class="govuk-file-upload" id="boundary-file" name="boundary-file" type="file"
+                    accept=".shp,.kml,.geojson,.zip" aria-describedby="boundary-file-hint">
+            </div>
+
+            <div id="file-error" class="govuk-error-summary" style="display: none;"
+                aria-labelledby="error-summary-title" role="alert" tabindex="-1">
+                <h2 class="govuk-error-summary__title" id="error-summary-title">
+                    There is a problem
+                </h2>
+                <div class="govuk-error-summary__body">
+                    <ul class="govuk-list govuk-error-summary__list" id="error-list">
+                    </ul>
+                </div>
+            </div>
+
+            <div id="file-result" class="govuk-inset-text" style="display: none;">
+                <h3 class="govuk-heading-s">File uploaded successfully</h3>
+                <div id="result-content"></div>
+            </div>
+
+            <div class="govuk-button-group">
+                <button class="govuk-button" data-module="govuk-button" type="submit" id="upload-button">
+                    Upload file
+                </button>
+                <a href="/applications/new/location" class="govuk-button govuk-button--secondary"
+                    data-module="govuk-button">
+                    Back
+                </a>
+            </div>
+        </form>
+
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Supported file formats</h2>
+                <ul class="govuk-list govuk-list--bullet">
+                    <li><strong>Shape files (.shp)</strong> - ESRI shapefile format</li>
+                    <li><strong>KML files (.kml)</strong> - Google Earth format</li>
+                    <li><strong>GeoJSON files (.geojson)</strong> - JSON-based format</li>
+                    <li><strong>ZIP files (.zip)</strong> - Compressed shapefiles</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">File requirements</h2>
+                <ul class="govuk-list govuk-list--bullet">
+                    <li>Maximum file size: 10MB</li>
+                    <li>Must contain a valid polygon boundary</li>
+                    <li>Must be within the UK</li>
+                    <li>Coordinate system: WGS84 (EPSG:4326)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Application progress</h2>
+                <ol class="govuk-list govuk-list--number">
+                    <li><strong>Location</strong> ← You are here</li>
+                    <li>EDP check</li>
+                    <li>Additional details</li>
+                    <li>Review quote</li>
+                    <li>Payment</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const fileInput = document.getElementById('boundary-file');
+        const uploadButton = document.getElementById('upload-button');
+
+        // Add file change event listener
+        fileInput.addEventListener('change', function () {
+            validateFile();
+        });
+
+        // Add form submission handler
+        document.querySelector('form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            if (validateFile()) {
+                // Mock file upload - in a real implementation, this would upload to server
+                uploadFile();
+            }
+        });
+    });
+
+    function validateFile() {
+        const fileInput = document.getElementById('boundary-file');
+        const file = fileInput.files[0];
+        const errors = [];
+
+        if (!file) {
+            errors.push('Please select a file to upload');
+        } else {
+            // Check file size (10MB limit)
+            const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+            if (file.size > maxSize) {
+                errors.push('File size must be less than 10MB');
+            }
+
+            // Check file type
+            const allowedTypes = ['.shp', '.kml', '.geojson', '.zip'];
+            const fileName = file.name.toLowerCase();
+            const isValidType = allowedTypes.some(ext => fileName.endsWith(ext));
+
+            if (!isValidType) {
+                errors.push('Please select a valid file type (.shp, .kml, .geojson, or .zip)');
+            }
+        }
+
+        if (errors.length > 0) {
+            showError(errors);
+            return false;
+        }
+
+        hideError();
+        return true;
+    }
+
+    function uploadFile() {
+        const fileInput = document.getElementById('boundary-file');
+        const file = fileInput.files[0];
+
+        // Show loading state
+        const uploadButton = document.getElementById('upload-button');
+        const originalText = uploadButton.textContent;
+        uploadButton.textContent = 'Uploading...';
+        uploadButton.disabled = true;
+
+        // Mock file upload delay
+        setTimeout(() => {
+            // Mock successful upload
+            const mockBoundaryData = {
+                fileName: file.name,
+                fileSize: formatFileSize(file.size),
+                boundary: {
+                    type: 'Polygon',
+                    coordinates: [[
+                        [-0.42, 51.48],
+                        [-0.38, 51.48],
+                        [-0.38, 51.52],
+                        [-0.42, 51.52],
+                        [-0.42, 51.48]
+                    ]]
+                },
+                center: [-0.4, 51.5]
+            };
+
+            // Store boundary data in session storage
+            sessionStorage.setItem('developmentBoundary', JSON.stringify(mockBoundaryData));
+
+            // Show success result
+            document.getElementById('result-content').innerHTML = `
+                <p class="govuk-body"><strong>File:</strong> ${file.name}</p>
+                <p class="govuk-body"><strong>Size:</strong> ${formatFileSize(file.size)}</p>
+                <p class="govuk-body"><strong>Status:</strong> Successfully processed</p>
+            `;
+            document.getElementById('file-result').style.display = 'block';
+
+            // Redirect to data collection after a short delay
+            setTimeout(() => {
+                window.location.href = '/applications/new/data';
+            }, 2000);
+
+        }, 1500);
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function showError(errors) {
+        const errorList = document.getElementById('error-list');
+        errorList.innerHTML = '';
+        errors.forEach(error => {
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.href = '#boundary-file';
+            a.textContent = error;
+            li.appendChild(a);
+            errorList.appendChild(li);
+        });
+        document.getElementById('file-error').style.display = 'block';
+        document.getElementById('file-result').style.display = 'none';
+    }
+
+    function hideError() {
+        document.getElementById('file-error').style.display = 'none';
+    }
+</script>
+
+{% endblock %}

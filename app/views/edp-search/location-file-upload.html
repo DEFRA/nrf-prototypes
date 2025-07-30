@@ -1,0 +1,196 @@
+{% extends "layouts/main.html" %}
+
+{% set pageName="Development Site Assessment - File Upload" %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-xl">
+            Upload your development boundary file
+        </h1>
+
+        <p class="govuk-body">
+            Upload a file containing your development site boundary. The file should be in one of the supported formats.
+        </p>
+
+        <div class="govuk-inset-text">
+            <p class="govuk-body">
+                <strong>Supported file formats:</strong>
+            </p>
+            <ul class="govuk-list govuk-list--bullet">
+                <li>Shape files (.shp) - with associated .dbf, .shx, and .prj files</li>
+                <li>KML files (.kml) - Google Earth format</li>
+                <li>GeoJSON files (.geojson) - JSON-based geographic data format</li>
+            </ul>
+            <p class="govuk-body">
+                <strong>Maximum file size:</strong> 10MB
+            </p>
+        </div>
+
+        <form action="/edp-search/details" method="post" enctype="multipart/form-data">
+            <div class="govuk-form-group">
+                <label class="govuk-label" for="boundary-file">
+                    Choose a file
+                </label>
+                <div id="boundary-file-hint" class="govuk-hint">
+                    Upload your development boundary file
+                </div>
+                <input class="govuk-file-upload" id="boundary-file" name="boundary-file" type="file"
+                    accept=".shp,.kml,.geojson,.zip" aria-describedby="boundary-file-hint">
+            </div>
+
+            <div id="file-preview" class="govuk-inset-text" style="display: none;">
+                <h3 class="govuk-heading-s">File preview</h3>
+                <div id="preview-content"></div>
+            </div>
+
+            <div id="file-error" class="govuk-error-summary" style="display: none;"
+                aria-labelledby="error-summary-title" role="alert" tabindex="-1">
+                <h2 class="govuk-error-summary__title" id="error-summary-title">
+                    There is a problem
+                </h2>
+                <div class="govuk-error-summary__body">
+                    <ul class="govuk-list govuk-error-summary__list" id="error-list">
+                    </ul>
+                </div>
+            </div>
+
+            <div class="govuk-button-group">
+                <button class="govuk-button" data-module="govuk-button" type="submit" id="continue-button" disabled>
+                    Continue
+                </button>
+                <a href="/edp-search/location" class="govuk-button govuk-button--secondary" data-module="govuk-button">
+                    Back
+                </a>
+            </div>
+        </form>
+
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">File requirements</h2>
+                <ul class="govuk-list govuk-list--bullet">
+                    <li>File must contain a single polygon or multipolygon</li>
+                    <li>Coordinates should be in British National Grid (EPSG:27700) or WGS84 (EPSG:4326)</li>
+                    <li>For shape files, include all associated files (.dbf, .shx, .prj)</li>
+                    <li>Ensure the boundary accurately represents your development site</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Need help?</h2>
+                <p class="govuk-body">If you don't have a boundary file:</p>
+                <ul class="govuk-list govuk-list--bullet">
+                    <li><a href="/edp-search/location/postcode" class="govuk-link">Use postcode lookup</a></li>
+                    <li><a href="/edp-search/location/coordinates" class="govuk-link">Enter coordinates</a></li>
+                    <li><a href="/edp-search/location/draw" class="govuk-link">Draw on map</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const fileInput = document.getElementById('boundary-file');
+        const continueButton = document.getElementById('continue-button');
+        const filePreview = document.getElementById('file-preview');
+        const previewContent = document.getElementById('preview-content');
+        const fileError = document.getElementById('file-error');
+        const errorList = document.getElementById('error-list');
+
+        fileInput.addEventListener('change', function (event) {
+            const file = event.target.files[0];
+
+            if (!file) {
+                hidePreview();
+                hideError();
+                continueButton.disabled = true;
+                return;
+            }
+
+            // Validate file
+            const validation = validateFile(file);
+
+            if (validation.isValid) {
+                hideError();
+                showPreview(file);
+                continueButton.disabled = false;
+            } else {
+                hidePreview();
+                showError(validation.errors);
+                continueButton.disabled = true;
+            }
+        });
+
+        function validateFile(file) {
+            const errors = [];
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            const allowedTypes = ['.shp', '.kml', '.geojson', '.zip'];
+
+            // Check file size
+            if (file.size > maxSize) {
+                errors.push('File size must be less than 10MB');
+            }
+
+            // Check file extension
+            const fileName = file.name.toLowerCase();
+            const hasValidExtension = allowedTypes.some(ext => fileName.endsWith(ext));
+
+            if (!hasValidExtension) {
+                errors.push('File must be a .shp, .kml, .geojson, or .zip file');
+            }
+
+            return {
+                isValid: errors.length === 0,
+                errors: errors
+            };
+        }
+
+        function showPreview(file) {
+            previewContent.innerHTML = `
+      <p class="govuk-body"><strong>File name:</strong> ${file.name}</p>
+      <p class="govuk-body"><strong>File size:</strong> ${formatFileSize(file.size)}</p>
+      <p class="govuk-body"><strong>File type:</strong> ${file.type || 'Unknown'}</p>
+    `;
+            filePreview.style.display = 'block';
+        }
+
+        function hidePreview() {
+            filePreview.style.display = 'none';
+        }
+
+        function showError(errors) {
+            errorList.innerHTML = '';
+            errors.forEach(error => {
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+                a.href = '#boundary-file';
+                a.textContent = error;
+                li.appendChild(a);
+                errorList.appendChild(li);
+            });
+            fileError.style.display = 'block';
+        }
+
+        function hideError() {
+            fileError.style.display = 'none';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+    });
+</script>
+
+{% endblock %}

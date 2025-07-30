@@ -1,0 +1,120 @@
+{% extends "layouts/main.html" %}
+
+{% set pageName="Environmental Development Plan Levy Calculator - Applications" %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-xl">
+            Your Development Applications
+        </h1>
+
+        <p class="govuk-body">
+            View and manage your environmental development plan applications and levy payments.
+        </p>
+
+        {% if applications and applications.length > 0 %}
+
+        <div class="govuk-table__container">
+            <table class="govuk-table">
+                <thead class="govuk-table__head">
+                    <tr class="govuk-table__row">
+                        <th scope="col" class="govuk-table__header">Application</th>
+                        <th scope="col" class="govuk-table__header">Development</th>
+                        <th scope="col" class="govuk-table__header">Status</th>
+                        <th scope="col" class="govuk-table__header">Levy Amount</th>
+                        <th scope="col" class="govuk-table__header">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="govuk-table__body">
+                    {% for application in applications %}
+                    <tr class="govuk-table__row">
+                        <td class="govuk-table__cell">
+                            <strong>{{ application.id }}</strong><br>
+                            <span class="govuk-body-s">{{ application.createdAt | formatDate }}</span>
+                        </td>
+                        <td class="govuk-table__cell">
+                            {{ application.developmentName }}<br>
+                            <span class="govuk-body-s">{{ application.houseCount }} houses</span>
+                        </td>
+                        <td class="govuk-table__cell">
+                            {% if application.status == 'pending_payment' %}
+                            <strong class="govuk-tag govuk-tag--orange">Pending Payment</strong>
+                            {% elif application.status == 'paid' %}
+                            <strong class="govuk-tag govuk-tag--green">Paid</strong>
+                            {% elif application.status == 'approved' %}
+                            <strong class="govuk-tag govuk-tag--blue">Approved</strong>
+                            {% elif application.status == 'draft' %}
+                            <strong class="govuk-tag govuk-tag--grey">Draft</strong>
+                            {% endif %}
+                        </td>
+                        <td class="govuk-table__cell">
+                            {% if application.quote %}
+                            <strong>{{ application.quote.total | formatCurrency }}</strong>
+                            {% else %}
+                            <span class="govuk-body-s">Not calculated</span>
+                            {% endif %}
+                        </td>
+                        <td class="govuk-table__cell">
+                            <a href="/applications/{{ application.id }}" class="govuk-link">View details</a>
+                            {% if application.status == 'pending_payment' %}
+                            <br><a href="/applications/{{ application.id }}/payment" class="govuk-link">Make payment</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% else %}
+
+        <div class="govuk-inset-text">
+            <p class="govuk-body">
+                You don't have any development applications yet.
+            </p>
+        </div>
+
+        {% endif %}
+
+        <div class="govuk-button-group">
+            <a href="/applications/new/start" class="govuk-button" data-module="govuk-button">
+                Create new application
+            </a>
+            <a href="/" class="govuk-button govuk-button--secondary" data-module="govuk-button">
+                Back to index
+            </a>
+        </div>
+
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Application Status Guide</h2>
+                <ul class="govuk-list govuk-list--bullet">
+                    <li><strong>Draft</strong> - Application in progress</li>
+                    <li><strong>Pending Payment</strong> - Quote received, payment required</li>
+                    <li><strong>Paid</strong> - Payment completed, under review</li>
+                    <li><strong>Approved</strong> - Application approved</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Need help?</h2>
+                <p class="govuk-body">If you need assistance with your application:</p>
+                <ul class="govuk-list">
+                    <li><a href="#" class="govuk-link">Contact support</a></li>
+                    <li><a href="#" class="govuk-link">View guidance</a></li>
+                    <li><a href="#" class="govuk-link">FAQs</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

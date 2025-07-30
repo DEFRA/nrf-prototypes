@@ -1,0 +1,114 @@
+{% extends "layouts/main.html" %}
+
+{% set pageName="New Application - Start" %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-xl">
+            Submit a new development application
+        </h1>
+
+        <p class="govuk-body">
+            Use this service to submit details of your proposed housing development and receive a quote for the required
+            environmental levy.
+        </p>
+
+        <div class="govuk-inset-text">
+            <p class="govuk-body">
+                This service will help you:
+            </p>
+            <ul class="govuk-list govuk-list--bullet">
+                <li>Determine if your development falls within Environmental Development Plan boundaries</li>
+                <li>Calculate the environmental impact costs for your development</li>
+                <li>Receive a detailed quote for the required levy</li>
+                <li>Complete payment for your environmental impact</li>
+            </ul>
+        </div>
+
+        <h2 class="govuk-heading-l">Before you start</h2>
+
+        <p class="govuk-body">You'll need:</p>
+        <ul class="govuk-list govuk-list--bullet">
+            <li>Your development site location (postcode, coordinates, or boundary file)</li>
+            <li>The number of houses in your development</li>
+            <li>Information about your wastewater treatment arrangements (if applicable)</li>
+            <li>Pond location details (if required for District Level Licensing)</li>
+        </ul>
+
+        <h2 class="govuk-heading-l">What happens next</h2>
+
+        <ol class="govuk-list govuk-list--number">
+            <li><strong>Provide development location</strong> - Upload a file, enter postcode, coordinates, or draw on a
+                map</li>
+            <li><strong>Check EDP boundaries</strong> - We'll determine which Environmental Development Plans apply</li>
+            <li><strong>Provide additional details</strong> - Enter house count and other required information</li>
+            <li><strong>Review quote</strong> - See the breakdown of your environmental levy</li>
+            <li><strong>Make payment</strong> - Complete payment through GOV.UK Pay</li>
+        </ol>
+
+        <h2 class="govuk-heading-l">Environmental Development Plans</h2>
+
+        <p class="govuk-body">Your development may be subject to one or more Environmental Development Plans:</p>
+
+        <div class="govuk-grid-row">
+            <div class="govuk-grid-column-one-half">
+                <div class="govuk-card govuk-card--contained">
+                    <div class="govuk-card__content">
+                        <h3 class="govuk-heading-s">District Level Licensing (DLL)</h3>
+                        <p class="govuk-body">For developments affecting great crested newt habitats. Requires pond
+                            location details.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="govuk-grid-column-one-half">
+                <div class="govuk-card govuk-card--contained">
+                    <div class="govuk-card__content">
+                        <h3 class="govuk-heading-s">Nutrient Mitigation</h3>
+                        <p class="govuk-body">For developments in areas with nutrient pollution concerns. Requires
+                            wastewater treatment site selection.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="govuk-button-group">
+            <a href="/applications-1/new/location" class="govuk-button" data-module="govuk-button">
+                Start application
+            </a>
+            <a href="/applications-1" class="govuk-button govuk-button--secondary" data-module="govuk-button">
+                Back to applications
+            </a>
+        </div>
+
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Related services</h2>
+                <ul class="govuk-list">
+                    <li><a href="#" class="govuk-link">Planning permission guidance</a></li>
+                    <li><a href="#" class="govuk-link">Environmental impact assessment</a></li>
+                    <li><a href="#" class="govuk-link">Nature Restoration Fund</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Need help?</h2>
+                <p class="govuk-body">If you need assistance:</p>
+                <ul class="govuk-list">
+                    <li><a href="#" class="govuk-link">Contact support</a></li>
+                    <li><a href="#" class="govuk-link">View guidance</a></li>
+                    <li><a href="#" class="govuk-link">FAQs</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

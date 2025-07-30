@@ -1,0 +1,346 @@
+{% extends "layouts/main.html" %}
+
+{% set pageName="Development Site Assessment - Summary" %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-xl">
+            Assessment Summary
+        </h1>
+
+        <div class="govuk-panel govuk-panel--confirmation">
+            <h1 class="govuk-panel__title">
+                Assessment Complete
+            </h1>
+            <div class="govuk-panel__body">
+                Your development site has been assessed for environmental impact costs.
+            </div>
+        </div>
+
+        <div id="map-container" style="height: 300px; border: 2px solid #0b0c0c; margin: 20px 0;">
+            <div id="map" style="height: 100%; width: 100%;"></div>
+        </div>
+
+        <div id="assessment-results">
+            <h2 class="govuk-heading-l">Assessment Results</h2>
+
+            <div id="edp-summary"></div>
+
+            <div id="cost-breakdown">
+                <h3 class="govuk-heading-m">Cost Breakdown</h3>
+                <div id="cost-table"></div>
+            </div>
+
+            <div id="no-costs-message" style="display: none;">
+                <div class="govuk-inset-text">
+                    <h3 class="govuk-heading-s">No environmental impact costs</h3>
+                    <p class="govuk-body">Your development site does not fall within any Environmental Development Plan
+                        boundaries that require payment.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="govuk-button-group">
+            <a href="/edp-search/print" class="govuk-button" data-module="govuk-button" target="_blank">
+                Print assessment
+            </a>
+            <a href="/edp-search/start" class="govuk-button govuk-button--secondary" data-module="govuk-button">
+                Start new assessment
+            </a>
+        </div>
+
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Development details</h2>
+                <div id="development-summary">
+                    <p class="govuk-body">Loading...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Next steps</h2>
+                <ul class="govuk-list govuk-list--bullet">
+                    <li>Review the assessment results</li>
+                    <li>Print or save the assessment</li>
+                    <li>Include costs in your planning application</li>
+                    <li>Contact your local planning authority</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Need help?</h2>
+                <p class="govuk-body">If you have questions about this assessment:</p>
+                <ul class="govuk-list govuk-list--bullet">
+                    <li><a href="#" class="govuk-link">Contact the Nature Restoration Fund team</a></li>
+                    <li><a href="#" class="govuk-link">View guidance on EDPs</a></li>
+                    <li><a href="#" class="govuk-link">Planning permission guidance</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<!-- Leaflet JavaScript -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    let map;
+    let mapLayers = {};
+
+    document.addEventListener('DOMContentLoaded', function () {
+        initializeMap();
+        loadAssessmentData();
+    });
+
+    function initializeMap() {
+        // Initialize the map
+        map = L.map('map');
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Create layer groups
+        mapLayers.development = L.layerGroup().addTo(map);
+        mapLayers.edp = L.layerGroup().addTo(map);
+    }
+
+    function loadAssessmentData() {
+        // Get data from session storage
+        const boundaryData = sessionStorage.getItem('developmentBoundary');
+        const locationData = sessionStorage.getItem('developmentLocation');
+        const applicableEDPs = sessionStorage.getItem('applicableEDPs');
+        const formData = getFormData();
+
+        if (!boundaryData || !locationData) {
+            showError('Assessment data not found. Please start a new assessment.');
+            return;
+        }
+
+        const boundary = JSON.parse(boundaryData);
+        const location = JSON.parse(locationData);
+        const edps = applicableEDPs ? JSON.parse(applicableEDPs) : [];
+
+        // Display development summary
+        displayDevelopmentSummary(boundary, location);
+
+        // Display map
+        displayMap(boundary, edps);
+
+        // Display EDP summary
+        displayEDPSummary(edps, formData);
+
+        // Display cost breakdown
+        displayCostBreakdown(edps, formData);
+    }
+
+    function getFormData() {
+        // In a real implementation, this would come from form submission
+        // For now, we'll simulate the data
+        return {
+            houseCount: 50,
+            wastewaterSite: 'wwt-001'
+        };
+    }
+
+    function displayDevelopmentSummary(boundary, location) {
+        const developmentSummary = document.getElementById('development-summary');
+        const areaHectares = boundary.area / 10000;
+
+        developmentSummary.innerHTML = `
+    <p class="govuk-body"><strong>Location:</strong> ${location.address || `${location.coordinates.lat.toFixed(6)}, ${location.coordinates.lng.toFixed(6)}`}</p>
+    <p class="govuk-body"><strong>Area:</strong> ${areaHectares.toFixed(2)} hectares</p>
+    <p class="govuk-body"><strong>Boundary points:</strong> ${boundary.points.length}</p>
+  `;
+    }
+
+    function displayMap(boundary, edps) {
+        // Add development boundary
+        const developmentPolygon = L.polygon(boundary.points, {
+            color: 'red',
+            weight: 3,
+            fillColor: '#ff0000',
+            fillOpacity: 0.3
+        }).addTo(mapLayers.development);
+
+        // Add EDP boundaries (mock data)
+        const edpBoundaries = [
+            {
+                name: 'District Level Licensing - Thames Valley',
+                coordinates: [[
+                    [51.4, -0.5],
+                    [51.6, -0.5],
+                    [51.6, -0.3],
+                    [51.4, -0.3],
+                    [51.4, -0.5]
+                ]],
+                color: 'blue'
+            },
+            {
+                name: 'Nutrient Mitigation - Hampshire',
+                coordinates: [[
+                    [50.8, -1.0],
+                    [51.2, -1.0],
+                    [51.2, -0.5],
+                    [50.8, -0.5],
+                    [50.8, -1.0]
+                ]],
+                color: 'green'
+            }
+        ];
+
+        edpBoundaries.forEach(edp => {
+            const polygon = L.polygon(edp.coordinates, {
+                color: edp.color,
+                weight: 2,
+                fillColor: edp.color,
+                fillOpacity: 0.1
+            }).addTo(mapLayers.edp);
+
+            polygon.bindPopup(edp.name);
+        });
+
+        // Fit map to show all features
+        const allFeatures = [developmentPolygon, ...mapLayers.edp.getLayers()];
+        const group = L.featureGroup(allFeatures);
+        map.fitBounds(group.getBounds().pad(0.1));
+    }
+
+    function displayEDPSummary(edps, formData) {
+        const edpSummary = document.getElementById('edp-summary');
+
+        if (edps.length === 0) {
+            edpSummary.innerHTML = `
+      <div class="govuk-inset-text">
+        <h3 class="govuk-heading-s">No applicable EDPs</h3>
+        <p class="govuk-body">Your development site does not fall within any Environmental Development Plan boundaries.</p>
+      </div>
+    `;
+            return;
+        }
+
+        let edpList = '<ul class="govuk-list govuk-list--bullet">';
+        edps.forEach(edp => {
+            edpList += `<li><strong>${edp.name}</strong>`;
+            if (edp.type === 'DLL' && formData.houseCount) {
+                edpList += ` - ${formData.houseCount} houses`;
+            }
+            if (edp.type === 'Nutrient Mitigation' && formData.wastewaterSite) {
+                edpList += ` - Wastewater treatment site selected`;
+            }
+            edpList += '</li>';
+        });
+        edpList += '</ul>';
+
+        edpSummary.innerHTML = `
+    <div class="govuk-inset-text">
+      <h3 class="govuk-heading-s">Applicable Environmental Development Plans</h3>
+      ${edpList}
+    </div>
+  `;
+    }
+
+    function displayCostBreakdown(edps, formData) {
+        const costTable = document.getElementById('cost-table');
+        const noCostsMessage = document.getElementById('no-costs-message');
+
+        if (edps.length === 0) {
+            costTable.style.display = 'none';
+            noCostsMessage.style.display = 'block';
+            return;
+        }
+
+        noCostsMessage.style.display = 'none';
+        costTable.style.display = 'block';
+
+        let totalCost = 0;
+        let tableRows = '';
+
+        edps.forEach(edp => {
+            let cost = 0;
+            let description = '';
+
+            if (edp.type === 'DLL' && formData.houseCount) {
+                cost = formData.houseCount * edp.rate;
+                description = `${formData.houseCount} houses × £${edp.rate.toLocaleString()}`;
+            } else if (edp.type === 'Nutrient Mitigation' && formData.wastewaterSite) {
+                cost = formData.houseCount * edp.rate;
+                description = `${formData.houseCount} houses × £${edp.rate.toLocaleString()}`;
+            }
+
+            totalCost += cost;
+
+            tableRows += `
+      <tr class="govuk-table__row">
+        <td class="govuk-table__cell">${edp.name}</td>
+        <td class="govuk-table__cell">${description}</td>
+        <td class="govuk-table__cell govuk-table__cell--numeric">£${cost.toLocaleString()}</td>
+      </tr>
+    `;
+        });
+
+        costTable.innerHTML = `
+    <table class="govuk-table">
+      <thead class="govuk-table__head">
+        <tr class="govuk-table__row">
+          <th scope="col" class="govuk-table__header">EDP</th>
+          <th scope="col" class="govuk-table__header">Calculation</th>
+          <th scope="col" class="govuk-table__header govuk-table__header--numeric">Cost</th>
+        </tr>
+      </thead>
+      <tbody class="govuk-table__body">
+        ${tableRows}
+        <tr class="govuk-table__row govuk-table__row--total">
+          <th scope="row" class="govuk-table__header">Total</th>
+          <td class="govuk-table__cell"></td>
+          <td class="govuk-table__cell govuk-table__cell--numeric"><strong>£${totalCost.toLocaleString()}</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  `;
+    }
+
+    function showError(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'govuk-error-summary';
+        errorDiv.setAttribute('aria-labelledby', 'error-summary-title');
+        errorDiv.setAttribute('role', 'alert');
+        errorDiv.setAttribute('tabindex', '-1');
+        errorDiv.innerHTML = `
+    <h2 class="govuk-error-summary__title" id="error-summary-title">
+      There is a problem
+    </h2>
+    <div class="govuk-error-summary__body">
+      <ul class="govuk-list govuk-error-summary__list">
+        <li><a href="#">${message}</a></li>
+      </ul>
+    </div>
+  `;
+
+        const content = document.querySelector('.govuk-grid-column-two-thirds');
+        content.insertBefore(errorDiv, content.firstChild);
+    }
+</script>
+
+<style>
+    .govuk-table__row--total {
+        border-top: 2px solid #0b0c0c;
+        font-weight: bold;
+    }
+</style>
+
+{% endblock %}
