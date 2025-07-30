@@ -1,5 +1,5 @@
 {
-  "serviceName": "CDP Node.js Prototype Template",
+  "serviceName": "nrf-prototypes",
   "plugins": {
     "govuk-frontend": {
       "rebrand": true

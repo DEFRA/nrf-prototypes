@@ -1,7 +1,7 @@
 {
-  "name": "cdp-node-prototype-template",
+  "name": "nrf-prototypes",
   "version": "0.1.0",
-  "description": "CDP Node.js Prototype Template. GOV.UK Prototype Kit with CDP Platform running capabilities",
+  "description": "nrf-prototypes. GOV.UK Prototype Kit with CDP Platform running capabilities",
   "author": "Defra DDTS",
   "license": "(OGL-UK-3, MIT) see licenses in /LICENSES",
   "scripts": {

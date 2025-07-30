@@ -1,4 +1,4 @@
-# CDP Node.js Prototype Template
+# nrf-prototypes
 
 `Node.js` prototype template, using the [GOV.UK Prototype Kit](https://github.com/alphagov/govuk-prototype-kit) and
 the [GOV.UK Frontend](https://github.com/alphagov/govuk-frontend).
@@ -37,7 +37,7 @@ the Node Version Manager [nvm](https://github.com/creationix/nvm)
 To use the correct version of Node.js for this application, via nvm:
 
 ```bash
-cd cdp-node-prototype-template
+cd nrf-prototypes
 nvm use
 ```
 
@@ -63,13 +63,13 @@ template provides both tools in a wrapper that runs on the Core Delivery Platfor
   - https://github.com/alphagov/govuk-frontend
 
 > [!WARNING]
-> The `CDP Node.js Prototype Template` is not a production ready application, it is a tool for prototyping. It is not
+> The `nrf-prototypes` is not a production ready application, it is a tool for prototyping. It is not
 > designed to be used in production or to be resilient, secure or performant, nor should it be. It is designed to be
 > used for prototyping ideas and testing them with users. It's a great tool for prototyping GOV web applications.
 
 ## Using the refreshed GOV.UK brand
 
-The refreshed GOV.UK brand is available and turned on by default in the `CDP Node.js Prototype Template`. To turn it
+The refreshed GOV.UK brand is available and turned on by default in the `nrf-prototypes`. To turn it
 off simply go to [app/config.json](./app/config.json) and set the `"rebrand"` property to `false`. This will turn off
 the refreshed brand and use the legacy brand instead.
 
@@ -205,13 +205,13 @@ UI in the CDP Portal.
 Build:
 
 ```bash
-docker build --target development --no-cache --tag cdp-node-prototype-template:development .
+docker build --target development --no-cache --tag nrf-prototypes:development .
 ```
 
 Run:
 
 ```bash
-docker run -e PORT=3000 -p 3000:3000 cdp-node-prototype-template:development
+docker run -e PORT=3000 -p 3000:3000 nrf-prototypes:development
 ```
 
 ### Production image
@@ -219,7 +219,7 @@ docker run -e PORT=3000 -p 3000:3000 cdp-node-prototype-template:development
 Build:
 
 ```bash
-docker build --no-cache --tag cdp-node-prototype-template .
+docker build --no-cache --tag nrf-prototypes .
 ```
 
 Run:
@@ -227,7 +227,7 @@ Run:
 > Update the password field to your password
 
 ```bash
-docker run -e PASSWORD=beepBoopBeep -e PORT=3000 -p 3000:3000 cdp-node-prototype-template
+docker run -e PASSWORD=beepBoopBeep -e PORT=3000 -p 3000:3000 nrf-prototypes
 ```
 
 ### Debug docker
@@ -238,13 +238,13 @@ can run an interactive shell:
 Build:
 
 ```bash
-docker build --no-cache --tag cdp-node-prototype-template .
+docker build --no-cache --tag nrf-prototypes .
 ```
 
 Run:
 
 ```bash
-docker run -it --entrypoint /bin/ash cdp-node-prototype-template
+docker run -it --entrypoint /bin/ash nrf-prototypes
 ```
 
 ## Licence
