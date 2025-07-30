@@ -1,0 +1,15 @@
+services:
+  service:
+    build:
+      context: ../..
+    container_name: cdp-node-prototype-template
+    ports:
+      - "8085:8085"
+    environment:
+      PORT: 8085
+      USE_AUTH: false # Turn off auth so we can hit the home page in the template validation tests
+      PASSWORD: beepBoopbeep # GOV.UK Prototype Kit requires a password to `npm start`
+    healthcheck:
+      test: curl http://localhost:8085
+      start_period: 1s
+      interval: 2s
