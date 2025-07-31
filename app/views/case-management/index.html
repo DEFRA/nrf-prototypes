@@ -1,0 +1,168 @@
+{% extends "layouts/main.html" %}
+
+{% set pageName="Case Management - Natural England Staff" %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+
+        <h1 class="govuk-heading-xl">
+            Case Management
+        </h1>
+
+        <p class="govuk-body">
+            View and manage developer applications for the Nature Restoration Fund.
+        </p>
+
+        <!-- Filters -->
+        <div class="govuk-card">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-m">Filter applications</h2>
+
+                <form method="GET" action="/case-management" class="govuk-form-group">
+                    <div class="govuk-grid-row">
+                        <div class="govuk-grid-column-one-quarter">
+                            <label class="govuk-label" for="status">
+                                Status
+                            </label>
+                            <select class="govuk-select" id="status" name="status">
+                                <option value="all" {% if filters.status=='all' %}selected{% endif %}>All statuses
+                                </option>
+                                <option value="draft" {% if filters.status=='draft' %}selected{% endif %}>Draft</option>
+                                <option value="pending_payment" {% if filters.status=='pending_payment' %}selected{%
+                                    endif %}>Pending Payment</option>
+                                <option value="paid" {% if filters.status=='paid' %}selected{% endif %}>Paid</option>
+                                <option value="approved" {% if filters.status=='approved' %}selected{% endif %}>Approved
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="govuk-grid-column-one-quarter">
+                            <label class="govuk-label" for="dateFrom">
+                                From date
+                            </label>
+                            <input class="govuk-input" type="date" id="dateFrom" name="dateFrom"
+                                value="{{ filters.dateFrom }}">
+                        </div>
+
+                        <div class="govuk-grid-column-one-quarter">
+                            <label class="govuk-label" for="dateTo">
+                                To date
+                            </label>
+                            <input class="govuk-input" type="date" id="dateTo" name="dateTo"
+                                value="{{ filters.dateTo }}">
+                        </div>
+
+                        <div class="govuk-grid-column-one-quarter">
+                            <label class="govuk-label" for="developmentName">
+                                Development name
+                            </label>
+                            <input class="govuk-input" type="text" id="developmentName" name="developmentName"
+                                value="{{ filters.developmentName }}">
+                        </div>
+                    </div>
+
+                    <div class="govuk-button-group" style="margin-top: 20px;">
+                        <button type="submit" class="govuk-button" data-module="govuk-button">
+                            Apply filters
+                        </button>
+                        <a href="/case-management" class="govuk-button govuk-button--secondary"
+                            data-module="govuk-button">
+                            Clear filters
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Export Button -->
+        <div class="govuk-button-group" style="margin: 20px 0;">
+            <a href="/case-management/export?{{ request.query }}" class="govuk-button govuk-button--secondary"
+                data-module="govuk-button">
+                Export to CSV
+            </a>
+        </div>
+
+        <!-- Applications Table -->
+        {% if applications and applications.length > 0 %}
+
+        <div class="govuk-table__container">
+            <table class="govuk-table">
+                <thead class="govuk-table__head">
+                    <tr class="govuk-table__row">
+                        <th scope="col" class="govuk-table__header">Application ID</th>
+                        <th scope="col" class="govuk-table__header">Development Name</th>
+                        <th scope="col" class="govuk-table__header">Submission Date</th>
+                        <th scope="col" class="govuk-table__header">Status</th>
+                        <th scope="col" class="govuk-table__header">House Count</th>
+                        <th scope="col" class="govuk-table__header">Levy Amount</th>
+                        <th scope="col" class="govuk-table__header">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="govuk-table__body">
+                    {% for application in applications %}
+                    <tr class="govuk-table__row">
+                        <td class="govuk-table__cell">
+                            <strong>{{ application.id }}</strong>
+                        </td>
+                        <td class="govuk-table__cell">
+                            {{ application.developmentName }}
+                        </td>
+                        <td class="govuk-table__cell">
+                            {{ application.createdAt | formatDate }}
+                        </td>
+                        <td class="govuk-table__cell">
+                            {% if application.status == 'pending_payment' %}
+                            <strong class="govuk-tag govuk-tag--orange">Pending Payment</strong>
+                            {% elif application.status == 'paid' %}
+                            <strong class="govuk-tag govuk-tag--green">Paid</strong>
+                            {% elif application.status == 'approved' %}
+                            <strong class="govuk-tag govuk-tag--blue">Approved</strong>
+                            {% elif application.status == 'draft' %}
+                            <strong class="govuk-tag govuk-tag--grey">Draft</strong>
+                            {% endif %}
+                        </td>
+                        <td class="govuk-table__cell">
+                            {{ application.houseCount }}
+                        </td>
+                        <td class="govuk-table__cell">
+                            {% if application.quote %}
+                            <strong>{{ application.quote.total | formatCurrency }}</strong>
+                            {% else %}
+                            <span class="govuk-body-s">Not calculated</span>
+                            {% endif %}
+                        </td>
+                        <td class="govuk-table__cell">
+                            <a href="/case-management/{{ application.id }}" class="govuk-link">View details</a>
+                            <br>
+                            <a href="/case-management/{{ application.id }}/edit" class="govuk-link">Edit</a>
+                            <br>
+                            <a href="/case-management/{{ application.id }}/audit" class="govuk-link">Audit history</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="govuk-inset-text">
+            <p class="govuk-body">
+                Showing {{ applications.length }} application{% if applications.length != 1 %}s{% endif %}.
+            </p>
+        </div>
+
+        {% else %}
+
+        <div class="govuk-inset-text">
+            <p class="govuk-body">
+                No applications found matching the current filters.
+            </p>
+        </div>
+
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}

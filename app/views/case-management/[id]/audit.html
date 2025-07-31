@@ -1,0 +1,253 @@
+{% extends "layouts/main.html" %}
+
+{% set pageName="Audit History - Case Management" %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-xl">
+            Audit History - Application {{ application.id }}
+        </h1>
+
+        <p class="govuk-body">
+            Complete history of all changes made to this application.
+        </p>
+
+        <!-- Application Summary -->
+        <div class="govuk-card">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-m">Application Summary</h2>
+                <dl class="govuk-summary-list govuk-summary-list--no-border">
+                    <div class="govuk-summary-list__row">
+                        <dt class="govuk-summary-list__key">Development</dt>
+                        <dd class="govuk-summary-list__value">{{ application.developmentName }}</dd>
+                    </div>
+                    <div class="govuk-summary-list__row">
+                        <dt class="govuk-summary-list__key">Current status</dt>
+                        <dd class="govuk-summary-list__value">
+                            {% if application.status == 'pending_payment' %}
+                            <strong class="govuk-tag govuk-tag--orange">Pending Payment</strong>
+                            {% elif application.status == 'paid' %}
+                            <strong class="govuk-tag govuk-tag--green">Paid</strong>
+                            {% elif application.status == 'approved' %}
+                            <strong class="govuk-tag govuk-tag--blue">Approved</strong>
+                            {% elif application.status == 'draft' %}
+                            <strong class="govuk-tag govuk-tag--grey">Draft</strong>
+                            {% endif %}
+                        </dd>
+                    </div>
+                    <div class="govuk-summary-list__row">
+                        <dt class="govuk-summary-list__key">Current levy</dt>
+                        <dd class="govuk-summary-list__value">
+                            {% if application.quote %}
+                            {{ application.quote.total | formatCurrency }}
+                            {% else %}
+                            Not calculated
+                            {% endif %}
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Audit Trail -->
+        <h2 class="govuk-heading-l">Audit Trail</h2>
+
+        {% if auditTrail and auditTrail.length > 0 %}
+
+        <div class="govuk-timeline">
+            {% for entry in auditTrail | reverse %}
+            <div class="govuk-timeline__entry">
+                <div class="govuk-timeline__header">
+                    <h3 class="govuk-heading-s govuk-timeline__title">
+                        {{ entry.action | title }} - {{ entry.timestamp | formatDate }} {{ entry.timestamp | formatTime
+                        }}
+                    </h3>
+                    <p class="govuk-timeline__by">
+                        by {{ entry.userId }} ({{ entry.userRole | replace('_', ' ') | title }})
+                    </p>
+                </div>
+                <div class="govuk-timeline__content">
+
+                    <!-- Action Type Tag -->
+                    <div style="margin-bottom: 10px;">
+                        {% if entry.action == 'create' %}
+                        <strong class="govuk-tag govuk-tag--green">Created</strong>
+                        {% elif entry.action == 'update' %}
+                        <strong class="govuk-tag govuk-tag--blue">Updated</strong>
+                        {% elif entry.action == 'status_change' %}
+                        <strong class="govuk-tag govuk-tag--orange">Status Changed</strong>
+                        {% elif entry.action == 'quote_recalculation' %}
+                        <strong class="govuk-tag govuk-tag--purple">Quote Recalculated</strong>
+                        {% elif entry.action == 'payment_update' %}
+                        <strong class="govuk-tag govuk-tag--green">Payment Updated</strong>
+                        {% elif entry.action == 'approval' %}
+                        <strong class="govuk-tag govuk-tag--blue">Approved</strong>
+                        {% elif entry.action == 'rejection' %}
+                        <strong class="govuk-tag govuk-tag--red">Rejected</strong>
+                        {% endif %}
+                    </div>
+
+                    <!-- Reason -->
+                    {% if entry.reason %}
+                    <p class="govuk-body">
+                        <strong>Reason:</strong> {{ entry.reason }}
+                    </p>
+                    {% endif %}
+
+                    <!-- Quote Impact -->
+                    {% if entry.impact and entry.impact.quoteChanged %}
+                    <div class="govuk-inset-text">
+                        <h4 class="govuk-heading-s">Levy Calculation Impact</h4>
+                        <dl class="govuk-summary-list govuk-summary-list--no-border">
+                            <div class="govuk-summary-list__row">
+                                <dt class="govuk-summary-list__key">Previous total</dt>
+                                <dd class="govuk-summary-list__value">{{ entry.impact.oldQuoteTotal | formatCurrency }}
+                                </dd>
+                            </div>
+                            <div class="govuk-summary-list__row">
+                                <dt class="govuk-summary-list__key">New total</dt>
+                                <dd class="govuk-summary-list__value">{{ entry.impact.newQuoteTotal | formatCurrency }}
+                                </dd>
+                            </div>
+                            <div class="govuk-summary-list__row">
+                                <dt class="govuk-summary-list__key">Difference</dt>
+                                <dd class="govuk-summary-list__value">
+                                    {% if entry.impact.difference > 0 %}
+                                    <span style="color: #d4351c;">+{{ entry.impact.difference | formatCurrency }}</span>
+                                    {% elif entry.impact.difference < 0 %} <span style="color: #00703c;">{{
+                                        entry.impact.difference | formatCurrency }}</span>
+                                        {% else %}
+                                        <span>No change</span>
+                                        {% endif %}
+                                </dd>
+                            </div>
+                        </dl>
+                    </div>
+                    {% endif %}
+
+                    <!-- Field Changes -->
+                    {% if entry.field and entry.field != 'multiple' %}
+                    <div class="govuk-summary-list">
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">Field changed</dt>
+                            <dd class="govuk-summary-list__value">{{ entry.field | title }}</dd>
+                        </div>
+                        {% if entry.oldValue is defined and entry.oldValue != null %}
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">Previous value</dt>
+                            <dd class="govuk-summary-list__value">{{ entry.oldValue }}</dd>
+                        </div>
+                        {% endif %}
+                        {% if entry.newValue is defined and entry.newValue != null %}
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">New value</dt>
+                            <dd class="govuk-summary-list__value">{{ entry.newValue }}</dd>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Metadata -->
+                    {% if entry.metadata %}
+                    <details class="govuk-details">
+                        <summary class="govuk-details__summary">
+                            <span class="govuk-details__summary-text">
+                                Technical details
+                            </span>
+                        </summary>
+                        <div class="govuk-details__text">
+                            <dl class="govuk-summary-list govuk-summary-list--no-border">
+                                {% if entry.metadata.ipAddress %}
+                                <div class="govuk-summary-list__row">
+                                    <dt class="govuk-summary-list__key">IP Address</dt>
+                                    <dd class="govuk-summary-list__value">{{ entry.metadata.ipAddress }}</dd>
+                                </div>
+                                {% endif %}
+                                {% if entry.metadata.userAgent %}
+                                <div class="govuk-summary-list__row">
+                                    <dt class="govuk-summary-list__key">User Agent</dt>
+                                    <dd class="govuk-summary-list__value">{{ entry.metadata.userAgent }}</dd>
+                                </div>
+                                {% endif %}
+                                {% if entry.metadata.sessionId %}
+                                <div class="govuk-summary-list__row">
+                                    <dt class="govuk-summary-list__key">Session ID</dt>
+                                    <dd class="govuk-summary-list__value">{{ entry.metadata.sessionId }}</dd>
+                                </div>
+                                {% endif %}
+                            </dl>
+                        </div>
+                    </details>
+                    {% endif %}
+
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% else %}
+
+        <div class="govuk-inset-text">
+            <p class="govuk-body">
+                No audit trail entries found for this application.
+            </p>
+        </div>
+
+        {% endif %}
+
+        <!-- Actions -->
+        <div class="govuk-button-group" style="margin-top: 30px;">
+            <a href="/case-management/{{ application.id }}" class="govuk-button" data-module="govuk-button">
+                Back to application
+            </a>
+            <a href="/case-management" class="govuk-button govuk-button--secondary" data-module="govuk-button">
+                Back to case management
+            </a>
+        </div>
+
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Audit Summary</h2>
+                <dl class="govuk-summary-list govuk-summary-list--no-border">
+                    <div class="govuk-summary-list__row">
+                        <dt class="govuk-summary-list__key">Total entries</dt>
+                        <dd class="govuk-summary-list__value">{{ auditTrail.length if auditTrail else 0 }}</dd>
+                    </div>
+                    <div class="govuk-summary-list__row">
+                        <dt class="govuk-summary-list__key">Last updated</dt>
+                        <dd class="govuk-summary-list__value">{{ application.updatedAt | formatDate }}</dd>
+                    </div>
+                    <div class="govuk-summary-list__row">
+                        <dt class="govuk-summary-list__key">Created</dt>
+                        <dd class="govuk-summary-list__value">{{ application.createdAt | formatDate }}</dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained" style="margin-top: 20px;">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Audit Information</h2>
+                <p class="govuk-body-s">
+                    The audit trail records:
+                </p>
+                <ul class="govuk-list govuk-list--bullet govuk-body-s">
+                    <li>Who made each change</li>
+                    <li>When changes were made</li>
+                    <li>What was changed</li>
+                    <li>Reasons for changes</li>
+                    <li>Impact on calculations</li>
+                    <li>Technical metadata</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

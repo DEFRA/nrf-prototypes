@@ -1,0 +1,212 @@
+{% extends "layouts/main.html" %}
+
+{% set pageName="Edit Application - Case Management" %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-xl">
+            Edit Application {{ application.id }}
+        </h1>
+
+        <p class="govuk-body">
+            Update application details. Changes will be logged in the audit trail.
+        </p>
+
+        <form method="POST" action="/case-management/{{ application.id }}/edit">
+
+            <!-- Development Information -->
+            <h2 class="govuk-heading-l">Development information</h2>
+
+            <div class="govuk-form-group">
+                <label class="govuk-label" for="developmentName">
+                    Development name
+                </label>
+                <input class="govuk-input" id="developmentName" name="developmentName" type="text"
+                    value="{{ application.developmentName }}" required>
+            </div>
+
+            <div class="govuk-form-group">
+                <label class="govuk-label" for="houseCount">
+                    Number of houses
+                </label>
+                <input class="govuk-input govuk-input--width-5" id="houseCount" name="houseCount" type="number"
+                    value="{{ application.houseCount }}" min="1" max="10000" required>
+                <div class="govuk-hint">
+                    Changing the house count will recalculate the levy amount.
+                </div>
+            </div>
+
+            <!-- Application Status -->
+            <h2 class="govuk-heading-l">Application status</h2>
+
+            <div class="govuk-form-group">
+                <label class="govuk-label" for="status">
+                    Status
+                </label>
+                <select class="govuk-select" id="status" name="status" required>
+                    <option value="draft" {% if application.status=='draft' %}selected{% endif %}>Draft</option>
+                    <option value="pending_payment" {% if application.status=='pending_payment' %}selected{% endif %}>
+                        Pending Payment</option>
+                    <option value="paid" {% if application.status=='paid' %}selected{% endif %}>Paid</option>
+                    <option value="approved" {% if application.status=='approved' %}selected{% endif %}>Approved
+                    </option>
+                </select>
+            </div>
+
+            <!-- Current Quote Information -->
+            <h2 class="govuk-heading-l">Current levy calculation</h2>
+
+            {% if application.quote %}
+
+            <dl class="govuk-summary-list">
+                <div class="govuk-summary-list__row">
+                    <dt class="govuk-summary-list__key">Total levy amount</dt>
+                    <dd class="govuk-summary-list__value">
+                        <strong class="govuk-heading-m">{{ application.quote.total | formatCurrency }}</strong>
+                    </dd>
+                </div>
+            </dl>
+
+            <h3 class="govuk-heading-m">Current breakdown</h3>
+
+            <div class="govuk-table__container">
+                <table class="govuk-table">
+                    <thead class="govuk-table__head">
+                        <tr class="govuk-table__row">
+                            <th scope="col" class="govuk-table__header">EDP Type</th>
+                            <th scope="col" class="govuk-table__header">Description</th>
+                            <th scope="col" class="govuk-table__header">Rate</th>
+                            <th scope="col" class="govuk-table__header">House Count</th>
+                            <th scope="col" class="govuk-table__header">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody class="govuk-table__body">
+                        {% for item in application.quote.breakdown %}
+                        <tr class="govuk-table__row">
+                            <td class="govuk-table__cell">
+                                <strong class="govuk-tag govuk-tag--blue">{{ item.edpType }}</strong>
+                            </td>
+                            <td class="govuk-table__cell">{{ item.description }}</td>
+                            <td class="govuk-table__cell">{{ item.rate | formatCurrency }}</td>
+                            <td class="govuk-table__cell">{{ item.houseCount }}</td>
+                            <td class="govuk-table__cell">{{ item.amount | formatCurrency }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% else %}
+
+            <div class="govuk-inset-text">
+                <p class="govuk-body">
+                    No levy calculation available for this application.
+                </p>
+            </div>
+
+            {% endif %}
+
+            <!-- Reason for Change -->
+            <h2 class="govuk-heading-l">Reason for change</h2>
+
+            <div class="govuk-form-group">
+                <label class="govuk-label" for="reason">
+                    Reason for updating this application
+                </label>
+                <textarea class="govuk-textarea" id="reason" name="reason" rows="3"
+                    placeholder="Enter the reason for this change..."></textarea>
+                <div class="govuk-hint">
+                    This will be recorded in the audit trail.
+                </div>
+            </div>
+
+            <!-- Warning about quote recalculation -->
+            <div class="govuk-warning-text">
+                <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+                <strong class="govuk-warning-text__text">
+                    <span class="govuk-warning-text__assistive">Warning</span>
+                    Changing the house count will recalculate the levy amount. Any difference will be highlighted after
+                    saving.
+                </strong>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="govuk-button-group">
+                <button type="submit" class="govuk-button" data-module="govuk-button">
+                    Save changes
+                </button>
+                <a href="/case-management/{{ application.id }}" class="govuk-button govuk-button--secondary"
+                    data-module="govuk-button">
+                    Cancel
+                </a>
+            </div>
+
+        </form>
+
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Application Summary</h2>
+                <dl class="govuk-summary-list govuk-summary-list--no-border">
+                    <div class="govuk-summary-list__row">
+                        <dt class="govuk-summary-list__key">Status</dt>
+                        <dd class="govuk-summary-list__value">
+                            {% if application.status == 'pending_payment' %}
+                            <strong class="govuk-tag govuk-tag--orange">Pending Payment</strong>
+                            {% elif application.status == 'paid' %}
+                            <strong class="govuk-tag govuk-tag--green">Paid</strong>
+                            {% elif application.status == 'approved' %}
+                            <strong class="govuk-tag govuk-tag--blue">Approved</strong>
+                            {% elif application.status == 'draft' %}
+                            <strong class="govuk-tag govuk-tag--grey">Draft</strong>
+                            {% endif %}
+                        </dd>
+                    </div>
+                    <div class="govuk-summary-list__row">
+                        <dt class="govuk-summary-list__key">Houses</dt>
+                        <dd class="govuk-summary-list__value">{{ application.houseCount }}</dd>
+                    </div>
+                    <div class="govuk-summary-list__row">
+                        <dt class="govuk-summary-list__key">Total levy</dt>
+                        <dd class="govuk-summary-list__value">
+                            {% if application.quote %}
+                            {{ application.quote.total | formatCurrency }}
+                            {% else %}
+                            Not calculated
+                            {% endif %}
+                        </dd>
+                    </div>
+                    <div class="govuk-summary-list__row">
+                        <dt class="govuk-summary-list__key">EDPs applicable</dt>
+                        <dd class="govuk-summary-list__value">
+                            {{ application.applicableEDPs.length if application.applicableEDPs else 0 }}
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained" style="margin-top: 20px;">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Audit Information</h2>
+                <p class="govuk-body-s">
+                    All changes to this application will be logged in the audit trail with:
+                </p>
+                <ul class="govuk-list govuk-list--bullet govuk-body-s">
+                    <li>Who made the change</li>
+                    <li>When the change was made</li>
+                    <li>What was changed</li>
+                    <li>Reason for the change</li>
+                    <li>Impact on levy calculation</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

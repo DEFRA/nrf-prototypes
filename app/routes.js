@@ -53,6 +53,7 @@ router.get('/edp-search/print', (req, res) => {
 // Applications - Environmental Development Plan Levy Calculator
 const applicationsData = require('./data/applications.js')
 const edpData = require('./data/edp-data.js')
+const caseManagementData = require('./data/case-management.js')
 
 // Main applications dashboard
 router.get('/applications', (req, res) => {
@@ -1211,4 +1212,119 @@ router.get('/applications-2/new/payment-confirmation', (req, res) => {
     });
 });
 
+// Case Management - Natural England Staff Application Management
+// Main case management dashboard
+router.get('/case-management', (req, res) => {
+    const filters = {
+        status: req.query.status || 'all',
+        dateFrom: req.query.dateFrom || '',
+        dateTo: req.query.dateTo || '',
+        developmentName: req.query.developmentName || ''
+    };
+
+    const applications = caseManagementData.getFilteredApplications(filters);
+
+    res.render('case-management/index', {
+        applications: applications,
+        filters: filters
+    });
+});
+
+// Export applications to CSV (must come before :id route)
+router.get('/case-management/export', (req, res) => {
+    const filters = {
+        status: req.query.status || 'all',
+        dateFrom: req.query.dateFrom || '',
+        dateTo: req.query.dateTo || '',
+        developmentName: req.query.developmentName || ''
+    };
+
+    const applications = caseManagementData.getFilteredApplications(filters);
+    const csvContent = caseManagementData.exportApplicationsToCSV(applications);
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const filename = `applications-export-${timestamp}.csv`;
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(csvContent);
+});
+
+// Individual application detail view
+router.get('/case-management/:id', (req, res) => {
+    const applicationId = req.params.id;
+    const application = applicationsData.getApplicationById(applicationId);
+
+    if (!application) {
+        return res.status(404).render('error', {
+            error: 'Application not found'
+        });
+    }
+
+    res.render('case-management/[id]', {
+        application: application
+    });
+});
+
+// Edit application page
+router.get('/case-management/:id/edit', (req, res) => {
+    const applicationId = req.params.id;
+    const application = applicationsData.getApplicationById(applicationId);
+
+    if (!application) {
+        return res.status(404).render('error', {
+            error: 'Application not found'
+        });
+    }
+
+    res.render('case-management/[id]/edit', {
+        application: application
+    });
+});
+
+// Handle application update
+router.post('/case-management/:id/edit', (req, res) => {
+    const applicationId = req.params.id;
+    const updates = {
+        developmentName: req.body.developmentName,
+        houseCount: parseInt(req.body.houseCount),
+        status: req.body.status
+    };
+
+    try {
+        const updatedApplication = caseManagementData.updateApplicationWithAudit(
+            applicationId,
+            updates,
+            'staff-001', // Mock staff user ID
+            'ne_staff',
+            req.body.reason || 'Application updated by staff'
+        );
+
+        res.redirect(`/case-management/${applicationId}`);
+    } catch (error) {
+        console.error('Error updating application:', error);
+        res.status(500).render('error', {
+            error: 'Failed to update application'
+        });
+    }
+});
+
+// Audit history page
+router.get('/case-management/:id/audit', (req, res) => {
+    const applicationId = req.params.id;
+    const application = applicationsData.getApplicationById(applicationId);
+
+    if (!application) {
+        return res.status(404).render('error', {
+            error: 'Application not found'
+        });
+    }
+
+    const auditTrail = caseManagementData.getAuditTrail(applicationId);
+
+    res.render('case-management/[id]/audit', {
+        application: application,
+        auditTrail: auditTrail
+    });
+});
 

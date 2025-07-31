@@ -45,7 +45,51 @@ const mockApplications = [
             ]
         },
         paymentStatus: 'pending',
-        paymentReference: 'PAY-REF-001'
+        paymentReference: 'PAY-REF-001',
+        auditTrail: [
+            {
+                timestamp: '2024-01-15T10:30:00Z',
+                userId: 'user-001',
+                userRole: 'developer',
+                action: 'create',
+                field: 'application',
+                oldValue: null,
+                newValue: 'APP-001',
+                reason: 'Application created by developer',
+                impact: {
+                    quoteChanged: false,
+                    oldQuoteTotal: 0,
+                    newQuoteTotal: 375000,
+                    difference: 375000
+                },
+                metadata: {
+                    ipAddress: '192.168.1.100',
+                    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    sessionId: 'session-001'
+                }
+            },
+            {
+                timestamp: '2024-01-15T14:45:00Z',
+                userId: 'staff-001',
+                userRole: 'ne_staff',
+                action: 'update',
+                field: 'status',
+                oldValue: 'draft',
+                newValue: 'pending_payment',
+                reason: 'Application reviewed and ready for payment',
+                impact: {
+                    quoteChanged: false,
+                    oldQuoteTotal: 375000,
+                    newQuoteTotal: 375000,
+                    difference: 0
+                },
+                metadata: {
+                    ipAddress: '10.0.0.50',
+                    userAgent: 'Natural England Staff Portal',
+                    sessionId: 'session-002'
+                }
+            }
+        ]
     },
     {
         id: 'APP-002',
@@ -106,6 +150,50 @@ const mockApplications = [
         paymentStatus: 'completed',
         paymentReference: 'PAY-REF-002',
         wastewaterTreatmentSite: 'wwt-002',
+        auditTrail: [
+            {
+                timestamp: '2024-01-10T09:15:00Z',
+                userId: 'user-001',
+                userRole: 'developer',
+                action: 'create',
+                field: 'application',
+                oldValue: null,
+                newValue: 'APP-002',
+                reason: 'Application created by developer',
+                impact: {
+                    quoteChanged: false,
+                    oldQuoteTotal: 0,
+                    newQuoteTotal: 900000,
+                    difference: 900000
+                },
+                metadata: {
+                    ipAddress: '192.168.1.100',
+                    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    sessionId: 'session-003'
+                }
+            },
+            {
+                timestamp: '2024-01-12T16:20:00Z',
+                userId: 'staff-001',
+                userRole: 'ne_staff',
+                action: 'payment_update',
+                field: 'payment_status',
+                oldValue: 'pending',
+                newValue: 'completed',
+                reason: 'Payment received and processed',
+                impact: {
+                    quoteChanged: false,
+                    oldQuoteTotal: 900000,
+                    newQuoteTotal: 900000,
+                    difference: 0
+                },
+                metadata: {
+                    ipAddress: '10.0.0.50',
+                    userAgent: 'Natural England Staff Portal',
+                    sessionId: 'session-004'
+                }
+            }
+        ],
         pondBoundaries: {
             type: 'Polygon',
             coordinates: [[
@@ -161,7 +249,51 @@ const mockApplications = [
         },
         paymentStatus: 'completed',
         paymentReference: 'PAY-REF-003',
-        wastewaterTreatmentSite: 'wwt-003'
+        wastewaterTreatmentSite: 'wwt-003',
+        auditTrail: [
+            {
+                timestamp: '2024-01-05T11:00:00Z',
+                userId: 'user-001',
+                userRole: 'developer',
+                action: 'create',
+                field: 'application',
+                oldValue: null,
+                newValue: 'APP-003',
+                reason: 'Application created by developer',
+                impact: {
+                    quoteChanged: false,
+                    oldQuoteTotal: 0,
+                    newQuoteTotal: 112500,
+                    difference: 112500
+                },
+                metadata: {
+                    ipAddress: '192.168.1.100',
+                    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    sessionId: 'session-005'
+                }
+            },
+            {
+                timestamp: '2024-01-08T13:30:00Z',
+                userId: 'staff-002',
+                userRole: 'ne_manager',
+                action: 'approval',
+                field: 'status',
+                oldValue: 'paid',
+                newValue: 'approved',
+                reason: 'Application approved by manager',
+                impact: {
+                    quoteChanged: false,
+                    oldQuoteTotal: 112500,
+                    newQuoteTotal: 112500,
+                    difference: 0
+                },
+                metadata: {
+                    ipAddress: '10.0.0.51',
+                    userAgent: 'Natural England Staff Portal',
+                    sessionId: 'session-006'
+                }
+            }
+        ]
     }
 ];
 
@@ -173,6 +305,11 @@ function getUserApplications(userId) {
 // Helper function to get application by ID
 function getApplicationById(id) {
     return mockApplications.find(app => app.id === id);
+}
+
+// Helper function to get all applications (for staff view)
+function getAllApplications() {
+    return mockApplications;
 }
 
 // Helper function to create new application
@@ -216,6 +353,7 @@ module.exports = {
     mockApplications,
     getUserApplications,
     getApplicationById,
+    getAllApplications,
     createApplication,
     updateApplication
 }; 
