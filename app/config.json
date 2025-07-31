@@ -1,5 +1,5 @@
 {
-  "serviceName": "nrf-prototypes",
+  "serviceName": "Nature Restoration Fund User Journey Prototypes",
   "plugins": {
     "govuk-frontend": {
       "rebrand": true
