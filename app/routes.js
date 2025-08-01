@@ -1328,3 +1328,110 @@ router.get('/case-management/:id/audit', (req, res) => {
     });
 });
 
+// Helper function to check developer match
+function checkDeveloperMatch(application, developerIdentifier) {
+    // In a real implementation, this would check against actual developer data
+    // For now, we'll use a simple mock check based on application ID patterns
+
+    // Mock developer data based on application ID
+    const mockDevelopers = {
+        'APP-001': ['Riverside Developers Ltd', 'RDL001'],
+        'APP-002': ['South East Properties', 'SEP002'],
+        'APP-003': ['Hampshire Coastal Ltd', 'HCL003']
+    }
+
+    const expectedDevelopers = mockDevelopers[application.id] || []
+
+    // Check for exact match or fuzzy match
+    return expectedDevelopers.some(dev =>
+        dev.toLowerCase() === developerIdentifier.toLowerCase() ||
+        dev.toLowerCase().includes(developerIdentifier.toLowerCase()) ||
+        developerIdentifier.toLowerCase().includes(dev.toLowerCase())
+    )
+}
+
+// LPA Application Verification - Local Planning Authority Staff Application Verification
+// Main verification landing page
+router.get('/lpa-verify', (req, res) => {
+    res.render('lpa-verify/index')
+})
+
+// Handle verification form submission
+router.post('/lpa-verify', (req, res) => {
+    const applicationReference = req.body['application-reference']?.trim()
+    const developerIdentifier = req.body['developer-identifier']?.trim()
+    const errors = []
+
+    // Validation
+    if (!applicationReference) {
+        errors.push({
+            field: 'application-reference',
+            message: 'Application reference is required'
+        })
+    } else if (!/^APP-\d{3,6}$/.test(applicationReference)) {
+        errors.push({
+            field: 'application-reference',
+            message: 'Application reference must be in format APP-XXX'
+        })
+    }
+
+    if (!developerIdentifier) {
+        errors.push({
+            field: 'developer-identifier',
+            message: 'Developer name or company ID is required'
+        })
+    }
+
+    if (errors.length > 0) {
+        return res.render('lpa-verify/index', {
+            errors: errors,
+            applicationReference: applicationReference,
+            developerIdentifier: developerIdentifier
+        })
+    }
+
+    // Search for application
+    const application = applicationsData.getApplicationById(applicationReference)
+
+    if (!application) {
+        return res.redirect('/lpa-verify/error')
+    }
+
+    // Check developer identifier (fuzzy matching for names, exact for company IDs)
+    const developerMatch = checkDeveloperMatch(application, developerIdentifier)
+
+    if (!developerMatch) {
+        return res.redirect('/lpa-verify/error')
+    }
+
+    // Store verification attempt in session for audit
+    req.session.verificationAttempt = {
+        timestamp: new Date().toISOString(),
+        applicationReference: applicationReference,
+        developerIdentifier: developerIdentifier,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent')
+    }
+
+    res.redirect(`/lpa-verify/details?ref=${applicationReference}`)
+})
+
+// Application details page
+router.get('/lpa-verify/details', (req, res) => {
+    const applicationReference = req.query.ref
+    const application = applicationsData.getApplicationById(applicationReference)
+
+    if (!application) {
+        return res.redirect('/lpa-verify/error')
+    }
+
+    res.render('lpa-verify/details', {
+        application: application
+    })
+})
+
+// Error page for application not found
+router.get('/lpa-verify/error', (req, res) => {
+    res.render('lpa-verify/error')
+})
+

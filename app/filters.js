@@ -17,6 +17,12 @@ addFilter('formatCurrency', (value) => {
     }).format(value);
 });
 
+// Format number with commas
+addFilter('formatNumber', (value) => {
+    if (typeof value !== 'number') return value;
+    return new Intl.NumberFormat('en-GB').format(value);
+});
+
 // Format date
 addFilter('formatDate', (value) => {
     if (!value) return value;

@@ -29,7 +29,17 @@ const mockApplications = [
                 name: 'District Level Licensing - Thames Valley',
                 type: 'DLL',
                 rate: 2500,
-                impact: 375000
+                impact: 375000,
+                boundary: {
+                    type: 'Polygon',
+                    coordinates: [[
+                        [-0.6, 51.3],
+                        [-0.2, 51.3],
+                        [-0.2, 51.7],
+                        [-0.6, 51.7],
+                        [-0.6, 51.3]
+                    ]]
+                }
             }
         ],
         quote: {
@@ -118,14 +128,34 @@ const mockApplications = [
                 name: 'District Level Licensing - South East',
                 type: 'DLL',
                 rate: 3000,
-                impact: 600000
+                impact: 600000,
+                boundary: {
+                    type: 'Polygon',
+                    coordinates: [[
+                        [-0.1, 50.8],
+                        [0.6, 50.8],
+                        [0.6, 51.4],
+                        [-0.1, 51.4],
+                        [-0.1, 50.8]
+                    ]]
+                }
             },
             {
                 id: 'nm-001',
                 name: 'Nutrient Mitigation - Hampshire',
                 type: 'Nutrient Mitigation',
                 rate: 1500,
-                impact: 300000
+                impact: 300000,
+                boundary: {
+                    type: 'Polygon',
+                    coordinates: [[
+                        [-1.2, 50.6],
+                        [-0.4, 50.6],
+                        [-0.4, 51.4],
+                        [-1.2, 51.4],
+                        [-1.2, 50.6]
+                    ]]
+                }
             }
         ],
         quote: {
@@ -232,7 +262,17 @@ const mockApplications = [
                 name: 'Nutrient Mitigation - Hampshire',
                 type: 'Nutrient Mitigation',
                 rate: 1500,
-                impact: 112500
+                impact: 112500,
+                boundary: {
+                    type: 'Polygon',
+                    coordinates: [[
+                        [-1.2, 50.6],
+                        [-0.4, 50.6],
+                        [-0.4, 51.4],
+                        [-1.2, 51.4],
+                        [-1.2, 50.6]
+                    ]]
+                }
             }
         ],
         quote: {

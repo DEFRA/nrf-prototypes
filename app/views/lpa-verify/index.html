@@ -1,0 +1,137 @@
+{% extends "layouts/main.html" %}
+
+{% set pageName="LPA Application Verification" %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-xl">
+            Verify Environmental Levy Payment
+        </h1>
+
+        <p class="govuk-body">
+            Enter the application reference and developer details to verify that the environmental levy has been paid
+            for a development.
+        </p>
+
+        {% if errors %}
+        <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1"
+            data-module="govuk-error-summary">
+            <h2 class="govuk-error-summary__title" id="error-summary-title">
+                There is a problem
+            </h2>
+            <div class="govuk-error-summary__body">
+                <ul class="govuk-list govuk-error-summary__list">
+                    {% for error in errors %}
+                    <li>
+                        <a href="#{{ error.field }}">{{ error.message }}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+        <form method="post" action="/lpa-verify">
+
+            <div
+                class="govuk-form-group {% if errors %}{% for error in errors %}{% if error.field === 'application-reference' %}govuk-form-group--error{% endif %}{% endfor %}{% endif %}">
+                <label class="govuk-label" for="application-reference">
+                    Application reference
+                </label>
+                <div id="application-reference-hint" class="govuk-hint">
+                    Enter the application reference in format APP-XXX (e.g., APP-001)
+                </div>
+                {% if errors %}
+                {% for error in errors %}
+                {% if error.field === 'application-reference' %}
+                <p id="application-reference-error" class="govuk-error-message">
+                    <span class="govuk-visually-hidden">Error:</span> {{ error.message }}
+                </p>
+                {% endif %}
+                {% endfor %}
+                {% endif %}
+                <input
+                    class="govuk-input {% if errors %}{% for error in errors %}{% if error.field === 'application-reference' %}govuk-input--error{% endif %}{% endfor %}{% endif %}"
+                    id="application-reference" name="application-reference" type="text"
+                    value="{{ applicationReference or '' }}"
+                    aria-describedby="application-reference-hint {% if errors %}{% for error in errors %}{% if error.field === 'application-reference' %}application-reference-error{% endif %}{% endfor %}{% endif %}">
+            </div>
+
+            <div
+                class="govuk-form-group {% if errors %}{% for error in errors %}{% if error.field === 'developer-identifier' %}govuk-form-group--error{% endif %}{% endfor %}{% endif %}">
+                <label class="govuk-label" for="developer-identifier">
+                    Developer name or company ID
+                </label>
+                <div id="developer-identifier-hint" class="govuk-hint">
+                    Enter the developer's name or company registration number
+                </div>
+                {% if errors %}
+                {% for error in errors %}
+                {% if error.field === 'developer-identifier' %}
+                <p id="developer-identifier-error" class="govuk-error-message">
+                    <span class="govuk-visually-hidden">Error:</span> {{ error.message }}
+                </p>
+                {% endif %}
+                {% endfor %}
+                {% endif %}
+                <input
+                    class="govuk-input {% if errors %}{% for error in errors %}{% if error.field === 'developer-identifier' %}govuk-input--error{% endif %}{% endfor %}{% endif %}"
+                    id="developer-identifier" name="developer-identifier" type="text"
+                    value="{{ developerIdentifier or '' }}"
+                    aria-describedby="developer-identifier-hint {% if errors %}{% for error in errors %}{% if error.field === 'developer-identifier' %}developer-identifier-error{% endif %}{% endfor %}{% endif %}">
+            </div>
+
+            <div class="govuk-button-group">
+                <button type="submit" class="govuk-button" data-module="govuk-button">
+                    Verify application
+                </button>
+                <a href="/" class="govuk-button govuk-button--secondary" data-module="govuk-button">
+                    Cancel
+                </a>
+            </div>
+
+        </form>
+
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">About this service</h2>
+                <p class="govuk-body">
+                    This service allows Local Planning Authority staff to verify that developers have paid the required
+                    environmental levy before granting final planning permission.
+                </p>
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Test data</h2>
+                <p class="govuk-body">For testing purposes, you can use:</p>
+                <ul class="govuk-list govuk-list--bullet">
+                    <li><strong>APP-001</strong> with "Riverside Developers Ltd" or "RDL001"</li>
+                    <li><strong>APP-002</strong> with "South East Properties" or "SEP002"</li>
+                    <li><strong>APP-003</strong> with "Hampshire Coastal Ltd" or "HCL003"</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Need help?</h2>
+                <p class="govuk-body">If you need assistance:</p>
+                <ul class="govuk-list">
+                    <li><a href="#" class="govuk-link">Contact support</a></li>
+                    <li><a href="#" class="govuk-link">View guidance</a></li>
+                    <li><a href="#" class="govuk-link">FAQs</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

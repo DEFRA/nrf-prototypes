@@ -1,0 +1,76 @@
+{% extends "layouts/main.html" %}
+
+{% set pageName="Application Not Found" %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-xl">
+            Application not found
+        </h1>
+
+        <p class="govuk-body">
+            We could not find an application matching the details you provided.
+        </p>
+
+        <p class="govuk-body">
+            The application reference and developer details you entered could not be verified in our system.
+        </p>
+
+        <h2 class="govuk-heading-m">What to check</h2>
+        <ul class="govuk-list govuk-list--bullet">
+            <li>Make sure the application reference is correct (format: APP-XXX)</li>
+            <li>Check that the developer name or company ID is accurate</li>
+            <li>Verify that the application exists in our system</li>
+            <li>Ensure the developer details match the application records</li>
+        </ul>
+
+        <h2 class="govuk-heading-m">Common issues</h2>
+        <ul class="govuk-list govuk-list--bullet">
+            <li>Application reference may be misspelled or incomplete</li>
+            <li>Developer name may be slightly different from what's on record</li>
+            <li>Application may not have been submitted yet</li>
+            <li>Application may have been withdrawn or cancelled</li>
+        </ul>
+
+        <div class="govuk-button-group">
+            <a href="/lpa-verify" class="govuk-button" data-module="govuk-button">
+                Try again
+            </a>
+            <a href="/" class="govuk-button govuk-button--secondary" data-module="govuk-button">
+                Back to homepage
+            </a>
+        </div>
+
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Need help?</h2>
+                <p class="govuk-body">If you continue to have problems:</p>
+                <ul class="govuk-list">
+                    <li><a href="#" class="govuk-link">Contact support</a></li>
+                    <li><a href="#" class="govuk-link">View guidance</a></li>
+                    <li><a href="#" class="govuk-link">FAQs</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="govuk-card govuk-card--contained">
+            <div class="govuk-card__content">
+                <h2 class="govuk-heading-s">Example application references</h2>
+                <p class="govuk-body">Valid application references include:</p>
+                <ul class="govuk-list govuk-list--bullet">
+                    <li>APP-001</li>
+                    <li>APP-002</li>
+                    <li>APP-003</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
