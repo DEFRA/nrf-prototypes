@@ -1,5 +1,5 @@
 /**
- * Data Extractor service for Planning Data Analyzer
+ * Data Extractor service for Planning Data Analyser
  */
 
 const Logger = require('../utils/logger');

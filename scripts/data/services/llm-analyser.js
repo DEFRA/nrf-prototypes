@@ -1,5 +1,5 @@
 /**
- * LLM Analyzer service for Planning Data Analyzer
+ * LLM Analyser service for Planning Data Analyser
  */
 
 const Logger = require('../utils/logger');
@@ -7,7 +7,7 @@ const HttpClient = require('../utils/http-client');
 const { LLM_CONFIG } = require('../config');
 const OpenAI = require('openai');
 
-class LLMAnalyzer {
+class LLMAnalyser {
     // OpenAI API limits
     static BATCH_LIMITS = {
         MAX_TOKENS_PER_REQUEST: 4000, // OpenAI limit for response tokens
@@ -411,7 +411,7 @@ For development category, prioritize in this order: house_build > commercial_bui
                         model: config.model,
                         messages: [{
                             role: 'system',
-                            content: `You are a planning application analyzer. Respond with ONLY a valid JSON object.`
+                            content: `You are a planning application analyser. Respond with ONLY a valid JSON object.`
                         }, {
                             role: 'user',
                             content: `Analyze this planning application description and extract building counts and development categories.
@@ -588,4 +588,4 @@ Example: {"houseCount": 5, "commercialBuildingCount": 2, "infrastructureBuildCou
     }
 }
 
-module.exports = LLMAnalyzer;
+module.exports = LLMAnalyser;

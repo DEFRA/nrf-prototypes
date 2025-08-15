@@ -1,5 +1,5 @@
 /**
- * Configuration for Planning Data Analyzer
+ * Configuration for Planning Data Analyser
  */
 
 // Load environment variables from .env file - try local first, then parent directory
@@ -44,7 +44,7 @@ const CONFIG = {
             perMilliseconds: 1000 // Time window in milliseconds (1 second)
         },
         headers: {
-            'User-Agent': 'Planning-Data-Analyzer/1.0',
+            'User-Agent': 'Planning-Data-Analyser/1.0',
             'Accept': 'application/json',
             'Content-Type': 'application/json'
         }
