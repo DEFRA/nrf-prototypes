@@ -12,3 +12,6 @@ npm-debug.log
 .env
 migrate.log
 usage-data-config.json
+
+# Script data files
+scripts/data/data/
