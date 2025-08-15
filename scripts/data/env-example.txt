@@ -1,0 +1,66 @@
+# LLM Configuration - Flexible setup that defaults to OpenAI but uses LMStudio when configured
+# Copy this content to a .env file and update the values
+
+# =============================================================================
+# OPENAI CONFIGURATION (Default)
+# =============================================================================
+# OpenAI API Key (required for OpenAI usage)
+OPENAI_API_KEY=your-openai-api-key-here
+
+# =============================================================================
+# LMSTUDIO CONFIGURATION (Optional - will override OpenAI if configured)
+# =============================================================================
+# Local LMStudio API URL (will use LMStudio if this is set)
+LM_API_URL=http://localhost:1234/v1/chat/completions
+
+# LMStudio API Key (usually not required, can be any value)
+LM_API_KEY=lm-studio
+
+# Local model name (the name of your loaded model in LMStudio)
+LM_MODEL=local-model
+
+# Fallback model name (if function calling fails)
+LM_FALLBACK_MODEL=local-model
+
+# Maximum tokens for responses
+LM_MAX_TOKENS=500
+
+# Timeout for LLM requests (in milliseconds)
+LM_TIMEOUT=30000
+
+# =============================================================================
+# FORCE PROVIDER (Optional)
+# =============================================================================
+# Force use of specific provider: 'openai', 'lmstudio', or leave unset for auto-detection
+# FORCE_LLM_PROVIDER=openai
+
+# =============================================================================
+# FUNCTION CALLING (Optional)
+# =============================================================================
+# Skip function calling for models that don't support it (set to 'true' to disable)
+# SKIP_FUNCTION_CALLING=true
+
+# =============================================================================
+# USAGE EXAMPLES
+# =============================================================================
+# 
+# 1. Use OpenAI only (default):
+#    - Set OPENAI_API_KEY
+#    - Leave LM_API_URL unset
+#
+# 2. Use LMStudio only:
+#    - Set LM_API_URL
+#    - Leave OPENAI_API_KEY unset
+#
+# 3. Use LMStudio with OpenAI fallback:
+#    - Set both LM_API_URL and OPENAI_API_KEY
+#    - LMStudio will be used by default
+#
+# 4. Force OpenAI even if LMStudio is configured:
+#    - Set FORCE_LLM_PROVIDER=openai
+#
+# 5. Force LMStudio even if OpenAI is configured:
+#    - Set FORCE_LLM_PROVIDER=lmstudio
+#
+# 6. Disable function calling for models that don't support it:
+#    - Set SKIP_FUNCTION_CALLING=true 

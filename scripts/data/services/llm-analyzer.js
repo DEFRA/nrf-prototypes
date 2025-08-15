@@ -14,9 +14,12 @@ class LLMAnalyzer {
         MAX_PROMPT_TOKENS: 128000, // GPT-4 context window
         MAX_BATCH_SIZE: 50, // Conservative batch size to avoid token limits
         MAX_DESCRIPTION_LENGTH: 500, // Max characters per description to keep within limits
-        CONCURRENCY_LIMIT: 20, // Parallel requests per chunk (increased from 5)
-        RATE_LIMIT_DELAY: 50 // Delay between batches in ms (reduced from 100)
+        CONCURRENCY_LIMIT: 5, // Reduced for LMStudio compatibility
+        RATE_LIMIT_DELAY: 100 // Increased delay for LMStudio
     };
+
+    // Track if function calling is not supported by the current model
+    static functionCallingNotSupported = false;
 
     static async analyzePlanningDescription(description) {
         Logger.info('Analyzing planning description with LLM...');
@@ -49,8 +52,8 @@ class LLMAnalyzer {
     }
 
     static async callLLMAPIParallel(descriptions) {
-        if (!LLM_CONFIG.apiKey || LLM_CONFIG.apiKey === 'mock-key') {
-            Logger.warn('OpenAI API key not configured, falling back to mock analysis');
+        if (!this.isLLMConfigured()) {
+            Logger.info('Using enhanced mock analysis for planning data extraction');
             return descriptions.map(desc => this.mockLLMAnalysis(desc));
         }
 
@@ -107,22 +110,54 @@ class LLMAnalyzer {
         return results;
     }
 
+    static isLLMConfigured() {
+        const provider = LLM_CONFIG.getActiveProvider();
+        if (provider === 'mock') {
+            Logger.debug('Mock analysis mode: Using enhanced pattern matching for planning data extraction');
+        }
+        return provider !== 'mock';
+    }
+
     static async callLLMAPI(description) {
-        if (!LLM_CONFIG.apiKey || LLM_CONFIG.apiKey === 'mock-key') {
-            Logger.warn('OpenAI API key not configured, falling back to mock analysis');
+        if (!this.isLLMConfigured()) {
+            Logger.info('Using enhanced mock analysis for planning data extraction');
             return this.mockLLMAnalysis(description);
         }
 
         try {
-            // Initialize OpenAI client
-            const openai = new OpenAI({
-                apiKey: LLM_CONFIG.apiKey
-            });
+            const config = LLM_CONFIG.getCurrentConfig();
+            Logger.debug(`Using ${config.provider} with model: ${config.model}`);
 
-            // Try function calling first
+            const clientConfig = {
+                apiKey: config.apiKey,
+                baseURL: config.baseURL,
+                timeout: config.timeout,
+                ...(config.provider === 'lmstudio' && {
+                    maxRetries: 0,
+                    httpAgent: new (require('https').Agent)({
+                        keepAlive: true,
+                        timeout: config.timeout
+                    })
+                })
+            };
+
+            const openai = new OpenAI(clientConfig);
+
+            // Check if we've already determined this model doesn't support function calling
+            if (this.functionCallingNotSupported && !LLM_CONFIG.skipFunctionCalling) {
+                Logger.debug('Function calling previously failed for this model, skipping to prompt-based approach');
+                throw new Error('Function calling not supported by this model');
+            }
+
             try {
+                if (LLM_CONFIG.skipFunctionCalling) {
+                    Logger.info('Skipping function calling as configured');
+                    throw new Error('Function calling disabled by configuration');
+                }
+
+                Logger.debug('Attempting function calling...');
                 const response = await openai.chat.completions.create({
-                    model: LLM_CONFIG.model,
+                    model: config.model,
                     messages: [{
                         role: 'user',
                         content: `Analyze this planning application description and extract building counts and development categories.
@@ -137,148 +172,318 @@ Extract the following information:
 
 For development category, prioritize in this order: house_build > commercial_build > infrastructure_build > extension > renovation > other`
                     }],
-                    functions: [{
-                        name: "analyze_planning_application",
-                        description: "Analyze a planning application description and extract building counts and development category",
-                        parameters: {
-                            type: "object",
-                            properties: {
-                                houseCount: {
-                                    type: "number",
-                                    description: "Number of houses/dwellings mentioned (0 if none found)"
+                    tools: [{
+                        type: "function",
+                        function: {
+                            name: "analyze_planning_application",
+                            description: "Analyze a planning application description and extract building counts and development category",
+                            parameters: {
+                                type: "object",
+                                properties: {
+                                    houseCount: {
+                                        type: "number",
+                                        description: "Number of houses/dwellings mentioned (0 if none found)"
+                                    },
+                                    commercialBuildingCount: {
+                                        type: "number",
+                                        description: "Number of commercial buildings/units mentioned (0 if none found)"
+                                    },
+                                    infrastructureBuildCount: {
+                                        type: "number",
+                                        description: "Number of infrastructure projects mentioned (0 if none found). Note, this category could include terms similar to infrastructure, pipeworks, substation, etc, so do your best but don't over-categorise."
+                                    },
+                                    developmentCategory: {
+                                        type: "string",
+                                        enum: ["house_build", "commercial_build", "infrastructure_build", "extension", "renovation", "other"],
+                                        description: "Primary development category. Prioritize: house_build > commercial_build > infrastructure_build > extension > renovation > other"
+                                    }
                                 },
-                                commercialBuildingCount: {
-                                    type: "number",
-                                    description: "Number of commercial buildings/units mentioned (0 if none found)"
-                                },
-                                infrastructureBuildCount: {
-                                    type: "number",
-                                    description: "Number of infrastructure projects mentioned (0 if none found). Note, this category could include terms similar to infrastructure, pipeworks, substation, etc, so do your best but don't over-categorise."
-                                },
-                                developmentCategory: {
-                                    type: "string",
-                                    enum: ["house_build", "commercial_build", "infrastructure_build", "extension", "renovation", "other"],
-                                    description: "Primary development category. Prioritize: house_build > commercial_build > infrastructure_build > extension > renovation > other"
-                                }
-                            },
-                            required: ["houseCount", "commercialBuildingCount", "infrastructureBuildCount", "developmentCategory"]
+                                required: ["houseCount", "commercialBuildingCount", "infrastructureBuildCount", "developmentCategory"]
+                            }
                         }
                     }],
-                    function_call: { name: "analyze_planning_application" },
-                    max_tokens: LLM_CONFIG.maxTokens,
+                    tool_choice: "required",
+                    max_tokens: config.maxTokens,
                     temperature: 0.0
                 });
 
                 if (!response.choices || !response.choices[0] || !response.choices[0].message) {
-                    throw new Error('Invalid response format from OpenAI API');
+                    throw new Error('Invalid response format from LLM API');
                 }
 
                 const message = response.choices[0].message;
 
-                // Check if function was called
-                if (!message.function_call) {
-                    Logger.warn('No function call in response, trying fallback model');
+                // Check for tool_calls first (newer format), then function_call (older format)
+                if (!message.tool_calls && !message.function_call) {
+                    // Check if this is the vLLM bug where function calls are returned as plain text
+                    if (message.content && (message.content.includes('"name"') && message.content.includes('"parameters"')) ||
+                        message.content.includes('functions.analyze_planning_application')) {
+                        Logger.warn('Detected vLLM function calling bug - function call returned as plain text');
+                        try {
+                            // Try to parse the function call from the content - multiple formats
+                            let functionCallMatch = null;
+
+                            // Format 1: Standard JSON array format
+                            functionCallMatch = message.content.match(/\[\s*\{\s*"name"\s*:\s*"([^"]+)"\s*,\s*"parameters"\s*:\s*(\{[^}]*\})\s*\}\s*\]/);
+
+                            // Format 2: vLLM specific format with analysis in content
+                            if (!functionCallMatch && message.content.includes('functions.analyze_planning_application')) {
+                                const analysisMatch = message.content.match(/analysis:\s*\{([^}]+)\}/);
+                                if (analysisMatch) {
+                                    const analysisStr = '{' + analysisMatch[1] + '}';
+                                    try {
+                                        // Convert single quotes to double quotes for JSON parsing
+                                        const jsonStr = analysisStr.replace(/'/g, '"');
+                                        const analysis = JSON.parse(jsonStr);
+                                        Logger.debug('Successfully parsed analysis from vLLM content:', analysis);
+
+                                        const validatedAnalysis = {
+                                            houseCount: analysis.houseCount || 0,
+                                            commercialBuildingCount: analysis.commercialBuildingCount || 0,
+                                            infrastructureBuildCount: analysis.infrastructureBuildCount || 0,
+                                            developmentCategory: typeof analysis.developmentCategory === 'string' ? analysis.developmentCategory : 'other'
+                                        };
+
+                                        const validCategories = ["house_build", "commercial_build", "infrastructure_build", "extension", "renovation", "other"];
+                                        if (!validCategories.includes(validatedAnalysis.developmentCategory)) {
+                                            validatedAnalysis.developmentCategory = 'other';
+                                        }
+
+                                        Logger.debug('Successfully parsed analysis from vLLM content:', validatedAnalysis);
+                                        return validatedAnalysis;
+                                    } catch (parseError) {
+                                        Logger.warn('Failed to parse analysis from vLLM content:', parseError.message);
+                                        Logger.debug('Raw analysis string:', analysisStr);
+                                    }
+                                }
+                            }
+
+                            if (functionCallMatch) {
+                                const functionName = functionCallMatch[1];
+                                const parameters = JSON.parse(functionCallMatch[2]);
+
+                                Logger.debug('Successfully parsed function call from content:', { functionName, parameters });
+
+                                // Validate the parameters
+                                if (!parameters || typeof parameters !== 'object') {
+                                    throw new Error('Invalid parameters structure');
+                                }
+
+                                const validatedAnalysis = {
+                                    houseCount: parameters.houseCount || 0,
+                                    commercialBuildingCount: parameters.commercialBuildingCount || 0,
+                                    infrastructureBuildCount: parameters.infrastructureBuildCount || 0,
+                                    developmentCategory: typeof parameters.developmentCategory === 'string' ? parameters.developmentCategory : 'other'
+                                };
+
+                                const validCategories = ["house_build", "commercial_build", "infrastructure_build", "extension", "renovation", "other"];
+                                if (!validCategories.includes(validatedAnalysis.developmentCategory)) {
+                                    validatedAnalysis.developmentCategory = 'other';
+                                }
+
+                                Logger.debug('Successfully parsed analysis from vLLM content:', validatedAnalysis);
+                                return validatedAnalysis;
+                            }
+                        } catch (parseError) {
+                            Logger.warn('Failed to parse function call from vLLM content:', parseError.message);
+                            Logger.debug('Raw content:', message.content);
+                        }
+                    }
+
+                    Logger.warn('No function call in response, trying prompt-based approach');
                     throw new Error('Function calling not supported');
                 }
 
-                // Parse the function arguments
-                let analysis;
-                try {
-                    analysis = JSON.parse(message.function_call.arguments);
-                } catch (parseError) {
-                    Logger.error('Failed to parse function arguments:', parseError);
-                    return this.mockLLMAnalysis(description);
+                // Handle tool_calls (newer format)
+                if (message.tool_calls && message.tool_calls.length > 0) {
+                    const toolCall = message.tool_calls[0];
+                    if (toolCall.function && toolCall.function.arguments) {
+                        let analysis;
+                        try {
+                            analysis = JSON.parse(toolCall.function.arguments);
+                        } catch (parseError) {
+                            Logger.error('Failed to parse tool call arguments:', parseError);
+                            return this.mockLLMAnalysis(description);
+                        }
+
+                        Logger.debug('Tool call arguments:', toolCall.function.arguments);
+                        Logger.debug('Parsed analysis:', analysis);
+
+                        if (!analysis || typeof analysis !== 'object') {
+                            Logger.error('Invalid analysis response: not an object', analysis);
+                            return this.mockLLMAnalysis(description);
+                        }
+
+                        if (typeof analysis.houseCount !== 'number') {
+                            if (typeof analysis.houseCount === 'string') {
+                                analysis.houseCount = parseInt(analysis.houseCount) || 0;
+                            } else {
+                                Logger.warn(`Invalid houseCount type: ${typeof analysis.houseCount}, value: ${analysis.houseCount}`);
+                                analysis.houseCount = 0;
+                            }
+                        }
+
+                        if (typeof analysis.commercialBuildingCount !== 'number') {
+                            if (typeof analysis.commercialBuildingCount === 'string') {
+                                analysis.commercialBuildingCount = parseInt(analysis.commercialBuildingCount) || 0;
+                            } else {
+                                Logger.warn(`Invalid commercialBuildingCount type: ${typeof analysis.commercialBuildingCount}, value: ${analysis.commercialBuildingCount}`);
+                                analysis.commercialBuildingCount = 0;
+                            }
+                        }
+
+                        if (typeof analysis.infrastructureBuildCount !== 'number') {
+                            if (typeof analysis.infrastructureBuildCount === 'string') {
+                                analysis.infrastructureBuildCount = parseInt(analysis.infrastructureBuildCount) || 0;
+                            } else {
+                                Logger.warn(`Invalid infrastructureBuildCount type: ${typeof analysis.infrastructureBuildCount}, value: ${analysis.infrastructureBuildCount}`);
+                                analysis.infrastructureBuildCount = 0;
+                            }
+                        }
+
+                        if (typeof analysis.developmentCategory !== 'string') {
+                            Logger.warn(`Invalid developmentCategory type: ${typeof analysis.developmentCategory}, value: ${analysis.developmentCategory}`);
+                            analysis.developmentCategory = 'other';
+                        }
+
+                        return {
+                            houseCount: analysis.houseCount || 0,
+                            commercialBuildingCount: analysis.commercialBuildingCount || 0,
+                            infrastructureBuildCount: analysis.infrastructureBuildCount || 0,
+                            developmentCategory: analysis.developmentCategory || 'other'
+                        };
+                    }
                 }
 
-                // Log the response for debugging
-                Logger.debug('Function call arguments:', message.function_call.arguments);
-                Logger.debug('Parsed analysis:', analysis);
+                // Handle function_call (older format)
+                if (message.function_call) {
+                    let analysis;
+                    try {
+                        analysis = JSON.parse(message.function_call.arguments);
+                    } catch (parseError) {
+                        Logger.error('Failed to parse function arguments:', parseError);
+                        return this.mockLLMAnalysis(description);
+                    }
 
-                // Validate the response structure with better error handling
-                if (!analysis || typeof analysis !== 'object') {
-                    Logger.error('Invalid analysis response: not an object', analysis);
-                    return this.mockLLMAnalysis(description);
+                    Logger.debug('Function call arguments:', message.function_call.arguments);
+                    Logger.debug('Parsed analysis:', analysis);
+
+                    if (!analysis || typeof analysis !== 'object') {
+                        Logger.error('Invalid analysis response: not an object', analysis);
+                        return this.mockLLMAnalysis(description);
+                    }
+
+                    if (typeof analysis.houseCount !== 'number') {
+                        Logger.warn(`Invalid houseCount type: ${typeof analysis.houseCount}, value: ${analysis.houseCount}`);
+                        analysis.houseCount = typeof analysis.houseCount === 'string' ? parseInt(analysis.houseCount) || 0 : 0;
+                    }
+
+                    if (typeof analysis.commercialBuildingCount !== 'number') {
+                        Logger.warn(`Invalid commercialBuildingCount type: ${typeof analysis.commercialBuildingCount}, value: ${analysis.commercialBuildingCount}`);
+                        analysis.commercialBuildingCount = typeof analysis.commercialBuildingCount === 'string' ? parseInt(analysis.commercialBuildingCount) || 0 : 0;
+                    }
+
+                    if (typeof analysis.infrastructureBuildCount !== 'number') {
+                        Logger.warn(`Invalid infrastructureBuildCount type: ${typeof analysis.infrastructureBuildCount}, value: ${analysis.infrastructureBuildCount}`);
+                        analysis.infrastructureBuildCount = typeof analysis.infrastructureBuildCount === 'string' ? parseInt(analysis.infrastructureBuildCount) || 0 : 0;
+                    }
+
+                    if (typeof analysis.developmentCategory !== 'string') {
+                        Logger.warn(`Invalid developmentCategory type: ${typeof analysis.developmentCategory}, value: ${analysis.developmentCategory}`);
+                        analysis.developmentCategory = 'other';
+                    }
+
+                    return {
+                        houseCount: analysis.houseCount || 0,
+                        commercialBuildingCount: analysis.commercialBuildingCount || 0,
+                        infrastructureBuildCount: analysis.infrastructureBuildCount || 0,
+                        developmentCategory: analysis.developmentCategory || 'other'
+                    };
                 }
-
-                // Function calling guarantees the structure, but we'll do basic validation
-                if (typeof analysis.houseCount !== 'number') {
-                    Logger.warn(`Invalid houseCount type: ${typeof analysis.houseCount}, value: ${analysis.houseCount}`);
-                    analysis.houseCount = 0;
-                }
-
-                if (typeof analysis.commercialBuildingCount !== 'number') {
-                    Logger.warn(`Invalid commercialBuildingCount type: ${typeof analysis.commercialBuildingCount}, value: ${analysis.commercialBuildingCount}`);
-                    analysis.commercialBuildingCount = 0;
-                }
-
-                if (typeof analysis.infrastructureBuildCount !== 'number') {
-                    Logger.warn(`Invalid infrastructureBuildCount type: ${typeof analysis.infrastructureBuildCount}, value: ${analysis.infrastructureBuildCount}`);
-                    analysis.infrastructureBuildCount = 0;
-                }
-
-                if (typeof analysis.developmentCategory !== 'string') {
-                    Logger.warn(`Invalid developmentCategory type: ${typeof analysis.developmentCategory}, value: ${analysis.developmentCategory}`);
-                    analysis.developmentCategory = 'other';
-                }
-
-                return {
-                    houseCount: analysis.houseCount || 0,
-                    commercialBuildingCount: analysis.commercialBuildingCount || 0,
-                    infrastructureBuildCount: analysis.infrastructureBuildCount || 0,
-                    developmentCategory: analysis.developmentCategory || 'other'
-                };
 
             } catch (functionError) {
-                // If function calling fails, try with fallback model using prompt-based approach
-                Logger.warn(`Function calling failed, trying fallback model ${LLM_CONFIG.fallbackModel}`);
+                // Mark that function calling is not supported for this model
+                this.functionCallingNotSupported = true;
+                Logger.warn(`Function calling failed, trying prompt-based approach with ${config.model}`);
 
-                const fallbackResponse = await openai.chat.completions.create({
-                    model: LLM_CONFIG.fallbackModel,
-                    messages: [{
-                        role: 'user',
-                        content: `Analyze this planning application description and extract building counts and development categories.
+                try {
+                    const promptResponse = await openai.chat.completions.create({
+                        model: config.model,
+                        messages: [{
+                            role: 'system',
+                            content: `You are a planning application analyzer. Respond with ONLY a valid JSON object.`
+                        }, {
+                            role: 'user',
+                            content: `Analyze this planning application description and extract building counts and development categories.
 
 Description: ${description}
 
-You must respond with a JSON object that has exactly these fields:
-- houseCount: a number (0 if no houses/dwellings mentioned)
-- commercialBuildingCount: a number (0 if no commercial buildings/units mentioned)
-- infrastructureBuildCount: a number (0 if no infrastructure mentioned)
-- developmentCategory: a string (one of: "house_build", "commercial_build", "infrastructure_build", "extension", "renovation", "other")
+Respond with a JSON object containing:
+- houseCount: number of houses/dwellings (0 if none)
+- commercialBuildingCount: number of commercial buildings/units (0 if none)
+- infrastructureBuildCount: number of infrastructure projects (0 if none)
+- developmentCategory: one of ["house_build", "commercial_build", "infrastructure_build", "extension", "renovation", "other"]
 
-Respond with ONLY the JSON object, no other text.`
-                    }],
-                    max_tokens: LLM_CONFIG.maxTokens,
-                    temperature: 0.0
-                });
+Example: {"houseCount": 5, "commercialBuildingCount": 2, "infrastructureBuildCount": 1, "developmentCategory": "house_build"}`
+                        }],
+                        max_tokens: config.maxTokens,
+                        temperature: 0.0
+                    });
 
-                if (!fallbackResponse.choices || !fallbackResponse.choices[0] || !fallbackResponse.choices[0].message) {
-                    throw new Error('Invalid response format from OpenAI API');
-                }
+                    if (!promptResponse.choices || !promptResponse.choices[0] || !promptResponse.choices[0].message) {
+                        throw new Error('Invalid response format from LLM API');
+                    }
 
-                const content = fallbackResponse.choices[0].message.content;
+                    const content = promptResponse.choices[0].message.content;
 
-                // Try to parse JSON from the response
-                try {
-                    const analysis = JSON.parse(content);
+                    try {
+                        let cleanContent = content.trim();
+                        const jsonMatch = cleanContent.match(/\{.*\}/s);
+                        if (jsonMatch) {
+                            cleanContent = jsonMatch[0];
+                        }
 
-                    // Basic validation for fallback
-                    return {
-                        houseCount: typeof analysis.houseCount === 'number' ? analysis.houseCount : 0,
-                        commercialBuildingCount: typeof analysis.commercialBuildingCount === 'number' ? analysis.commercialBuildingCount : 0,
-                        infrastructureBuildCount: typeof analysis.infrastructureBuildCount === 'number' ? analysis.infrastructureBuildCount : 0,
-                        developmentCategory: typeof analysis.developmentCategory === 'string' ? analysis.developmentCategory : 'other'
-                    };
-                } catch (parseError) {
-                    Logger.warn('Failed to parse JSON response, using mock analysis');
+                        const analysis = JSON.parse(cleanContent);
+
+                        if (!analysis || typeof analysis !== 'object') {
+                            throw new Error('Response is not a valid JSON object');
+                        }
+
+                        const validatedAnalysis = {
+                            houseCount: analysis.houseCount || 0,
+                            commercialBuildingCount: analysis.commercialBuildingCount || 0,
+                            infrastructureBuildCount: analysis.infrastructureBuildCount || 0,
+                            developmentCategory: typeof analysis.developmentCategory === 'string' ? analysis.developmentCategory : 'other'
+                        };
+
+                        const validCategories = ["house_build", "commercial_build", "infrastructure_build", "extension", "renovation", "other"];
+                        if (!validCategories.includes(validatedAnalysis.developmentCategory)) {
+                            validatedAnalysis.developmentCategory = 'other';
+                        }
+
+                        Logger.debug('Successfully parsed JSON response:', validatedAnalysis);
+                        return validatedAnalysis;
+
+                    } catch (parseError) {
+                        Logger.warn('Failed to parse JSON response from prompt-based approach:', parseError.message);
+                        Logger.debug('Raw response content:', content);
+                        return this.mockLLMAnalysis(description);
+                    }
+
+                } catch (promptError) {
+                    Logger.warn(`Prompt-based approach failed with ${config.model}:`, promptError.message);
+                    if (promptError.response) {
+                        Logger.error(`API Error Status: ${promptError.response.status}`);
+                        Logger.error(`API Error Data:`, promptError.response.data);
+                    }
                     return this.mockLLMAnalysis(description);
                 }
+
             }
 
         } catch (error) {
-            Logger.error('OpenAI API call failed', error);
+            Logger.error('LLM API call failed', error);
 
-            // Handle specific OpenAI errors
             if (error.status === 400) {
                 Logger.error('Bad Request - likely invalid request format or content');
             } else if (error.status === 401) {
@@ -286,7 +491,11 @@ Respond with ONLY the JSON object, no other text.`
             } else if (error.status === 429) {
                 Logger.error('Rate limit exceeded - try again later');
             } else if (error.status === 500) {
-                Logger.error('OpenAI server error - try again later');
+                Logger.error('Server error - try again later');
+            } else if (error.code === 'ECONNREFUSED') {
+                Logger.error('Connection refused - check if LMStudio is running on the configured port');
+            } else if (error.code === 'ENOTFOUND') {
+                Logger.error('Host not found - check the API URL configuration');
             }
 
             Logger.warn('Falling back to mock analysis');
@@ -295,7 +504,7 @@ Respond with ONLY the JSON object, no other text.`
     }
 
     static mockLLMAnalysis(description) {
-        // Mock analysis logic - fallback when API is not available
+        // Enhanced mock analysis logic - more sophisticated fallback when API is not available
         const lowerDesc = description.toLowerCase();
 
         let houseCount = 0;
@@ -303,34 +512,70 @@ Respond with ONLY the JSON object, no other text.`
         let infrastructureBuildCount = 0;
         let developmentCategory = 'other';
 
-        // Extract house count
-        const houseMatches = lowerDesc.match(/(\d+)\s*(houses?|dwellings?|units?|homes?)/);
-        if (houseMatches) {
-            houseCount = parseInt(houseMatches[1]);
+        // Enhanced house count extraction
+        const housePatterns = [
+            /(\d+)\s*(houses?|dwellings?|units?|homes?|residential)/,
+            /(\d+)\s*(new|additional|proposed)\s*(houses?|dwellings?|units?|homes?)/,
+            /construction\s*of\s*(\d+)\s*(houses?|dwellings?|units?|homes?)/,
+            /(\d+)\s*(bedroom|bed)\s*(houses?|dwellings?|units?|homes?)/
+        ];
+
+        for (const pattern of housePatterns) {
+            const match = lowerDesc.match(pattern);
+            if (match) {
+                houseCount = parseInt(match[1]);
+                break;
+            }
         }
 
-        // Extract commercial building count
-        const commercialMatches = lowerDesc.match(/(\d+)\s*(commercial|office|retail|shop|store|business)/);
-        if (commercialMatches) {
-            commercialBuildingCount = parseInt(commercialMatches[1]);
+        // Enhanced commercial building count extraction
+        const commercialPatterns = [
+            /(\d+)\s*(commercial|office|retail|shop|store|business|industrial)/,
+            /(\d+)\s*(new|additional|proposed)\s*(commercial|office|retail|shop|store|business)/,
+            /construction\s*of\s*(\d+)\s*(commercial|office|retail|shop|store|business)/,
+            /(\d+)\s*(commercial|office|retail)\s*(units?|buildings?|spaces?)/
+        ];
+
+        for (const pattern of commercialPatterns) {
+            const match = lowerDesc.match(pattern);
+            if (match) {
+                commercialBuildingCount = parseInt(match[1]);
+                break;
+            }
         }
 
-        // Extract infrastructure count
-        const infrastructureMatches = lowerDesc.match(/(\d+)\s*(infrastructure|road|bridge|tunnel|station|facility)/);
-        if (infrastructureMatches) {
-            infrastructureBuildCount = parseInt(infrastructureMatches[1]);
+        // Enhanced infrastructure count extraction
+        const infrastructurePatterns = [
+            /(\d+)\s*(infrastructure|road|bridge|tunnel|station|facility|substation)/,
+            /(\d+)\s*(new|additional|proposed)\s*(infrastructure|road|bridge|tunnel|station|facility)/,
+            /construction\s*of\s*(\d+)\s*(infrastructure|road|bridge|tunnel|station|facility)/,
+            /(\d+)\s*(infrastructure|road|bridge)\s*(projects?|facilities?|structures?)/
+        ];
+
+        for (const pattern of infrastructurePatterns) {
+            const match = lowerDesc.match(pattern);
+            if (match) {
+                infrastructureBuildCount = parseInt(match[1]);
+                break;
+            }
         }
 
-        // Determine development category
-        if (lowerDesc.includes('house') || lowerDesc.includes('dwelling') || lowerDesc.includes('residential')) {
+        // Enhanced development category determination with priority
+        if (lowerDesc.includes('house') || lowerDesc.includes('dwelling') || lowerDesc.includes('residential') ||
+            lowerDesc.includes('home') || lowerDesc.includes('housing') || houseCount > 0) {
             developmentCategory = 'house_build';
-        } else if (lowerDesc.includes('commercial') || lowerDesc.includes('office') || lowerDesc.includes('retail')) {
+        } else if (lowerDesc.includes('commercial') || lowerDesc.includes('office') || lowerDesc.includes('retail') ||
+            lowerDesc.includes('shop') || lowerDesc.includes('store') || lowerDesc.includes('business') ||
+            lowerDesc.includes('industrial') || commercialBuildingCount > 0) {
             developmentCategory = 'commercial_build';
-        } else if (lowerDesc.includes('infrastructure') || lowerDesc.includes('road') || lowerDesc.includes('bridge')) {
+        } else if (lowerDesc.includes('infrastructure') || lowerDesc.includes('road') || lowerDesc.includes('bridge') ||
+            lowerDesc.includes('tunnel') || lowerDesc.includes('station') || lowerDesc.includes('facility') ||
+            lowerDesc.includes('substation') || lowerDesc.includes('pipework') || infrastructureBuildCount > 0) {
             developmentCategory = 'infrastructure_build';
-        } else if (lowerDesc.includes('extension') || lowerDesc.includes('addition')) {
+        } else if (lowerDesc.includes('extension') || lowerDesc.includes('addition') || lowerDesc.includes('expand')) {
             developmentCategory = 'extension';
-        } else if (lowerDesc.includes('renovation') || lowerDesc.includes('refurbishment')) {
+        } else if (lowerDesc.includes('renovation') || lowerDesc.includes('refurbishment') || lowerDesc.includes('refurb') ||
+            lowerDesc.includes('upgrade') || lowerDesc.includes('modernization')) {
             developmentCategory = 'renovation';
         }
 
@@ -343,4 +588,4 @@ Respond with ONLY the JSON object, no other text.`
     }
 }
 
-module.exports = LLMAnalyzer; 
+module.exports = LLMAnalyzer;
