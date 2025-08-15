@@ -1,10 +1,12 @@
 /**
- * Statistical Analyzer service for Planning Data Analyzer
+ * Statistical Analyser service for Planning Data Analyser
  */
 
 const Logger = require('../utils/logger');
+const fs = require('fs');
+const path = require('path');
 
-class StatisticalAnalyzer {
+class StatisticalAnalyser {
     static analyzePlanningData(enhancedApplications) {
         Logger.info('Starting statistical analysis...');
 
@@ -142,65 +144,174 @@ class StatisticalAnalyzer {
     }
 
     static analyzeHouseCountDistribution(applications) {
-        const ranges = [
-            { name: '1-5', min: 1, max: 5 },
-            { name: '5-10', min: 5, max: 10 },
-            { name: '10-20', min: 10, max: 20 },
-            { name: '20-50', min: 20, max: 50 },
-            { name: '50-100', min: 50, max: 100 },
-            { name: '100-200', min: 100, max: 200 },
-            { name: '200-500', min: 200, max: 500 },
-            { name: '500+', min: 500, max: Infinity }
-        ];
+        const distribution = {
+            '1-5': 0, '5-10': 0, '10-20': 0, '20-50': 0,
+            '50-100': 0, '100-200': 0, '200-500': 0, '500+': 0
+        };
 
-        const distribution = {};
-        ranges.forEach(range => {
-            distribution[range.name] = applications.filter(app =>
-                app.houseCount >= range.min && app.houseCount < range.max
-            ).length;
+        applications.forEach(app => {
+            const count = app.houseCount || 0;
+            if (count === 0) return;
+
+            if (count <= 5) distribution['1-5']++;
+            else if (count <= 10) distribution['5-10']++;
+            else if (count <= 20) distribution['10-20']++;
+            else if (count <= 50) distribution['20-50']++;
+            else if (count <= 100) distribution['50-100']++;
+            else if (count <= 200) distribution['100-200']++;
+            else if (count <= 500) distribution['200-500']++;
+            else distribution['500+']++;
         });
 
         return distribution;
     }
 
     static analyzeCommercialCountDistribution(applications) {
-        const ranges = [
-            { name: '1-5', min: 1, max: 5 },
-            { name: '5-10', min: 5, max: 10 },
-            { name: '10-20', min: 10, max: 20 },
-            { name: '20-50', min: 20, max: 50 },
-            { name: '50-100', min: 50, max: 100 },
-            { name: '100+', min: 100, max: Infinity }
-        ];
+        const distribution = {
+            '1-5': 0, '5-10': 0, '10-20': 0, '20-50': 0,
+            '50-100': 0, '100+': 0
+        };
 
-        const distribution = {};
-        ranges.forEach(range => {
-            distribution[range.name] = applications.filter(app =>
-                app.commercialBuildingCount >= range.min && app.commercialBuildingCount < range.max
-            ).length;
+        applications.forEach(app => {
+            const count = app.commercialBuildingCount || 0;
+            if (count === 0) return;
+
+            if (count <= 5) distribution['1-5']++;
+            else if (count <= 10) distribution['5-10']++;
+            else if (count <= 20) distribution['10-20']++;
+            else if (count <= 50) distribution['20-50']++;
+            else if (count <= 100) distribution['50-100']++;
+            else distribution['100+']++;
         });
 
         return distribution;
     }
 
     static analyzeInfrastructureCountDistribution(applications) {
-        const ranges = [
-            { name: '1-5', min: 1, max: 5 },
-            { name: '5-10', min: 5, max: 10 },
-            { name: '10-20', min: 10, max: 20 },
-            { name: '20-50', min: 20, max: 50 },
-            { name: '50+', min: 50, max: Infinity }
-        ];
+        const distribution = {
+            '1-5': 0, '5-10': 0, '10-20': 0, '20-50': 0, '50+': 0
+        };
 
-        const distribution = {};
-        ranges.forEach(range => {
-            distribution[range.name] = applications.filter(app =>
-                app.infrastructureBuildCount >= range.min && app.infrastructureBuildCount < range.max
-            ).length;
+        applications.forEach(app => {
+            const count = app.infrastructureBuildCount || 0;
+            if (count === 0) return;
+
+            if (count <= 5) distribution['1-5']++;
+            else if (count <= 10) distribution['5-10']++;
+            else if (count <= 20) distribution['10-20']++;
+            else if (count <= 50) distribution['20-50']++;
+            else distribution['50+']++;
         });
 
         return distribution;
     }
+
+    /**
+     * Generate CSV from analysis data
+     * @param {Object} analysis - Analysis data
+     * @param {string} outputPath - Output CSV file path
+     * @returns {Object} Result object with success status and file info
+     */
+    static generateAnalysisCSV(analysis, outputPath) {
+        try {
+            Logger.info('Generating analysis CSV...');
+
+            // Convert development categories to CSV rows
+            const categoryRows = this.convertDevelopmentCategoriesToCSV(analysis.byDevelopmentCategory);
+
+            // Add summary row
+            const summaryRow = this.convertSummaryToCSV(analysis.summary);
+
+            // Combine all rows
+            const allRows = [summaryRow, ...categoryRows];
+
+            // Generate CSV header
+            const headers = [
+                'category',
+                'count',
+                'totalHouses',
+                'totalCommercialBuildings',
+                'totalInfrastructureProjects',
+                'averageHouses',
+                'averageCommercialBuildings',
+                'averageInfrastructureProjects'
+            ];
+
+            // Generate CSV rows
+            const csvRows = allRows.map(row => {
+                return headers.map(header => {
+                    const value = row[header] || '';
+                    return `"${value}"`;
+                }).join(',');
+            });
+
+            // Combine header and rows
+            const csvContent = [headers.join(','), ...csvRows].join('\n');
+
+            // Write CSV file
+            fs.writeFileSync(outputPath, csvContent, 'utf8');
+
+            const fileSize = (csvContent.length / 1024).toFixed(2);
+            Logger.success(`Analysis CSV generated: ${outputPath} (${fileSize} KB)`);
+
+            return {
+                success: true,
+                file: path.basename(outputPath),
+                size: fileSize,
+                path: outputPath
+            };
+
+        } catch (error) {
+            Logger.error(`Failed to generate analysis CSV: ${error.message}`);
+            return {
+                success: false,
+                file: path.basename(outputPath),
+                error: error.message
+            };
+        }
+    }
+
+    /**
+     * Convert development category data to CSV rows
+     * @param {Object} byDevelopmentCategory - Development category analysis data
+     * @returns {Array} Array of CSV row objects
+     */
+    static convertDevelopmentCategoriesToCSV(byDevelopmentCategory) {
+        const rows = [];
+
+        Object.entries(byDevelopmentCategory).forEach(([category, data]) => {
+            rows.push({
+                category: category,
+                count: data.count,
+                totalHouses: data.totalHouses,
+                totalCommercialBuildings: data.totalCommercialBuildings,
+                totalInfrastructureProjects: data.totalInfrastructureProjects,
+                averageHouses: data.averageHouses,
+                averageCommercialBuildings: data.averageCommercialBuildings,
+                averageInfrastructureProjects: data.averageInfrastructureProjects
+            });
+        });
+
+        return rows;
+    }
+
+    /**
+     * Convert summary data to CSV row
+     * @param {Object} summary - Summary analysis data
+     * @returns {Object} Summary CSV row object
+     */
+    static convertSummaryToCSV(summary) {
+        return {
+            category: 'TOTAL',
+            count: summary.totalApplications,
+            totalHouses: summary.totalHouses,
+            totalCommercialBuildings: summary.totalCommercialBuildings,
+            totalInfrastructureProjects: summary.totalInfrastructureProjects,
+            averageHouses: (summary.totalHouses / summary.totalApplications).toFixed(2),
+            averageCommercialBuildings: (summary.totalCommercialBuildings / summary.totalApplications).toFixed(2),
+            averageInfrastructureProjects: (summary.totalInfrastructureProjects / summary.totalApplications).toFixed(2)
+        };
+    }
 }
 
-module.exports = StatisticalAnalyzer; 
+module.exports = StatisticalAnalyser; 

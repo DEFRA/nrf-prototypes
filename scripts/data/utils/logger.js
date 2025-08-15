@@ -1,5 +1,5 @@
 /**
- * Logger utility for Planning Data Analyzer
+ * Logger utility for Planning Data Analyser
  */
 
 class Logger {

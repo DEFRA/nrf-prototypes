@@ -1,5 +1,5 @@
 /**
- * HTTP Client utility for Planning Data Analyzer
+ * HTTP Client utility for Planning Data Analyser
  * 
  * Uses Axios with retry logic, rate limiting, and timeout handling
  */

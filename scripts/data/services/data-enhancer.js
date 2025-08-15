@@ -1,9 +1,9 @@
 /**
- * Data Enhancer service for Planning Data Analyzer
+ * Data Enhancer service for Planning Data Analyser
  */
 
 const Logger = require('../utils/logger');
-const LLMAnalyzer = require('./llm-analyzer');
+const LLMAnalyser = require('./llm-analyser');
 
 class DataEnhancer {
     static async enhancePlanningData(planningApplications, localAuthorities, localPlanningAuthorities) {
@@ -19,7 +19,7 @@ class DataEnhancer {
 
         try {
             // Process all descriptions in a single batch call
-            const llmAnalyses = await LLMAnalyzer.analyzePlanningDescriptionsBatch(descriptions);
+            const llmAnalyses = await LLMAnalyser.analyzePlanningDescriptionsBatch(descriptions);
             Logger.success(`Batch LLM analysis completed for ${llmAnalyses.length} applications`);
 
             // Enhance each application with the batch results
@@ -95,7 +95,7 @@ class DataEnhancer {
             analysis = llmAnalysis;
         } else {
             const description = application.description || '';
-            analysis = await LLMAnalyzer.analyzePlanningDescription(description);
+            analysis = await LLMAnalyser.analyzePlanningDescription(description);
         }
 
         // Get local authority name

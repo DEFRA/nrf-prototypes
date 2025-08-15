@@ -1,5 +1,5 @@
 /**
- * File Manager utility for Planning Data Analyzer
+ * File Manager utility for Planning Data Analyser
  */
 
 const fs = require('fs').promises;
