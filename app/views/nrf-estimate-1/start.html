@@ -1,0 +1,58 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Get an estimate for Nature Restoration Fund Levy - GOV.UK
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <h1 class="govuk-heading-xl">Nature Restoration Fund</h1>
+
+        <p class="govuk-body">
+            Use this service to see if your development falls into the catchment area of an Environmental Delivery Plan
+            (EDP).
+        </p>
+
+        <p class="govuk-body">
+            You can submit details of your development to get an estimate of how much the levy might be or pay your
+            Nature Restoration Fund (NRF) levy.
+        </p>
+
+        <h2 class="govuk-heading-m">Before you start</h2>
+
+        <p class="govuk-body">You will need to be able to tell us:</p>
+
+        <ul class="govuk-list govuk-list--bullet">
+            <li>where you might be planning your development – you can use a redline boundary or shapefile</li>
+            <li>the types of buildings you are planning</li>
+            <li>details about the buildings including the amount or rooms</li>
+            <li>Your planning reference if you have one and are ready to pay</li>
+        </ul>
+
+        <form action="/nrf-estimate-1/start" method="post" novalidate>
+            <button class="govuk-button govuk-button--start" data-module="govuk-button">
+                Start now
+                <svg class="govuk-button__start-icon" xmlns="http://www.w3.org/2000/svg" width="17.5" height="19"
+                    viewBox="0 0 33 40" aria-hidden="true" focusable="false">
+                    <path fill="currentColor" d="M0 0h13l20 20-20 20H0l20-20z" />
+                </svg>
+            </button>
+        </form>
+
+        <h2 class="govuk-heading-m">Get help with Nature Restoration Fund</h2>
+
+        <p class="govuk-body">If you need to help with Nature Restoration Fund, contact XXXX.</p>
+
+        <p class="govuk-body">
+            Email: <a href="mailto:xxxxx@defra.gov.uk" class="govuk-link">xxxxx@defra.gov.uk</a><br>
+            Telephone: 00000000000<br>
+            Monday to Friday, 8:30am to 5pm, except bank holidays
+        </p>
+
+        <p class="govuk-body">
+            <a href="https://www.gov.uk/call-charges" class="govuk-link">Find out about call charges</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
