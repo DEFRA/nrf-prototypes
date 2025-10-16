@@ -470,6 +470,69 @@ Find out about call charges at https://www.gov.uk/call-charges
 #### Errors
 None
 
+---
+### Email sent from the Nature Restoration Fund service
+| **Field**             | **Value**                                           |
+| --------------------- | --------------------------------------------------- |
+| Order number:         | 7                                                   |
+| Path:                 | /nrf-estimate-1/estimate-email-content              |
+| Title:                | Email sent from the Nature Restoration Fund service |
+| Data points:          | None                                                |
+| Conditional pageflow: | None                                                |
+
+
+#### Content
+```
+**From**
+Nature Restoration Fund 
+
+**To**
+email address
+
+**Subject**
+Estimate: Nature Restoration Fund levy  
+
+## Estimate reference: ((estimateReference))  
+
+--- 
+
+# Nature Restoration Fund – your estimate for the Nature Restoration Fund levy   
+
+Thank you for submitting details of your development on the Get an estimate for Nature Restoration Fund service. 
+
+You told us:  
+* you are planning your development in an area XXXXXXXXXX 
+* you are building ((amount)) ((buildingType)) buildings, ((buildingType)) buildings with a total of ((amount)) rooms and ((buildingType)) buildings with a total of ((amount)) rooms 
+
+[Example without the dynamic bits:  you are building 50 residential and accommodation buildings, house of multiple occupancy buildings with a total of 30 rooms and residential institution buildings with a total of 200 rooms] 
+
+## What you might need to pay 
+
+Based on the information you have provided, your development falls into the catchment area for the Nature Restoration Fund Nutrients Levy.  The estimated total amount you may need to pay if you develop in this area is: ((levyAmount)) 
+
+You do not need to pay anything at this point, this service is designed to help you plan how to mitigate your envronmental obligations.   
+
+If you do decide to mitigate using Nature Restoration Fund levy, you can speak to your Local Planning Authority and commit to use Nature Restoration Fund. 
+
+Keep this email as record of your estimate and reference number, you can use it to retrieve this estimate when you are ready to pay your levy. 
+
+## What your levy will pay for 
+
+Your levy will be spent on conservation, with amounts being spent on  monitoring and maintenance. There will also be an admin charge of £00 taken from the levy payment. Levies are calculated as part of Environmental Delivery Plans (EDPs).  
+
+## Get help with Nature Restoration Fund 
+
+If you need to help with Nature Restoration Fund, contact XXXX and give the estimate reference number.  
+
+Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk) 
+Telephone: 00000000000  
+Monday to Friday, 8:30am to 5pm, except bank holidays  
+
+Find out about call charges at [https://www.gov.uk/call-charges](https://www.gov.uk/call-charges) 
+```
+
+---
+
 ## Technical Requirements
 
 ### File Structure

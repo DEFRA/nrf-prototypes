@@ -755,4 +755,17 @@ router.get('/nrf-estimate-1/catchments.geojson', (req, res) => {
     }
 })
 
+// Estimate email content page
+router.get('/nrf-estimate-1/estimate-email-content', (req, res) => {
+    const data = req.session.data || {}
+    
+    if (!data.estimateReference) {
+        return res.redirect('/nrf-estimate-1/summary')
+    }
+    
+    res.render('nrf-estimate-1/estimate-email-content', {
+        data: data
+    })
+})
+
 module.exports = router

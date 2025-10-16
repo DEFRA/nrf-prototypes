@@ -31,6 +31,12 @@ Type `/journey-updates` in the chat to trigger a merge of changes to the user jo
 - **Error messages**: "Select a building type" → "Select a building type to continue"
 - **Page titles**: "Upload redline file" → "Upload a red line boundary file"
 
+### Structural Change Examples
+- **New pages**: Step 7 "Email sent from the Nature Restoration Fund service" → `/nrf-estimate-1/estimate-email-content`
+- **Page order changes**: Reordering of steps in the journey flow
+- **Path changes**: `/old-path` → `/new-path`
+- **Deleted pages**: Removing steps that are no longer needed
+
 # Instructions
 Take the instructions and parameters provided, then:
 
@@ -43,8 +49,24 @@ Take the instructions and parameters provided, then:
      * Compare exact strings between specification and implementation
      * Look for word variations, spacing differences, and terminology changes
      * Check all user-facing text including hidden form elements and error messages
+   - **Structural Detection Techniques**:
+     * Use `grep -E "^\|\|.*Path:"` to extract all page paths from specification
+     * Use `ls app/views/{journey}/` to list existing view files
+     * Compare the two lists to identify missing pages
+     * Use `grep -E "Order number:"` to detect page order changes
+   - **Structural Analysis**:
+     * Extract all page paths from the specification (look for "Path:" entries)
+     * Compare with existing view files in the journey directory
+     * Identify new pages, deleted pages, and modified pages
+     * Check for new order numbers and page flow changes
 
 3. **Implementation Steps**:
+   - **Structural Analysis First**:
+     * Extract all page paths from the specification using grep for "Path:"
+     * List all existing view files in the journey directory
+     * Identify new pages that need to be created
+     * Identify deleted pages that need to be removed
+     * Check for page order changes and flow modifications
    - Review the current implementation of the `{journey_type}` journey
    - Identify the differences with the updated journey from `{changes}`
    - Focus on ALL content changes including:
@@ -66,6 +88,11 @@ Take the instructions and parameters provided, then:
    - Any additional files mentioned in the changes
 
 5. **Validation**:
+   - **Structural Verification**:
+     * Verify all pages from the specification exist as view files
+     * Check that all page paths match the specification exactly
+     * Confirm page order and flow matches the specification
+     * Ensure no orphaned pages exist that aren't in the specification
    - **Content Verification**: 
      * Compare ALL user-facing text with the specification (page titles, headings, labels, buttons, error messages)
      * Verify terminology consistency throughout the journey
