@@ -23,37 +23,6 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
         border: 1px solid #b1b4b6;
     }
 
-    .edp-legend {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: white;
-        padding: 10px;
-        border-radius: 5px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-        z-index: 1000;
-        max-width: 200px;
-    }
-
-    .edp-legend h4 {
-        margin: 0 0 10px 0;
-        font-size: 14px;
-        font-weight: bold;
-    }
-
-    .edp-legend-item {
-        display: flex;
-        align-items: center;
-        margin-bottom: 5px;
-        font-size: 12px;
-    }
-
-    .edp-legend-color {
-        width: 15px;
-        height: 15px;
-        margin-right: 8px;
-        border: 1px solid #333;
-    }
 
     /* Minimal Leaflet Draw overrides to work with GOV.UK */
     .leaflet-draw-toolbar {
@@ -136,41 +105,6 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
                                     <p class="govuk-body">Loading map...</p>
                                 </div>
                             </div>
-                            <div class="edp-legend">
-                                <h4 class="govuk-heading-s">EDP Areas</h4>
-                                <div class="edp-legend-item">
-                                    <div class="edp-legend-color" style="background-color: #ff6b6b;"></div>
-                                    <span class="govuk-body-s">Thames Valley</span>
-                                </div>
-                                <div class="edp-legend-item">
-                                    <div class="edp-legend-color" style="background-color: #4ecdc4;"></div>
-                                    <span class="govuk-body-s">Greater Manchester</span>
-                                </div>
-                                <div class="edp-legend-item">
-                                    <div class="edp-legend-color" style="background-color: #45b7d1;"></div>
-                                    <span class="govuk-body-s">West Midlands</span>
-                                </div>
-                                <div class="edp-legend-item">
-                                    <div class="edp-legend-color" style="background-color: #96ceb4;"></div>
-                                    <span class="govuk-body-s">South West</span>
-                                </div>
-                                <div class="edp-legend-item">
-                                    <div class="edp-legend-color" style="background-color: #feca57;"></div>
-                                    <span class="govuk-body-s">North East</span>
-                                </div>
-                                <div class="edp-legend-item">
-                                    <div class="edp-legend-color" style="background-color: #ff9ff3;"></div>
-                                    <span class="govuk-body-s">Yorkshire</span>
-                                </div>
-                                <div class="edp-legend-item">
-                                    <div class="edp-legend-color" style="background-color: #a8e6cf;"></div>
-                                    <span class="govuk-body-s">East Midlands</span>
-                                </div>
-                                <div class="edp-legend-item">
-                                    <div class="edp-legend-color" style="background-color: #dda0dd;"></div>
-                                    <span class="govuk-body-s">East of England</span>
-                                </div>
-                            </div>
                         </div>
 
                         <input type="hidden" id="boundary-data" name="boundary-data" value="{{ existingBoundaryData }}">
@@ -201,6 +135,7 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
             initMap();
         }
 
+
         function initMap() {
             // Additional delay to ensure GOV.UK components are ready
             setTimeout(function () {
@@ -225,127 +160,152 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
                     }).addTo(map);
                     console.log('Tiles added');
 
-                    // EDP Boundary data - 8 areas across England
-                    const edpBoundaries = [
-                        {
-                            name: "Thames Valley EDP",
-                            color: "#ff6b6b",
-                            coordinates: [
-                                [51.3, -0.5],
-                                [51.3, -0.3],
-                                [51.7, -0.3],
-                                [51.7, -0.5],
-                                [51.3, -0.5]
-                            ]
-                        },
-                        {
-                            name: "Greater Manchester EDP",
-                            color: "#4ecdc4",
-                            coordinates: [
-                                [53.3, -2.5],
-                                [53.3, -2.1],
-                                [53.7, -2.1],
-                                [53.7, -2.5],
-                                [53.3, -2.5]
-                            ]
-                        },
-                        {
-                            name: "West Midlands EDP",
-                            color: "#45b7d1",
-                            coordinates: [
-                                [52.3, -2.0],
-                                [52.3, -1.6],
-                                [52.7, -1.6],
-                                [52.7, -2.0],
-                                [52.3, -2.0]
-                            ]
-                        },
-                        {
-                            name: "South West EDP",
-                            color: "#96ceb4",
-                            coordinates: [
-                                [50.5, -3.0],
-                                [50.5, -2.5],
-                                [51.0, -2.5],
-                                [51.0, -3.0],
-                                [50.5, -3.0]
-                            ]
-                        },
-                        {
-                            name: "North East EDP",
-                            color: "#feca57",
-                            coordinates: [
-                                [54.5, -1.8],
-                                [54.5, -1.2],
-                                [55.0, -1.2],
-                                [55.0, -1.8],
-                                [54.5, -1.8]
-                            ]
-                        },
-                        {
-                            name: "Yorkshire EDP",
-                            color: "#ff9ff3",
-                            coordinates: [
-                                [53.5, -1.5],
-                                [53.5, -0.8],
-                                [54.2, -0.8],
-                                [54.2, -1.5],
-                                [53.5, -1.5]
-                            ]
-                        },
-                        {
-                            name: "East Midlands EDP",
-                            color: "#a8e6cf",
-                            coordinates: [
-                                [52.5, -1.5],
-                                [52.5, -0.8],
-                                [53.2, -0.8],
-                                [53.2, -1.5],
-                                [52.5, -1.5]
-                            ]
-                        },
-                        {
-                            name: "East of England EDP",
-                            color: "#dda0dd",
-                            coordinates: [
-                                [51.8, -0.5],
-                                [51.8, 0.5],
-                                [52.8, 0.5],
-                                [52.8, -0.5],
-                                [51.8, -0.5]
-                            ]
-                        }
+                    // Load GeoJSON boundaries
+                    let edpBoundaries = [];
+                    let edpLayers = [];
+
+                    // Color palette for different catchments
+                    const colors = [
+                        "#ff6b6b", "#4ecdc4", "#45b7d1", "#96ceb4",
+                        "#feca57", "#ff9ff3", "#a8e6cf", "#dda0dd",
+                        "#ffa726", "#ab47bc", "#26a69a", "#42a5f5",
+                        "#66bb6a", "#ef5350", "#ff7043", "#8d6e63"
                     ];
 
-                    // Add EDP boundaries to the map
-                    const edpLayers = [];
-                    edpBoundaries.forEach((edp, index) => {
-                        console.log('Adding EDP boundary:', edp.name, 'with coordinates:', edp.coordinates);
-                        const polygon = L.polygon(edp.coordinates, {
-                            color: edp.color,
-                            weight: 3,
-                            opacity: 1,
-                            fillColor: edp.color,
-                            fillOpacity: 0.4
-                        }).addTo(map);
+                    // Load GeoJSON data
+                    console.log('=== STARTING GEOJSON LOAD ===');
+                    fetch('/nrf-estimate-1/catchments.geojson')
+                        .then(response => {
+                            console.log('Fetch response status:', response.status);
+                            console.log('Fetch response ok:', response.ok);
+                            return response.json();
+                        })
+                        .then(data => {
+                            console.log('GeoJSON data loaded successfully');
+                            console.log('Number of features:', data.features ? data.features.length : 'undefined');
+                            console.log('First feature:', data.features ? data.features[0] : 'undefined');
 
-                        // Add popup with EDP name
-                        polygon.bindPopup(`<strong>${edp.name}</strong>`);
+                            // Process each feature in the GeoJSON
+                            data.features.forEach((feature, index) => {
+                                const properties = feature.properties;
+                                const geometry = feature.geometry;
 
-                        edpLayers.push({
-                            name: edp.name,
-                            polygon: polygon,
-                            coordinates: edp.coordinates
+                                // Extract catchment name from properties
+                                const catchmentName = properties.Label || properties.N2K_Site_N || `Catchment ${index + 1}`;
+                                const color = colors[index % colors.length];
+
+                                // Convert GeoJSON coordinates to Leaflet format
+                                if (geometry.type === 'Polygon') {
+                                    const coordinates = geometry.coordinates[0].map(coord => [coord[1], coord[0]]); // Convert [lng, lat] to [lat, lng]
+
+                                    // Debug logging for first few catchments
+                                    if (index < 3) {
+                                        console.log(`Catchment ${index + 1} (${catchmentName}):`);
+                                        console.log('  Original GeoJSON coords (first 3):', geometry.coordinates[0].slice(0, 3));
+                                        console.log('  Converted Leaflet coords (first 3):', coordinates.slice(0, 3));
+                                        console.log('  Coordinate count:', coordinates.length);
+                                    }
+
+                                    const polygon = L.polygon(coordinates, {
+                                        color: color,
+                                        weight: 2,
+                                        opacity: 0.8,
+                                        fillColor: color,
+                                        fillOpacity: 0.3
+                                    }).addTo(map);
+
+                                    // Add popup with catchment information
+                                    const popupContent = `
+                                        <strong>${catchmentName}</strong><br>
+                                        ${properties.PopupInfo ? `Type: ${properties.PopupInfo}<br>` : ''}
+                                        ${properties.DateAmend ? `Last Updated: ${properties.DateAmend}<br>` : ''}
+                                        ${properties.Notes ? `Notes: ${properties.Notes}` : ''}
+                                    `;
+                                    polygon.bindPopup(popupContent);
+
+                                    edpLayers.push({
+                                        name: catchmentName,
+                                        polygon: polygon,
+                                        coordinates: coordinates,
+                                        properties: properties
+                                    });
+
+                                    edpBoundaries.push({
+                                        name: catchmentName,
+                                        color: color,
+                                        coordinates: coordinates
+                                    });
+                                }
+                            });
+
+                            console.log('Catchment boundaries added:', edpLayers.length);
+
+                            // Test intersection function with a simple case
+                            if (edpLayers.length > 0) {
+                                console.log('=== TESTING INTERSECTION FUNCTION ===');
+                                const testPolygon1 = [[-2.9, 52.2], [-2.8, 52.2], [-2.8, 52.3], [-2.9, 52.3], [-2.9, 52.2]];
+                                const testPolygon2 = [[-2.85, 52.25], [-2.75, 52.25], [-2.75, 52.35], [-2.85, 52.35], [-2.85, 52.25]];
+                                const testResult = polygonIntersects(testPolygon1, testPolygon2);
+                                console.log('Test intersection result:', testResult);
+
+                                // Test with actual catchment coordinates if available
+                                if (edpLayers.length > 0) {
+                                    console.log('Testing with actual catchment data...');
+                                    const firstCatchment = edpLayers[0];
+                                    console.log('First catchment name:', firstCatchment.name);
+                                    console.log('First catchment coords (first 3):', firstCatchment.coordinates.slice(0, 3));
+
+                                    // Create a test polygon that should intersect with the first catchment
+                                    const testDrawnPolygon = firstCatchment.coordinates.slice(0, 4); // Use first 4 points of catchment
+                                    const testResult2 = polygonIntersects(testDrawnPolygon, firstCatchment.coordinates);
+                                    console.log('Test with actual catchment data result:', testResult2);
+
+                                    // Test with coordinates from your drawn area
+                                    const testPolygon3 = [[-1.9, 51.2], [-1.8, 51.2], [-1.8, 51.3], [-1.9, 51.3], [-1.9, 51.2]];
+                                    console.log('Testing with coordinates from drawn area:', testPolygon3);
+                                    const testResult3 = polygonIntersects(testPolygon3, firstCatchment.coordinates);
+                                    console.log('Test with drawn area coordinates result:', testResult3);
+                                }
+
+                                console.log('=== END TEST ===');
+
+                                // Re-check any existing drawn polygons for intersections
+                                console.log('Re-checking existing drawn polygons for intersections...');
+                                drawnItems.eachLayer(function (layer) {
+                                    if (layer instanceof L.Polygon) {
+                                        console.log('Re-checking existing polygon for intersections');
+                                        const drawnPolygon = layer.getLatLngs()[0];
+                                        const drawnPoints = drawnPolygon.map(latLng => [latLng.lng, latLng.lat]);
+
+                                        let intersectingCatchment = null;
+                                        edpLayers.forEach(catchment => {
+                                            if (polygonIntersects(drawnPoints, catchment.coordinates)) {
+                                                intersectingCatchment = catchment;
+                                                console.log(`Found intersection with existing polygon: ${catchment.name}`);
+                                            }
+                                        });
+
+                                        updateBoundaryData(layer, intersectingCatchment);
+                                    }
+                                });
+                            }
+
+                            // Fit map to show all boundaries
+                            if (edpLayers.length > 0) {
+                                const group = new L.featureGroup(edpLayers.map(edp => edp.polygon));
+                                map.fitBounds(group.getBounds().pad(0.1));
+                                console.log('Map fitted to show catchment boundaries');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('=== GEOJSON LOAD ERROR ===');
+                            console.error('Error loading GeoJSON data:', error);
+                            console.error('Error message:', error.message);
+                            console.error('Error stack:', error.stack);
+                            console.log('Falling back to hardcoded boundaries');
+                            console.log('=== END GEOJSON LOAD ERROR ===');
                         });
-                    });
-                    console.log('EDP boundaries added:', edpLayers.length);
 
-                    // Test if boundaries are visible by fitting map to show them
-                    if (edpLayers.length > 0) {
-                        const group = new L.featureGroup(edpLayers.map(edp => edp.polygon));
-                        map.fitBounds(group.getBounds().pad(0.1));
-                        console.log('Map fitted to show EDP boundaries');
-                    }
 
                     // Initialize the draw control
                     const drawnItems = new L.FeatureGroup();
@@ -382,6 +342,11 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
                     });
                     map.addControl(drawControl);
                     console.log('Draw control added');
+
+                    // Add a simple click handler to test if events are working
+                    map.on('click', function (e) {
+                        console.log('Map clicked at:', e.latlng);
+                    });
 
                     // Load existing boundary data if available
                     const existingBoundaryData = document.getElementById('boundary-data').value;
@@ -429,40 +394,67 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
 
                     // Handle drawing events
                     map.on(L.Draw.Event.CREATED, function (event) {
+                        console.log('=== POLYGON CREATED EVENT ===');
                         console.log('Polygon created');
+                        console.log('edpLayers length:', edpLayers.length);
+                        console.log('edpLayers available:', edpLayers.length > 0);
+
                         const layer = event.layer;
                         drawnItems.addLayer(layer);
 
-                        // Check if the drawn polygon intersects with any EDP boundary
-                        const drawnBounds = layer.getBounds();
-                        const drawnCenter = drawnBounds.getCenter();
+                        // Check if catchments are loaded
+                        if (edpLayers.length === 0) {
+                            console.log('WARNING: No catchments loaded yet, skipping intersection check');
+                            updateBoundaryData(layer, null);
+                            return;
+                        }
 
-                        let intersectingEDP = null;
-                        edpLayers.forEach(edp => {
-                            if (isPointInPolygon([drawnCenter.lng, drawnCenter.lat], edp.coordinates)) {
-                                intersectingEDP = edp;
+                        // Check if the drawn polygon intersects with any catchment boundary
+                        const drawnPolygon = layer.getLatLngs()[0];
+                        const drawnPoints = drawnPolygon.map(latLng => [latLng.lng, latLng.lat]); // Convert to [lng, lat] format
+
+                        console.log('=== INTERSECTION DEBUG ===');
+                        console.log('Drawn polygon points:', drawnPoints);
+                        console.log('Number of catchments to check:', edpLayers.length);
+                        console.log('First few catchments:', edpLayers.slice(0, 3).map(c => ({name: c.name, coordsLength: c.coordinates.length})));
+
+                        let intersectingCatchment = null;
+                        edpLayers.forEach((catchment, index) => {
+                            console.log(`Checking catchment ${index + 1}: ${catchment.name}`);
+                            console.log(`Catchment coordinates length: ${catchment.coordinates.length}`);
+                            console.log(`First few catchment coords:`, catchment.coordinates.slice(0, 3));
+
+                            const intersects = polygonIntersects(drawnPoints, catchment.coordinates);
+                            console.log(`Intersects with ${catchment.name}:`, intersects);
+
+                            if (intersects) {
+                                intersectingCatchment = catchment;
+                                console.log(`FOUND INTERSECTION: ${catchment.name}`);
                             }
                         });
 
+                        console.log('Final intersecting catchment:', intersectingCatchment ? intersectingCatchment.name : 'null');
+                        console.log('=== END INTERSECTION DEBUG ===');
+
                         // Update the boundary data
-                        updateBoundaryData(layer, intersectingEDP);
+                        updateBoundaryData(layer, intersectingCatchment);
                     });
 
                     map.on(L.Draw.Event.EDITED, function (event) {
                         console.log('Polygon edited');
                         const layers = event.layers;
                         layers.eachLayer(function (layer) {
-                            const drawnBounds = layer.getBounds();
-                            const drawnCenter = drawnBounds.getCenter();
+                            const drawnPolygon = layer.getLatLngs()[0];
+                            const drawnPoints = drawnPolygon.map(latLng => [latLng.lng, latLng.lat]); // Convert to [lng, lat] format
 
-                            let intersectingEDP = null;
-                            edpLayers.forEach(edp => {
-                                if (isPointInPolygon([drawnCenter.lng, drawnCenter.lat], edp.coordinates)) {
-                                    intersectingEDP = edp;
+                            let intersectingCatchment = null;
+                            edpLayers.forEach(catchment => {
+                                if (polygonIntersects(drawnPoints, catchment.coordinates)) {
+                                    intersectingCatchment = catchment;
                                 }
                             });
 
-                            updateBoundaryData(layer, intersectingEDP);
+                            updateBoundaryData(layer, intersectingCatchment);
                         });
                     });
 
@@ -474,21 +466,102 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
                     // Helper function to check if a point is within a polygon
                     function isPointInPolygon(point, polygon) {
                         const x = point[0], y = point[1]; // point is [lng, lat]
+                        console.log(`Checking point [${x}, ${y}] against polygon with ${polygon.length} vertices`);
+                        console.log(`Polygon sample: [${polygon[0][0]}, ${polygon[0][1]}], [${polygon[1][0]}, ${polygon[1][1]}]`);
+
                         let inside = false;
                         for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-                            // polygon coordinates are [lat, lng], so we need to swap them for the algorithm
-                            const xi = polygon[i][1], yi = polygon[i][0]; // [lng, lat]
-                            const xj = polygon[j][1], yj = polygon[j][0]; // [lng, lat]
+                            // polygon coordinates are [lng, lat] format
+                            const xi = polygon[i][0], yi = polygon[i][1]; // [lng, lat]
+                            const xj = polygon[j][0], yj = polygon[j][1]; // [lng, lat]
                             if (((yi > y) !== (yj > y)) &&
                                 (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
                                 inside = !inside;
                             }
                         }
+                        console.log(`Point [${x}, ${y}] inside polygon: ${inside}`);
                         return inside;
                     }
 
+                    // Helper function to check if two polygons intersect
+                    function polygonIntersects(polygon1, polygon2) {
+                        console.log('polygonIntersects called with:');
+                        console.log('polygon1 length:', polygon1.length);
+                        console.log('polygon2 length:', polygon2.length);
+                        console.log('polygon1 sample:', polygon1.slice(0, 2));
+                        console.log('polygon2 sample (before conversion):', polygon2.slice(0, 2));
+
+                        // Convert polygon2 coordinates from [lat, lng] to [lng, lat] format
+                        const poly2 = polygon2.map(coord => [coord[1], coord[0]]);
+                        console.log('poly2 (converted) length:', poly2.length);
+                        console.log('poly2 sample (after conversion):', poly2.slice(0, 2));
+
+                        // Simplified approach: check if any vertex of polygon1 is inside polygon2
+                        // This is more reliable than complex edge intersection algorithms
+                        for (let i = 0; i < polygon1.length; i++) {
+                            const inside = isPointInPolygon(polygon1[i], poly2);
+                            console.log(`Checking vertex ${i} [${polygon1[i][0]}, ${polygon1[i][1]}] inside polygon2: ${inside}`);
+                            if (inside) {
+                                console.log(`Vertex ${i} of polygon1 is inside polygon2`);
+                                return true;
+                            }
+                        }
+
+                        // Also check if any vertex of polygon2 is inside polygon1
+                        for (let i = 0; i < poly2.length; i++) {
+                            const inside = isPointInPolygon(poly2[i], polygon1);
+                            if (inside) {
+                                console.log(`Vertex ${i} of polygon2 is inside polygon1`);
+                                return true;
+                            }
+                        }
+
+                        // Check center point of polygon1
+                        const centerLng = polygon1.reduce((sum, coord) => sum + coord[0], 0) / polygon1.length;
+                        const centerLat = polygon1.reduce((sum, coord) => sum + coord[1], 0) / polygon1.length;
+                        const centerInside = isPointInPolygon([centerLng, centerLat], poly2);
+                        console.log(`Center point [${centerLng}, ${centerLat}] inside polygon2: ${centerInside}`);
+                        if (centerInside) {
+                            console.log('Center point of polygon1 is inside polygon2');
+                            return true;
+                        }
+
+                        console.log('No intersection found');
+                        return false;
+                    }
+
+                    // Helper function to check if two line segments intersect
+                    function lineSegmentsIntersect(p1, q1, p2, q2) {
+                        function orientation(p, q, r) {
+                            const val = (q[1] - p[1]) * (r[0] - q[0]) - (q[0] - p[0]) * (r[1] - q[1]);
+                            if (val === 0) return 0; // collinear
+                            return val > 0 ? 1 : 2; // clockwise or counterclockwise
+                        }
+
+                        function onSegment(p, q, r) {
+                            return q[0] <= Math.max(p[0], r[0]) && q[0] >= Math.min(p[0], r[0]) &&
+                                q[1] <= Math.max(p[1], r[1]) && q[1] >= Math.min(p[1], r[1]);
+                        }
+
+                        const o1 = orientation(p1, q1, p2);
+                        const o2 = orientation(p1, q1, q2);
+                        const o3 = orientation(p2, q2, p1);
+                        const o4 = orientation(p2, q2, q1);
+
+                        // General case
+                        if (o1 !== o2 && o3 !== o4) return true;
+
+                        // Special cases
+                        if (o1 === 0 && onSegment(p1, p2, q1)) return true;
+                        if (o2 === 0 && onSegment(p1, q2, q1)) return true;
+                        if (o3 === 0 && onSegment(p2, p1, q2)) return true;
+                        if (o4 === 0 && onSegment(p2, q1, q2)) return true;
+
+                        return false;
+                    }
+
                     // Update boundary data in the hidden input
-                    function updateBoundaryData(layer, intersectingEDP) {
+                    function updateBoundaryData(layer, intersectingCatchment) {
                         const bounds = layer.getBounds();
                         const center = bounds.getCenter();
                         const latLngs = layer.getLatLngs()[0];
@@ -497,7 +570,7 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
                         const boundaryData = {
                             center: [center.lng, center.lat],
                             points: points,
-                            intersectingEDP: intersectingEDP ? intersectingEDP.name : null
+                            intersectingCatchment: intersectingCatchment ? intersectingCatchment.name : null
                         };
 
                         document.getElementById('boundary-data').value = JSON.stringify(boundaryData);

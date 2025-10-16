@@ -4,6 +4,8 @@
 
 const govukPrototypeKit = require('govuk-prototype-kit')
 const router = govukPrototypeKit.requests.setupRouter()
+const path = require('path')
+const fs = require('fs')
 
 // Mock EDP boundary data for validation
 const edpBoundaries = [
@@ -248,31 +250,44 @@ router.post('/nrf-estimate-1/map', (req, res) => {
     
     try {
         const parsedData = JSON.parse(boundaryData)
+        console.log('=== MAP SUBMISSION DEBUG ===')
+        console.log('Parsed boundary data:', parsedData)
+        console.log('Intersecting catchment:', parsedData.intersectingCatchment)
         
         // Store in session
         req.session.data = req.session.data || {}
         req.session.data.redlineBoundaryPolygon = {
             center: parsedData.center,
             coordinates: parsedData.points,
-            intersectingEDP: parsedData.intersectingEDP
+            intersectingCatchment: parsedData.intersectingCatchment
         }
         
-        // Check EDP intersection - use the intersectingEDP from the map if available
+        // Check EDP intersection - use the intersectingCatchment from the map if available
         let edpIntersection = null
-        if (parsedData.intersectingEDP) {
-            // Find the EDP by name
-            edpIntersection = edpBoundaries.find(edp => edp.name === parsedData.intersectingEDP)
+        if (parsedData.intersectingCatchment) {
+            // Find the EDP by name - we'll treat any catchment intersection as an EDP intersection
+            edpIntersection = {
+                name: parsedData.intersectingCatchment,
+                type: 'catchment'
+            }
+            console.log('EDP intersection found:', edpIntersection)
         } else {
             // Fallback to checking intersection
             edpIntersection = checkEDPIntersection({
                 center: parsedData.center,
                 coordinates: parsedData.points
             })
+            console.log('Fallback EDP intersection:', edpIntersection)
         }
         
+        console.log('Final EDP intersection:', edpIntersection)
+        console.log('=== END MAP SUBMISSION DEBUG ===')
+        
         if (!edpIntersection) {
+            console.log('No EDP intersection - redirecting to no-edp')
             res.redirect('/nrf-estimate-1/no-edp')
         } else {
+            console.log('EDP intersection found - redirecting to building-type')
             res.redirect('/nrf-estimate-1/building-type')
         }
     } catch (error) {
@@ -710,6 +725,30 @@ router.get('/nrf-estimate-1/confirmation', (req, res) => {
     res.render('nrf-estimate-1/confirmation', {
         data: data
     })
+})
+
+// Serve GeoJSON catchment data
+router.get('/nrf-estimate-1/catchments.geojson', (req, res) => {
+    try {
+        const geojsonPath = path.join(__dirname, '../assets/catchments_nn_catchments_03_2024.geojson')
+        
+        // Check if file exists
+        if (!fs.existsSync(geojsonPath)) {
+            console.error('GeoJSON file not found at:', geojsonPath)
+            return res.status(404).json({ error: 'Catchment data not found' })
+        }
+        
+        // Read and serve the file
+        const geojsonData = fs.readFileSync(geojsonPath, 'utf8')
+        
+        res.setHeader('Content-Type', 'application/json')
+        res.setHeader('Access-Control-Allow-Origin', '*')
+        res.send(geojsonData)
+        
+    } catch (error) {
+        console.error('Error serving GeoJSON:', error)
+        res.status(500).json({ error: 'Failed to load catchment data' })
+    }
 })
 
 module.exports = router
