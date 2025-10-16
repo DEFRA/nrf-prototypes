@@ -353,7 +353,7 @@ router.post('/nrf-estimate-1/building-type', (req, res) => {
     // If this is a change from summary, handle adding/removing associated values
     if (isChange && navFromSummary) {
         const roomCountTypes = ['Hotel', 'House of multiple occupation (HMO)', 'Residential institution']
-        const residentialType = 'Residential and accommodation'
+        const residentialType = 'Dwellinghouse'
         
         // Initialize roomCounts if it doesn't exist
         if (!req.session.data.roomCounts) {
@@ -363,7 +363,7 @@ router.post('/nrf-estimate-1/building-type', (req, res) => {
         // Check for removed building types and clear their associated data
         const removedTypes = previousBuildingTypes.filter(type => !buildingTypesArray.includes(type))
         removedTypes.forEach(type => {
-            if (type === residentialType) {
+            if (type === 'Dwellinghouse') {
                 delete req.session.data.residentialBuildingCount
             } else if (type === 'Hotel') {
                 delete req.session.data.roomCounts.hotelCount
@@ -429,7 +429,7 @@ router.post('/nrf-estimate-1/building-type', (req, res) => {
             req.session.data.roomCountTypes = buildingTypesArray.filter(type => roomCountTypes.includes(type))
             req.session.data.currentRoomCountIndex = 0
             res.redirect('/nrf-estimate-1/room-count')
-        } else if (buildingTypesArray.includes('Residential and accommodation')) {
+        } else if (buildingTypesArray.includes('Dwellinghouse')) {
             res.redirect('/nrf-estimate-1/residential')
         } else {
             res.redirect('/nrf-estimate-1/email')
@@ -458,7 +458,7 @@ router.get('/nrf-estimate-1/room-count', (req, res) => {
             res.redirect('/nrf-estimate-1/summary')
         } else if (isChange) {
             res.redirect('/nrf-estimate-1/summary')
-        } else if (data.buildingTypes && data.buildingTypes.includes('Residential and accommodation')) {
+        } else if (data.buildingTypes && data.buildingTypes.includes('Dwellinghouse')) {
             res.redirect('/nrf-estimate-1/residential')
         } else {
             res.redirect('/nrf-estimate-1/email')
@@ -530,7 +530,7 @@ router.post('/nrf-estimate-1/room-count', (req, res) => {
         // All room counts collected, move to next step
         if (isChange) {
             res.redirect('/nrf-estimate-1/summary')
-        } else if (data.buildingTypes && data.buildingTypes.includes('Residential and accommodation')) {
+        } else if (data.buildingTypes && data.buildingTypes.includes('Dwellinghouse')) {
             res.redirect('/nrf-estimate-1/residential')
         } else {
             res.redirect('/nrf-estimate-1/email')
@@ -562,7 +562,7 @@ router.post('/nrf-estimate-1/residential', (req, res) => {
     
     if (!residentialBuildingCount || isNaN(residentialBuildingCount) || residentialBuildingCount < 1) {
         return res.render('nrf-estimate-1/residential', {
-            error: 'Enter the number of residential and accommodation buildings to continue',
+            error: 'Enter the number of dwellinghouse buildings to continue',
             data: req.session.data || {},
             isChange: isChange,
             navFromSummary: navFromSummary
