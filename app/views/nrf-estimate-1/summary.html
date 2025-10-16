@@ -24,7 +24,7 @@ Check your answers - Get an estimate for Nature Restoration Fund Levy - GOV.UK
                     {% endif %}
                 </dd>
                 <dd class="govuk-summary-list__actions">
-                    <a class="govuk-link" href="/nrf-estimate-1/redline-map">
+                    <a class="govuk-link" href="/nrf-estimate-1/redline-map?nav=summary">
                         Change<span class="govuk-visually-hidden"> red line boundary</span>
                     </a>
                 </dd>
@@ -45,11 +45,11 @@ Check your answers - Get an estimate for Nature Restoration Fund Levy - GOV.UK
                 </dd>
                 <dd class="govuk-summary-list__actions">
                     {% if data.hasRedlineBoundaryFile === 'yes' %}
-                    <a class="govuk-link" href="/nrf-estimate-1/upload-redline">
+                    <a class="govuk-link" href="/nrf-estimate-1/upload-redline?nav=summary">
                         Change<span class="govuk-visually-hidden"> shapefile</span>
                     </a>
                     {% else %}
-                    <a class="govuk-link" href="/nrf-estimate-1/map">
+                    <a class="govuk-link" href="/nrf-estimate-1/map?nav=summary">
                         Change<span class="govuk-visually-hidden"> boundary</span>
                     </a>
                     {% endif %}

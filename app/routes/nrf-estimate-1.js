@@ -332,7 +332,6 @@ router.post('/nrf-estimate-1/building-type', (req, res) => {
     // When no checkboxes are selected, buildingTypes will be undefined
     // When checkboxes are selected, buildingTypes will be a string (single) or array (multiple)
     if (!buildingTypes || buildingTypes === '_unchecked') {
-        console.log('No building types selected - showing error')
         return res.render('nrf-estimate-1/building-type', {
             error: 'Select a building type to continue',
             data: req.session.data || {},
@@ -340,8 +339,6 @@ router.post('/nrf-estimate-1/building-type', (req, res) => {
             navFromSummary: navFromSummary
         })
     }
-    
-    console.log('Building types selected - continuing')
     
     // Store in session - preserve existing data
     if (!req.session.data) {
@@ -377,21 +374,33 @@ router.post('/nrf-estimate-1/building-type', (req, res) => {
             }
         })
         
+        // Check if there are actual changes to building types
+        const hasChanges = JSON.stringify(previousBuildingTypes.sort()) !== JSON.stringify(buildingTypesArray.sort())
+        
+        // Only proceed with data collection if there are actual changes
+        if (!hasChanges) {
+            res.redirect('/nrf-estimate-1/summary');
+            return;
+        }
+        
         // Check for newly added building types that need data collection
         const newlyAddedTypes = buildingTypesArray.filter(type => !previousBuildingTypes.includes(type))
-        const needsRoomCount = newlyAddedTypes.some(type => roomCountTypes.includes(type))
-        const needsResidentialCount = newlyAddedTypes.includes(residentialType)
+        const newlyAddedRoomCountTypes = newlyAddedTypes.filter(type => roomCountTypes.includes(type))
+        const newlyAddedResidentialType = newlyAddedTypes.includes(residentialType)
         
-        // If new types were added that need data collection, collect them first
+        const needsRoomCount = newlyAddedRoomCountTypes.length > 0
+        const needsResidentialCount = newlyAddedResidentialType
+        
+        // If there are newly added building types that need data collection, collect them first
         if (needsRoomCount || needsResidentialCount) {
-            if (needsRoomCount) {
-                // Store the building types that need room counts for processing
-                req.session.data.roomCountTypes = buildingTypesArray.filter(type => roomCountTypes.includes(type))
+            if (needsResidentialCount) {
+                res.redirect('/nrf-estimate-1/residential?change=true&nav=summary')
+                return
+            } else if (needsRoomCount) {
+                // Store only the newly added building types that need room counts for processing
+                req.session.data.roomCountTypes = newlyAddedRoomCountTypes
                 req.session.data.currentRoomCountIndex = 0
                 res.redirect('/nrf-estimate-1/room-count?change=true&nav=summary')
-                return
-            } else if (needsResidentialCount) {
-                res.redirect('/nrf-estimate-1/residential?change=true&nav=summary')
                 return
             }
         }
@@ -438,12 +447,8 @@ router.get('/nrf-estimate-1/room-count', (req, res) => {
     const data = req.session.data || {}
     const isChange = req.query.change === 'true'
     const navFromSummary = req.query.nav === 'summary'
+    const error = req.query.error
     const roomCountTypes = data.roomCountTypes || []
-    
-    // If this is a change from summary, reset the index to start from the beginning
-    if (isChange) {
-        req.session.data.currentRoomCountIndex = 0
-    }
     
     const currentIndex = data.currentRoomCountIndex || 0
     
@@ -468,7 +473,8 @@ router.get('/nrf-estimate-1/room-count', (req, res) => {
         totalCount: roomCountTypes.length,
         data: data,
         isChange: isChange,
-        navFromSummary: navFromSummary
+        navFromSummary: navFromSummary,
+        error: error
     })
 })
 
@@ -484,15 +490,13 @@ router.post('/nrf-estimate-1/room-count', (req, res) => {
     let roomCount = req.body['room-count']
     
     if (!roomCount || isNaN(roomCount) || roomCount < 1) {
-        return res.render('nrf-estimate-1/room-count', {
-            buildingType: currentBuildingType,
-            currentIndex: currentIndex,
-            totalCount: roomCountTypes.length,
-            data: data,
-            isChange: isChange,
-            navFromSummary: navFromSummary,
-            error: 'Enter the number of rooms to continue'
-        })
+        // Build redirect URL with query parameters
+        let redirectUrl = '/nrf-estimate-1/room-count?'
+        if (isChange) redirectUrl += 'change=true&'
+        if (navFromSummary) redirectUrl += 'nav=summary&'
+        redirectUrl = redirectUrl.replace(/&$/, '') // Remove trailing &
+        
+        return res.redirect(redirectUrl + '&error=Enter the number of rooms to continue')
     }
     
     // Store the room count for this building type
@@ -516,11 +520,15 @@ router.post('/nrf-estimate-1/room-count', (req, res) => {
     // Move to next building type or next step
     req.session.data.currentRoomCountIndex = currentIndex + 1
     
+    // Check if this is a change from summary - only redirect to summary after collecting ALL room counts
+    if (isChange && navFromSummary && currentIndex + 1 >= roomCountTypes.length) {
+        res.redirect('/nrf-estimate-1/summary');
+        return;
+    }
+    
     if (currentIndex + 1 >= roomCountTypes.length) {
         // All room counts collected, move to next step
-        if (isChange && navFromSummary) {
-            res.redirect('/nrf-estimate-1/summary')
-        } else if (isChange) {
+        if (isChange) {
             res.redirect('/nrf-estimate-1/summary')
         } else if (data.buildingTypes && data.buildingTypes.includes('Residential and accommodation')) {
             res.redirect('/nrf-estimate-1/residential')
@@ -529,11 +537,7 @@ router.post('/nrf-estimate-1/room-count', (req, res) => {
         }
     } else {
         // Move to next building type
-        if (isChange && navFromSummary) {
-            res.redirect('/nrf-estimate-1/room-count?change=true&nav=summary')
-        } else {
-            res.redirect('/nrf-estimate-1/room-count')
-        }
+        res.redirect('/nrf-estimate-1/room-count')
     }
 })
 

@@ -44,79 +44,75 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
 {% endblock %}
 
 {% block content %}
-<div class="govuk-width-container">
-    <div class="govuk-main-wrapper">
-        <div class="govuk-grid-row">
-            <div class="govuk-grid-column-full">
-                <a href="/nrf-estimate-1/redline-map" class="govuk-back-link">Back</a>
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+        <a href="/nrf-estimate-1/redline-map" class="govuk-back-link">Back</a>
 
-                <form action="/nrf-estimate-1/map" method="post" novalidate>
+        <form id="map-form" action="/nrf-estimate-1/map" method="post" novalidate>
 
-                    {% if error %}
-                    <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert">
-                        <h2 class="govuk-error-summary__title" id="error-summary-title">
-                            There is a problem
-                        </h2>
-                        <div class="govuk-error-summary__body">
-                            <ul class="govuk-list govuk-error-summary__list">
-                                <li>
-                                    <a href="#map">{{ error }}</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
-                        <h1 class="govuk-label-wrapper">
-                            <label class="govuk-label govuk-label--l" for="map">
-                                Draw a red line boundary
-                            </label>
-                        </h1>
-
-                        <div id="map-hint" class="govuk-hint">
-                            <p class="govuk-body">
-                                Use the map to draw a red line boundary for where your development might be.
-                            </p>
-                        </div>
-
-                        {% if error %}
-                        <p id="map-error" class="govuk-error-message">
-                            <span class="govuk-visually-hidden">Error:</span> {{ error }}
-                        </p>
-                        {% endif %}
-
-                        <div class="govuk-inset-text">
-                            <p class="govuk-body govuk-!-margin-bottom-1">
-                                <strong>Instructions:</strong>
-                            </p>
-                            <ul class="govuk-list govuk-list--bullet govuk-!-margin-bottom-0">
-                                <li>Click the polygon tool in the toolbar (top left of map)</li>
-                                <li>Click on the map to create points for your development boundary</li>
-                                <li>Double-click to finish drawing</li>
-                                <li>You can edit or delete your boundary using the toolbar</li>
-                            </ul>
-                        </div>
-
-                        <div class="map-container">
-                            <div id="map">
-                                <div id="map-loading"
-                                    style="text-align: center; padding: 2rem; background: #f8f8f8; border: 1px solid #ccc;">
-                                    <p class="govuk-body">Loading map...</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <input type="hidden" id="boundary-data" name="boundary-data" value="{{ existingBoundaryData }}">
-                    </div>
-
-                    <button class="govuk-button" type="submit">
-                        Continue
-                    </button>
-
-                </form>
+            {% if error %}
+            <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert">
+                <h2 class="govuk-error-summary__title" id="error-summary-title">
+                    There is a problem
+                </h2>
+                <div class="govuk-error-summary__body">
+                    <ul class="govuk-list govuk-error-summary__list">
+                        <li>
+                            <a href="#map">{{ error }}</a>
+                        </li>
+                    </ul>
+                </div>
             </div>
-        </div>
+            {% endif %}
+
+            <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
+                <h1 class="govuk-label-wrapper">
+                    <label class="govuk-label govuk-label--l" for="map">
+                        Draw a red line boundary
+                    </label>
+                </h1>
+
+                <div id="map-hint" class="govuk-hint">
+                    <p class="govuk-body">
+                        Use the map to draw a red line boundary for where your development might be.
+                    </p>
+                </div>
+
+                {% if error %}
+                <p id="map-error" class="govuk-error-message">
+                    <span class="govuk-visually-hidden">Error:</span> {{ error }}
+                </p>
+                {% endif %}
+
+                <div class="govuk-inset-text">
+                    <p class="govuk-body govuk-!-margin-bottom-1">
+                        <strong>Instructions:</strong>
+                    </p>
+                    <ul class="govuk-list govuk-list--bullet govuk-!-margin-bottom-0">
+                        <li>Click the polygon tool in the toolbar (top left of map)</li>
+                        <li>Click on the map to create points for your development boundary</li>
+                        <li>Double-click to finish drawing</li>
+                        <li>You can edit or delete your boundary using the toolbar</li>
+                    </ul>
+                </div>
+
+                <div class="map-container">
+                    <div id="map">
+                        <div id="map-loading"
+                            style="text-align: center; padding: 2rem; background: #f8f8f8; border: 1px solid #ccc;">
+                            <p class="govuk-body">Loading map...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <input type="hidden" id="boundary-data" name="boundary-data" value="{{ existingBoundaryData }}">
+            </div>
+
+            <button class="govuk-button" type="submit">
+                Continue
+            </button>
+
+        </form>
     </div>
 </div>
 
@@ -290,11 +286,13 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
                                 });
                             }
 
-                            // Fit map to show all boundaries
-                            if (edpLayers.length > 0) {
+                            // Only fit map to catchments if no existing boundary is loaded
+                            if (edpLayers.length > 0 && !existingBoundaryData) {
                                 const group = new L.featureGroup(edpLayers.map(edp => edp.polygon));
                                 map.fitBounds(group.getBounds().pad(0.1));
                                 console.log('Map fitted to show catchment boundaries');
+                            } else if (edpLayers.length > 0 && existingBoundaryData) {
+                                console.log('Catchments loaded but keeping focus on existing boundary');
                             }
                         })
                         .catch(error => {
@@ -377,8 +375,9 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
 
                                 drawnItems.addLayer(existingPolygon);
 
-                                // Fit map to show the existing boundary
+                                // Always fit map to show the existing boundary when it exists
                                 map.fitBounds(existingPolygon.getBounds().pad(0.1));
+                                console.log('Map focused on existing boundary');
 
                                 console.log('Existing boundary loaded and displayed successfully');
                             } else {
@@ -577,13 +576,43 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
                         console.log('Boundary data updated:', boundaryData);
                     }
 
-                    // Form submission validation
+                    // Form submission validation and navigation logic
                     document.querySelector('form').addEventListener('submit', function (e) {
                         const boundaryData = document.getElementById('boundary-data').value;
                         if (!boundaryData) {
                             e.preventDefault();
                             alert('Please draw a boundary on the map before continuing.');
                             return false;
+                        }
+
+                        // Check for nav=summary query parameter
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const navParam = urlParams.get('nav');
+
+                        if (navParam === 'summary') {
+                            console.log('Navigation parameter detected: summary');
+
+                            try {
+                                const parsedData = JSON.parse(boundaryData);
+                                const hasIntersection = parsedData.intersectingCatchment !== null;
+
+                                console.log('Intersection status:', hasIntersection);
+                                console.log('Intersecting catchment:', parsedData.intersectingCatchment);
+
+                                if (hasIntersection) {
+                                    // Redirect to summary page if there's an intersection
+                                    console.log('Redirecting to summary page');
+                                    e.preventDefault();
+                                    window.location.href = '/nrf-estimate-1/summary';
+                                    return false;
+                                } else {
+                                    // Let the form submit normally to go to no-edp page
+                                    console.log('No intersection found, submitting form normally');
+                                }
+                            } catch (error) {
+                                console.error('Error parsing boundary data for navigation:', error);
+                                // Let the form submit normally if there's an error
+                            }
                         }
                     });
 

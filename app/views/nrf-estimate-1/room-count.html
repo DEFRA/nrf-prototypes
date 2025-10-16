@@ -10,7 +10,7 @@ GOV.UK
     <div class="govuk-grid-column-two-thirds">
         <a href="/nrf-estimate-1/building-type" class="govuk-back-link">Back</a>
 
-        <form action="/nrf-estimate-1/room-count" method="post" novalidate>
+        <form id="room-count-form" action="/nrf-estimate-1/room-count" method="post" novalidate>
             {% if isChange %}
             <input type="hidden" name="isChange" value="true">
             {% endif %}
@@ -52,11 +52,48 @@ GOV.UK
                     value="{% if data.roomCounts %}{% if buildingType === 'Hotel' and data.roomCounts.hotelCount %}{{ data.roomCounts.hotelCount }}{% elif buildingType === 'House of multiple occupation (HMO)' and data.roomCounts.hmoCount %}{{ data.roomCounts.hmoCount }}{% elif buildingType === 'Residential institution' and data.roomCounts.residentialInstitutionCount %}{{ data.roomCounts.residentialInstitutionCount }}{% endif %}{% endif %}">
             </div>
 
-            <button class="govuk-button" data-module="govuk-button">
+            <button class="govuk-button" data-module="govuk-button" type="submit">
                 Continue
             </button>
 
         </form>
     </div>
 </div>
+
+<script>
+    // Handle nav=summary query parameter
+    document.addEventListener('DOMContentLoaded', function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const navParam = urlParams.get('nav');
+        const isChange = urlParams.get('change') === 'true';
+
+        if (navParam === 'summary') {
+            // Ensure the navFromSummary hidden field is set
+            let navFromSummaryInput = document.querySelector('input[name="navFromSummary"]');
+            if (!navFromSummaryInput) {
+                navFromSummaryInput = document.createElement('input');
+                navFromSummaryInput.type = 'hidden';
+                navFromSummaryInput.name = 'navFromSummary';
+                navFromSummaryInput.value = 'true';
+                document.getElementById('room-count-form').appendChild(navFromSummaryInput);
+            } else {
+                navFromSummaryInput.value = 'true';
+            }
+
+            // Ensure the isChange hidden field is set if needed
+            if (isChange) {
+                let isChangeInput = document.querySelector('input[name="isChange"]');
+                if (!isChangeInput) {
+                    isChangeInput = document.createElement('input');
+                    isChangeInput.type = 'hidden';
+                    isChangeInput.name = 'isChange';
+                    isChangeInput.value = 'true';
+                    document.getElementById('room-count-form').appendChild(isChangeInput);
+                } else {
+                    isChangeInput.value = 'true';
+                }
+            }
+        }
+    });
+</script>
 {% endblock %}
