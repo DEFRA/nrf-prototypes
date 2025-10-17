@@ -7,96 +7,83 @@ Email sent from the Nature Restoration Fund service - Get an estimate for Nature
 {% block content %}
 <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-        <div class="govuk-panel govuk-panel--confirmation">
-            <h1 class="govuk-panel__title">
-                Email sent from the Nature Restoration Fund service
-            </h1>
-        </div>
 
-        <div class="govuk-!-margin-top-6">
-            <h2 class="govuk-heading-m">From</h2>
-            <p class="govuk-body">Nature Restoration Fund</p>
+        <h1 class="govuk-heading-l">Nature Restoration Fund – estimate for the Nature Restoration Fund levy
+        </h1>
 
-            <h2 class="govuk-heading-m">To</h2>
-            <p class="govuk-body">{{ data.email }}</p>
+        <p class="govuk-body">Thank you for submitting details of the development on the Get an estimate for Nature
+            Restoration Fund service.</p>
 
-            <h2 class="govuk-heading-m">Subject</h2>
-            <p class="govuk-body">Estimate: Nature Restoration Fund levy</p>
+        <p class="govuk-body">You told us the development:</p>
 
-            <hr class="govuk-section-break govuk-section-break--visible govuk-!-margin-top-6 govuk-!-margin-bottom-6">
-
-            <h1 class="govuk-heading-l">Nature Restoration Fund – your estimate for the Nature Restoration Fund levy
-            </h1>
-
-            <p class="govuk-body">Thank you for submitting details of your development on the Get an estimate for Nature
-                Restoration Fund service.</p>
-
-            <h2 class="govuk-heading-m">Estimate reference: {{ data.estimateReference }}</h2>
-
-            <p class="govuk-body">You told us:</p>
-            <ul class="govuk-list govuk-list--bullet">
-                <li>you are planning your development in an area {{ data.redlineBoundaryPolygon.intersectingCatchment or
-                    'Thames Valley EDP' }}</li>
-                {% if data.buildingTypes %}
-                <li>you are building:
-                    <ul class="govuk-list govuk-list--bullet">
-                        {% if data.buildingTypes.includes('Dwellinghouse') and data.residentialBuildingCount %}
-                        <li>{{ data.residentialBuildingCount }} dwellinghouse buildings</li>
-                        {% endif %}
-                        {% if data.buildingTypes.includes('Hotel') and data.roomCounts.hotelCount %}
-                        <li>hotel buildings with a total of {{ data.roomCounts.hotelCount }} rooms</li>
-                        {% endif %}
-                        {% if data.buildingTypes.includes('House of multiple occupation (HMO)') and
-                        data.roomCounts.hmoCount %}
-                        <li>house of multiple occupation buildings with a total of {{ data.roomCounts.hmoCount }} rooms
-                        </li>
-                        {% endif %}
-                        {% if data.buildingTypes.includes('Residential institution') and
-                        data.roomCounts.residentialInstitutionCount %}
-                        <li>residential institution buildings with a total of {{
-                            data.roomCounts.residentialInstitutionCount }} rooms</li>
-                        {% endif %}
-                    </ul>
-                </li>
+        <ul class="govuk-list govuk-list--bullet">
+            <li>is planned in an area {{ data.redlineBoundaryPolygon.intersectingCatchment or 'Thames Valley EDP' }}
+            </li>
+            {% if data.buildingTypes %}
+            <li>has
+                {% if data.buildingTypes.includes('Dwellinghouse') and data.residentialBuildingCount %}
+                {{ data.residentialBuildingCount }} dwellinghouse buildings
+                {% if data.buildingTypes.includes('Hotel') and data.roomCounts.hotelCount %}, {% endif %}
                 {% endif %}
-            </ul>
+                {% if data.buildingTypes.includes('Hotel') and data.roomCounts.hotelCount %}
+                hotel buildings with a total of {{ data.roomCounts.hotelCount }} rooms
+                {% if data.buildingTypes.includes('House of multiple occupation (HMO)') and data.roomCounts.hmoCount
+                %}, {% endif %}
+                {% endif %}
+                {% if data.buildingTypes.includes('House of multiple occupation (HMO)') and data.roomCounts.hmoCount
+                %}
+                house of multiple occupation buildings with a total of {{ data.roomCounts.hmoCount }} rooms
+                {% if data.buildingTypes.includes('Residential institution') and
+                data.roomCounts.residentialInstitutionCount %}, {% endif %}
+                {% endif %}
+                {% if data.buildingTypes.includes('Residential institution') and
+                data.roomCounts.residentialInstitutionCount %}
+                residential institution buildings with a total of {{ data.roomCounts.residentialInstitutionCount }}
+                rooms
+                {% endif %}
+            </li>
+            {% endif %}
+        </ul>
 
-            <h2 class="govuk-heading-m">What you might need to pay</h2>
+        <h2 class="govuk-heading-m">What you might need to pay</h2>
 
-            <p class="govuk-body">Based on the information you have provided, your development falls into the catchment
-                area for the Nature Restoration Fund Nutrients Levy. The estimated total amount you may need to pay if
-                you develop in this area is: <strong>£{{ data.levyAmount or '2,500' }}</strong></p>
+        <p class="govuk-body">Based on the information you have provided, the development falls into the catchment
+            area for the Nature Restoration Fund Nutrients Levy.</p>
 
-            <p class="govuk-body">You do not need to pay anything at this point, this service is designed to help you
-                plan how to mitigate your environmental obligations.</p>
+        <p class="govuk-body">The estimated total amount you may need to pay if you develop in this area is:
+            <strong>£{{ data.levyAmount or '2,500' }}</strong>
+        </p>
 
-            <p class="govuk-body">If you do decide to mitigate using Nature Restoration Fund levy, you can speak to your
-                Local Planning Authority and commit to use Nature Restoration Fund.</p>
+        <p class="govuk-body">You do not need to pay anything at this point, this service is designed to help you
+            plan how to mitigate your environmental obligations.</p>
 
-            <p class="govuk-body">Keep this email as record of your estimate and reference number, you can use it to
-                retrieve this estimate when you are ready to pay your levy.</p>
+        <p class="govuk-body">If you do decide to mitigate using Nature Restoration Fund levy, you can speak to your
+            Local Planning Authority and commit to use Nature Restoration Fund.</p>
 
-            <h2 class="govuk-heading-m">What your levy will pay for</h2>
+        <p class="govuk-body">Keep this email as record of your estimate and reference number, you can use it to
+            retrieve this estimate when you are ready to pay your levy.</p>
 
-            <p class="govuk-body">Your levy will be spent on conservation, with amounts being spent on monitoring and
-                maintenance. There will also be an admin charge of £50 taken from the levy payment. Levies are
-                calculated as part of Environmental Delivery Plans (EDPs).</p>
+        <h2 class="govuk-heading-m">What your levy will pay for</h2>
 
-            <h2 class="govuk-heading-m">Get help with Nature Restoration Fund</h2>
+        <p class="govuk-body">Your levy will be spent on conservation, with amounts being spent on monitoring and
+            maintenance. There will also be an admin charge of £00 taken from the levy payment. Levies are
+            calculated as part of Environmental Delivery Plans (EDPs).</p>
 
-            <p class="govuk-body">If you need to help with Nature Restoration Fund, contact XXXX and give the estimate
-                reference number.</p>
+        <h2 class="govuk-heading-m">Get help with Nature Restoration Fund</h2>
 
-            <p class="govuk-body">
-                Email: <a href="mailto:xxxxx@defra.gov.uk" class="govuk-link">xxxxx@defra.gov.uk</a><br>
-                Telephone: 00000000000<br>
-                Monday to Friday, 8:30am to 5pm, except bank holidays
-            </p>
+        <p class="govuk-body">If you need help with Nature Restoration Fund, contact XXXX and give the estimate
+            reference number.</p>
 
-            <p class="govuk-body">
-                <a href="https://www.gov.uk/call-charges" class="govuk-link">Find out about call charges</a>
-            </p>
-        </div>
+        <p class="govuk-body">
+            Email: <a href="mailto:xxxxx@defra.gov.uk" class="govuk-link">xxxxx@defra.gov.uk</a><br>
+            Telephone: 00000000000<br>
+            Monday to Friday, 8:30am to 5pm, except bank holidays
+        </p>
+
+        <p class="govuk-body">
+            <a href="https://www.gov.uk/call-charges" class="govuk-link">Find out about call charges</a>
+        </p>
     </div>
+</div>
 </div>
 {% endblock %}

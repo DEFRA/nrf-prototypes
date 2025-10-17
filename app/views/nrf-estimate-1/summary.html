@@ -32,25 +32,23 @@ Check your answers - Get an estimate for Nature Restoration Fund Levy - GOV.UK
 
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">
-                    Red line boundary method
+                    Red line boundary file uploaded
                 </dt>
                 <dd class="govuk-summary-list__value">
                     {% if data.redlineFile %}
-                    File uploaded - {{ data.redlineFile }}
-                    {% elif data.redlineBoundaryPolygon %}
-                    Drawn on map
+                    Yes
                     {% else %}
-                    No boundary added
+                    No
                     {% endif %}
                 </dd>
                 <dd class="govuk-summary-list__actions">
                     {% if data.hasRedlineBoundaryFile === 'yes' %}
                     <a class="govuk-link" href="/nrf-estimate-1/upload-redline?nav=summary">
-                        Change<span class="govuk-visually-hidden"> shapefile</span>
+                        Change<span class="govuk-visually-hidden"> red line boundary file</span>
                     </a>
                     {% else %}
                     <a class="govuk-link" href="/nrf-estimate-1/map?nav=summary">
-                        Change<span class="govuk-visually-hidden"> boundary</span>
+                        Change<span class="govuk-visually-hidden"> red line boundary</span>
                     </a>
                     {% endif %}
                 </dd>

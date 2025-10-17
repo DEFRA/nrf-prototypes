@@ -53,6 +53,14 @@ Select the types of buildings - Get an estimate for Nature Restoration Fund Levy
 
                     <div class="govuk-checkboxes" data-module="govuk-checkboxes">
                         <div class="govuk-checkboxes__item">
+                            <input class="govuk-checkboxes__input" id="building-types-dwellinghouse"
+                                name="building-types" type="checkbox" value="Dwellinghouse" {% if data.buildingTypes and
+                                data.buildingTypes.includes('Dwellinghouse') %}checked{% endif %}>
+                            <label class="govuk-label govuk-checkboxes__label" for="building-types-dwellinghouse">
+                                Dwellinghouse
+                            </label>
+                        </div>
+                        <div class="govuk-checkboxes__item">
                             <input class="govuk-checkboxes__input" id="building-types-hotel" name="building-types"
                                 type="checkbox" value="Hotel" {% if data.buildingTypes and
                                 data.buildingTypes.includes('Hotel') %}checked{% endif %}>
@@ -75,14 +83,6 @@ Select the types of buildings - Get an estimate for Nature Restoration Fund Levy
                                 %}checked{% endif %}>
                             <label class="govuk-label govuk-checkboxes__label" for="building-types-non-residential">
                                 Non-residential development
-                            </label>
-                        </div>
-                        <div class="govuk-checkboxes__item">
-                            <input class="govuk-checkboxes__input" id="building-types-dwellinghouse"
-                                name="building-types" type="checkbox" value="Dwellinghouse" {% if data.buildingTypes and
-                                data.buildingTypes.includes('Dwellinghouse') %}checked{% endif %}>
-                            <label class="govuk-label govuk-checkboxes__label" for="building-types-dwellinghouse">
-                                Dwellinghouse
                             </label>
                         </div>
                         <div class="govuk-checkboxes__item">

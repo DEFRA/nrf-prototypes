@@ -109,7 +109,7 @@ router.post('/nrf-estimate-1/what-would-you-like-to-do', (req, res) => {
     
     if (!journeyType) {
         return res.render('nrf-estimate-1/what-would-you-like-to-do', {
-            error: 'Select if you want an estimate or if you are ready to pay'
+            error: 'Select if you want an estimate or if you are ready to pay the Nature Restoration Fund levy'
         })
     }
     
@@ -172,7 +172,7 @@ router.post('/nrf-estimate-1/upload-redline', (req, res) => {
     if (!allowedTypes.includes(fileExtension)) {
         console.log('Invalid file type:', fileExtension)
         return res.render('nrf-estimate-1/upload-redline', {
-            error: 'The selected file must be a .shp or .geojson file'
+            error: 'The selected file must be a [shp,geojson]'
         })
     }
     

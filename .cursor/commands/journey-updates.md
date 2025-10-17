@@ -30,6 +30,9 @@ Type `/journey-updates` in the chat to trigger a merge of changes to the user jo
 - **Spacing**: "redline boundary" → "red line boundary"
 - **Error messages**: "Select a building type" → "Select a building type to continue"
 - **Page titles**: "Upload redline file" → "Upload a red line boundary file"
+- **Pronoun changes**: "your development" → "the development"
+- **Grammar fixes**: "If you need to help" → "If you need help"
+- **Alphabetical ordering**: Form options (checkboxes, radio buttons, select options) must be in alphabetical order
 
 ### Structural Change Examples
 - **New pages**: Step 7 "Email sent from the Nature Restoration Fund service" → `/nrf-estimate-1/estimate-email-content`
@@ -44,7 +47,21 @@ Take the instructions and parameters provided, then:
 2. **Changes Source**: 
    - Read and analyze the markdown file content in `{changes}`
    - Compare with the implemented user journey under `{journey}`
-   - **Content Comparison Techniques**:
+   - **Content Replacement Methodology** (Recommended Approach):
+     * **Parse Specification Content**: Extract complete content blocks from the markdown specification for each page
+     * **Content Block Identification**: Identify content sections in the specification:
+       - Main page content (paragraphs, lists, headings)
+       - Form labels and options
+       - Error messages and validation text
+       - Button text and navigation elements
+     * **Direct Content Mapping**: Map specification content directly to view file content sections
+     * **Template-Aware Replacement**: Replace content while preserving:
+       - GOV.UK Prototype Kit template structure
+       - Template variables and data binding (`{{ data.variable }}`)
+       - Form action URLs and method attributes
+       - CSS classes and HTML attributes
+       - JavaScript functionality
+   - **Content Comparison Techniques** (Fallback Approach):
      * Use grep/search tools to find specific text patterns
      * Compare exact strings between specification and implementation
      * Look for word variations, spacing differences, and terminology changes
@@ -68,8 +85,22 @@ Take the instructions and parameters provided, then:
      * Identify new pages that need to be created
      * Identify deleted pages that need to be removed
      * Check for page order changes and flow modifications
-   - Review the current implementation of the `{journey}` journey
-   - Identify the differences with the updated journey from `{changes}`
+   - **Content Replacement Strategy** (Primary Approach):
+     * **Extract Content Blocks**: Parse the specification markdown to extract complete content blocks for each page
+     * **Direct Content Replacement**: Replace entire content sections in view files with the exact content from the specification
+     * **Content Block Mapping**: Map specification content blocks to corresponding view file sections:
+       - Page titles and headings
+       - Main content paragraphs and lists
+       - Form labels and options
+       - Error messages and validation text
+       - Button text and navigation elements
+     * **Template Preservation**: Maintain GOV.UK Prototype Kit template structure while replacing content
+     * **Variable Preservation**: Keep existing template variables and data binding intact
+   - **Fallback Content Comparison** (Secondary Approach):
+     * Use grep/search tools to find specific text patterns
+     * Compare exact strings between specification and implementation
+     * Look for word variations, spacing differences, and terminology changes
+     * Check all user-facing text including hidden form elements and error messages
    - Focus on ALL content changes including:
      * **Text changes**: Exact wording, capitalization, punctuation, spacing
      * **Terminology changes**: Word variations (e.g., "redline" vs "red line", "dwellinghouse" vs "residential")
@@ -77,6 +108,7 @@ Take the instructions and parameters provided, then:
      * **Page titles and headings**: All heading text, page titles, form labels
      * **Navigation text**: Button text, link text, back link text
      * **Content structure**: Bullet points, lists, form options, radio/checkbox labels
+     * **Alphabetical ordering**: Ensure all form options (checkboxes, radio buttons, select options) are in alphabetical order by their display text
      * **Page flow changes**: New pages, deleted pages, conditional routing
      * **Data structure changes**: Field names, variable names, data types
    - Update the relevant files (routes, views, etc.)
@@ -98,6 +130,7 @@ Take the instructions and parameters provided, then:
      * Compare ALL user-facing text with the specification (page titles, headings, labels, buttons, error messages)
      * Verify terminology consistency throughout the journey
      * Check spacing, punctuation, and capitalization match exactly
+     * Verify all form options (checkboxes, radio buttons, select options) are in alphabetical order by display text
    - **Functional Testing**:
      * Ensure all form submissions work correctly
      * Verify navigation flow is maintained
