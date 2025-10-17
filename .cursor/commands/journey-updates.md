@@ -49,6 +49,7 @@ Take the instructions and parameters provided, then:
      * Compare exact strings between specification and implementation
      * Look for word variations, spacing differences, and terminology changes
      * Check all user-facing text including hidden form elements and error messages
+     * Forensically review the content in the implemented pages and compare against the content defined in `{changes}`    
    - **Structural Detection Techniques**:
      * Use `grep -E "^\|\|.*Path:"` to extract all page paths from specification
      * Use `ls app/views/{journey}/` to list existing view files
@@ -67,7 +68,7 @@ Take the instructions and parameters provided, then:
      * Identify new pages that need to be created
      * Identify deleted pages that need to be removed
      * Check for page order changes and flow modifications
-   - Review the current implementation of the `{journey_type}` journey
+   - Review the current implementation of the `{journey}` journey
    - Identify the differences with the updated journey from `{changes}`
    - Focus on ALL content changes including:
      * **Text changes**: Exact wording, capitalization, punctuation, spacing
@@ -83,8 +84,8 @@ Take the instructions and parameters provided, then:
    - Test the updated journey flow
 
 4. **Files to Update**:
-   - Routes: `app/routes/{journey_type}.js`
-   - Views: `app/views/{journey_type}/`
+   - Routes: `app/routes/{journey}.js`
+   - Views: `app/views/{journey}/`
    - Any additional files mentioned in the changes
 
 5. **Validation**:

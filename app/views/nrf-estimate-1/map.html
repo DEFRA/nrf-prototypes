@@ -12,9 +12,166 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
 <style>
+    /* Accessible map interface layout - GOV.UK compliant */
+    .map-interface {
+        display: flex;
+        gap: 30px;
+        margin-bottom: 30px;
+    }
+
+    .map-controls-panel {
+        width: 300px;
+        background: #f3f2f1;
+        border: 1px solid #b1b4b6;
+        padding: 20px;
+        flex-shrink: 0;
+    }
+
+    /* Typography following GOV.UK design system */
+    .map-controls-panel h2 {
+        font-family: "GDS Transport", arial, sans-serif;
+        font-size: 19px;
+        line-height: 1.31579;
+        font-weight: 700;
+        margin-top: 0;
+        margin-bottom: 15px;
+        color: #0b0c0c;
+    }
+
+    .map-controls-panel h3 {
+        font-family: "GDS Transport", arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.25;
+        font-weight: 700;
+        margin-top: 20px;
+        margin-bottom: 10px;
+        color: #0b0c0c;
+    }
+
+    .map-controls-panel h3:first-of-type {
+        margin-top: 0;
+    }
+
+    .search-container {
+        display: flex;
+        gap: 10px;
+        align-items: flex-end;
+    }
+
+    .search-container .govuk-input {
+        flex: 1;
+    }
+
+    .search-button {
+        flex-shrink: 0;
+        margin-bottom: 0;
+    }
+
+    /* GOV.UK link styling for tool links */
+    .tool-links {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .tool-links .govuk-link {
+        display: block;
+        font-family: "GDS Transport", arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.25;
+        text-decoration: underline;
+        text-decoration-thickness: max(1px, 0.0625rem);
+        text-underline-offset: 0.1em;
+        color: #1d70b8;
+        cursor: pointer;
+        padding: 10px 0;
+        border: none;
+        background: none;
+        width: 100%;
+        text-align: left;
+    }
+
+    .tool-links .govuk-link:hover {
+        color: #003078;
+        text-decoration-thickness: max(3px, 0.1875rem, 0.12em);
+        text-underline-offset: 0.1em;
+    }
+
+    .tool-links .govuk-link:focus {
+        outline: 3px solid #ffdd00;
+        outline-offset: 0;
+        background-color: #ffdd00;
+        color: #0b0c0c;
+        text-decoration: none;
+    }
+
+    .tool-links .govuk-link:visited {
+        color: #4c2c92;
+    }
+
+    .tool-links .govuk-link:visited:hover {
+        color: #003078;
+    }
+
+    .tool-links .govuk-link:visited:focus {
+        color: #0b0c0c;
+    }
+
+    /* Disabled state for tool links */
+    .tool-links .govuk-link[aria-disabled="true"] {
+        color: #505a5f;
+        cursor: not-allowed;
+        text-decoration: none;
+    }
+
+    .tool-links .govuk-link[aria-disabled="true"]:hover {
+        color: #505a5f;
+        text-decoration: none;
+    }
+
+    .tool-links .govuk-link[aria-disabled="true"]:focus {
+        outline: 3px solid #ffdd00;
+        outline-offset: 0;
+        background-color: #ffdd00;
+        color: #0b0c0c;
+    }
+
+    /* Destructive action styling */
+    .tool-links .govuk-link--destructive {
+        color: #d4351c;
+    }
+
+    .tool-links .govuk-link--destructive:hover {
+        color: #a52814;
+        text-decoration-thickness: max(3px, 0.1875rem, 0.12em);
+    }
+
+    .tool-links .govuk-link--destructive:focus {
+        color: #0b0c0c;
+        background-color: #ffdd00;
+    }
+
+    .map-controls-panel .govuk-hint {
+        font-family: "GDS Transport", arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.25;
+        margin-top: 5px;
+        margin-bottom: 10px;
+        color: #505a5f;
+    }
+
+    .map-controls-panel .govuk-form-group {
+        margin-bottom: 20px;
+    }
+
+    .map-controls-panel .govuk-form-group:last-child {
+        margin-bottom: 0;
+    }
+
     .map-container {
         position: relative;
-        margin-bottom: 2rem;
+        flex: 1;
+        min-height: 500px;
     }
 
     #map {
@@ -23,22 +180,32 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
         border: 1px solid #b1b4b6;
     }
 
-
-    /* Minimal Leaflet Draw overrides to work with GOV.UK */
+    /* Hide the default Leaflet draw toolbar since we're using our own controls */
     .leaflet-draw-toolbar {
-        border: 2px solid #0b0c0c !important;
-        background: white !important;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2) !important;
+        display: none !important;
     }
 
-    .leaflet-draw-toolbar a {
-        background-color: white !important;
-        border: 1px solid #0b0c0c !important;
-        color: #0b0c0c !important;
-    }
+    /* Responsive design for smaller screens - GOV.UK compliant */
+    @media (max-width: 768px) {
+        .map-interface {
+            flex-direction: column;
+            gap: 20px;
+        }
 
-    .leaflet-draw-toolbar a:hover {
-        background-color: #f3f2f1 !important;
+        .map-controls-panel {
+            width: 100%;
+            padding: 15px;
+        }
+
+        .search-container {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 15px;
+        }
+
+        .search-button {
+            margin-top: 0;
+        }
     }
 </style>
 {% endblock %}
@@ -84,23 +251,70 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
                 </p>
                 {% endif %}
 
-                <div class="govuk-inset-text">
-                    <p class="govuk-body govuk-!-margin-bottom-1">
-                        <strong>Instructions:</strong>
-                    </p>
-                    <ul class="govuk-list govuk-list--bullet govuk-!-margin-bottom-0">
-                        <li>Click the polygon tool in the toolbar (top left of map)</li>
-                        <li>Click on the map to create points for your development boundary</li>
-                        <li>Double-click to finish drawing</li>
-                        <li>You can edit or delete your boundary using the toolbar</li>
-                    </ul>
-                </div>
+                <!-- Accessible map interface with left panel -->
+                <div class="map-interface">
+                    <!-- Left control panel -->
+                    <div class="map-controls-panel">
+                        <!-- Search functionality -->
+                        <div class="govuk-form-group">
+                            <label class="govuk-label" for="location-search">
+                                Search for a location
+                            </label>
+                            <div class="search-container">
+                                <input class="govuk-input" id="location-search" name="location-search" type="text"
+                                    placeholder="Enter postcode, town or area">
+                            </div>
+                        </div>
 
-                <div class="map-container">
-                    <div id="map">
-                        <div id="map-loading"
-                            style="text-align: center; padding: 2rem; background: #f8f8f8; border: 1px solid #ccc;">
-                            <p class="govuk-body">Loading map...</p>
+                        <!-- Drawing tools -->
+                        <div class="govuk-form-group">
+                            <h2 class="govuk-heading-s">Drawing tools</h2>
+                            <div class="tool-links">
+                                <a href="#" class="govuk-link" id="start-drawing" data-tool="polygon"
+                                    aria-describedby="drawing-instructions" role="button" tabindex="0">
+                                    Start drawing boundary
+                                </a>
+                                <a href="#" class="govuk-link" id="edit-boundary" data-tool="edit"
+                                    aria-describedby="edit-instructions" role="button" tabindex="-1"
+                                    aria-disabled="true">
+                                    Edit boundary
+                                </a>
+                                <a href="#" class="govuk-link govuk-link--destructive" id="delete-boundary"
+                                    data-tool="delete" aria-describedby="delete-instructions" role="button"
+                                    tabindex="-1" aria-disabled="true">
+                                    Delete boundary
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Map controls -->
+                        <div class="govuk-form-group">
+                            <h3 class="govuk-heading-xs">Map View</h3>
+                            <div class="tool-links">
+                                <a href="#" class="govuk-link" id="zoom-to-england" aria-describedby="zoom-england-help"
+                                    role="button" tabindex="0">
+                                    Show all England
+                                </a>
+                                <a href="#" class="govuk-link" id="zoom-to-boundary"
+                                    aria-describedby="zoom-boundary-help" role="button" tabindex="-1"
+                                    aria-disabled="true">
+                                    Zoom to boundary
+                                </a>
+                                <a href="#" class="govuk-link" id="toggle-catchments"
+                                    aria-describedby="toggle-catchments-help" role="button" tabindex="0">
+                                    Toggle catchments
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Map container -->
+                    <div class="map-container">
+                        <div id="map" role="img" aria-label="Interactive map for drawing development boundary">
+                            <div id="map-loading"
+                                style="text-align: center; padding: 2rem; background: #f8f8f8; border: 1px solid #ccc;">
+                                <p class="govuk-body">Loading map...</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -305,16 +519,21 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
                         });
 
 
-                    // Initialize the draw control
+                    // Initialize the draw control (hidden, we'll use our own controls)
                     const drawnItems = new L.FeatureGroup();
                     map.addLayer(drawnItems);
 
+                    // Create draw control but don't add it to map (we'll control it programmatically)
                     const drawControl = new L.Control.Draw({
                         position: 'topleft',
                         draw: {
                             polygon: {
                                 allowIntersection: false,
                                 showArea: true,
+                                showLength: true,
+                                metric: true,
+                                feet: false,
+                                nautic: false,
                                 drawError: {
                                     color: '#e1e100',
                                     message: '<strong>Error:</strong> shape edges cannot cross!'
@@ -338,8 +557,19 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
                             remove: true
                         }
                     });
+
+                    // Add the control to the map but hide it
                     map.addControl(drawControl);
-                    console.log('Draw control added');
+
+                    // Hide the toolbar after it's added
+                    setTimeout(() => {
+                        const toolbar = document.querySelector('.leaflet-draw-toolbar');
+                        if (toolbar) {
+                            toolbar.style.display = 'none';
+                        }
+                    }, 100);
+
+                    console.log('Draw control created and added to map');
 
                     // Add a simple click handler to test if events are working
                     map.on('click', function (e) {
@@ -391,143 +621,9 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
                         console.log('No existing boundary data found');
                     }
 
-                    // Handle drawing events
-                    map.on(L.Draw.Event.CREATED, function (event) {
-                        console.log('=== POLYGON CREATED EVENT ===');
-                        console.log('Polygon created');
-                        console.log('edpLayers length:', edpLayers.length);
-                        console.log('edpLayers available:', edpLayers.length > 0);
+                    // Drawing events are now handled in the accessible controls function
 
-                        const layer = event.layer;
-                        drawnItems.addLayer(layer);
-
-                        // Check if catchments are loaded
-                        if (edpLayers.length === 0) {
-                            console.log('WARNING: No catchments loaded yet, skipping intersection check');
-                            updateBoundaryData(layer, null);
-                            return;
-                        }
-
-                        // Check if the drawn polygon intersects with any catchment boundary
-                        const drawnPolygon = layer.getLatLngs()[0];
-                        const drawnPoints = drawnPolygon.map(latLng => [latLng.lng, latLng.lat]); // Convert to [lng, lat] format
-
-                        console.log('=== INTERSECTION DEBUG ===');
-                        console.log('Drawn polygon points:', drawnPoints);
-                        console.log('Number of catchments to check:', edpLayers.length);
-                        console.log('First few catchments:', edpLayers.slice(0, 3).map(c => ({name: c.name, coordsLength: c.coordinates.length})));
-
-                        let intersectingCatchment = null;
-                        edpLayers.forEach((catchment, index) => {
-                            console.log(`Checking catchment ${index + 1}: ${catchment.name}`);
-                            console.log(`Catchment coordinates length: ${catchment.coordinates.length}`);
-                            console.log(`First few catchment coords:`, catchment.coordinates.slice(0, 3));
-
-                            const intersects = polygonIntersects(drawnPoints, catchment.coordinates);
-                            console.log(`Intersects with ${catchment.name}:`, intersects);
-
-                            if (intersects) {
-                                intersectingCatchment = catchment;
-                                console.log(`FOUND INTERSECTION: ${catchment.name}`);
-                            }
-                        });
-
-                        console.log('Final intersecting catchment:', intersectingCatchment ? intersectingCatchment.name : 'null');
-                        console.log('=== END INTERSECTION DEBUG ===');
-
-                        // Update the boundary data
-                        updateBoundaryData(layer, intersectingCatchment);
-                    });
-
-                    map.on(L.Draw.Event.EDITED, function (event) {
-                        console.log('Polygon edited');
-                        const layers = event.layers;
-                        layers.eachLayer(function (layer) {
-                            const drawnPolygon = layer.getLatLngs()[0];
-                            const drawnPoints = drawnPolygon.map(latLng => [latLng.lng, latLng.lat]); // Convert to [lng, lat] format
-
-                            let intersectingCatchment = null;
-                            edpLayers.forEach(catchment => {
-                                if (polygonIntersects(drawnPoints, catchment.coordinates)) {
-                                    intersectingCatchment = catchment;
-                                }
-                            });
-
-                            updateBoundaryData(layer, intersectingCatchment);
-                        });
-                    });
-
-                    map.on(L.Draw.Event.DELETED, function (event) {
-                        console.log('Polygon deleted');
-                        document.getElementById('boundary-data').value = '';
-                    });
-
-                    // Helper function to check if a point is within a polygon
-                    function isPointInPolygon(point, polygon) {
-                        const x = point[0], y = point[1]; // point is [lng, lat]
-                        console.log(`Checking point [${x}, ${y}] against polygon with ${polygon.length} vertices`);
-                        console.log(`Polygon sample: [${polygon[0][0]}, ${polygon[0][1]}], [${polygon[1][0]}, ${polygon[1][1]}]`);
-
-                        let inside = false;
-                        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-                            // polygon coordinates are [lng, lat] format
-                            const xi = polygon[i][0], yi = polygon[i][1]; // [lng, lat]
-                            const xj = polygon[j][0], yj = polygon[j][1]; // [lng, lat]
-                            if (((yi > y) !== (yj > y)) &&
-                                (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
-                                inside = !inside;
-                            }
-                        }
-                        console.log(`Point [${x}, ${y}] inside polygon: ${inside}`);
-                        return inside;
-                    }
-
-                    // Helper function to check if two polygons intersect
-                    function polygonIntersects(polygon1, polygon2) {
-                        console.log('polygonIntersects called with:');
-                        console.log('polygon1 length:', polygon1.length);
-                        console.log('polygon2 length:', polygon2.length);
-                        console.log('polygon1 sample:', polygon1.slice(0, 2));
-                        console.log('polygon2 sample (before conversion):', polygon2.slice(0, 2));
-
-                        // Convert polygon2 coordinates from [lat, lng] to [lng, lat] format
-                        const poly2 = polygon2.map(coord => [coord[1], coord[0]]);
-                        console.log('poly2 (converted) length:', poly2.length);
-                        console.log('poly2 sample (after conversion):', poly2.slice(0, 2));
-
-                        // Simplified approach: check if any vertex of polygon1 is inside polygon2
-                        // This is more reliable than complex edge intersection algorithms
-                        for (let i = 0; i < polygon1.length; i++) {
-                            const inside = isPointInPolygon(polygon1[i], poly2);
-                            console.log(`Checking vertex ${i} [${polygon1[i][0]}, ${polygon1[i][1]}] inside polygon2: ${inside}`);
-                            if (inside) {
-                                console.log(`Vertex ${i} of polygon1 is inside polygon2`);
-                                return true;
-                            }
-                        }
-
-                        // Also check if any vertex of polygon2 is inside polygon1
-                        for (let i = 0; i < poly2.length; i++) {
-                            const inside = isPointInPolygon(poly2[i], polygon1);
-                            if (inside) {
-                                console.log(`Vertex ${i} of polygon2 is inside polygon1`);
-                                return true;
-                            }
-                        }
-
-                        // Check center point of polygon1
-                        const centerLng = polygon1.reduce((sum, coord) => sum + coord[0], 0) / polygon1.length;
-                        const centerLat = polygon1.reduce((sum, coord) => sum + coord[1], 0) / polygon1.length;
-                        const centerInside = isPointInPolygon([centerLng, centerLat], poly2);
-                        console.log(`Center point [${centerLng}, ${centerLat}] inside polygon2: ${centerInside}`);
-                        if (centerInside) {
-                            console.log('Center point of polygon1 is inside polygon2');
-                            return true;
-                        }
-
-                        console.log('No intersection found');
-                        return false;
-                    }
+                    // Helper functions moved to global scope for accessibility
 
                     // Helper function to check if two line segments intersect
                     function lineSegmentsIntersect(p1, q1, p2, q2) {
@@ -559,22 +655,7 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
                         return false;
                     }
 
-                    // Update boundary data in the hidden input
-                    function updateBoundaryData(layer, intersectingCatchment) {
-                        const bounds = layer.getBounds();
-                        const center = bounds.getCenter();
-                        const latLngs = layer.getLatLngs()[0];
-                        const points = latLngs.map(latLng => [latLng.lng, latLng.lat]);
-
-                        const boundaryData = {
-                            center: [center.lng, center.lat],
-                            points: points,
-                            intersectingCatchment: intersectingCatchment ? intersectingCatchment.name : null
-                        };
-
-                        document.getElementById('boundary-data').value = JSON.stringify(boundaryData);
-                        console.log('Boundary data updated:', boundaryData);
-                    }
+                    // updateBoundaryData function moved to global scope for accessibility
 
                     // Form submission validation and navigation logic
                     document.querySelector('form').addEventListener('submit', function (e) {
@@ -616,6 +697,26 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
                         }
                     });
 
+                    // Initialize accessible controls with a delay to ensure draw control is ready
+                    setTimeout(() => {
+                        // Check if DOM is ready and all required objects exist
+                        if (document.readyState === 'loading') {
+                            document.addEventListener('DOMContentLoaded', () => {
+                                if (map && drawControl && drawnItems && edpLayers) {
+                                    initAccessibleControls(map, drawControl, drawnItems, edpLayers);
+                                } else {
+                                    console.error('Required objects not available for initialization');
+                                }
+                            });
+                        } else {
+                            if (map && drawControl && drawnItems && edpLayers) {
+                                initAccessibleControls(map, drawControl, drawnItems, edpLayers);
+                            } else {
+                                console.error('Required objects not available for initialization');
+                            }
+                        }
+                    }, 500);
+
                     console.log('Map setup complete');
                 } catch (error) {
                     console.error('Error initializing map:', error);
@@ -625,6 +726,564 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
                     }
                 }
             }, 1000); // Increased delay to ensure GOV.UK components are ready
+        }
+
+        // Helper functions for polygon intersection detection
+        function isPointInPolygon(point, polygon) {
+            const x = point[0], y = point[1]; // point is [lng, lat]
+
+            let inside = false;
+            for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+                // polygon coordinates are [lng, lat] format
+                const xi = polygon[i][0], yi = polygon[i][1]; // [lng, lat]
+                const xj = polygon[j][0], yj = polygon[j][1]; // [lng, lat]
+                if (((yi > y) !== (yj > y)) &&
+                    (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+                    inside = !inside;
+                }
+            }
+            return inside;
+        }
+
+        function polygonIntersects(polygon1, polygon2) {
+            // Convert polygon2 coordinates from [lat, lng] to [lng, lat] format
+            const poly2 = polygon2.map(coord => [coord[1], coord[0]]);
+
+            // Quick check: if polygons have very different bounding boxes, they likely don't intersect
+            const bounds1 = getPolygonBounds(polygon1);
+            const bounds2 = getPolygonBounds(poly2);
+            if (!boundsOverlap(bounds1, bounds2)) {
+                return false;
+            }
+
+            // Check if any vertex of polygon1 is inside polygon2
+            for (let i = 0; i < polygon1.length; i++) {
+                if (isPointInPolygon(polygon1[i], poly2)) {
+                    return true;
+                }
+            }
+
+            // Check if any vertex of polygon2 is inside polygon1
+            for (let i = 0; i < poly2.length; i++) {
+                if (isPointInPolygon(poly2[i], polygon1)) {
+                    return true;
+                }
+            }
+
+            // Check center point of polygon1
+            const centerLng = polygon1.reduce((sum, coord) => sum + coord[0], 0) / polygon1.length;
+            const centerLat = polygon1.reduce((sum, coord) => sum + coord[1], 0) / polygon1.length;
+            if (isPointInPolygon([centerLng, centerLat], poly2)) {
+                return true;
+            }
+
+            return false;
+        }
+
+        // Helper function to get polygon bounding box
+        function getPolygonBounds(polygon) {
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            for (const point of polygon) {
+                minX = Math.min(minX, point[0]);
+                minY = Math.min(minY, point[1]);
+                maxX = Math.max(maxX, point[0]);
+                maxY = Math.max(maxY, point[1]);
+            }
+            return {minX, minY, maxX, maxY};
+        }
+
+        // Helper function to check if two bounding boxes overlap
+        function boundsOverlap(bounds1, bounds2) {
+            return !(bounds1.maxX < bounds2.minX || bounds2.maxX < bounds1.minX ||
+                bounds1.maxY < bounds2.minY || bounds2.maxY < bounds1.minY);
+        }
+
+        // Update boundary data in the hidden input
+        function updateBoundaryData(layer, intersectingCatchment) {
+            if (!layer) {
+                console.log('No layer provided to updateBoundaryData');
+                document.getElementById('boundary-data').value = '';
+                return;
+            }
+
+            const bounds = layer.getBounds();
+            const center = bounds.getCenter();
+            const latLngs = layer.getLatLngs()[0];
+            const points = latLngs.map(latLng => [latLng.lng, latLng.lat]);
+
+            const boundaryData = {
+                center: [center.lng, center.lat],
+                points: points,
+                intersectingCatchment: intersectingCatchment ? intersectingCatchment.name : null
+            };
+
+            document.getElementById('boundary-data').value = JSON.stringify(boundaryData);
+            console.log('Boundary data updated:', boundaryData);
+        }
+
+        // Initialize accessible controls
+        function initAccessibleControls(map, drawControl, drawnItems, edpLayers) {
+            // Validate required parameters
+            if (!map || !drawControl || !drawnItems) {
+                console.error('Missing required parameters for initAccessibleControls');
+                return;
+            }
+
+            // Get control elements with null checks
+            const startDrawingBtn = document.getElementById('start-drawing');
+            const editBoundaryBtn = document.getElementById('edit-boundary');
+            const deleteBoundaryBtn = document.getElementById('delete-boundary');
+            const zoomToEnglandBtn = document.getElementById('zoom-to-england');
+            const zoomToBoundaryBtn = document.getElementById('zoom-to-boundary');
+            const toggleCatchmentsBtn = document.getElementById('toggle-catchments');
+            const searchInput = document.getElementById('location-search');
+            const searchBtn = document.getElementById('search-location');
+
+            // Check if all required elements exist
+            if (!startDrawingBtn || !editBoundaryBtn || !deleteBoundaryBtn ||
+                !zoomToEnglandBtn || !zoomToBoundaryBtn || !toggleCatchmentsBtn ||
+                !searchInput || !searchBtn) {
+                console.error('One or more control elements not found in DOM');
+                return;
+            }
+
+            // Status functions removed - no status panel needed
+
+            let isDrawing = false;
+            let isEditing = false;
+            let catchmentsVisible = true;
+            let currentDrawingLayer = null;
+
+            // Debug: Check if draw control is properly initialized
+            console.log('Draw control object:', drawControl);
+            console.log('Draw control toolbars:', drawControl._toolbars);
+            if (drawControl._toolbars) {
+                console.log('Draw toolbars:', drawControl._toolbars.draw);
+                console.log('Edit toolbars:', drawControl._toolbars.edit);
+            }
+
+            // Start drawing mode
+            startDrawingBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                if (isDrawing) {
+                    // Cancel drawing
+                    if (currentDrawingLayer) {
+                        drawnItems.removeLayer(currentDrawingLayer);
+                        currentDrawingLayer = null;
+                    }
+                    // Disable drawing mode
+                    if (drawControl._toolbars && drawControl._toolbars.draw && drawControl._toolbars.draw._modes && drawControl._toolbars.draw._modes.polygon) {
+                        drawControl._toolbars.draw._modes.polygon.handler.disable();
+                    }
+                    isDrawing = false;
+                    startDrawingBtn.textContent = 'Start Drawing Boundary';
+                    startDrawingBtn.classList.remove('govuk-link--destructive');
+                    console.log('Drawing cancelled');
+                } else {
+                    // Start drawing
+                    if (drawControl._toolbars && drawControl._toolbars.draw && drawControl._toolbars.draw._modes && drawControl._toolbars.draw._modes.polygon) {
+                        drawControl._toolbars.draw._modes.polygon.handler.enable();
+                        isDrawing = true;
+                        startDrawingBtn.textContent = 'Cancel Drawing';
+                        startDrawingBtn.classList.add('govuk-link--destructive');
+                        console.log('Click on the map to start drawing your boundary');
+                    } else {
+                        console.error('Draw control not properly initialized');
+                        console.error('Error: Drawing control not available');
+                    }
+                }
+            });
+
+            // Edit boundary
+            editBoundaryBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                if (isEditing) {
+                    // Stop editing
+                    if (drawControl._toolbars && drawControl._toolbars.edit && drawControl._toolbars.edit._modes && drawControl._toolbars.edit._modes.edit) {
+                        drawControl._toolbars.edit._modes.edit.handler.disable();
+                    }
+                    isEditing = false;
+                    editBoundaryBtn.textContent = 'Edit Boundary';
+                    editBoundaryBtn.classList.remove('govuk-link--destructive');
+                    console.log('Edit mode disabled');
+                } else {
+                    // Start editing
+                    if (drawnItems.getLayers().length > 0) {
+                        if (drawControl._toolbars && drawControl._toolbars.edit && drawControl._toolbars.edit._modes && drawControl._toolbars.edit._modes.edit) {
+                            drawControl._toolbars.edit._modes.edit.handler.enable();
+                            isEditing = true;
+                            editBoundaryBtn.textContent = 'Stop Editing';
+                            editBoundaryBtn.classList.add('govuk-link--destructive');
+                            console.log('Click and drag points to edit your boundary');
+                        } else {
+                            console.error('Edit control not properly initialized');
+                            console.error('Error: Edit control not available');
+                        }
+                    } else {
+                        console.log('No boundary to edit. Please draw a boundary first.', 'error');
+                    }
+                }
+            });
+
+            // Delete boundary
+            deleteBoundaryBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                if (drawnItems.getLayers().length > 0) {
+                    if (confirm('Are you sure you want to delete the boundary?')) {
+                        drawnItems.clearLayers();
+                        updateBoundaryData(null, null);
+                        console.log('Boundary deleted');
+                        updateLinkStates();
+                    }
+                } else {
+                    console.log('No boundary to delete', 'error');
+                }
+            });
+
+            // Zoom to England
+            zoomToEnglandBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                map.setView([52.5, -1.5], 6);
+                console.log('Zoomed to show all of England');
+            });
+
+            // Zoom to boundary
+            zoomToBoundaryBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                if (drawnItems.getLayers().length > 0) {
+                    const group = new L.featureGroup(drawnItems.getLayers());
+                    map.fitBounds(group.getBounds().pad(0.1));
+                    console.log('Zoomed to boundary');
+                } else {
+                    console.log('No boundary to zoom to', 'error');
+                }
+            });
+
+            // Toggle catchments
+            toggleCatchmentsBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                if (edpLayers && edpLayers.length > 0) {
+                    catchmentsVisible = !catchmentsVisible;
+                    edpLayers.forEach(edp => {
+                        if (catchmentsVisible) {
+                            map.addLayer(edp.polygon);
+                        } else {
+                            map.removeLayer(edp.polygon);
+                        }
+                    });
+                    toggleCatchmentsBtn.textContent = catchmentsVisible ? 'Hide Catchments' : 'Show Catchments';
+                    console.log(catchmentsVisible ? 'Catchments shown' : 'Catchments hidden');
+                } else {
+                    console.log('No catchment data available', 'error');
+                }
+            });
+
+            // Search functionality (basic implementation)
+            function performSearch(query) {
+                if (!query.trim()) {
+                    console.log('Please enter a search term', 'error');
+                    return;
+                }
+
+                // This is a basic implementation - in a real app you'd use a geocoding service
+                console.log(`Searching for "${query}"...`);
+
+                // For now, just show a message - you could integrate with a geocoding API
+                setTimeout(() => {
+                    console.log(`Search for "${query}" completed. (Note: This is a demo - integrate with a geocoding service for real functionality)`);
+                }, 1000);
+            }
+
+            searchBtn.addEventListener('click', function () {
+                performSearch(searchInput.value);
+            });
+
+            searchInput.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    performSearch(searchInput.value);
+                }
+            });
+
+            // Update link states based on current state
+            function updateLinkStates() {
+                const hasBoundary = drawnItems.getLayers().length > 0;
+
+                if (hasBoundary) {
+                    editBoundaryBtn.removeAttribute('aria-disabled');
+                    editBoundaryBtn.setAttribute('tabindex', '0');
+
+                    deleteBoundaryBtn.removeAttribute('aria-disabled');
+                    deleteBoundaryBtn.setAttribute('tabindex', '0');
+
+                    zoomToBoundaryBtn.removeAttribute('aria-disabled');
+                    zoomToBoundaryBtn.setAttribute('tabindex', '0');
+                } else {
+                    editBoundaryBtn.setAttribute('aria-disabled', 'true');
+                    editBoundaryBtn.setAttribute('tabindex', '-1');
+
+                    deleteBoundaryBtn.setAttribute('aria-disabled', 'true');
+                    deleteBoundaryBtn.setAttribute('tabindex', '-1');
+
+                    zoomToBoundaryBtn.setAttribute('aria-disabled', 'true');
+                    zoomToBoundaryBtn.setAttribute('tabindex', '-1');
+                }
+            }
+
+            // Catchment status updates removed - no status panel needed
+
+            // Handle drawing events with comprehensive error protection
+            function setupDrawingEvents() {
+                try {
+                    // Validate all required objects exist and are properly initialized
+                    if (!map || typeof map.on !== 'function') {
+                        console.warn('Map object not ready for event listeners');
+                        return;
+                    }
+
+                    if (!L || !L.Draw || !L.Draw.Event) {
+                        console.warn('Leaflet Draw not available for event listeners');
+                        return;
+                    }
+
+                    // Check if map is fully initialized
+                    if (!map._container || !map._container.parentNode) {
+                        console.warn('Map container not ready');
+                        return;
+                    }
+
+                    console.log('Setting up drawing event listeners...');
+
+                    // Debug: Log all available Draw events
+                    console.log('Available Draw events:', Object.keys(L.Draw.Event));
+                    console.log('DRAWSTART:', L.Draw.Event.DRAWSTART);
+                    console.log('DRAWVERTEX:', L.Draw.Event.DRAWVERTEX);
+                    console.log('DRAWCANCEL:', L.Draw.Event.DRAWCANCEL);
+
+                    // Track when drawing starts
+                    if (L.Draw.Event.DRAWSTART) {
+                        try {
+                            map.on(L.Draw.Event.DRAWSTART, function (event) {
+                                console.log('Drawing started:', event);
+                                console.log('Drawing started - click on the map to create points');
+                            });
+                            console.log('DRAWSTART event listener added successfully');
+                        } catch (error) {
+                            console.error('Error adding DRAWSTART event listener:', error);
+                        }
+                    } else {
+                        console.warn('DRAWSTART event not available');
+                    }
+
+                    // Track when drawing is in progress
+                    if (L.Draw.Event.DRAWVERTEX) {
+                        try {
+                            map.on(L.Draw.Event.DRAWVERTEX, function (event) {
+                                console.log('Vertex added:', event);
+                                console.log('Point added - continue clicking to add more points or double-click to finish');
+                            });
+                            console.log('DRAWVERTEX event listener added successfully');
+                        } catch (error) {
+                            console.error('Error adding DRAWVERTEX event listener:', error);
+                        }
+                    } else {
+                        console.warn('DRAWVERTEX event not available');
+                    }
+
+                    // Track when drawing is cancelled
+                    if (L.Draw.Event.DRAWCANCEL) {
+                        try {
+                            map.on(L.Draw.Event.DRAWCANCEL, function (event) {
+                                console.log('Drawing cancelled:', event);
+                                isDrawing = false;
+                                startDrawingBtn.textContent = 'Start Drawing Boundary';
+                                startDrawingBtn.classList.remove('govuk-link--destructive');
+                                console.log('Drawing cancelled');
+                            });
+                            console.log('DRAWCANCEL event listener added successfully');
+                        } catch (error) {
+                            console.error('Error adding DRAWCANCEL event listener:', error);
+                            console.log('DRAWCANCEL event will be handled through alternative method');
+                        }
+                    } else {
+                        console.warn('DRAWCANCEL event not available');
+                    }
+
+                    // Alternative: Handle drawing cancellation through map click events
+                    // This is a fallback if DRAWCANCEL doesn't work
+                    try {
+                        map.on('click', function (e) {
+                            // Only handle if we're in drawing mode and user clicks outside
+                            if (isDrawing) {
+                                console.log('Map clicked during drawing - potential cancellation');
+                                // Note: This is a simplified approach, the actual cancellation
+                                // will be handled by the drawing controls
+                            }
+                        });
+                        console.log('Alternative drawing cancellation handler added');
+                    } catch (error) {
+                        console.error('Error adding alternative cancellation handler:', error);
+                    }
+
+                    console.log('Drawing event listeners set up successfully');
+                } catch (error) {
+                    console.error('Error setting up drawing event listeners:', error);
+                }
+            }
+
+            // Set up drawing events with a delay
+            setTimeout(setupDrawingEvents, 1000);
+
+            // Handle polygon creation and other events
+            function setupPolygonEvents() {
+                try {
+                    // Validate all required objects exist and are properly initialized
+                    if (!map || typeof map.on !== 'function') {
+                        console.warn('Map object not ready for polygon event listeners');
+                        return;
+                    }
+
+                    if (!L || !L.Draw || !L.Draw.Event) {
+                        console.warn('Leaflet Draw not available for polygon event listeners');
+                        return;
+                    }
+
+                    // Check if map is fully initialized
+                    if (!map._container || !map._container.parentNode) {
+                        console.warn('Map container not ready for polygon events');
+                        return;
+                    }
+
+                    console.log('Setting up polygon event listeners...');
+
+                    // Handle polygon creation
+                    map.on(L.Draw.Event.CREATED, function (event) {
+                        console.log('Polygon created event triggered');
+                        const layer = event.layer;
+                        drawnItems.addLayer(layer);
+                        currentDrawingLayer = layer;
+                        isDrawing = false;
+                        startDrawingBtn.textContent = 'Start Drawing Boundary';
+                        startDrawingBtn.classList.remove('govuk-link--destructive');
+
+                        console.log('Boundary created successfully');
+                        updateLinkStates();
+
+                        // Check for intersections with catchments (optimized)
+                        if (edpLayers && edpLayers.length > 0) {
+                            const drawnPolygon = layer.getLatLngs()[0];
+                            const drawnPoints = drawnPolygon.map(latLng => [latLng.lng, latLng.lat]);
+
+                            let intersectingCatchment = null;
+                            // Limit to first 10 catchments to improve performance
+                            const catchmentsToCheck = edpLayers.slice(0, 10);
+
+                            for (const catchment of catchmentsToCheck) {
+                                if (polygonIntersects(drawnPoints, catchment.coordinates)) {
+                                    intersectingCatchment = catchment;
+                                    break; // Stop at first intersection found
+                                }
+                            }
+
+                            updateBoundaryData(layer, intersectingCatchment);
+
+                            if (intersectingCatchment) {
+                                console.log(`Boundary intersects with catchment: ${intersectingCatchment.name}`);
+                            } else {
+                                console.log('Boundary created - no catchment intersection detected');
+                            }
+                        } else {
+                            updateBoundaryData(layer, null);
+                        }
+                    });
+
+                    // Handle polygon editing
+                    map.on(L.Draw.Event.EDITED, function (event) {
+                        console.log('Boundary edited successfully');
+                        // Re-check intersections after editing (optimized)
+                        const layers = event.layers;
+                        layers.eachLayer(function (layer) {
+                            if (edpLayers && edpLayers.length > 0) {
+                                const drawnPolygon = layer.getLatLngs()[0];
+                                const drawnPoints = drawnPolygon.map(latLng => [latLng.lng, latLng.lat]);
+
+                                let intersectingCatchment = null;
+                                // Limit to first 10 catchments to improve performance
+                                const catchmentsToCheck = edpLayers.slice(0, 10);
+
+                                for (const catchment of catchmentsToCheck) {
+                                    if (polygonIntersects(drawnPoints, catchment.coordinates)) {
+                                        intersectingCatchment = catchment;
+                                        break; // Stop at first intersection found
+                                    }
+                                }
+
+                                updateBoundaryData(layer, intersectingCatchment);
+                            } else {
+                                updateBoundaryData(layer, null);
+                            }
+                        });
+                    });
+
+                    // Handle polygon deletion
+                    map.on(L.Draw.Event.DELETED, function (event) {
+                        console.log('Boundary deleted');
+                        updateLinkStates();
+                        document.getElementById('boundary-data').value = '';
+                    });
+
+                    // Handle when drawing is completed (polygon is closed)
+                    map.on(L.Draw.Event.DRAWSTOP, function (event) {
+                        console.log('Drawing stopped:', event);
+                        if (isDrawing) {
+                            console.log('Drawing completed - polygon has been created');
+                        }
+                    });
+
+                    console.log('Polygon event listeners set up successfully');
+                } catch (error) {
+                    console.error('Error setting up polygon event listeners:', error);
+                }
+            }
+
+            // Set up polygon events with a delay
+            setTimeout(setupPolygonEvents, 1200);
+
+            // Add keyboard event handling for links
+            function addKeyboardHandling(linkElement, clickHandler) {
+                if (!linkElement) {
+                    console.warn('Link element is null, skipping keyboard handling');
+                    return;
+                }
+                linkElement.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        clickHandler(e);
+                    }
+                });
+            }
+
+            // Add keyboard handling to all tool links
+            addKeyboardHandling(startDrawingBtn, function (e) {
+                startDrawingBtn.click();
+            });
+            addKeyboardHandling(editBoundaryBtn, function (e) {
+                editBoundaryBtn.click();
+            });
+            addKeyboardHandling(deleteBoundaryBtn, function (e) {
+                deleteBoundaryBtn.click();
+            });
+            addKeyboardHandling(zoomToEnglandBtn, function (e) {
+                zoomToEnglandBtn.click();
+            });
+            addKeyboardHandling(zoomToBoundaryBtn, function (e) {
+                zoomToBoundaryBtn.click();
+            });
+            addKeyboardHandling(toggleCatchmentsBtn, function (e) {
+                toggleCatchmentsBtn.click();
+            });
+
+            // Initialize link states
+            updateLinkStates();
         }
     })();
 </script>
