@@ -1,7 +1,8 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-Check your answers - Get an estimate for Nature Restoration Fund Levy - GOV.UK
+Check your answers - {% if data.journeyType === 'payment' %}Pay for Nature Restoration Fund Levy{% else %}Get an
+estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
 {% endblock %}
 
 {% block content %}

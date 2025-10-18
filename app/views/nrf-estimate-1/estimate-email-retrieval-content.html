@@ -1,7 +1,8 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-Email sent to get magic link to access estimate - Pay for Nature Restoration Fund Levy
+Email sent to get magic link to access estimate - {% if data.journeyType === 'payment' %}Pay for Nature Restoration Fund
+Levy{% else %}Get an estimate for Nature Restoration Fund Levy{% endif %}
 {% endblock %}
 
 {% block beforeContent %}
@@ -18,11 +19,11 @@ href: "javascript:window.history.back()"
 
         <div class="govuk-inset-text">
             <p><strong>To:</strong> {{ data.email or 'user@example.com' }}</p>
-            <p><strong>Subject:</strong> Nature Restoration Fund – retrieve your estimate details for the Nature
+            <p><strong>Subject:</strong> Nature Restoration Fund - retrieve your estimate details for the Nature
                 Restoration Fund levy</p>
         </div>
 
-        <h1 class="govuk-heading-l">Nature Restoration Fund – retrieve your estimate details for the Nature Restoration
+        <h1 class="govuk-heading-l">Nature Restoration Fund - retrieve your estimate details for the Nature Restoration
             Fund levy</h1>
 
         <p>You can use the details you previously gave us for your estimate to fill in the information needed for your

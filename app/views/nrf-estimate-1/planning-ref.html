@@ -1,7 +1,8 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-Enter your planning reference - Pay for Nature Restoration Fund Levy
+Enter your planning application reference - {% if data.journeyType === 'payment' %}Pay for Nature Restoration Fund
+Levy{% else %}Get an estimate for Nature Restoration Fund Levy{% endif %}
 {% endblock %}
 
 {% block beforeContent %}
@@ -37,7 +38,7 @@ href: "javascript:window.history.back()"
             <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
                 <h1 class="govuk-label-wrapper">
                     <label class="govuk-label govuk-label--l" for="planning-ref">
-                        Enter your planning reference
+                        Enter your planning application reference
                     </label>
                 </h1>
                 {% if error %}
@@ -45,8 +46,12 @@ href: "javascript:window.history.back()"
                     <span class="govuk-visually-hidden">Error:</span> {{ error }}
                 </p>
                 {% endif %}
+                <div id="planning-ref-hint" class="govuk-hint">
+                    Enter the reference of the planning application you want to pay the Nature Restoration Fund levy for
+                </div>
                 <input class="govuk-input {% if error %}govuk-input--error{% endif %}" id="planning-ref"
-                    name="planning-ref" type="text" aria-describedby="{% if error %}planning-ref-error{% endif %}">
+                    name="planning-ref" type="text"
+                    aria-describedby="{% if error %}planning-ref-error{% endif %} planning-ref-hint">
             </div>
 
             <button class="govuk-button" data-module="govuk-button">

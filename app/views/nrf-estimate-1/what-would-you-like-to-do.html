@@ -1,7 +1,8 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-What would you like to do? - Get an estimate for Nature Restoration Fund Levy - GOV.UK
+What would you like to do? - {% if data.journeyType === 'payment' %}Pay for Nature Restoration Fund Levy{% else %}Get an
+estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
 {% endblock %}
 
 {% block content %}
@@ -11,23 +12,7 @@ What would you like to do? - Get an estimate for Nature Restoration Fund Levy - 
 
         <form action="/nrf-estimate-1/what-would-you-like-to-do" method="post" novalidate>
 
-            {% if error %}
-            <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert"
-                data-module="govuk-error-summary">
-                <h2 class="govuk-error-summary__title" id="error-summary-title">
-                    There is a problem
-                </h2>
-                <div class="govuk-error-summary__body">
-                    <ul class="govuk-list govuk-error-summary__list">
-                        <li>
-                            <a href="#journey-type">{{ error }}</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            {% endif %}
-
-            <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
+            <div class="govuk-form-group">
                 <fieldset class="govuk-fieldset">
                     <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
                         <h1 class="govuk-fieldset__heading">
@@ -35,23 +20,17 @@ What would you like to do? - Get an estimate for Nature Restoration Fund Levy - 
                         </h1>
                     </legend>
 
-                    {% if error %}
-                    <p id="journey-type-error" class="govuk-error-message">
-                        <span class="govuk-visually-hidden">Error:</span> {{ error }}
-                    </p>
-                    {% endif %}
-
                     <div class="govuk-radios" data-module="govuk-radios">
                         <div class="govuk-radios__item">
                             <input class="govuk-radios__input" id="journey-type-estimate" name="journey-type"
-                                type="radio" value="estimate">
+                                type="radio" value="estimate" {% if data.journeyType==='estimate' %}checked{% endif %}>
                             <label class="govuk-label govuk-radios__label" for="journey-type-estimate">
                                 I want an estimate for the Nature Restoration Fund levy
                             </label>
                         </div>
                         <div class="govuk-radios__item">
                             <input class="govuk-radios__input" id="journey-type-pay" name="journey-type" type="radio"
-                                value="payment">
+                                value="payment" {% if data.journeyType==='payment' %}checked{% endif %}>
                             <label class="govuk-label govuk-radios__label" for="journey-type-pay">
                                 I have a planning reference and I'm ready to pay the Nature Restoration Fund levy
                             </label>

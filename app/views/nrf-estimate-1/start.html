@@ -1,7 +1,8 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-Get an estimate for Nature Restoration Fund Levy - GOV.UK
+{% if data.journeyType === 'payment' %}Pay for Nature Restoration Fund Levy{% else %}Get an estimate for Nature
+Restoration Fund Levy{% endif %} - GOV.UK
 {% endblock %}
 
 {% block content %}
@@ -24,7 +25,7 @@ Get an estimate for Nature Restoration Fund Levy - GOV.UK
         <p class="govuk-body">You will need to be able to tell us:</p>
 
         <ul class="govuk-list govuk-list--bullet">
-            <li>where the development is planned – you can use a red line boundary file or draw a red line boundary</li>
+            <li>where the development is planned - you can use a red line boundary file or draw a red line boundary</li>
             <li>the types of buildings planned</li>
             <li>details about the amount of buildings or rooms</li>
             <li>the planning reference, if you have one and are ready to pay</li>

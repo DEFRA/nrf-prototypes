@@ -1,7 +1,8 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-Do you have an estimate reference? - Pay for Nature Restoration Fund Levy
+Do you have an estimate reference? - {% if data.journeyType === 'payment' %}Pay for Nature Restoration Fund Levy{% else
+%}Get an estimate for Nature Restoration Fund Levy{% endif %}
 {% endblock %}
 
 {% block beforeContent %}

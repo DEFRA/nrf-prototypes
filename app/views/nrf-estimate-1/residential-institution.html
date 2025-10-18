@@ -1,8 +1,8 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-Enter the number of rooms in your building planned for your development - Get an estimate for Nature Restoration Fund
-Levy - GOV.UK
+Enter the number of rooms in your building planned for your development - {% if data.journeyType === 'payment' %}Pay for
+Nature Restoration Fund Levy{% else %}Get an estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
 {% endblock %}
 
 {% block content %}
@@ -30,7 +30,7 @@ Levy - GOV.UK
             <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
                 <h1 class="govuk-label-wrapper">
                     <label class="govuk-label govuk-label--l" for="hmo-count">
-                        Enter the number of rooms in your House of multiple occupation (HMO) building planned for your
+                        Enter the number of rooms in your House of multiple occupation (HMO) building planned for the
                         development
                     </label>
                 </h1>
@@ -51,7 +51,7 @@ Levy - GOV.UK
             <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
                 <h1 class="govuk-label-wrapper">
                     <label class="govuk-label govuk-label--l" for="residential-accommodation-count">
-                        Enter the number of rooms in your residential institution building planned for your development
+                        Enter the number of rooms in your residential institution building planned for the development
                     </label>
                 </h1>
 

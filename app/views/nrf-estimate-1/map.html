@@ -3,7 +3,8 @@
 {% set pageName="Draw a red line boundary" %}
 
 {% block pageTitle %}
-Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GOV.UK
+Draw a red line boundary - {% if data.journeyType === 'payment' %}Pay for Nature Restoration Fund Levy{% else %}Get an
+estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
 {% endblock %}
 
 {% block head %}
@@ -198,7 +199,7 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
 
                 <div id="map-hint" class="govuk-hint">
                     <p class="govuk-body">
-                        Use the map to draw a red line boundary for where your development might be.
+                        Use the map to draw a red line boundary for where the development might be.
                     </p>
                 </div>
 

@@ -90,7 +90,8 @@ function checkEDPIntersection(boundary) {
 
 // Start page
 router.get('/nrf-estimate-1/start', (req, res) => {
-    res.render('nrf-estimate-1/start')
+    const data = req.session.data || {}
+    res.render('nrf-estimate-1/start', { data: data })
 })
 
 // Handle start page submission
@@ -100,18 +101,13 @@ router.post('/nrf-estimate-1/start', (req, res) => {
 
 // What would you like to do page
 router.get('/nrf-estimate-1/what-would-you-like-to-do', (req, res) => {
-    res.render('nrf-estimate-1/what-would-you-like-to-do')
+    const data = req.session.data || {}
+    res.render('nrf-estimate-1/what-would-you-like-to-do', { data: data })
 })
 
 // Handle what would you like to do
 router.post('/nrf-estimate-1/what-would-you-like-to-do', (req, res) => {
     const journeyType = req.body['journey-type']
-    
-    if (!journeyType) {
-        return res.render('nrf-estimate-1/what-would-you-like-to-do', {
-            error: 'Select if you want an estimate or if you are ready to pay the Nature Restoration Fund levy'
-        })
-    }
     
     // Store in session
     req.session.data = req.session.data || {}
@@ -120,14 +116,15 @@ router.post('/nrf-estimate-1/what-would-you-like-to-do', (req, res) => {
     // Route based on journey type
     if (journeyType === 'estimate') {
         res.redirect('/nrf-estimate-1/redline-map')
-    } else if (journeyType === 'payment') {
+    } else {
         res.redirect('/nrf-estimate-1/do-you-have-an-estimate-ref')
     }
 })
 
 // Redline boundary file question
 router.get('/nrf-estimate-1/redline-map', (req, res) => {
-    res.render('nrf-estimate-1/redline-map')
+    const data = req.session.data || {}
+    res.render('nrf-estimate-1/redline-map', { data: data })
 })
 
 // Handle redline boundary file question
@@ -153,7 +150,8 @@ router.post('/nrf-estimate-1/redline-map', (req, res) => {
 
 // Upload redline boundary file
 router.get('/nrf-estimate-1/upload-redline', (req, res) => {
-    res.render('nrf-estimate-1/upload-redline')
+    const data = req.session.data || {}
+    res.render('nrf-estimate-1/upload-redline', { data: data })
 })
 
 // Handle redline file upload
@@ -303,7 +301,8 @@ router.post('/nrf-estimate-1/map', (req, res) => {
 
 // No EDP area page
 router.get('/nrf-estimate-1/no-edp', (req, res) => {
-    res.render('nrf-estimate-1/no-edp')
+    const data = req.session.data || {}
+    res.render('nrf-estimate-1/no-edp', { data: data })
 })
 
 // Building type selection
@@ -442,7 +441,8 @@ router.post('/nrf-estimate-1/building-type', (req, res) => {
 
 // Non-residential development page
 router.get('/nrf-estimate-1/non-residential', (req, res) => {
-    res.render('nrf-estimate-1/non-residential')
+    const data = req.session.data || {}
+    res.render('nrf-estimate-1/non-residential', { data: data })
 })
 
 // Room count page (for Hotel, HMO, Residential institution)
@@ -590,7 +590,8 @@ router.post('/nrf-estimate-1/residential', (req, res) => {
 
 // Residential institution room count
 router.get('/nrf-estimate-1/residential-institution', (req, res) => {
-    res.render('nrf-estimate-1/residential-institution')
+    const data = req.session.data || {}
+    res.render('nrf-estimate-1/residential-institution', { data: data })
 })
 
 // Handle residential institution room count
@@ -804,7 +805,8 @@ router.get('/nrf-estimate-1/estimate-email-content', (req, res) => {
 
 // Do you have an estimate reference?
 router.get('/nrf-estimate-1/do-you-have-an-estimate-ref', (req, res) => {
-    res.render('nrf-estimate-1/do-you-have-an-estimate-ref')
+    const data = req.session.data || {}
+    res.render('nrf-estimate-1/do-you-have-an-estimate-ref', { data: data })
 })
 
 // Handle estimate reference question
@@ -824,13 +826,14 @@ router.post('/nrf-estimate-1/do-you-have-an-estimate-ref', (req, res) => {
     if (hasEstimateRef === 'yes') {
         res.redirect('/nrf-estimate-1/enter-estimate-ref')
     } else {
-        res.redirect('/nrf-estimate-1/retrieve-estimate-email')
+        res.redirect('/nrf-estimate-1/redline-map')
     }
 })
 
 // Enter your estimate reference
 router.get('/nrf-estimate-1/enter-estimate-ref', (req, res) => {
-    res.render('nrf-estimate-1/enter-estimate-ref')
+    const data = req.session.data || {}
+    res.render('nrf-estimate-1/enter-estimate-ref', { data: data })
 })
 
 // Handle estimate reference entry
@@ -859,7 +862,8 @@ router.post('/nrf-estimate-1/enter-estimate-ref', (req, res) => {
 
 // Retrieve estimate email entry
 router.get('/nrf-estimate-1/retrieve-estimate-email', (req, res) => {
-    res.render('nrf-estimate-1/retrieve-estimate-email')
+    const data = req.session.data || {}
+    res.render('nrf-estimate-1/retrieve-estimate-email', { data: data })
 })
 
 // Handle retrieve estimate email
@@ -889,7 +893,8 @@ router.post('/nrf-estimate-1/retrieve-estimate-email', (req, res) => {
 
 // Email sent with magic link to estimate
 router.get('/nrf-estimate-1/estimate-email-retrieval-content', (req, res) => {
-    res.render('nrf-estimate-1/estimate-email-retrieval-content')
+    const data = req.session.data || {}
+    res.render('nrf-estimate-1/estimate-email-retrieval-content', { data: data })
 })
 
 // Handle email retrieval content submission
@@ -899,7 +904,8 @@ router.post('/nrf-estimate-1/estimate-email-retrieval-content', (req, res) => {
 
 // Enter your planning reference
 router.get('/nrf-estimate-1/planning-ref', (req, res) => {
-    res.render('nrf-estimate-1/planning-ref')
+    const data = req.session.data || {}
+    res.render('nrf-estimate-1/planning-ref', { data: data })
 })
 
 // Handle planning reference entry
@@ -908,7 +914,7 @@ router.post('/nrf-estimate-1/planning-ref', (req, res) => {
     
     if (!planningRef || planningRef.trim() === '') {
         return res.render('nrf-estimate-1/planning-ref', {
-            error: 'Enter your planning reference to continue'
+            error: 'Enter the planning application reference'
         })
     }
     
