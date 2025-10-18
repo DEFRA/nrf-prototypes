@@ -1,0 +1,202 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Check your answers - Pay for Nature Restoration Fund Levy
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: "javascript:window.history.back()"
+}) }}
+{% endblock %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-l">Check your answers</h1>
+
+        <dl class="govuk-summary-list govuk-!-margin-bottom-9">
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Planning reference
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.planningRef }}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="/nrf-estimate-1/planning-ref">
+                        Change<span class="govuk-visually-hidden"> planning reference</span>
+                    </a>
+                </dd>
+            </div>
+
+            {% if data.estimateRef %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Estimate reference
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.estimateRef }}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="/nrf-estimate-1/enter-estimate-ref">
+                        Change<span class="govuk-visually-hidden"> estimate reference</span>
+                    </a>
+                </dd>
+            </div>
+            {% endif %}
+
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Red line boundary added
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {% if data.redlineBoundaryPolygon %}Yes{% else %}No{% endif %}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="/nrf-estimate-1/map">
+                        Change<span class="govuk-visually-hidden"> red line boundary</span>
+                    </a>
+                </dd>
+            </div>
+
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Red line boundary file uploaded
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {% if data.hasRedlineBoundaryFile === 'yes' %}Yes{% else %}No{% endif %}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="/nrf-estimate-1/redline-map">
+                        Change<span class="govuk-visually-hidden"> red line boundary file</span>
+                    </a>
+                </dd>
+            </div>
+
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Building types
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {% if data.buildingTypes %}
+                    {% set validBuildingTypes = [] %}
+                    {% for buildingType in data.buildingTypes %}
+                    {% if buildingType and not buildingType.startsWith('_unchecked') %}
+                    {% set _ = validBuildingTypes.push(buildingType) %}
+                    {% endif %}
+                    {% endfor %}
+                    {% for buildingType in validBuildingTypes %}
+                    {{ buildingType }}{% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                    {% else %}
+                    Not specified
+                    {% endif %}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="/nrf-estimate-1/building-type">
+                        Change<span class="govuk-visually-hidden"> building types</span>
+                    </a>
+                </dd>
+            </div>
+
+            {% set validBuildingTypes = [] %}
+            {% if data.buildingTypes %}
+            {% for buildingType in data.buildingTypes %}
+            {% if buildingType and not buildingType.startsWith('_unchecked') %}
+            {% set _ = validBuildingTypes.push(buildingType) %}
+            {% endif %}
+            {% endfor %}
+            {% endif %}
+            {% if validBuildingTypes.includes('Dwellinghouse') %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Number of dwellinghouse buildings
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.residentialBuildingCount or 'Not specified' }}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="/nrf-estimate-1/residential">
+                        Change<span class="govuk-visually-hidden"> number of dwellinghouse buildings</span>
+                    </a>
+                </dd>
+            </div>
+            {% endif %}
+
+            {% if validBuildingTypes.includes('Hotel') %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Number of hotel rooms
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.roomCounts.hotelCount or 'Not specified' }}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="/nrf-estimate-1/room-count">
+                        Change<span class="govuk-visually-hidden"> number of hotel rooms</span>
+                    </a>
+                </dd>
+            </div>
+            {% endif %}
+
+            {% if validBuildingTypes.includes('House of multiple occupation (HMO)') %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Number of multiple occupation rooms
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.roomCounts.hmoCount or 'Not specified' }}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="/nrf-estimate-1/room-count">
+                        Change<span class="govuk-visually-hidden"> number of multiple occupation rooms</span>
+                    </a>
+                </dd>
+            </div>
+            {% endif %}
+
+            {% if validBuildingTypes.includes('Residential institution') %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Number of residential institution rooms
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.roomCounts.residentialInstitutionCount or 'Not specified' }}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="/nrf-estimate-1/room-count">
+                        Change<span class="govuk-visually-hidden"> number of residential institution rooms</span>
+                    </a>
+                </dd>
+            </div>
+            {% endif %}
+
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Email address
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.email }}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="/nrf-estimate-1/retrieve-estimate-email">
+                        Change<span class="govuk-visually-hidden"> email address</span>
+                    </a>
+                </dd>
+            </div>
+        </dl>
+
+        <form method="post">
+            {{ govukButton({
+            text: "Submit"
+            }) }}
+        </form>
+
+    </div>
+</div>
+
+{% endblock %}

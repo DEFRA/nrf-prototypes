@@ -117,9 +117,12 @@ router.post('/nrf-estimate-1/what-would-you-like-to-do', (req, res) => {
     req.session.data = req.session.data || {}
     req.session.data.journeyType = journeyType
     
-    // For now, both options lead to the same journey (estimate)
-    // In a real implementation, the payment option would lead to a different flow
-    res.redirect('/nrf-estimate-1/redline-map')
+    // Route based on journey type
+    if (journeyType === 'estimate') {
+        res.redirect('/nrf-estimate-1/redline-map')
+    } else if (journeyType === 'payment') {
+        res.redirect('/nrf-estimate-1/do-you-have-an-estimate-ref')
+    }
 })
 
 // Redline boundary file question
@@ -695,27 +698,56 @@ router.get('/nrf-estimate-1/summary', (req, res) => {
     console.log('=== SUMMARY ROUTE DEBUG ===')
     console.log('Summary route - redlineBoundaryPolygon exists:', !!data.redlineBoundaryPolygon)
     console.log('Summary route - redlineBoundaryPolygon:', data.redlineBoundaryPolygon)
+    console.log('Summary route - planningRef exists:', !!data.planningRef)
+    console.log('Summary route - journeyType:', data.journeyType)
     console.log('=== END SUMMARY ROUTE DEBUG ===')
     
-    if (!data.email) {
-        return res.redirect('/nrf-estimate-1/email')
+    // Check if this is a payment journey
+    if (data.journeyType === 'payment') {
+        // Payment journey - check for planning reference
+        if (!data.planningRef) {
+            return res.redirect('/nrf-estimate-1/planning-ref')
+        }
+        // Render payment summary
+        res.render('nrf-estimate-1/payment-summary', {
+            data: data
+        })
+    } else {
+        // Estimate journey - check for email
+        if (!data.email) {
+            return res.redirect('/nrf-estimate-1/email')
+        }
+        // Render estimate summary
+        res.render('nrf-estimate-1/summary', {
+            data: data
+        })
     }
-    
-    res.render('nrf-estimate-1/summary', {
-        data: data
-    })
 })
 
 // Handle summary submission
 router.post('/nrf-estimate-1/summary', (req, res) => {
-    // Generate estimate reference
-    const estimateReference = 'EST-' + Date.now().toString().slice(-6)
+    const data = req.session.data || {}
     
-    // Store estimate reference in session
-    req.session.data = req.session.data || {}
-    req.session.data.estimateReference = estimateReference
-    
-    res.redirect('/nrf-estimate-1/confirmation')
+    // Check if this is a payment journey
+    if (data.journeyType === 'payment') {
+        // Payment journey - generate payment reference
+        const paymentReference = 'PAY-' + Date.now().toString().slice(-6)
+        
+        // Store payment reference in session
+        req.session.data = req.session.data || {}
+        req.session.data.paymentReference = paymentReference
+        
+        res.redirect('/nrf-estimate-1/payment-confirmation')
+    } else {
+        // Estimate journey - generate estimate reference
+        const estimateReference = 'EST-' + Date.now().toString().slice(-6)
+        
+        // Store estimate reference in session
+        req.session.data = req.session.data || {}
+        req.session.data.estimateReference = estimateReference
+        
+        res.redirect('/nrf-estimate-1/confirmation')
+    }
 })
 
 // Confirmation page
@@ -764,6 +796,157 @@ router.get('/nrf-estimate-1/estimate-email-content', (req, res) => {
     }
     
     res.render('nrf-estimate-1/estimate-email-content', {
+        data: data
+    })
+})
+
+// ===== PAYMENT JOURNEY ROUTES =====
+
+// Do you have an estimate reference?
+router.get('/nrf-estimate-1/do-you-have-an-estimate-ref', (req, res) => {
+    res.render('nrf-estimate-1/do-you-have-an-estimate-ref')
+})
+
+// Handle estimate reference question
+router.post('/nrf-estimate-1/do-you-have-an-estimate-ref', (req, res) => {
+    const hasEstimateRef = req.body['has-estimate-ref']
+    
+    if (!hasEstimateRef) {
+        return res.render('nrf-estimate-1/do-you-have-an-estimate-ref', {
+            error: 'Select yes if you have an estimate reference'
+        })
+    }
+    
+    // Store in session
+    req.session.data = req.session.data || {}
+    req.session.data.hasEstimateRef = hasEstimateRef
+    
+    if (hasEstimateRef === 'yes') {
+        res.redirect('/nrf-estimate-1/enter-estimate-ref')
+    } else {
+        res.redirect('/nrf-estimate-1/retrieve-estimate-email')
+    }
+})
+
+// Enter your estimate reference
+router.get('/nrf-estimate-1/enter-estimate-ref', (req, res) => {
+    res.render('nrf-estimate-1/enter-estimate-ref')
+})
+
+// Handle estimate reference entry
+router.post('/nrf-estimate-1/enter-estimate-ref', (req, res) => {
+    const estimateRef = req.body['estimate-ref']
+    
+    if (!estimateRef || estimateRef.trim() === '') {
+        return res.render('nrf-estimate-1/enter-estimate-ref', {
+            error: 'Enter your estimate reference to continue'
+        })
+    }
+    
+    // Basic validation - should be a number
+    if (isNaN(estimateRef)) {
+        return res.render('nrf-estimate-1/enter-estimate-ref', {
+            error: 'Enter a valid estimate reference number'
+        })
+    }
+    
+    // Store in session
+    req.session.data = req.session.data || {}
+    req.session.data.estimateRef = estimateRef
+    
+    res.redirect('/nrf-estimate-1/retrieve-estimate-email')
+})
+
+// Retrieve estimate email entry
+router.get('/nrf-estimate-1/retrieve-estimate-email', (req, res) => {
+    res.render('nrf-estimate-1/retrieve-estimate-email')
+})
+
+// Handle retrieve estimate email
+router.post('/nrf-estimate-1/retrieve-estimate-email', (req, res) => {
+    const email = req.body['email']
+    
+    if (!email) {
+        return res.render('nrf-estimate-1/retrieve-estimate-email', {
+            error: 'Enter your email address to continue'
+        })
+    }
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+        return res.render('nrf-estimate-1/retrieve-estimate-email', {
+            error: 'Enter an email address in the correct format, like name@example.com'
+        })
+    }
+    
+    // Store in session
+    req.session.data = req.session.data || {}
+    req.session.data.email = email
+    
+    res.redirect('/nrf-estimate-1/estimate-email-retrieval-content')
+})
+
+// Email sent with magic link to estimate
+router.get('/nrf-estimate-1/estimate-email-retrieval-content', (req, res) => {
+    res.render('nrf-estimate-1/estimate-email-retrieval-content')
+})
+
+// Handle email retrieval content submission
+router.post('/nrf-estimate-1/estimate-email-retrieval-content', (req, res) => {
+    res.redirect('/nrf-estimate-1/planning-ref')
+})
+
+// Enter your planning reference
+router.get('/nrf-estimate-1/planning-ref', (req, res) => {
+    res.render('nrf-estimate-1/planning-ref')
+})
+
+// Handle planning reference entry
+router.post('/nrf-estimate-1/planning-ref', (req, res) => {
+    const planningRef = req.body['planning-ref']
+    
+    if (!planningRef || planningRef.trim() === '') {
+        return res.render('nrf-estimate-1/planning-ref', {
+            error: 'Enter your planning reference to continue'
+        })
+    }
+    
+    // Store in session
+    req.session.data = req.session.data || {}
+    req.session.data.planningRef = planningRef
+    
+    res.redirect('/nrf-estimate-1/summary')
+})
+
+
+// Payment confirmation page
+router.get('/nrf-estimate-1/payment-confirmation', (req, res) => {
+    const data = req.session.data || {}
+    
+    if (!data.paymentReference) {
+        return res.redirect('/nrf-estimate-1/summary')
+    }
+    
+    res.render('nrf-estimate-1/payment-confirmation', {
+        data: data
+    })
+})
+
+// Estimate confirmation email page
+router.get('/nrf-estimate-1/estimate-confirmation-email', (req, res) => {
+    const data = req.session.data || {}
+    
+    res.render('nrf-estimate-1/estimate-confirmation-email', {
+        data: data
+    })
+})
+
+// Payment email page
+router.get('/nrf-estimate-1/payment-email', (req, res) => {
+    const data = req.session.data || {}
+    
+    res.render('nrf-estimate-1/payment-email', {
         data: data
     })
 })

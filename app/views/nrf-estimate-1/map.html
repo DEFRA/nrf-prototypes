@@ -74,7 +74,7 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
         gap: 15px;
     }
 
-    .tool-links .govuk-link {
+    /* .tool-links .govuk-link {
         display: block;
         font-family: "GDS Transport", arial, sans-serif;
         font-size: 16px;
@@ -115,7 +115,7 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
 
     .tool-links .govuk-link:visited:focus {
         color: #0b0c0c;
-    }
+    } */
 
     /* Disabled state for tool links */
     .tool-links .govuk-link[aria-disabled="true"] {
@@ -266,42 +266,44 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
                             </div>
                         </div>
 
+                        <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+
                         <!-- Drawing tools -->
                         <div class="govuk-form-group">
                             <h2 class="govuk-heading-s">Drawing tools</h2>
                             <div class="tool-links">
                                 <a href="#" class="govuk-link" id="start-drawing" data-tool="polygon"
-                                    aria-describedby="drawing-instructions" role="button" tabindex="0">
+                                    aria-describedby="drawing-instructions" tabindex="0">
                                     Start drawing boundary
                                 </a>
                                 <a href="#" class="govuk-link" id="edit-boundary" data-tool="edit"
-                                    aria-describedby="edit-instructions" role="button" tabindex="-1"
-                                    aria-disabled="true">
+                                    aria-describedby="edit-instructions" tabindex="-1" aria-disabled="true">
                                     Edit boundary
                                 </a>
                                 <a href="#" class="govuk-link govuk-link--destructive" id="delete-boundary"
-                                    data-tool="delete" aria-describedby="delete-instructions" role="button"
-                                    tabindex="-1" aria-disabled="true">
+                                    data-tool="delete" aria-describedby="delete-instructions" tabindex="-1"
+                                    aria-disabled="true">
                                     Delete boundary
                                 </a>
                             </div>
                         </div>
 
+                        <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+
                         <!-- Map controls -->
                         <div class="govuk-form-group">
-                            <h3 class="govuk-heading-xs">Map view</h3>
+                            <h2 class="govuk-heading-s">Map view</h2>
                             <div class="tool-links">
                                 <a href="#" class="govuk-link" id="zoom-to-england" aria-describedby="zoom-england-help"
                                     role="button" tabindex="0">
                                     Show all England
                                 </a>
                                 <a href="#" class="govuk-link" id="zoom-to-boundary"
-                                    aria-describedby="zoom-boundary-help" role="button" tabindex="-1"
-                                    aria-disabled="true">
+                                    aria-describedby="zoom-boundary-help" tabindex="-1" aria-disabled="true">
                                     Zoom to boundary
                                 </a>
                                 <a href="#" class="govuk-link" id="toggle-catchments"
-                                    aria-describedby="toggle-catchments-help" role="button" tabindex="0">
+                                    aria-describedby="toggle-catchments-help" tabindex="0">
                                     Toggle catchments
                                 </a>
                             </div>
@@ -352,6 +354,23 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
                 console.log('Map script loading...');
                 console.log('Leaflet available:', typeof L !== 'undefined');
                 console.log('Map container exists:', document.getElementById('map') !== null);
+
+                // Check if Leaflet is loaded
+                if (typeof L === 'undefined') {
+                    console.error('Leaflet library not loaded');
+                    const loadingDiv = document.getElementById('map-loading');
+                    if (loadingDiv) {
+                        loadingDiv.innerHTML = '<p class="govuk-body" style="color: red;">Error: Map library not loaded. Please refresh the page.</p>';
+                    }
+                    return;
+                }
+
+                // Check if map container exists
+                const mapContainer = document.getElementById('map');
+                if (!mapContainer) {
+                    console.error('Map container not found');
+                    return;
+                }
 
                 try {
                     // Hide loading message
@@ -470,11 +489,17 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
                                     const testResult2 = polygonIntersects(testDrawnPolygon, firstCatchment.coordinates);
                                     console.log('Test with actual catchment data result:', testResult2);
 
-                                    // Test with coordinates from your drawn area
+                                    // Test with coordinates from your drawn area (Salisbury area based on screenshot)
                                     const testPolygon3 = [[-1.9, 51.2], [-1.8, 51.2], [-1.8, 51.3], [-1.9, 51.3], [-1.9, 51.2]];
                                     console.log('Testing with coordinates from drawn area:', testPolygon3);
                                     const testResult3 = polygonIntersects(testPolygon3, firstCatchment.coordinates);
                                     console.log('Test with drawn area coordinates result:', testResult3);
+
+                                    // Test with a polygon that should definitely intersect (using catchment's own coordinates)
+                                    const testPolygon4 = firstCatchment.coordinates.slice(0, 3).concat([firstCatchment.coordinates[0]]); // Triangle inside catchment
+                                    console.log('Testing with triangle inside catchment:', testPolygon4);
+                                    const testResult4 = polygonIntersects(testPolygon4, firstCatchment.coordinates);
+                                    console.log('Test with triangle inside catchment result:', testResult4);
                                 }
 
                                 console.log('=== END TEST ===');
@@ -516,6 +541,12 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
                             console.error('Error stack:', error.stack);
                             console.log('Falling back to hardcoded boundaries');
                             console.log('=== END GEOJSON LOAD ERROR ===');
+
+                            // Show user-friendly message
+                            const loadingDiv = document.getElementById('map-loading');
+                            if (loadingDiv) {
+                                loadingDiv.innerHTML = '<p class="govuk-body">Map loaded successfully. Catchment data temporarily unavailable.</p>';
+                            }
                         });
 
 
@@ -625,35 +656,6 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
 
                     // Helper functions moved to global scope for accessibility
 
-                    // Helper function to check if two line segments intersect
-                    function lineSegmentsIntersect(p1, q1, p2, q2) {
-                        function orientation(p, q, r) {
-                            const val = (q[1] - p[1]) * (r[0] - q[0]) - (q[0] - p[0]) * (r[1] - q[1]);
-                            if (val === 0) return 0; // collinear
-                            return val > 0 ? 1 : 2; // clockwise or counterclockwise
-                        }
-
-                        function onSegment(p, q, r) {
-                            return q[0] <= Math.max(p[0], r[0]) && q[0] >= Math.min(p[0], r[0]) &&
-                                q[1] <= Math.max(p[1], r[1]) && q[1] >= Math.min(p[1], r[1]);
-                        }
-
-                        const o1 = orientation(p1, q1, p2);
-                        const o2 = orientation(p1, q1, q2);
-                        const o3 = orientation(p2, q2, p1);
-                        const o4 = orientation(p2, q2, q1);
-
-                        // General case
-                        if (o1 !== o2 && o3 !== o4) return true;
-
-                        // Special cases
-                        if (o1 === 0 && onSegment(p1, p2, q1)) return true;
-                        if (o2 === 0 && onSegment(p1, q2, q1)) return true;
-                        if (o3 === 0 && onSegment(p2, p1, q2)) return true;
-                        if (o4 === 0 && onSegment(p2, q1, q2)) return true;
-
-                        return false;
-                    }
 
                     // updateBoundaryData function moved to global scope for accessibility
 
@@ -702,14 +704,14 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
                         // Check if DOM is ready and all required objects exist
                         if (document.readyState === 'loading') {
                             document.addEventListener('DOMContentLoaded', () => {
-                                if (map && drawControl && drawnItems && edpLayers) {
+                                if (map && drawControl && drawnItems) {
                                     initAccessibleControls(map, drawControl, drawnItems, edpLayers);
                                 } else {
                                     console.error('Required objects not available for initialization');
                                 }
                             });
                         } else {
-                            if (map && drawControl && drawnItems && edpLayers) {
+                            if (map && drawControl && drawnItems) {
                                 initAccessibleControls(map, drawControl, drawnItems, edpLayers);
                             } else {
                                 console.error('Required objects not available for initialization');
@@ -726,6 +728,36 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
                     }
                 }
             }, 1000); // Increased delay to ensure GOV.UK components are ready
+        }
+
+        // Helper function to check if two line segments intersect
+        function lineSegmentsIntersect(p1, q1, p2, q2) {
+            function orientation(p, q, r) {
+                const val = (q[1] - p[1]) * (r[0] - q[0]) - (q[0] - p[0]) * (r[1] - q[1]);
+                if (val === 0) return 0; // collinear
+                return val > 0 ? 1 : 2; // clockwise or counterclockwise
+            }
+
+            function onSegment(p, q, r) {
+                return q[0] <= Math.max(p[0], r[0]) && q[0] >= Math.min(p[0], r[0]) &&
+                    q[1] <= Math.max(p[1], r[1]) && q[1] >= Math.min(p[1], r[1]);
+            }
+
+            const o1 = orientation(p1, q1, p2);
+            const o2 = orientation(p1, q1, q2);
+            const o3 = orientation(p2, q2, p1);
+            const o4 = orientation(p2, q2, q1);
+
+            // General case
+            if (o1 !== o2 && o3 !== o4) return true;
+
+            // Special cases
+            if (o1 === 0 && onSegment(p1, p2, q1)) return true;
+            if (o2 === 0 && onSegment(p1, q2, q1)) return true;
+            if (o3 === 0 && onSegment(p2, p1, q2)) return true;
+            if (o4 === 0 && onSegment(p2, q1, q2)) return true;
+
+            return false;
         }
 
         // Helper functions for polygon intersection detection
@@ -746,19 +778,31 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
         }
 
         function polygonIntersects(polygon1, polygon2) {
-            // Convert polygon2 coordinates from [lat, lng] to [lng, lat] format
+            // polygon1 is drawn polygon in [lng, lat] format
+            // polygon2 is catchment polygon in [lat, lng] format (from Leaflet)
+            // Convert polygon2 from [lat, lng] to [lng, lat] format for comparison
             const poly2 = polygon2.map(coord => [coord[1], coord[0]]);
+
+            console.log('Intersection check:');
+            console.log('  Drawn polygon (first 3 points):', polygon1.slice(0, 3));
+            console.log('  Catchment polygon (first 3 points):', poly2.slice(0, 3));
 
             // Quick check: if polygons have very different bounding boxes, they likely don't intersect
             const bounds1 = getPolygonBounds(polygon1);
             const bounds2 = getPolygonBounds(poly2);
+            console.log('  Bounds1:', bounds1);
+            console.log('  Bounds2:', bounds2);
+            console.log('  Bounds overlap:', boundsOverlap(bounds1, bounds2));
+
             if (!boundsOverlap(bounds1, bounds2)) {
+                console.log('  No intersection: bounding boxes do not overlap');
                 return false;
             }
 
             // Check if any vertex of polygon1 is inside polygon2
             for (let i = 0; i < polygon1.length; i++) {
                 if (isPointInPolygon(polygon1[i], poly2)) {
+                    console.log(`  Intersection found: vertex ${i} of drawn polygon is inside catchment`);
                     return true;
                 }
             }
@@ -766,6 +810,7 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
             // Check if any vertex of polygon2 is inside polygon1
             for (let i = 0; i < poly2.length; i++) {
                 if (isPointInPolygon(poly2[i], polygon1)) {
+                    console.log(`  Intersection found: vertex ${i} of catchment is inside drawn polygon`);
                     return true;
                 }
             }
@@ -774,9 +819,27 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
             const centerLng = polygon1.reduce((sum, coord) => sum + coord[0], 0) / polygon1.length;
             const centerLat = polygon1.reduce((sum, coord) => sum + coord[1], 0) / polygon1.length;
             if (isPointInPolygon([centerLng, centerLat], poly2)) {
+                console.log('  Intersection found: center of drawn polygon is inside catchment');
                 return true;
             }
 
+            // Check for edge intersections between the two polygons
+            for (let i = 0; i < polygon1.length; i++) {
+                const p1 = polygon1[i];
+                const q1 = polygon1[(i + 1) % polygon1.length];
+
+                for (let j = 0; j < poly2.length; j++) {
+                    const p2 = poly2[j];
+                    const q2 = poly2[(j + 1) % poly2.length];
+
+                    if (lineSegmentsIntersect(p1, q1, p2, q2)) {
+                        console.log(`  Intersection found: edge intersection between drawn polygon edge ${i} and catchment edge ${j}`);
+                        return true;
+                    }
+                }
+            }
+
+            console.log('  No intersection detected');
             return false;
         }
 
@@ -829,6 +892,12 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
                 return;
             }
 
+            // Initialize edpLayers as empty array if not provided
+            if (!edpLayers) {
+                edpLayers = [];
+                console.log('edpLayers not available, initializing as empty array');
+            }
+
             // Get control elements with null checks
             const startDrawingBtn = document.getElementById('start-drawing');
             const editBoundaryBtn = document.getElementById('edit-boundary');
@@ -837,12 +906,11 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
             const zoomToBoundaryBtn = document.getElementById('zoom-to-boundary');
             const toggleCatchmentsBtn = document.getElementById('toggle-catchments');
             const searchInput = document.getElementById('location-search');
-            const searchBtn = document.getElementById('search-location');
 
             // Check if all required elements exist
             if (!startDrawingBtn || !editBoundaryBtn || !deleteBoundaryBtn ||
                 !zoomToEnglandBtn || !zoomToBoundaryBtn || !toggleCatchmentsBtn ||
-                !searchInput || !searchBtn) {
+                !searchInput) {
                 console.error('One or more control elements not found in DOM');
                 return;
             }
@@ -993,10 +1061,6 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
                     console.log(`Search for "${query}" completed. (Note: This is a demo - integrate with a geocoding service for real functionality)`);
                 }, 1000);
             }
-
-            searchBtn.addEventListener('click', function () {
-                performSearch(searchInput.value);
-            });
 
             searchInput.addEventListener('keypress', function (e) {
                 if (e.key === 'Enter') {
@@ -1168,30 +1232,40 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund Levy - GO
                         console.log('Boundary created successfully');
                         updateLinkStates();
 
-                        // Check for intersections with catchments (optimized)
+                        // Check for intersections with catchments
                         if (edpLayers && edpLayers.length > 0) {
                             const drawnPolygon = layer.getLatLngs()[0];
                             const drawnPoints = drawnPolygon.map(latLng => [latLng.lng, latLng.lat]);
 
-                            let intersectingCatchment = null;
-                            // Limit to first 10 catchments to improve performance
-                            const catchmentsToCheck = edpLayers.slice(0, 10);
+                            console.log('=== CHECKING INTERSECTIONS FOR DRAWN POLYGON ===');
+                            console.log('Drawn polygon points (first 3):', drawnPoints.slice(0, 3));
+                            console.log('Total catchments to check:', edpLayers.length);
 
-                            for (const catchment of catchmentsToCheck) {
+                            let intersectingCatchment = null;
+                            // Check all catchments, not just first 10
+                            for (let i = 0; i < edpLayers.length; i++) {
+                                const catchment = edpLayers[i];
+                                console.log(`Checking catchment ${i + 1}/${edpLayers.length}: ${catchment.name}`);
+
                                 if (polygonIntersects(drawnPoints, catchment.coordinates)) {
                                     intersectingCatchment = catchment;
+                                    console.log(`✓ INTERSECTION FOUND with catchment: ${catchment.name}`);
                                     break; // Stop at first intersection found
+                                } else {
+                                    console.log(`✗ No intersection with catchment: ${catchment.name}`);
                                 }
                             }
 
                             updateBoundaryData(layer, intersectingCatchment);
 
                             if (intersectingCatchment) {
-                                console.log(`Boundary intersects with catchment: ${intersectingCatchment.name}`);
+                                console.log(`✓ FINAL RESULT: Boundary intersects with catchment: ${intersectingCatchment.name}`);
                             } else {
-                                console.log('Boundary created - no catchment intersection detected');
+                                console.log('✗ FINAL RESULT: No catchment intersection detected');
                             }
+                            console.log('=== END INTERSECTION CHECK ===');
                         } else {
+                            console.log('No catchment data available for intersection check');
                             updateBoundaryData(layer, null);
                         }
                     });
