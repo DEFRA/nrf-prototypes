@@ -10,7 +10,7 @@ Upload a red line boundary file - {% if data.journeyType === 'payment' %}Pay for
     <div class="govuk-grid-column-two-thirds">
         <a href="/nrf-estimate-1/redline-map" class="govuk-back-link">Back</a>
 
-        <form action="/nrf-estimate-1/upload-redline" method="post" novalidate>
+        <form action="/nrf-estimate-1/upload-redline" method="post" enctype="multipart/form-data" novalidate>
 
             {% if error %}
             <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert"
@@ -47,9 +47,6 @@ Upload a red line boundary file - {% if data.journeyType === 'payment' %}Pay for
 
                 <input class="govuk-file-upload {% if error %}govuk-file-upload--error{% endif %}" id="redline-file"
                     name="redline-file" type="file" accept=".shp,.geojson" aria-describedby="redline-file-hint">
-
-                <!-- Hidden input to capture file name for prototype -->
-                <input type="hidden" id="file-name" name="file-name" value="">
             </div>
 
             <button class="govuk-button" data-module="govuk-button">
@@ -57,75 +54,6 @@ Upload a red line boundary file - {% if data.journeyType === 'payment' %}Pay for
             </button>
 
         </form>
-
-        <script>
-            // For prototype purposes - capture file name when file is selected
-            document.getElementById('redline-file').addEventListener('change', function (event) {
-                const file = event.target.files[0];
-                const fileNameInput = document.getElementById('file-name');
-
-                if (file) {
-                    // Validate file type
-                    const allowedTypes = ['.shp', '.geojson'];
-                    const fileName = file.name.toLowerCase();
-                    const fileExtension = fileName.substring(fileName.lastIndexOf('.'));
-
-                    if (allowedTypes.includes(fileExtension)) {
-                        fileNameInput.value = file.name;
-                        console.log('File selected:', file.name);
-
-                        // Clear any previous error styling
-                        document.getElementById('redline-file').classList.remove('govuk-file-upload--error');
-                        const errorMessage = document.getElementById('redline-file-error');
-                        if (errorMessage) {
-                            errorMessage.remove();
-                        }
-                    } else {
-                        // Invalid file type
-                        fileNameInput.value = '';
-                        console.log('Invalid file type:', fileExtension);
-
-                        // Show error styling
-                        document.getElementById('redline-file').classList.add('govuk-file-upload--error');
-
-                        // Create error message
-                        const errorMessage = document.createElement('p');
-                        errorMessage.id = 'redline-file-error';
-                        errorMessage.className = 'govuk-error-message';
-                        errorMessage.innerHTML = '<span class="govuk-visually-hidden">Error:</span> The selected file must be a .shp or .geojson file';
-
-                        // Insert error message after the file input
-                        const fileInput = document.getElementById('redline-file');
-                        fileInput.parentNode.insertBefore(errorMessage, fileInput.nextSibling);
-                    }
-                } else {
-                    fileNameInput.value = '';
-                    console.log('No file selected');
-
-                    // Clear error styling
-                    document.getElementById('redline-file').classList.remove('govuk-file-upload--error');
-                    const errorMessage = document.getElementById('redline-file-error');
-                    if (errorMessage) {
-                        errorMessage.remove();
-                    }
-                }
-            });
-
-            // Also clear the hidden field on form reset or when the file input is cleared
-            document.getElementById('redline-file').addEventListener('input', function (event) {
-                if (event.target.files.length === 0) {
-                    document.getElementById('file-name').value = '';
-                    console.log('File input cleared');
-
-                    // Clear error styling
-                    document.getElementById('redline-file').classList.remove('govuk-file-upload--error');
-                    const errorMessage = document.getElementById('redline-file-error');
-                    if (errorMessage) {
-                        errorMessage.remove();
-                    }
-                }
-            });
-        </script>
     </div>
 </div>
 {% endblock %}
