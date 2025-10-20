@@ -185,58 +185,47 @@ router.post('/nrf-estimate-1/upload-redline', (req, res, next) => {
     })
 }, (req, res) => {
     if (!req.file) {
-        console.log('No file uploaded')
         return res.render('nrf-estimate-1/upload-redline', {
             error: 'Select a file'
         })
     }
 
     const uploadedFile = req.file
-    console.log('File uploaded:', uploadedFile.originalname, uploadedFile.size, 'bytes')
-
     const allowedTypes = ['.shp', '.geojson']
     const fileName = uploadedFile.originalname.toLowerCase()
     const fileExtension = fileName.substring(fileName.lastIndexOf('.'))
 
     if (!allowedTypes.includes(fileExtension)) {
-        console.log('Invalid file type:', fileExtension)
         return res.render('nrf-estimate-1/upload-redline', {
-            error: 'The selected file must be a SHP or GeoJSON'
+            error: 'The selected file must be a .shp or .geojson file'
         })
     }
 
     if (uploadedFile.size === 0) {
-        console.log('Empty file uploaded')
         return res.render('nrf-estimate-1/upload-redline', {
             error: 'The selected file is empty'
         })
     }
-
-    console.log('File validation successful')
 
     let boundaryData = null
 
     if (fileExtension === '.geojson') {
         try {
             const fileContent = uploadedFile.buffer.toString('utf8')
-            console.log('GeoJSON file content preview:', fileContent.substring(0, 100))
-
             const geojson = JSON.parse(fileContent)
-            console.log('Parsed GeoJSON type:', geojson.type)
-
             let coordinates = []
 
             if (geojson.type === 'FeatureCollection' && geojson.features && geojson.features.length > 0) {
                 const firstFeature = geojson.features[0]
-                if (firstFeature.geometry.type === 'Polygon') {
+                if (firstFeature.geometry && firstFeature.geometry.type === 'Polygon') {
                     coordinates = firstFeature.geometry.coordinates[0]
-                } else if (firstFeature.geometry.type === 'MultiPolygon') {
+                } else if (firstFeature.geometry && firstFeature.geometry.type === 'MultiPolygon') {
                     coordinates = firstFeature.geometry.coordinates[0][0]
                 }
             } else if (geojson.type === 'Feature') {
-                if (geojson.geometry.type === 'Polygon') {
+                if (geojson.geometry && geojson.geometry.type === 'Polygon') {
                     coordinates = geojson.geometry.coordinates[0]
-                } else if (geojson.geometry.type === 'MultiPolygon') {
+                } else if (geojson.geometry && geojson.geometry.type === 'MultiPolygon') {
                     coordinates = geojson.geometry.coordinates[0][0]
                 }
             } else if (geojson.type === 'Polygon') {
@@ -251,20 +240,9 @@ router.post('/nrf-estimate-1/upload-redline', (req, res, next) => {
                 })
             }
 
-            console.log('Extracted coordinates count:', coordinates.length)
-            console.log('First 3 coordinates:', coordinates.slice(0, 3))
-
-            const lngs = coordinates.map(coord => coord[0])
-            const lats = coordinates.map(coord => coord[1])
-            const centerLng = lngs.reduce((a, b) => a + b, 0) / lngs.length
-            const centerLat = lats.reduce((a, b) => a + b, 0) / lats.length
-
             boundaryData = {
-                center: [centerLng, centerLat],
                 coordinates: coordinates
             }
-
-            console.log('Parsed boundary center:', boundaryData.center)
         } catch (error) {
             console.error('Error parsing GeoJSON:', error)
             return res.render('nrf-estimate-1/upload-redline', {
@@ -286,6 +264,9 @@ router.post('/nrf-estimate-1/upload-redline', (req, res, next) => {
     req.session.save((err) => {
         if (err) {
             console.error('Error saving session:', err)
+            return res.render('nrf-estimate-1/upload-redline', {
+                error: 'There was a problem processing your file. Please try again.'
+            })
         }
         res.redirect('/nrf-estimate-1/map')
     })
