@@ -45,14 +45,14 @@ else %}Get an estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
                     <div class="govuk-radios" data-module="govuk-radios">
                         <div class="govuk-radios__item">
                             <input class="govuk-radios__input" id="has-redline-boundary-file-yes"
-                                name="has-redline-boundary-file" type="radio" value="yes">
+                                name="has-redline-boundary-file" type="radio" value="yes" {% if data['hasRedlineBoundaryFile'] == 'yes' %}checked{% endif %}>
                             <label class="govuk-label govuk-radios__label" for="has-redline-boundary-file-yes">
                                 Yes
                             </label>
                         </div>
                         <div class="govuk-radios__item">
                             <input class="govuk-radios__input" id="has-redline-boundary-file-no"
-                                name="has-redline-boundary-file" type="radio" value="no">
+                                name="has-redline-boundary-file" type="radio" value="no" {% if data['hasRedlineBoundaryFile'] == 'no' %}checked{% endif %}>
                             <label class="govuk-label govuk-radios__label" for="has-redline-boundary-file-no">
                                 No
                             </label>
