@@ -206,7 +206,12 @@ router.post(
     }
 
     const uploadedFile = req.file
-    console.log('File uploaded:', uploadedFile.originalname, uploadedFile.size, 'bytes')
+    console.log(
+      'File uploaded:',
+      uploadedFile.originalname,
+      uploadedFile.size,
+      'bytes'
+    )
 
     // Check file type
     const allowedTypes = ['.shp', '.geojson']
@@ -232,66 +237,111 @@ router.post(
     // If we get here, the file passed all validations
     console.log('File validation successful')
 
-    // Read file contents
-    const fileContent = uploadedFile.buffer.toString('utf8')
-    console.log('File content preview:', fileContent.substring(0, 100))
+    // Parse file based on type
+    let boundaryData = null
 
-    // Mock file processing - in a real implementation, this would parse the shapefile or GeoJSON
-    const mockBoundaryData = {
-      center: [-0.4, 51.5],
-      coordinates: [
-        [-0.42, 51.48],
-        [-0.38, 51.48],
-        [-0.38, 51.52],
-        [-0.42, 51.52],
-        [-0.42, 51.48]
-      ]
+    if (fileExtension === '.geojson') {
+      try {
+        // Read and parse GeoJSON
+        const fileContent = uploadedFile.buffer.toString('utf8')
+        console.log(
+          'GeoJSON file content preview:',
+          fileContent.substring(0, 100)
+        )
+
+        const geojson = JSON.parse(fileContent)
+        console.log('Parsed GeoJSON type:', geojson.type)
+
+        // Extract coordinates from GeoJSON
+        let coordinates = []
+
+        if (
+          geojson.type === 'FeatureCollection' &&
+          geojson.features &&
+          geojson.features.length > 0
+        ) {
+          // Get first feature's geometry (Todo: handle multiple features!?)
+          const firstFeature = geojson.features[0]
+          if (firstFeature.geometry.type === 'Polygon') {
+            coordinates = firstFeature.geometry.coordinates[0]
+          } else if (firstFeature.geometry.type === 'MultiPolygon') {
+            coordinates = firstFeature.geometry.coordinates[0][0]
+          }
+        } else if (geojson.type === 'Feature') {
+          if (geojson.geometry.type === 'Polygon') {
+            coordinates = geojson.geometry.coordinates[0]
+          } else if (geojson.geometry.type === 'MultiPolygon') {
+            coordinates = geojson.geometry.coordinates[0][0]
+          }
+        } else if (geojson.type === 'Polygon') {
+          coordinates = geojson.coordinates[0]
+        } else if (geojson.type === 'MultiPolygon') {
+          coordinates = geojson.coordinates[0][0]
+        }
+
+        if (coordinates.length === 0) {
+          return res.render('nrf-estimate-1/upload-redline', {
+            error: 'The GeoJSON file does not contain valid polygon coordinates'
+          })
+        }
+
+        boundaryData = {
+          coordinates: coordinates
+        }
+      } catch (error) {
+        console.error('Error parsing GeoJSON:', error)
+        return res.render('nrf-estimate-1/upload-redline', {
+          error: 'The selected file is not a valid GeoJSON file'
+        })
+      }
+    } else if (fileExtension === '.shp') {
+      // For shapefile, we'd need a library like shapefile.js
+      // For now, return an error
+      return res.render('nrf-estimate-1/upload-redline', {
+        error:
+          'Shapefile parsing is not yet supported. Please use GeoJSON format.'
+      })
     }
 
     // Store in session
     req.session.data = req.session.data || {}
     req.session.data.redlineFile = uploadedFile.originalname
     req.session.data.hasRedlineBoundaryFile = 'yes'
-    req.session.data.redlineBoundaryPolygon = mockBoundaryData
+    req.session.data.redlineBoundaryPolygon = boundaryData
 
-    // Check EDP intersection
-    const edpIntersection = checkEDPIntersection(mockBoundaryData)
-    if (!edpIntersection) {
-      res.redirect('/nrf-estimate-1/no-edp')
-    } else {
-      res.redirect('/nrf-estimate-1/building-type')
-    }
+    // Navigate to map page to display the boundary
+    res.redirect('/nrf-estimate-1/map')
   }
 )
 
 // Draw polygon on map
 router.get('/nrf-estimate-1/map', (req, res) => {
   const data = req.session.data || {}
-  console.log('=== MAP ROUTE DEBUG ===')
-  console.log('Map route - full session data:', JSON.stringify(data, null, 2))
-  console.log(
-    'Map route - redlineBoundaryPolygon exists:',
-    !!data.redlineBoundaryPolygon
-  )
-  console.log(
-    'Map route - redlineBoundaryPolygon:',
-    data.redlineBoundaryPolygon
-  )
-  console.log(
-    'Map route - hasRedlineBoundaryFile:',
-    data.hasRedlineBoundaryFile
-  )
-  console.log('Map route - redlineFile:', data.redlineFile)
+  //   console.log('=== MAP ROUTE DEBUG ===')
+  //   console.log('Map route - full session data:', JSON.stringify(data, null, 2))
+  //   console.log(
+  //     'Map route - redlineBoundaryPolygon exists:',
+  //     !!data.redlineBoundaryPolygon
+  //   )
+  //   console.log(
+  //     'Map route - redlineBoundaryPolygon:',
+  //     data.redlineBoundaryPolygon
+  //   )
+  //   console.log(
+  //     'Map route - hasRedlineBoundaryFile:',
+  //     data.hasRedlineBoundaryFile
+  //   )
+  //   console.log('Map route - redlineFile:', data.redlineFile)
 
   const existingBoundaryData = data.redlineBoundaryPolygon
     ? JSON.stringify(data.redlineBoundaryPolygon)
     : ''
-  console.log(
-    'Map route - existingBoundaryData length:',
-    existingBoundaryData.length
-  )
-  console.log('Map route - existingBoundaryData:', existingBoundaryData)
-  console.log('=== END MAP ROUTE DEBUG ===')
+  //   console.log(
+  //     'Map route - existingBoundaryData length:',
+  //     existingBoundaryData.length
+  //   )
+  //   console.log('Map route - existingBoundaryData:', existingBoundaryData)
+  //   console.log('=== END MAP ROUTE DEBUG ===')
 
   res.render('nrf-estimate-1/map', {
     data: data,
