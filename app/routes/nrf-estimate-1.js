@@ -162,6 +162,8 @@ router.post('/nrf-estimate-1/redline-map', (req, res) => {
   if (hasRedlineBoundaryFile === 'yes') {
     res.redirect('/nrf-estimate-1/upload-redline')
   } else {
+    // Store that we came from redline-map for back link
+    req.session.data.mapReferrer = 'redline-map'
     res.redirect('/nrf-estimate-1/map')
   }
 })
@@ -308,6 +310,8 @@ router.post(
     req.session.data.redlineFile = uploadedFile.originalname
     req.session.data.hasRedlineBoundaryFile = 'yes'
     req.session.data.redlineBoundaryPolygon = boundaryData
+    // Store that we came from upload-redline for back link
+    req.session.data.mapReferrer = 'upload-redline'
 
     // Navigate to map page to display the boundary
     res.redirect('/nrf-estimate-1/map')
@@ -317,35 +321,21 @@ router.post(
 // Draw polygon on map
 router.get('/nrf-estimate-1/map', (req, res) => {
   const data = req.session.data || {}
-  //   console.log('=== MAP ROUTE DEBUG ===')
-  //   console.log('Map route - full session data:', JSON.stringify(data, null, 2))
-  //   console.log(
-  //     'Map route - redlineBoundaryPolygon exists:',
-  //     !!data.redlineBoundaryPolygon
-  //   )
-  //   console.log(
-  //     'Map route - redlineBoundaryPolygon:',
-  //     data.redlineBoundaryPolygon
-  //   )
-  //   console.log(
-  //     'Map route - hasRedlineBoundaryFile:',
-  //     data.hasRedlineBoundaryFile
-  //   )
-  //   console.log('Map route - redlineFile:', data.redlineFile)
 
   const existingBoundaryData = data.redlineBoundaryPolygon
     ? JSON.stringify(data.redlineBoundaryPolygon)
     : ''
-  //   console.log(
-  //     'Map route - existingBoundaryData length:',
-  //     existingBoundaryData.length
-  //   )
-  //   console.log('Map route - existingBoundaryData:', existingBoundaryData)
-  //   console.log('=== END MAP ROUTE DEBUG ===')
+
+  // Determine back link based on where user came from
+  const backLink =
+    data.mapReferrer === 'upload-redline'
+      ? '/nrf-estimate-1/upload-redline'
+      : '/nrf-estimate-1/redline-map'
 
   res.render('nrf-estimate-1/map', {
     data: data,
-    existingBoundaryData: existingBoundaryData
+    existingBoundaryData: existingBoundaryData,
+    backLink: backLink
   })
 })
 
