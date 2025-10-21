@@ -4,3 +4,42 @@
 // 
 
 // Add extra styles here
+
+// Style a <button> to look like a GOV.UK link while preserving POST submission
+.govuk-link-button {
+    background: none;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    // Apply GOV.UK link typography and colours explicitly to avoid UA defaults
+    font-family: "GDS Transport", Arial, sans-serif;
+    font-size: 19px; // govuk-body-m
+    line-height: 1.31579; // govuk-body-m
+    font-weight: 400;
+    color: #1d70b8; // govuk-link colour
+    text-decoration: underline;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    text-align: left;
+    display: inline; // match anchor display for consistent baselines
+}
+
+.govuk-link-button:hover {
+    color: #003078; // govuk-link hover
+}
+
+.govuk-link-button:visited {
+    color: #4c2c92; // govuk-link visited
+}
+
+.govuk-link-button:focus {
+    outline: 3px solid transparent;
+    color: #0b0c0c; // black text inside focus
+    background-color: #fd0; // govuk focus yellow
+    box-shadow: 0 -2px #fd0, 0 4px #0b0c0c;
+    text-decoration: none;
+}
+
+// Optional: pair with .govuk-link for colours, underline and focus styles
+// <button class="govuk-link govuk-link-button">Continue</button>
