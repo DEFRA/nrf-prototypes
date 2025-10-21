@@ -311,6 +311,9 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
     (function () {
         'use strict';
 
+        let isDrawing = false;
+        let isEditing = false;
+
         // Wait for everything to be ready
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initMap);
@@ -649,6 +652,18 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
 
                     // Form submission validation and navigation logic
                     document.querySelector('form').addEventListener('submit', function (e) {
+                        if (isDrawing) {
+                            e.preventDefault();
+                            showErrorSummary('You are still drawing the boundary. Select "Cancel drawing" or finish drawing before continuing.');
+                            return false;
+                        }
+
+                        if (isEditing) {
+                            e.preventDefault();
+                            showErrorSummary('You are still editing the boundary. Select "Stop editing" before continuing.');
+                            return false;
+                        }
+
                         const boundaryData = document.getElementById('boundary-data').value;
                         if (!boundaryData) {
                             e.preventDefault();
@@ -906,10 +921,6 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
                 return;
             }
 
-            // Status functions removed - no status panel needed
-
-            let isDrawing = false;
-            let isEditing = false;
             let catchmentsVisible = true;
             let currentDrawingLayer = null;
 
