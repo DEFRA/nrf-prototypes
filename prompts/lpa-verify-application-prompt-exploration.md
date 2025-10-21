@@ -22,7 +22,7 @@ Interface Design:
 [Relevant user interface design. This is a GOV.UK Application so it should follow GOV.UK guidelines including the GDS Design System and Accessibility. Ensure you include the GDS Components needed for the interface]
 
 Technical Design:
-[The functionality defined in technical detail.  Include the URL paths as examples from below as backend API endpoints are not required for this prototype]
+[The functionality defined in technical detail. Include the URL paths as examples from below as backend API endpoints are not required for this prototype]
 
 ---
 
@@ -33,14 +33,17 @@ The Nature Restoration Fund (NRF) is a levy that certain developers can contribu
 Currently, developers seeking planning permission must navigate a complex landscape of stakeholders, systems, and services to meet environmental regulations. This process is often inefficient, costly, and difficult to use.
 
 Developing a dedicated NRF service presents an opportunity to:
- - Standardise and integrate existing and emerging strategic conservation solutions
- - Simplify the planning process for developers in servicing environmental obligations
- - Improve internal efficiency in delivering conservation measures
+
+- Standardise and integrate existing and emerging strategic conservation solutions
+- Simplify the planning process for developers in servicing environmental obligations
+- Improve internal efficiency in delivering conservation measures
 
 ## Feature Context
+
 A local planning authority (LPA) whom the Developers will submit a request for planning permission through will only grant final planning permission once they verify that the environmental levy has been paid by the developer. The service must provide an interface where LPAs can enter the application reference and the name or registered company ID (from Companies House) of the developer and they can review the status and the application details.
 
 # Data model
+
 The known data points applicable to an application submitted by a developer is as follows
 
 ```json
@@ -179,7 +182,13 @@ The known data points applicable to an application submitted by a developer is a
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["edpType", "description", "rate", "houseCount", "amount"],
+            "required": [
+              "edpType",
+              "description",
+              "rate",
+              "houseCount",
+              "amount"
+            ],
             "properties": {
               "edpType": {
                 "type": "string",
@@ -328,9 +337,10 @@ The known data points applicable to an application submitted by a developer is a
 
 - The landing page will be a simple form that takes the application reference and either the name of the developer or the company ID as granted by Companies House
 - If the application is found, submitting the form will either take the user to a page that shows the application details and a message stating that the application has been found
-- If the application cannot be found, submitting the form will take the user to an error page 
+- If the application cannot be found, submitting the form will take the user to an error page
 
 # Verification Checklist
+
 - The user story contains format and content as defined above. It does not need to have any additional sections.
-- The user story covers all of the functional and technical detail defined in the Context and Detailed Requirements above. It does not need to have any additional technical details.  
+- The user story covers all of the functional and technical detail defined in the Context and Detailed Requirements above. It does not need to have any additional technical details.
 - The user story as a markdown file. Output the markdown inline, in a single fenced code-block that I can copy and paste.

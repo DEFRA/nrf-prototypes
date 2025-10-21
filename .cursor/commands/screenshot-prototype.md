@@ -10,12 +10,12 @@ parameters:
     description: Base URL for the prototype
     required: false
     type: string
-    default: "http://localhost:3000"
+    default: 'http://localhost:3000'
   - name: screenshot-dir
     description: Directory to save screenshots
     required: false
     type: string
-    default: "screenshots"
+    default: 'screenshots'
   - name: headless
     description: Run in headless mode (no browser window)
     required: false
@@ -27,12 +27,15 @@ parameters:
     type: number
     default: 1000
 ---
+
 # Screenshot Prototype Journey
 
 ## Overview
+
 This slash command captures screenshots of all pages in a prototype journey by automatically walking through the user flow and taking screenshots of each page.
 
 ## Usage
+
 ```
 /screenshot-prototype <prototype-path> [options]
 ```
@@ -40,16 +43,19 @@ This slash command captures screenshots of all pages in a prototype journey by a
 ## Examples
 
 ### Basic usage
+
 ```bash
 /screenshot-prototype nrf-estimate-1
 ```
 
 ### With custom options
+
 ```bash
 /screenshot-prototype nrf-estimate-1 --base-url http://localhost:3001 --screenshot-dir my-screenshots --headless --delay 2000
 ```
 
 ### Using parameter names
+
 ```bash
 /screenshot-prototype prototype-path:nrf-estimate-1 base-url:http://localhost:3001 screenshot-dir:my-screenshots headless:true delay:2000
 ```
@@ -57,6 +63,7 @@ This slash command captures screenshots of all pages in a prototype journey by a
 ## Available Prototypes
 
 ### nrf-estimate-1
+
 **Name**: NRF Estimate Journey  
 **Description**: Nature Restoration Fund Levy Estimate prototype  
 **Pages**: 22 pages including start, forms, maps, summary, and confirmation pages
@@ -76,6 +83,7 @@ This slash command captures screenshots of all pages in a prototype journey by a
 ## Screenshot Organization
 
 Screenshots are saved with the following structure, with index numbers to maintain user journey order:
+
 ```
 {screenshot-dir}/
 └── {prototype-path}/
@@ -124,7 +132,9 @@ chmod +x scripts/screenshot-capture.js
 ## Technical Details
 
 ### Form Data
+
 The script automatically fills out forms with appropriate test data:
+
 - Journey type: "estimate"
 - File uploads: Mock file names
 - Building types: "Dwellinghouse"
@@ -133,12 +143,14 @@ The script automatically fills out forms with appropriate test data:
 - References: Mock reference numbers
 
 ### Error Handling
+
 - Continues to next page if one page fails
 - Logs errors for debugging
 - Gracefully handles missing form elements
 - Times out after 30 seconds per page
 
 ### Browser Configuration
+
 - Default viewport: 1200x800 pixels
 - Full-page screenshots
 - Network idle wait for page loads
@@ -167,7 +179,9 @@ The script automatically fills out forms with appropriate test data:
    - Verify the prototype is accessible at the specified `base-url`
 
 ### Debug Mode
+
 Run with verbose logging to see detailed information:
+
 ```bash
 DEBUG=* node scripts/screenshot-capture.js nrf-estimate-1
 ```
@@ -178,24 +192,25 @@ To add support for new prototypes, edit `scripts/screenshot-capture.js` and add 
 
 ```javascript
 const PROTOTYPE_JOURNEYS = {
-    // ... existing prototypes ...
-    'new-prototype': {
-        name: 'New Prototype Name',
-        basePath: '/new-prototype',
-        pages: [
-            { path: '/start', name: 'start', title: 'Start Page' },
-            // ... add all pages ...
-        ],
-        formData: {
-            // ... add form data for auto-filling ...
-        }
+  // ... existing prototypes ...
+  'new-prototype': {
+    name: 'New Prototype Name',
+    basePath: '/new-prototype',
+    pages: [
+      { path: '/start', name: 'start', title: 'Start Page' }
+      // ... add all pages ...
+    ],
+    formData: {
+      // ... add form data for auto-filling ...
     }
-};
+  }
+}
 ```
 
 ## Output
 
 The script provides real-time feedback:
+
 - ✅ Successful page captures
 - ❌ Failed page captures with error messages
 - 📁 Directory creation notifications

@@ -1,15 +1,17 @@
 # Create NRF Payment journey with reference in GOV.UK Prototype Kit
 
 ## Journey Information
+
 - **Journey Name**: Pay Nature Restoration Fund Levy
 - **Journey Description**:  
-A user journey for a developer pay for the Nature Restoration Fund levy required when submitting planning permission to build a development of some sort. A significant page in the journey is /nrf-estimate-1/map where the user will be able to plot a polygon on a map to define the development site boundary. There will also be 5 polygon areas over England that are known as EDP boundaries. If the development site boundary does not fall within an EDP area then the user will be navigated to the exit page /nrf-estimate-1/no-edp.
+  A user journey for a developer pay for the Nature Restoration Fund levy required when submitting planning permission to build a development of some sort. A significant page in the journey is /nrf-estimate-1/map where the user will be able to plot a polygon on a map to define the development site boundary. There will also be 5 polygon areas over England that are known as EDP boundaries. If the development site boundary does not fall within an EDP area then the user will be navigated to the exit page /nrf-estimate-1/no-edp.
 - **Journey Route Prefix**: nrf-estimate-1
 - **Start Page Title**: Get an estimate for Nature Restoration Fund Levy
 
 ## Page Flow and Conditional Logic
 
 ### Landing page
+
 | **Field**                  | **Value**                            |
 | -------------------------- | ------------------------------------ |
 | **Order number:**          | 1                                    |
@@ -18,7 +20,9 @@ A user journey for a developer pay for the Nature Restoration Fund levy required
 | **Conditional page flow:** | none                                 |
 
 ---
+
 ### What would you like to do?
+
 | **Field**              | **Value**                                 |
 | ---------------------- | ----------------------------------------- |
 | Order number:          | 2                                         |
@@ -27,7 +31,9 @@ A user journey for a developer pay for the Nature Restoration Fund levy required
 | Conditional page flow: | none                                      |
 
 ---
+
 ### Do you have an estimate reference?
+
 | **Field**              | **Value**                                   |
 | ---------------------- | ------------------------------------------- |
 | Order number:          | 3                                           |
@@ -36,6 +42,7 @@ A user journey for a developer pay for the Nature Restoration Fund levy required
 | Conditional page flow: | none                                        |
 
 #### Data points
+
 ```
 {
     application: {
@@ -49,13 +56,15 @@ A user journey for a developer pay for the Nature Restoration Fund levy required
 ```
 
 #### Content
+
 ```
-# Do you have an estimate reference? 
+# Do you have an estimate reference?
 - Yes
-- No 
+- No
 ```
 
-#### Errors 
+#### Errors
+
 | **Field**      | **Value**                                               |
 | -------------- | ------------------------------------------------------- |
 | Description:   | User has selected ‘Continue’ without choosing an option |
@@ -63,6 +72,7 @@ A user journey for a developer pay for the Nature Restoration Fund levy required
 | Error message: | Select yes if you have an estimate reference            |
 
 ---
+
 ### Enter your estimate reference
 
 | **Field**              | **Value**                          |
@@ -72,8 +82,8 @@ A user journey for a developer pay for the Nature Restoration Fund levy required
 | Title:                 | Enter your estimate reference      |
 | Conditional page flow: | none                               |
 
-
 #### Data points
+
 ```
 {
     application: {
@@ -86,12 +96,14 @@ A user journey for a developer pay for the Nature Restoration Fund levy required
 ```
 
 #### Content
+
 ```
-# Enter your estimate reference 
+# Enter your estimate reference
 hint text: Enter this reference to retrieve the details entered during the estimate.
 ```
 
-#### Errors 
+#### Errors
+
 | **Field**      | **Value**                                               |
 | -------------- | ------------------------------------------------------- |
 | Description:   | User has selected ‘Continue’ without choosing an option |
@@ -99,15 +111,18 @@ hint text: Enter this reference to retrieve the details entered during the estim
 | Error message: | Select yes if you have an estimate reference            |
 
 ---
-### Email entry
-| **Field**              | **Value**                |     |
-| ---------------------- | ------------------------ | --- |
-| Order number:          | 5                        |     |
-| Path:                  | /nrf-estimate-1/retrieve-estimate-email    |     |
-| Title:                 | Enter your email address |     |
-| Conditional page flow: | None                     |     |
 
-#### Data points 
+### Email entry
+
+| **Field**              | **Value**                               |     |
+| ---------------------- | --------------------------------------- | --- |
+| Order number:          | 5                                       |     |
+| Path:                  | /nrf-estimate-1/retrieve-estimate-email |     |
+| Title:                 | Enter your email address                |     |
+| Conditional page flow: | None                                    |     |
+
+#### Data points
+
 ```
 {
     applicant: {
@@ -120,49 +135,53 @@ hint text: Enter this reference to retrieve the details entered during the estim
 ```
 
 #### Content
+
 ```
 # Enter your email address
-Hint text: We will send you a link so you can retrieve the details from your estimate.  
+Hint text: We will send you a link so you can retrieve the details from your estimate.
 ```
 
-#### Errors 
-| **Field** | **Value** |
-|-----------|-----------|
-| Description: | User has selected ‘Continue’ without entering any details |
-| Error summary: | There is a problem | 
-| Error message: | Enter your email address to continue |
-| Description: | Incorrect email format |
-| Error summary: | There is a problem | 
+#### Errors
+
+| **Field**      | **Value**                                                           |
+| -------------- | ------------------------------------------------------------------- |
+| Description:   | User has selected ‘Continue’ without entering any details           |
+| Error summary: | There is a problem                                                  |
+| Error message: | Enter your email address to continue                                |
+| Description:   | Incorrect email format                                              |
+| Error summary: | There is a problem                                                  |
 | Error message: | Enter an email address in the correct format, like name@example.com |
 
-
 ---
-### Email sent with magic link to estimate
-| **Field**             | **Value**                                           |
-| --------------------- | --------------------------------------------------- |
-| Order number:         | 6                                                   |
-| Path:                 | /nrf-estimate-1/estimate-email-retrieval-content    |
-| Title:                | Email sent to get magic link to access estimate     |
-| Data points:          | None                                                |
-| Conditional pageflow: | None                                                |
 
+### Email sent with magic link to estimate
+
+| **Field**             | **Value**                                        |
+| --------------------- | ------------------------------------------------ |
+| Order number:         | 6                                                |
+| Path:                 | /nrf-estimate-1/estimate-email-retrieval-content |
+| Title:                | Email sent to get magic link to access estimate  |
+| Data points:          | None                                             |
+| Conditional pageflow: | None                                             |
 
 #### Content
-# Nature Restoration Fund – retrieve your estimate details for the Nature Restoration Fund levy   
- 
-You can use the details you previously gave us for your estimate to fill in the information needed for your levy payment.  
 
-[Retrieve the estimate details](http://testurl-to-my-nrf-service.com)  
+# Nature Restoration Fund – retrieve your estimate details for the Nature Restoration Fund levy
 
-## Get help with Nature Restoration Fund 
+You can use the details you previously gave us for your estimate to fill in the information needed for your levy payment.
 
-If you need help with Nature Restoration Fund, contact XXXX and give the estimate reference number.  
+[Retrieve the estimate details](http://testurl-to-my-nrf-service.com)
 
-Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk) 
+## Get help with Nature Restoration Fund
+
+If you need help with Nature Restoration Fund, contact XXXX and give the estimate reference number.
+
+Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000  
-Monday to Friday, 8:30am to 5pm, except bank holidays  
+Monday to Friday, 8:30am to 5pm, except bank holidays
 
-Find out about call charges at https://www.gov.uk/call-charges  
+Find out about call charges at https://www.gov.uk/call-charges
+
 ```
 ---
 
@@ -174,28 +193,32 @@ Find out about call charges at https://www.gov.uk/call-charges
 | Title:                 | Enter your planning reference |     |
 | Conditional page flow: | None                          |     |
 
-#### Data points 
+#### Data points
 ```
+
 {
-    applicant: {
-        email: {
-            type: planning reference,
-            required: true
-        }
-    }
+applicant: {
+email: {
+type: planning reference,
+required: true
 }
+}
+}
+
 ```
 
 #### Content
 ```
-# Enter your planning reference  
+
+# Enter your planning reference
+
 ```
 
-#### Errors 
+#### Errors
 | **Field** | **Value** |
 |-----------|-----------|
 | Description: | User has selected ‘Continue’ without entering any details |
-| Error summary: | There is a problem | 
+| Error summary: | There is a problem |
 | Error message: | Enter your planning reference to continue |
 
 ---
@@ -205,27 +228,29 @@ Find out about call charges at https://www.gov.uk/call-charges
 | Order number: | 8 |
 | Path: | /nrf-estimate-1/summary |
 | Title: | Check your answers |
-| Conditional page flow: | None | 
+| Conditional page flow: | None |
 
 #### Data points
 None
 
 #### Content
 ```
-# Check your answers 
 
-| Planning reference | [show planning reference] | 
-| Red line boundary added | [Show yes/no] | 
-| Red line boundary file uploaded     | [Show no/yes] |  
-| Building types          | [List all types picked here] | 
+# Check your answers
+
+| Planning reference | [show planning reference] |
+| Red line boundary added | [Show yes/no] |
+| Red line boundary file uploaded | [Show no/yes] |  
+| Building types | [List all types picked here] |
 | [IF they pick dwellinghouse THEN show] | Number of dwellinghouse buildings |
 | [IF they pick "House of multiple occupation (HMO)" THEN show] | Number of multiple occupation rooms |
 | [IF they pick "Residential institution THEN show] | Number of residential institution rooms |
-| Email address                                          | [show email address] | 
+| Email address | [show email address] |
+
 ```
 
 #### Errors
-None 
+None
 
 ---
 ### Details submitted confirmation page
@@ -233,34 +258,36 @@ None
 |-----------|-----------|
 | Order number: | 9 |
 | Path: | /nrf-estimate-1/summary |
-| Title: | Your details have been submitted | 
+| Title: | Your details have been submitted |
 | Data points: | None |
 | Conditional pageflow: | None |
 
 #### Content
 ```
+
 <green banner>
 # Your details have been submitted
 
-Payment reference: 000000   
+Payment reference: 000000  
 </green banner>
 
-## What happens next 
+## What happens next
 
 You will receive an email with the amount of the Nature Restoration Fund levy.  
-You will be able to click the link on the email to accept the amount and request an invoice to pay the levy.  
- 
+You will be able to click the link on the email to accept the amount and request an invoice to pay the levy.
 
-## Get help with Nature Restoration Fund 
-If you need help with Nature Restoration Fund, contact XXXX and give the payment reference.  
+## Get help with Nature Restoration Fund
 
-Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk) 
+If you need help with Nature Restoration Fund, contact XXXX and give the payment reference.
+
+Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000  
-Monday to Friday, 8:30am to 5pm, except bank holidays  
+Monday to Friday, 8:30am to 5pm, except bank holidays
 
-Find out about call charges at https://www.gov.uk/call-charges 
+Find out about call charges at https://www.gov.uk/call-charges
 
 [View payment email](/nrf-estimate-1/payment-email)
+
 ```
 
 #### Errors
@@ -278,41 +305,41 @@ None
 
 
 #### Content
-# Nature Restoration Fund – payment for the Nature Restoration Fund levy   
+# Nature Restoration Fund – payment for the Nature Restoration Fund levy
 
-Thank you for submitting details of the development on the Pay the Nature Restoration Fund service. 
+Thank you for submitting details of the development on the Pay the Nature Restoration Fund service.
 
-You told us the development:  
-* is planned in an area XXXXXXXXXX 
-* has ((amount)) ((buildingType)) buildings, ((buildingType)) buildings with a total of ((amount)) rooms and ((buildingType)) buildings with a total of ((amount)) rooms 
- 
-
-## What you need to pay 
-
-Based on the information you have provided, the development falls into the catchment area for the Nature Restoration Fund Nutrients Levy.  
- 
-The total amount you need to pay is: 
-((levyAmount)) 
-
-[Confirm payment and request an invoice](http:my-nrf-page.com) 
- 
-
-## What your levy will pay for 
-
-Your levy will be spent on conservation, with amounts being spent on  
-monitoring and maintenance. There will also be an admin charge of £00 taken from the levy payment. 
-Levies are calculated as part of Environmental Delivery Plans (EDPs). 
+You told us the development:
+* is planned in an area XXXXXXXXXX
+* has ((amount)) ((buildingType)) buildings, ((buildingType)) buildings with a total of ((amount)) rooms and ((buildingType)) buildings with a total of ((amount)) rooms
 
 
-## Get help with paying the Nature Restoration Fund levy 
+## What you need to pay
 
-If you need help with paying the Nature Restoration Fund levy contact XXXX and give the payment reference number.  
+Based on the information you have provided, the development falls into the catchment area for the Nature Restoration Fund Nutrients Levy.
 
-Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk) 
-Telephone: 00000000000  
-Monday to Friday, 8:30am to 5pm, except bank holidays  
+The total amount you need to pay is:
+((levyAmount))
 
-Find out about call charges at https://www.gov.uk/call-charges  
+[Confirm payment and request an invoice](http:my-nrf-page.com)
+
+
+## What your levy will pay for
+
+Your levy will be spent on conservation, with amounts being spent on
+monitoring and maintenance. There will also be an admin charge of £00 taken from the levy payment.
+Levies are calculated as part of Environmental Delivery Plans (EDPs).
+
+
+## Get help with paying the Nature Restoration Fund levy
+
+If you need help with paying the Nature Restoration Fund levy contact XXXX and give the payment reference number.
+
+Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
+Telephone: 00000000000
+Monday to Friday, 8:30am to 5pm, except bank holidays
+
+Find out about call charges at https://www.gov.uk/call-charges
 ```
 
 ---
@@ -320,6 +347,7 @@ Find out about call charges at https://www.gov.uk/call-charges
 ## Technical Requirements
 
 ### File Structure
+
 Create the following files in the GOV.UK Prototype Kit structure:
 
 1. **Route File**: `app/routes/nrf-estimate-1.js`
@@ -328,6 +356,7 @@ Create the following files in the GOV.UK Prototype Kit structure:
 4. **Data File**: `app/data/nrf-estimate-1-data.js` (if needed)
 
 ### Route Implementation
+
 - Use GOV.UK Prototype Kit router setup
 - Implement GET routes for displaying pages
 - Implement POST routes for form submissions
@@ -337,6 +366,7 @@ Create the following files in the GOV.UK Prototype Kit structure:
 - Include back links on each page
 
 ### View Implementation
+
 - Extend `layouts/main.html` from GOV.UK Prototype Kit
 - Use GOV.UK Frontend components and classes
 - Implement proper form structure with CSRF protection
@@ -345,12 +375,14 @@ Create the following files in the GOV.UK Prototype Kit structure:
 - Implement proper navigation between pages
 
 ### Data Handling
+
 - Store form data in session using `req.session.data`
 - Implement data validation with appropriate error messages
 - Handle conditional logic for multi-step forms
 - Clear session data on journey completion or restart
 
 ### GOV.UK Design System Compliance
+
 - Use proper GOV.UK Frontend components
 - Follow GOV.UK content guidelines
 - Implement proper heading hierarchy
@@ -359,6 +391,7 @@ Create the following files in the GOV.UK Prototype Kit structure:
 - Ensure accessibility compliance
 
 ### Conditional Logic Implementation
+
 - Implement branching logic based on user selections
 - Handle different paths through the journey
 - Store conditional data appropriately
@@ -374,6 +407,7 @@ Create the following files in the GOV.UK Prototype Kit structure:
 6. **Test the complete journey** to ensure all paths work correctly
 
 ## Expected Output
+
 - Complete working user journey with all pages
 - Proper form validation and error handling
 - Conditional logic implementation
@@ -382,6 +416,7 @@ Create the following files in the GOV.UK Prototype Kit structure:
 - Clean, maintainable code structure
 
 ## Notes
+
 - This is for rapid prototyping, so focus on user experience over security
 - Use session storage for data persistence during the journey
 - Implement basic validation without complex security measures

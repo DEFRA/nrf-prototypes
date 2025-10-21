@@ -20,13 +20,13 @@ The primary goals of these prototypes are to:
 
 ## Current Prototypes
 
-| Prototype | Description | Key Features |
-|-----------|-------------|--------------|
-| **User Journey 1** | Sample journey demonstrating the concept of user journey prototyping within the NRF context | Basic user flow demonstration |
-| **Applications Prototypes** | Interactive prototypes for the application process | • Application start and data collection<br>• Location selection (postcode, coordinates, drawing, file upload)<br>• Payment processing<br>• Application summary and confirmation |
-| **EDP Search Prototypes** | Prototypes for the Environmental Data Platform (EDP) search functionality | • Search interface and filters<br>• Location-based searching<br>• Results display and details<br>• Print functionality |
-| **LPA Application Verification** | Local Planning Authority staff can verify environmental levy payments | • Application reference and developer verification<br>• Payment status and development details display<br>• Interactive map showing development and EDP boundaries<br>• Standard GOV.UK error handling |
-| **Natural England Case Management** | Staff interface for managing developer applications and processing payments | • Application dashboard with filtering and search<br>• Individual application review and editing<br>• Payment processing and status updates<br>• Audit trail and export functionality |
+| Prototype                           | Description                                                                                 | Key Features                                                                                                                                                                                           |
+| ----------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **User Journey 1**                  | Sample journey demonstrating the concept of user journey prototyping within the NRF context | Basic user flow demonstration                                                                                                                                                                          |
+| **Applications Prototypes**         | Interactive prototypes for the application process                                          | • Application start and data collection<br>• Location selection (postcode, coordinates, drawing, file upload)<br>• Payment processing<br>• Application summary and confirmation                        |
+| **EDP Search Prototypes**           | Prototypes for the Environmental Data Platform (EDP) search functionality                   | • Search interface and filters<br>• Location-based searching<br>• Results display and details<br>• Print functionality                                                                                 |
+| **LPA Application Verification**    | Local Planning Authority staff can verify environmental levy payments                       | • Application reference and developer verification<br>• Payment status and development details display<br>• Interactive map showing development and EDP boundaries<br>• Standard GOV.UK error handling |
+| **Natural England Case Management** | Staff interface for managing developer applications and processing payments                 | • Application dashboard with filtering and search<br>• Individual application review and editing<br>• Payment processing and status updates<br>• Audit trail and export functionality                  |
 
 ## Project Structure
 
@@ -69,6 +69,7 @@ To add a new user journey or prototype:
 ### Nature Restoration Fund
 
 The Nature Restoration Fund supports projects that:
+
 - Restore and create wildlife-rich habitats
 - Reduce flood risk and improve water quality
 - Enhance public access to nature
@@ -90,6 +91,7 @@ These prototypes follow the Government Digital Service (GDS) service design meth
 The **LPA Application Verification** prototype enables Local Planning Authority (LPA) staff to verify that developers have paid the required environmental levy before granting final planning permission.
 
 **Key User Journey:**
+
 1. **Landing Page** (`/lpa-verify`) - Form with application reference and developer identifier fields
 2. **Verification Process** - Validates application reference format (APP-XXX) and developer details
 3. **Success Page** (`/lpa-verify/details`) - Displays comprehensive application information including:
@@ -100,6 +102,7 @@ The **LPA Application Verification** prototype enables Local Planning Authority 
 4. **Error Handling** (`/lpa-verify/error`) - Standard GOV.UK error page for invalid applications
 
 **Technical Features:**
+
 - **Form Validation** - Client and server-side validation with clear error messages
 - **Fuzzy Matching** - Supports both developer names and company IDs
 - **Interactive Map** - Leaflet-based map showing redline boundaries
@@ -107,8 +110,9 @@ The **LPA Application Verification** prototype enables Local Planning Authority 
 - **Accessibility** - WCAG 2.1 AA compliant with proper ARIA labels
 
 **Test Data Available:**
+
 - APP-001 with "Riverside Developers Ltd" or "RDL001"
-- APP-002 with "South East Properties" or "SEP002"  
+- APP-002 with "South East Properties" or "SEP002"
 - APP-003 with "Hampshire Coastal Ltd" or "HCL003"
 
 ### Natural England Case Management
@@ -116,6 +120,7 @@ The **LPA Application Verification** prototype enables Local Planning Authority 
 The **Natural England Case Management** prototype provides staff with a comprehensive interface for managing developer applications, processing payments, and maintaining audit trails.
 
 **Key User Journey:**
+
 1. **Dashboard** (`/case-management`) - Overview of all applications with filtering and search capabilities
 2. **Application Review** (`/case-management/:id`) - Detailed view of individual applications including:
    - Development information and status
@@ -127,6 +132,7 @@ The **Natural England Case Management** prototype provides staff with a comprehe
 5. **Export Functionality** (`/case-management/export`) - CSV export of filtered application data
 
 **Technical Features:**
+
 - **Advanced Filtering** - Filter by status, date range, development name
 - **Search and Sort** - Find applications quickly with robust search functionality
 - **Status Management** - Update application status (draft, pending payment, paid, approved)
@@ -136,6 +142,7 @@ The **Natural England Case Management** prototype provides staff with a comprehe
 - **Interactive Maps** - Visual representation of development sites and EDP boundaries
 
 **Staff Workflow:**
+
 - **Application Review** - Staff can review submitted applications and verify details
 - **Payment Verification** - Confirm environmental levy payments have been received
 - **Status Updates** - Update application status as it progresses through the system
@@ -144,6 +151,7 @@ The **Natural England Case Management** prototype provides staff with a comprehe
 ### User-Centered Design
 
 All prototypes prioritize:
+
 - **Accessibility** - Meeting WCAG 2.2 AA standards
 - **Usability** - Clear, intuitive interfaces following GOV.UK patterns
 - **Inclusivity** - Designing for diverse user needs and abilities
@@ -152,6 +160,7 @@ All prototypes prioritize:
 ## Stakeholder Engagement
 
 These prototypes support engagement with:
+
 - **Internal teams** - Natural England staff and management
 - **External partners** - Other government departments and delivery partners
 - **Local Planning Authorities** - LPA staff who need to verify environmental levy payments
@@ -161,6 +170,7 @@ These prototypes support engagement with:
 ## Success Metrics
 
 The effectiveness of these prototypes is measured by:
+
 - User feedback and satisfaction scores
 - Task completion rates in user testing
 - Reduction in support queries and clarification requests
@@ -177,6 +187,7 @@ The effectiveness of these prototypes is measured by:
 ## Support and Contact
 
 For questions about these prototypes or the NRF service:
+
 - Contact the Natural England development team
 - Create an issue in this repository for specific prototype feedback
-- Refer to the main [README.md](../README.md) for technical setup and deployment information 
+- Refer to the main [README.md](../README.md) for technical setup and deployment information

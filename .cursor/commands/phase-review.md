@@ -24,6 +24,7 @@ Perform a thorough review of the specified phase implementation by:
 Organize your review using the following structure:
 
 ### 1. Phase Overview
+
 - **Phase Number and Name**: (e.g., Phase 3 - Business Logic Extraction)
 - **Status**: Complete ✅ / In Progress 🚧 / Not Started ⏳
 - **Scope**: Brief description of what this phase should deliver
@@ -33,6 +34,7 @@ Organize your review using the following structure:
 For each major component in the phase:
 
 #### Component Name
+
 - **Status**: ✅ Complete / 🚧 Partial / ❌ Missing
 - **Location**: File path and relevant line numbers
 - **Maps to Legacy**: Reference to legacy script lines
@@ -56,11 +58,13 @@ Create a checklist comparing all relevant legacy script sections:
 ### 4. Test Coverage Analysis
 
 #### Unit Tests
+
 - **Count**: X tests passing
 - **Coverage Areas**: List what's tested
 - **Gaps**: Any untested functionality
 
 #### Regression Tests
+
 - **Count**: X tests
 - **Validation Strategy**: How equivalence is verified
 - **Results**: Pass/fail status
@@ -68,6 +72,7 @@ Create a checklist comparing all relevant legacy script sections:
 ### 5. Code Quality Assessment
 
 Evaluate:
+
 - **Type Safety**: Use of type hints, Pydantic models, etc.
 - **Separation of Concerns**: Clear module boundaries
 - **DRY Principle**: Elimination of duplication
@@ -77,6 +82,7 @@ Evaluate:
 ### 6. Integration Points
 
 Check how this phase integrates:
+
 - **Hybrid Runner**: Are injection points implemented?
 - **Feature Flags**: Can components be toggled?
 - **Backwards Compatibility**: Does it produce identical results?
@@ -84,6 +90,7 @@ Check how this phase integrates:
 ### 7. Validation Summary
 
 For each phase criterion:
+
 - ✅ **Pass**: Meets requirements with evidence
 - ⚠️ **Warning**: Minor issues or improvements needed
 - ❌ **Fail**: Critical issues that block progress
@@ -91,16 +98,19 @@ For each phase criterion:
 ### 8. Issues and Recommendations
 
 #### Critical Issues (Blockers)
+
 - Issue description
 - Impact
 - Recommended fix
 
 #### Warnings (Should Fix)
+
 - Issue description
 - Impact
 - Recommended fix
 
 #### Suggestions (Nice to Have)
+
 - Suggestion description
 - Benefit
 - Estimated effort
@@ -138,6 +148,7 @@ User: /phase-review phase-3
 ```
 
 Your response should:
+
 1. Identify Phase 3 from the README
 2. Review all business logic calculators
 3. Map to legacy script lines 185-452
@@ -157,21 +168,27 @@ Your response should:
 ## Special Considerations
 
 ### Legacy Script Mapping
+
 Always identify which lines from `legacy/FullDFMScript250925.py` are covered:
+
 - Lines 1-73: Configuration and constants → Phase 1
 - Lines 75-111: Data loading → Phase 2
 - Lines 117-452: Business logic → Phase 3
 - Lines 420-455: Output formatting → Phase 5
 
 ### Regression Testing
+
 Verify that:
+
 - Hybrid runner has injection points for new components
 - Feature flags can enable/disable components
 - Regression tests validate numerical equivalence
 - Tests use appropriate tolerances
 
 ### Code Quality Standards
+
 Check against project rules:
+
 - Type hints on all functions
 - Pydantic models for validation
 - Clear separation of concerns
@@ -182,6 +199,7 @@ Check against project rules:
 ## Deliverable
 
 Produce a **comprehensive, actionable review** that:
+
 1. Clearly states whether the phase is complete and accurate
 2. Identifies all gaps or issues with specific recommendations
 3. Provides confidence to proceed (or clear blockers if not ready)

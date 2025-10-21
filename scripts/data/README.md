@@ -27,21 +27,26 @@ The analyser performs several key functions:
 ## Installation & Setup
 
 ### Prerequisites
+
 - Node.js (v16 or higher)
 - npm or yarn package manager
 
 ### Setup
+
 1. Navigate to the scripts/data directory:
+
    ```bash
    cd scripts/data
    ```
 
 2. Install dependencies:
+
    ```bash
    npm install
    ```
 
 3. Configure environment variables (copy from env-example.txt):
+
    ```bash
    cp env-example.txt .env
    # Edit .env with your API keys and configuration
@@ -55,6 +60,7 @@ The analyser performs several key functions:
 ## Usage
 
 ### Full Run (Extraction + LLM + Analysis + CSV)
+
 This mode extracts fresh data, runs LLM analysis, and generates all outputs:
 
 ```bash
@@ -62,6 +68,7 @@ node planning-data-analyser.js
 ```
 
 **What happens:**
+
 - Downloads raw planning applications from planning.data.gov.uk
 - Downloads local authority and planning authority data
 - Runs LLM analysis to categorise applications and extract building counts
@@ -73,6 +80,7 @@ node planning-data-analyser.js
 **Use when:** Initial setup, new data needed, or when LLM analysis is required
 
 ### Regeneration Only (Skip Extraction & LLM)
+
 This mode uses existing enhanced data to regenerate analysis and CSV files:
 
 ```bash
@@ -82,6 +90,7 @@ node planning-data-analyser.js -r
 ```
 
 **What happens:**
+
 - Loads existing enhanced planning applications
 - Standardises development categories
 - Populates authority names (if data available)
@@ -94,14 +103,17 @@ node planning-data-analyser.js -r
 ## Output Files
 
 ### Enhanced Data
+
 - `enhanced-planning-applications.json` - LLM enhanced data with building counts and categories
 - `enhanced-planning-applications-standardised.json` - Fully standardised data with clean categories
 
 ### Analysis
+
 - `planning-analysis.json` - Complete statistical analysis results
 - `planning-analysis-v3.json` - Versioned analysis with metadata
 
 ### CSV Files
+
 - `enhanced-planning-data.csv` - Complete planning applications (33+ MB)
   - Includes: ID, reference, description, building counts, categories, authority names, dates
 - `planning-analysis.csv` - Analysis summary (1 KB)
@@ -114,11 +126,13 @@ node planning-data-analyser.js -r
 The system automatically maps long descriptive development categories to standardised names:
 
 ### Examples
+
 - `"mixed-use development comprising residential units, commercial floor space, hotel, cinema and associated car parking, cycle parking, public realm and landscaping"` → `"mixed_use"`
 - `"mixed_use_redevelopment"` → `"mixed_use"`
 - `"mixed-use development"` → `"mixed_use"`
 
 ### Standard Categories
+
 - `extension` - Building extensions
 - `other` - Miscellaneous applications
 - `renovation` - Building renovations
@@ -132,11 +146,13 @@ The system automatically maps long descriptive development categories to standar
 ## Performance
 
 ### Full Run
+
 - **Time**: Varies based on API calls and LLM processing (typically 10-30 minutes)
 - **Data**: Fresh extraction and analysis
 - **Use Case**: Initial setup or when new data is needed
 
 ### Regeneration
+
 - **Time**: ~1-2 seconds (very fast)
 - **Data**: Uses existing enhanced data
 - **Use Case**: Daily updates, testing, or when only standardisation/analysis is needed
@@ -155,6 +171,7 @@ The system uses a central configuration file (`config.js`) that controls:
 The analyser is built with a modular service architecture:
 
 ### Core Services
+
 - **DataExtractor** - Handles API data extraction and caching
 - **DataEnhancer** - Manages LLM analysis and data enhancement
 - **DataStandardizer** - Standardises categories and populates authority names
@@ -162,6 +179,7 @@ The analyser is built with a modular service architecture:
 - **CSVGenerator** - Creates formatted CSV files
 
 ### Utilities
+
 - **Logger** - Structured logging with different levels
 - **FileManager** - File operations and directory management
 - **HTTPClient** - HTTP requests with retry logic and rate limiting
@@ -196,7 +214,9 @@ The system includes comprehensive error handling:
    - Use `--max-old-space-size=4096` flag if needed
 
 ### Debug Mode
+
 Enable detailed logging:
+
 ```bash
 DEBUG=1 node planning-data-analyser.js
 ```
@@ -214,6 +234,7 @@ The modular architecture makes it easy to extend:
 ## Support
 
 For issues or questions:
+
 1. Check the logs for detailed error information
 2. Verify configuration and environment variables
 3. Ensure all dependencies are installed
