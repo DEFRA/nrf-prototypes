@@ -8,13 +8,24 @@ const path = require('path')
 const fs = require('fs')
 const multer = require('multer')
 
-// Configure multer for file uploads
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 2 * 1024 * 1024 // 2MB limit
+    fileSize: 2 * 1024 * 1024
   }
 })
+
+const roomTypeToBuildingType = {
+  hmo: 'House of multiple occupation (HMO)',
+  hotel: 'Hotel',
+  'residential-institution': 'Residential institution'
+}
+
+const roomTypeToDataKey = {
+  hmo: 'hmoCount',
+  hotel: 'hotelCount',
+  'residential-institution': 'residentialInstitutionCount'
+}
 
 // Mock EDP boundary data for validation
 const edpBoundaries = [
@@ -550,14 +561,6 @@ router.get('/nrf-estimate-1/room-count', (req, res) => {
   const error = req.query.error
   const roomType = req.query.type
 
-  // Shared mapping from roomType to buildingType
-  const roomTypeToBuildingType = {
-    hmo: 'House of multiple occupation (HMO)',
-    hotel: 'Hotel',
-    'residential-institution': 'Residential institution'
-  }
-
-  // If coming from summary with a specific room type, set up to edit just that type
   if (isChange && navFromSummary && roomType) {
     const buildingType = roomTypeToBuildingType[roomType] || null
 
@@ -629,20 +632,11 @@ router.post('/nrf-estimate-1/room-count', (req, res) => {
     )
   }
 
-  // Store the room count for this building type
   req.session.data = req.session.data || {}
   if (!req.session.data.roomCounts) {
     req.session.data.roomCounts = {}
   }
 
-  // Shared mapping from roomType to dataKey
-  const roomTypeToDataKey = {
-    hmo: 'hmoCount',
-    hotel: 'hotelCount',
-    'residential-institution': 'residentialInstitutionCount'
-  }
-
-  // If editing a single room type from summary
   if (isChange && navFromSummary && singleRoomType) {
     const dataKey = roomTypeToDataKey[singleRoomType] || null
 
