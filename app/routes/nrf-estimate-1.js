@@ -302,31 +302,11 @@ router.post(
 // Draw polygon on map
 router.get('/nrf-estimate-1/map', (req, res) => {
   const data = req.session.data || {}
-  console.log('=== MAP ROUTE DEBUG ===')
-  console.log('Map route - full session data:', JSON.stringify(data, null, 2))
-  console.log(
-    'Map route - redlineBoundaryPolygon exists:',
-    !!data.redlineBoundaryPolygon
-  )
-  console.log(
-    'Map route - redlineBoundaryPolygon:',
-    data.redlineBoundaryPolygon
-  )
-  console.log(
-    'Map route - hasRedlineBoundaryFile:',
-    data.hasRedlineBoundaryFile
-  )
-  console.log('Map route - redlineFile:', data.redlineFile)
+  const navFromSummary = req.query.nav === 'summary'
 
   const existingBoundaryData = data.redlineBoundaryPolygon
     ? JSON.stringify(data.redlineBoundaryPolygon)
     : ''
-  console.log(
-    'Map route - existingBoundaryData length:',
-    existingBoundaryData.length
-  )
-  console.log('Map route - existingBoundaryData:', existingBoundaryData)
-  console.log('=== END MAP ROUTE DEBUG ===')
 
   const backLink =
     data.mapReferrer === 'upload-redline'
@@ -336,27 +316,26 @@ router.get('/nrf-estimate-1/map', (req, res) => {
   res.render('nrf-estimate-1/map', {
     data: data,
     existingBoundaryData: existingBoundaryData,
-    backLink: backLink
+    backLink: backLink,
+    navFromSummary: navFromSummary
   })
 })
 
 // Handle map polygon submission
 router.post('/nrf-estimate-1/map', (req, res) => {
   const boundaryData = req.body['boundary-data']
+  const navFromSummary = req.body.navFromSummary === 'true'
 
   if (!boundaryData) {
     return res.render('nrf-estimate-1/map', {
-      error: 'Draw a red line boundary to continue'
+      error: 'Draw a red line boundary to continue',
+      navFromSummary: navFromSummary
     })
   }
 
   try {
     const parsedData = JSON.parse(boundaryData)
-    console.log('=== MAP SUBMISSION DEBUG ===')
-    console.log('Parsed boundary data:', parsedData)
-    console.log('Intersecting catchment:', parsedData.intersectingCatchment)
 
-    // Store in session
     req.session.data = req.session.data || {}
     req.session.data.redlineBoundaryPolygon = {
       center: parsedData.center,
@@ -364,38 +343,33 @@ router.post('/nrf-estimate-1/map', (req, res) => {
       intersectingCatchment: parsedData.intersectingCatchment
     }
 
-    // Check EDP intersection - use the intersectingCatchment from the map if available
+    if (navFromSummary) {
+      return res.redirect('/nrf-estimate-1/summary')
+    }
+
     let edpIntersection = null
     if (parsedData.intersectingCatchment) {
-      // Find the EDP by name - we'll treat any catchment intersection as an EDP intersection
       edpIntersection = {
         name: parsedData.intersectingCatchment,
         type: 'catchment'
       }
-      console.log('EDP intersection found:', edpIntersection)
     } else {
-      // Fallback to checking intersection
       edpIntersection = checkEDPIntersection({
         center: parsedData.center,
         coordinates: parsedData.points
       })
-      console.log('Fallback EDP intersection:', edpIntersection)
     }
 
-    console.log('Final EDP intersection:', edpIntersection)
-    console.log('=== END MAP SUBMISSION DEBUG ===')
-
     if (!edpIntersection) {
-      console.log('No EDP intersection - redirecting to no-edp')
       res.redirect('/nrf-estimate-1/no-edp')
     } else {
-      console.log('EDP intersection found - redirecting to building-type')
       res.redirect('/nrf-estimate-1/building-type')
     }
   } catch (error) {
     console.error('Error parsing boundary data:', error)
     res.render('nrf-estimate-1/map', {
-      error: 'Draw a red line boundary to continue'
+      error: 'Draw a red line boundary to continue',
+      navFromSummary: navFromSummary
     })
   }
 })
@@ -574,8 +548,34 @@ router.get('/nrf-estimate-1/room-count', (req, res) => {
   const isChange = req.query.change === 'true'
   const navFromSummary = req.query.nav === 'summary'
   const error = req.query.error
-  const roomCountTypes = data.roomCountTypes || []
+  const roomType = req.query.type
 
+  // If coming from summary with a specific room type, set up to edit just that type
+  if (isChange && navFromSummary && roomType) {
+    const buildingType =
+      roomType === 'hmo'
+        ? 'House of multiple occupation (HMO)'
+        : roomType === 'hotel'
+          ? 'Hotel'
+          : roomType === 'residential-institution'
+            ? 'Residential institution'
+            : null
+
+    if (buildingType) {
+      return res.render('nrf-estimate-1/room-count', {
+        buildingType: buildingType,
+        currentIndex: 0,
+        totalCount: 1,
+        data: data,
+        isChange: isChange,
+        navFromSummary: navFromSummary,
+        error: error,
+        singleRoomType: roomType
+      })
+    }
+  }
+
+  const roomCountTypes = data.roomCountTypes || []
   const currentIndex = data.currentRoomCountIndex || 0
 
   if (currentIndex >= roomCountTypes.length) {
@@ -610,11 +610,9 @@ router.get('/nrf-estimate-1/room-count', (req, res) => {
 // Handle room count submission
 router.post('/nrf-estimate-1/room-count', (req, res) => {
   const data = req.session.data || {}
-  const roomCountTypes = data.roomCountTypes || []
-  const currentIndex = data.currentRoomCountIndex || 0
-  const currentBuildingType = roomCountTypes[currentIndex]
   const isChange = req.body.isChange === 'true'
   const navFromSummary = req.body.navFromSummary === 'true'
+  const singleRoomType = req.body.singleRoomType
 
   let roomCount = req.body['room-count']
 
@@ -623,7 +621,8 @@ router.post('/nrf-estimate-1/room-count', (req, res) => {
     let redirectUrl = '/nrf-estimate-1/room-count?'
     if (isChange) redirectUrl += 'change=true&'
     if (navFromSummary) redirectUrl += 'nav=summary&'
-    redirectUrl = redirectUrl.replace(/&$/, '') // Remove trailing &
+    if (singleRoomType) redirectUrl += `type=${singleRoomType}&`
+    redirectUrl = redirectUrl.replace(/&$/, '')
 
     return res.redirect(
       redirectUrl + '&error=Enter the number of rooms to continue'
@@ -635,6 +634,29 @@ router.post('/nrf-estimate-1/room-count', (req, res) => {
   if (!req.session.data.roomCounts) {
     req.session.data.roomCounts = {}
   }
+
+  // If editing a single room type from summary
+  if (isChange && navFromSummary && singleRoomType) {
+    const dataKey =
+      singleRoomType === 'hmo'
+        ? 'hmoCount'
+        : singleRoomType === 'hotel'
+          ? 'hotelCount'
+          : singleRoomType === 'residential-institution'
+            ? 'residentialInstitutionCount'
+            : null
+
+    if (dataKey) {
+      req.session.data.roomCounts[dataKey] = parseInt(roomCount)
+    }
+
+    return res.redirect('/nrf-estimate-1/summary')
+  }
+
+  // Normal flow with multiple room types
+  const roomCountTypes = data.roomCountTypes || []
+  const currentIndex = data.currentRoomCountIndex || 0
+  const currentBuildingType = roomCountTypes[currentIndex]
 
   // Map building types to their data keys
   const typeMapping = {
