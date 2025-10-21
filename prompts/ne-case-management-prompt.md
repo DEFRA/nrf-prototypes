@@ -1,33 +1,38 @@
 # Natural England Staff Application Management
 
 ## User Story
+
 As a Natural England staff member, I want to view and manage developer applications for the Nature Restoration Fund, so that I can process applications, generate invoices, and maintain accurate records of environmental levy payments.
 
 ## Acceptance Criteria
 
 ### Scenario 1: Viewing Application List
+
 **Given** I am logged in as a Natural England staff member  
 **When** I navigate to the applications management page  
 **Then** I should see a list of all developer applications  
 **And** each application should display the submission date, development name, and status  
-**And** the status should be one of: pending payment, paid, or approved  
+**And** the status should be one of: pending payment, paid, or approved
 
 ### Scenario 2: Filtering Applications
+
 **Given** I am viewing the applications list  
 **When** I use the filter controls  
 **Then** I should be able to filter by application status  
 **And** I should be able to filter by date range  
 **And** I should be able to filter by development name  
-**And** the filtered results should update in real-time  
+**And** the filtered results should update in real-time
 
 ### Scenario 3: Exporting Applications
+
 **Given** I am viewing the applications list  
 **When** I click the export button  
 **Then** a CSV file should be downloaded  
 **And** the CSV should contain all visible applications with their key details  
-**And** the file should be named with the current date and time  
+**And** the file should be named with the current date and time
 
 ### Scenario 4: Viewing Application Details
+
 **Given** I am viewing the applications list  
 **When** I click on an application record  
 **Then** I should see the detailed application view  
@@ -35,26 +40,29 @@ As a Natural England staff member, I want to view and manage developer applicati
 **And** I should see the overlapping EDP areas highlighted on the map  
 **And** I should see the house count or wastewater treatment site details  
 **And** I should see the calculated quote and payment status  
-**And** I should see a list of applicable EDPs with their impact calculations  
+**And** I should see a list of applicable EDPs with their impact calculations
 
 ### Scenario 5: Updating Application Details
+
 **Given** I am viewing an application's details  
 **When** I click the update button  
 **Then** I should be able to modify the application data  
 **And** the system should recalculate the levy amount  
 **And** any cost differences should be clearly highlighted  
-**And** the changes should be logged in the audit trail  
+**And** the changes should be logged in the audit trail
 
 ### Scenario 6: Viewing Audit History
+
 **Given** I am viewing an application's details  
 **When** I access the audit history  
 **Then** I should see a chronological list of all changes made to the application  
 **And** each change should show who made it, when, and why  
-**And** any quote recalculations should show the old and new amounts  
+**And** any quote recalculations should show the old and new amounts
 
 ## Interface Design
 
 ### Application List Page (`/case-management`)
+
 - **GOV.UK Table Component**: Display applications with columns for date, development name, status, and actions
 - **GOV.UK Filter Component**: Allow filtering by status, date range, and development name
 - **GOV.UK Button Component**: Export to CSV functionality
@@ -62,6 +70,7 @@ As a Natural England staff member, I want to view and manage developer applicati
 - **GOV.UK Pagination Component**: For handling large numbers of applications
 
 ### Application Detail Page (`/case-management/[id]`)
+
 - **GOV.UK Summary List Component**: Display key application information
 - **Interactive Map Component**: Show development boundary and EDP overlaps using Leaflet or similar
 - **GOV.UK Table Component**: Display EDP breakdown and levy calculations
@@ -70,17 +79,20 @@ As a Natural England staff member, I want to view and manage developer applicati
 - **GOV.UK Details Component**: Collapsible sections for different information types
 
 ### Update Application Page (`/case-management/[id]/edit`)
+
 - **GOV.UK Form Components**: Text inputs, number inputs, and select dropdowns
 - **GOV.UK Button Component**: Save changes and cancel
 - **GOV.UK Warning Text Component**: Highlight any cost differences
 - **GOV.UK Summary List Component**: Show before/after comparison
 
 ### Audit History Page (`/case-management/[id]/audit`)
+
 - **GOV.UK Table Component**: Chronological list of changes
 - **GOV.UK Tag Component**: Change type indicators
 - **GOV.UK Details Component**: Expandable change details
 
 ### Accessibility Requirements
+
 - All components must meet WCAG 2.1 AA standards
 - Keyboard navigation support for all interactive elements
 - Screen reader compatibility for tables and forms
@@ -90,6 +102,7 @@ As a Natural England staff member, I want to view and manage developer applicati
 ## Technical Design
 
 ### URL Structure
+
 - `/case-management` - Main applications list page
 - `/case-management?status=pending_payment&dateFrom=2024-01-01&dateTo=2024-12-31` - Filtered list
 - `/case-management/[id]` - Individual application detail view (e.g., `/case-management/APP-001`)
@@ -98,6 +111,7 @@ As a Natural England staff member, I want to view and manage developer applicati
 - `/case-management/export` - CSV export endpoint
 
 ### Data model
+
 The known data points applicable to an application submitted by a developer is as follows
 
 ```json
@@ -236,7 +250,13 @@ The known data points applicable to an application submitted by a developer is a
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["edpType", "description", "rate", "houseCount", "amount"],
+            "required": [
+              "edpType",
+              "description",
+              "rate",
+              "houseCount",
+              "amount"
+            ],
             "properties": {
               "edpType": {
                 "type": "string",
@@ -382,6 +402,7 @@ The known data points applicable to an application submitted by a developer is a
 ```
 
 ### Data Handling
+
 - Application data follows the provided JSON schema
 - Filter parameters passed as URL query strings
 - Map data uses GeoJSON format for boundaries
@@ -389,6 +410,7 @@ The known data points applicable to an application submitted by a developer is a
 - Quote recalculations trigger new audit entries with impact analysis
 
 ### Key Features
+
 - Real-time filtering without page reload
 - Interactive map with development and EDP boundary overlays
 - CSV export with all visible application data

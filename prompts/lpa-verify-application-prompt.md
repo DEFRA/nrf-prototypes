@@ -9,6 +9,7 @@
 ## Acceptance Criteria
 
 ### Scenario 1: Successful Application Verification
+
 **Given** an LPA staff member is on the verification page  
 **When** they enter a valid application reference and developer name  
 **And** the application exists in the system  
@@ -19,6 +20,7 @@
 **And** the page should confirm the application has been found
 
 ### Scenario 2: Application Not Found
+
 **Given** an LPA staff member is on the verification page  
 **When** they enter an application reference and developer name  
 **And** the application does not exist in the system  
@@ -27,6 +29,7 @@
 **And** the error page should provide guidance on what to check
 
 ### Scenario 3: Form Validation
+
 **Given** an LPA staff member is on the verification page  
 **When** they submit the form without required fields  
 **Then** validation errors should be displayed  
@@ -34,6 +37,7 @@
 **And** the user should be guided on what information is required
 
 ### Scenario 4: Alternative Developer Identifier
+
 **Given** an LPA staff member is on the verification page  
 **When** they enter a valid application reference and company ID  
 **And** the application exists in the system  
@@ -43,6 +47,7 @@
 ## Interface Design
 
 ### Landing Page (`/lpa-verify`)
+
 The verification form should use the following GOV.UK Design System components:
 
 - **GOV.UK Design System Components Required:**
@@ -62,6 +67,7 @@ The verification form should use the following GOV.UK Design System components:
   - Submit button with appropriate GOV.UK styling
 
 ### Application Details Page (`/lpa-verify/details`)
+
 When an application is found, display:
 
 - **GOV.UK Design System Components Required:**
@@ -81,6 +87,7 @@ When an application is found, display:
   - Audit trail summary
 
 ### Error Page (`/lpa-verify/error`)
+
 When no application is found:
 
 - **GOV.UK Design System Components Required:**
@@ -96,11 +103,13 @@ When no application is found:
 ## Technical Design
 
 ### URL Structure
+
 - **Landing Page**: `/lpa-verify` - Main verification form
 - **Success Page**: `/lpa-verify/details` - Application details display
 - **Error Page**: `/lpa-verify/error` - Application not found
 
 ### Form Processing
+
 1. **Input Validation:**
    - Application reference: Required, format validation (APP-XXX pattern)
    - Developer identifier: Required, either name or company ID
@@ -125,6 +134,7 @@ When no application is found:
    - Logging of verification attempts for audit purposes
 
 ### Security Considerations
+
 - No sensitive data exposure in URLs
 - Input sanitization and validation
 - Rate limiting for verification attempts
@@ -132,6 +142,7 @@ When no application is found:
 - Session management for LPA users
 
 ### Accessibility Requirements
+
 - WCAG 2.1 AA compliance
 - Screen reader compatibility
 - Keyboard navigation support

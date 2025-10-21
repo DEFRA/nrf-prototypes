@@ -27,5 +27,3 @@ router.use('/', lpaVerifyRoutes)
 router.use('/', nrfEstimate1Routes)
 
 module.exports = router
-
-

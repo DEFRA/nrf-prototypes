@@ -7,7 +7,7 @@ const router = govukPrototypeKit.requests.setupRouter()
 
 // User Journey 1 - Digital Application Process
 router.get('/user-journey-1/start', (req, res) => {
-    res.render('user-journey-1/start')
+  res.render('user-journey-1/start')
 })
 
 module.exports = router

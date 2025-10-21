@@ -22,7 +22,7 @@ Interface Design:
 [Relevant user interface design. This is a GOV.UK Application so it should follow GOV.UK guidelines including the GDS Design System and Accessibility. Ensure you include the GDS Components needed for the interface]
 
 Technical Design:
-[The functionality defined in technical detail.  Include the API Responses as examples from below]
+[The functionality defined in technical detail. Include the API Responses as examples from below]
 
 ---
 
@@ -32,15 +32,16 @@ The project is a prototype that uses the govuk-prototype-kit which is already in
 
 # Detailed Requirements
 
- - You need to create an interface that acts as an index for different user journeys. Each user journey will be an expriment that will be trialled with stakeholders. 
- - The index will contain a list containing the name for the user journey that is hyperlinked and the description of the user journey. 
- - The values in the table can be hard-coded into the page.
- - Each hyperlink in the index will link to the route of that page.
- - Create one user journey with a basic start page to demonstrate the concept.
+- You need to create an interface that acts as an index for different user journeys. Each user journey will be an expriment that will be trialled with stakeholders.
+- The index will contain a list containing the name for the user journey that is hyperlinked and the description of the user journey.
+- The values in the table can be hard-coded into the page.
+- Each hyperlink in the index will link to the route of that page.
+- Create one user journey with a basic start page to demonstrate the concept.
 
 # Verification Checklist
+
 - The user story contains format and content as defined above. It does not need to have any additional sections.
 
-- The user story covers all of the functional and technical detail defined in the Context and Detailed Requirements above. It does not need to have any additional technical details.  
+- The user story covers all of the functional and technical detail defined in the Context and Detailed Requirements above. It does not need to have any additional technical details.
 
 - The user story as a markdown file. Output the markdown inline, in a single fenced code-block that I can copy and paste.

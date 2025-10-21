@@ -26,6 +26,7 @@ I have provided you with a Product Requirements document(PRD). Please analyze th
    - Note any assumptions or decisions made
 
 Constraints:
+
 - Maintain consistency with existing codebase
 - Follow the cursor rules
 - Do not add any unit tests at this time

@@ -22,7 +22,7 @@ Interface Design:
 [Relevant user interface design. This is a GOV.UK Application so it should follow GOV.UK guidelines including the GDS Design System and Accessibility. Ensure you include the GDS Components needed for the interface]
 
 Technical Design:
-[The functionality defined in technical detail.  Include the URL paths as examples from below as backend API endpoints are not required for this prototype]
+[The functionality defined in technical detail. Include the URL paths as examples from below as backend API endpoints are not required for this prototype]
 
 ---
 
@@ -33,14 +33,17 @@ The Nature Restoration Fund (NRF) is a levy that certain developers can contribu
 Currently, developers seeking planning permission must navigate a complex landscape of stakeholders, systems, and services to meet environmental regulations. This process is often inefficient, costly, and difficult to use.
 
 Developing a dedicated NRF service presents an opportunity to:
- - Standardise and integrate existing and emerging strategic conservation solutions
- - Simplify the planning process for developers in servicing environmental obligations
- - Improve internal efficiency in delivering conservation measures
+
+- Standardise and integrate existing and emerging strategic conservation solutions
+- Simplify the planning process for developers in servicing environmental obligations
+- Improve internal efficiency in delivering conservation measures
 
 ## Feature Context
-Natural England staff will need to log in and access and manage the developer's applications. They will need to view the list of applications, drill down to the details. The list can be filtered and exported to a CSV so it can be input into the finance system to raise an invoice. Staff may need to update the application details if the developer entered them incorrectly, recalculate the levy and highlight any cost differences that need to be balanced or view the audit history of an application.  
+
+Natural England staff will need to log in and access and manage the developer's applications. They will need to view the list of applications, drill down to the details. The list can be filtered and exported to a CSV so it can be input into the finance system to raise an invoice. Staff may need to update the application details if the developer entered them incorrectly, recalculate the levy and highlight any cost differences that need to be balanced or view the audit history of an application.
 
 # Data model
+
 The known data points applicable to an application submitted by a developer is as follows
 
 ```json
@@ -179,7 +182,13 @@ The known data points applicable to an application submitted by a developer is a
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["edpType", "description", "rate", "houseCount", "amount"],
+            "required": [
+              "edpType",
+              "description",
+              "rate",
+              "houseCount",
+              "amount"
+            ],
             "properties": {
               "edpType": {
                 "type": "string",
@@ -330,17 +339,18 @@ The known data points applicable to an application submitted by a developer is a
 - Display a list of development sites submitted by developers that show the date the application was submitted, the name of the development and the status of the application - pending payment | paid | approved
 - Enable the list to be filtered using standard GDS Design System components
 - Enable the list to be exported to a CSV file - mock up this feature
-- When a user clicks on a record in the list they will see the application details that will include: 
- - the redline boundary they submitted on a map along with the redline of any EDP areas
- - the number of houses or waste water treatment sites they submitted
- - the quote received and whether it was accepted
- - a flag indicating if payment was made
- - an update button to enable the user to change the application details
- - access to the audit history highlighting any changes made to the application
- - a list of the EDPs that the housing development crosses into 
- - a breakdown of the environmental impact of the development for which the levy is required
+- When a user clicks on a record in the list they will see the application details that will include:
+- the redline boundary they submitted on a map along with the redline of any EDP areas
+- the number of houses or waste water treatment sites they submitted
+- the quote received and whether it was accepted
+- a flag indicating if payment was made
+- an update button to enable the user to change the application details
+- access to the audit history highlighting any changes made to the application
+- a list of the EDPs that the housing development crosses into
+- a breakdown of the environmental impact of the development for which the levy is required
 
 # Verification Checklist
+
 - The user story contains format and content as defined above. It does not need to have any additional sections.
-- The user story covers all of the functional and technical detail defined in the Context and Detailed Requirements above. It does not need to have any additional technical details.  
+- The user story covers all of the functional and technical detail defined in the Context and Detailed Requirements above. It does not need to have any additional technical details.
 - The user story as a markdown file. Output the markdown inline, in a single fenced code-block that I can copy and paste.
