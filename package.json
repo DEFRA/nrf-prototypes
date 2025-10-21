@@ -4,15 +4,16 @@
   "description": "nrf-prototypes. GOV.UK Prototype Kit with CDP Platform running capabilities",
   "author": "Defra DDTS",
   "license": "(OGL-UK-3, MIT) see licenses in /LICENSES",
-  "type": "module",
   "scripts": {
     "dev": "govuk-prototype-kit dev",
     "serve": "govuk-prototype-kit serve",
     "start": "govuk-prototype-kit start",
     "format": "prettier --write \"**/*.{cjs,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{cjs,js,json,md}\"",
-    "screenshot": "node scripts/screenshot-capture.js",
-    "prepare": "husky"
+    "screenshot": "node scripts/screenshot-capture.js"
+  },
+  "lint-staged": {
+    "*.{cjs,js,json,md}": "npm run format:check"
   },
   "dependencies": {
     "@govuk-prototype-kit/common-templates": "2.0.1",
