@@ -550,16 +550,16 @@ router.get('/nrf-estimate-1/room-count', (req, res) => {
   const error = req.query.error
   const roomType = req.query.type
 
+  // Shared mapping from roomType to buildingType
+  const roomTypeToBuildingType = {
+    hmo: 'House of multiple occupation (HMO)',
+    hotel: 'Hotel',
+    'residential-institution': 'Residential institution'
+  }
+
   // If coming from summary with a specific room type, set up to edit just that type
   if (isChange && navFromSummary && roomType) {
-    const buildingType =
-      roomType === 'hmo'
-        ? 'House of multiple occupation (HMO)'
-        : roomType === 'hotel'
-          ? 'Hotel'
-          : roomType === 'residential-institution'
-            ? 'Residential institution'
-            : null
+    const buildingType = roomTypeToBuildingType[roomType] || null
 
     if (buildingType) {
       return res.render('nrf-estimate-1/room-count', {
@@ -635,16 +635,16 @@ router.post('/nrf-estimate-1/room-count', (req, res) => {
     req.session.data.roomCounts = {}
   }
 
+  // Shared mapping from roomType to dataKey
+  const roomTypeToDataKey = {
+    hmo: 'hmoCount',
+    hotel: 'hotelCount',
+    'residential-institution': 'residentialInstitutionCount'
+  }
+
   // If editing a single room type from summary
   if (isChange && navFromSummary && singleRoomType) {
-    const dataKey =
-      singleRoomType === 'hmo'
-        ? 'hmoCount'
-        : singleRoomType === 'hotel'
-          ? 'hotelCount'
-          : singleRoomType === 'residential-institution'
-            ? 'residentialInstitutionCount'
-            : null
+    const dataKey = roomTypeToDataKey[singleRoomType] || null
 
     if (dataKey) {
       req.session.data.roomCounts[dataKey] = parseInt(roomCount)
