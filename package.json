@@ -13,7 +13,7 @@
     "screenshot": "node scripts/screenshot-capture.js"
   },
   "lint-staged": {
-    "*.{cjs,js,json,md}": "npm run format:check"
+    "*.{cjs,js,json,md}": "prettier --check"
   },
   "dependencies": {
     "@govuk-prototype-kit/common-templates": "2.0.1",
