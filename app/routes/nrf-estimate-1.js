@@ -6,6 +6,15 @@ const govukPrototypeKit = require('govuk-prototype-kit')
 const router = govukPrototypeKit.requests.setupRouter()
 const path = require('path')
 const fs = require('fs')
+const multer = require('multer')
+
+// Configure multer for file uploads
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 2 * 1024 * 1024 // 2MB limit
+    }
+})
 
 // Mock EDP boundary data for validation
 const edpBoundaries = [
@@ -144,6 +153,7 @@ router.post('/nrf-estimate-1/redline-map', (req, res) => {
     if (hasRedlineBoundaryFile === 'yes') {
         res.redirect('/nrf-estimate-1/upload-redline')
     } else {
+        req.session.data.mapReferrer = 'redline-map'
         res.redirect('/nrf-estimate-1/map')
     }
 })
@@ -155,67 +165,111 @@ router.get('/nrf-estimate-1/upload-redline', (req, res) => {
 })
 
 // Handle redline file upload
-router.post('/nrf-estimate-1/upload-redline', (req, res) => {
-    // For prototype purposes, we'll mock the file upload
-    // In a real implementation, this would use multer or similar middleware
-    const fileName = req.body['file-name']
-    
-    if (!fileName || fileName.trim() === '') {
-        console.log('No file name provided - showing error')
+router.post('/nrf-estimate-1/upload-redline', (req, res, next) => {
+    upload.single('redline-file')(req, res, (err) => {
+        if (err instanceof multer.MulterError) {
+            if (err.code === 'LIMIT_FILE_SIZE') {
+                return res.render('nrf-estimate-1/upload-redline', {
+                    error: 'The selected file must be smaller than 2MB'
+                })
+            }
+            return res.render('nrf-estimate-1/upload-redline', {
+                error: 'There was a problem uploading the file'
+            })
+        } else if (err) {
+            return res.render('nrf-estimate-1/upload-redline', {
+                error: 'There was a problem uploading the file'
+            })
+        }
+        next()
+    })
+}, (req, res) => {
+    if (!req.file) {
         return res.render('nrf-estimate-1/upload-redline', {
-            error: 'Select a file to upload'
+            error: 'Select a file'
         })
     }
-    
-    // Check file type
+
+    const uploadedFile = req.file
     const allowedTypes = ['.shp', '.geojson']
-    const fileExtension = fileName.toLowerCase().substring(fileName.lastIndexOf('.'))
+    const fileName = uploadedFile.originalname.toLowerCase()
+    const fileExtension = fileName.substring(fileName.lastIndexOf('.'))
+
     if (!allowedTypes.includes(fileExtension)) {
-        console.log('Invalid file type:', fileExtension)
         return res.render('nrf-estimate-1/upload-redline', {
-            error: 'The selected file must be a [shp,geojson]'
+            error: 'The selected file must be a .shp or .geojson file'
         })
     }
-    
-    // Check file size (2MB limit)
-    if (redlineFile.size > 2 * 1024 * 1024) {
-        return res.render('nrf-estimate-1/upload-redline', {
-            error: 'The [file] must be smaller than 2MB'
-        })
-    }
-    
-    // Check if file is empty
-    if (redlineFile.size === 0) {
+
+    if (uploadedFile.size === 0) {
         return res.render('nrf-estimate-1/upload-redline', {
             error: 'The selected file is empty'
         })
     }
-    
-    // Mock file processing - in a real implementation, this would process the uploaded file
-    const mockBoundaryData = {
-        center: [-0.4, 51.5],
-        coordinates: [
-            [-0.42, 51.48],
-            [-0.38, 51.48],
-            [-0.38, 51.52],
-            [-0.42, 51.52],
-            [-0.42, 51.48]
-        ]
+
+    let boundaryData = null
+
+    if (fileExtension === '.geojson') {
+        try {
+            const fileContent = uploadedFile.buffer.toString('utf8')
+            const geojson = JSON.parse(fileContent)
+            let coordinates = []
+
+            if (geojson.type === 'FeatureCollection' && geojson.features && geojson.features.length > 0) {
+                const firstFeature = geojson.features[0]
+                if (firstFeature.geometry && firstFeature.geometry.type === 'Polygon') {
+                    coordinates = firstFeature.geometry.coordinates[0]
+                } else if (firstFeature.geometry && firstFeature.geometry.type === 'MultiPolygon') {
+                    coordinates = firstFeature.geometry.coordinates[0][0]
+                }
+            } else if (geojson.type === 'Feature') {
+                if (geojson.geometry && geojson.geometry.type === 'Polygon') {
+                    coordinates = geojson.geometry.coordinates[0]
+                } else if (geojson.geometry && geojson.geometry.type === 'MultiPolygon') {
+                    coordinates = geojson.geometry.coordinates[0][0]
+                }
+            } else if (geojson.type === 'Polygon') {
+                coordinates = geojson.coordinates[0]
+            } else if (geojson.type === 'MultiPolygon') {
+                coordinates = geojson.coordinates[0][0]
+            }
+
+            if (coordinates.length === 0) {
+                return res.render('nrf-estimate-1/upload-redline', {
+                    error: 'The GeoJSON file does not contain valid polygon coordinates'
+                })
+            }
+
+            boundaryData = {
+                coordinates: coordinates
+            }
+        } catch (error) {
+            console.error('Error parsing GeoJSON:', error)
+            return res.render('nrf-estimate-1/upload-redline', {
+                error: 'The selected file is not a valid GeoJSON file'
+            })
+        }
+    } else if (fileExtension === '.shp') {
+        return res.render('nrf-estimate-1/upload-redline', {
+            error: 'Shapefile parsing is not yet supported. Please use GeoJSON format.'
+        })
     }
-    
-    // Store in session
+
     req.session.data = req.session.data || {}
-    req.session.data.redlineFile = fileName
+    req.session.data.redlineFile = uploadedFile.originalname
     req.session.data.hasRedlineBoundaryFile = 'yes'
-    req.session.data.redlineBoundaryPolygon = mockBoundaryData
-    
-    // Check EDP intersection
-    const edpIntersection = checkEDPIntersection(mockBoundaryData)
-    if (!edpIntersection) {
-        res.redirect('/nrf-estimate-1/no-edp')
-    } else {
-        res.redirect('/nrf-estimate-1/building-type')
-    }
+    req.session.data.redlineBoundaryPolygon = boundaryData
+    req.session.data.mapReferrer = 'upload-redline'
+
+    req.session.save((err) => {
+        if (err) {
+            console.error('Error saving session:', err)
+            return res.render('nrf-estimate-1/upload-redline', {
+                error: 'There was a problem processing your file. Please try again.'
+            })
+        }
+        res.redirect('/nrf-estimate-1/map')
+    })
 })
 
 // Draw polygon on map
@@ -227,15 +281,18 @@ router.get('/nrf-estimate-1/map', (req, res) => {
     console.log('Map route - redlineBoundaryPolygon:', data.redlineBoundaryPolygon)
     console.log('Map route - hasRedlineBoundaryFile:', data.hasRedlineBoundaryFile)
     console.log('Map route - redlineFile:', data.redlineFile)
-    
+
     const existingBoundaryData = data.redlineBoundaryPolygon ? JSON.stringify(data.redlineBoundaryPolygon) : ''
     console.log('Map route - existingBoundaryData length:', existingBoundaryData.length)
     console.log('Map route - existingBoundaryData:', existingBoundaryData)
     console.log('=== END MAP ROUTE DEBUG ===')
-    
+
+    const backLink = data.mapReferrer === 'upload-redline' ? '/nrf-estimate-1/upload-redline' : '/nrf-estimate-1/redline-map'
+
     res.render('nrf-estimate-1/map', {
         data: data,
-        existingBoundaryData: existingBoundaryData
+        existingBoundaryData: existingBoundaryData,
+        backLink: backLink
     })
 })
 
