@@ -40,7 +40,7 @@ Nature Restoration Fund Levy{% else %}Get an estimate for Nature Restoration Fun
             <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
                 <h1 class="govuk-label-wrapper">
                     <label class="govuk-label govuk-label--l" for="room-count">
-                        Enter the number of rooms in your {{ buildingType | lower }} building(s) planned for the
+                        Enter the number of rooms in your {{ buildingType | lower if buildingType !== 'House of multiple occupation (HMO)' else buildingType }} building(s) planned for the
                         development
                     </label>
                 </h1>
