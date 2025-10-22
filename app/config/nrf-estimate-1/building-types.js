@@ -34,31 +34,9 @@ const BUILDING_TYPE_DATA_KEYS = {
   'residential-institution': 'residentialInstitutionCount'
 }
 
-// Room count field names for each building type
-const ROOM_COUNT_FIELDS = {
-  [BUILDING_TYPES.DWELLINGHOUSE]: {
-    bedrooms: 'Number of bedrooms',
-    bathrooms: 'Number of bathrooms',
-    otherRooms: 'Number of other rooms'
-  },
-  [BUILDING_TYPES.HOTEL]: {
-    rooms: 'Number of hotel rooms'
-  },
-  [BUILDING_TYPES.HMO]: {
-    rooms: 'Number of HMO rooms'
-  },
-  [BUILDING_TYPES.RESIDENTIAL_INSTITUTION]: {
-    residentialUnits: 'Number of residential units'
-  },
-  [BUILDING_TYPES.NON_RESIDENTIAL]: {
-    rooms: 'Number of rooms or spaces'
-  }
-}
-
 module.exports = {
   BUILDING_TYPES,
   BUILDING_TYPES_REQUIRING_ROOM_COUNT,
   BUILDING_TYPE_LABELS,
-  BUILDING_TYPE_DATA_KEYS,
-  ROOM_COUNT_FIELDS
+  BUILDING_TYPE_DATA_KEYS
 }
