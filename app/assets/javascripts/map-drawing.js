@@ -462,11 +462,11 @@
     const bounds = layer.getBounds()
     const center = bounds.getCenter()
     const latLngs = layer.getLatLngs()[0]
-    const points = latLngs.map((latLng) => [latLng.lng, latLng.lat])
+    const coordinates = latLngs.map((latLng) => [latLng.lng, latLng.lat])
 
     const boundaryData = {
       center: [center.lng, center.lat],
-      points: points,
+      coordinates: coordinates,
       intersectingCatchment: intersectingCatchment
         ? intersectingCatchment.name
         : null
@@ -536,7 +536,9 @@
     editBoundaryBtn.addEventListener('click', function (e) {
       e.preventDefault()
       if (isEditing) {
+        // Save the edits before disabling edit mode
         if (drawControl._toolbars?.edit?._modes?.edit) {
+          drawControl._toolbars.edit._modes.edit.handler.save()
           drawControl._toolbars.edit._modes.edit.handler.disable()
         }
         isEditing = false
@@ -614,6 +616,11 @@
       const hasBoundary = drawnItems.getLayers().length > 0
 
       if (hasBoundary) {
+        // Hide start drawing button when boundary exists
+        startDrawingBtn.style.display = 'none'
+
+        // Show and enable edit/delete/zoom buttons
+        editBoundaryBtn.style.display = 'block'
         editBoundaryBtn.removeAttribute('aria-disabled')
         editBoundaryBtn.setAttribute('tabindex', '0')
         deleteBoundaryBtn.removeAttribute('aria-disabled')
@@ -621,6 +628,11 @@
         zoomToBoundaryBtn.removeAttribute('aria-disabled')
         zoomToBoundaryBtn.setAttribute('tabindex', '0')
       } else {
+        // Show start drawing button when no boundary
+        startDrawingBtn.style.display = 'block'
+
+        // Hide and disable edit button, disable delete/zoom buttons
+        editBoundaryBtn.style.display = 'none'
         editBoundaryBtn.setAttribute('aria-disabled', 'true')
         editBoundaryBtn.setAttribute('tabindex', '-1')
         deleteBoundaryBtn.setAttribute('aria-disabled', 'true')

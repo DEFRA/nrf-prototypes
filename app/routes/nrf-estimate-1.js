@@ -363,7 +363,7 @@ router.post(ROUTES.MAP, (req, res) => {
     req.session.data = req.session.data || {}
     req.session.data.redlineBoundaryPolygon = {
       center: parsedData.center,
-      coordinates: parsedData.points,
+      coordinates: parsedData.coordinates,
       intersectingCatchment: parsedData.intersectingCatchment
     }
 
@@ -376,7 +376,7 @@ router.post(ROUTES.MAP, (req, res) => {
     } else {
       edpIntersection = checkEDPIntersection({
         center: parsedData.center,
-        coordinates: parsedData.points
+        coordinates: parsedData.coordinates
       })
     }
 
