@@ -174,6 +174,9 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
         <a href="{{ backLink }}" class="govuk-back-link">Back</a>
 
         <form id="map-form" action="/nrf-estimate-1/map" method="post" novalidate>
+            {% if navFromSummary %}
+            <input type="hidden" name="navFromSummary" value="true">
+            {% endif %}
 
             {% if error %}
             <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert">
@@ -208,6 +211,19 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
                     <span class="govuk-visually-hidden">Error:</span> {{ error }}
                 </p>
                 {% endif %}
+
+            <div id="client-error-summary" class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" style="display: none;">
+                <h2 class="govuk-error-summary__title" id="error-summary-title">
+                    There is a problem
+                </h2>
+                <div class="govuk-error-summary__body">
+                    <ul class="govuk-list govuk-error-summary__list">
+                        <li>
+                            <a href="#map" id="client-error-link"></a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
 
                 <!-- Accessible map interface with left panel -->
                 <div class="map-interface">
@@ -298,6 +314,9 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
     (function () {
         'use strict';
 
+        let isDrawing = false;
+        let isEditing = false;
+
         // Wait for everything to be ready
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initMap);
@@ -305,6 +324,25 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
             initMap();
         }
 
+
+        function showErrorSummary(message) {
+            const errorSummary = document.getElementById('client-error-summary');
+            const errorLink = document.getElementById('client-error-link');
+
+            if (errorSummary && errorLink) {
+                errorLink.textContent = message;
+                errorSummary.style.display = 'block';
+                errorSummary.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                errorSummary.focus();
+            }
+        }
+
+        function hideErrorSummary() {
+            const errorSummary = document.getElementById('client-error-summary');
+            if (errorSummary) {
+                errorSummary.style.display = 'none';
+            }
+        }
 
         function initMap() {
             // Additional delay to ensure GOV.UK components are ready
@@ -619,12 +657,26 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
 
                     // Form submission validation and navigation logic
                     document.querySelector('form').addEventListener('submit', function (e) {
+                        if (isDrawing) {
+                            e.preventDefault();
+                            showErrorSummary('You are still drawing the boundary. Select "Cancel drawing" or finish drawing before continuing.');
+                            return false;
+                        }
+
+                        if (isEditing) {
+                            e.preventDefault();
+                            showErrorSummary('You are still editing the boundary. Select "Stop editing" before continuing.');
+                            return false;
+                        }
+
                         const boundaryData = document.getElementById('boundary-data').value;
                         if (!boundaryData) {
                             e.preventDefault();
-                            alert('Please draw a boundary on the map before continuing.');
+                            showErrorSummary('Please draw a boundary on the map before continuing.');
                             return false;
                         }
+
+                        hideErrorSummary();
 
                         // Check for nav=summary query parameter
                         const urlParams = new URLSearchParams(window.location.search);
@@ -873,10 +925,6 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
                 return;
             }
 
-            // Status functions removed - no status panel needed
-
-            let isDrawing = false;
-            let isEditing = false;
             let catchmentsVisible = true;
             let currentDrawingLayer = null;
 
@@ -943,10 +991,10 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
                             console.log('Click and drag points to edit your boundary');
                         } else {
                             console.error('Edit control not properly initialized');
-                            console.error('Error: Edit control not available');
+                            showErrorSummary('The edit control is not available. Please refresh the page to try again.');
                         }
                     } else {
-                        console.log('No boundary to edit. Please draw a boundary first.', 'error');
+                        showErrorSummary('No boundary to edit. Please draw a boundary first.');
                     }
                 }
             });
@@ -958,11 +1006,11 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
                     if (confirm('Are you sure you want to delete the boundary?')) {
                         drawnItems.clearLayers();
                         updateBoundaryData(null, null);
-                        console.log('Boundary deleted');
+                        hideErrorSummary();
                         updateLinkStates();
                     }
                 } else {
-                    console.log('No boundary to delete', 'error');
+                    showErrorSummary('No boundary to delete. Please draw a boundary first.');
                 }
             });
 
@@ -979,9 +1027,9 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
                 if (drawnItems.getLayers().length > 0) {
                     const group = new L.featureGroup(drawnItems.getLayers());
                     map.fitBounds(group.getBounds().pad(0.1));
-                    console.log('Zoomed to boundary');
+                    hideErrorSummary();
                 } else {
-                    console.log('No boundary to zoom to', 'error');
+                    showErrorSummary('No boundary to zoom to. Please draw a boundary first.');
                 }
             });
 
@@ -998,9 +1046,9 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
                         }
                     });
                     toggleCatchmentsBtn.textContent = catchmentsVisible ? 'Hide Catchments' : 'Show Catchments';
-                    console.log(catchmentsVisible ? 'Catchments shown' : 'Catchments hidden');
+                    hideErrorSummary();
                 } else {
-                    console.log('No catchment data available', 'error');
+                    showErrorSummary('Catchment data is not available. The catchments may still be loading or failed to load.');
                 }
             });
 
@@ -1187,7 +1235,7 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
                         startDrawingBtn.textContent = 'Start Drawing Boundary';
                         startDrawingBtn.classList.remove('govuk-link--destructive');
 
-                        console.log('Boundary created successfully');
+                        hideErrorSummary();
                         updateLinkStates();
 
                         // Check for intersections with catchments

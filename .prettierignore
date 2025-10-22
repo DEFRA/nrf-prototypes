@@ -4,3 +4,4 @@ coverage
 .tmp/
 .env
 migrate.log
+*.html

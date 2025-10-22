@@ -8,13 +8,24 @@ const path = require('path')
 const fs = require('fs')
 const multer = require('multer')
 
-// Configure multer for file uploads
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 2 * 1024 * 1024 // 2MB limit
+    fileSize: 2 * 1024 * 1024
   }
 })
+
+const buildingTypeToDisplayName = {
+  hmo: 'House of multiple occupation (HMO)',
+  hotel: 'Hotel',
+  'residential-institution': 'Residential institution'
+}
+
+const buildingTypeToDataKey = {
+  hmo: 'hmoCount',
+  hotel: 'hotelCount',
+  'residential-institution': 'residentialInstitutionCount'
+}
 
 // Mock EDP boundary data for validation
 const edpBoundaries = [
@@ -302,31 +313,11 @@ router.post(
 // Draw polygon on map
 router.get('/nrf-estimate-1/map', (req, res) => {
   const data = req.session.data || {}
-  console.log('=== MAP ROUTE DEBUG ===')
-  console.log('Map route - full session data:', JSON.stringify(data, null, 2))
-  console.log(
-    'Map route - redlineBoundaryPolygon exists:',
-    !!data.redlineBoundaryPolygon
-  )
-  console.log(
-    'Map route - redlineBoundaryPolygon:',
-    data.redlineBoundaryPolygon
-  )
-  console.log(
-    'Map route - hasRedlineBoundaryFile:',
-    data.hasRedlineBoundaryFile
-  )
-  console.log('Map route - redlineFile:', data.redlineFile)
+  const navFromSummary = req.query.nav === 'summary'
 
   const existingBoundaryData = data.redlineBoundaryPolygon
     ? JSON.stringify(data.redlineBoundaryPolygon)
     : ''
-  console.log(
-    'Map route - existingBoundaryData length:',
-    existingBoundaryData.length
-  )
-  console.log('Map route - existingBoundaryData:', existingBoundaryData)
-  console.log('=== END MAP ROUTE DEBUG ===')
 
   const backLink =
     data.mapReferrer === 'upload-redline'
@@ -336,27 +327,26 @@ router.get('/nrf-estimate-1/map', (req, res) => {
   res.render('nrf-estimate-1/map', {
     data: data,
     existingBoundaryData: existingBoundaryData,
-    backLink: backLink
+    backLink: backLink,
+    navFromSummary: navFromSummary
   })
 })
 
 // Handle map polygon submission
 router.post('/nrf-estimate-1/map', (req, res) => {
   const boundaryData = req.body['boundary-data']
+  const navFromSummary = req.body.navFromSummary === 'true'
 
   if (!boundaryData) {
     return res.render('nrf-estimate-1/map', {
-      error: 'Draw a red line boundary to continue'
+      error: 'Draw a red line boundary to continue',
+      navFromSummary: navFromSummary
     })
   }
 
   try {
     const parsedData = JSON.parse(boundaryData)
-    console.log('=== MAP SUBMISSION DEBUG ===')
-    console.log('Parsed boundary data:', parsedData)
-    console.log('Intersecting catchment:', parsedData.intersectingCatchment)
 
-    // Store in session
     req.session.data = req.session.data || {}
     req.session.data.redlineBoundaryPolygon = {
       center: parsedData.center,
@@ -364,38 +354,31 @@ router.post('/nrf-estimate-1/map', (req, res) => {
       intersectingCatchment: parsedData.intersectingCatchment
     }
 
-    // Check EDP intersection - use the intersectingCatchment from the map if available
     let edpIntersection = null
     if (parsedData.intersectingCatchment) {
-      // Find the EDP by name - we'll treat any catchment intersection as an EDP intersection
       edpIntersection = {
         name: parsedData.intersectingCatchment,
         type: 'catchment'
       }
-      console.log('EDP intersection found:', edpIntersection)
     } else {
-      // Fallback to checking intersection
       edpIntersection = checkEDPIntersection({
         center: parsedData.center,
         coordinates: parsedData.points
       })
-      console.log('Fallback EDP intersection:', edpIntersection)
     }
 
-    console.log('Final EDP intersection:', edpIntersection)
-    console.log('=== END MAP SUBMISSION DEBUG ===')
-
     if (!edpIntersection) {
-      console.log('No EDP intersection - redirecting to no-edp')
       res.redirect('/nrf-estimate-1/no-edp')
+    } else if (navFromSummary) {
+      res.redirect('/nrf-estimate-1/summary')
     } else {
-      console.log('EDP intersection found - redirecting to building-type')
       res.redirect('/nrf-estimate-1/building-type')
     }
   } catch (error) {
     console.error('Error parsing boundary data:', error)
     res.render('nrf-estimate-1/map', {
-      error: 'Draw a red line boundary to continue'
+      error: 'Draw a red line boundary to continue',
+      navFromSummary: navFromSummary
     })
   }
 })
@@ -574,8 +557,26 @@ router.get('/nrf-estimate-1/room-count', (req, res) => {
   const isChange = req.query.change === 'true'
   const navFromSummary = req.query.nav === 'summary'
   const error = req.query.error
-  const roomCountTypes = data.roomCountTypes || []
+  const buildingType = req.query.type
 
+  if (isChange && navFromSummary && buildingType) {
+    const displayName = buildingTypeToDisplayName[buildingType] || null
+
+    if (displayName) {
+      return res.render('nrf-estimate-1/room-count', {
+        buildingType: displayName,
+        currentIndex: 0,
+        totalCount: 1,
+        data: data,
+        isChange: isChange,
+        navFromSummary: navFromSummary,
+        error: error,
+        buildingTypeKey: buildingType
+      })
+    }
+  }
+
+  const roomCountTypes = data.roomCountTypes || []
   const currentIndex = data.currentRoomCountIndex || 0
 
   if (currentIndex >= roomCountTypes.length) {
@@ -610,31 +611,43 @@ router.get('/nrf-estimate-1/room-count', (req, res) => {
 // Handle room count submission
 router.post('/nrf-estimate-1/room-count', (req, res) => {
   const data = req.session.data || {}
-  const roomCountTypes = data.roomCountTypes || []
-  const currentIndex = data.currentRoomCountIndex || 0
-  const currentBuildingType = roomCountTypes[currentIndex]
   const isChange = req.body.isChange === 'true'
   const navFromSummary = req.body.navFromSummary === 'true'
+  const buildingType = req.body.buildingType
 
   let roomCount = req.body['room-count']
 
   if (!roomCount || isNaN(roomCount) || roomCount < 1) {
-    // Build redirect URL with query parameters
     let redirectUrl = '/nrf-estimate-1/room-count?'
     if (isChange) redirectUrl += 'change=true&'
     if (navFromSummary) redirectUrl += 'nav=summary&'
-    redirectUrl = redirectUrl.replace(/&$/, '') // Remove trailing &
+    if (buildingType) redirectUrl += `type=${buildingType}&`
+    redirectUrl = redirectUrl.replace(/&$/, '')
 
     return res.redirect(
       redirectUrl + '&error=Enter the number of rooms to continue'
     )
   }
 
-  // Store the room count for this building type
   req.session.data = req.session.data || {}
   if (!req.session.data.roomCounts) {
     req.session.data.roomCounts = {}
   }
+
+  if (isChange && navFromSummary && buildingType) {
+    const dataKey = buildingTypeToDataKey[buildingType] || null
+
+    if (dataKey) {
+      req.session.data.roomCounts[dataKey] = parseInt(roomCount)
+    }
+
+    return res.redirect('/nrf-estimate-1/summary')
+  }
+
+  // Normal flow with multiple room types
+  const roomCountTypes = data.roomCountTypes || []
+  const currentIndex = data.currentRoomCountIndex || 0
+  const currentBuildingType = roomCountTypes[currentIndex]
 
   // Map building types to their data keys
   const typeMapping = {

@@ -15,43 +15,19 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
         <dl class="govuk-summary-list govuk-!-margin-bottom-9">
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">
-                    Red line boundary added
+                    Red line boundary
                 </dt>
                 <dd class="govuk-summary-list__value">
-                    {% if data.hasRedlineBoundaryFile === 'yes' or data.redlineBoundaryPolygon %}
-                    Yes
+                    {% if data.redlineBoundaryPolygon %}
+                    Added
                     {% else %}
-                    No
+                    Not added
                     {% endif %}
                 </dd>
                 <dd class="govuk-summary-list__actions">
-                    <a class="govuk-link" href="/nrf-estimate-1/redline-map?nav=summary">
-                        Change<span class="govuk-visually-hidden"> red line boundary</span>
-                    </a>
-                </dd>
-            </div>
-
-            <div class="govuk-summary-list__row">
-                <dt class="govuk-summary-list__key">
-                    Red line boundary file uploaded
-                </dt>
-                <dd class="govuk-summary-list__value">
-                    {% if data.redlineFile %}
-                    Yes
-                    {% else %}
-                    No
-                    {% endif %}
-                </dd>
-                <dd class="govuk-summary-list__actions">
-                    {% if data.hasRedlineBoundaryFile === 'yes' %}
-                    <a class="govuk-link" href="/nrf-estimate-1/upload-redline?nav=summary">
-                        Change<span class="govuk-visually-hidden"> red line boundary file</span>
-                    </a>
-                    {% else %}
                     <a class="govuk-link" href="/nrf-estimate-1/map?nav=summary">
                         Change<span class="govuk-visually-hidden"> red line boundary</span>
                     </a>
-                    {% endif %}
                 </dd>
             </div>
 
@@ -103,7 +79,7 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
                     {{ data.roomCounts.hmoCount }}
                 </dd>
                 <dd class="govuk-summary-list__actions">
-                    <a class="govuk-link" href="/nrf-estimate-1/room-count?change=true&nav=summary">
+                    <a class="govuk-link" href="/nrf-estimate-1/room-count?change=true&nav=summary&type=hmo">
                         Change<span class="govuk-visually-hidden"> number of multiple occupation rooms</span>
                     </a>
                 </dd>
@@ -119,7 +95,7 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
                     {{ data.roomCounts.residentialInstitutionCount }}
                 </dd>
                 <dd class="govuk-summary-list__actions">
-                    <a class="govuk-link" href="/nrf-estimate-1/room-count?change=true&nav=summary">
+                    <a class="govuk-link" href="/nrf-estimate-1/room-count?change=true&nav=summary&type=residential-institution">
                         Change<span class="govuk-visually-hidden"> number of residential institution rooms</span>
                     </a>
                 </dd>
@@ -135,7 +111,7 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
                     {{ data.roomCounts.hotelCount }}
                 </dd>
                 <dd class="govuk-summary-list__actions">
-                    <a class="govuk-link" href="/nrf-estimate-1/room-count?change=true&nav=summary">
+                    <a class="govuk-link" href="/nrf-estimate-1/room-count?change=true&nav=summary&type=hotel">
                         Change<span class="govuk-visually-hidden"> number of hotel rooms</span>
                     </a>
                 </dd>
