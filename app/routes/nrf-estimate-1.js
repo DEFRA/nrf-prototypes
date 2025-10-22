@@ -8,24 +8,23 @@ const path = require('path')
 const fs = require('fs')
 const multer = require('multer')
 
+// Import helpers and validators
+const validators = require('../lib/nrf-estimate-1/validators')
+const buildingTypeHelpers = require('../lib/nrf-estimate-1/building-type-helpers')
+const { ROUTES, TEMPLATES } = require('../config/nrf-estimate-1/routes')
+const {
+  BUILDING_TYPES,
+  BUILDING_TYPE_LABELS,
+  BUILDING_TYPE_DATA_KEYS,
+  BUILDING_TYPES_REQUIRING_ROOM_COUNT
+} = require('../config/nrf-estimate-1/building-types')
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
     fileSize: 2 * 1024 * 1024
   }
 })
-
-const buildingTypeToDisplayName = {
-  hmo: 'House of multiple occupation (HMO)',
-  hotel: 'Hotel',
-  'residential-institution': 'Residential institution'
-}
-
-const buildingTypeToDataKey = {
-  hmo: 'hmoCount',
-  hotel: 'hotelCount',
-  'residential-institution': 'residentialInstitutionCount'
-}
 
 // Mock EDP boundary data for validation
 const edpBoundaries = [
@@ -125,31 +124,31 @@ function getNextRouteAfterBuildingDetails(sessionData) {
     sessionData.hasEstimateRef === 'no'
   ) {
     // Planning ref comes before email for payment journey
-    return '/nrf-estimate-1/planning-ref'
+    return ROUTES.PLANNING_REF
   }
   // Otherwise go to email
-  return '/nrf-estimate-1/email'
+  return ROUTES.EMAIL
 }
 
 // Start page
-router.get('/nrf-estimate-1/start', (req, res) => {
+router.get(ROUTES.START, (req, res) => {
   const data = req.session.data || {}
-  res.render('nrf-estimate-1/start', { data: data })
+  res.render(TEMPLATES.START, { data: data })
 })
 
 // Handle start page submission
-router.post('/nrf-estimate-1/start', (req, res) => {
-  res.redirect('/nrf-estimate-1/what-would-you-like-to-do')
+router.post(ROUTES.START, (req, res) => {
+  res.redirect(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO)
 })
 
 // What would you like to do page
-router.get('/nrf-estimate-1/what-would-you-like-to-do', (req, res) => {
+router.get(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO, (req, res) => {
   const data = req.session.data || {}
-  res.render('nrf-estimate-1/what-would-you-like-to-do', { data: data })
+  res.render(TEMPLATES.WHAT_WOULD_YOU_LIKE_TO_DO, { data: data })
 })
 
 // Handle what would you like to do
-router.post('/nrf-estimate-1/what-would-you-like-to-do', (req, res) => {
+router.post(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO, (req, res) => {
   const journeyType = req.body['journey-type']
 
   // Store in session
@@ -158,24 +157,24 @@ router.post('/nrf-estimate-1/what-would-you-like-to-do', (req, res) => {
 
   // Route based on journey type
   if (journeyType === 'estimate') {
-    res.redirect('/nrf-estimate-1/redline-map')
+    res.redirect(ROUTES.REDLINE_MAP)
   } else {
-    res.redirect('/nrf-estimate-1/do-you-have-an-estimate-ref')
+    res.redirect(ROUTES.DO_YOU_HAVE_ESTIMATE_REF)
   }
 })
 
 // Redline boundary file question
-router.get('/nrf-estimate-1/redline-map', (req, res) => {
+router.get(ROUTES.REDLINE_MAP, (req, res) => {
   const data = req.session.data || {}
-  res.render('nrf-estimate-1/redline-map', { data: data })
+  res.render(TEMPLATES.REDLINE_MAP, { data: data })
 })
 
 // Handle redline boundary file question
-router.post('/nrf-estimate-1/redline-map', (req, res) => {
+router.post(ROUTES.REDLINE_MAP, (req, res) => {
   const hasRedlineBoundaryFile = req.body['has-redline-boundary-file']
 
   if (!hasRedlineBoundaryFile) {
-    return res.render('nrf-estimate-1/redline-map', {
+    return res.render(TEMPLATES.REDLINE_MAP, {
       error: 'Select yes if you have a red line boundary file'
     })
   }
@@ -185,35 +184,35 @@ router.post('/nrf-estimate-1/redline-map', (req, res) => {
   req.session.data.hasRedlineBoundaryFile = hasRedlineBoundaryFile
 
   if (hasRedlineBoundaryFile === 'yes') {
-    res.redirect('/nrf-estimate-1/upload-redline')
+    res.redirect(ROUTES.UPLOAD_REDLINE)
   } else {
     req.session.data.mapReferrer = 'redline-map'
-    res.redirect('/nrf-estimate-1/map')
+    res.redirect(ROUTES.MAP)
   }
 })
 
 // Upload redline boundary file
-router.get('/nrf-estimate-1/upload-redline', (req, res) => {
+router.get(ROUTES.UPLOAD_REDLINE, (req, res) => {
   const data = req.session.data || {}
-  res.render('nrf-estimate-1/upload-redline', { data: data })
+  res.render(TEMPLATES.UPLOAD_REDLINE, { data: data })
 })
 
 // Handle redline file upload
 router.post(
-  '/nrf-estimate-1/upload-redline',
+  ROUTES.UPLOAD_REDLINE,
   (req, res, next) => {
     upload.single('redline-file')(req, res, (err) => {
       if (err instanceof multer.MulterError) {
         if (err.code === 'LIMIT_FILE_SIZE') {
-          return res.render('nrf-estimate-1/upload-redline', {
+          return res.render(TEMPLATES.UPLOAD_REDLINE, {
             error: 'The selected file must be smaller than 2MB'
           })
         }
-        return res.render('nrf-estimate-1/upload-redline', {
+        return res.render(TEMPLATES.UPLOAD_REDLINE, {
           error: 'There was a problem uploading the file'
         })
       } else if (err) {
-        return res.render('nrf-estimate-1/upload-redline', {
+        return res.render(TEMPLATES.UPLOAD_REDLINE, {
           error: 'There was a problem uploading the file'
         })
       }
@@ -222,7 +221,7 @@ router.post(
   },
   (req, res) => {
     if (!req.file) {
-      return res.render('nrf-estimate-1/upload-redline', {
+      return res.render(TEMPLATES.UPLOAD_REDLINE, {
         error: 'Select a file'
       })
     }
@@ -233,13 +232,13 @@ router.post(
     const fileExtension = fileName.substring(fileName.lastIndexOf('.'))
 
     if (!allowedTypes.includes(fileExtension)) {
-      return res.render('nrf-estimate-1/upload-redline', {
+      return res.render(TEMPLATES.UPLOAD_REDLINE, {
         error: 'The selected file must be a .shp or .geojson file'
       })
     }
 
     if (uploadedFile.size === 0) {
-      return res.render('nrf-estimate-1/upload-redline', {
+      return res.render(TEMPLATES.UPLOAD_REDLINE, {
         error: 'The selected file is empty'
       })
     }
@@ -285,7 +284,7 @@ router.post(
         }
 
         if (coordinates.length === 0) {
-          return res.render('nrf-estimate-1/upload-redline', {
+          return res.render(TEMPLATES.UPLOAD_REDLINE, {
             error: 'The GeoJSON file does not contain valid polygon coordinates'
           })
         }
@@ -295,12 +294,12 @@ router.post(
         }
       } catch (error) {
         console.error('Error parsing GeoJSON:', error)
-        return res.render('nrf-estimate-1/upload-redline', {
+        return res.render(TEMPLATES.UPLOAD_REDLINE, {
           error: 'The selected file is not a valid GeoJSON file'
         })
       }
     } else if (fileExtension === '.shp') {
-      return res.render('nrf-estimate-1/upload-redline', {
+      return res.render(TEMPLATES.UPLOAD_REDLINE, {
         error:
           'Shapefile parsing is not yet supported. Please use GeoJSON format.'
       })
@@ -315,17 +314,17 @@ router.post(
     req.session.save((err) => {
       if (err) {
         console.error('Error saving session:', err)
-        return res.render('nrf-estimate-1/upload-redline', {
+        return res.render(TEMPLATES.UPLOAD_REDLINE, {
           error: 'There was a problem processing your file. Please try again.'
         })
       }
-      res.redirect('/nrf-estimate-1/map')
+      res.redirect(ROUTES.MAP)
     })
   }
 )
 
 // Draw polygon on map
-router.get('/nrf-estimate-1/map', (req, res) => {
+router.get(ROUTES.MAP, (req, res) => {
   const data = req.session.data || {}
   const navFromSummary = req.query.nav === 'summary'
 
@@ -335,10 +334,10 @@ router.get('/nrf-estimate-1/map', (req, res) => {
 
   const backLink =
     data.mapReferrer === 'upload-redline'
-      ? '/nrf-estimate-1/upload-redline'
-      : '/nrf-estimate-1/redline-map'
+      ? ROUTES.UPLOAD_REDLINE
+      : ROUTES.REDLINE_MAP
 
-  res.render('nrf-estimate-1/map', {
+  res.render(TEMPLATES.MAP, {
     data: data,
     existingBoundaryData: existingBoundaryData,
     backLink: backLink,
@@ -347,12 +346,12 @@ router.get('/nrf-estimate-1/map', (req, res) => {
 })
 
 // Handle map polygon submission
-router.post('/nrf-estimate-1/map', (req, res) => {
+router.post(ROUTES.MAP, (req, res) => {
   const boundaryData = req.body['boundary-data']
   const navFromSummary = req.body.navFromSummary === 'true'
 
   if (!boundaryData) {
-    return res.render('nrf-estimate-1/map', {
+    return res.render(TEMPLATES.MAP, {
       error: 'Draw a red line boundary to continue',
       navFromSummary: navFromSummary
     })
@@ -382,15 +381,15 @@ router.post('/nrf-estimate-1/map', (req, res) => {
     }
 
     if (!edpIntersection) {
-      res.redirect('/nrf-estimate-1/no-edp')
+      res.redirect(ROUTES.NO_EDP)
     } else if (navFromSummary) {
-      res.redirect('/nrf-estimate-1/summary')
+      res.redirect(ROUTES.SUMMARY)
     } else {
-      res.redirect('/nrf-estimate-1/building-type')
+      res.redirect(ROUTES.BUILDING_TYPE)
     }
   } catch (error) {
     console.error('Error parsing boundary data:', error)
-    res.render('nrf-estimate-1/map', {
+    res.render(TEMPLATES.MAP, {
       error: 'Draw a red line boundary to continue',
       navFromSummary: navFromSummary
     })
@@ -398,24 +397,18 @@ router.post('/nrf-estimate-1/map', (req, res) => {
 })
 
 // No EDP area page
-router.get('/nrf-estimate-1/no-edp', (req, res) => {
+router.get(ROUTES.NO_EDP, (req, res) => {
   const data = req.session.data || {}
-  res.render('nrf-estimate-1/no-edp', { data: data })
+  res.render(TEMPLATES.NO_EDP, { data: data })
 })
 
 // Building type selection
-router.get('/nrf-estimate-1/building-type', (req, res) => {
+router.get(ROUTES.BUILDING_TYPE, (req, res) => {
   const data = req.session.data || {}
   const isChange = req.query.change === 'true'
   const navFromSummary = req.query.nav === 'summary'
 
-  console.log('=== BUILDING TYPE GET ROUTE ===')
-  console.log('Session data:', data)
-  console.log('Is change:', isChange)
-  console.log('Nav from summary:', navFromSummary)
-  console.log('=== END GET ROUTE DEBUG ===')
-
-  res.render('nrf-estimate-1/building-type', {
+  res.render(TEMPLATES.BUILDING_TYPE, {
     data: data,
     isChange: isChange,
     navFromSummary: navFromSummary
@@ -423,7 +416,7 @@ router.get('/nrf-estimate-1/building-type', (req, res) => {
 })
 
 // Handle building type selection
-router.post('/nrf-estimate-1/building-type', (req, res) => {
+router.post(ROUTES.BUILDING_TYPE, (req, res) => {
   const buildingTypes = req.body['building-types']
   const isChange = req.body.isChange === 'true'
   const navFromSummary = req.body.navFromSummary === 'true'
@@ -432,7 +425,7 @@ router.post('/nrf-estimate-1/building-type', (req, res) => {
   // When no checkboxes are selected, buildingTypes will be undefined
   // When checkboxes are selected, buildingTypes will be a string (single) or array (multiple)
   if (!buildingTypes || buildingTypes === '_unchecked') {
-    return res.render('nrf-estimate-1/building-type', {
+    return res.render(TEMPLATES.BUILDING_TYPE, {
       error: 'Select a building type to continue',
       data: req.session.data || {},
       isChange: isChange,
@@ -446,20 +439,15 @@ router.post('/nrf-estimate-1/building-type', (req, res) => {
   }
   const previousBuildingTypes = req.session.data.buildingTypes || []
 
-  // Ensure buildingTypes is always an array
-  const buildingTypesArray = Array.isArray(buildingTypes)
-    ? buildingTypes
-    : [buildingTypes]
+  // Normalize building types to always be an array
+  const buildingTypesArray =
+    buildingTypeHelpers.normalizeBuildingTypes(buildingTypes)
   req.session.data.buildingTypes = buildingTypesArray
 
   // If this is a change from summary, handle adding/removing associated values
   if (isChange && navFromSummary) {
-    const roomCountTypes = [
-      'Hotel',
-      'House of multiple occupation (HMO)',
-      'Residential institution'
-    ]
-    const residentialType = 'Dwellinghouse'
+    const roomCountTypes = BUILDING_TYPES_REQUIRING_ROOM_COUNT
+    const residentialType = BUILDING_TYPES.DWELLINGHOUSE
 
     // Initialize roomCounts if it doesn't exist
     if (!req.session.data.roomCounts) {
@@ -467,17 +455,18 @@ router.post('/nrf-estimate-1/building-type', (req, res) => {
     }
 
     // Check for removed building types and clear their associated data
-    const removedTypes = previousBuildingTypes.filter(
-      (type) => !buildingTypesArray.includes(type)
+    const removedTypes = buildingTypeHelpers.getRemovedBuildingTypes(
+      previousBuildingTypes,
+      buildingTypesArray
     )
     removedTypes.forEach((type) => {
-      if (type === 'Dwellinghouse') {
+      if (type === BUILDING_TYPES.DWELLINGHOUSE) {
         delete req.session.data.residentialBuildingCount
-      } else if (type === 'Hotel') {
+      } else if (type === BUILDING_TYPES.HOTEL) {
         delete req.session.data.roomCounts.hotelCount
-      } else if (type === 'House of multiple occupation (HMO)') {
+      } else if (type === BUILDING_TYPES.HMO) {
         delete req.session.data.roomCounts.hmoCount
-      } else if (type === 'Residential institution') {
+      } else if (type === BUILDING_TYPES.RESIDENTIAL_INSTITUTION) {
         delete req.session.data.roomCounts.residentialInstitutionCount
       }
     })
@@ -489,13 +478,14 @@ router.post('/nrf-estimate-1/building-type', (req, res) => {
 
     // Only proceed with data collection if there are actual changes
     if (!hasChanges) {
-      res.redirect('/nrf-estimate-1/summary')
+      res.redirect(ROUTES.SUMMARY)
       return
     }
 
     // Check for newly added building types that need data collection
-    const newlyAddedTypes = buildingTypesArray.filter(
-      (type) => !previousBuildingTypes.includes(type)
+    const newlyAddedTypes = buildingTypeHelpers.getNewlyAddedBuildingTypes(
+      previousBuildingTypes,
+      buildingTypesArray
     )
     const newlyAddedRoomCountTypes = newlyAddedTypes.filter((type) =>
       roomCountTypes.includes(type)
@@ -508,51 +498,46 @@ router.post('/nrf-estimate-1/building-type', (req, res) => {
     // If there are newly added building types that need data collection, collect them first
     if (needsRoomCount || needsResidentialCount) {
       if (needsResidentialCount) {
-        res.redirect('/nrf-estimate-1/residential?change=true&nav=summary')
+        res.redirect(`${ROUTES.RESIDENTIAL}?change=true&nav=summary`)
         return
       } else if (needsRoomCount) {
         // Store only the newly added building types that need room counts for processing
         req.session.data.roomCountTypes = newlyAddedRoomCountTypes
         req.session.data.currentRoomCountIndex = 0
-        res.redirect('/nrf-estimate-1/room-count?change=true&nav=summary')
+        res.redirect(`${ROUTES.ROOM_COUNT}?change=true&nav=summary`)
         return
       }
     }
 
     // If no new data collection needed, go back to summary
-    res.redirect('/nrf-estimate-1/summary')
+    res.redirect(ROUTES.SUMMARY)
     return
   }
 
   // If this is a change from summary, redirect back to summary
   if (isChange) {
-    res.redirect('/nrf-estimate-1/summary')
+    res.redirect(ROUTES.SUMMARY)
     return
   }
 
   // Check if non-residential development selected
-  if (buildingTypesArray.includes('Non-residential development')) {
-    res.redirect('/nrf-estimate-1/non-residential')
+  if (buildingTypesArray.includes(BUILDING_TYPES.NON_RESIDENTIAL)) {
+    res.redirect(ROUTES.NON_RESIDENTIAL)
   } else {
     // Check if any building types require room counts
-    const roomCountTypes = [
-      'Hotel',
-      'House of multiple occupation (HMO)',
-      'Residential institution'
-    ]
     const hasRoomCountTypes = buildingTypesArray.some((type) =>
-      roomCountTypes.includes(type)
+      BUILDING_TYPES_REQUIRING_ROOM_COUNT.includes(type)
     )
 
     if (hasRoomCountTypes) {
       // Store the building types that need room counts for processing
       req.session.data.roomCountTypes = buildingTypesArray.filter((type) =>
-        roomCountTypes.includes(type)
+        BUILDING_TYPES_REQUIRING_ROOM_COUNT.includes(type)
       )
       req.session.data.currentRoomCountIndex = 0
-      res.redirect('/nrf-estimate-1/room-count')
-    } else if (buildingTypesArray.includes('Dwellinghouse')) {
-      res.redirect('/nrf-estimate-1/residential')
+      res.redirect(ROUTES.ROOM_COUNT)
+    } else if (buildingTypesArray.includes(BUILDING_TYPES.DWELLINGHOUSE)) {
+      res.redirect(ROUTES.RESIDENTIAL)
     } else {
       res.redirect(getNextRouteAfterBuildingDetails(req.session.data))
     }
@@ -560,13 +545,13 @@ router.post('/nrf-estimate-1/building-type', (req, res) => {
 })
 
 // Non-residential development page
-router.get('/nrf-estimate-1/non-residential', (req, res) => {
+router.get(ROUTES.NON_RESIDENTIAL, (req, res) => {
   const data = req.session.data || {}
-  res.render('nrf-estimate-1/non-residential', { data: data })
+  res.render(TEMPLATES.NON_RESIDENTIAL, { data: data })
 })
 
 // Room count page (for Hotel, HMO, Residential institution)
-router.get('/nrf-estimate-1/room-count', (req, res) => {
+router.get(ROUTES.ROOM_COUNT, (req, res) => {
   const data = req.session.data || {}
   const isChange = req.query.change === 'true'
   const navFromSummary = req.query.nav === 'summary'
@@ -574,10 +559,10 @@ router.get('/nrf-estimate-1/room-count', (req, res) => {
   const buildingType = req.query.type
 
   if (isChange && navFromSummary && buildingType) {
-    const displayName = buildingTypeToDisplayName[buildingType] || null
+    const displayName = BUILDING_TYPE_LABELS[buildingType] || null
 
     if (displayName) {
-      return res.render('nrf-estimate-1/room-count', {
+      return res.render(TEMPLATES.ROOM_COUNT, {
         buildingType: displayName,
         currentIndex: 0,
         totalCount: 1,
@@ -596,14 +581,14 @@ router.get('/nrf-estimate-1/room-count', (req, res) => {
   if (currentIndex >= roomCountTypes.length) {
     // All room counts collected, move to next step
     if (isChange && navFromSummary) {
-      res.redirect('/nrf-estimate-1/summary')
+      res.redirect(ROUTES.SUMMARY)
     } else if (isChange) {
-      res.redirect('/nrf-estimate-1/summary')
+      res.redirect(ROUTES.SUMMARY)
     } else if (
       data.buildingTypes &&
       data.buildingTypes.includes('Dwellinghouse')
     ) {
-      res.redirect('/nrf-estimate-1/residential')
+      res.redirect(ROUTES.RESIDENTIAL)
     } else {
       res.redirect(getNextRouteAfterBuildingDetails(data))
     }
@@ -611,7 +596,7 @@ router.get('/nrf-estimate-1/room-count', (req, res) => {
   }
 
   const currentBuildingType = roomCountTypes[currentIndex]
-  res.render('nrf-estimate-1/room-count', {
+  res.render(TEMPLATES.ROOM_COUNT, {
     buildingType: currentBuildingType,
     currentIndex: currentIndex,
     totalCount: roomCountTypes.length,
@@ -623,7 +608,7 @@ router.get('/nrf-estimate-1/room-count', (req, res) => {
 })
 
 // Handle room count submission
-router.post('/nrf-estimate-1/room-count', (req, res) => {
+router.post(ROUTES.ROOM_COUNT, (req, res) => {
   const data = req.session.data || {}
   const isChange = req.body.isChange === 'true'
   const navFromSummary = req.body.navFromSummary === 'true'
@@ -632,7 +617,7 @@ router.post('/nrf-estimate-1/room-count', (req, res) => {
   let roomCount = req.body['room-count']
 
   if (!roomCount || isNaN(roomCount) || roomCount < 1) {
-    let redirectUrl = '/nrf-estimate-1/room-count?'
+    let redirectUrl = ROUTES.ROOM_COUNT + '?'
     if (isChange) redirectUrl += 'change=true&'
     if (navFromSummary) redirectUrl += 'nav=summary&'
     if (buildingType) redirectUrl += `type=${buildingType}&`
@@ -649,13 +634,13 @@ router.post('/nrf-estimate-1/room-count', (req, res) => {
   }
 
   if (isChange && navFromSummary && buildingType) {
-    const dataKey = buildingTypeToDataKey[buildingType] || null
+    const dataKey = BUILDING_TYPE_DATA_KEYS[buildingType] || null
 
     if (dataKey) {
       req.session.data.roomCounts[dataKey] = parseInt(roomCount)
     }
 
-    return res.redirect('/nrf-estimate-1/summary')
+    return res.redirect(ROUTES.SUMMARY)
   }
 
   // Normal flow with multiple room types
@@ -680,35 +665,35 @@ router.post('/nrf-estimate-1/room-count', (req, res) => {
 
   // Check if this is a change from summary - only redirect to summary after collecting ALL room counts
   if (isChange && navFromSummary && currentIndex + 1 >= roomCountTypes.length) {
-    res.redirect('/nrf-estimate-1/summary')
+    res.redirect(ROUTES.SUMMARY)
     return
   }
 
   if (currentIndex + 1 >= roomCountTypes.length) {
     // All room counts collected, move to next step
     if (isChange) {
-      res.redirect('/nrf-estimate-1/summary')
+      res.redirect(ROUTES.SUMMARY)
     } else if (
       data.buildingTypes &&
       data.buildingTypes.includes('Dwellinghouse')
     ) {
-      res.redirect('/nrf-estimate-1/residential')
+      res.redirect(ROUTES.RESIDENTIAL)
     } else {
       res.redirect(getNextRouteAfterBuildingDetails(req.session.data))
     }
   } else {
     // Move to next building type
-    res.redirect('/nrf-estimate-1/room-count')
+    res.redirect(ROUTES.ROOM_COUNT)
   }
 })
 
 // Residential building count
-router.get('/nrf-estimate-1/residential', (req, res) => {
+router.get(ROUTES.RESIDENTIAL, (req, res) => {
   const data = req.session.data || {}
   const isChange = req.query.change === 'true'
   const navFromSummary = req.query.nav === 'summary'
 
-  res.render('nrf-estimate-1/residential', {
+  res.render(TEMPLATES.RESIDENTIAL, {
     data: data,
     isChange: isChange,
     navFromSummary: navFromSummary
@@ -716,7 +701,7 @@ router.get('/nrf-estimate-1/residential', (req, res) => {
 })
 
 // Handle residential building count
-router.post('/nrf-estimate-1/residential', (req, res) => {
+router.post(ROUTES.RESIDENTIAL, (req, res) => {
   const residentialBuildingCount = req.body['residential-building-count']
   const isChange = req.body.isChange === 'true'
   const navFromSummary = req.body.navFromSummary === 'true'
@@ -726,7 +711,7 @@ router.post('/nrf-estimate-1/residential', (req, res) => {
     isNaN(residentialBuildingCount) ||
     residentialBuildingCount < 1
   ) {
-    return res.render('nrf-estimate-1/residential', {
+    return res.render(TEMPLATES.RESIDENTIAL, {
       error: 'Enter the number of dwellinghouse buildings to continue',
       data: req.session.data || {},
       isChange: isChange,
@@ -740,10 +725,10 @@ router.post('/nrf-estimate-1/residential', (req, res) => {
 
   // If this is a change from summary, redirect back to summary
   if (isChange && navFromSummary) {
-    res.redirect('/nrf-estimate-1/summary')
+    res.redirect(ROUTES.SUMMARY)
     return
   } else if (isChange) {
-    res.redirect('/nrf-estimate-1/summary')
+    res.redirect(ROUTES.SUMMARY)
     return
   }
 
@@ -751,13 +736,13 @@ router.post('/nrf-estimate-1/residential', (req, res) => {
 })
 
 // Residential institution room count
-router.get('/nrf-estimate-1/residential-institution', (req, res) => {
+router.get(ROUTES.RESIDENTIAL_INSTITUTION, (req, res) => {
   const data = req.session.data || {}
-  res.render('nrf-estimate-1/residential-institution', { data: data })
+  res.render(TEMPLATES.RESIDENTIAL_INSTITUTION, { data: data })
 })
 
 // Handle residential institution room count
-router.post('/nrf-estimate-1/residential-institution', (req, res) => {
+router.post(ROUTES.RESIDENTIAL_INSTITUTION, (req, res) => {
   const data = req.session.data || {}
   const buildingTypes = data.buildingTypes || []
 
@@ -789,7 +774,7 @@ router.post('/nrf-estimate-1/residential-institution', (req, res) => {
   }
 
   if (error) {
-    return res.render('nrf-estimate-1/residential-institution', {
+    return res.render(TEMPLATES.RESIDENTIAL_INSTITUTION, {
       error: error,
       buildingTypes: buildingTypes
     })
@@ -806,35 +791,35 @@ router.post('/nrf-estimate-1/residential-institution', (req, res) => {
     )
   }
 
-  res.redirect('/nrf-estimate-1/email')
+  res.redirect(ROUTES.EMAIL)
 })
 
 // Email entry
-router.get('/nrf-estimate-1/email', (req, res) => {
+router.get(ROUTES.EMAIL, (req, res) => {
   const data = req.session.data || {}
   const isChange = req.query.change === 'true'
   const navFromSummary = req.query.nav === 'summary'
 
   // Determine back link based on journey type
-  let backLink = '/nrf-estimate-1/building-type'
+  let backLink = ROUTES.BUILDING_TYPE
 
   // If this is a payment journey without an estimate ref, back should go to planning-ref
   if (data.journeyType === 'payment' && data.hasEstimateRef === 'no') {
-    backLink = '/nrf-estimate-1/planning-ref'
+    backLink = ROUTES.PLANNING_REF
   } else {
     // For estimate journey, determine back link based on what was collected
     if (data.buildingTypes) {
       if (data.buildingTypes.includes('Dwellinghouse')) {
-        backLink = '/nrf-estimate-1/residential'
+        backLink = ROUTES.RESIDENTIAL
       } else if (data.roomCountTypes && data.roomCountTypes.length > 0) {
-        backLink = '/nrf-estimate-1/room-count'
+        backLink = ROUTES.ROOM_COUNT
       } else {
-        backLink = '/nrf-estimate-1/building-type'
+        backLink = ROUTES.BUILDING_TYPE
       }
     }
   }
 
-  res.render('nrf-estimate-1/email', {
+  res.render(TEMPLATES.EMAIL, {
     data: data,
     isChange: isChange,
     navFromSummary: navFromSummary,
@@ -843,44 +828,33 @@ router.get('/nrf-estimate-1/email', (req, res) => {
 })
 
 // Handle email submission
-router.post('/nrf-estimate-1/email', (req, res) => {
+router.post(ROUTES.EMAIL, (req, res) => {
   const email = req.body['email']
   const isChange = req.body.isChange === 'true'
   const navFromSummary = req.body.navFromSummary === 'true'
   const data = req.session.data || {}
 
   // Calculate back link for error rendering
-  let backLink = '/nrf-estimate-1/building-type'
+  let backLink = ROUTES.BUILDING_TYPE
   if (data.journeyType === 'payment' && data.hasEstimateRef === 'no') {
-    backLink = '/nrf-estimate-1/planning-ref'
+    backLink = ROUTES.PLANNING_REF
   } else {
     if (data.buildingTypes) {
       if (data.buildingTypes.includes('Dwellinghouse')) {
-        backLink = '/nrf-estimate-1/residential'
+        backLink = ROUTES.RESIDENTIAL
       } else if (data.roomCountTypes && data.roomCountTypes.length > 0) {
-        backLink = '/nrf-estimate-1/room-count'
+        backLink = ROUTES.ROOM_COUNT
       } else {
-        backLink = '/nrf-estimate-1/building-type'
+        backLink = ROUTES.BUILDING_TYPE
       }
     }
   }
 
-  if (!email) {
-    return res.render('nrf-estimate-1/email', {
-      error: 'Enter your email address to continue',
-      data: data,
-      isChange: isChange,
-      navFromSummary: navFromSummary,
-      backLink: backLink
-    })
-  }
-
-  // Basic email validation
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (!emailRegex.test(email)) {
-    return res.render('nrf-estimate-1/email', {
-      error:
-        'Enter an email address in the correct format, like name@example.com',
+  // Validate email
+  const validation = validators.validateEmail(email)
+  if (!validation.valid) {
+    return res.render(TEMPLATES.EMAIL, {
+      error: validation.error,
       data: data,
       isChange: isChange,
       navFromSummary: navFromSummary,
@@ -894,56 +868,44 @@ router.post('/nrf-estimate-1/email', (req, res) => {
 
   // If this is a change from summary, redirect back to summary
   if (isChange && navFromSummary) {
-    res.redirect('/nrf-estimate-1/summary')
+    res.redirect(ROUTES.SUMMARY)
     return
   } else if (isChange) {
-    res.redirect('/nrf-estimate-1/summary')
+    res.redirect(ROUTES.SUMMARY)
     return
   }
 
-  res.redirect('/nrf-estimate-1/summary')
+  res.redirect(ROUTES.SUMMARY)
 })
 
 // Summary page
-router.get('/nrf-estimate-1/summary', (req, res) => {
+router.get(ROUTES.SUMMARY, (req, res) => {
   const data = req.session.data || {}
-  console.log('=== SUMMARY ROUTE DEBUG ===')
-  console.log(
-    'Summary route - redlineBoundaryPolygon exists:',
-    !!data.redlineBoundaryPolygon
-  )
-  console.log(
-    'Summary route - redlineBoundaryPolygon:',
-    data.redlineBoundaryPolygon
-  )
-  console.log('Summary route - planningRef exists:', !!data.planningRef)
-  console.log('Summary route - journeyType:', data.journeyType)
-  console.log('=== END SUMMARY ROUTE DEBUG ===')
 
   // Check if this is a payment journey
   if (data.journeyType === 'payment') {
     // Payment journey - check for planning reference
     if (!data.planningRef) {
-      return res.redirect('/nrf-estimate-1/planning-ref')
+      return res.redirect(ROUTES.PLANNING_REF)
     }
     // Render payment summary
-    res.render('nrf-estimate-1/payment-summary', {
+    res.render(TEMPLATES.PAYMENT_SUMMARY, {
       data: data
     })
   } else {
     // Estimate journey - check for email
     if (!data.email) {
-      return res.redirect('/nrf-estimate-1/email')
+      return res.redirect(ROUTES.EMAIL)
     }
     // Render estimate summary
-    res.render('nrf-estimate-1/summary', {
+    res.render(TEMPLATES.SUMMARY, {
       data: data
     })
   }
 })
 
 // Handle summary submission
-router.post('/nrf-estimate-1/summary', (req, res) => {
+router.post(ROUTES.SUMMARY, (req, res) => {
   const data = req.session.data || {}
 
   // Check if this is a payment journey
@@ -955,7 +917,7 @@ router.post('/nrf-estimate-1/summary', (req, res) => {
     req.session.data = req.session.data || {}
     req.session.data.paymentReference = paymentReference
 
-    res.redirect('/nrf-estimate-1/payment-confirmation')
+    res.redirect(ROUTES.PAYMENT_CONFIRMATION)
   } else {
     // Estimate journey - generate estimate reference
     const estimateReference = 'EST-' + Date.now().toString().slice(-6)
@@ -964,25 +926,25 @@ router.post('/nrf-estimate-1/summary', (req, res) => {
     req.session.data = req.session.data || {}
     req.session.data.estimateReference = estimateReference
 
-    res.redirect('/nrf-estimate-1/confirmation')
+    res.redirect(ROUTES.CONFIRMATION)
   }
 })
 
 // Confirmation page
-router.get('/nrf-estimate-1/confirmation', (req, res) => {
+router.get(ROUTES.CONFIRMATION, (req, res) => {
   const data = req.session.data || {}
 
   if (!data.estimateReference) {
-    return res.redirect('/nrf-estimate-1/summary')
+    return res.redirect(ROUTES.SUMMARY)
   }
 
-  res.render('nrf-estimate-1/confirmation', {
+  res.render(TEMPLATES.CONFIRMATION, {
     data: data
   })
 })
 
 // Serve GeoJSON catchment data
-router.get('/nrf-estimate-1/catchments.geojson', (req, res) => {
+router.get(ROUTES.CATCHMENTS_GEOJSON, (req, res) => {
   try {
     const geojsonPath = path.join(
       __dirname,
@@ -1008,14 +970,14 @@ router.get('/nrf-estimate-1/catchments.geojson', (req, res) => {
 })
 
 // Estimate email content page
-router.get('/nrf-estimate-1/estimate-email-content', (req, res) => {
+router.get(ROUTES.ESTIMATE_EMAIL_CONTENT, (req, res) => {
   const data = req.session.data || {}
 
   if (!data.estimateReference) {
-    return res.redirect('/nrf-estimate-1/summary')
+    return res.redirect(ROUTES.SUMMARY)
   }
 
-  res.render('nrf-estimate-1/estimate-email-content', {
+  res.render(TEMPLATES.ESTIMATE_EMAIL_CONTENT, {
     data: data
   })
 })
@@ -1023,17 +985,17 @@ router.get('/nrf-estimate-1/estimate-email-content', (req, res) => {
 // ===== PAYMENT JOURNEY ROUTES =====
 
 // Do you have an estimate reference?
-router.get('/nrf-estimate-1/do-you-have-an-estimate-ref', (req, res) => {
+router.get(ROUTES.DO_YOU_HAVE_ESTIMATE_REF, (req, res) => {
   const data = req.session.data || {}
-  res.render('nrf-estimate-1/do-you-have-an-estimate-ref', { data: data })
+  res.render(TEMPLATES.DO_YOU_HAVE_ESTIMATE_REF, { data: data })
 })
 
 // Handle estimate reference question
-router.post('/nrf-estimate-1/do-you-have-an-estimate-ref', (req, res) => {
+router.post(ROUTES.DO_YOU_HAVE_ESTIMATE_REF, (req, res) => {
   const hasEstimateRef = req.body['has-estimate-ref']
 
   if (!hasEstimateRef) {
-    return res.render('nrf-estimate-1/do-you-have-an-estimate-ref', {
+    return res.render(TEMPLATES.DO_YOU_HAVE_ESTIMATE_REF, {
       error: 'Select yes if you have an estimate reference'
     })
   }
@@ -1043,31 +1005,31 @@ router.post('/nrf-estimate-1/do-you-have-an-estimate-ref', (req, res) => {
   req.session.data.hasEstimateRef = hasEstimateRef
 
   if (hasEstimateRef === 'yes') {
-    res.redirect('/nrf-estimate-1/enter-estimate-ref')
+    res.redirect(ROUTES.ENTER_ESTIMATE_REF)
   } else {
-    res.redirect('/nrf-estimate-1/redline-map')
+    res.redirect(ROUTES.REDLINE_MAP)
   }
 })
 
 // Enter your estimate reference
-router.get('/nrf-estimate-1/enter-estimate-ref', (req, res) => {
+router.get(ROUTES.ENTER_ESTIMATE_REF, (req, res) => {
   const data = req.session.data || {}
-  res.render('nrf-estimate-1/enter-estimate-ref', { data: data })
+  res.render(TEMPLATES.ENTER_ESTIMATE_REF, { data: data })
 })
 
 // Handle estimate reference entry
-router.post('/nrf-estimate-1/enter-estimate-ref', (req, res) => {
+router.post(ROUTES.ENTER_ESTIMATE_REF, (req, res) => {
   const estimateRef = req.body['estimate-ref']
 
   if (!estimateRef || estimateRef.trim() === '') {
-    return res.render('nrf-estimate-1/enter-estimate-ref', {
+    return res.render(TEMPLATES.ENTER_ESTIMATE_REF, {
       error: 'Enter your estimate reference to continue'
     })
   }
 
   // Basic validation - should be a number
   if (isNaN(estimateRef)) {
-    return res.render('nrf-estimate-1/enter-estimate-ref', {
+    return res.render(TEMPLATES.ENTER_ESTIMATE_REF, {
       error: 'Enter a valid estimate reference number'
     })
   }
@@ -1076,31 +1038,30 @@ router.post('/nrf-estimate-1/enter-estimate-ref', (req, res) => {
   req.session.data = req.session.data || {}
   req.session.data.estimateRef = estimateRef
 
-  res.redirect('/nrf-estimate-1/retrieve-estimate-email')
+  res.redirect(ROUTES.RETRIEVE_ESTIMATE_EMAIL)
 })
 
 // Retrieve estimate email entry
-router.get('/nrf-estimate-1/retrieve-estimate-email', (req, res) => {
+router.get(ROUTES.RETRIEVE_ESTIMATE_EMAIL, (req, res) => {
   const data = req.session.data || {}
-  res.render('nrf-estimate-1/retrieve-estimate-email', { data: data })
+  res.render(TEMPLATES.RETRIEVE_ESTIMATE_EMAIL, { data: data })
 })
 
 // Handle retrieve estimate email
-router.post('/nrf-estimate-1/retrieve-estimate-email', (req, res) => {
+router.post(ROUTES.RETRIEVE_ESTIMATE_EMAIL, (req, res) => {
   const email = req.body['email']
 
   if (!email) {
-    return res.render('nrf-estimate-1/retrieve-estimate-email', {
+    return res.render(TEMPLATES.RETRIEVE_ESTIMATE_EMAIL, {
       error: 'Enter your email address to continue'
     })
   }
 
-  // Basic email validation
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (!emailRegex.test(email)) {
-    return res.render('nrf-estimate-1/retrieve-estimate-email', {
-      error:
-        'Enter an email address in the correct format, like name@example.com'
+  // Validate email
+  const validation = validators.validateEmail(email)
+  if (!validation.valid) {
+    return res.render(TEMPLATES.RETRIEVE_ESTIMATE_EMAIL, {
+      error: validation.error
     })
   }
 
@@ -1108,45 +1069,45 @@ router.post('/nrf-estimate-1/retrieve-estimate-email', (req, res) => {
   req.session.data = req.session.data || {}
   req.session.data.email = email
 
-  res.redirect('/nrf-estimate-1/estimate-email-retrieval-content')
+  res.redirect(ROUTES.ESTIMATE_EMAIL_RETRIEVAL_CONTENT)
 })
 
 // Email sent with magic link to estimate
-router.get('/nrf-estimate-1/estimate-email-retrieval-content', (req, res) => {
+router.get(ROUTES.ESTIMATE_EMAIL_RETRIEVAL_CONTENT, (req, res) => {
   const data = req.session.data || {}
-  res.render('nrf-estimate-1/estimate-email-retrieval-content', { data: data })
+  res.render(TEMPLATES.ESTIMATE_EMAIL_RETRIEVAL_CONTENT, { data: data })
 })
 
 // Handle email retrieval content submission
-router.post('/nrf-estimate-1/estimate-email-retrieval-content', (req, res) => {
-  res.redirect('/nrf-estimate-1/planning-ref')
+router.post(ROUTES.ESTIMATE_EMAIL_RETRIEVAL_CONTENT, (req, res) => {
+  res.redirect(ROUTES.PLANNING_REF)
 })
 
 // Enter your planning reference
-router.get('/nrf-estimate-1/planning-ref', (req, res) => {
+router.get(ROUTES.PLANNING_REF, (req, res) => {
   const data = req.session.data || {}
   const isChange = req.query.change === 'true'
   const navFromSummary = req.query.nav === 'summary'
 
   // Determine back link based on journey type
-  let backLink = '/nrf-estimate-1/estimate-email-retrieval-content'
+  let backLink = ROUTES.ESTIMATE_EMAIL_RETRIEVAL_CONTENT
 
   // If this is a payment journey without an estimate ref, back should go to last building details page
   if (data.journeyType === 'payment' && data.hasEstimateRef === 'no') {
     if (data.buildingTypes) {
       if (data.buildingTypes.includes('Dwellinghouse')) {
-        backLink = '/nrf-estimate-1/residential'
+        backLink = ROUTES.RESIDENTIAL
       } else if (data.roomCountTypes && data.roomCountTypes.length > 0) {
-        backLink = '/nrf-estimate-1/room-count'
+        backLink = ROUTES.ROOM_COUNT
       } else {
-        backLink = '/nrf-estimate-1/building-type'
+        backLink = ROUTES.BUILDING_TYPE
       }
     } else {
-      backLink = '/nrf-estimate-1/building-type'
+      backLink = ROUTES.BUILDING_TYPE
     }
   }
 
-  res.render('nrf-estimate-1/planning-ref', {
+  res.render(TEMPLATES.PLANNING_REF, {
     data: data,
     isChange: isChange,
     navFromSummary: navFromSummary,
@@ -1155,7 +1116,7 @@ router.get('/nrf-estimate-1/planning-ref', (req, res) => {
 })
 
 // Handle planning reference entry
-router.post('/nrf-estimate-1/planning-ref', (req, res) => {
+router.post(ROUTES.PLANNING_REF, (req, res) => {
   const planningRef = req.body['planning-ref']
   const isChange = req.body.isChange === 'true'
   const navFromSummary = req.body.navFromSummary === 'true'
@@ -1163,22 +1124,22 @@ router.post('/nrf-estimate-1/planning-ref', (req, res) => {
 
   if (!planningRef || planningRef.trim() === '') {
     // Calculate back link for error rendering
-    let backLink = '/nrf-estimate-1/estimate-email-retrieval-content'
+    let backLink = ROUTES.ESTIMATE_EMAIL_RETRIEVAL_CONTENT
     if (data.journeyType === 'payment' && data.hasEstimateRef === 'no') {
       if (data.buildingTypes) {
         if (data.buildingTypes.includes('Dwellinghouse')) {
-          backLink = '/nrf-estimate-1/residential'
+          backLink = ROUTES.RESIDENTIAL
         } else if (data.roomCountTypes && data.roomCountTypes.length > 0) {
-          backLink = '/nrf-estimate-1/room-count'
+          backLink = ROUTES.ROOM_COUNT
         } else {
-          backLink = '/nrf-estimate-1/building-type'
+          backLink = ROUTES.BUILDING_TYPE
         }
       } else {
-        backLink = '/nrf-estimate-1/building-type'
+        backLink = ROUTES.BUILDING_TYPE
       }
     }
 
-    return res.render('nrf-estimate-1/planning-ref', {
+    return res.render(TEMPLATES.PLANNING_REF, {
       error: 'Enter the planning application reference',
       data: data,
       isChange: isChange,
@@ -1193,50 +1154,50 @@ router.post('/nrf-estimate-1/planning-ref', (req, res) => {
 
   // If this is a change from summary, redirect back to summary
   if (isChange && navFromSummary) {
-    res.redirect('/nrf-estimate-1/summary')
+    res.redirect(ROUTES.SUMMARY)
     return
   } else if (isChange) {
-    res.redirect('/nrf-estimate-1/summary')
+    res.redirect(ROUTES.SUMMARY)
     return
   }
 
   // Check if this is a payment journey without estimate ref
   // If so, continue to email page
   if (data.journeyType === 'payment' && data.hasEstimateRef === 'no') {
-    res.redirect('/nrf-estimate-1/email')
+    res.redirect(ROUTES.EMAIL)
   } else {
     // This path handles the case where user came from estimate retrieval
-    res.redirect('/nrf-estimate-1/summary')
+    res.redirect(ROUTES.SUMMARY)
   }
 })
 
 // Payment confirmation page
-router.get('/nrf-estimate-1/payment-confirmation', (req, res) => {
+router.get(ROUTES.PAYMENT_CONFIRMATION, (req, res) => {
   const data = req.session.data || {}
 
   if (!data.paymentReference) {
-    return res.redirect('/nrf-estimate-1/summary')
+    return res.redirect(ROUTES.SUMMARY)
   }
 
-  res.render('nrf-estimate-1/payment-confirmation', {
+  res.render(TEMPLATES.PAYMENT_CONFIRMATION, {
     data: data
   })
 })
 
 // Estimate confirmation email page
-router.get('/nrf-estimate-1/estimate-confirmation-email', (req, res) => {
+router.get(ROUTES.ESTIMATE_CONFIRMATION_EMAIL, (req, res) => {
   const data = req.session.data || {}
 
-  res.render('nrf-estimate-1/estimate-confirmation-email', {
+  res.render(TEMPLATES.ESTIMATE_CONFIRMATION_EMAIL, {
     data: data
   })
 })
 
 // Payment email page
-router.get('/nrf-estimate-1/payment-email', (req, res) => {
+router.get(ROUTES.PAYMENT_EMAIL, (req, res) => {
   const data = req.session.data || {}
 
-  res.render('nrf-estimate-1/payment-email', {
+  res.render(TEMPLATES.PAYMENT_EMAIL, {
     data: data
   })
 })
