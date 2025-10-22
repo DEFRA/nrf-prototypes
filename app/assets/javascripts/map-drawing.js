@@ -276,7 +276,7 @@
           if (isDrawing) {
             e.preventDefault()
             showErrorSummary(
-              'You are still drawing the boundary. Select "Cancel drawing" or finish drawing before continuing.'
+              'Finish or delete the red line boundary to continue'
             )
             return false
           }
@@ -284,7 +284,7 @@
           if (isEditing) {
             e.preventDefault()
             showErrorSummary(
-              'You are still editing the boundary. Select "Stop editing" before continuing.'
+              'Stop editing or delete the red line boundary to continue'
             )
             return false
           }
@@ -292,9 +292,7 @@
           const boundaryData = document.getElementById('boundary-data').value
           if (!boundaryData) {
             e.preventDefault()
-            showErrorSummary(
-              'Please draw a boundary on the map before continuing.'
-            )
+            showErrorSummary('Draw a red line boundary to continue')
             return false
           }
 
