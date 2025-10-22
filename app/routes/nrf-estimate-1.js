@@ -15,13 +15,13 @@ const upload = multer({
   }
 })
 
-const roomTypeToBuildingType = {
+const buildingTypeToDisplayName = {
   hmo: 'House of multiple occupation (HMO)',
   hotel: 'Hotel',
   'residential-institution': 'Residential institution'
 }
 
-const roomTypeToDataKey = {
+const buildingTypeToDataKey = {
   hmo: 'hmoCount',
   hotel: 'hotelCount',
   'residential-institution': 'residentialInstitutionCount'
@@ -354,10 +354,6 @@ router.post('/nrf-estimate-1/map', (req, res) => {
       intersectingCatchment: parsedData.intersectingCatchment
     }
 
-    if (navFromSummary) {
-      return res.redirect('/nrf-estimate-1/summary')
-    }
-
     let edpIntersection = null
     if (parsedData.intersectingCatchment) {
       edpIntersection = {
@@ -373,6 +369,8 @@ router.post('/nrf-estimate-1/map', (req, res) => {
 
     if (!edpIntersection) {
       res.redirect('/nrf-estimate-1/no-edp')
+    } else if (navFromSummary) {
+      res.redirect('/nrf-estimate-1/summary')
     } else {
       res.redirect('/nrf-estimate-1/building-type')
     }
@@ -559,21 +557,21 @@ router.get('/nrf-estimate-1/room-count', (req, res) => {
   const isChange = req.query.change === 'true'
   const navFromSummary = req.query.nav === 'summary'
   const error = req.query.error
-  const roomType = req.query.type
+  const buildingType = req.query.type
 
-  if (isChange && navFromSummary && roomType) {
-    const buildingType = roomTypeToBuildingType[roomType] || null
+  if (isChange && navFromSummary && buildingType) {
+    const displayName = buildingTypeToDisplayName[buildingType] || null
 
-    if (buildingType) {
+    if (displayName) {
       return res.render('nrf-estimate-1/room-count', {
-        buildingType: buildingType,
+        buildingType: displayName,
         currentIndex: 0,
         totalCount: 1,
         data: data,
         isChange: isChange,
         navFromSummary: navFromSummary,
         error: error,
-        singleRoomType: roomType
+        buildingTypeKey: buildingType
       })
     }
   }
@@ -615,16 +613,15 @@ router.post('/nrf-estimate-1/room-count', (req, res) => {
   const data = req.session.data || {}
   const isChange = req.body.isChange === 'true'
   const navFromSummary = req.body.navFromSummary === 'true'
-  const singleRoomType = req.body.singleRoomType
+  const buildingType = req.body.buildingType
 
   let roomCount = req.body['room-count']
 
   if (!roomCount || isNaN(roomCount) || roomCount < 1) {
-    // Build redirect URL with query parameters
     let redirectUrl = '/nrf-estimate-1/room-count?'
     if (isChange) redirectUrl += 'change=true&'
     if (navFromSummary) redirectUrl += 'nav=summary&'
-    if (singleRoomType) redirectUrl += `type=${singleRoomType}&`
+    if (buildingType) redirectUrl += `type=${buildingType}&`
     redirectUrl = redirectUrl.replace(/&$/, '')
 
     return res.redirect(
@@ -637,8 +634,8 @@ router.post('/nrf-estimate-1/room-count', (req, res) => {
     req.session.data.roomCounts = {}
   }
 
-  if (isChange && navFromSummary && singleRoomType) {
-    const dataKey = roomTypeToDataKey[singleRoomType] || null
+  if (isChange && navFromSummary && buildingType) {
+    const dataKey = buildingTypeToDataKey[buildingType] || null
 
     if (dataKey) {
       req.session.data.roomCounts[dataKey] = parseInt(roomCount)
