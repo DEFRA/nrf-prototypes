@@ -193,6 +193,20 @@
         const drawnItems = new L.FeatureGroup()
         map.addLayer(drawnItems)
 
+        // Disable tooltips
+        L.drawLocal.draw.handlers.polygon.tooltip = {
+          start: '',
+          cont: '',
+          end: ''
+        }
+        L.drawLocal.edit.handlers.edit.tooltip = {
+          text: '',
+          subtext: ''
+        }
+        L.drawLocal.edit.handlers.remove.tooltip = {
+          text: ''
+        }
+
         const drawControl = new L.Control.Draw({
           position: 'topleft',
           draw: {
