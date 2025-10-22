@@ -8,7 +8,7 @@ Levy{% else %}Get an estimate for Nature Restoration Fund Levy{% endif %}
 {% block beforeContent %}
 {{ govukBackLink({
 text: "Back",
-href: "javascript:window.history.back()"
+href: backLink
 }) }}
 {% endblock %}
 
@@ -35,6 +35,13 @@ href: "javascript:window.history.back()"
 
         <form method="post">
 
+            {% if isChange %}
+            <input type="hidden" name="isChange" value="true">
+            {% endif %}
+            {% if navFromSummary %}
+            <input type="hidden" name="navFromSummary" value="true">
+            {% endif %}
+
             <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
                 <h1 class="govuk-label-wrapper">
                     <label class="govuk-label govuk-label--l" for="planning-ref">
@@ -50,7 +57,7 @@ href: "javascript:window.history.back()"
                     Enter the reference of the planning application you want to pay the Nature Restoration Fund levy for
                 </div>
                 <input class="govuk-input {% if error %}govuk-input--error{% endif %}" id="planning-ref"
-                    name="planning-ref" type="text"
+                    name="planning-ref" type="text" value="{{ data['planning-ref'] or data.planningRef }}"
                     aria-describedby="{% if error %}planning-ref-error{% endif %} planning-ref-hint">
             </div>
 
