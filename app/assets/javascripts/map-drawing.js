@@ -558,19 +558,61 @@
       }
     })
 
+    // Get delete confirmation elements
+    const deleteConfirmationPanel = document.getElementById(
+      'delete-confirmation-panel'
+    )
+    const confirmDeleteBtn = document.getElementById('confirm-delete-btn')
+    const cancelDeleteBtn = document.getElementById('cancel-delete-btn')
+    const mapInterface = document.querySelector('.map-interface')
+    const pageHeading = document.querySelector('.govuk-label-wrapper')
+    const mapHint = document.getElementById('map-hint')
+    const continueButton = document.querySelector(
+      '.govuk-button[type="submit"]'
+    )
+
+    function showDeleteConfirmation() {
+      deleteConfirmationPanel.style.display = 'block'
+      mapInterface.style.display = 'none'
+      if (pageHeading) pageHeading.style.display = 'none'
+      if (mapHint) mapHint.style.display = 'none'
+      if (continueButton) continueButton.style.display = 'none'
+      deleteConfirmationPanel.scrollIntoView({ behavior: 'smooth' })
+      confirmDeleteBtn.focus()
+    }
+
+    function hideDeleteConfirmation() {
+      deleteConfirmationPanel.style.display = 'none'
+      mapInterface.style.display = 'flex'
+      if (pageHeading) pageHeading.style.display = 'block'
+      if (mapHint) mapHint.style.display = 'block'
+      if (continueButton) continueButton.style.display = 'inline-block'
+      deleteBoundaryBtn.focus()
+    }
+
     // Delete boundary
     deleteBoundaryBtn.addEventListener('click', function (e) {
       e.preventDefault()
       if (drawnItems.getLayers().length > 0) {
-        if (confirm('Are you sure you want to delete the boundary?')) {
-          drawnItems.clearLayers()
-          updateBoundaryData(null, null)
-          hideErrorSummary()
-          updateLinkStates()
-        }
+        showDeleteConfirmation()
       } else {
         showErrorSummary('No boundary to delete.')
       }
+    })
+
+    // Confirm delete
+    confirmDeleteBtn.addEventListener('click', function (e) {
+      e.preventDefault()
+      drawnItems.clearLayers()
+      updateBoundaryData(null, null)
+      hideErrorSummary()
+      updateLinkStates()
+      hideDeleteConfirmation()
+    })
+
+    // Cancel delete
+    cancelDeleteBtn.addEventListener('click', function () {
+      hideDeleteConfirmation()
     })
 
     // Zoom to England
