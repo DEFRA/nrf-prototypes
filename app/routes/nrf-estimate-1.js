@@ -117,6 +117,20 @@ function checkEDPIntersection(boundary) {
   return null
 }
 
+// Helper function to determine next route after building details collected
+function getNextRouteAfterBuildingDetails(sessionData) {
+  // Check if this is a payment journey without an estimate ref
+  if (
+    sessionData.journeyType === 'payment' &&
+    sessionData.hasEstimateRef === 'no'
+  ) {
+    // Planning ref comes before email for payment journey
+    return '/nrf-estimate-1/planning-ref'
+  }
+  // Otherwise go to email
+  return '/nrf-estimate-1/email'
+}
+
 // Start page
 router.get('/nrf-estimate-1/start', (req, res) => {
   const data = req.session.data || {}
@@ -540,7 +554,7 @@ router.post('/nrf-estimate-1/building-type', (req, res) => {
     } else if (buildingTypesArray.includes('Dwellinghouse')) {
       res.redirect('/nrf-estimate-1/residential')
     } else {
-      res.redirect('/nrf-estimate-1/email')
+      res.redirect(getNextRouteAfterBuildingDetails(req.session.data))
     }
   }
 })
@@ -591,7 +605,7 @@ router.get('/nrf-estimate-1/room-count', (req, res) => {
     ) {
       res.redirect('/nrf-estimate-1/residential')
     } else {
-      res.redirect('/nrf-estimate-1/email')
+      res.redirect(getNextRouteAfterBuildingDetails(data))
     }
     return
   }
@@ -680,7 +694,7 @@ router.post('/nrf-estimate-1/room-count', (req, res) => {
     ) {
       res.redirect('/nrf-estimate-1/residential')
     } else {
-      res.redirect('/nrf-estimate-1/email')
+      res.redirect(getNextRouteAfterBuildingDetails(req.session.data))
     }
   } else {
     // Move to next building type
@@ -733,7 +747,7 @@ router.post('/nrf-estimate-1/residential', (req, res) => {
     return
   }
 
-  res.redirect('/nrf-estimate-1/email')
+  res.redirect(getNextRouteAfterBuildingDetails(req.session.data))
 })
 
 // Residential institution room count
@@ -801,10 +815,30 @@ router.get('/nrf-estimate-1/email', (req, res) => {
   const isChange = req.query.change === 'true'
   const navFromSummary = req.query.nav === 'summary'
 
+  // Determine back link based on journey type
+  let backLink = '/nrf-estimate-1/building-type'
+
+  // If this is a payment journey without an estimate ref, back should go to planning-ref
+  if (data.journeyType === 'payment' && data.hasEstimateRef === 'no') {
+    backLink = '/nrf-estimate-1/planning-ref'
+  } else {
+    // For estimate journey, determine back link based on what was collected
+    if (data.buildingTypes) {
+      if (data.buildingTypes.includes('Dwellinghouse')) {
+        backLink = '/nrf-estimate-1/residential'
+      } else if (data.roomCountTypes && data.roomCountTypes.length > 0) {
+        backLink = '/nrf-estimate-1/room-count'
+      } else {
+        backLink = '/nrf-estimate-1/building-type'
+      }
+    }
+  }
+
   res.render('nrf-estimate-1/email', {
     data: data,
     isChange: isChange,
-    navFromSummary: navFromSummary
+    navFromSummary: navFromSummary,
+    backLink: backLink
   })
 })
 
@@ -813,13 +847,31 @@ router.post('/nrf-estimate-1/email', (req, res) => {
   const email = req.body['email']
   const isChange = req.body.isChange === 'true'
   const navFromSummary = req.body.navFromSummary === 'true'
+  const data = req.session.data || {}
+
+  // Calculate back link for error rendering
+  let backLink = '/nrf-estimate-1/building-type'
+  if (data.journeyType === 'payment' && data.hasEstimateRef === 'no') {
+    backLink = '/nrf-estimate-1/planning-ref'
+  } else {
+    if (data.buildingTypes) {
+      if (data.buildingTypes.includes('Dwellinghouse')) {
+        backLink = '/nrf-estimate-1/residential'
+      } else if (data.roomCountTypes && data.roomCountTypes.length > 0) {
+        backLink = '/nrf-estimate-1/room-count'
+      } else {
+        backLink = '/nrf-estimate-1/building-type'
+      }
+    }
+  }
 
   if (!email) {
     return res.render('nrf-estimate-1/email', {
       error: 'Enter your email address to continue',
-      data: req.session.data || {},
+      data: data,
       isChange: isChange,
-      navFromSummary: navFromSummary
+      navFromSummary: navFromSummary,
+      backLink: backLink
     })
   }
 
@@ -829,9 +881,10 @@ router.post('/nrf-estimate-1/email', (req, res) => {
     return res.render('nrf-estimate-1/email', {
       error:
         'Enter an email address in the correct format, like name@example.com',
-      data: req.session.data || {},
+      data: data,
       isChange: isChange,
-      navFromSummary: navFromSummary
+      navFromSummary: navFromSummary,
+      backLink: backLink
     })
   }
 
@@ -1072,16 +1125,65 @@ router.post('/nrf-estimate-1/estimate-email-retrieval-content', (req, res) => {
 // Enter your planning reference
 router.get('/nrf-estimate-1/planning-ref', (req, res) => {
   const data = req.session.data || {}
-  res.render('nrf-estimate-1/planning-ref', { data: data })
+  const isChange = req.query.change === 'true'
+  const navFromSummary = req.query.nav === 'summary'
+
+  // Determine back link based on journey type
+  let backLink = '/nrf-estimate-1/estimate-email-retrieval-content'
+
+  // If this is a payment journey without an estimate ref, back should go to last building details page
+  if (data.journeyType === 'payment' && data.hasEstimateRef === 'no') {
+    if (data.buildingTypes) {
+      if (data.buildingTypes.includes('Dwellinghouse')) {
+        backLink = '/nrf-estimate-1/residential'
+      } else if (data.roomCountTypes && data.roomCountTypes.length > 0) {
+        backLink = '/nrf-estimate-1/room-count'
+      } else {
+        backLink = '/nrf-estimate-1/building-type'
+      }
+    } else {
+      backLink = '/nrf-estimate-1/building-type'
+    }
+  }
+
+  res.render('nrf-estimate-1/planning-ref', {
+    data: data,
+    isChange: isChange,
+    navFromSummary: navFromSummary,
+    backLink: backLink
+  })
 })
 
 // Handle planning reference entry
 router.post('/nrf-estimate-1/planning-ref', (req, res) => {
   const planningRef = req.body['planning-ref']
+  const isChange = req.body.isChange === 'true'
+  const navFromSummary = req.body.navFromSummary === 'true'
+  const data = req.session.data || {}
 
   if (!planningRef || planningRef.trim() === '') {
+    // Calculate back link for error rendering
+    let backLink = '/nrf-estimate-1/estimate-email-retrieval-content'
+    if (data.journeyType === 'payment' && data.hasEstimateRef === 'no') {
+      if (data.buildingTypes) {
+        if (data.buildingTypes.includes('Dwellinghouse')) {
+          backLink = '/nrf-estimate-1/residential'
+        } else if (data.roomCountTypes && data.roomCountTypes.length > 0) {
+          backLink = '/nrf-estimate-1/room-count'
+        } else {
+          backLink = '/nrf-estimate-1/building-type'
+        }
+      } else {
+        backLink = '/nrf-estimate-1/building-type'
+      }
+    }
+
     return res.render('nrf-estimate-1/planning-ref', {
-      error: 'Enter the planning application reference'
+      error: 'Enter the planning application reference',
+      data: data,
+      isChange: isChange,
+      navFromSummary: navFromSummary,
+      backLink: backLink
     })
   }
 
@@ -1089,7 +1191,23 @@ router.post('/nrf-estimate-1/planning-ref', (req, res) => {
   req.session.data = req.session.data || {}
   req.session.data.planningRef = planningRef
 
-  res.redirect('/nrf-estimate-1/summary')
+  // If this is a change from summary, redirect back to summary
+  if (isChange && navFromSummary) {
+    res.redirect('/nrf-estimate-1/summary')
+    return
+  } else if (isChange) {
+    res.redirect('/nrf-estimate-1/summary')
+    return
+  }
+
+  // Check if this is a payment journey without estimate ref
+  // If so, continue to email page
+  if (data.journeyType === 'payment' && data.hasEstimateRef === 'no') {
+    res.redirect('/nrf-estimate-1/email')
+  } else {
+    // This path handles the case where user came from estimate retrieval
+    res.redirect('/nrf-estimate-1/summary')
+  }
 })
 
 // Payment confirmation page
