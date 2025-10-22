@@ -18,11 +18,6 @@ const BUILDING_TYPES_REQUIRING_ROOM_COUNT = [
   BUILDING_TYPES.RESIDENTIAL_INSTITUTION
 ]
 
-// Building types that go to residential page (dwellinghouse details)
-const BUILDING_TYPES_REQUIRING_RESIDENTIAL_DETAILS = [
-  BUILDING_TYPES.DWELLINGHOUSE
-]
-
 // Labels for display (these match the values since they're user-facing strings)
 const BUILDING_TYPE_LABELS = {
   [BUILDING_TYPES.DWELLINGHOUSE]: 'Dwellinghouse',
@@ -30,6 +25,13 @@ const BUILDING_TYPE_LABELS = {
   [BUILDING_TYPES.HMO]: 'House of multiple occupation (HMO)',
   [BUILDING_TYPES.RESIDENTIAL_INSTITUTION]: 'Residential institution',
   [BUILDING_TYPES.NON_RESIDENTIAL]: 'Non-residential development'
+}
+
+// Mapping from building type keys to session data field names
+const BUILDING_TYPE_DATA_KEYS = {
+  hmo: 'hmoCount',
+  hotel: 'hotelCount',
+  'residential-institution': 'residentialInstitutionCount'
 }
 
 // Room count field names for each building type
@@ -56,7 +58,7 @@ const ROOM_COUNT_FIELDS = {
 module.exports = {
   BUILDING_TYPES,
   BUILDING_TYPES_REQUIRING_ROOM_COUNT,
-  BUILDING_TYPES_REQUIRING_RESIDENTIAL_DETAILS,
   BUILDING_TYPE_LABELS,
+  BUILDING_TYPE_DATA_KEYS,
   ROOM_COUNT_FIELDS
 }

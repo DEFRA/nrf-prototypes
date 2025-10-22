@@ -38,13 +38,6 @@
   function initMap() {
     // Additional delay to ensure GOV.UK components are ready
     setTimeout(function () {
-      console.log('Map script loading...')
-      console.log('Leaflet available:', typeof L !== 'undefined')
-      console.log(
-        'Map container exists:',
-        document.getElementById('map') !== null
-      )
-
       // Check if Leaflet is loaded
       if (typeof L === 'undefined') {
         console.error('Leaflet library not loaded')
@@ -72,13 +65,11 @@
 
         // Initialize the map centered on England
         const map = L.map('map').setView([52.5, -1.5], 6)
-        console.log('Map initialized')
 
         // Add OpenStreetMap tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '© OpenStreetMap contributors'
         }).addTo(map)
-        console.log('Tiles added')
 
         // Load GeoJSON boundaries
         let edpBoundaries = []
@@ -105,20 +96,11 @@
         ]
 
         // Load GeoJSON data
-        console.log('=== STARTING GEOJSON LOAD ===')
         fetch('/nrf-estimate-1/catchments.geojson')
           .then((response) => {
-            console.log('Fetch response status:', response.status)
-            console.log('Fetch response ok:', response.ok)
             return response.json()
           })
           .then((data) => {
-            console.log('GeoJSON data loaded successfully')
-            console.log(
-              'Number of features:',
-              data.features ? data.features.length : 'undefined'
-            )
-
             // Process each feature in the GeoJSON
             data.features.forEach((feature, index) => {
               const properties = feature.properties
@@ -170,8 +152,6 @@
               }
             })
 
-            console.log('Catchment boundaries added:', edpLayers.length)
-
             // Re-check any existing drawn polygons for intersections
             drawnItems.eachLayer(function (layer) {
               if (layer instanceof L.Polygon) {
@@ -198,7 +178,6 @@
                 edpLayers.map((edp) => edp.polygon)
               )
               map.fitBounds(group.getBounds().pad(0.1))
-              console.log('Map fitted to show catchment boundaries')
             }
           })
           .catch((error) => {
@@ -286,7 +265,6 @@
 
               drawnItems.addLayer(existingPolygon)
               map.fitBounds(existingPolygon.getBounds().pad(0.1))
-              console.log('Existing boundary loaded')
             }
           } catch (error) {
             console.error('Error loading existing boundary:', error)
@@ -498,7 +476,6 @@
 
     document.getElementById('boundary-data').value =
       JSON.stringify(boundaryData)
-    console.log('Boundary data updated:', boundaryData)
   }
 
   function initAccessibleControls(map, drawControl, drawnItems, edpLayers) {

@@ -15,6 +15,7 @@ const { ROUTES, TEMPLATES } = require('../config/nrf-estimate-1/routes')
 const {
   BUILDING_TYPES,
   BUILDING_TYPE_LABELS,
+  BUILDING_TYPE_DATA_KEYS,
   BUILDING_TYPES_REQUIRING_ROOM_COUNT
 } = require('../config/nrf-estimate-1/building-types')
 
@@ -407,12 +408,6 @@ router.get(ROUTES.BUILDING_TYPE, (req, res) => {
   const isChange = req.query.change === 'true'
   const navFromSummary = req.query.nav === 'summary'
 
-  console.log('=== BUILDING TYPE GET ROUTE ===')
-  console.log('Session data:', data)
-  console.log('Is change:', isChange)
-  console.log('Nav from summary:', navFromSummary)
-  console.log('=== END GET ROUTE DEBUG ===')
-
   res.render(TEMPLATES.BUILDING_TYPE, {
     data: data,
     isChange: isChange,
@@ -639,7 +634,7 @@ router.post(ROUTES.ROOM_COUNT, (req, res) => {
   }
 
   if (isChange && navFromSummary && buildingType) {
-    const dataKey = BUILDING_TYPE_LABELS[buildingType] || null
+    const dataKey = BUILDING_TYPE_DATA_KEYS[buildingType] || null
 
     if (dataKey) {
       req.session.data.roomCounts[dataKey] = parseInt(roomCount)
@@ -886,18 +881,6 @@ router.post(ROUTES.EMAIL, (req, res) => {
 // Summary page
 router.get(ROUTES.SUMMARY, (req, res) => {
   const data = req.session.data || {}
-  console.log('=== SUMMARY ROUTE DEBUG ===')
-  console.log(
-    'Summary route - redlineBoundaryPolygon exists:',
-    !!data.redlineBoundaryPolygon
-  )
-  console.log(
-    'Summary route - redlineBoundaryPolygon:',
-    data.redlineBoundaryPolygon
-  )
-  console.log('Summary route - planningRef exists:', !!data.planningRef)
-  console.log('Summary route - journeyType:', data.journeyType)
-  console.log('=== END SUMMARY ROUTE DEBUG ===')
 
   // Check if this is a payment journey
   if (data.journeyType === 'payment') {
