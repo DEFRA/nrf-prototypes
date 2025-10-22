@@ -8,8 +8,8 @@
     "dev": "govuk-prototype-kit dev",
     "serve": "govuk-prototype-kit serve",
     "start": "govuk-prototype-kit start",
-    "format": "prettier --write \"**/*.{cjs,js,json,md}\"",
-    "format:check": "prettier --check \"**/*.{cjs,js,json,md}\"",
+    "format": "prettier --write \"**/*.{cjs,js,json,md,scss}\"",
+    "format:check": "prettier --check \"**/*.{cjs,js,json,md,scss}\"",
     "screenshot": "node scripts/screenshot-capture.js"
   },
   "lint-staged": {
