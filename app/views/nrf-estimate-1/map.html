@@ -40,18 +40,6 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
             {% endif %}
 
             <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
-                <h1 class="govuk-label-wrapper">
-                    <label class="govuk-label govuk-label--l" for="map">
-                        Draw a red line boundary
-                    </label>
-                </h1>
-
-                <div id="map-hint" class="govuk-hint">
-                    <p class="govuk-body">
-                        Use the map to draw a red line boundary for where the development might be.
-                    </p>
-                </div>
-
                 {% if error %}
                 <p id="map-error" class="govuk-error-message">
                     <span class="govuk-visually-hidden">Error:</span> {{ error }}
@@ -84,6 +72,20 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
                             No
                         </button>
                     </div>
+                </div>
+
+                <!-- Main map content container -->
+                <div id="map-content">
+                <h1 class="govuk-label-wrapper">
+                    <label class="govuk-label govuk-label--l" for="map">
+                        Draw a red line boundary
+                    </label>
+                </h1>
+
+                <div id="map-hint" class="govuk-hint">
+                    <p class="govuk-body">
+                        Use the map to draw a red line boundary for where the development might be.
+                    </p>
                 </div>
 
                 <!-- Accessible map interface with left panel -->
@@ -157,11 +159,12 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
                 </div>
 
                 <input type="hidden" id="boundary-data" name="boundary-data" value="{{ existingBoundaryData }}">
-            </div>
 
             <button class="govuk-button" type="submit">
                 Continue
             </button>
+            </div>
+            </div>
 
         </form>
     </div>

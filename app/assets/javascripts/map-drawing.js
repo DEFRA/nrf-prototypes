@@ -578,29 +578,18 @@
     )
     const confirmDeleteBtn = document.getElementById('confirm-delete-btn')
     const cancelDeleteBtn = document.getElementById('cancel-delete-btn')
-    const mapInterface = document.querySelector('.map-interface')
-    const pageHeading = document.querySelector('.govuk-label-wrapper')
-    const mapHint = document.getElementById('map-hint')
-    const continueButton = document.querySelector(
-      '.govuk-button[type="submit"]'
-    )
+    const mapContent = document.getElementById('map-content')
 
     function showDeleteConfirmation() {
       deleteConfirmationPanel.style.display = 'block'
-      mapInterface.style.display = 'none'
-      if (pageHeading) pageHeading.style.display = 'none'
-      if (mapHint) mapHint.style.display = 'none'
-      if (continueButton) continueButton.style.display = 'none'
+      mapContent.style.display = 'none'
       deleteConfirmationPanel.scrollIntoView({ behavior: 'smooth' })
       confirmDeleteBtn.focus()
     }
 
     function hideDeleteConfirmation() {
       deleteConfirmationPanel.style.display = 'none'
-      mapInterface.style.display = 'flex'
-      if (pageHeading) pageHeading.style.display = 'block'
-      if (mapHint) mapHint.style.display = 'block'
-      if (continueButton) continueButton.style.display = 'inline-block'
+      mapContent.style.display = 'block'
       deleteBoundaryBtn.focus()
     }
 
