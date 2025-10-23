@@ -622,15 +622,36 @@
         updateBoundaryData(null, null)
         hideErrorSummary()
         updateLinkStates()
-        hideDeleteConfirmation()
       } else if (deleteNoRadio.checked) {
         // User selected No - just hide the confirmation panel
-        hideDeleteConfirmation()
         hideErrorSummary()
       } else {
         // No option selected - show error
         showErrorSummary('Please select an option to continue.')
+        return
       }
+
+      // Reset editing and drawing states (for both Yes and No)
+      // Disable edit mode on the map
+      if (drawControl._toolbars?.edit?._modes?.edit) {
+        drawControl._toolbars.edit._modes.edit.handler.save()
+        drawControl._toolbars.edit._modes.edit.handler.disable()
+      }
+      // Disable drawing mode on the map
+      if (drawControl._toolbars?.draw?._modes?.polygon) {
+        drawControl._toolbars.draw._modes.polygon.handler.disable()
+      }
+
+      isEditing = false
+      isDrawing = false
+
+      // Reset button text and styling
+      editBoundaryBtn.textContent = 'Edit boundary'
+      editBoundaryBtn.classList.remove('govuk-link--destructive')
+      startDrawingBtn.textContent = 'Start drawing boundary'
+      startDrawingBtn.classList.remove('govuk-link--destructive')
+
+      hideDeleteConfirmation()
     })
 
     // Zoom to England
