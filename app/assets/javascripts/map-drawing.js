@@ -35,6 +35,25 @@
     }
   }
 
+  // Helper functions for managing element states
+  function enableElement(element) {
+    element.removeAttribute('aria-disabled')
+    element.setAttribute('tabindex', '0')
+  }
+
+  function disableElement(element) {
+    element.setAttribute('aria-disabled', 'true')
+    element.setAttribute('tabindex', '-1')
+  }
+
+  function showElement(element) {
+    element.style.display = 'block'
+  }
+
+  function hideElement(element) {
+    element.style.display = 'none'
+  }
+
   function initMap() {
     // Additional delay to ensure GOV.UK components are ready
     setTimeout(function () {
@@ -193,6 +212,20 @@
         const drawnItems = new L.FeatureGroup()
         map.addLayer(drawnItems)
 
+        // Disable tooltips
+        L.drawLocal.draw.handlers.polygon.tooltip = {
+          start: '',
+          cont: '',
+          end: ''
+        }
+        L.drawLocal.edit.handlers.edit.tooltip = {
+          text: '',
+          subtext: ''
+        }
+        L.drawLocal.edit.handlers.remove.tooltip = {
+          text: ''
+        }
+
         const drawControl = new L.Control.Draw({
           position: 'topleft',
           draw: {
@@ -276,7 +309,7 @@
           if (isDrawing) {
             e.preventDefault()
             showErrorSummary(
-              'You are still drawing the boundary. Select "Cancel drawing" or finish drawing before continuing.'
+              'Finish or delete the red line boundary to continue'
             )
             return false
           }
@@ -284,7 +317,7 @@
           if (isEditing) {
             e.preventDefault()
             showErrorSummary(
-              'You are still editing the boundary. Select "Stop editing" before continuing.'
+              'Stop editing or delete the red line boundary to continue'
             )
             return false
           }
@@ -292,9 +325,7 @@
           const boundaryData = document.getElementById('boundary-data').value
           if (!boundaryData) {
             e.preventDefault()
-            showErrorSummary(
-              'Please draw a boundary on the map before continuing.'
-            )
+            showErrorSummary('Draw a red line boundary to continue')
             return false
           }
 
@@ -464,11 +495,11 @@
     const bounds = layer.getBounds()
     const center = bounds.getCenter()
     const latLngs = layer.getLatLngs()[0]
-    const points = latLngs.map((latLng) => [latLng.lng, latLng.lat])
+    const coordinates = latLngs.map((latLng) => [latLng.lng, latLng.lat])
 
     const boundaryData = {
       center: [center.lng, center.lat],
-      points: points,
+      coordinates: coordinates,
       intersectingCatchment: intersectingCatchment
         ? intersectingCatchment.name
         : null
@@ -522,6 +553,7 @@
           drawControl._toolbars.draw._modes.polygon.handler.disable()
         }
         isDrawing = false
+        hideErrorSummary()
         startDrawingBtn.textContent = 'Start drawing boundary'
         startDrawingBtn.classList.remove('govuk-link--destructive')
       } else {
@@ -538,10 +570,13 @@
     editBoundaryBtn.addEventListener('click', function (e) {
       e.preventDefault()
       if (isEditing) {
+        // Save the edits before disabling edit mode
         if (drawControl._toolbars?.edit?._modes?.edit) {
+          drawControl._toolbars.edit._modes.edit.handler.save()
           drawControl._toolbars.edit._modes.edit.handler.disable()
         }
         isEditing = false
+        hideErrorSummary()
         editBoundaryBtn.textContent = 'Edit boundary'
         editBoundaryBtn.classList.remove('govuk-link--destructive')
       } else {
@@ -558,19 +593,84 @@
       }
     })
 
+    // Get delete confirmation elements
+    const deleteConfirmationPanel = document.getElementById(
+      'delete-confirmation-panel'
+    )
+    const deleteContinueBtn = document.getElementById('delete-continue-btn')
+    const deleteYesRadio = document.getElementById('delete-yes')
+    const deleteNoRadio = document.getElementById('delete-no')
+    const mapContent = document.getElementById('map-content')
+    const backLink = document.getElementById('back-link')
+
+    function showDeleteConfirmation() {
+      hideErrorSummary()
+      // Reset radio buttons
+      deleteYesRadio.checked = false
+      deleteNoRadio.checked = false
+      showElement(deleteConfirmationPanel)
+      hideElement(mapContent)
+      if (backLink) hideElement(backLink)
+      deleteConfirmationPanel.scrollIntoView({ behavior: 'smooth' })
+      deleteYesRadio.focus()
+    }
+
+    function hideDeleteConfirmation() {
+      hideElement(deleteConfirmationPanel)
+      showElement(mapContent)
+      if (backLink) backLink.style.display = 'inline'
+      deleteBoundaryBtn.focus()
+    }
+
     // Delete boundary
     deleteBoundaryBtn.addEventListener('click', function (e) {
       e.preventDefault()
       if (drawnItems.getLayers().length > 0) {
-        if (confirm('Are you sure you want to delete the boundary?')) {
-          drawnItems.clearLayers()
-          updateBoundaryData(null, null)
-          hideErrorSummary()
-          updateLinkStates()
-        }
+        showDeleteConfirmation()
       } else {
         showErrorSummary('No boundary to delete.')
       }
+    })
+
+    // Continue button on delete confirmation
+    deleteContinueBtn.addEventListener('click', function (e) {
+      e.preventDefault()
+      if (deleteYesRadio.checked) {
+        // User selected Yes - delete the boundary
+        drawnItems.clearLayers()
+        updateBoundaryData(null, null)
+        hideErrorSummary()
+        updateLinkStates()
+      } else if (deleteNoRadio.checked) {
+        // User selected No - just hide the confirmation panel
+        hideErrorSummary()
+      } else {
+        // No option selected - show error
+        showErrorSummary('Please select an option to continue.')
+        return
+      }
+
+      // Reset editing and drawing states (for both Yes and No)
+      // Disable edit mode on the map
+      if (drawControl._toolbars?.edit?._modes?.edit) {
+        drawControl._toolbars.edit._modes.edit.handler.save()
+        drawControl._toolbars.edit._modes.edit.handler.disable()
+      }
+      // Disable drawing mode on the map
+      if (drawControl._toolbars?.draw?._modes?.polygon) {
+        drawControl._toolbars.draw._modes.polygon.handler.disable()
+      }
+
+      isEditing = false
+      isDrawing = false
+
+      // Reset button text and styling
+      editBoundaryBtn.textContent = 'Edit boundary'
+      editBoundaryBtn.classList.remove('govuk-link--destructive')
+      startDrawingBtn.textContent = 'Start drawing boundary'
+      startDrawingBtn.classList.remove('govuk-link--destructive')
+
+      hideDeleteConfirmation()
     })
 
     // Zoom to England
@@ -616,19 +716,23 @@
       const hasBoundary = drawnItems.getLayers().length > 0
 
       if (hasBoundary) {
-        editBoundaryBtn.removeAttribute('aria-disabled')
-        editBoundaryBtn.setAttribute('tabindex', '0')
-        deleteBoundaryBtn.removeAttribute('aria-disabled')
-        deleteBoundaryBtn.setAttribute('tabindex', '0')
-        zoomToBoundaryBtn.removeAttribute('aria-disabled')
-        zoomToBoundaryBtn.setAttribute('tabindex', '0')
+        // Hide start drawing button when boundary exists
+        hideElement(startDrawingBtn)
+
+        // Show and enable edit/delete/zoom buttons
+        showElement(editBoundaryBtn)
+        enableElement(editBoundaryBtn)
+        enableElement(deleteBoundaryBtn)
+        enableElement(zoomToBoundaryBtn)
       } else {
-        editBoundaryBtn.setAttribute('aria-disabled', 'true')
-        editBoundaryBtn.setAttribute('tabindex', '-1')
-        deleteBoundaryBtn.setAttribute('aria-disabled', 'true')
-        deleteBoundaryBtn.setAttribute('tabindex', '-1')
-        zoomToBoundaryBtn.setAttribute('aria-disabled', 'true')
-        zoomToBoundaryBtn.setAttribute('tabindex', '-1')
+        // Show start drawing button when no boundary
+        showElement(startDrawingBtn)
+
+        // Hide and disable edit button, disable delete/zoom buttons
+        hideElement(editBoundaryBtn)
+        disableElement(editBoundaryBtn)
+        disableElement(deleteBoundaryBtn)
+        disableElement(zoomToBoundaryBtn)
       }
     }
 

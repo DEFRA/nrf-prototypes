@@ -123,8 +123,9 @@
   border: 1px solid #b1b4b6;
 }
 
-/* Hide the default Leaflet draw toolbar since we're using our own controls */
-.leaflet-draw-toolbar {
+/* Hide the default Leaflet draw toolbar and action buttons since we're using our own controls */
+.leaflet-draw-toolbar,
+.leaflet-draw-actions {
   display: none !important;
 }
 
