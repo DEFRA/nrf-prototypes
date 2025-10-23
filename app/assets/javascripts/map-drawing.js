@@ -35,6 +35,25 @@
     }
   }
 
+  // Helper functions for managing element states
+  function enableElement(element) {
+    element.removeAttribute('aria-disabled')
+    element.setAttribute('tabindex', '0')
+  }
+
+  function disableElement(element) {
+    element.setAttribute('aria-disabled', 'true')
+    element.setAttribute('tabindex', '-1')
+  }
+
+  function showElement(element) {
+    element.style.display = 'block'
+  }
+
+  function hideElement(element) {
+    element.style.display = 'none'
+  }
+
   function initMap() {
     // Additional delay to ensure GOV.UK components are ready
     setTimeout(function () {
@@ -589,16 +608,16 @@
       // Reset radio buttons
       deleteYesRadio.checked = false
       deleteNoRadio.checked = false
-      deleteConfirmationPanel.style.display = 'block'
-      mapContent.style.display = 'none'
-      if (backLink) backLink.style.display = 'none'
+      showElement(deleteConfirmationPanel)
+      hideElement(mapContent)
+      if (backLink) hideElement(backLink)
       deleteConfirmationPanel.scrollIntoView({ behavior: 'smooth' })
       deleteYesRadio.focus()
     }
 
     function hideDeleteConfirmation() {
-      deleteConfirmationPanel.style.display = 'none'
-      mapContent.style.display = 'block'
+      hideElement(deleteConfirmationPanel)
+      showElement(mapContent)
       if (backLink) backLink.style.display = 'inline'
       deleteBoundaryBtn.focus()
     }
@@ -698,28 +717,22 @@
 
       if (hasBoundary) {
         // Hide start drawing button when boundary exists
-        startDrawingBtn.style.display = 'none'
+        hideElement(startDrawingBtn)
 
         // Show and enable edit/delete/zoom buttons
-        editBoundaryBtn.style.display = 'block'
-        editBoundaryBtn.removeAttribute('aria-disabled')
-        editBoundaryBtn.setAttribute('tabindex', '0')
-        deleteBoundaryBtn.removeAttribute('aria-disabled')
-        deleteBoundaryBtn.setAttribute('tabindex', '0')
-        zoomToBoundaryBtn.removeAttribute('aria-disabled')
-        zoomToBoundaryBtn.setAttribute('tabindex', '0')
+        showElement(editBoundaryBtn)
+        enableElement(editBoundaryBtn)
+        enableElement(deleteBoundaryBtn)
+        enableElement(zoomToBoundaryBtn)
       } else {
         // Show start drawing button when no boundary
-        startDrawingBtn.style.display = 'block'
+        showElement(startDrawingBtn)
 
         // Hide and disable edit button, disable delete/zoom buttons
-        editBoundaryBtn.style.display = 'none'
-        editBoundaryBtn.setAttribute('aria-disabled', 'true')
-        editBoundaryBtn.setAttribute('tabindex', '-1')
-        deleteBoundaryBtn.setAttribute('aria-disabled', 'true')
-        deleteBoundaryBtn.setAttribute('tabindex', '-1')
-        zoomToBoundaryBtn.setAttribute('aria-disabled', 'true')
-        zoomToBoundaryBtn.setAttribute('tabindex', '-1')
+        hideElement(editBoundaryBtn)
+        disableElement(editBoundaryBtn)
+        disableElement(deleteBoundaryBtn)
+        disableElement(zoomToBoundaryBtn)
       }
     }
 
