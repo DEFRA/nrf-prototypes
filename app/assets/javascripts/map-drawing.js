@@ -578,21 +578,28 @@
     const deleteConfirmationPanel = document.getElementById(
       'delete-confirmation-panel'
     )
-    const confirmDeleteBtn = document.getElementById('confirm-delete-btn')
-    const cancelDeleteBtn = document.getElementById('cancel-delete-btn')
+    const deleteContinueBtn = document.getElementById('delete-continue-btn')
+    const deleteYesRadio = document.getElementById('delete-yes')
+    const deleteNoRadio = document.getElementById('delete-no')
     const mapContent = document.getElementById('map-content')
+    const backLink = document.getElementById('back-link')
 
     function showDeleteConfirmation() {
       hideErrorSummary()
+      // Reset radio buttons
+      deleteYesRadio.checked = false
+      deleteNoRadio.checked = false
       deleteConfirmationPanel.style.display = 'block'
       mapContent.style.display = 'none'
+      if (backLink) backLink.style.display = 'none'
       deleteConfirmationPanel.scrollIntoView({ behavior: 'smooth' })
-      confirmDeleteBtn.focus()
+      deleteYesRadio.focus()
     }
 
     function hideDeleteConfirmation() {
       deleteConfirmationPanel.style.display = 'none'
       mapContent.style.display = 'block'
+      if (backLink) backLink.style.display = 'inline'
       deleteBoundaryBtn.focus()
     }
 
@@ -606,19 +613,24 @@
       }
     })
 
-    // Confirm delete
-    confirmDeleteBtn.addEventListener('click', function (e) {
+    // Continue button on delete confirmation
+    deleteContinueBtn.addEventListener('click', function (e) {
       e.preventDefault()
-      drawnItems.clearLayers()
-      updateBoundaryData(null, null)
-      hideErrorSummary()
-      updateLinkStates()
-      hideDeleteConfirmation()
-    })
-
-    // Cancel delete
-    cancelDeleteBtn.addEventListener('click', function () {
-      hideDeleteConfirmation()
+      if (deleteYesRadio.checked) {
+        // User selected Yes - delete the boundary
+        drawnItems.clearLayers()
+        updateBoundaryData(null, null)
+        hideErrorSummary()
+        updateLinkStates()
+        hideDeleteConfirmation()
+      } else if (deleteNoRadio.checked) {
+        // User selected No - just hide the confirmation panel
+        hideDeleteConfirmation()
+        hideErrorSummary()
+      } else {
+        // No option selected - show error
+        showErrorSummary('Please select an option to continue.')
+      }
     })
 
     // Zoom to England
