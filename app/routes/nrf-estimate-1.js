@@ -866,16 +866,13 @@ router.post(ROUTES.EMAIL, (req, res) => {
   req.session.data = req.session.data || {}
   req.session.data.email = email
 
-  // If this is a change from summary, redirect back to summary
-  if (isChange && navFromSummary) {
-    res.redirect(ROUTES.SUMMARY)
-    return
-  } else if (isChange) {
-    res.redirect(ROUTES.SUMMARY)
-    return
-  }
-
-  res.redirect(ROUTES.SUMMARY)
+  // Save session before redirect to prevent race condition
+  req.session.save((err) => {
+    if (err) {
+      console.error('Session save error:', err)
+    }
+    res.redirect(303, ROUTES.SUMMARY)
+  })
 })
 
 // Summary page
