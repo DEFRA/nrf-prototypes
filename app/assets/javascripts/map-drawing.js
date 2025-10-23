@@ -534,6 +534,7 @@
           drawControl._toolbars.draw._modes.polygon.handler.disable()
         }
         isDrawing = false
+        hideErrorSummary()
         startDrawingBtn.textContent = 'Start drawing boundary'
         startDrawingBtn.classList.remove('govuk-link--destructive')
       } else {
@@ -556,6 +557,7 @@
           drawControl._toolbars.edit._modes.edit.handler.disable()
         }
         isEditing = false
+        hideErrorSummary()
         editBoundaryBtn.textContent = 'Edit boundary'
         editBoundaryBtn.classList.remove('govuk-link--destructive')
       } else {
@@ -581,6 +583,7 @@
     const mapContent = document.getElementById('map-content')
 
     function showDeleteConfirmation() {
+      hideErrorSummary()
       deleteConfirmationPanel.style.display = 'block'
       mapContent.style.display = 'none'
       deleteConfirmationPanel.scrollIntoView({ behavior: 'smooth' })
