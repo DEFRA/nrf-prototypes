@@ -18,29 +18,34 @@
 
       <form method="post" novalidate>
         <h1 class="govuk-heading-l">Confirm that you want to commit to paying this Nature Restoration Fund levy</h1>
-        <div class="govuk-hint">Paying this levy will mitigate your environmental impact for newts.</div>
+        <div class="govuk-hint">
+          Paying this levy will mitigate your environmental impact for {% if data.leviesSelected and data.leviesSelected.length -%}
+            {%- set impacts = [] -%}
+            {%- for levy in data.leviesSelected -%}
+              {%- if levy and not levy.startsWith('_unchecked') -%}
+                {%- if levy.includes('newts') -%}
+                  {%- set _ = impacts.push('newts') -%}
+                {%- elif levy.includes('nutrients') -%}
+                  {%- set _ = impacts.push('nutrients') -%}
+                {%- endif -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {%- for impact in impacts -%}
+              {{- impact -}}
+              {%- if not loop.last %} and {% endif -%}
+            {%- endfor -%}
+          {%- endif %}.
+        </div>
 
         {% if data.leviesSelected and data.leviesSelected.length %}
-          <ul class="govuk-list govuk-list--bullet">
+          <ul class="govuk-list">
             {% for levy in data.leviesSelected %}
-              <li>{{ levy }}</li>
+              {% if levy and not levy.startsWith('_unchecked') %}
+                <li>{{ levy }}</li>
+              {% endif %}
             {% endfor %}
           </ul>
         {% endif %}
-
-        <div class="govuk-form-group{% if error %} govuk-form-group--error{% endif %}">
-          {% if error %}
-            <p id="confirm-choice-error" class="govuk-error-message">
-              <span class="govuk-visually-hidden">Error:</span> {{ error }}
-            </p>
-          {% endif %}
-          <div class="govuk-radios" data-module="govuk-radios" id="confirm-choice">
-            <div class="govuk-radios__item">
-              <input class="govuk-radios__input" id="confirm-yes" name="confirm-choice" type="radio" value="yes">
-              <label class="govuk-label govuk-radios__label" for="confirm-yes">Confirm</label>
-            </div>
-          </div>
-        </div>
 
         <button class="govuk-button" data-module="govuk-button">Continue</button>
       </form>

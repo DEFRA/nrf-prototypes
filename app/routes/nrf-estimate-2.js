@@ -931,10 +931,6 @@ router.post(ROUTES.SUMMARY, (req, res) => {
 router.get(ROUTES.CONFIRMATION, (req, res) => {
   const data = req.session.data || {}
 
-  if (!data.estimateReference) {
-    return res.redirect(ROUTES.SUMMARY)
-  }
-
   res.render(TEMPLATES.CONFIRMATION, {
     data: data
   })
@@ -1224,13 +1220,7 @@ router.get(ROUTES.CONFIRM, (req, res) => {
 })
 
 router.post(ROUTES.CONFIRM, (req, res) => {
-  const confirmChoice = req.body['confirm-choice']
-  if (!confirmChoice) {
-    return res.render(TEMPLATES.CONFIRM, {
-      error: 'Confirm the levy you would like to pay',
-      data: req.session.data || {}
-    })
-  }
+  // No validation needed - continue button submission is enough
   res.redirect(ROUTES.LPA_EMAIL)
 })
 

@@ -22,7 +22,7 @@
 
         <div class="govuk-form-group{% if error %} govuk-form-group--error{% endif %}">
           <fieldset class="govuk-fieldset" aria-describedby="levies-hint">
-            <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">Select all that apply:</legend>
+            <div id="levies-hint" class="govuk-hint">Select all that apply:</div>
 
             {% if error %}
               <p id="levies-error" class="govuk-error-message">

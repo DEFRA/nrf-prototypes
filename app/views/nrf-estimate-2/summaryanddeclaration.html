@@ -8,30 +8,55 @@
       <form method="post">
         <h1 class="govuk-heading-l">Check your answers</h1>
 
-        <dl class="govuk-summary-list govuk-!-margin-bottom-6">
+        <dl class="govuk-summary-list govuk-!-margin-bottom-9">
           <div class="govuk-summary-list__row">
             <dt class="govuk-summary-list__key">Nature Restoration Fund levy confirmed</dt>
             <dd class="govuk-summary-list__value">
               {% if data.leviesSelected and data.leviesSelected.length %}
-                <ul class="govuk-list govuk-list--bullet govuk-!-margin-bottom-0">
+                <ul class="govuk-list">
                   {% for levy in data.leviesSelected %}
-                    <li>{{ levy }}</li>
+                    {% if levy and not levy.startsWith('_unchecked') %}
+                      <li>{{ levy }}</li>
+                    {% endif %}
                   {% endfor %}
                 </ul>
               {% else %}
                 Not provided
               {% endif %}
             </dd>
+            <dd class="govuk-summary-list__actions">
+              <a class="govuk-link" href="/nrf-estimate-2/which">
+                Change<span class="govuk-visually-hidden"> Nature Restoration Fund levy confirmed</span>
+              </a>
+            </dd>
           </div>
           <div class="govuk-summary-list__row">
             <dt class="govuk-summary-list__key">Email address of Local Planning Authority contact</dt>
             <dd class="govuk-summary-list__value">{{ data.lpaEmail or 'Not provided' }}</dd>
+            <dd class="govuk-summary-list__actions">
+              <a class="govuk-link" href="/nrf-estimate-2/LPAemail">
+                Change<span class="govuk-visually-hidden"> Email address of Local Planning Authority contact</span>
+              </a>
+            </dd>
           </div>
         </dl>
 
+        <h2 class="govuk-heading-m">Confirm and submit these details</h2>
         <p class="govuk-body">By confirming and submitting these details you are committing to paying the Nature Restoration Fund levy.</p>
-        <p class="govuk-body">Paying this levy will mitigate your environmental impact for newts.</p>
-        <p class="govuk-body">Nature Restoration Fund newts levy: £2,500</p>
+        <p class="govuk-body">Paying this levy will mitigate your environmental impact for:</p>
+        {% if data.leviesSelected and data.leviesSelected.length %}
+          <ul class="govuk-list govuk-list--bullet">
+            {% for levy in data.leviesSelected %}
+              {% if levy and not levy.startsWith('_unchecked') %}
+                {% if levy.includes('newts') %}
+                  <li>newts</li>
+                {% elif levy.includes('nutrients') %}
+                  <li>nutrients</li>
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+          </ul>
+        {% endif %}
 
         <button class="govuk-button" data-module="govuk-button">Confirm and submit</button>
       </form>
