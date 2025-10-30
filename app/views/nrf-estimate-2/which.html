@@ -2,6 +2,13 @@
 
 {% set pageName = "Which Nature Restoration Fund levies would you like to pay?" %}
 
+{% block beforeContent %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/nrf-estimate-2/payment-email"
+  }) }}
+{% endblock %}
+
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
@@ -32,11 +39,11 @@
 
             <div class="govuk-checkboxes" data-module="govuk-checkboxes" id="levies">
               <div class="govuk-checkboxes__item">
-                <input class="govuk-checkboxes__input" id="levy-newts" name="levies" type="checkbox" value="Nature Restoration Fund newts levy: £2,500">
+                <input class="govuk-checkboxes__input" id="levy-newts" name="levies" type="checkbox" value="Nature Restoration Fund newts levy: £2,500" {% if data.leviesSelected and data.leviesSelected.includes('Nature Restoration Fund newts levy: £2,500') %}checked{% endif %}>
                 <label class="govuk-label govuk-checkboxes__label" for="levy-newts">Nature Restoration Fund newts levy: £2,500</label>
               </div>
               <div class="govuk-checkboxes__item">
-                <input class="govuk-checkboxes__input" id="levy-nutrients" name="levies" type="checkbox" value="Nature Restoration Fund nutrients levy: £2,500">
+                <input class="govuk-checkboxes__input" id="levy-nutrients" name="levies" type="checkbox" value="Nature Restoration Fund nutrients levy: £2,500" {% if data.leviesSelected and data.leviesSelected.includes('Nature Restoration Fund nutrients levy: £2,500') %}checked{% endif %}>
                 <label class="govuk-label govuk-checkboxes__label" for="levy-nutrients">Nature Restoration Fund nutrients levy: £2,500</label>
               </div>
             </div>

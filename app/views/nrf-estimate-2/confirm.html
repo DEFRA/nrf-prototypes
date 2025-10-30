@@ -2,6 +2,13 @@
 
 {% set pageName = "Confirm that you want to commit to paying this Nature Restoration Fund levy" %}
 
+{% block beforeContent %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/nrf-estimate-2/which"
+  }) }}
+{% endblock %}
+
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
