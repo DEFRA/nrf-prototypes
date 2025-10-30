@@ -1181,15 +1181,6 @@ router.get(ROUTES.PAYMENT_CONFIRMATION, (req, res) => {
   })
 })
 
-// Estimate confirmation email page
-router.get(ROUTES.ESTIMATE_CONFIRMATION_EMAIL, (req, res) => {
-  const data = req.session.data || {}
-
-  res.render(TEMPLATES.ESTIMATE_CONFIRMATION_EMAIL, {
-    data: data
-  })
-})
-
 // Payment email page
 router.get(ROUTES.PAYMENT_EMAIL, (req, res) => {
   const data = req.session.data || {}
