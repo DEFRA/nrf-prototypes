@@ -1190,4 +1190,101 @@ router.get(ROUTES.PAYMENT_EMAIL, (req, res) => {
   })
 })
 
+// ===== INVOICE JOURNEY (COMMIT TO PAY AND GET AN INVOICE) =====
+
+// Which NRF levies
+router.get(ROUTES.WHICH, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.WHICH, { data: data })
+})
+
+router.post(ROUTES.WHICH, (req, res) => {
+  const levies = req.body['levies']
+
+  if (!levies || levies === '_unchecked') {
+    return res.render(TEMPLATES.WHICH, {
+      error: 'Select the levy you would like to pay',
+      data: req.session.data || {}
+    })
+  }
+
+  // Normalize to array
+  const selected = Array.isArray(levies) ? levies : [levies]
+
+  req.session.data = req.session.data || {}
+  req.session.data.leviesSelected = selected
+
+  res.redirect(ROUTES.CONFIRM)
+})
+
+// Confirm NRF levy selection
+router.get(ROUTES.CONFIRM, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.CONFIRM, { data: data })
+})
+
+router.post(ROUTES.CONFIRM, (req, res) => {
+  const confirmChoice = req.body['confirm-choice']
+  if (!confirmChoice) {
+    return res.render(TEMPLATES.CONFIRM, {
+      error: 'Confirm the levy you would like to pay',
+      data: req.session.data || {}
+    })
+  }
+  res.redirect(ROUTES.LPA_EMAIL)
+})
+
+// LPA Email entry
+router.get(ROUTES.LPA_EMAIL, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.LPA_EMAIL, { data: data })
+})
+
+router.post(ROUTES.LPA_EMAIL, (req, res) => {
+  const email = req.body['email']
+
+  if (!email) {
+    return res.render(TEMPLATES.LPA_EMAIL, {
+      error: 'Enter your email address to continue',
+      data: req.session.data || {}
+    })
+  }
+
+  const validation = validators.validateEmail(email)
+  if (!validation.valid) {
+    return res.render(TEMPLATES.LPA_EMAIL, {
+      error:
+        'Enter an email address in the correct format, like name@example.com',
+      data: req.session.data || {}
+    })
+  }
+
+  req.session.data = req.session.data || {}
+  req.session.data.lpaEmail = email
+
+  res.redirect(ROUTES.SUMMARY_AND_DECLARATION)
+})
+
+// Summary and declaration
+router.get(ROUTES.SUMMARY_AND_DECLARATION, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.SUMMARY_AND_DECLARATION, { data: data })
+})
+
+router.post(ROUTES.SUMMARY_AND_DECLARATION, (req, res) => {
+  // Generate a payment reference for the invoice journey
+  const paymentReference = 'PAY-' + Date.now().toString().slice(-6)
+
+  req.session.data = req.session.data || {}
+  req.session.data.paymentReference = paymentReference
+
+  res.redirect(ROUTES.CONFIRMATION)
+})
+
+// Invoice email content (for documentation/print view)
+router.get(ROUTES.INVOICE_EMAIL_CONTENT, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.INVOICE_EMAIL_CONTENT, { data: data })
+})
+
 module.exports = router

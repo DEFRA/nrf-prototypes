@@ -38,6 +38,13 @@ const ROUTES = {
   EMAIL: `${BASE_PATH}/email`,
   CONFIRMATION: `${BASE_PATH}/confirmation`,
 
+  // Invoice journey (commit to pay and get an invoice)
+  WHICH: `${BASE_PATH}/which`,
+  CONFIRM: `${BASE_PATH}/confirm`,
+  LPA_EMAIL: `${BASE_PATH}/LPAemail`,
+  SUMMARY_AND_DECLARATION: `${BASE_PATH}/summaryanddeclaration`,
+  INVOICE_EMAIL_CONTENT: `${BASE_PATH}/invoice-email-content`,
+
   // Payment journey
   PAYMENT_SUMMARY: `${BASE_PATH}/payment-summary`,
   PAYMENT_CONFIRMATION: `${BASE_PATH}/payment-confirmation`,
@@ -76,7 +83,14 @@ const TEMPLATES = {
   ESTIMATE_EMAIL_RETRIEVAL_CONTENT:
     'nrf-estimate-2/estimate-email-retrieval-content',
   ESTIMATE_CONFIRMATION_EMAIL: 'nrf-estimate-2/estimate-confirmation-email',
-  PAYMENT_EMAIL: 'nrf-estimate-2/payment-email'
+  PAYMENT_EMAIL: 'nrf-estimate-2/payment-email',
+
+  // Invoice journey templates
+  WHICH: 'nrf-estimate-2/which',
+  CONFIRM: 'nrf-estimate-2/confirm',
+  LPA_EMAIL: 'nrf-estimate-2/LPAemail',
+  SUMMARY_AND_DECLARATION: 'nrf-estimate-2/summaryanddeclaration',
+  INVOICE_EMAIL_CONTENT: 'nrf-estimate-2/invoice-email-content'
 }
 
 module.exports = { ROUTES, TEMPLATES }

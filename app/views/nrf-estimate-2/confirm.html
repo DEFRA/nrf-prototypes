@@ -1,0 +1,51 @@
+{% extends "layouts/main.html" %}
+
+{% set pageName = "Confirm that you want to commit to paying this Nature Restoration Fund levy" %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      {% if error %}
+        <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" data-module="govuk-error-summary">
+          <h2 class="govuk-error-summary__title" id="error-summary-title">There is a problem</h2>
+          <div class="govuk-error-summary__body">
+            <ul class="govuk-list govuk-error-summary__list">
+              <li><a href="#confirm-choice">{{ error }}</a></li>
+            </ul>
+          </div>
+        </div>
+      {% endif %}
+
+      <form method="post" novalidate>
+        <h1 class="govuk-heading-l">Confirm that you want to commit to paying this Nature Restoration Fund levy</h1>
+        <div class="govuk-hint">Paying this levy will mitigate your environmental impact for newts.</div>
+
+        {% if data.leviesSelected and data.leviesSelected.length %}
+          <ul class="govuk-list govuk-list--bullet">
+            {% for levy in data.leviesSelected %}
+              <li>{{ levy }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+
+        <div class="govuk-form-group{% if error %} govuk-form-group--error{% endif %}">
+          {% if error %}
+            <p id="confirm-choice-error" class="govuk-error-message">
+              <span class="govuk-visually-hidden">Error:</span> {{ error }}
+            </p>
+          {% endif %}
+          <div class="govuk-radios" data-module="govuk-radios" id="confirm-choice">
+            <div class="govuk-radios__item">
+              <input class="govuk-radios__input" id="confirm-yes" name="confirm-choice" type="radio" value="yes">
+              <label class="govuk-label govuk-radios__label" for="confirm-yes">Confirm</label>
+            </div>
+          </div>
+        </div>
+
+        <button class="govuk-button" data-module="govuk-button">Continue</button>
+      </form>
+    </div>
+  </div>
+{% endblock %}
+
+
