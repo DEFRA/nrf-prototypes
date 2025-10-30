@@ -1,0 +1,94 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Email sent from the Nature Restoration Fund service - Pay for Nature Restoration Fund Levy
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: "javascript:window.history.back()"
+}) }}
+{% endblock %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <div class="govuk-inset-text">
+            <p><strong>To:</strong> {{ data.email or 'user@example.com' }}</p>
+            <p><strong>Subject:</strong> Nature Restoration Fund – payment for the Nature Restoration Fund levy</p>
+        </div>
+
+        <h1 class="govuk-heading-l">Nature Restoration Fund – payment for the Nature Restoration Fund levy</h1>
+
+        <h2 class="govuk-heading-m">Payment reference: {{ data.paymentReference }}</h2>
+
+        <p>Thank you for submitting details of the development on the Pay the Nature Restoration Fund service.</p>
+
+        <p>You told us the development:</p>
+        <ul class="govuk-list govuk-list--bullet">
+            <li>is planned in an area {{ data.redlineBoundaryPolygon.intersectingCatchment or 'Unknown' }}</li>
+            <li>has
+                {% if data.buildingTypes %}
+                {% set validBuildingTypes = [] %}
+                {% for buildingType in data.buildingTypes %}
+                {% if buildingType and not buildingType.startsWith('_unchecked') %}
+                {% set _ = validBuildingTypes.push(buildingType) %}
+                {% endif %}
+                {% endfor %}
+                {% for buildingType in validBuildingTypes %}
+                {% if buildingType === 'Dwellinghouse' %}
+                {{ data.residentialBuildingCount or 0 }} {{ buildingType | lower }} buildings
+                {% elif buildingType === 'Hotel' %}
+                {{ data.roomCounts.hotelCount or 0 }} {{ buildingType | lower }} rooms
+                {% elif buildingType === 'House of multiple occupation (HMO)' %}
+                {{ data.roomCounts.hmoCount or 0 }} {{ buildingType | lower }} rooms
+                {% elif buildingType === 'Residential institution' %}
+                {{ data.roomCounts.residentialInstitutionCount or 0 }} {{ buildingType | lower }} rooms
+                {% else %}
+                {{ buildingType | lower }} buildings
+                {% endif %}
+                {% if not loop.last %}, {% endif %}
+                {% endfor %}
+                {% else %}
+                no building types specified
+                {% endif %}
+            </li>
+        </ul>
+
+        <h2 class="govuk-heading-m">What you need to pay</h2>
+
+        <p>Based on the information you have provided, the development falls into the catchment area for the Nature
+            Restoration Fund Nutrients Levy.</p>
+
+        <p>The total amount you need to pay is:</p>
+        <p class="govuk-body-l"><strong>£{{ data.levyAmount or '2,500' }}</strong></p>
+
+        <p><a href="http://my-nrf-page.com">Confirm payment and request an invoice</a></p>
+
+        <h2 class="govuk-heading-m">What your levy will pay for</h2>
+
+        <p>Your levy will be spent on conservation, with amounts being spent on monitoring and maintenance. There will
+            also be an admin charge of £00 taken from the levy payment.</p>
+        <p>Levies are calculated as part of Environmental Delivery Plans (EDPs).</p>
+
+        <h2 class="govuk-heading-m">Get help with paying the Nature Restoration Fund levy</h2>
+
+        <p>If you need help with paying the Nature Restoration Fund levy contact XXXX and give the payment reference
+            number {{ data.paymentReference or 'N/A' }}.</p>
+
+        <p>
+            Email: <a href="mailto:xxxxx@defra.gov.uk">xxxxx@defra.gov.uk</a><br>
+            Telephone: 00000000000<br>
+            Monday to Friday, 8:30am to 5pm, except bank holidays
+        </p>
+
+        <p>Find out about call charges at <a href="https://www.gov.uk/call-charges">https://www.gov.uk/call-charges</a>
+        </p>
+
+    </div>
+</div>
+
+{% endblock %}
