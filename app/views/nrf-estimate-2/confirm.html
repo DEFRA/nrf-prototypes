@@ -30,8 +30,8 @@
             {%- set impacts = [] -%}
             {%- for levy in data.leviesSelected -%}
               {%- if levy and not levy.startsWith('_unchecked') -%}
-                {%- if levy.includes('newts') -%}
-                  {%- set _ = impacts.push('newts') -%}
+                {%- if levy.includes('greater crested newts') -%}
+                  {%- set _ = impacts.push('greater crested newts') -%}
                 {%- elif levy.includes('nutrients') -%}
                   {%- set _ = impacts.push('nutrients') -%}
                 {%- endif -%}

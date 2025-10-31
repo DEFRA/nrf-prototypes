@@ -55,8 +55,8 @@
           <ul class="govuk-list govuk-list--bullet">
             {% for levy in data.leviesSelected %}
               {% if levy and not levy.startsWith('_unchecked') %}
-                {% if levy.includes('newts') %}
-                  <li>newts</li>
+                {% if levy.includes('greater crested newts') %}
+                  <li>greater crested newts</li>
                 {% elif levy.includes('nutrients') %}
                   <li>nutrients</li>
                 {% endif %}
