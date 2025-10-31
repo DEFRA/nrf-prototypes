@@ -1,0 +1,77 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Enter the number of rooms in your building planned for your development - {% if data.journeyType === 'payment' %}Pay for
+Nature Restoration Fund Levy{% else %}Get an estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <form action="/nrf-estimate-2/residential-institution" method="post" novalidate>
+
+            {% if error %}
+            <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert"
+                data-module="govuk-error-summary">
+                <h2 class="govuk-error-summary__title" id="error-summary-title">
+                    There is a problem
+                </h2>
+                <div class="govuk-error-summary__body">
+                    <ul class="govuk-list govuk-error-summary__list">
+                        <li>
+                            <a href="#room-count">{{ error }}</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if buildingTypes and buildingTypes.includes('House of multiple occupation (HMO)') %}
+            <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
+                <h1 class="govuk-label-wrapper">
+                    <label class="govuk-label govuk-label--l" for="hmo-count">
+                        Enter the number of rooms in your House of multiple occupation (HMO) building planned for the
+                        development
+                    </label>
+                </h1>
+
+                {% if error %}
+                <p id="hmo-count-error" class="govuk-error-message">
+                    <span class="govuk-visually-hidden">Error:</span> {{ error }}
+                </p>
+                {% endif %}
+
+                <input class="govuk-input govuk-input--width-5 {% if error %}govuk-input--error{% endif %}"
+                    id="hmo-count" name="hmo-count" type="number" pattern="[0-9]*" inputmode="numeric">
+            </div>
+            {% endif %}
+
+            {% if buildingTypes and (buildingTypes.includes('Residential institution') or buildingTypes.includes('Secure
+            residential institution')) %}
+            <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
+                <h1 class="govuk-label-wrapper">
+                    <label class="govuk-label govuk-label--l" for="residential-accommodation-count">
+                        Enter the number of rooms in your residential institution building planned for the development
+                    </label>
+                </h1>
+
+                {% if error %}
+                <p id="residential-accommodation-count-error" class="govuk-error-message">
+                    <span class="govuk-visually-hidden">Error:</span> {{ error }}
+                </p>
+                {% endif %}
+
+                <input class="govuk-input govuk-input--width-5 {% if error %}govuk-input--error{% endif %}"
+                    id="residential-accommodation-count" name="residential-accommodation-count" type="number"
+                    pattern="[0-9]*" inputmode="numeric">
+            </div>
+            {% endif %}
+
+            <button class="govuk-button" data-module="govuk-button">
+                Continue
+            </button>
+
+        </form>
+    </div>
+</div>
+{% endblock %}

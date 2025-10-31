@@ -46,7 +46,6 @@ const ROUTES = {
   NO_EDP: `${BASE_PATH}/no-edp`,
   ESTIMATE_EMAIL_CONTENT: `${BASE_PATH}/estimate-email-content`,
   ESTIMATE_EMAIL_RETRIEVAL_CONTENT: `${BASE_PATH}/estimate-email-retrieval-content`,
-  ESTIMATE_CONFIRMATION_EMAIL: `${BASE_PATH}/estimate-confirmation-email`,
   PAYMENT_EMAIL: `${BASE_PATH}/payment-email`,
   CATCHMENTS_GEOJSON: `${BASE_PATH}/catchments.geojson`
 }

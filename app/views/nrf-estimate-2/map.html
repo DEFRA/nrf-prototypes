@@ -1,0 +1,187 @@
+{% extends "govuk-prototype-kit/layouts/govuk-branded.njk" %}
+
+{% set pageName="Draw a red line boundary" %}
+
+{% block pageTitle %}
+Draw a red line boundary - {% if data.journeyType === 'payment' %}Pay for Nature Restoration Fund Levy{% else %}Get an
+estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
+{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+        <a href="{{ backLink }}" class="govuk-back-link" id="back-link">Back</a>
+
+        <form id="map-form" action="/nrf-estimate-2/map" method="post" novalidate>
+            {% if navFromSummary %}
+            <input type="hidden" name="navFromSummary" value="true">
+            {% endif %}
+
+            {% if error %}
+            <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert">
+                <h2 class="govuk-error-summary__title" id="error-summary-title">
+                    There is a problem
+                </h2>
+                <div class="govuk-error-summary__body">
+                    <ul class="govuk-list govuk-error-summary__list">
+                        <li>
+                            <a href="#map">{{ error }}</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
+                {% if error %}
+                <p id="map-error" class="govuk-error-message">
+                    <span class="govuk-visually-hidden">Error:</span> {{ error }}
+                </p>
+                {% endif %}
+
+            <div id="client-error-summary" class="govuk-error-summary govuk-!-margin-top-6" aria-labelledby="error-summary-title" role="alert" style="display: none;">
+                <h2 class="govuk-error-summary__title" id="error-summary-title">
+                    There is a problem
+                </h2>
+                <div class="govuk-error-summary__body">
+                    <ul class="govuk-list govuk-error-summary__list">
+                        <li>
+                            <a href="#map" id="client-error-link"></a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+                <!-- Delete confirmation panel -->
+                <div id="delete-confirmation-panel" style="display: none;" role="dialog" aria-labelledby="delete-confirmation-title">
+                    <h1 class="govuk-heading-l" id="delete-confirmation-title">
+                        Are you sure you want to delete the red line boundary?
+                    </h1>
+                    <fieldset class="govuk-fieldset">
+                        <div class="govuk-radios" data-module="govuk-radios">
+                            <div class="govuk-radios__item">
+                                <input class="govuk-radios__input" id="delete-yes" name="delete-boundary" type="radio" value="yes">
+                                <label class="govuk-label govuk-radios__label" for="delete-yes">
+                                    Yes
+                                </label>
+                            </div>
+                            <div class="govuk-radios__item">
+                                <input class="govuk-radios__input" id="delete-no" name="delete-boundary" type="radio" value="no">
+                                <label class="govuk-label govuk-radios__label" for="delete-no">
+                                    No
+                                </label>
+                            </div>
+                        </div>
+                    </fieldset>
+                    <button class="govuk-button govuk-!-margin-top-6" id="delete-continue-btn" type="button" data-module="govuk-button">
+                        Continue
+                    </button>
+                </div>
+
+                <!-- Main map content container -->
+                <div id="map-content">
+                <h1 class="govuk-label-wrapper">
+                    <label class="govuk-label govuk-label--l" for="map">
+                        Draw a red line boundary
+                    </label>
+                </h1>
+
+                <div id="map-hint" class="govuk-hint">
+                    <p class="govuk-body">
+                        Use the map to draw a red line boundary for where the development might be.
+                    </p>
+                </div>
+
+                <!-- Accessible map interface with left panel -->
+                <div class="map-interface">
+                    <!-- Left control panel -->
+                    <div class="map-controls-panel">
+                        <!-- Search functionality -->
+                        <div class="govuk-form-group">
+                            <label class="govuk-label" for="location-search">
+                                Search for a location
+                            </label>
+                            <div class="search-container">
+                                <input class="govuk-input" id="location-search" name="location-search" type="text"
+                                    placeholder="Enter postcode, town or area">
+                            </div>
+                        </div>
+
+                        <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+
+                        <!-- Drawing tools -->
+                        <div class="govuk-form-group">
+                            <h2 class="govuk-heading-s">Drawing tools</h2>
+                            <div class="tool-links">
+                                <a href="#" class="govuk-link" id="start-drawing" data-tool="polygon"
+                                    aria-describedby="drawing-instructions" tabindex="0">
+                                    Start drawing boundary
+                                </a>
+                                <a href="#" class="govuk-link" id="edit-boundary" data-tool="edit"
+                                    aria-describedby="edit-instructions" tabindex="-1" aria-disabled="true" style="display: none;">
+                                    Edit boundary
+                                </a>
+                                <a href="#" class="govuk-link govuk-link--destructive" id="delete-boundary"
+                                    data-tool="delete" aria-describedby="delete-instructions" tabindex="-1"
+                                    aria-disabled="true">
+                                    Delete boundary
+                                </a>
+                            </div>
+                        </div>
+
+                        <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+
+                        <!-- Map controls -->
+                        <div class="govuk-form-group">
+                            <h2 class="govuk-heading-s">Map view</h2>
+                            <div class="tool-links">
+                                <a href="#" class="govuk-link" id="zoom-to-england" aria-describedby="zoom-england-help"
+                                    role="button" tabindex="0">
+                                    Show all England
+                                </a>
+                                <a href="#" class="govuk-link" id="zoom-to-boundary"
+                                    aria-describedby="zoom-boundary-help" tabindex="-1" aria-disabled="true">
+                                    Zoom to boundary
+                                </a>
+                                <a href="#" class="govuk-link" id="toggle-catchments"
+                                    aria-describedby="toggle-catchments-help" tabindex="0">
+                                    Toggle catchments
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Map container -->
+                    <div class="map-container">
+                        <div id="map" role="img" aria-label="Interactive map for drawing development boundary">
+                            <div id="map-loading"
+                                style="text-align: center; padding: 2rem; background: #f8f8f8; border: 1px solid #ccc;">
+                                <p class="govuk-body">Loading map...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <input type="hidden" id="boundary-data" name="boundary-data" value="{{ existingBoundaryData }}">
+
+            <button class="govuk-button" type="submit">
+                Save and continue
+            </button>
+            </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+<script src="/public/javascripts/map-drawing.js"></script>
+{% endblock %}
