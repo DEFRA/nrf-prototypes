@@ -5,11 +5,14 @@
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-      <h1 class="govuk-heading-l">Email sent from the Nature Restoration Fund service</h1>
+      <div class="govuk-inset-text">
+        <p><strong>To:</strong> {{ data.lpaEmail or 'user@example.com' }}</p>
+        <p><strong>Subject:</strong> Nature Restoration Fund – payment for the Nature Restoration Fund levy</p>
+      </div>
 
-      <h2 class="govuk-heading-m">Nature Restoration Fund – payment for the Nature Restoration Fund levy</h2>
+      <h1 class="govuk-heading-l">Nature Restoration Fund – payment for the Nature Restoration Fund levy</h1>
 
-      <p class="govuk-body"><strong>Payment reference:</strong> {{ data.paymentReference }}</p>
+      <h2 class="govuk-heading-m">Payment reference: {{ data.paymentReference }}</h2>
 
       <p class="govuk-body">Thank you for using Nature Restoration Fund Levy to mitigate your environmental impact.</p>
       <p class="govuk-body">An invoice for the total amount of the levy is attached.</p>
