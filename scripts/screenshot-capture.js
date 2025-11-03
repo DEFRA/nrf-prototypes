@@ -121,6 +121,153 @@ const PROTOTYPE_JOURNEYS = {
       'residential-building-count': '5',
       email: 'test@example.com'
     }
+  },
+  'nrf-estimate-2': {
+    name: 'NRF Estimate Journey 2',
+    basePath: '/nrf-estimate-2',
+    pages: [
+      { path: '/start', name: 'start', title: 'Start Page' },
+      {
+        path: '/what-would-you-like-to-do',
+        name: 'what-would-you-like-to-do',
+        title: 'What would you like to do?'
+      },
+      {
+        path: '/redline-map',
+        name: 'redline-map',
+        title: 'Redline Map Question'
+      },
+      {
+        path: '/upload-redline',
+        name: 'upload-redline',
+        title: 'Upload Redline File'
+      },
+      { path: '/map', name: 'map', title: 'Draw on Map' },
+      { path: '/no-edp', name: 'no-edp', title: 'No EDP Area' },
+      {
+        path: '/building-type',
+        name: 'building-type',
+        title: 'Building Type Selection'
+      },
+      { path: '/room-count', name: 'room-count', title: 'Room Count' },
+      {
+        path: '/residential',
+        name: 'residential',
+        title: 'Residential Building Count'
+      },
+      {
+        path: '/residential-institution',
+        name: 'residential-institution',
+        title: 'Residential Institution'
+      },
+      {
+        path: '/non-residential',
+        name: 'non-residential',
+        title: 'Non-residential Development'
+      },
+      {
+        path: '/planning-ref',
+        name: 'planning-ref',
+        title: 'Planning Reference'
+      },
+      { path: '/email', name: 'email', title: 'Email Entry' },
+      { path: '/summary', name: 'summary', title: 'Summary' },
+      { path: '/confirmation', name: 'confirmation', title: 'Confirmation' },
+      {
+        path: '/estimate-email-content',
+        name: 'estimate-email-content',
+        title: 'Estimate Email Content'
+      },
+      {
+        path: '/do-you-have-an-estimate-ref',
+        name: 'do-you-have-an-estimate-ref',
+        title: 'Do you have an estimate reference?'
+      },
+      {
+        path: '/enter-estimate-ref',
+        name: 'enter-estimate-ref',
+        title: 'Enter Estimate Reference'
+      },
+      {
+        path: '/retrieve-estimate-email',
+        name: 'retrieve-estimate-email',
+        title: 'Retrieve Estimate Email'
+      },
+      {
+        path: '/estimate-email-retrieval-content',
+        name: 'estimate-email-retrieval-content',
+        title: 'Estimate Email Retrieval Content'
+      },
+      {
+        path: '/payment-summary',
+        name: 'payment-summary',
+        title: 'Payment Summary'
+      },
+      {
+        path: '/payment-confirmation',
+        name: 'payment-confirmation',
+        title: 'Payment Confirmation'
+      },
+      {
+        path: '/payment-email',
+        name: 'payment-email',
+        title: 'Payment Email'
+      },
+      {
+        path: '/which',
+        name: 'which',
+        title: 'Which NRF Levies'
+      },
+      {
+        path: '/confirm',
+        name: 'confirm',
+        title: 'Confirm Levy Selection'
+      },
+      {
+        path: '/company-details',
+        name: 'company-details',
+        title: 'Company Details'
+      },
+      {
+        path: '/LPAemail',
+        name: 'LPAemail',
+        title: 'LPA Email Entry'
+      },
+      {
+        path: '/summaryanddeclaration',
+        name: 'summaryanddeclaration',
+        title: 'Summary and Declaration'
+      },
+      {
+        path: '/invoice-email-content',
+        name: 'invoice-email-content',
+        title: 'Invoice Email Content'
+      }
+    ],
+    formData: {
+      'journey-type': 'estimate',
+      'has-redline-boundary-file': 'yes',
+      'file-name': 'test-boundary.geojson',
+      'building-types': ['Dwellinghouse'],
+      'residential-building-count': '5',
+      'room-count': '10',
+      'has-estimate-ref': 'yes',
+      'estimate-ref': '123456',
+      'planning-ref': 'REF123456',
+      email: 'test@example.com',
+      levies: [
+        'Nature Restoration Fund greater crested newts levy: £2,500',
+        'Nature Restoration Fund nutrients levy: £2,500'
+      ],
+      fullName: 'John Smith',
+      businessName: 'Test Company Ltd',
+      addressLine1: '123 Test Street',
+      addressLine2: 'Suite 100',
+      townOrCity: 'London',
+      county: 'Greater London',
+      postcode: 'SW1A 1AA',
+      lpaEmail: 'test@example.com'
+    }
   }
   // Add more prototypes here as needed
 }
@@ -131,6 +278,7 @@ class ScreenshotCapture {
     this.screenshotDir = options.screenshotDir || DEFAULT_SCREENSHOT_DIR
     this.viewport = options.viewport || DEFAULT_VIEWPORT
     this.delay = options.delay || DEFAULT_DELAY
+    this.headless = options.headless !== undefined ? options.headless : false
     this.browser = null
     this.page = null
   }
@@ -147,7 +295,7 @@ class ScreenshotCapture {
 
     // Launch browser
     this.browser = await puppeteer.launch({
-      headless: false, // Set to true for headless mode
+      headless: this.headless,
       defaultViewport: this.viewport,
       args: ['--no-sandbox', '--disable-setuid-sandbox']
     })
@@ -226,6 +374,15 @@ class ScreenshotCapture {
       })
 
       console.log(`✅ Captured: ${indexNumber}-${pageInfo.name}.png`)
+
+      // Submit form if there's a submit button (to save data for next page)
+      const submitButton = await this.page.$(
+        'button[type="submit"], input[type="submit"], button.govuk-button'
+      )
+      if (submitButton) {
+        await submitButton.click()
+        await new Promise((resolve) => setTimeout(resolve, 500))
+      }
     } catch (error) {
       console.error(`❌ Error capturing ${pageInfo.name}:`, error.message)
       throw error
@@ -237,88 +394,65 @@ class ScreenshotCapture {
     const formData = journey.formData || {}
 
     try {
-      // Fill out specific forms based on page
-      switch (pageInfo.name) {
-        case 'what-would-you-like-to-do':
-          await this.page.select('input[name="journey-type"][value="estimate"]')
-          break
+      // Wait for page to be ready
+      await new Promise((resolve) => setTimeout(resolve, 500))
 
-        case 'redline-map':
-          await this.page.click(
-            'input[name="has-redline-boundary-file"][value="yes"]'
+      // Try to fill any text/number/email inputs based on formData
+      for (const [fieldName, value] of Object.entries(formData)) {
+        // Handle checkboxes (arrays) - check this first before string check
+        if (Array.isArray(value)) {
+          for (const val of value) {
+            const checkbox = await this.page.$(
+              `input[type="checkbox"][name="${fieldName}"][value="${val}"]`
+            )
+            if (checkbox) {
+              await checkbox.click()
+              await new Promise((resolve) => setTimeout(resolve, 100))
+            }
+          }
+          continue // Skip to next field
+        }
+
+        // Handle text/email/number inputs
+        if (typeof value === 'string' || typeof value === 'number') {
+          // Try to find the input - check multiple possible selectors
+          let input = await this.page.$(
+            `input[name="${fieldName}"][type="text"]`
           )
-          break
+          if (!input) {
+            input = await this.page.$(
+              `input[name="${fieldName}"][type="email"]`
+            )
+          }
+          if (!input) {
+            input = await this.page.$(
+              `input[name="${fieldName}"][type="number"]`
+            )
+          }
+          if (!input) {
+            // Try without type attribute
+            input = await this.page.$(
+              `input[name="${fieldName}"]:not([type="radio"]):not([type="checkbox"])`
+            )
+          }
 
-        case 'upload-redline':
-          await this.page.type(
-            'input[name="file-name"]',
-            formData['file-name'] || 'test-boundary.geojson'
+          if (input) {
+            await input.type(String(value))
+            continue // Skip to next field
+          }
+
+          // Handle radio buttons
+          const radio = await this.page.$(
+            `input[type="radio"][name="${fieldName}"][value="${value}"]`
           )
-          break
-
-        case 'building-type':
-          await this.page.click(
-            'input[name="building-types"][value="Dwellinghouse"]'
-          )
-          break
-
-        case 'residential':
-          await this.page.type(
-            'input[name="residential-building-count"]',
-            formData['residential-building-count'] || '5'
-          )
-          break
-
-        case 'email':
-          await this.page.type(
-            'input[name="email"]',
-            formData['email'] || 'test@example.com'
-          )
-          break
-
-        case 'do-you-have-an-estimate-ref':
-          await this.page.click('input[name="has-estimate-ref"][value="yes"]')
-          break
-
-        case 'enter-estimate-ref':
-          await this.page.type('input[name="estimate-ref"]', '123456')
-          break
-
-        case 'retrieve-estimate-email':
-          await this.page.type(
-            'input[name="email"]',
-            formData['email'] || 'test@example.com'
-          )
-          break
-
-        case 'planning-ref':
-          await this.page.type('input[name="planning-ref"]', 'PL/2024/001234')
-          break
-      }
-
-      // Submit form if it's a form page (not a display-only page)
-      const displayOnlyPages = [
-        'start',
-        'summary',
-        'confirmation',
-        'no-edp',
-        'estimate-email-content',
-        'estimate-email-retrieval-content',
-        'payment-summary',
-        'payment-confirmation',
-        'estimate-confirmation-email',
-        'payment-email'
-      ]
-
-      if (!displayOnlyPages.includes(pageInfo.name)) {
-        const submitButton = await this.page.$(
-          'button[type="submit"], input[type="submit"]'
-        )
-        if (submitButton) {
-          await submitButton.click()
-          await new Promise((resolve) => setTimeout(resolve, 500)) // Wait for navigation
+          if (radio) {
+            await radio.click()
+          }
         }
       }
+
+      // Wait for any UI updates
+      await new Promise((resolve) => setTimeout(resolve, 300))
     } catch (error) {
       console.warn(
         `⚠️  Could not fill form for ${pageInfo.name}:`,
