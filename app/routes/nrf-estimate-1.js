@@ -17,7 +17,7 @@ const {
   BUILDING_TYPE_LABELS,
   BUILDING_TYPE_DATA_KEYS,
   BUILDING_TYPES_REQUIRING_ROOM_COUNT
-} = require('../config/nrf-estimate-1/building-types')
+} = require('../config/shared/building-types')
 
 const upload = multer({
   storage: multer.memoryStorage(),

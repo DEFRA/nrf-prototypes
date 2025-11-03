@@ -17,7 +17,7 @@ const {
   BUILDING_TYPE_LABELS,
   BUILDING_TYPE_DATA_KEYS,
   BUILDING_TYPES_REQUIRING_ROOM_COUNT
-} = require('../config/nrf-estimate-1/building-types')
+} = require('../config/shared/building-types')
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -101,7 +101,7 @@ function isPointInPolygon(point, polygon) {
 
 // Helper function to check if development is within EDP boundary
 function checkEDPIntersection(boundary) {
-  if (!boundary || !boundary.coordinates) return null
+  if (!boundary?.coordinates) return null
 
   const center = boundary.center || [
     boundary.coordinates[0][0],

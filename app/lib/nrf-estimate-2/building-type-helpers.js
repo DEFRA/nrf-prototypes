@@ -6,7 +6,7 @@
 const {
   BUILDING_TYPES,
   BUILDING_TYPES_REQUIRING_ROOM_COUNT
-} = require('../../config/nrf-estimate-1/building-types')
+} = require('../../config/shared/building-types')
 
 /**
  * Checks if any of the selected building types require room count input
