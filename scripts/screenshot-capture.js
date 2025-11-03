@@ -126,6 +126,7 @@ const PROTOTYPE_JOURNEYS = {
     name: 'NRF Estimate Journey 2',
     basePath: '/nrf-estimate-2',
     pages: [
+      // ESTIMATE JOURNEY (Primary flow)
       { path: '/start', name: 'start', title: 'Start Page' },
       {
         path: '/what-would-you-like-to-do',
@@ -143,18 +144,27 @@ const PROTOTYPE_JOURNEYS = {
         title: 'Upload Redline File'
       },
       { path: '/map', name: 'map', title: 'Draw on Map' },
-      { path: '/no-edp', name: 'no-edp', title: 'No EDP Area' },
       {
         path: '/building-type',
         name: 'building-type',
         title: 'Building Type Selection'
       },
-      { path: '/room-count', name: 'room-count', title: 'Room Count' },
       {
         path: '/residential',
         name: 'residential',
         title: 'Residential Building Count'
       },
+      { path: '/email', name: 'email', title: 'Email Entry' },
+      { path: '/summary', name: 'summary', title: 'Summary' },
+      { path: '/confirmation', name: 'confirmation', title: 'Confirmation' },
+      {
+        path: '/estimate-email-content',
+        name: 'estimate-email-content',
+        title: 'Estimate Email Content'
+      },
+      // Alternative paths in estimate journey
+      { path: '/no-edp', name: 'no-edp', title: 'No EDP Area' },
+      { path: '/room-count', name: 'room-count', title: 'Room Count' },
       {
         path: '/residential-institution',
         name: 'residential-institution',
@@ -165,19 +175,7 @@ const PROTOTYPE_JOURNEYS = {
         name: 'non-residential',
         title: 'Non-residential Development'
       },
-      {
-        path: '/planning-ref',
-        name: 'planning-ref',
-        title: 'Planning Reference'
-      },
-      { path: '/email', name: 'email', title: 'Email Entry' },
-      { path: '/summary', name: 'summary', title: 'Summary' },
-      { path: '/confirmation', name: 'confirmation', title: 'Confirmation' },
-      {
-        path: '/estimate-email-content',
-        name: 'estimate-email-content',
-        title: 'Estimate Email Content'
-      },
+      // PAYMENT JOURNEY (with estimate reference)
       {
         path: '/do-you-have-an-estimate-ref',
         name: 'do-you-have-an-estimate-ref',
@@ -199,6 +197,11 @@ const PROTOTYPE_JOURNEYS = {
         title: 'Estimate Email Retrieval Content'
       },
       {
+        path: '/planning-ref',
+        name: 'planning-ref',
+        title: 'Planning Reference'
+      },
+      {
         path: '/payment-summary',
         name: 'payment-summary',
         title: 'Payment Summary'
@@ -213,6 +216,7 @@ const PROTOTYPE_JOURNEYS = {
         name: 'payment-email',
         title: 'Payment Email'
       },
+      // INVOICE JOURNEY (Commit to Pay)
       {
         path: '/which',
         name: 'which',
@@ -229,14 +233,19 @@ const PROTOTYPE_JOURNEYS = {
         title: 'Company Details'
       },
       {
-        path: '/LPAemail',
-        name: 'LPAemail',
+        path: '/lpa-email',
+        name: 'lpa-email',
         title: 'LPA Email Entry'
       },
       {
-        path: '/summaryanddeclaration',
-        name: 'summaryanddeclaration',
+        path: '/summary-and-declaration',
+        name: 'summary-and-declaration',
         title: 'Summary and Declaration'
+      },
+      {
+        path: '/confirmation',
+        name: 'confirmation-invoice',
+        title: 'Confirmation (Invoice Journey)'
       },
       {
         path: '/invoice-email-content',
