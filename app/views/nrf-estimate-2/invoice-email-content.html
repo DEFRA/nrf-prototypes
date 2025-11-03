@@ -12,15 +12,23 @@
 
       <h1 class="govuk-heading-l">Nature Restoration Fund – payment for the Nature Restoration Fund levy</h1>
 
-      <h2 class="govuk-heading-m">Payment reference: {{ data.paymentReference }}</h2>
+      <p class="govuk-body"><strong>Payment reference:</strong> {{ data.paymentReference }}</p>
 
       <p class="govuk-body">Thank you for using Nature Restoration Fund Levy to mitigate your environmental impact.</p>
       <p class="govuk-body">An invoice for the total amount of the levy is attached.</p>
 
       <p class="govuk-body">You have agreed to pay the following:</p>
       <ul class="govuk-list govuk-list--bullet">
-        <li>Nature Restoration Fund greater crested newts levy : £2,500</li>
-        <li>Nature Restoration Fund nutrients levy : £2,500</li>
+        {% if data.leviesSelected %}
+          {% for levy in data.leviesSelected %}
+            {% if levy and not levy.startsWith('_unchecked') %}
+              <li>{{ levy }}</li>
+            {% endif %}
+          {% endfor %}
+        {% else %}
+          <li>Nature Restoration Fund greater crested newts levy : £2,500</li>
+          <li>Nature Restoration Fund nutrients levy : £2,500</li>
+        {% endif %}
       </ul>
 
       <p class="govuk-body">Your levy will be spent on conservation, with amounts being spent on monitoring and maintenance. There will also be an admin charge of £00 taken from the levy payment. Levies are calculated as part of Environmental Delivery Plans (EDPs).</p>
@@ -42,7 +50,11 @@
 
       <h2 class="govuk-heading-m">Get help with Nature Restoration Fund</h2>
       <p class="govuk-body">If you need help with Nature Restoration Fund, contact XXXX and give the estimate reference number.</p>
-      <p class="govuk-body">Email: xxxxx@defra.gov.uk<br>Telephone: 00000000000<br>Monday to Friday, 8:30am to 5pm, except bank holidays</p>
+      <p class="govuk-body">
+        Email: <a class="govuk-link" href="mailto:xxxxx@defra.gov.uk">xxxxx@defra.gov.uk</a><br>
+        Telephone: 00000000000<br>
+        Monday to Friday, 8:30am to 5pm, except bank holidays
+      </p>
       <p class="govuk-body">Find out about call charges at <a class="govuk-link" href="https://www.gov.uk/call-charges">https://www.gov.uk/call-charges</a></p>
     </div>
   </div>

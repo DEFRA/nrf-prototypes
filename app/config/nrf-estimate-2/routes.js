@@ -41,8 +41,9 @@ const ROUTES = {
   // Invoice journey (commit to pay and get an invoice)
   WHICH: `${BASE_PATH}/which`,
   CONFIRM: `${BASE_PATH}/confirm`,
-  LPA_EMAIL: `${BASE_PATH}/LPAemail`,
-  SUMMARY_AND_DECLARATION: `${BASE_PATH}/summaryanddeclaration`,
+  COMPANY_DETAILS: `${BASE_PATH}/company-details`,
+  LPA_EMAIL: `${BASE_PATH}/lpa-email`,
+  SUMMARY_AND_DECLARATION: `${BASE_PATH}/summary-and-declaration`,
   INVOICE_EMAIL_CONTENT: `${BASE_PATH}/invoice-email-content`,
 
   // Payment journey
@@ -88,8 +89,9 @@ const TEMPLATES = {
   // Invoice journey templates
   WHICH: 'nrf-estimate-2/which',
   CONFIRM: 'nrf-estimate-2/confirm',
-  LPA_EMAIL: 'nrf-estimate-2/LPAemail',
-  SUMMARY_AND_DECLARATION: 'nrf-estimate-2/summaryanddeclaration',
+  COMPANY_DETAILS: 'nrf-estimate-2/company-details',
+  LPA_EMAIL: 'nrf-estimate-2/lpa-email',
+  SUMMARY_AND_DECLARATION: 'nrf-estimate-2/summary-and-declaration',
   INVOICE_EMAIL_CONTENT: 'nrf-estimate-2/invoice-email-content'
 }
 
