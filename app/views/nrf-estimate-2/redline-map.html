@@ -5,10 +5,16 @@ Do you have a red line boundary file? - {% if data.journeyType === 'payment' %}P
 else %}Get an estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
 {% endblock %}
 
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: "/nrf-estimate-2/what-would-you-like-to-do"
+}) }}
+{% endblock %}
+
 {% block content %}
 <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-        <a href="/nrf-estimate-2/what-would-you-like-to-do" class="govuk-back-link">Back</a>
 
         <form action="/nrf-estimate-2/redline-map" method="post" novalidate>
 

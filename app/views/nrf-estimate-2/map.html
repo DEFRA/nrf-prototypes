@@ -14,10 +14,16 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
 <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
 {% endblock %}
 
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: backLink
+}) }}
+{% endblock %}
+
 {% block content %}
 <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
-        <a href="{{ backLink }}" class="govuk-back-link" id="back-link">Back</a>
 
         <form id="map-form" action="/nrf-estimate-2/map" method="post" novalidate>
             {% if navFromSummary %}

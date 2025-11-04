@@ -5,10 +5,16 @@ Check your answers - {% if data.journeyType === 'payment' %}Pay for Nature Resto
 estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
 {% endblock %}
 
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: "/nrf-estimate-2/email"
+}) }}
+{% endblock %}
+
 {% block content %}
 <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-        <a href="/nrf-estimate-2/email" class="govuk-back-link">Back</a>
 
         <h1 class="govuk-heading-xl">Check your answers</h1>
 
