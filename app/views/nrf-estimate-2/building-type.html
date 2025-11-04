@@ -1,0 +1,116 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Select the types of buildings - {% if data.journeyType === 'payment' %}Pay for Nature Restoration Fund Levy{% else %}Get
+an estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: "/nrf-estimate-2/map"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <form action="/nrf-estimate-2/building-type" method="post" novalidate>
+            {% if isChange %}
+            <input type="hidden" name="isChange" value="true">
+            {% endif %}
+            {% if navFromSummary %}
+            <input type="hidden" name="navFromSummary" value="true">
+            {% endif %}
+
+            {% if error %}
+            <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert"
+                data-module="govuk-error-summary">
+                <h2 class="govuk-error-summary__title" id="error-summary-title">
+                    There is a problem
+                </h2>
+                <div class="govuk-error-summary__body">
+                    <ul class="govuk-list govuk-error-summary__list">
+                        <li>
+                            <a href="#building-type">{{ error }}</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
+                <fieldset class="govuk-fieldset" id="building-type">
+                    <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
+                        <h1 class="govuk-fieldset__heading">
+                            Select the types of buildings that are planned for this development
+                        </h1>
+                    </legend>
+
+                    <div id="building-type-hint" class="govuk-hint">
+                        Select all that apply
+                    </div>
+
+                    {% if error %}
+                    <p id="building-type-error" class="govuk-error-message">
+                        <span class="govuk-visually-hidden">Error:</span> {{ error }}
+                    </p>
+                    {% endif %}
+
+                    <div class="govuk-checkboxes" data-module="govuk-checkboxes">
+                        <div class="govuk-checkboxes__item">
+                            <input class="govuk-checkboxes__input" id="building-types-dwellinghouse"
+                                name="building-types" type="checkbox" value="Dwellinghouse" {% if data.buildingTypes and
+                                data.buildingTypes.includes('Dwellinghouse') %}checked{% endif %}>
+                            <label class="govuk-label govuk-checkboxes__label" for="building-types-dwellinghouse">
+                                Dwellinghouse
+                            </label>
+                        </div>
+                        <div class="govuk-checkboxes__item">
+                            <input class="govuk-checkboxes__input" id="building-types-hotel" name="building-types"
+                                type="checkbox" value="Hotel" {% if data.buildingTypes and
+                                data.buildingTypes.includes('Hotel') %}checked{% endif %}>
+                            <label class="govuk-label govuk-checkboxes__label" for="building-types-hotel">
+                                Hotel
+                            </label>
+                        </div>
+                        <div class="govuk-checkboxes__item">
+                            <input class="govuk-checkboxes__input" id="building-types-hmo" name="building-types"
+                                type="checkbox" value="House of multiple occupation (HMO)" {% if data.buildingTypes and
+                                data.buildingTypes.includes('House of multiple occupation (HMO)') %}checked{% endif %}>
+                            <label class="govuk-label govuk-checkboxes__label" for="building-types-hmo">
+                                House of multiple occupation (HMO)
+                            </label>
+                        </div>
+                        <div class="govuk-checkboxes__item">
+                            <input class="govuk-checkboxes__input" id="building-types-non-residential"
+                                name="building-types" type="checkbox" value="Non-residential development" {% if
+                                data.buildingTypes and data.buildingTypes.includes('Non-residential development')
+                                %}checked{% endif %}>
+                            <label class="govuk-label govuk-checkboxes__label" for="building-types-non-residential">
+                                Non-residential development
+                            </label>
+                        </div>
+                        <div class="govuk-checkboxes__item">
+                            <input class="govuk-checkboxes__input" id="building-types-residential-institution"
+                                name="building-types" type="checkbox" value="Residential institution" {% if
+                                data.buildingTypes and data.buildingTypes.includes('Residential institution')
+                                %}checked{% endif %}>
+                            <label class="govuk-label govuk-checkboxes__label"
+                                for="building-types-residential-institution">
+                                Residential institution
+                            </label>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+
+            <button class="govuk-button" data-module="govuk-button">
+                Continue
+            </button>
+
+        </form>
+    </div>
+</div>
+{% endblock %}

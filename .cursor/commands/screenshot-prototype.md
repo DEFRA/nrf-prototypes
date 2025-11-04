@@ -72,13 +72,12 @@ This slash command captures screenshots of all pages in a prototype journey by a
 
 1. **Launches a browser** using Puppeteer
 2. **Navigates through each page** in the `prototype-path` journey
-3. **Fills out forms** with test data where appropriate
+3. **Fills out forms** with test data from formData configuration
 4. **Captures screenshots** of each page in full-page mode
 5. **Saves screenshots** to `screenshot-dir/<prototype-path>/` directory
-6. **Handles form submissions** automatically to progress through the journey
-7. **Uses the specified `base-url`** to access the prototype
-8. **Waits `delay` milliseconds** between page captures
-9. **Runs in headless mode** if `headless` is set to true
+6. **Uses the specified `base-url`** to access the prototype
+7. **Waits `delay` milliseconds** between page captures
+8. **Runs in headless mode** if `headless` is set to true
 
 ## Screenshot Organization
 
@@ -133,14 +132,13 @@ chmod +x scripts/screenshot-capture.js
 
 ### Form Data
 
-The script automatically fills out forms with appropriate test data:
+The script automatically fills out forms based on the `formData` object in each prototype configuration. The generic form filler supports:
 
-- Journey type: "estimate"
-- File uploads: Mock file names
-- Building types: "Dwellinghouse"
-- Counts: Realistic test values
-- Email: "test@example.com"
-- References: Mock reference numbers
+- **Radio buttons**: Matched by field name and value
+- **Checkboxes**: Arrays of values for multiple selections
+- **Text/email/number inputs**: Matched by field name
+
+Each prototype defines its own test data in the `PROTOTYPE_JOURNEYS` object.
 
 ### Error Handling
 
@@ -201,7 +199,11 @@ const PROTOTYPE_JOURNEYS = {
       // ... add all pages ...
     ],
     formData: {
-      // ... add form data for auto-filling ...
+      // Define test data to fill forms
+      'journey-type': 'estimate', // Radio button
+      'building-types': ['Type1', 'Type2'], // Checkboxes (array)
+      email: 'test@example.com', // Text input
+      count: '10' // Number input
     }
   }
 }

@@ -9,9 +9,9 @@ const fs = require('fs')
 const multer = require('multer')
 
 // Import helpers and validators
-const validators = require('../lib/nrf-estimate-1/validators')
-const buildingTypeHelpers = require('../lib/nrf-estimate-1/building-type-helpers')
-const { ROUTES, TEMPLATES } = require('../config/nrf-estimate-1/routes')
+const validators = require('../lib/nrf-estimate-2/validators')
+const buildingTypeHelpers = require('../lib/nrf-estimate-2/building-type-helpers')
+const { ROUTES, TEMPLATES } = require('../config/nrf-estimate-2/routes')
 const {
   BUILDING_TYPES,
   BUILDING_TYPE_LABELS,
@@ -101,7 +101,7 @@ function isPointInPolygon(point, polygon) {
 
 // Helper function to check if development is within EDP boundary
 function checkEDPIntersection(boundary) {
-  if (!boundary || !boundary.coordinates) return null
+  if (!boundary?.coordinates) return null
 
   const center = boundary.center || [
     boundary.coordinates[0][0],
@@ -931,10 +931,6 @@ router.post(ROUTES.SUMMARY, (req, res) => {
 router.get(ROUTES.CONFIRMATION, (req, res) => {
   const data = req.session.data || {}
 
-  if (!data.estimateReference) {
-    return res.redirect(ROUTES.SUMMARY)
-  }
-
   res.render(TEMPLATES.CONFIRMATION, {
     data: data
   })
@@ -1188,6 +1184,157 @@ router.get(ROUTES.PAYMENT_EMAIL, (req, res) => {
   res.render(TEMPLATES.PAYMENT_EMAIL, {
     data: data
   })
+})
+
+// ===== INVOICE JOURNEY (COMMIT TO PAY AND GET AN INVOICE) =====
+
+// Which NRF levies
+router.get(ROUTES.WHICH, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.WHICH, { data: data })
+})
+
+router.post(ROUTES.WHICH, (req, res) => {
+  const levies = req.body['levies']
+
+  if (!levies || levies === '_unchecked') {
+    return res.render(TEMPLATES.WHICH, {
+      error: 'Select the levy you would like to pay',
+      data: req.session.data || {}
+    })
+  }
+
+  // Normalize to array
+  const selected = Array.isArray(levies) ? levies : [levies]
+
+  req.session.data = req.session.data || {}
+  req.session.data.leviesSelected = selected
+
+  res.redirect(ROUTES.CONFIRM)
+})
+
+// Confirm NRF levy selection
+router.get(ROUTES.CONFIRM, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.CONFIRM, { data: data })
+})
+
+router.post(ROUTES.CONFIRM, (req, res) => {
+  // No validation needed - continue button submission is enough
+  res.redirect(ROUTES.COMPANY_DETAILS)
+})
+
+// Company details entry
+router.get(ROUTES.COMPANY_DETAILS, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.COMPANY_DETAILS, {
+    data: data,
+    errorsByField: {}
+  })
+})
+
+router.post(ROUTES.COMPANY_DETAILS, (req, res) => {
+  const fullName = req.body.fullName
+  const businessName = req.body.businessName
+  const addressLine1 = req.body.addressLine1
+  const addressLine2 = req.body.addressLine2
+  const townOrCity = req.body.townOrCity
+  const county = req.body.county
+  const postcode = req.body.postcode
+
+  const errors = []
+
+  if (!fullName || fullName.trim() === '') {
+    errors.push({ field: 'fullName', message: 'Enter your full name' })
+  }
+
+  if (!addressLine1 || addressLine1.trim() === '') {
+    errors.push({ field: 'addressLine1', message: 'Enter address line 1' })
+  }
+
+  if (!townOrCity || townOrCity.trim() === '') {
+    errors.push({ field: 'townOrCity', message: 'Enter a town or city' })
+  }
+
+  if (!postcode || postcode.trim() === '') {
+    errors.push({ field: 'postcode', message: 'Enter a postcode' })
+  }
+
+  if (errors.length > 0) {
+    const errorsByField = {}
+    errors.forEach((error) => {
+      errorsByField[error.field] = error
+    })
+    return res.render(TEMPLATES.COMPANY_DETAILS, {
+      errors: errors,
+      errorsByField: errorsByField,
+      data: req.session.data || {}
+    })
+  }
+
+  req.session.data = req.session.data || {}
+  req.session.data.fullName = fullName
+  req.session.data.businessName = businessName || ''
+  req.session.data.addressLine1 = addressLine1
+  req.session.data.addressLine2 = addressLine2 || ''
+  req.session.data.townOrCity = townOrCity
+  req.session.data.county = county || ''
+  req.session.data.postcode = postcode
+
+  res.redirect(ROUTES.LPA_EMAIL)
+})
+
+// LPA Email entry
+router.get(ROUTES.LPA_EMAIL, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.LPA_EMAIL, { data: data })
+})
+
+router.post(ROUTES.LPA_EMAIL, (req, res) => {
+  const email = req.body['lpaEmail'] || req.body['email']
+
+  if (!email) {
+    return res.render(TEMPLATES.LPA_EMAIL, {
+      error: 'Enter your email address to continue',
+      data: req.session.data || {}
+    })
+  }
+
+  const validation = validators.validateEmail(email)
+  if (!validation.valid) {
+    return res.render(TEMPLATES.LPA_EMAIL, {
+      error:
+        'Enter an email address in the correct format, like name@example.com',
+      data: req.session.data || {}
+    })
+  }
+
+  req.session.data = req.session.data || {}
+  req.session.data.lpaEmail = email
+
+  res.redirect(ROUTES.SUMMARY_AND_DECLARATION)
+})
+
+// Summary and declaration
+router.get(ROUTES.SUMMARY_AND_DECLARATION, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.SUMMARY_AND_DECLARATION, { data: data })
+})
+
+router.post(ROUTES.SUMMARY_AND_DECLARATION, (req, res) => {
+  // Generate a payment reference for the invoice journey
+  const paymentReference = 'PAY-' + Date.now().toString().slice(-6)
+
+  req.session.data = req.session.data || {}
+  req.session.data.paymentReference = paymentReference
+
+  res.redirect(ROUTES.CONFIRMATION)
+})
+
+// Invoice email content (for documentation/print view)
+router.get(ROUTES.INVOICE_EMAIL_CONTENT, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.INVOICE_EMAIL_CONTENT, { data: data })
 })
 
 module.exports = router

@@ -1,0 +1,109 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Enter the number of rooms in your {{ buildingType | lower }} building - {% if data.journeyType === 'payment' %}Pay for
+Nature Restoration Fund Levy{% else %}Get an estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: "/nrf-estimate-2/building-type"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <form id="room-count-form" action="/nrf-estimate-2/room-count" method="post" novalidate>
+            {% if isChange %}
+            <input type="hidden" name="isChange" value="true">
+            {% endif %}
+            {% if navFromSummary %}
+            <input type="hidden" name="navFromSummary" value="true">
+            {% endif %}
+            {% if buildingTypeKey %}
+            <input type="hidden" name="buildingType" value="{{ buildingTypeKey }}">
+            {% endif %}
+
+            {% if error %}
+            <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert"
+                data-module="govuk-error-summary">
+                <h2 class="govuk-error-summary__title" id="error-summary-title">
+                    There is a problem
+                </h2>
+                <div class="govuk-error-summary__body">
+                    <ul class="govuk-list govuk-error-summary__list">
+                        <li>
+                            <a href="#room-count">{{ error }}</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
+                <h1 class="govuk-label-wrapper">
+                    <label class="govuk-label govuk-label--l" for="room-count">
+                        Enter the number of rooms in your {{ buildingType | lower if buildingType !== 'House of multiple occupation (HMO)' else buildingType }} building(s) planned for the
+                        development
+                    </label>
+                </h1>
+
+                {% if error %}
+                <p id="room-count-error" class="govuk-error-message">
+                    <span class="govuk-visually-hidden">Error:</span> {{ error }}
+                </p>
+                {% endif %}
+
+                <input class="govuk-input govuk-input--width-5 {% if error %}govuk-input--error{% endif %}"
+                    id="room-count" name="room-count" type="number" pattern="[0-9]*" inputmode="numeric"
+                    value="{% if data.roomCounts %}{% if buildingType === 'Hotel' and data.roomCounts.hotelCount %}{{ data.roomCounts.hotelCount }}{% elif buildingType === 'House of multiple occupation (HMO)' and data.roomCounts.hmoCount %}{{ data.roomCounts.hmoCount }}{% elif buildingType === 'Residential institution' and data.roomCounts.residentialInstitutionCount %}{{ data.roomCounts.residentialInstitutionCount }}{% endif %}{% endif %}">
+            </div>
+
+            <button class="govuk-button" data-module="govuk-button" type="submit">
+                Continue
+            </button>
+
+        </form>
+    </div>
+</div>
+
+<script>
+    // Handle nav=summary query parameter
+    document.addEventListener('DOMContentLoaded', function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const navParam = urlParams.get('nav');
+        const isChange = urlParams.get('change') === 'true';
+
+        if (navParam === 'summary') {
+            // Ensure the navFromSummary hidden field is set
+            let navFromSummaryInput = document.querySelector('input[name="navFromSummary"]');
+            if (!navFromSummaryInput) {
+                navFromSummaryInput = document.createElement('input');
+                navFromSummaryInput.type = 'hidden';
+                navFromSummaryInput.name = 'navFromSummary';
+                navFromSummaryInput.value = 'true';
+                document.getElementById('room-count-form').appendChild(navFromSummaryInput);
+            } else {
+                navFromSummaryInput.value = 'true';
+            }
+
+            // Ensure the isChange hidden field is set if needed
+            if (isChange) {
+                let isChangeInput = document.querySelector('input[name="isChange"]');
+                if (!isChangeInput) {
+                    isChangeInput = document.createElement('input');
+                    isChangeInput.type = 'hidden';
+                    isChangeInput.name = 'isChange';
+                    isChangeInput.value = 'true';
+                    document.getElementById('room-count-form').appendChild(isChangeInput);
+                } else {
+                    isChangeInput.value = 'true';
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

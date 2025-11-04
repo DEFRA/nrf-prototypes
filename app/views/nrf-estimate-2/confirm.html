@@ -1,0 +1,63 @@
+{% extends "layouts/main.html" %}
+
+{% set pageName = "Confirm that you want to commit to paying this Nature Restoration Fund levy" %}
+
+{% block beforeContent %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/nrf-estimate-2/which"
+  }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      {% if error %}
+        <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" data-module="govuk-error-summary">
+          <h2 class="govuk-error-summary__title" id="error-summary-title">There is a problem</h2>
+          <div class="govuk-error-summary__body">
+            <ul class="govuk-list govuk-error-summary__list">
+              <li><a href="#confirm-choice">{{ error }}</a></li>
+            </ul>
+          </div>
+        </div>
+      {% endif %}
+
+      <form method="post" novalidate>
+        <h1 class="govuk-heading-l">Confirm that you want to commit to paying this Nature Restoration Fund levy</h1>
+        <div class="govuk-hint">
+          Paying this levy will mitigate your environmental impact for {% if data.leviesSelected and data.leviesSelected.length -%}
+            {%- set impacts = [] -%}
+            {%- for levy in data.leviesSelected -%}
+              {%- if levy and not levy.startsWith('_unchecked') -%}
+                {%- if levy.includes('greater crested newts') -%}
+                  {%- set _ = impacts.push('greater crested newts') -%}
+                {%- elif levy.includes('nutrients') -%}
+                  {%- set _ = impacts.push('nutrients') -%}
+                {%- endif -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {%- for impact in impacts -%}
+              {{- impact -}}
+              {%- if not loop.last %} and {% endif -%}
+            {%- endfor -%}
+          {%- endif %}.
+        </div>
+
+        {% if data.leviesSelected and data.leviesSelected.length %}
+          <ul class="govuk-list">
+            {% for levy in data.leviesSelected %}
+              {% if levy and not levy.startsWith('_unchecked') %}
+                <li>{{ levy }}</li>
+              {% endif %}
+            {% endfor %}
+          </ul>
+        {% endif %}
+
+        <button class="govuk-button" data-module="govuk-button">Confirm</button>
+      </form>
+    </div>
+  </div>
+{% endblock %}
+
+

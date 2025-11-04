@@ -1,0 +1,104 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Check your answers - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/nrf-estimate-2/lpa-email"
+  }) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-l">Check your answers</h1>
+
+        <dl class="govuk-summary-list govuk-!-margin-bottom-9">
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Nature Restoration Fund levy confirmed
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {% if data.leviesSelected %}
+                    {% for levy in data.leviesSelected %}
+                    {% if levy and not levy.startsWith('_unchecked') %}
+                    {{ levy }}{% if not loop.last %}<br>{% endif %}
+                    {% endif %}
+                    {% endfor %}
+                    {% else %}
+                    Not provided
+                    {% endif %}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="/nrf-estimate-2/which">
+                        Change<span class="govuk-visually-hidden"> Nature Restoration Fund levy confirmed</span>
+                    </a>
+                </dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Your details
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.fullName or 'Not provided' }}{% if data.businessName %}<br>{{ data.businessName }}{% endif %}<br>
+                    {{ data.addressLine1 or '' }}{% if data.addressLine2 %}<br>{{ data.addressLine2 }}{% endif %}<br>
+                    {{ data.townOrCity or '' }}{% if data.county %}<br>{{ data.county }}{% endif %}<br>
+                    {{ data.postcode or '' }}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="/nrf-estimate-2/company-details">
+                        Change<span class="govuk-visually-hidden"> Your details</span>
+                    </a>
+                </dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Email address of Local Planning Authority contact
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.lpaEmail or 'Not provided' }}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="/nrf-estimate-2/lpa-email">
+                        Change<span class="govuk-visually-hidden"> Email address of Local Planning Authority contact</span>
+                    </a>
+                </dd>
+            </div>
+        </dl>
+
+        <p class="govuk-body">
+            By confirming and submitting these details you are committing to paying the Nature Restoration Fund levy.
+        </p>
+        
+        <p class="govuk-body">
+            Paying this levy will mitigate your environmental impact for {% if data.leviesSelected and data.leviesSelected.length -%}
+            {%- set impacts = [] -%}
+            {%- for levy in data.leviesSelected -%}
+              {%- if levy and not levy.startsWith('_unchecked') -%}
+                {%- if levy.includes('greater crested newts') -%}
+                  {%- set _ = impacts.push('greater crested newts') -%}
+                {%- elif levy.includes('nutrients') -%}
+                  {%- set _ = impacts.push('nutrients') -%}
+                {%- endif -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {%- for impact in impacts -%}
+              {{- impact -}}
+              {%- if not loop.last %} and {% endif -%}
+            {%- endfor -%}
+          {%- endif %}.
+        </p>
+
+        <form action="/nrf-estimate-2/summary-and-declaration" method="post" novalidate>
+            <button class="govuk-button" data-module="govuk-button">
+                Confirm and submit
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
