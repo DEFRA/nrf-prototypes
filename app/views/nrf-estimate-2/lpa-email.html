@@ -4,11 +4,16 @@
 Enter the email address for your Local Planning Authority (LPA) contact - GOV.UK
 {% endblock %}
 
+{% block beforeContent %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/nrf-estimate-2/company-details"
+  }) }}
+{% endblock %}
+
 {% block content %}
 <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-
-        <a href="/nrf-estimate-2/company-details" class="govuk-back-link">Back</a>
 
         <form action="/nrf-estimate-2/lpa-email" method="post" novalidate>
 
