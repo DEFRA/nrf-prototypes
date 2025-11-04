@@ -1,0 +1,55 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+What would you like to do? - {% if data.journeyType === 'payment' %}Pay for Nature Restoration Fund Levy{% else %}Get an
+estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: "/nrf-estimate-2-map-layers-spike/start"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <form action="/nrf-estimate-2-map-layers-spike/what-would-you-like-to-do" method="post" novalidate>
+
+            <div class="govuk-form-group">
+                <fieldset class="govuk-fieldset">
+                    <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
+                        <h1 class="govuk-fieldset__heading">
+                            What would you like to do?
+                        </h1>
+                    </legend>
+
+                    <div class="govuk-radios" data-module="govuk-radios">
+                        <div class="govuk-radios__item">
+                            <input class="govuk-radios__input" id="journey-type-estimate" name="journey-type"
+                                type="radio" value="estimate" {% if data.journeyType==='estimate' %}checked{% endif %}>
+                            <label class="govuk-label govuk-radios__label" for="journey-type-estimate">
+                                I want an estimate for the Nature Restoration Fund levy
+                            </label>
+                        </div>
+                        <div class="govuk-radios__item">
+                            <input class="govuk-radios__input" id="journey-type-pay" name="journey-type" type="radio"
+                                value="payment" {% if data.journeyType==='payment' %}checked{% endif %}>
+                            <label class="govuk-label govuk-radios__label" for="journey-type-pay">
+                                I have a planning reference and I'm ready to pay the Nature Restoration Fund levy
+                            </label>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+
+            <button class="govuk-button" data-module="govuk-button">
+                Continue
+            </button>
+
+        </form>
+    </div>
+</div>
+{% endblock %}

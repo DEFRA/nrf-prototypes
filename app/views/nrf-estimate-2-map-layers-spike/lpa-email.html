@@ -1,0 +1,68 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Enter the email address for your Local Planning Authority (LPA) contact - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/nrf-estimate-2-map-layers-spike/company-details"
+  }) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <form action="/nrf-estimate-2-map-layers-spike/lpa-email" method="post" novalidate>
+
+            {% if error %}
+            <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert"
+                data-module="govuk-error-summary">
+                <h2 class="govuk-error-summary__title" id="error-summary-title">
+                    There is a problem
+                </h2>
+                <div class="govuk-error-summary__body">
+                    <ul class="govuk-list govuk-error-summary__list">
+                        <li>
+                            <a href="#lpa-email">{{ error }}</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+
+            <h1 class="govuk-heading-l">Enter the email address for your Local Planning Authority (LPA) contact</h1>
+
+            <div class="govuk-hint">
+                Enter the email address for the person that is responsible for your planning application. We will also send a copy to: {{ data.email or 'email@email.co.uk' }}
+            </div>
+
+            <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
+                <label class="govuk-label" for="lpa-email">
+                    Email address
+                </label>
+
+                {% if error %}
+                <p id="lpa-email-error" class="govuk-error-message">
+                    <span class="govuk-visually-hidden">Error:</span> {{ error }}
+                </p>
+                {% endif %}
+
+                <input class="govuk-input govuk-input--width-20 {% if error %}govuk-input--error{% endif %}" id="lpa-email" name="lpaEmail" type="email" spellcheck="false" value="{{ data.lpaEmail }}">
+            </div>
+
+            <p class="govuk-body">
+                Once the LPA contact has approved your commitment to use Nature Restoration Fund levy, you will receive an email with an invoice.
+            </p>
+
+            <button class="govuk-button" data-module="govuk-button">
+                Continue
+            </button>
+
+        </form>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,69 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Enter the number of dwellinghouse buildings planned for the development - {% if data.journeyType === 'payment' %}Pay for
+Nature Restoration Fund Levy{% else %}Get an estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: "/nrf-estimate-2-map-layers-spike/building-type"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <form action="/nrf-estimate-2-map-layers-spike/residential" method="post" novalidate>
+            {% if isChange %}
+            <input type="hidden" name="isChange" value="true">
+            {% endif %}
+            {% if navFromSummary %}
+            <input type="hidden" name="navFromSummary" value="true">
+            {% endif %}
+
+            {% if error %}
+            <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert"
+                data-module="govuk-error-summary">
+                <h2 class="govuk-error-summary__title" id="error-summary-title">
+                    There is a problem
+                </h2>
+                <div class="govuk-error-summary__body">
+                    <ul class="govuk-list govuk-error-summary__list">
+                        <li>
+                            <a href="#residential-building-count">{{ error }}</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
+                <h1 class="govuk-label-wrapper">
+                    <label class="govuk-label govuk-label--l" for="residential-building-count">
+                        Enter the number of dwellinghouse buildings planned for the development
+                    </label>
+                </h1>
+
+                {% if error %}
+                <p id="residential-building-count-error" class="govuk-error-message">
+                    <span class="govuk-visually-hidden">Error:</span> {{ error }}
+                </p>
+                {% endif %}
+
+                <input class="govuk-input govuk-input--width-5 {% if error %}govuk-input--error{% endif %}"
+                    id="residential-building-count" name="residential-building-count" type="number" pattern="[0-9]*"
+                    inputmode="numeric"
+                    value="{% if data.residentialBuildingCount %}{{ data.residentialBuildingCount }}{% endif %}">
+            </div>
+
+            <button class="govuk-button" data-module="govuk-button">
+                Continue
+            </button>
+
+        </form>
+    </div>
+</div>
+{% endblock %}
