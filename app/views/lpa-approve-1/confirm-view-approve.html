@@ -1,0 +1,29 @@
+{% extends "layouts/main.html" %}
+
+{% set pageName="Confirm you want to view and approve these Nature Restoration Fund levy details" %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+  text: "Back",
+  href: "/lpa-approve-1/lpa-approval-email-content"
+}) }}
+{% endblock %}
+
+{% block content %}
+<h1 class="govuk-heading-xl">Confirm you want to view and approve these Nature Restoration Fund levy details.</h1>
+
+<div class="govuk-hint">
+  You will receive an email with a link.
+</div>
+
+<p class="govuk-body">Payment reference: 0006677</p>
+<p class="govuk-body">Business name: Acme Developments</p>
+
+<p class="govuk-body">
+  <a href="/lpa-approve-1/lpa-approval-email-magiclink" role="button" draggable="false" class="govuk-button" data-module="govuk-button">
+    Confirm
+  </a>
+</p>
+
+{% endblock %}
+

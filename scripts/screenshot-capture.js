@@ -277,6 +277,43 @@ const PROTOTYPE_JOURNEYS = {
       postcode: 'SW1A 1AA',
       lpaEmail: 'test@example.com'
     }
+  },
+  'lpa-approve-1': {
+    name: 'LPA Approve Journey',
+    basePath: '/lpa-approve-1',
+    pages: [
+      {
+        path: '/lpa-approval-email-content',
+        name: 'lpa-approval-email-content',
+        title: 'LPA Approval Email Content'
+      },
+      {
+        path: '/confirm-view-approve',
+        name: 'confirm-view-approve',
+        title: 'Confirm View and Approve'
+      },
+      {
+        path: '/lpa-approval-email-magiclink',
+        name: 'lpa-approval-email-magiclink',
+        title: 'LPA Approval Email Magic Link'
+      },
+      {
+        path: '/approve-details',
+        name: 'approve-details',
+        title: 'Approve Details'
+      },
+      {
+        path: '/approval-confirmation',
+        name: 'approval-confirmation',
+        title: 'Approval Confirmation'
+      },
+      {
+        path: '/lpa-approval-confirmation-email',
+        name: 'lpa-approval-confirmation-email',
+        title: 'LPA Approval Confirmation Email'
+      }
+    ],
+    formData: {}
   }
   // Add more prototypes here as needed
 }
