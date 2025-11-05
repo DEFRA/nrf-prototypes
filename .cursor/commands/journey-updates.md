@@ -39,6 +39,26 @@ Type `/journey-updates` in the chat to trigger a merge of changes to the user jo
 - **Grammar fixes**: "If you need to help" → "If you need help"
 - **Alphabetical ordering**: Form options (checkboxes, radio buttons, select options) must be in alphabetical order
 
+### Styling Requirements
+
+When implementing or updating journeys, ensure consistent styling across all pages:
+
+- **Heading Styles**:
+  - **Email pages**: Use `govuk-heading-l` for main headings (h1)
+  - **Regular form/content pages**: Use `govuk-heading-xl` for main headings (h1)
+  - **Confirmation pages**: Use `govukPanel` component with `titleText` (not h1 headings)
+  - **Sub-headings**: Use `govuk-heading-m` for h2, `govuk-heading-s` for h3
+
+- **Email Pages**:
+  - **No button styles**: Email pages must use `govuk-link` class for links, never `govuk-button` or button styling
+  - **Link styling**: All navigation links in email pages should be plain links with `class="govuk-link"`
+
+- **Data Display**:
+  - **Payment/Reference numbers**: When displaying "Payment reference:" or similar labels, make the label bold using `<strong>Payment reference:</strong>` followed by the value
+  - **Structured data**: Use `govuk-summary-list` component for displaying key-value pairs (e.g., payment reference and business name together)
+
+- **Consistency**: Ensure all pages in a journey follow the same styling patterns as existing journeys (nrf-estimate-1, nrf-estimate-2)
+
 ### Structural Change Examples
 
 - **New pages**: Step 7 "Email sent from the Nature Restoration Fund service" → `/nrf-estimate-1/estimate-email-content`
@@ -103,6 +123,7 @@ Take the instructions and parameters provided, then:
        - Button text and navigation elements
      - **Template Preservation**: Maintain GOV.UK Prototype Kit template structure while replacing content
      - **Variable Preservation**: Keep existing template variables and data binding intact
+     - **Styling Preservation**: Ensure correct heading styles (email pages: `govuk-heading-l`, regular pages: `govuk-heading-xl`, confirmation pages: `govukPanel`), email pages use `govuk-link` not buttons, payment references use bold labels, structured data uses `govuk-summary-list`
    - **Fallback Content Comparison** (Secondary Approach):
      - Use grep/search tools to find specific text patterns
      - Compare exact strings between specification and implementation
@@ -138,6 +159,12 @@ Take the instructions and parameters provided, then:
      - Verify terminology consistency throughout the journey
      - Check spacing, punctuation, and capitalization match exactly
      - Verify all form options (checkboxes, radio buttons, select options) are in alphabetical order by display text
+   - **Styling Verification**:
+     - Verify heading styles: email pages use `govuk-heading-l`, regular pages use `govuk-heading-xl`, confirmation pages use `govukPanel`
+     - Check email pages use `govuk-link` for links, not `govuk-button` styles
+     - Verify payment/reference labels are bold (`<strong>Payment reference:</strong>`)
+     - Check structured data uses `govuk-summary-list` where appropriate
+     - Ensure styling consistency with existing journeys (nrf-estimate-1, nrf-estimate-2)
    - **Functional Testing**:
      - Ensure all form submissions work correctly
      - Verify navigation flow is maintained
