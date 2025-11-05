@@ -94,43 +94,8 @@
         let edpBoundaries = []
         let edpLayers = []
 
-        // Create SVG pattern for diagonal lines
-        const svg = document.createElementNS(
-          'http://www.w3.org/2000/svg',
-          'svg'
-        )
-        svg.setAttribute('width', '0')
-        svg.setAttribute('height', '0')
-        svg.style.position = 'absolute'
-
-        const defs = document.createElementNS(
-          'http://www.w3.org/2000/svg',
-          'defs'
-        )
-        const pattern = document.createElementNS(
-          'http://www.w3.org/2000/svg',
-          'pattern'
-        )
-        pattern.setAttribute('id', 'diagonal-stripe')
-        pattern.setAttribute('patternUnits', 'userSpaceOnUse')
-        pattern.setAttribute('width', '8')
-        pattern.setAttribute('height', '8')
-
-        const path = document.createElementNS(
-          'http://www.w3.org/2000/svg',
-          'path'
-        )
-        path.setAttribute('d', 'M-2,2 l4,-4 M0,8 l8,-8 M6,10 l4,-4')
-        path.setAttribute('stroke', '#1d70b8')
-        path.setAttribute('stroke-width', '2')
-
-        pattern.appendChild(path)
-        defs.appendChild(pattern)
-        svg.appendChild(defs)
-        document.body.appendChild(svg)
-
-        // Catchment border color
-        const catchmentColor = '#1d70b8' // GOV.UK blue
+        // Catchment color - purple for good contrast on map
+        const catchmentColor = '#ab47bc'
 
         // Load GeoJSON data
         fetch('/nrf-estimate-2-map-layers-spike/catchments.geojson')
@@ -160,9 +125,8 @@
                   color: catchmentColor,
                   weight: 2,
                   opacity: 0.8,
-                  fillPattern: 'url(#diagonal-stripe)',
-                  fillOpacity: 1,
-                  className: 'catchment-polygon'
+                  fillColor: catchmentColor,
+                  fillOpacity: 0.3
                 }).addTo(map)
 
                 // Add popup with catchment information
