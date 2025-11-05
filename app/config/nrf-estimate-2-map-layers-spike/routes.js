@@ -19,6 +19,7 @@ const ROUTES = {
   RETRIEVE_ESTIMATE_EMAIL: `${BASE_PATH}/retrieve-estimate-email`,
 
   // Boundary definition
+  LOCATION: `${BASE_PATH}/location`,
   MAP: `${BASE_PATH}/map`,
   UPLOAD_REDLINE: `${BASE_PATH}/upload-redline`,
   REDLINE_MAP: `${BASE_PATH}/redline-map`,
@@ -68,6 +69,7 @@ const TEMPLATES = {
   ENTER_ESTIMATE_REF: 'nrf-estimate-2-map-layers-spike/enter-estimate-ref',
   RETRIEVE_ESTIMATE_EMAIL:
     'nrf-estimate-2-map-layers-spike/retrieve-estimate-email',
+  LOCATION: 'nrf-estimate-2-map-layers-spike/location',
   MAP: 'nrf-estimate-2-map-layers-spike/map',
   UPLOAD_REDLINE: 'nrf-estimate-2-map-layers-spike/upload-redline',
   REDLINE_MAP: 'nrf-estimate-2-map-layers-spike/redline-map',
