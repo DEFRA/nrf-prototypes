@@ -549,6 +549,63 @@
     })
 
     // Edit boundary
+    // Helper functions for edit mode UI
+    function enterEditMode() {
+      const panel = document.querySelector('.map-controls-panel')
+      const saveButtonContainer = document.getElementById(
+        'map-save-button-container'
+      )
+      const editButtonsContainer = document.getElementById(
+        'map-edit-buttons-container'
+      )
+
+      // Hide the side panel
+      if (panel) {
+        panel.style.display = 'none'
+      }
+
+      // Hide the save button, show edit buttons
+      if (saveButtonContainer) {
+        saveButtonContainer.style.display = 'none'
+      }
+      if (editButtonsContainer) {
+        editButtonsContainer.style.display = 'block'
+      }
+
+      // Force Leaflet to recalculate map size after panel is hidden
+      setTimeout(() => {
+        map.invalidateSize()
+      }, 100)
+    }
+
+    function exitEditMode() {
+      const panel = document.querySelector('.map-controls-panel')
+      const saveButtonContainer = document.getElementById(
+        'map-save-button-container'
+      )
+      const editButtonsContainer = document.getElementById(
+        'map-edit-buttons-container'
+      )
+
+      // Show the side panel
+      if (panel) {
+        panel.style.display = 'block'
+      }
+
+      // Show the save button, hide edit buttons
+      if (saveButtonContainer && drawnItems.getLayers().length > 0) {
+        saveButtonContainer.style.display = 'block'
+      }
+      if (editButtonsContainer) {
+        editButtonsContainer.style.display = 'none'
+      }
+
+      // Force Leaflet to recalculate map size after panel is shown
+      setTimeout(() => {
+        map.invalidateSize()
+      }, 100)
+    }
+
     editBoundaryBtn.addEventListener('click', function (e) {
       e.preventDefault()
       if (isEditing) {
@@ -561,6 +618,7 @@
         hideErrorSummary()
         editBoundaryBtn.textContent = 'Edit boundary'
         editBoundaryBtn.classList.remove('govuk-link--destructive')
+        exitEditMode()
       } else {
         if (drawnItems.getLayers().length > 0) {
           if (drawControl._toolbars?.edit?._modes?.edit) {
@@ -568,6 +626,7 @@
             isEditing = true
             editBoundaryBtn.textContent = 'Stop editing'
             editBoundaryBtn.classList.add('govuk-link--destructive')
+            enterEditMode()
           }
         } else {
           showErrorSummary('No boundary to edit. Please draw a boundary first.')
@@ -575,85 +634,92 @@
       }
     })
 
-    // Get delete confirmation elements
-    const deleteConfirmationPanel = document.getElementById(
-      'delete-confirmation-panel'
-    )
-    const deleteContinueBtn = document.getElementById('delete-continue-btn')
-    const deleteYesRadio = document.getElementById('delete-yes')
-    const deleteNoRadio = document.getElementById('delete-no')
-    const mapContent = document.getElementById('map-content')
-    const backLink = document.getElementById('back-link')
-
-    function showDeleteConfirmation() {
-      hideErrorSummary()
-      // Reset radio buttons
-      deleteYesRadio.checked = false
-      deleteNoRadio.checked = false
-      showElement(deleteConfirmationPanel)
-      hideElement(mapContent)
-      if (backLink) hideElement(backLink)
-      deleteConfirmationPanel.scrollIntoView({ behavior: 'smooth' })
-      deleteYesRadio.focus()
-    }
-
-    function hideDeleteConfirmation() {
-      hideElement(deleteConfirmationPanel)
-      showElement(mapContent)
-      if (backLink) backLink.style.display = 'inline'
-      deleteBoundaryBtn.focus()
-    }
-
-    // Delete boundary
+    // Delete boundary - immediately delete without confirmation
     deleteBoundaryBtn.addEventListener('click', function (e) {
       e.preventDefault()
       if (drawnItems.getLayers().length > 0) {
-        showDeleteConfirmation()
+        // Delete the boundary immediately
+        drawnItems.clearLayers()
+        updateBoundaryData(null, null)
+        hideErrorSummary()
+        updateLinkStates()
+
+        // Reset editing and drawing states
+        // Disable edit mode on the map
+        if (drawControl._toolbars?.edit?._modes?.edit) {
+          drawControl._toolbars.edit._modes.edit.handler.save()
+          drawControl._toolbars.edit._modes.edit.handler.disable()
+        }
+        // Disable drawing mode on the map
+        if (drawControl._toolbars?.draw?._modes?.polygon) {
+          drawControl._toolbars.draw._modes.polygon.handler.disable()
+        }
+
+        isEditing = false
+        isDrawing = false
+
+        // Reset button text and styling
+        editBoundaryBtn.textContent = 'Edit boundary'
+        editBoundaryBtn.classList.remove('govuk-link--destructive')
+        startDrawingBtn.textContent = 'Start drawing boundary'
+        startDrawingBtn.classList.remove('govuk-link--destructive')
       } else {
         showErrorSummary('No boundary to delete.')
       }
     })
 
-    // Continue button on delete confirmation
-    deleteContinueBtn.addEventListener('click', function (e) {
-      e.preventDefault()
-      if (deleteYesRadio.checked) {
-        // User selected Yes - delete the boundary
-        drawnItems.clearLayers()
-        updateBoundaryData(null, null)
+    // Edit mode: Confirm area button
+    const confirmEditBtn = document.getElementById('confirm-edit-btn')
+    if (confirmEditBtn) {
+      confirmEditBtn.addEventListener('click', function (e) {
+        e.preventDefault()
+
+        // Check if the polygon is complete (not in drawing state)
+        if (drawControl._toolbars?.edit?._modes?.edit) {
+          const editHandler = drawControl._toolbars.edit._modes.edit.handler
+
+          // Complete any incomplete drawings
+          if (editHandler._enabled) {
+            // Save the edits
+            editHandler.save()
+            editHandler.disable()
+          }
+        }
+
+        // Exit edit mode
+        isEditing = false
         hideErrorSummary()
-        updateLinkStates()
-      } else if (deleteNoRadio.checked) {
-        // User selected No - just hide the confirmation panel
+        editBoundaryBtn.textContent = 'Edit boundary'
+        editBoundaryBtn.classList.remove('govuk-link--destructive')
+        exitEditMode()
+      })
+    }
+
+    // Edit mode: Cancel button
+    const cancelEditBtn = document.getElementById('cancel-edit-btn')
+    if (cancelEditBtn) {
+      cancelEditBtn.addEventListener('click', function (e) {
+        e.preventDefault()
+
+        // Revert any changes and exit edit mode
+        if (drawControl._toolbars?.edit?._modes?.edit) {
+          const editHandler = drawControl._toolbars.edit._modes.edit.handler
+
+          // Disable edit mode without saving
+          if (editHandler._enabled) {
+            editHandler.revertLayers()
+            editHandler.disable()
+          }
+        }
+
+        // Exit edit mode
+        isEditing = false
         hideErrorSummary()
-      } else {
-        // No option selected - show error
-        showErrorSummary('Please select an option to continue.')
-        return
-      }
-
-      // Reset editing and drawing states (for both Yes and No)
-      // Disable edit mode on the map
-      if (drawControl._toolbars?.edit?._modes?.edit) {
-        drawControl._toolbars.edit._modes.edit.handler.save()
-        drawControl._toolbars.edit._modes.edit.handler.disable()
-      }
-      // Disable drawing mode on the map
-      if (drawControl._toolbars?.draw?._modes?.polygon) {
-        drawControl._toolbars.draw._modes.polygon.handler.disable()
-      }
-
-      isEditing = false
-      isDrawing = false
-
-      // Reset button text and styling
-      editBoundaryBtn.textContent = 'Edit boundary'
-      editBoundaryBtn.classList.remove('govuk-link--destructive')
-      startDrawingBtn.textContent = 'Start drawing boundary'
-      startDrawingBtn.classList.remove('govuk-link--destructive')
-
-      hideDeleteConfirmation()
-    })
+        editBoundaryBtn.textContent = 'Edit boundary'
+        editBoundaryBtn.classList.remove('govuk-link--destructive')
+        exitEditMode()
+      })
+    }
 
     // Zoom to England
     zoomToEnglandBtn.addEventListener('click', function (e) {
@@ -696,6 +762,9 @@
 
     function updateLinkStates() {
       const hasBoundary = drawnItems.getLayers().length > 0
+      const saveButtonContainer = document.getElementById(
+        'map-save-button-container'
+      )
 
       if (hasBoundary) {
         // Hide start drawing button when boundary exists
@@ -706,6 +775,11 @@
         enableElement(editBoundaryBtn)
         enableElement(deleteBoundaryBtn)
         enableElement(zoomToBoundaryBtn)
+
+        // Show the floating save button
+        if (saveButtonContainer) {
+          saveButtonContainer.style.display = 'block'
+        }
       } else {
         // Show start drawing button when no boundary
         showElement(startDrawingBtn)
@@ -715,6 +789,11 @@
         disableElement(editBoundaryBtn)
         disableElement(deleteBoundaryBtn)
         disableElement(zoomToBoundaryBtn)
+
+        // Hide the floating save button
+        if (saveButtonContainer) {
+          saveButtonContainer.style.display = 'none'
+        }
       }
     }
 

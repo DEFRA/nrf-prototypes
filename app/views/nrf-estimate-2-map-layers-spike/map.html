@@ -63,32 +63,6 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
                 </div>
             </div>
 
-                <!-- Delete confirmation panel -->
-                <div id="delete-confirmation-panel" style="display: none;" role="dialog" aria-labelledby="delete-confirmation-title">
-                    <h1 class="govuk-heading-l" id="delete-confirmation-title">
-                        Are you sure you want to delete the red line boundary?
-                    </h1>
-                    <fieldset class="govuk-fieldset">
-                        <div class="govuk-radios" data-module="govuk-radios">
-                            <div class="govuk-radios__item">
-                                <input class="govuk-radios__input" id="delete-yes" name="delete-boundary" type="radio" value="yes">
-                                <label class="govuk-label govuk-radios__label" for="delete-yes">
-                                    Yes
-                                </label>
-                            </div>
-                            <div class="govuk-radios__item">
-                                <input class="govuk-radios__input" id="delete-no" name="delete-boundary" type="radio" value="no">
-                                <label class="govuk-label govuk-radios__label" for="delete-no">
-                                    No
-                                </label>
-                            </div>
-                        </div>
-                    </fieldset>
-                    <button class="govuk-button govuk-!-margin-top-6" id="delete-continue-btn" type="button" data-module="govuk-button">
-                        Continue
-                    </button>
-                </div>
-
                 <!-- Main map content container -->
                 <div id="map-content" style="height: calc(100vh - 60px);">
 
@@ -146,12 +120,6 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
                                 </a>
                             </div>
                         </div>
-
-                        <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
-
-                        <button class="govuk-button" type="submit">
-                            Save and continue
-                        </button>
                     </div>
 
                     <!-- Map container -->
@@ -160,6 +128,27 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
                             <div id="map-loading"
                                 style="text-align: center; padding: 2rem; background: #f8f8f8; border: 1px solid #ccc;">
                                 <p class="govuk-body">Loading map...</p>
+                            </div>
+                        </div>
+
+                        <!-- Floating save button - only shown when boundary exists -->
+                        <div id="map-save-button-container" style="display: none; position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000;">
+                            <div style="background: #ffffff; padding: 20px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); border-radius: 4px;">
+                                <button class="govuk-button govuk-!-margin-bottom-0" type="submit" data-module="govuk-button">
+                                    Save and continue
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Edit mode buttons - only shown when in edit mode -->
+                        <div id="map-edit-buttons-container" style="display: none; position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000;">
+                            <div style="background: #ffffff; padding: 20px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); border-radius: 4px; display: flex; gap: 10px;">
+                                <button class="govuk-button govuk-!-margin-bottom-0" type="button" id="confirm-edit-btn" data-module="govuk-button">
+                                    Confirm area
+                                </button>
+                                <button class="govuk-button govuk-button--secondary govuk-!-margin-bottom-0" type="button" id="cancel-edit-btn" data-module="govuk-button">
+                                    Cancel
+                                </button>
                             </div>
                         </div>
                     </div>
