@@ -1,4 +1,4 @@
-{% extends "govuk-prototype-kit/layouts/govuk-branded.njk" %}
+{% extends "layouts/map.html" %}
 
 {% set pageName="Draw a red line boundary" %}
 
@@ -12,20 +12,18 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+<style>
+    body, html {
+        overflow: hidden !important;
+    }
+</style>
 {% endblock %}
 
-{% block beforeContent %}
-{{ govukBackLink({
-text: "Back",
-href: backLink
-}) }}
-{% endblock %}
 
 {% block content %}
-<div class="govuk-grid-row">
-    <div class="govuk-grid-column-full">
 
-        <form id="map-form" action="/nrf-estimate-2-map-layers-spike/map" method="post" novalidate>
+
+<form id="map-form" action="/nrf-estimate-2-map-layers-spike/map" method="post" novalidate style="height: 100%;">
             {% if navFromSummary %}
             <input type="hidden" name="navFromSummary" value="true">
             {% endif %}
@@ -92,33 +90,19 @@ href: backLink
                 </div>
 
                 <!-- Main map content container -->
-                <div id="map-content">
-                <h1 class="govuk-label-wrapper">
-                    <label class="govuk-label govuk-label--l" for="map">
-                        Draw a red line boundary
-                    </label>
-                </h1>
-
-                <div id="map-hint" class="govuk-hint">
-                    <p class="govuk-body">
-                        Use the map to draw a red line boundary for where the development might be.
-                    </p>
-                </div>
+                <div id="map-content" style="height: calc(100vh - 60px);">
 
                 <!-- Accessible map interface with left panel -->
-                <div class="map-interface">
+                <div class="map-interface" style="height: 100%;">
                     <!-- Left control panel -->
                     <div class="map-controls-panel">
-                        <!-- Search functionality -->
-                        <div class="govuk-form-group">
-                            <label class="govuk-label" for="location-search">
-                                Search for a location
-                            </label>
-                            <div class="search-container">
-                                <input class="govuk-input" id="location-search" name="location-search" type="text"
-                                    placeholder="Enter postcode, town or area">
-                            </div>
-                        </div>
+                        <h1 class="govuk-heading-m">
+                            Draw a red line boundary
+                        </h1>
+
+                        <p class="govuk-body-s govuk-!-margin-bottom-6">
+                            Use the map to draw a red line boundary for where the development might be.
+                        </p>
 
                         <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
 
@@ -162,11 +146,17 @@ href: backLink
                                 </a>
                             </div>
                         </div>
+
+                        <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+
+                        <button class="govuk-button" type="submit">
+                            Save and continue
+                        </button>
                     </div>
 
                     <!-- Map container -->
-                    <div class="map-container">
-                        <div id="map" role="img" aria-label="Interactive map for drawing development boundary">
+                    <div class="map-container" style="height: 100%;">
+                        <div id="map" role="img" aria-label="Interactive map for drawing development boundary" style="height: 100%;">
                             <div id="map-loading"
                                 style="text-align: center; padding: 2rem; background: #f8f8f8; border: 1px solid #ccc;">
                                 <p class="govuk-body">Loading map...</p>
@@ -176,15 +166,8 @@ href: backLink
                 </div>
 
                 <input type="hidden" id="boundary-data" name="boundary-data" value="{{ existingBoundaryData }}">
-
-            <button class="govuk-button" type="submit">
-                Save and continue
-            </button>
-            </div>
             </div>
         </form>
-    </div>
-</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
