@@ -190,7 +190,8 @@ router.post(ROUTES.REDLINE_MAP, (req, res) => {
   if (hasRedlineBoundaryFile === 'yes') {
     res.redirect(ROUTES.UPLOAD_REDLINE)
   } else {
-    res.redirect(ROUTES.LOCATION)
+    req.session.data.mapReferrer = 'redline-map'
+    res.redirect(ROUTES.MAP)
   }
 })
 
@@ -348,11 +349,14 @@ router.post(ROUTES.LOCATION, (req, res) => {
   // Check if no option is selected
   if (!findby) {
     return res.render(TEMPLATES.LOCATION, {
-      error: 'Select a place or postcode, National Grid Reference (NGR) or an Easting and northing',
-      errorList: [{
-        text: 'Select a place or postcode, National Grid Reference (NGR) or an Easting and northing',
-        href: '#findby'
-      }],
+      error:
+        'Select a place or postcode, National Grid Reference (NGR) or an Easting and northing',
+      errorList: [
+        {
+          text: 'Select a place or postcode, National Grid Reference (NGR) or an Easting and northing',
+          href: '#findby'
+        }
+      ],
       data: req.session.data || {},
       backLink: ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO
     })
@@ -386,10 +390,16 @@ router.post(ROUTES.LOCATION, (req, res) => {
   if (hasErrors) {
     const errorList = []
     if (fieldErrors.placeOrPostcode) {
-      errorList.push({ text: fieldErrors.placeOrPostcode, href: '#placeOrPostcode' })
+      errorList.push({
+        text: fieldErrors.placeOrPostcode,
+        href: '#placeOrPostcode'
+      })
     }
     if (fieldErrors.nationalGridReference) {
-      errorList.push({ text: fieldErrors.nationalGridReference, href: '#nationalGridReference' })
+      errorList.push({
+        text: fieldErrors.nationalGridReference,
+        href: '#nationalGridReference'
+      })
     }
     if (fieldErrors.easting) {
       errorList.push({ text: fieldErrors.easting, href: '#easting' })
@@ -1101,7 +1111,7 @@ router.post(ROUTES.DO_YOU_HAVE_ESTIMATE_REF, (req, res) => {
   if (hasEstimateRef === 'yes') {
     res.redirect(ROUTES.ENTER_ESTIMATE_REF)
   } else {
-    res.redirect(ROUTES.REDLINE_MAP)
+    res.redirect(ROUTES.LOCATION)
   }
 })
 
