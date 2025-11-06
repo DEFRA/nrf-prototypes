@@ -44,8 +44,7 @@ Type `/journey-updates` in the chat to trigger a merge of changes to the user jo
 When implementing or updating journeys, ensure consistent styling across all pages:
 
 - **Heading Styles**:
-  - **Email pages**: Use `govuk-heading-l` for main headings (h1)
-  - **Regular form/content pages**: Use `govuk-heading-xl` for main headings (h1)
+  - **All pages**: Use `govuk-heading-l` for main headings (h1)
   - **Confirmation pages**: Use `govukPanel` component with `titleText` (not h1 headings)
   - **Sub-headings**: Use `govuk-heading-m` for h2, `govuk-heading-s` for h3
 
@@ -123,7 +122,7 @@ Take the instructions and parameters provided, then:
        - Button text and navigation elements
      - **Template Preservation**: Maintain GOV.UK Prototype Kit template structure while replacing content
      - **Variable Preservation**: Keep existing template variables and data binding intact
-     - **Styling Preservation**: Ensure correct heading styles (email pages: `govuk-heading-l`, regular pages: `govuk-heading-xl`, confirmation pages: `govukPanel`), email pages use `govuk-link` not buttons, payment references use bold labels, structured data uses `govuk-summary-list`
+     - **Styling Preservation**: Ensure correct heading styles (all pages: `govuk-heading-l`, confirmation pages: `govukPanel`), email pages use `govuk-link` not buttons, payment references use bold labels, structured data uses `govuk-summary-list`
    - **Fallback Content Comparison** (Secondary Approach):
      - Use grep/search tools to find specific text patterns
      - Compare exact strings between specification and implementation
@@ -160,7 +159,7 @@ Take the instructions and parameters provided, then:
      - Check spacing, punctuation, and capitalization match exactly
      - Verify all form options (checkboxes, radio buttons, select options) are in alphabetical order by display text
    - **Styling Verification**:
-     - Verify heading styles: email pages use `govuk-heading-l`, regular pages use `govuk-heading-xl`, confirmation pages use `govukPanel`
+     - Verify heading styles: all pages use `govuk-heading-l`, confirmation pages use `govukPanel`
      - Check email pages use `govuk-link` for links, not `govuk-button` styles
      - Verify payment/reference labels are bold (`<strong>Payment reference:</strong>`)
      - Check structured data uses `govuk-summary-list` where appropriate
