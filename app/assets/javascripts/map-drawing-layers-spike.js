@@ -538,12 +538,14 @@
         hideErrorSummary()
         startDrawingBtn.textContent = 'Start drawing boundary'
         startDrawingBtn.classList.remove('govuk-link--destructive')
+        exitEditMode()
       } else {
         if (drawControl._toolbars?.draw?._modes?.polygon) {
           drawControl._toolbars.draw._modes.polygon.handler.enable()
           isDrawing = true
           startDrawingBtn.textContent = 'Cancel drawing'
           startDrawingBtn.classList.add('govuk-link--destructive')
+          enterEditMode()
         }
       }
     })
@@ -668,14 +670,24 @@
       }
     })
 
-    // Edit mode: Confirm area button
+    // Edit/Drawing mode: Confirm area button
     const confirmEditBtn = document.getElementById('confirm-edit-btn')
     if (confirmEditBtn) {
       confirmEditBtn.addEventListener('click', function (e) {
         e.preventDefault()
 
-        // Check if the polygon is complete (not in drawing state)
-        if (drawControl._toolbars?.edit?._modes?.edit) {
+        // Handle drawing mode - complete the drawing
+        if (isDrawing && drawControl._toolbars?.draw?._modes?.polygon) {
+          const drawHandler = drawControl._toolbars.draw._modes.polygon.handler
+
+          // If currently drawing, complete the polygon
+          if (drawHandler._enabled) {
+            drawHandler.completeShape()
+          }
+        }
+
+        // Handle edit mode - save edits
+        if (isEditing && drawControl._toolbars?.edit?._modes?.edit) {
           const editHandler = drawControl._toolbars.edit._modes.edit.handler
 
           // Complete any incomplete drawings
@@ -684,39 +696,65 @@
             editHandler.save()
             editHandler.disable()
           }
+
+          // Exit edit mode
+          isEditing = false
+          editBoundaryBtn.textContent = 'Edit boundary'
+          editBoundaryBtn.classList.remove('govuk-link--destructive')
         }
 
-        // Exit edit mode
-        isEditing = false
+        // Exit drawing mode
+        if (isDrawing) {
+          if (drawControl._toolbars?.draw?._modes?.polygon) {
+            drawControl._toolbars.draw._modes.polygon.handler.disable()
+          }
+          isDrawing = false
+          startDrawingBtn.textContent = 'Start drawing boundary'
+          startDrawingBtn.classList.remove('govuk-link--destructive')
+        }
+
         hideErrorSummary()
-        editBoundaryBtn.textContent = 'Edit boundary'
-        editBoundaryBtn.classList.remove('govuk-link--destructive')
         exitEditMode()
       })
     }
 
-    // Edit mode: Cancel button
+    // Edit/Drawing mode: Cancel button
     const cancelEditBtn = document.getElementById('cancel-edit-btn')
     if (cancelEditBtn) {
       cancelEditBtn.addEventListener('click', function (e) {
         e.preventDefault()
 
-        // Revert any changes and exit edit mode
-        if (drawControl._toolbars?.edit?._modes?.edit) {
-          const editHandler = drawControl._toolbars.edit._modes.edit.handler
-
-          // Disable edit mode without saving
-          if (editHandler._enabled) {
-            editHandler.revertLayers()
-            editHandler.disable()
+        // Cancel drawing mode - remove any partial drawing
+        if (isDrawing) {
+          if (currentDrawingLayer) {
+            drawnItems.removeLayer(currentDrawingLayer)
+            currentDrawingLayer = null
           }
+          if (drawControl._toolbars?.draw?._modes?.polygon) {
+            drawControl._toolbars.draw._modes.polygon.handler.disable()
+          }
+          isDrawing = false
+          startDrawingBtn.textContent = 'Start drawing boundary'
+          startDrawingBtn.classList.remove('govuk-link--destructive')
         }
 
-        // Exit edit mode
-        isEditing = false
+        // Cancel edit mode - revert any changes
+        if (isEditing) {
+          if (drawControl._toolbars?.edit?._modes?.edit) {
+            const editHandler = drawControl._toolbars.edit._modes.edit.handler
+
+            // Disable edit mode without saving
+            if (editHandler._enabled) {
+              editHandler.revertLayers()
+              editHandler.disable()
+            }
+          }
+          isEditing = false
+          editBoundaryBtn.textContent = 'Edit boundary'
+          editBoundaryBtn.classList.remove('govuk-link--destructive')
+        }
+
         hideErrorSummary()
-        editBoundaryBtn.textContent = 'Edit boundary'
-        editBoundaryBtn.classList.remove('govuk-link--destructive')
         exitEditMode()
       })
     }
@@ -807,6 +845,7 @@
       startDrawingBtn.classList.remove('govuk-link--destructive')
       hideErrorSummary()
       updateLinkStates()
+      exitEditMode()
 
       if (edpLayers && edpLayers.length > 0) {
         const drawnPolygon = layer.getLatLngs()[0]
