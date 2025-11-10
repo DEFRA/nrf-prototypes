@@ -16,6 +16,10 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
     body, html {
         overflow: hidden !important;
     }
+
+    .map-controls-panel .govuk-back-link {
+        margin-bottom: 20px;
+    }
 </style>
 {% endblock %}
 
@@ -70,6 +74,8 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
                 <div class="map-interface" style="height: 100%;">
                     <!-- Left control panel -->
                     <div class="map-controls-panel">
+                        <a href="{{ backLink }}" class="govuk-back-link">Back</a>
+
                         <h1 class="govuk-heading-m">
                             Draw a red line boundary
                         </h1>
