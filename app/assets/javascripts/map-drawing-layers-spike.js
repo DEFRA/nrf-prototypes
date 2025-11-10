@@ -83,7 +83,16 @@
         }
 
         // Initialize the map centered on England
-        const map = L.map('map').setView([52.5, -1.5], 6)
+        const map = L.map('map', {
+          zoomControl: false
+        }).setView([52.5, -1.5], 6)
+
+        // Add zoom control to bottom-right
+        L.control
+          .zoom({
+            position: 'bottomright'
+          })
+          .addTo(map)
 
         // Add OpenStreetMap tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -250,6 +259,9 @@
             toolbar.style.display = 'none'
           }
         }, 100)
+
+        // Initialize location search
+        initLocationSearch(map)
 
         // Load existing boundary data if available
         const existingBoundaryData =
@@ -574,6 +586,14 @@
         editButtonsContainer.style.display = 'block'
       }
 
+      // Hide search button and container
+      if (map._searchButton) {
+        map._searchButton.style.display = 'none'
+      }
+      if (map._searchContainer) {
+        map._searchContainer.style.display = 'none'
+      }
+
       // Force Leaflet to recalculate map size after panel is hidden
       setTimeout(() => {
         map.invalidateSize()
@@ -600,6 +620,11 @@
       }
       if (editButtonsContainer) {
         editButtonsContainer.style.display = 'none'
+      }
+
+      // Show search button (but not the container)
+      if (map._searchButton) {
+        map._searchButton.style.display = 'flex'
       }
 
       // Force Leaflet to recalculate map size after panel is shown
@@ -897,5 +922,295 @@
     })
 
     updateLinkStates()
+  }
+
+  // Location Search Functionality
+  function initLocationSearch(map) {
+    // Create search button
+    const searchButton = document.createElement('button')
+    searchButton.id = 'location-search-button'
+    searchButton.className = 'govuk-button govuk-button--secondary'
+    searchButton.innerHTML =
+      '<svg width="27" height="27" viewBox="0 0 27 27" fill="none" xmlns="http://www.w3.org/2000/svg" focusable="false" aria-hidden="true" style="margin-right: 10px;"><circle cx="12.0161" cy="11.0161" r="8.51613" stroke="currentColor" stroke-width="2"></circle><line x1="17.8668" y1="17.3587" x2="26.4475" y2="25.9393" stroke="currentColor" stroke-width="2"></line></svg><span>Search</span>'
+    searchButton.setAttribute('aria-label', 'Search for location')
+    searchButton.style.cssText = `
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
+      margin: 0;
+      padding: 8px 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: none;
+      border-radius: 0;
+      height: 45px;
+      box-sizing: border-box;
+    `
+
+    // Create search container
+    const searchContainer = document.createElement('div')
+    searchContainer.id = 'location-search-container'
+    searchContainer.style.cssText = `
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 999;
+      background: #b1dcf3;
+      padding: 0;
+      box-shadow: none;
+      border-radius: 0;
+      min-width: 400px;
+      display: none;
+    `
+
+    // Create search input
+    const searchInput = document.createElement('input')
+    searchInput.id = 'location-search-input'
+    searchInput.className = 'govuk-input'
+    searchInput.type = 'text'
+    searchInput.placeholder = 'Search for a place in England'
+    searchInput.style.cssText = `
+      width: 100%;
+      margin: 0;
+      border-radius: 0;
+      padding: 8px 12px;
+      font-size: 19px;
+      line-height: 1.25;
+      box-sizing: border-box;
+      outline: none;
+      height: 45px;
+      border: 2px solid #0b0c0c;
+    `
+
+    // Create results dropdown
+    const resultsDropdown = document.createElement('div')
+    resultsDropdown.id = 'location-search-results'
+    resultsDropdown.style.cssText = `
+      background: white;
+      border: 1px solid #b1b4b6;
+      border-top: none;
+      max-height: 300px;
+      overflow-y: auto;
+      display: none;
+    `
+
+    searchContainer.appendChild(searchInput)
+    searchContainer.appendChild(resultsDropdown)
+
+    // Add to map container
+    const mapContainer = document.getElementById('map')
+    mapContainer.appendChild(searchButton)
+    mapContainer.appendChild(searchContainer)
+
+    let searchTimeout
+
+    // Toggle search container
+    searchButton.addEventListener('click', function (e) {
+      e.preventDefault()
+      e.stopPropagation()
+      const isVisible = searchContainer.style.display === 'block'
+      searchContainer.style.display = isVisible ? 'none' : 'block'
+      searchButton.style.display = isVisible ? 'flex' : 'none'
+      if (!isVisible) {
+        searchInput.focus()
+        // Show results dropdown if there are results and input has value
+        if (
+          searchInput.value.trim().length > 0 &&
+          resultsDropdown.children.length > 0
+        ) {
+          resultsDropdown.style.display = 'block'
+        }
+      }
+    })
+
+    // Hide search when clicking outside
+    document.addEventListener('click', function (e) {
+      if (
+        !searchContainer.contains(e.target) &&
+        !searchButton.contains(e.target)
+      ) {
+        searchContainer.style.display = 'none'
+        searchButton.style.display = 'flex'
+        resultsDropdown.style.display = 'none'
+      }
+    })
+
+    // Show results when input is focused if there are existing results
+    searchInput.addEventListener('focus', function () {
+      if (
+        searchInput.value.trim().length > 0 &&
+        resultsDropdown.children.length > 0
+      ) {
+        resultsDropdown.style.display = 'block'
+      }
+    })
+
+    // Search input handler
+    searchInput.addEventListener('input', function (e) {
+      const query = e.target.value.trim()
+
+      clearTimeout(searchTimeout)
+
+      if (query.length < 2) {
+        resultsDropdown.style.display = 'none'
+        return
+      }
+
+      searchTimeout = setTimeout(() => {
+        searchLocation(query, resultsDropdown, map)
+      }, 300)
+    })
+
+    // Handle keyboard navigation
+    searchInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        searchContainer.style.display = 'none'
+        searchButton.style.display = 'flex'
+        resultsDropdown.style.display = 'none'
+      }
+    })
+
+    // Store reference to search elements for hiding during edit/draw mode
+    map._searchButton = searchButton
+    map._searchContainer = searchContainer
+  }
+
+  // Search for location using postcodes.io API
+  function searchLocation(query, resultsDropdown, map) {
+    // Request more results to account for filtering out non-English locations
+    const apiUrl = `https://api.postcodes.io/places?q=${encodeURIComponent(query)}&limit=50`
+
+    fetch(apiUrl)
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.status === 200 && data.result && data.result.length > 0) {
+          // Filter results to only include English locations
+          const englishResults = data.result.filter(
+            (result) => result.country === 'England'
+          )
+
+          if (englishResults.length > 0) {
+            // Limit to 10 results after filtering
+            displaySearchResults(
+              englishResults.slice(0, 10),
+              resultsDropdown,
+              map
+            )
+          } else {
+            resultsDropdown.innerHTML =
+              '<div style="padding: 10px; color: #505a5f;">No English locations found. Try a different search term.</div>'
+            resultsDropdown.style.display = 'block'
+          }
+        } else {
+          resultsDropdown.innerHTML =
+            '<div style="padding: 10px; color: #505a5f;">No results found</div>'
+          resultsDropdown.style.display = 'block'
+        }
+      })
+      .catch((error) => {
+        console.error('Error searching location:', error)
+        resultsDropdown.innerHTML =
+          '<div style="padding: 10px; color: #d4351c;">Error searching location</div>'
+        resultsDropdown.style.display = 'block'
+      })
+  }
+
+  // Display search results
+  function displaySearchResults(results, resultsDropdown, map) {
+    resultsDropdown.innerHTML = ''
+    resultsDropdown.style.display = 'block'
+
+    results.forEach((result) => {
+      const resultItem = document.createElement('button')
+      resultItem.type = 'button'
+      resultItem.className = 'location-search-result-item'
+      resultItem.style.cssText = `
+        width: 100%;
+        text-align: left;
+        padding: 10px 15px;
+        border: none;
+        background: white;
+        cursor: pointer;
+        display: block;
+        font-family: inherit;
+        font-size: inherit;
+      `
+
+      // Create result text with location details
+      const nameText = document.createElement('div')
+      nameText.style.fontWeight = 'bold'
+      nameText.textContent = result.name_1
+
+      const detailsText = document.createElement('div')
+      detailsText.style.cssText = 'font-size: 14px; color: #505a5f;'
+      const details = []
+      if (result.local_type) details.push(result.local_type)
+      if (result.county_unitary) details.push(result.county_unitary)
+      if (result.region) details.push(result.region)
+      detailsText.textContent = details.join(', ')
+
+      resultItem.appendChild(nameText)
+      resultItem.appendChild(detailsText)
+
+      // Hover effect
+      resultItem.addEventListener('mouseenter', function () {
+        resultItem.style.background = '#f3f2f1'
+      })
+      resultItem.addEventListener('mouseleave', function () {
+        resultItem.style.background = 'white'
+      })
+
+      // Click handler
+      resultItem.addEventListener('click', function () {
+        zoomToLocation(result, map)
+        resultsDropdown.style.display = 'none'
+        const searchContainer = document.getElementById(
+          'location-search-container'
+        )
+        const searchButton = document.getElementById('location-search-button')
+        searchContainer.style.display = 'none'
+        searchButton.style.display = 'flex'
+      })
+
+      resultsDropdown.appendChild(resultItem)
+    })
+  }
+
+  /**
+   * Calculate zoom level based on location type
+   * @param {'City' | 'Town' | 'Suburban Area' | 'Village' | 'Hamlet' | 'Other Settlement' | 'Locality' | string} localType - The type of location from postcodes.io API
+   * @returns {number} The appropriate zoom level (11-15)
+   */
+  function getZoomLevelFromLocationType(localType) {
+    // Map local_type to appropriate zoom levels
+    // More specific types = more zoomed in
+    const typeToZoom = {
+      City: 11, // Large cities - zoomed out
+      Town: 12, // Medium towns
+      'Suburban Area': 13, // Suburban areas
+      Village: 14, // Small villages
+      Hamlet: 15, // Very small hamlets - street level
+      'Other Settlement': 14, // Default for settlements
+      Locality: 14 // Other localities
+    }
+
+    // Return zoom level or default to 13 if type not found
+    return typeToZoom[localType] || 13
+  }
+
+  // Zoom to selected location
+  function zoomToLocation(location, map) {
+    const lat = location.latitude
+    const lng = location.longitude
+    const localType = location.local_type
+
+    const zoomLevel = getZoomLevelFromLocationType(localType)
+
+    // Animate to location
+    map.flyTo([lat, lng], zoomLevel, {
+      duration: 1.5
+    })
   }
 })()
