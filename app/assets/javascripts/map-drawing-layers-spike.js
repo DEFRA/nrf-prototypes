@@ -87,17 +87,63 @@
           zoomControl: false
         }).setView([52.5, -1.5], 6)
 
-        // Add zoom control to bottom-right
+        // Add zoom control to top-right
         L.control
           .zoom({
+            position: 'topright'
+          })
+          .addTo(map)
+
+        // Create base layers for the layer control
+        const streetMap = L.tileLayer(
+          'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+          {
+            attribution: '© OpenStreetMap contributors'
+          }
+        )
+
+        const satelliteMap = L.tileLayer(
+          'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+          {
+            attribution:
+              'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, and others'
+          }
+        )
+
+        // Check for saved layer preference in cookie
+        const savedLayer = window.CookieUtils
+          ? window.CookieUtils.get('mapBaseLayer')
+          : null
+
+        // Add default layer based on saved preference or default to street map
+        if (savedLayer === 'satellite') {
+          satelliteMap.addTo(map)
+        } else {
+          streetMap.addTo(map)
+        }
+
+        // Create layer control with base layers
+        const baseLayers = {
+          'Street Map': streetMap,
+          'Satellite View': satelliteMap
+        }
+
+        L.control
+          .layers(baseLayers, null, {
             position: 'bottomright'
           })
           .addTo(map)
 
-        // Add OpenStreetMap tiles
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap contributors'
-        }).addTo(map)
+        // Save layer preference when changed
+        map.on('baselayerchange', function (e) {
+          if (window.CookieUtils) {
+            if (e.name === 'Satellite View') {
+              window.CookieUtils.set('mapBaseLayer', 'satellite', 365)
+            } else {
+              window.CookieUtils.set('mapBaseLayer', 'street', 365)
+            }
+          }
+        })
 
         // Load GeoJSON boundaries
         let edpBoundaries = []
@@ -135,7 +181,7 @@
                   weight: 2,
                   opacity: 0.8,
                   fillColor: catchmentColor,
-                  fillOpacity: 0.3
+                  fillOpacity: 0.6
                 }).addTo(map)
 
                 // Add popup with catchment information
