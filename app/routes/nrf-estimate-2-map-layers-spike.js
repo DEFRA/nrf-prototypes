@@ -160,7 +160,7 @@ router.post(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO, (req, res) => {
 
   // Route based on journey type
   if (journeyType === 'estimate') {
-    res.redirect(ROUTES.LOCATION)
+    res.redirect(ROUTES.REDLINE_MAP)
   } else {
     res.redirect(ROUTES.DO_YOU_HAVE_ESTIMATE_REF)
   }
@@ -169,7 +169,7 @@ router.post(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO, (req, res) => {
 // Redline boundary file question
 router.get(ROUTES.REDLINE_MAP, (req, res) => {
   const data = req.session.data || {}
-  const backLink = ROUTES.LOCATION
+  const backLink = ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO
   res.render(TEMPLATES.REDLINE_MAP, { data: data, backLink: backLink })
 })
 
@@ -327,111 +327,6 @@ router.post(
   }
 )
 
-// Find location page
-router.get(ROUTES.LOCATION, (req, res) => {
-  const data = req.session.data || {}
-  const backLink = ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO
-
-  res.render(TEMPLATES.LOCATION, {
-    data: data,
-    backLink: backLink
-  })
-})
-
-// Handle location selection
-router.post(ROUTES.LOCATION, (req, res) => {
-  const findby = req.body['findby']
-  const placeOrPostcode = req.body['placeOrPostcode']
-  const nationalGridReference = req.body['nationalGridReference']
-  const easting = req.body['easting']
-  const northing = req.body['northing']
-
-  // Check if no option is selected
-  if (!findby) {
-    return res.render(TEMPLATES.LOCATION, {
-      error:
-        'Select a place or postcode, National Grid Reference (NGR) or an Easting and northing',
-      errorList: [
-        {
-          text: 'Select a place or postcode, National Grid Reference (NGR) or an Easting and northing',
-          href: '#findby'
-        }
-      ],
-      data: req.session.data || {},
-      backLink: ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO
-    })
-  }
-
-  // Validate based on selection
-  const fieldErrors = {}
-  let hasErrors = false
-
-  if (findby === 'placeOrPostcode') {
-    if (!placeOrPostcode || placeOrPostcode.trim() === '') {
-      fieldErrors.placeOrPostcode = 'Enter a real place name or postcode'
-      hasErrors = true
-    }
-  } else if (findby === 'nationalGridReference') {
-    if (!nationalGridReference || nationalGridReference.trim() === '') {
-      fieldErrors.nationalGridReference = 'Enter a real National Grid Reference'
-      hasErrors = true
-    }
-  } else if (findby === 'eastingNorthing') {
-    if (!easting || easting.trim() === '') {
-      fieldErrors.easting = 'Enter an easting'
-      hasErrors = true
-    }
-    if (!northing || northing.trim() === '') {
-      fieldErrors.northing = 'Enter a northing'
-      hasErrors = true
-    }
-  }
-
-  if (hasErrors) {
-    const errorList = []
-    if (fieldErrors.placeOrPostcode) {
-      errorList.push({
-        text: fieldErrors.placeOrPostcode,
-        href: '#placeOrPostcode'
-      })
-    }
-    if (fieldErrors.nationalGridReference) {
-      errorList.push({
-        text: fieldErrors.nationalGridReference,
-        href: '#nationalGridReference'
-      })
-    }
-    if (fieldErrors.easting) {
-      errorList.push({ text: fieldErrors.easting, href: '#easting' })
-    }
-    if (fieldErrors.northing) {
-      errorList.push({ text: fieldErrors.northing, href: '#northing' })
-    }
-
-    return res.render(TEMPLATES.LOCATION, {
-      fieldErrors: fieldErrors,
-      errorList: errorList,
-      data: req.session.data || {},
-      backLink: ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO
-    })
-  }
-
-  // Store in session
-  req.session.data = req.session.data || {}
-  req.session.data.findby = findby
-  if (findby === 'placeOrPostcode') {
-    req.session.data.placeOrPostcode = placeOrPostcode
-  } else if (findby === 'nationalGridReference') {
-    req.session.data.nationalGridReference = nationalGridReference
-  } else if (findby === 'eastingNorthing') {
-    req.session.data.easting = easting
-    req.session.data.northing = northing
-  }
-
-  // Redirect to redline-map question
-  res.redirect(ROUTES.REDLINE_MAP)
-})
-
 // Draw polygon on map
 router.get(ROUTES.MAP, (req, res) => {
   const data = req.session.data || {}
@@ -444,8 +339,6 @@ router.get(ROUTES.MAP, (req, res) => {
   let backLink = ROUTES.REDLINE_MAP
   if (data.mapReferrer === 'upload-redline') {
     backLink = ROUTES.UPLOAD_REDLINE
-  } else if (data.mapReferrer === 'location') {
-    backLink = ROUTES.LOCATION
   }
 
   res.render(TEMPLATES.MAP, {
@@ -1111,7 +1004,7 @@ router.post(ROUTES.DO_YOU_HAVE_ESTIMATE_REF, (req, res) => {
   if (hasEstimateRef === 'yes') {
     res.redirect(ROUTES.ENTER_ESTIMATE_REF)
   } else {
-    res.redirect(ROUTES.LOCATION)
+    res.redirect(ROUTES.REDLINE_MAP)
   }
 })
 
