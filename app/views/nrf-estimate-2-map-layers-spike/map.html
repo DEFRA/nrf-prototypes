@@ -51,68 +51,7 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
         height: 22px;
     }
 
-    /* Map style modal - positioned next to button */
-    .map-style-modal {
-        position: absolute;
-        top: 10px;
-        right: 60px;
-        z-index: 10000;
-    }
-
-    .map-style-modal-content {
-        background: white;
-        padding: 15px 30px 20px 20px;
-        border-radius: 0;
-        width: auto;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        position: relative;
-    }
-
-    .map-style-header {
-        margin-bottom: 20px;
-        padding-right: 35px;
-    }
-
-    .map-style-header h2 {
-        margin: 0;
-        font-size: 16px;
-        font-weight: 700;
-        font-family: "GDS Transport", arial, sans-serif;
-        line-height: 1.25;
-    }
-
-    .map-style-close {
-        background: transparent;
-        border: none;
-        cursor: pointer;
-        padding: 8px;
-        width: 36px;
-        height: 36px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #0b0c0c;
-        margin: 0;
-        position: absolute;
-        top: 5px;
-        right: 5px;
-    }
-
-    .map-style-close svg {
-        width: 16px;
-        height: 16px;
-        display: block;
-    }
-
-    .map-style-close:hover {
-        background: rgba(0, 0, 0, 0.05);
-    }
-
-    .map-style-close:focus {
-        outline: 3px solid #ffdd00;
-        outline-offset: 0;
-    }
-
+    /* Map style selector specific styles */
     .map-style-options {
         display: flex;
         gap: 20px;
@@ -317,5 +256,6 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 <script src="/public/javascripts/utils.js"></script>
+<script src="/public/javascripts/components/modal.js"></script>
 <script src="/public/javascripts/map-drawing-layers-spike.js"></script>
 {% endblock %}

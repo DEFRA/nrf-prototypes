@@ -148,6 +148,9 @@
           })
           .addTo(map)
 
+        // Map style modal instance
+        let mapStyleModal = null
+
         // Create map style modal
         function showMapStyleModal() {
           // Hide error banner when opening modal
@@ -158,100 +161,96 @@
             ? window.CookieUtils.get('mapBaseLayer')
             : null
 
-          const modal = document.createElement('div')
-          modal.className = 'map-style-modal'
-          modal.innerHTML = `
-            <div class="map-style-modal-content">
-              <div class="map-style-header">
-                <h2>Map style</h2>
-                <button class="map-style-close" aria-label="Close">
-                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M1 1L17 17M17 1L1 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                  </svg>
-                </button>
-              </div>
-              <div class="map-style-options">
-                <button class="map-style-option ${currentLayer !== 'satellite' ? 'map-style-option--selected' : ''}" data-style="street">
-                  <div class="map-style-thumbnail">
-                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23f2efe9' width='100' height='100'/%3E%3Cpath fill='%23fff' d='M20 30h15v20H20zM50 25h30v15H50zM25 60h20v25H25zM60 55h25v30H60z'/%3E%3Cpath stroke='%23ccc' stroke-width='2' fill='none' d='M0 40h100M40 0v100'/%3E%3Cpath fill='%23d4d4d4' d='M5 5h8v8H5zM65 70h6v6h-6z'/%3E%3C/svg%3E" alt="Street map preview" />
-                  </div>
-                  <span class="map-style-label">Street map</span>
-                </button>
-                <button class="map-style-option ${currentLayer === 'satellite' ? 'map-style-option--selected' : ''}" data-style="satellite">
-                  <div class="map-style-thumbnail">
-                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3Cpattern id='terrain' width='10' height='10' patternUnits='userSpaceOnUse'%3E%3Crect fill='%234a5f3a' width='10' height='10'/%3E%3Crect fill='%235d7047' x='2' y='2' width='4' height='4'/%3E%3C/pattern%3E%3C/defs%3E%3Crect fill='url(%23terrain)' width='100' height='100'/%3E%3Cpath fill='%23667d52' d='M20 40h25v20H20z'/%3E%3Cpath fill='%2378916a' d='M60 60h30v25H60z'/%3E%3Cpath fill='%233d4f2f' d='M10 75h15v15H10z'/%3E%3C/svg%3E" alt="Satellite view preview" />
-                  </div>
-                  <span class="map-style-label">Satellite</span>
-                </button>
-              </div>
+          // Create modal content
+          const modalContent = `
+            <div class="map-style-options">
+              <button class="map-style-option ${currentLayer !== 'satellite' ? 'map-style-option--selected' : ''}" data-style="street">
+                <div class="map-style-thumbnail">
+                  <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23f2efe9' width='100' height='100'/%3E%3Cpath fill='%23fff' d='M20 30h15v20H20zM50 25h30v15H50zM25 60h20v25H25zM60 55h25v30H60z'/%3E%3Cpath stroke='%23ccc' stroke-width='2' fill='none' d='M0 40h100M40 0v100'/%3E%3Cpath fill='%23d4d4d4' d='M5 5h8v8H5zM65 70h6v6h-6z'/%3E%3C/svg%3E" alt="Street map preview" />
+                </div>
+                <span class="map-style-label">Street map</span>
+              </button>
+              <button class="map-style-option ${currentLayer === 'satellite' ? 'map-style-option--selected' : ''}" data-style="satellite">
+                <div class="map-style-thumbnail">
+                  <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3Cpattern id='terrain' width='10' height='10' patternUnits='userSpaceOnUse'%3E%3Crect fill='%234a5f3a' width='10' height='10'/%3E%3Crect fill='%235d7047' x='2' y='2' width='4' height='4'/%3E%3C/pattern%3E%3C/defs%3E%3Crect fill='url(%23terrain)' width='100' height='100'/%3E%3Cpath fill='%23667d52' d='M20 40h25v20H20z'/%3E%3Cpath fill='%2378916a' d='M60 60h30v25H60z'/%3E%3Cpath fill='%233d4f2f' d='M10 75h15v15H10z'/%3E%3C/svg%3E" alt="Satellite view preview" />
+                </div>
+                <span class="map-style-label">Satellite</span>
+              </button>
             </div>
           `
 
-          mapContainer.appendChild(modal)
-
-          // Close modal handlers
-          const closeBtn = modal.querySelector('.map-style-close')
-          closeBtn.addEventListener('click', () => {
-            if (mapContainer.contains(modal)) {
-              mapContainer.removeChild(modal)
+          // Create modal using component
+          mapStyleModal = new Modal({
+            title: 'Map style',
+            position: 'top-right',
+            content: modalContent,
+            container: mapContainer,
+            closeOnOutsideClick: false, // We'll handle this manually to exclude the button
+            onClose: () => {
+              mapStyleModal = null
             }
           })
 
-          // Close on outside click
-          document.addEventListener(
-            'click',
-            function closeOnOutside(e) {
+          mapStyleModal.open()
+
+          // Setup event handlers after modal is created
+          setTimeout(() => {
+            const modalElement = mapStyleModal.getElement()
+            if (!modalElement) return
+
+            // Style option handlers
+            const options = modalElement.querySelectorAll('.map-style-option')
+            options.forEach((option) => {
+              option.addEventListener('click', () => {
+                const style = option.getAttribute('data-style')
+
+                // Update selected state visually
+                options.forEach((opt) => {
+                  opt.classList.remove('map-style-option--selected')
+                })
+                option.classList.add('map-style-option--selected')
+
+                // Remove all layers
+                map.eachLayer((layer) => {
+                  if (layer instanceof L.TileLayer) {
+                    map.removeLayer(layer)
+                  }
+                })
+
+                // Add selected layer
+                if (style === 'satellite') {
+                  satelliteMap.addTo(map)
+                  if (window.CookieUtils) {
+                    window.CookieUtils.set('mapBaseLayer', 'satellite', 365)
+                  }
+                } else {
+                  streetMap.addTo(map)
+                  if (window.CookieUtils) {
+                    window.CookieUtils.set('mapBaseLayer', 'street', 365)
+                  }
+                }
+
+                // Close modal
+                mapStyleModal.close()
+              })
+            })
+
+            // Custom outside click handler (exclude the map style button)
+            const outsideClickHandler = (e) => {
               if (
-                !modal.contains(e.target) &&
+                modalElement &&
+                !modalElement.contains(e.target) &&
                 !e.target.closest('.map-style-button')
               ) {
-                if (mapContainer.contains(modal)) {
-                  mapContainer.removeChild(modal)
-                }
-                document.removeEventListener('click', closeOnOutside)
+                mapStyleModal.close()
+                document.removeEventListener('click', outsideClickHandler, true)
               }
-            },
-            true
-          )
+            }
 
-          // Style option handlers
-          const options = modal.querySelectorAll('.map-style-option')
-          options.forEach((option) => {
-            option.addEventListener('click', () => {
-              const style = option.getAttribute('data-style')
-
-              // Update selected state visually
-              options.forEach((opt) => {
-                opt.classList.remove('map-style-option--selected')
-              })
-              option.classList.add('map-style-option--selected')
-
-              // Remove all layers
-              map.eachLayer((layer) => {
-                if (layer instanceof L.TileLayer) {
-                  map.removeLayer(layer)
-                }
-              })
-
-              // Add selected layer
-              if (style === 'satellite') {
-                satelliteMap.addTo(map)
-                if (window.CookieUtils) {
-                  window.CookieUtils.set('mapBaseLayer', 'satellite', 365)
-                }
-              } else {
-                streetMap.addTo(map)
-                if (window.CookieUtils) {
-                  window.CookieUtils.set('mapBaseLayer', 'street', 365)
-                }
-              }
-
-              // Close modal
-              if (mapContainer.contains(modal)) {
-                mapContainer.removeChild(modal)
-              }
-            })
-          })
+            setTimeout(() => {
+              document.addEventListener('click', outsideClickHandler, true)
+            }, 100)
+          }, 50)
         }
 
         // Load GeoJSON boundaries
