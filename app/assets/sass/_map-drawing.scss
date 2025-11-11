@@ -39,38 +39,36 @@
   gap: 15px;
 }
 
+/* Button as link reset */
+.tool-links button.govuk-link {
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  font-size: 16px;
+  font-family: "GDS Transport", arial, sans-serif;
+  line-height: normal;
+}
+
+/* Focus state for buttons styled as links */
+.tool-links button.govuk-link:focus {
+  outline: 3px solid #ffdd00;
+  outline-offset: 0;
+  background-color: #ffdd00;
+  color: #0b0c0c;
+  text-decoration: none;
+}
+
 /* Disabled state for tool links */
-.tool-links .govuk-link[aria-disabled='true'] {
+.tool-links button.govuk-link:disabled {
   color: #505a5f;
   cursor: not-allowed;
   text-decoration: none;
 }
 
-.tool-links .govuk-link[aria-disabled='true']:hover {
+.tool-links button.govuk-link:disabled:hover {
   color: #505a5f;
   text-decoration: none;
-}
-
-.tool-links .govuk-link[aria-disabled='true']:focus {
-  outline: 3px solid #ffdd00;
-  outline-offset: 0;
-  background-color: #ffdd00;
-  color: #0b0c0c;
-}
-
-/* Destructive action styling */
-.tool-links .govuk-link--destructive {
-  color: #d4351c;
-}
-
-.tool-links .govuk-link--destructive:hover {
-  color: #a52814;
-  text-decoration-thickness: max(3px, 0.1875rem, 0.12em);
-}
-
-.tool-links .govuk-link--destructive:focus {
-  color: #0b0c0c;
-  background-color: #ffdd00;
 }
 
 /* Map container */

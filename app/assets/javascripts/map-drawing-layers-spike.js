@@ -37,13 +37,11 @@
 
   // Helper functions for managing element states
   function enableElement(element) {
-    element.removeAttribute('aria-disabled')
-    element.setAttribute('tabindex', '0')
+    element.disabled = false
   }
 
   function disableElement(element) {
-    element.setAttribute('aria-disabled', 'true')
-    element.setAttribute('tabindex', '-1')
+    element.disabled = true
   }
 
   function showElement(element) {
@@ -444,6 +442,9 @@
         // Initialize location search
         initLocationSearch(map)
 
+        // Initialize map key
+        initMapKey(map)
+
         // Load existing boundary data if available
         const existingBoundaryData =
           document.getElementById('boundary-data').value
@@ -699,21 +700,18 @@
     const deleteBoundaryBtn = document.getElementById('delete-boundary')
     const zoomToEnglandBtn = document.getElementById('zoom-to-england')
     const zoomToBoundaryBtn = document.getElementById('zoom-to-boundary')
-    const toggleCatchmentsBtn = document.getElementById('toggle-catchments')
 
     if (
       !startDrawingBtn ||
       !editBoundaryBtn ||
       !deleteBoundaryBtn ||
       !zoomToEnglandBtn ||
-      !zoomToBoundaryBtn ||
-      !toggleCatchmentsBtn
+      !zoomToBoundaryBtn
     ) {
       console.error('Control elements not found')
       return
     }
 
-    let catchmentsVisible = true
     let currentDrawingLayer = null
 
     // Start drawing
@@ -775,6 +773,14 @@
         map._searchContainer.style.display = 'none'
       }
 
+      // Hide key button and modal
+      if (map._keyButton) {
+        map._keyButton.style.display = 'none'
+      }
+      if (map._keyModal) {
+        map._keyModal.close()
+      }
+
       // Force Leaflet to recalculate map size after panel is hidden
       setTimeout(() => {
         map.invalidateSize()
@@ -806,6 +812,11 @@
       // Show search button (but not the container)
       if (map._searchButton) {
         map._searchButton.style.display = 'flex'
+      }
+
+      // Show key button (modal stays closed)
+      if (map._keyButton) {
+        map._keyButton.style.display = 'flex'
       }
 
       // Force Leaflet to recalculate map size after panel is shown
@@ -983,27 +994,6 @@
       }
     })
 
-    // Toggle catchments
-    toggleCatchmentsBtn.addEventListener('click', function (e) {
-      e.preventDefault()
-      if (edpLayers && edpLayers.length > 0) {
-        catchmentsVisible = !catchmentsVisible
-        edpLayers.forEach((edp) => {
-          if (catchmentsVisible) {
-            map.addLayer(edp.polygon)
-          } else {
-            map.removeLayer(edp.polygon)
-          }
-        })
-        toggleCatchmentsBtn.textContent = catchmentsVisible
-          ? 'Hide catchments'
-          : 'Show catchments'
-        hideErrorSummary()
-      } else {
-        showErrorSummary('Catchment data is not available.')
-      }
-    })
-
     function updateLinkStates() {
       const hasBoundary = drawnItems.getLayers().length > 0
       const saveButtonContainer = document.getElementById(
@@ -1111,8 +1101,12 @@
     const searchButton = document.createElement('button')
     searchButton.id = 'location-search-button'
     searchButton.className = 'govuk-button govuk-button--secondary'
-    searchButton.innerHTML =
-      '<svg width="27" height="27" viewBox="0 0 27 27" fill="none" xmlns="http://www.w3.org/2000/svg" focusable="false" aria-hidden="true" style="margin-right: 10px;"><circle cx="12.0161" cy="11.0161" r="8.51613" stroke="currentColor" stroke-width="2"></circle><line x1="17.8668" y1="17.3587" x2="26.4475" y2="25.9393" stroke="currentColor" stroke-width="2"></line></svg><span>Search</span>'
+    searchButton.innerHTML = `
+      <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 20 20" fill-rule="evenodd" fill="currentColor" style="margin-right: 10px;">
+        <path d="M12.084 14.312c-1.117.711-2.444 1.123-3.866 1.123C4.235 15.435 1 12.201 1 8.218S4.235 1 8.218 1s7.217 3.235 7.217 7.218c0 1.422-.412 2.749-1.123 3.866L19 16.773 16.773 19l-4.689-4.688zM8.218 2.818c2.98 0 5.4 2.419 5.4 5.4s-2.42 5.4-5.4 5.4-5.4-2.42-5.4-5.4 2.419-5.4 5.4-5.4z"></path>
+      </svg>
+      <span>Search</span>
+    `
     searchButton.setAttribute('aria-label', 'Search for location')
     searchButton.style.cssText = `
       position: absolute;
@@ -1194,6 +1188,21 @@
       const isVisible = searchContainer.style.display === 'block'
       searchContainer.style.display = isVisible ? 'none' : 'block'
       searchButton.style.display = isVisible ? 'flex' : 'none'
+
+      // Toggle key button and modal visibility based on search panel state
+      if (map._keyButton) {
+        map._keyButton.style.display = isVisible ? 'flex' : 'none'
+      }
+      if (map._keyModal) {
+        if (isVisible) {
+          // Search is closing, key button will be shown, close modal
+          map._keyModal.close()
+        } else {
+          // Search is opening, hide modal and button
+          map._keyModal.close()
+        }
+      }
+
       if (!isVisible) {
         searchInput.focus()
         // Show results dropdown if there are results and input has value
@@ -1215,6 +1224,11 @@
         searchContainer.style.display = 'none'
         searchButton.style.display = 'flex'
         resultsDropdown.style.display = 'none'
+
+        // Show key button when search is hidden
+        if (map._keyButton) {
+          map._keyButton.style.display = 'flex'
+        }
       }
     })
 
@@ -1353,6 +1367,11 @@
         const searchButton = document.getElementById('location-search-button')
         searchContainer.style.display = 'none'
         searchButton.style.display = 'flex'
+
+        // Show key button when search closes
+        if (map._keyButton) {
+          map._keyButton.style.display = 'flex'
+        }
       })
 
       resultsDropdown.appendChild(resultItem)
@@ -1393,5 +1412,99 @@
     map.flyTo([lat, lng], zoomLevel, {
       duration: 1.5
     })
+  }
+
+  // Map Key Functionality
+  function initMapKey(map) {
+    const mapContainer = document.getElementById('map')
+
+    // Create key toggle button
+    const keyButton = document.createElement('button')
+    keyButton.id = 'map-key-button'
+    keyButton.className = 'govuk-button govuk-button--secondary'
+    keyButton.innerHTML = `
+      <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 20 20" fill-rule="evenodd" fill="currentColor" style="margin-right: 10px;">
+        <circle cx="3.5" cy="4" r="1.5"></circle>
+        <circle cx="3.5" cy="10" r="1.5"></circle>
+        <circle cx="3.5" cy="16" r="1.5"></circle>
+        <path d="M7 4h11M7 10h11M7 16h11" fill="none" stroke="currentColor" stroke-width="2"></path>
+      </svg>
+      <span>Key</span>
+    `
+    keyButton.setAttribute('aria-label', 'Toggle map key')
+    keyButton.style.cssText = `
+      position: absolute;
+      top: 10px;
+      left: 145px;
+      z-index: 1000;
+      margin: 0;
+      padding: 8px 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: none;
+      border-radius: 0;
+      height: 45px;
+      box-sizing: border-box;
+    `
+
+    // Add to map container
+    mapContainer.appendChild(keyButton)
+
+    // Create key content
+    const keyContent = `
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 30px; height: 20px; border: 2px solid #ab47bc; background-color: rgba(171, 71, 188, 0.6);"></div>
+        <span style="font-size: 16px; font-family: 'GDS Transport', arial, sans-serif;">EDP areas</span>
+      </div>
+    `
+
+    // Create modal instance
+    const keyModal = new Modal({
+      title: 'Key',
+      position: 'top-left',
+      content: keyContent,
+      container: mapContainer,
+      closeOnOutsideClick: false
+    })
+
+    // Position modal below the buttons after it's created
+    const modalElement = keyModal.getElement()
+    if (modalElement) {
+      modalElement.style.top = '65px'
+      modalElement.style.left = '10px'
+    }
+
+    // Toggle key modal on button click
+    keyButton.addEventListener('click', function (e) {
+      e.preventDefault()
+      e.stopPropagation()
+      const modalElement = keyModal.getElement()
+      if (modalElement && modalElement.style.display !== 'none') {
+        keyModal.close()
+        keyButton.style.display = 'flex'
+      } else {
+        keyModal.open()
+        keyButton.style.display = 'none'
+      }
+    })
+
+    // Close modal when clicking outside
+    document.addEventListener('click', function (e) {
+      const modalElement = keyModal.getElement()
+      if (
+        modalElement &&
+        modalElement.style.display !== 'none' &&
+        !modalElement.contains(e.target) &&
+        !keyButton.contains(e.target)
+      ) {
+        keyModal.close()
+        keyButton.style.display = 'flex'
+      }
+    })
+
+    // Store references for hiding during edit/draw mode and when search is open
+    map._keyModal = keyModal
+    map._keyButton = keyButton
   }
 })()
