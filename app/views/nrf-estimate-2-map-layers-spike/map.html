@@ -168,29 +168,20 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
                             Draw a red line boundary
                         </h1>
 
-                        <p class="govuk-body-s govuk-!-margin-bottom-6">
-                            Use the map to draw a red line boundary for where the development might be.
-                        </p>
-
-                        <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
-
-                        <!-- Drawing tools -->
-                        <div class="govuk-form-group">
-                            <h2 class="govuk-heading-s">Drawing tools</h2>
-                            <div class="tool-links">
-                                <button type="button" class="govuk-link" id="start-drawing" data-tool="polygon"
-                                    aria-describedby="drawing-instructions">
-                                    Start drawing boundary
-                                </button>
-                                <button type="button" class="govuk-link" id="edit-boundary" data-tool="edit"
-                                    aria-describedby="edit-instructions" disabled style="display: none;">
-                                    Edit boundary
-                                </button>
-                                <button type="button" class="govuk-link govuk-link--destructive" id="delete-boundary"
-                                    data-tool="delete" aria-describedby="delete-instructions" disabled>
-                                    Delete boundary
-                                </button>
-                            </div>
+                        <!-- Drawing tool buttons -->
+                        <div class="drawing-tool-buttons">
+                            <button type="button" class="tool-button" id="start-drawing" data-tool="polygon">
+                                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20"><path d="M16 6v7.996M14 16H6m-2-2.004V6m2-2h8" fill="none" stroke="currentColor" stroke-width="2"></path><path d="M2.081 2H6v4H2.081zm0 12H6v4H2.081zm11.96-12h3.919v4h-3.919zm0 11.996h3.919v4h-3.919z" fill="currentColor" stroke="none"></path></svg>
+                                <span>Add</span>
+                            </button>
+                            <button type="button" class="tool-button" id="edit-boundary" data-tool="edit" disabled style="display: none;">
+                                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20"><path d="M16 6v7.996M14 16H6m-2-2.004V6m2-2h8" fill="none" stroke="currentColor" stroke-width="2"></path><path d="M2.081 2H6v4H2.081zm0 12H6v4H2.081zm11.96-12h3.919v4h-3.919zm0 11.996h3.919v4h-3.919z" fill="currentColor" stroke="none"></path></svg>
+                                <span>Edit</span>
+                            </button>
+                            <button type="button" class="tool-button" id="delete-boundary" data-tool="delete" disabled>
+                                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill-rule="evenodd"><path d="M3 5.963H2V3.989h4V2h8v1.989h4v1.974h-.956V18H3V5.963zm12 0H5.044v10.063H15V5.963z" fill="currentColor"></path><path d="M6.953 7L7 15m2.977-8l.046 8m2.954-8l.046 8" fill="none" stroke="currentColor" stroke-width="2"></path></svg>
+                                <span>Delete</span>
+                            </button>
                         </div>
 
                         <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">

@@ -45,7 +45,7 @@
   }
 
   function showElement(element) {
-    element.style.display = 'block'
+    element.style.display = 'flex'
   }
 
   function hideElement(element) {
@@ -727,15 +727,11 @@
         }
         isDrawing = false
         hideErrorSummary()
-        startDrawingBtn.textContent = 'Start drawing boundary'
-        startDrawingBtn.classList.remove('govuk-link--destructive')
         exitEditMode()
       } else {
         if (drawControl._toolbars?.draw?._modes?.polygon) {
           drawControl._toolbars.draw._modes.polygon.handler.enable()
           isDrawing = true
-          startDrawingBtn.textContent = 'Cancel drawing'
-          startDrawingBtn.classList.add('govuk-link--destructive')
           enterEditMode()
         }
       }
@@ -835,16 +831,12 @@
         }
         isEditing = false
         hideErrorSummary()
-        editBoundaryBtn.textContent = 'Edit boundary'
-        editBoundaryBtn.classList.remove('govuk-link--destructive')
         exitEditMode()
       } else {
         if (drawnItems.getLayers().length > 0) {
           if (drawControl._toolbars?.edit?._modes?.edit) {
             drawControl._toolbars.edit._modes.edit.handler.enable()
             isEditing = true
-            editBoundaryBtn.textContent = 'Stop editing'
-            editBoundaryBtn.classList.add('govuk-link--destructive')
             enterEditMode()
           }
         } else {
@@ -876,12 +868,6 @@
 
         isEditing = false
         isDrawing = false
-
-        // Reset button text and styling
-        editBoundaryBtn.textContent = 'Edit boundary'
-        editBoundaryBtn.classList.remove('govuk-link--destructive')
-        startDrawingBtn.textContent = 'Start drawing boundary'
-        startDrawingBtn.classList.remove('govuk-link--destructive')
       } else {
         showErrorSummary('No boundary to delete.')
       }
@@ -916,8 +902,6 @@
 
           // Exit edit mode
           isEditing = false
-          editBoundaryBtn.textContent = 'Edit boundary'
-          editBoundaryBtn.classList.remove('govuk-link--destructive')
         }
 
         // Exit drawing mode
@@ -926,8 +910,6 @@
             drawControl._toolbars.draw._modes.polygon.handler.disable()
           }
           isDrawing = false
-          startDrawingBtn.textContent = 'Start drawing boundary'
-          startDrawingBtn.classList.remove('govuk-link--destructive')
         }
 
         hideErrorSummary()
@@ -951,8 +933,6 @@
             drawControl._toolbars.draw._modes.polygon.handler.disable()
           }
           isDrawing = false
-          startDrawingBtn.textContent = 'Start drawing boundary'
-          startDrawingBtn.classList.remove('govuk-link--destructive')
         }
 
         // Cancel edit mode - revert any changes
@@ -967,8 +947,6 @@
             }
           }
           isEditing = false
-          editBoundaryBtn.textContent = 'Edit boundary'
-          editBoundaryBtn.classList.remove('govuk-link--destructive')
         }
 
         hideErrorSummary()
