@@ -6,8 +6,16 @@
 ;(function () {
   'use strict'
 
+  // ============================================================================
+  // STATE MANAGEMENT
+  // ============================================================================
+
   let isDrawing = false
   let isEditing = false
+
+  // ============================================================================
+  // INITIALIZATION
+  // ============================================================================
 
   // Wait for everything to be ready
   if (document.readyState === 'loading') {
@@ -15,6 +23,10 @@
   } else {
     initMap()
   }
+
+  // ============================================================================
+  // ERROR HANDLING
+  // ============================================================================
 
   function showErrorSummary(message) {
     const errorSummary = document.getElementById('client-error-summary')
@@ -35,7 +47,9 @@
     }
   }
 
-  // Helper functions for managing element states
+  // ============================================================================
+  // ELEMENT STATE HELPERS
+  // ============================================================================
   function enableElement(element) {
     element.disabled = false
   }
@@ -51,6 +65,10 @@
   function hideElement(element) {
     element.style.display = 'none'
   }
+
+  // ============================================================================
+  // MODAL FUNCTIONALITY
+  // ============================================================================
 
   // Map hints modal - shows on page load
   function showMapHintsModal(container) {
@@ -76,6 +94,140 @@
     hintsModal.open()
   }
 
+  // ============================================================================
+  // MAP INITIALIZATION
+  // ============================================================================
+
+  // Helper function to create catchment polygon from GeoJSON feature
+  function createCatchmentPolygon(feature, index, map, catchmentColor) {
+    const properties = feature.properties
+    const geometry = feature.geometry
+
+    // Extract catchment name from properties
+    const catchmentName =
+      properties.Label || properties.N2K_Site_N || `Catchment ${index + 1}`
+
+    // Convert GeoJSON coordinates to Leaflet format
+    if (geometry.type === 'Polygon') {
+      const coordinates = geometry.coordinates[0].map((coord) => [
+        coord[1],
+        coord[0]
+      ]) // Convert [lng, lat] to [lat, lng]
+
+      const polygon = L.polygon(coordinates, {
+        color: catchmentColor,
+        weight: 2,
+        opacity: 0.8,
+        fillColor: catchmentColor,
+        fillOpacity: 0.6
+      }).addTo(map)
+
+      // Add popup with catchment information
+      const popupContent = `
+        <strong>${catchmentName}</strong><br>
+        ${properties.PopupInfo ? `Type: ${properties.PopupInfo}<br>` : ''}
+        ${properties.DateAmend ? `Last Updated: ${properties.DateAmend}<br>` : ''}
+        ${properties.Notes ? `Notes: ${properties.Notes}` : ''}
+      `
+      polygon.bindPopup(popupContent)
+
+      return {
+        name: catchmentName,
+        polygon: polygon,
+        coordinates: coordinates,
+        properties: properties
+      }
+    }
+
+    return null
+  }
+
+  // Helper function to load existing boundary from hidden input
+  function loadExistingBoundary(drawnItems, map) {
+    const existingBoundaryData = document.getElementById('boundary-data').value
+
+    if (existingBoundaryData) {
+      try {
+        const boundaryData = JSON.parse(existingBoundaryData)
+
+        if (
+          boundaryData.coordinates &&
+          Array.isArray(boundaryData.coordinates) &&
+          boundaryData.coordinates.length > 0
+        ) {
+          const latLngs = boundaryData.coordinates.map((point) => [
+            point[1],
+            point[0]
+          ])
+
+          const existingPolygon = L.polygon(latLngs, {
+            color: '#d4351c',
+            weight: 3,
+            opacity: 0.8,
+            fillColor: '#d4351c',
+            fillOpacity: 0.2
+          })
+
+          drawnItems.addLayer(existingPolygon)
+          map.fitBounds(existingPolygon.getBounds().pad(0.1))
+
+          return true
+        }
+      } catch (error) {
+        console.error('Error loading existing boundary:', error)
+      }
+    }
+
+    return false
+  }
+
+  // Helper function to setup form validation
+  function setupFormValidation() {
+    document.querySelector('form').addEventListener('submit', function (e) {
+      if (isDrawing) {
+        e.preventDefault()
+        showErrorSummary('Finish or delete the red line boundary to continue')
+        return false
+      }
+
+      if (isEditing) {
+        e.preventDefault()
+        showErrorSummary(
+          'Stop editing or delete the red line boundary to continue'
+        )
+        return false
+      }
+
+      const boundaryData = document.getElementById('boundary-data').value
+      if (!boundaryData) {
+        e.preventDefault()
+        showErrorSummary('Draw a red line boundary to continue')
+        return false
+      }
+
+      hideErrorSummary()
+
+      // Check for nav=summary query parameter
+      const urlParams = new URLSearchParams(window.location.search)
+      const navParam = urlParams.get('nav')
+
+      if (navParam === 'summary') {
+        try {
+          const parsedData = JSON.parse(boundaryData)
+          const hasIntersection = parsedData.intersectingCatchment !== null
+
+          if (hasIntersection) {
+            e.preventDefault()
+            window.location.href = '/nrf-estimate-2-map-layers-spike/summary'
+            return false
+          }
+        } catch (error) {
+          console.error('Error parsing boundary data:', error)
+        }
+      }
+    })
+  }
+
   function initMap() {
     // Additional delay to ensure GOV.UK components are ready
     setTimeout(function () {
@@ -85,7 +237,7 @@
         const loadingDiv = document.getElementById('map-loading')
         if (loadingDiv) {
           loadingDiv.innerHTML =
-            '<p class="govuk-body" style="color: red;">Error: Map library not loaded. Please refresh the page.</p>'
+            '<p class="govuk-body map-error-message">Error: Map library not loaded. Please refresh the page.</p>'
         }
         return
       }
@@ -293,49 +445,18 @@
           .then((data) => {
             // Process each feature in the GeoJSON
             data.features.forEach((feature, index) => {
-              const properties = feature.properties
-              const geometry = feature.geometry
+              const catchmentData = createCatchmentPolygon(
+                feature,
+                index,
+                map,
+                catchmentColor
+              )
 
-              // Extract catchment name from properties
-              const catchmentName =
-                properties.Label ||
-                properties.N2K_Site_N ||
-                `Catchment ${index + 1}`
-
-              // Convert GeoJSON coordinates to Leaflet format
-              if (geometry.type === 'Polygon') {
-                const coordinates = geometry.coordinates[0].map((coord) => [
-                  coord[1],
-                  coord[0]
-                ]) // Convert [lng, lat] to [lat, lng]
-
-                const polygon = L.polygon(coordinates, {
-                  color: catchmentColor,
-                  weight: 2,
-                  opacity: 0.8,
-                  fillColor: catchmentColor,
-                  fillOpacity: 0.6
-                }).addTo(map)
-
-                // Add popup with catchment information
-                const popupContent = `
-                  <strong>${catchmentName}</strong><br>
-                  ${properties.PopupInfo ? `Type: ${properties.PopupInfo}<br>` : ''}
-                  ${properties.DateAmend ? `Last Updated: ${properties.DateAmend}<br>` : ''}
-                  ${properties.Notes ? `Notes: ${properties.Notes}` : ''}
-                `
-                polygon.bindPopup(popupContent)
-
-                edpLayers.push({
-                  name: catchmentName,
-                  polygon: polygon,
-                  coordinates: coordinates,
-                  properties: properties
-                })
-
+              if (catchmentData) {
+                edpLayers.push(catchmentData)
                 edpBoundaries.push({
-                  name: catchmentName,
-                  coordinates: coordinates
+                  name: catchmentData.name,
+                  coordinates: catchmentData.coordinates
                 })
               }
             })
@@ -343,19 +464,10 @@
             // Re-check any existing drawn polygons for intersections
             drawnItems.eachLayer(function (layer) {
               if (layer instanceof L.Polygon) {
-                const drawnPolygon = layer.getLatLngs()[0]
-                const drawnPoints = drawnPolygon.map((latLng) => [
-                  latLng.lng,
-                  latLng.lat
-                ])
-
-                let intersectingCatchment = null
-                edpLayers.forEach((catchment) => {
-                  if (polygonIntersects(drawnPoints, catchment.coordinates)) {
-                    intersectingCatchment = catchment
-                  }
-                })
-
+                const intersectingCatchment = findIntersectingCatchment(
+                  layer,
+                  edpLayers
+                )
                 updateBoundaryData(layer, intersectingCatchment)
               }
             })
@@ -446,86 +558,10 @@
         initMapKey(map)
 
         // Load existing boundary data if available
-        const existingBoundaryData =
-          document.getElementById('boundary-data').value
-
-        if (existingBoundaryData) {
-          try {
-            const boundaryData = JSON.parse(existingBoundaryData)
-
-            if (
-              boundaryData.coordinates &&
-              Array.isArray(boundaryData.coordinates) &&
-              boundaryData.coordinates.length > 0
-            ) {
-              const latLngs = boundaryData.coordinates.map((point) => [
-                point[1],
-                point[0]
-              ])
-
-              const existingPolygon = L.polygon(latLngs, {
-                color: '#d4351c',
-                weight: 3,
-                opacity: 0.8,
-                fillColor: '#d4351c',
-                fillOpacity: 0.2
-              })
-
-              drawnItems.addLayer(existingPolygon)
-              map.fitBounds(existingPolygon.getBounds().pad(0.1))
-            }
-          } catch (error) {
-            console.error('Error loading existing boundary:', error)
-          }
-        }
+        const existingBoundaryData = loadExistingBoundary(drawnItems, map)
 
         // Form submission validation
-        document.querySelector('form').addEventListener('submit', function (e) {
-          if (isDrawing) {
-            e.preventDefault()
-            showErrorSummary(
-              'Finish or delete the red line boundary to continue'
-            )
-            return false
-          }
-
-          if (isEditing) {
-            e.preventDefault()
-            showErrorSummary(
-              'Stop editing or delete the red line boundary to continue'
-            )
-            return false
-          }
-
-          const boundaryData = document.getElementById('boundary-data').value
-          if (!boundaryData) {
-            e.preventDefault()
-            showErrorSummary('Draw a red line boundary to continue')
-            return false
-          }
-
-          hideErrorSummary()
-
-          // Check for nav=summary query parameter
-          const urlParams = new URLSearchParams(window.location.search)
-          const navParam = urlParams.get('nav')
-
-          if (navParam === 'summary') {
-            try {
-              const parsedData = JSON.parse(boundaryData)
-              const hasIntersection = parsedData.intersectingCatchment !== null
-
-              if (hasIntersection) {
-                e.preventDefault()
-                window.location.href =
-                  '/nrf-estimate-2-map-layers-spike/summary'
-                return false
-              }
-            } catch (error) {
-              console.error('Error parsing boundary data:', error)
-            }
-          }
-        })
+        setupFormValidation()
 
         // Initialize accessible controls
         setTimeout(() => {
@@ -538,11 +574,15 @@
         const loadingDiv = document.getElementById('map-loading')
         if (loadingDiv) {
           loadingDiv.innerHTML =
-            '<p class="govuk-body" style="color: red;">Error loading map. Please refresh the page.</p>'
+            '<p class="govuk-body map-error-message">Error loading map. Please refresh the page.</p>'
         }
       }
     }, 1000)
   }
+
+  // ============================================================================
+  // GEOMETRY CALCULATION HELPERS
+  // ============================================================================
 
   // Helper function to check if two line segments intersect
   function lineSegmentsIntersect(p1, q1, p2, q2) {
@@ -662,6 +702,28 @@
     )
   }
 
+  // ============================================================================
+  // BOUNDARY DATA MANAGEMENT
+  // ============================================================================
+
+  // Helper function to check polygon intersection with catchments
+  function findIntersectingCatchment(layer, edpLayers) {
+    if (!layer || !edpLayers || edpLayers.length === 0) {
+      return null
+    }
+
+    const drawnPolygon = layer.getLatLngs()[0]
+    const drawnPoints = drawnPolygon.map((latLng) => [latLng.lng, latLng.lat])
+
+    for (const catchment of edpLayers) {
+      if (polygonIntersects(drawnPoints, catchment.coordinates)) {
+        return catchment
+      }
+    }
+
+    return null
+  }
+
   function updateBoundaryData(layer, intersectingCatchment) {
     if (!layer) {
       document.getElementById('boundary-data').value = ''
@@ -684,6 +746,10 @@
     document.getElementById('boundary-data').value =
       JSON.stringify(boundaryData)
   }
+
+  // ============================================================================
+  // DRAWING CONTROLS
+  // ============================================================================
 
   function initAccessibleControls(map, drawControl, drawnItems, edpLayers) {
     if (!map || !drawControl || !drawnItems) {
@@ -714,30 +780,6 @@
 
     let currentDrawingLayer = null
 
-    // Start drawing
-    startDrawingBtn.addEventListener('click', function (e) {
-      e.preventDefault()
-      if (isDrawing) {
-        if (currentDrawingLayer) {
-          drawnItems.removeLayer(currentDrawingLayer)
-          currentDrawingLayer = null
-        }
-        if (drawControl._toolbars?.draw?._modes?.polygon) {
-          drawControl._toolbars.draw._modes.polygon.handler.disable()
-        }
-        isDrawing = false
-        hideErrorSummary()
-        exitEditMode()
-      } else {
-        if (drawControl._toolbars?.draw?._modes?.polygon) {
-          drawControl._toolbars.draw._modes.polygon.handler.enable()
-          isDrawing = true
-          enterEditMode()
-        }
-      }
-    })
-
-    // Edit boundary
     // Helper functions for edit mode UI
     function enterEditMode() {
       const panel = document.querySelector('.map-controls-panel')
@@ -821,6 +863,31 @@
       }, 100)
     }
 
+    // Button event handlers
+    // Start drawing
+    startDrawingBtn.addEventListener('click', function (e) {
+      e.preventDefault()
+      if (isDrawing) {
+        if (currentDrawingLayer) {
+          drawnItems.removeLayer(currentDrawingLayer)
+          currentDrawingLayer = null
+        }
+        if (drawControl._toolbars?.draw?._modes?.polygon) {
+          drawControl._toolbars.draw._modes.polygon.handler.disable()
+        }
+        isDrawing = false
+        hideErrorSummary()
+        exitEditMode()
+      } else {
+        if (drawControl._toolbars?.draw?._modes?.polygon) {
+          drawControl._toolbars.draw._modes.polygon.handler.enable()
+          isDrawing = true
+          enterEditMode()
+        }
+      }
+    })
+
+    // Edit boundary
     editBoundaryBtn.addEventListener('click', function (e) {
       e.preventDefault()
       if (isEditing) {
@@ -972,6 +1039,7 @@
       }
     })
 
+    // Helper function to update button states based on boundary existence
     function updateLinkStates() {
       const hasBoundary = drawnItems.getLayers().length > 0
       const saveButtonContainer = document.getElementById(
@@ -1009,59 +1077,28 @@
       }
     }
 
-    // Drawing events
+    // Map drawing event handlers
     map.on(L.Draw.Event.CREATED, function (event) {
       const layer = event.layer
       drawnItems.addLayer(layer)
       currentDrawingLayer = layer
       isDrawing = false
-      startDrawingBtn.textContent = 'Start drawing boundary'
-      startDrawingBtn.classList.remove('govuk-link--destructive')
       hideErrorSummary()
       updateLinkStates()
       exitEditMode()
 
-      if (edpLayers && edpLayers.length > 0) {
-        const drawnPolygon = layer.getLatLngs()[0]
-        const drawnPoints = drawnPolygon.map((latLng) => [
-          latLng.lng,
-          latLng.lat
-        ])
-
-        let intersectingCatchment = null
-        for (const catchment of edpLayers) {
-          if (polygonIntersects(drawnPoints, catchment.coordinates)) {
-            intersectingCatchment = catchment
-            break
-          }
-        }
-        updateBoundaryData(layer, intersectingCatchment)
-      } else {
-        updateBoundaryData(layer, null)
-      }
+      const intersectingCatchment = findIntersectingCatchment(layer, edpLayers)
+      updateBoundaryData(layer, intersectingCatchment)
     })
 
     map.on(L.Draw.Event.EDITED, function (event) {
       const layers = event.layers
       layers.eachLayer(function (layer) {
-        if (edpLayers && edpLayers.length > 0) {
-          const drawnPolygon = layer.getLatLngs()[0]
-          const drawnPoints = drawnPolygon.map((latLng) => [
-            latLng.lng,
-            latLng.lat
-          ])
-
-          let intersectingCatchment = null
-          for (const catchment of edpLayers) {
-            if (polygonIntersects(drawnPoints, catchment.coordinates)) {
-              intersectingCatchment = catchment
-              break
-            }
-          }
-          updateBoundaryData(layer, intersectingCatchment)
-        } else {
-          updateBoundaryData(layer, null)
-        }
+        const intersectingCatchment = findIntersectingCatchment(
+          layer,
+          edpLayers
+        )
+        updateBoundaryData(layer, intersectingCatchment)
       })
     })
 
@@ -1073,50 +1110,75 @@
     updateLinkStates()
   }
 
-  // Location Search Functionality
+  // ============================================================================
+  // LOCATION SEARCH
+  // ============================================================================
+
+  // Helper function to toggle search visibility and related UI elements
+  function toggleSearchVisibility(
+    searchContainer,
+    searchButton,
+    searchInput,
+    resultsDropdown,
+    map
+  ) {
+    const isVisible = searchContainer.style.display === 'block'
+    searchContainer.style.display = isVisible ? 'none' : 'block'
+    searchButton.style.display = isVisible ? 'flex' : 'none'
+
+    // Toggle key button and modal visibility based on search panel state
+    if (map._keyButton) {
+      map._keyButton.style.display = isVisible ? 'flex' : 'none'
+    }
+    if (map._keyModal) {
+      if (isVisible) {
+        // Search is closing, key button will be shown, close modal
+        map._keyModal.close()
+      } else {
+        // Search is opening, hide modal and button
+        map._keyModal.close()
+      }
+    }
+
+    if (!isVisible) {
+      searchInput.focus()
+      // Show results dropdown if there are results and input has value
+      if (
+        searchInput.value.trim().length > 0 &&
+        resultsDropdown.children.length > 0
+      ) {
+        resultsDropdown.style.display = 'block'
+      }
+    }
+  }
+
+  // Helper function to hide search and show related UI elements
+  function hideSearchPanel(searchContainer, searchButton, map) {
+    searchContainer.style.display = 'none'
+    searchButton.style.display = 'flex'
+
+    // Show key button when search is hidden
+    if (map._keyButton) {
+      map._keyButton.style.display = 'flex'
+    }
+  }
+
   function initLocationSearch(map) {
     // Create search button
     const searchButton = document.createElement('button')
     searchButton.id = 'location-search-button'
     searchButton.className = 'govuk-button govuk-button--secondary'
     searchButton.innerHTML = `
-      <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 20 20" fill-rule="evenodd" fill="currentColor" style="margin-right: 10px;">
+      <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 20 20" fill-rule="evenodd" fill="currentColor">
         <path d="M12.084 14.312c-1.117.711-2.444 1.123-3.866 1.123C4.235 15.435 1 12.201 1 8.218S4.235 1 8.218 1s7.217 3.235 7.217 7.218c0 1.422-.412 2.749-1.123 3.866L19 16.773 16.773 19l-4.689-4.688zM8.218 2.818c2.98 0 5.4 2.419 5.4 5.4s-2.42 5.4-5.4 5.4-5.4-2.42-5.4-5.4 2.419-5.4 5.4-5.4z"></path>
       </svg>
       <span>Search</span>
     `
     searchButton.setAttribute('aria-label', 'Search for location')
-    searchButton.style.cssText = `
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      z-index: 1000;
-      margin: 0;
-      padding: 8px 15px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: none;
-      border-radius: 0;
-      height: 45px;
-      box-sizing: border-box;
-    `
 
     // Create search container
     const searchContainer = document.createElement('div')
     searchContainer.id = 'location-search-container'
-    searchContainer.style.cssText = `
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      z-index: 999;
-      background: #b1dcf3;
-      padding: 0;
-      box-shadow: none;
-      border-radius: 0;
-      min-width: 400px;
-      display: none;
-    `
 
     // Create search input
     const searchInput = document.createElement('input')
@@ -1124,30 +1186,10 @@
     searchInput.className = 'govuk-input'
     searchInput.type = 'text'
     searchInput.placeholder = 'Search for a place in England'
-    searchInput.style.cssText = `
-      width: 100%;
-      margin: 0;
-      border-radius: 0;
-      padding: 8px 12px;
-      font-size: 19px;
-      line-height: 1.25;
-      box-sizing: border-box;
-      outline: none;
-      height: 45px;
-      border: 2px solid #0b0c0c;
-    `
 
     // Create results dropdown
     const resultsDropdown = document.createElement('div')
     resultsDropdown.id = 'location-search-results'
-    resultsDropdown.style.cssText = `
-      background: white;
-      border: 1px solid #b1b4b6;
-      border-top: none;
-      max-height: 300px;
-      overflow-y: auto;
-      display: none;
-    `
 
     searchContainer.appendChild(searchInput)
     searchContainer.appendChild(resultsDropdown)
@@ -1163,34 +1205,13 @@
     searchButton.addEventListener('click', function (e) {
       e.preventDefault()
       e.stopPropagation()
-      const isVisible = searchContainer.style.display === 'block'
-      searchContainer.style.display = isVisible ? 'none' : 'block'
-      searchButton.style.display = isVisible ? 'flex' : 'none'
-
-      // Toggle key button and modal visibility based on search panel state
-      if (map._keyButton) {
-        map._keyButton.style.display = isVisible ? 'flex' : 'none'
-      }
-      if (map._keyModal) {
-        if (isVisible) {
-          // Search is closing, key button will be shown, close modal
-          map._keyModal.close()
-        } else {
-          // Search is opening, hide modal and button
-          map._keyModal.close()
-        }
-      }
-
-      if (!isVisible) {
-        searchInput.focus()
-        // Show results dropdown if there are results and input has value
-        if (
-          searchInput.value.trim().length > 0 &&
-          resultsDropdown.children.length > 0
-        ) {
-          resultsDropdown.style.display = 'block'
-        }
-      }
+      toggleSearchVisibility(
+        searchContainer,
+        searchButton,
+        searchInput,
+        resultsDropdown,
+        map
+      )
     })
 
     // Hide search when clicking outside
@@ -1199,14 +1220,8 @@
         !searchContainer.contains(e.target) &&
         !searchButton.contains(e.target)
       ) {
-        searchContainer.style.display = 'none'
-        searchButton.style.display = 'flex'
+        hideSearchPanel(searchContainer, searchButton, map)
         resultsDropdown.style.display = 'none'
-
-        // Show key button when search is hidden
-        if (map._keyButton) {
-          map._keyButton.style.display = 'flex'
-        }
       }
     })
 
@@ -1273,19 +1288,19 @@
             )
           } else {
             resultsDropdown.innerHTML =
-              '<div style="padding: 10px; color: #505a5f;">No English locations found. Try a different search term.</div>'
+              '<div class="search-message">No English locations found. Try a different search term.</div>'
             resultsDropdown.style.display = 'block'
           }
         } else {
           resultsDropdown.innerHTML =
-            '<div style="padding: 10px; color: #505a5f;">No results found</div>'
+            '<div class="search-message">No results found</div>'
           resultsDropdown.style.display = 'block'
         }
       })
       .catch((error) => {
         console.error('Error searching location:', error)
         resultsDropdown.innerHTML =
-          '<div style="padding: 10px; color: #d4351c;">Error searching location</div>'
+          '<div class="search-error">Error searching location</div>'
         resultsDropdown.style.display = 'block'
       })
   }
@@ -1299,25 +1314,14 @@
       const resultItem = document.createElement('button')
       resultItem.type = 'button'
       resultItem.className = 'location-search-result-item'
-      resultItem.style.cssText = `
-        width: 100%;
-        text-align: left;
-        padding: 10px 15px;
-        border: none;
-        background: white;
-        cursor: pointer;
-        display: block;
-        font-family: inherit;
-        font-size: inherit;
-      `
 
       // Create result text with location details
       const nameText = document.createElement('div')
-      nameText.style.fontWeight = 'bold'
+      nameText.className = 'search-result-name'
       nameText.textContent = result.name_1
 
       const detailsText = document.createElement('div')
-      detailsText.style.cssText = 'font-size: 14px; color: #505a5f;'
+      detailsText.className = 'search-result-details'
       const details = []
       if (result.local_type) details.push(result.local_type)
       if (result.county_unitary) details.push(result.county_unitary)
@@ -1327,14 +1331,6 @@
       resultItem.appendChild(nameText)
       resultItem.appendChild(detailsText)
 
-      // Hover effect
-      resultItem.addEventListener('mouseenter', function () {
-        resultItem.style.background = '#f3f2f1'
-      })
-      resultItem.addEventListener('mouseleave', function () {
-        resultItem.style.background = 'white'
-      })
-
       // Click handler
       resultItem.addEventListener('click', function () {
         zoomToLocation(result, map)
@@ -1343,13 +1339,7 @@
           'location-search-container'
         )
         const searchButton = document.getElementById('location-search-button')
-        searchContainer.style.display = 'none'
-        searchButton.style.display = 'flex'
-
-        // Show key button when search closes
-        if (map._keyButton) {
-          map._keyButton.style.display = 'flex'
-        }
+        hideSearchPanel(searchContainer, searchButton, map)
       })
 
       resultsDropdown.appendChild(resultItem)
@@ -1392,7 +1382,10 @@
     })
   }
 
-  // Map Key Functionality
+  // ============================================================================
+  // MAP KEY
+  // ============================================================================
+
   function initMapKey(map) {
     const mapContainer = document.getElementById('map')
 
@@ -1401,7 +1394,7 @@
     keyButton.id = 'map-key-button'
     keyButton.className = 'govuk-button govuk-button--secondary'
     keyButton.innerHTML = `
-      <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 20 20" fill-rule="evenodd" fill="currentColor" style="margin-right: 10px;">
+      <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 20 20" fill-rule="evenodd" fill="currentColor">
         <circle cx="3.5" cy="4" r="1.5"></circle>
         <circle cx="3.5" cy="10" r="1.5"></circle>
         <circle cx="3.5" cy="16" r="1.5"></circle>
@@ -1410,30 +1403,15 @@
       <span>Key</span>
     `
     keyButton.setAttribute('aria-label', 'Toggle map key')
-    keyButton.style.cssText = `
-      position: absolute;
-      top: 10px;
-      left: 145px;
-      z-index: 1000;
-      margin: 0;
-      padding: 8px 15px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: none;
-      border-radius: 0;
-      height: 45px;
-      box-sizing: border-box;
-    `
 
     // Add to map container
     mapContainer.appendChild(keyButton)
 
     // Create key content
     const keyContent = `
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <div style="width: 30px; height: 20px; border: 2px solid #ab47bc; background-color: rgba(171, 71, 188, 0.6);"></div>
-        <span style="font-size: 16px; font-family: 'GDS Transport', arial, sans-serif;">EDP areas</span>
+      <div class="map-key-item">
+        <div class="map-key-swatch"></div>
+        <span class="map-key-label">EDP areas</span>
       </div>
     `
 
