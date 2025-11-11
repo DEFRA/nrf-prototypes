@@ -81,3 +81,24 @@
 .modal__body {
     /* Content area - styling controlled by consumer */
 }
+
+// Centered modal specific styling
+.modal--center .modal__content {
+    max-width: 600px;
+    min-width: 400px;
+}
+
+// Map hints specific content styling
+.map-hints-content {
+    h3 {
+        margin-bottom: 10px;
+    }
+
+    p {
+        margin-bottom: 15px;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+}

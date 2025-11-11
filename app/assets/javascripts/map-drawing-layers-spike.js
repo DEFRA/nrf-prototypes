@@ -54,6 +54,30 @@
     element.style.display = 'none'
   }
 
+  // Map hints modal - shows on page load
+  function showMapHintsModal(container) {
+    const hintsContent = `
+      <div class="map-hints-content">
+        <h3 class="govuk-heading-s">How to draw a boundary</h3>
+        <p class="govuk-body">Click on the map to start drawing a red line boundary around your development site.</p>
+        <p class="govuk-body">Click on each corner of your site to create the boundary. Double-click to finish.</p>
+
+        <h3 class="govuk-heading-s govuk-!-margin-top-4">Keyboard controls</h3>
+        <p class="govuk-body">Use Tab and arrow keys to navigate the map. Press Enter to interact with controls.</p>
+      </div>
+    `
+
+    const hintsModal = new Modal({
+      title: 'Map hints',
+      position: 'center',
+      content: hintsContent,
+      container: container,
+      closeOnOutsideClick: true
+    })
+
+    hintsModal.open()
+  }
+
   function initMap() {
     // Additional delay to ensure GOV.UK components are ready
     setTimeout(function () {
@@ -74,6 +98,9 @@
         console.error('Map container not found')
         return
       }
+
+      // Show map hints modal on page load
+      showMapHintsModal(mapContainer)
 
       try {
         // Hide loading message
