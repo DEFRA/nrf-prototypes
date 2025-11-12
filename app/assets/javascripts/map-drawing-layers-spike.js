@@ -7,6 +7,99 @@
   'use strict'
 
   // ============================================================================
+  // CONSTANTS
+  // ============================================================================
+
+  // Map Configuration
+  const ENGLAND_CENTER_LAT = 52.5
+  const ENGLAND_CENTER_LNG = -1.5
+  const ENGLAND_DEFAULT_ZOOM = 6
+
+  // Colors
+  const COLOR_BOUNDARY_RED = '#d4351c' // GOV.UK red for user-drawn boundaries
+  const COLOR_CATCHMENT_PURPLE = '#ab47bc' // Purple for EDP catchment areas
+  const COLOR_ERROR_YELLOW = '#e1e100' // Warning yellow for draw errors
+
+  // Boundary Styles
+  const BOUNDARY_STYLE = {
+    color: COLOR_BOUNDARY_RED,
+    weight: 3,
+    opacity: 0.8,
+    fillColor: COLOR_BOUNDARY_RED,
+    fillOpacity: 0.2
+  }
+
+  const CATCHMENT_STYLE = {
+    color: COLOR_CATCHMENT_PURPLE,
+    weight: 2,
+    opacity: 0.8,
+    fillColor: COLOR_CATCHMENT_PURPLE,
+    fillOpacity: 0.6
+  }
+
+  // Timing Constants (milliseconds)
+  const DEBOUNCE_SEARCH_MS = 300 // Delay before executing search
+  const DELAY_GOVUK_READY_MS = 1000 // Wait for GOV.UK components to initialize
+  const DELAY_TOOLBAR_HIDE_MS = 100 // Wait for Leaflet toolbar to render before hiding
+  const DELAY_ACCESSIBLE_CONTROLS_MS = 500 // Wait for map to be fully ready
+  const DELAY_MODAL_SETUP_MS = 50 // Wait for modal DOM to be ready
+  const DELAY_OUTSIDE_CLICK_MS = 100 // Prevent immediate outside click triggers
+  const DELAY_MAP_RESIZE_MS = 100 // Wait for CSS transitions before recalculating map size
+
+  // Cookie Configuration
+  const COOKIE_MAP_LAYER = 'mapBaseLayer'
+  const COOKIE_EXPIRY_DAYS = 365
+
+  // API Configuration
+  const POSTCODES_API_BASE = 'https://api.postcodes.io/places'
+  const POSTCODES_API_LIMIT = 50 // Request more results to filter for England
+  const POSTCODES_MAX_DISPLAY_RESULTS = 10
+
+  // Search Configuration
+  const SEARCH_MIN_QUERY_LENGTH = 2
+
+  // Zoom Levels by Location Type
+  const ZOOM_LEVEL_BY_TYPE = {
+    City: 11, // Large cities - zoomed out
+    Town: 12, // Medium towns
+    'Suburban Area': 13, // Suburban areas
+    Village: 14, // Small villages
+    Hamlet: 15, // Very small hamlets - street level
+    'Other Settlement': 14, // Default for settlements
+    Locality: 14 // Other localities
+  }
+  const ZOOM_LEVEL_DEFAULT = 13
+
+  // Map Animation
+  const FLY_TO_DURATION_SECONDS = 1.5
+
+  // Padding for map bounds
+  const MAP_BOUNDS_PADDING = 0.1
+
+  // DOM Element IDs
+  const DOM_IDS = {
+    map: 'map',
+    mapLoading: 'map-loading',
+    boundaryData: 'boundary-data',
+    errorSummary: 'client-error-summary',
+    errorLink: 'client-error-link',
+    startDrawing: 'start-drawing',
+    editBoundary: 'edit-boundary',
+    deleteBoundary: 'delete-boundary',
+    zoomToEngland: 'zoom-to-england',
+    zoomToBoundary: 'zoom-to-boundary',
+    confirmEdit: 'confirm-edit-btn',
+    cancelEdit: 'cancel-edit-btn',
+    saveButtonContainer: 'map-save-button-container',
+    editButtonsContainer: 'map-edit-buttons-container',
+    locationSearchButton: 'location-search-button',
+    locationSearchContainer: 'location-search-container',
+    locationSearchInput: 'location-search-input',
+    locationSearchResults: 'location-search-results',
+    mapKeyButton: 'map-key-button'
+  }
+
+  // ============================================================================
   // STATE MANAGEMENT
   // ============================================================================
 
@@ -29,21 +122,21 @@
   // ============================================================================
 
   function showErrorSummary(message) {
-    const errorSummary = document.getElementById('client-error-summary')
-    const errorLink = document.getElementById('client-error-link')
+    const errorSummary = document.getElementById(DOM_IDS.errorSummary)
+    const errorLink = document.getElementById(DOM_IDS.errorLink)
 
     if (errorSummary && errorLink) {
       errorLink.textContent = message
-      errorSummary.style.display = 'block'
+      errorSummary.classList.remove('hidden')
       errorSummary.scrollIntoView({ behavior: 'smooth', block: 'start' })
       errorSummary.focus()
     }
   }
 
   function hideErrorSummary() {
-    const errorSummary = document.getElementById('client-error-summary')
+    const errorSummary = document.getElementById(DOM_IDS.errorSummary)
     if (errorSummary) {
-      errorSummary.style.display = 'none'
+      errorSummary.classList.add('hidden')
     }
   }
 
@@ -59,11 +152,11 @@
   }
 
   function showElement(element) {
-    element.style.display = 'flex'
+    element.classList.remove('hidden')
   }
 
   function hideElement(element) {
-    element.style.display = 'none'
+    element.classList.add('hidden')
   }
 
   // ============================================================================
@@ -99,7 +192,7 @@
   // ============================================================================
 
   // Helper function to create catchment polygon from GeoJSON feature
-  function createCatchmentPolygon(feature, index, map, catchmentColor) {
+  function createCatchmentPolygon(feature, index, map) {
     const properties = feature.properties
     const geometry = feature.geometry
 
@@ -114,21 +207,10 @@
         coord[0]
       ]) // Convert [lng, lat] to [lat, lng]
 
-      const polygon = L.polygon(coordinates, {
-        color: catchmentColor,
-        weight: 2,
-        opacity: 0.8,
-        fillColor: catchmentColor,
-        fillOpacity: 0.6
-      }).addTo(map)
+      const polygon = L.polygon(coordinates, CATCHMENT_STYLE).addTo(map)
 
       // Add popup with catchment information
-      const popupContent = `
-        <strong>${catchmentName}</strong><br>
-        ${properties.PopupInfo ? `Type: ${properties.PopupInfo}<br>` : ''}
-        ${properties.DateAmend ? `Last Updated: ${properties.DateAmend}<br>` : ''}
-        ${properties.Notes ? `Notes: ${properties.Notes}` : ''}
-      `
+      const popupContent = buildCatchmentPopupContent(catchmentName, properties)
       polygon.bindPopup(popupContent)
 
       return {
@@ -142,9 +224,20 @@
     return null
   }
 
+  function buildCatchmentPopupContent(catchmentName, properties) {
+    return `
+      <strong>${catchmentName}</strong><br>
+      ${properties.PopupInfo ? `Type: ${properties.PopupInfo}<br>` : ''}
+      ${properties.DateAmend ? `Last Updated: ${properties.DateAmend}<br>` : ''}
+      ${properties.Notes ? `Notes: ${properties.Notes}` : ''}
+    `
+  }
+
   // Helper function to load existing boundary from hidden input
   function loadExistingBoundary(drawnItems, map) {
-    const existingBoundaryData = document.getElementById('boundary-data').value
+    const existingBoundaryData = document.getElementById(
+      DOM_IDS.boundaryData
+    ).value
 
     if (existingBoundaryData) {
       try {
@@ -160,16 +253,10 @@
             point[0]
           ])
 
-          const existingPolygon = L.polygon(latLngs, {
-            color: '#d4351c',
-            weight: 3,
-            opacity: 0.8,
-            fillColor: '#d4351c',
-            fillOpacity: 0.2
-          })
+          const existingPolygon = L.polygon(latLngs, BOUNDARY_STYLE)
 
           drawnItems.addLayer(existingPolygon)
-          map.fitBounds(existingPolygon.getBounds().pad(0.1))
+          map.fitBounds(existingPolygon.getBounds().pad(MAP_BOUNDS_PADDING))
 
           return true
         }
@@ -198,7 +285,7 @@
         return false
       }
 
-      const boundaryData = document.getElementById('boundary-data').value
+      const boundaryData = document.getElementById(DOM_IDS.boundaryData).value
       if (!boundaryData) {
         e.preventDefault()
         showErrorSummary('Draw a red line boundary to continue')
@@ -208,42 +295,38 @@
       hideErrorSummary()
 
       // Check for nav=summary query parameter
-      const urlParams = new URLSearchParams(window.location.search)
-      const navParam = urlParams.get('nav')
-
-      if (navParam === 'summary') {
-        try {
-          const parsedData = JSON.parse(boundaryData)
-          const hasIntersection = parsedData.intersectingCatchment !== null
-
-          if (hasIntersection) {
-            e.preventDefault()
-            window.location.href = '/nrf-estimate-2-map-layers-spike/summary'
-            return false
-          }
-        } catch (error) {
-          console.error('Error parsing boundary data:', error)
-        }
+      if (shouldRedirectToSummary(boundaryData)) {
+        e.preventDefault()
+        window.location.href = '/nrf-estimate-2-map-layers-spike/summary'
+        return false
       }
     })
+  }
+
+  function shouldRedirectToSummary(boundaryData) {
+    const urlParams = new URLSearchParams(window.location.search)
+    const navParam = urlParams.get('nav')
+
+    if (navParam === 'summary') {
+      try {
+        const parsedData = JSON.parse(boundaryData)
+        return parsedData.intersectingCatchment !== null
+      } catch (error) {
+        console.error('Error parsing boundary data:', error)
+      }
+    }
+
+    return false
   }
 
   function initMap() {
     // Additional delay to ensure GOV.UK components are ready
     setTimeout(function () {
-      // Check if Leaflet is loaded
-      if (typeof L === 'undefined') {
-        console.error('Leaflet library not loaded')
-        const loadingDiv = document.getElementById('map-loading')
-        if (loadingDiv) {
-          loadingDiv.innerHTML =
-            '<p class="govuk-body map-error-message">Error: Map library not loaded. Please refresh the page.</p>'
-        }
+      if (!checkLeafletLoaded()) {
         return
       }
 
-      // Check if map container exists
-      const mapContainer = document.getElementById('map')
+      const mapContainer = document.getElementById(DOM_IDS.map)
       if (!mapContainer) {
         console.error('Map container not found')
         return
@@ -253,303 +336,35 @@
       showMapHintsModal(mapContainer)
 
       try {
-        // Hide loading message
-        const loadingDiv = document.getElementById('map-loading')
-        if (loadingDiv) {
-          loadingDiv.style.display = 'none'
-        }
+        hideLoadingMessage()
 
         // Initialize the map centered on England
-        const map = L.map('map', {
-          zoomControl: false
-        }).setView([52.5, -1.5], 6)
+        const map = createBaseMap()
 
-        // Create base layers for the layer control
-        const streetMap = L.tileLayer(
-          'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-          {
-            attribution: '© OpenStreetMap contributors'
-          }
-        )
+        // Setup base layers (street and satellite)
+        const { streetMap, satelliteMap } = createBaseLayers()
+        addSavedLayerToMap(map, streetMap, satelliteMap)
 
-        const satelliteMap = L.tileLayer(
-          'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-          {
-            attribution:
-              'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, and others'
-          }
-        )
-
-        // Check for saved layer preference in cookie
-        const savedLayer = window.CookieUtils
-          ? window.CookieUtils.get('mapBaseLayer')
-          : null
-
-        // Add default layer based on saved preference or default to street map
-        if (savedLayer === 'satellite') {
-          satelliteMap.addTo(map)
-        } else {
-          streetMap.addTo(map)
-        }
-
-        // Create custom map style switcher button
-        const mapStyleButton = L.control({ position: 'topright' })
-        mapStyleButton.onAdd = function () {
-          const button = L.DomUtil.create('button', 'map-style-button')
-          button.type = 'button'
-          button.innerHTML = `
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="2" y="2" width="9" height="9" fill="#505a5f" stroke="none"/>
-              <rect x="13" y="2" width="9" height="9" fill="#b1b4b6" stroke="none"/>
-              <rect x="2" y="13" width="9" height="9" fill="#b1b4b6" stroke="none"/>
-              <rect x="13" y="13" width="9" height="9" fill="#505a5f" stroke="none"/>
-            </svg>
-          `
-          button.title = 'Change map style'
-          button.setAttribute('aria-label', 'Change map style')
-
-          L.DomEvent.disableClickPropagation(button)
-          L.DomEvent.on(button, 'click', function (e) {
-            L.DomEvent.stopPropagation(e)
-            showMapStyleModal()
-          })
-
-          return button
-        }
-        mapStyleButton.addTo(map)
-
-        // Add zoom control to top-right (after map style button)
-        L.control
-          .zoom({
-            position: 'topright'
-          })
-          .addTo(map)
-
-        // Map style modal instance
-        let mapStyleModal = null
-
-        // Create map style modal
-        function showMapStyleModal() {
-          // Hide error banner when opening modal
-          hideErrorSummary()
-
-          // Re-read the cookie each time the modal opens to get the current selection
-          const currentLayer = window.CookieUtils
-            ? window.CookieUtils.get('mapBaseLayer')
-            : null
-
-          // Create modal content
-          const modalContent = `
-            <div class="map-style-options">
-              <button class="map-style-option ${currentLayer !== 'satellite' ? 'map-style-option--selected' : ''}" data-style="street">
-                <div class="map-style-thumbnail">
-                  <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23f2efe9' width='100' height='100'/%3E%3Cpath fill='%23fff' d='M20 30h15v20H20zM50 25h30v15H50zM25 60h20v25H25zM60 55h25v30H60z'/%3E%3Cpath stroke='%23ccc' stroke-width='2' fill='none' d='M0 40h100M40 0v100'/%3E%3Cpath fill='%23d4d4d4' d='M5 5h8v8H5zM65 70h6v6h-6z'/%3E%3C/svg%3E" alt="Street map preview" />
-                </div>
-                <span class="map-style-label">Street map</span>
-              </button>
-              <button class="map-style-option ${currentLayer === 'satellite' ? 'map-style-option--selected' : ''}" data-style="satellite">
-                <div class="map-style-thumbnail">
-                  <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3Cpattern id='terrain' width='10' height='10' patternUnits='userSpaceOnUse'%3E%3Crect fill='%234a5f3a' width='10' height='10'/%3E%3Crect fill='%235d7047' x='2' y='2' width='4' height='4'/%3E%3C/pattern%3E%3C/defs%3E%3Crect fill='url(%23terrain)' width='100' height='100'/%3E%3Cpath fill='%23667d52' d='M20 40h25v20H20z'/%3E%3Cpath fill='%2378916a' d='M60 60h30v25H60z'/%3E%3Cpath fill='%233d4f2f' d='M10 75h15v15H10z'/%3E%3C/svg%3E" alt="Satellite view preview" />
-                </div>
-                <span class="map-style-label">Satellite</span>
-              </button>
-            </div>
-          `
-
-          // Create modal using component
-          mapStyleModal = new Modal({
-            title: 'Map style',
-            position: 'top-right',
-            content: modalContent,
-            container: mapContainer,
-            closeOnOutsideClick: false, // We'll handle this manually to exclude the button
-            onClose: () => {
-              mapStyleModal = null
-            }
-          })
-
-          mapStyleModal.open()
-
-          // Setup event handlers after modal is created
-          setTimeout(() => {
-            const modalElement = mapStyleModal.getElement()
-            if (!modalElement) return
-
-            // Style option handlers
-            const options = modalElement.querySelectorAll('.map-style-option')
-            options.forEach((option) => {
-              option.addEventListener('click', () => {
-                const style = option.getAttribute('data-style')
-
-                // Update selected state visually
-                options.forEach((opt) => {
-                  opt.classList.remove('map-style-option--selected')
-                })
-                option.classList.add('map-style-option--selected')
-
-                // Remove all layers
-                map.eachLayer((layer) => {
-                  if (layer instanceof L.TileLayer) {
-                    map.removeLayer(layer)
-                  }
-                })
-
-                // Add selected layer
-                if (style === 'satellite') {
-                  satelliteMap.addTo(map)
-                  if (window.CookieUtils) {
-                    window.CookieUtils.set('mapBaseLayer', 'satellite', 365)
-                  }
-                } else {
-                  streetMap.addTo(map)
-                  if (window.CookieUtils) {
-                    window.CookieUtils.set('mapBaseLayer', 'street', 365)
-                  }
-                }
-
-                // Close modal
-                mapStyleModal.close()
-              })
-            })
-
-            // Custom outside click handler (exclude the map style button)
-            const outsideClickHandler = (e) => {
-              if (
-                modalElement &&
-                !modalElement.contains(e.target) &&
-                !e.target.closest('.map-style-button')
-              ) {
-                mapStyleModal.close()
-                document.removeEventListener('click', outsideClickHandler, true)
-              }
-            }
-
-            setTimeout(() => {
-              document.addEventListener('click', outsideClickHandler, true)
-            }, 100)
-          }, 50)
-        }
+        // Add map controls
+        addMapStyleSwitcher(map, mapContainer, streetMap, satelliteMap)
+        addZoomControl(map)
 
         // Load GeoJSON boundaries
-        let edpBoundaries = []
-        let edpLayers = []
-
-        // Catchment color - purple for good contrast on map
-        const catchmentColor = '#ab47bc'
-
-        // Load GeoJSON data
-        fetch('/nrf-estimate-2-map-layers-spike/catchments.geojson')
-          .then((response) => {
-            return response.json()
-          })
-          .then((data) => {
-            // Process each feature in the GeoJSON
-            data.features.forEach((feature, index) => {
-              const catchmentData = createCatchmentPolygon(
-                feature,
-                index,
-                map,
-                catchmentColor
-              )
-
-              if (catchmentData) {
-                edpLayers.push(catchmentData)
-                edpBoundaries.push({
-                  name: catchmentData.name,
-                  coordinates: catchmentData.coordinates
-                })
-              }
-            })
-
-            // Re-check any existing drawn polygons for intersections
-            drawnItems.eachLayer(function (layer) {
-              if (layer instanceof L.Polygon) {
-                const intersectingCatchment = findIntersectingCatchment(
-                  layer,
-                  edpLayers
-                )
-                updateBoundaryData(layer, intersectingCatchment)
-              }
-            })
-
-            // Only fit map to catchments if no existing boundary is loaded
-            if (edpLayers.length > 0 && !existingBoundaryData) {
-              const group = new L.featureGroup(
-                edpLayers.map((edp) => edp.polygon)
-              )
-              map.fitBounds(group.getBounds().pad(0.1))
-            }
-          })
-          .catch((error) => {
-            console.error('Error loading GeoJSON data:', error)
-            const loadingDiv = document.getElementById('map-loading')
-            if (loadingDiv) {
-              loadingDiv.innerHTML =
-                '<p class="govuk-body">Map loaded successfully. Catchment data temporarily unavailable.</p>'
-            }
-          })
+        const edpData = {
+          boundaries: [],
+          layers: []
+        }
+        loadCatchmentData(map, edpData)
 
         // Initialize the draw control
         const drawnItems = new L.FeatureGroup()
         map.addLayer(drawnItems)
 
-        // Disable tooltips
-        L.drawLocal.draw.handlers.polygon.tooltip = {
-          start: '',
-          cont: '',
-          end: ''
-        }
-        L.drawLocal.edit.handlers.edit.tooltip = {
-          text: '',
-          subtext: ''
-        }
-        L.drawLocal.edit.handlers.remove.tooltip = {
-          text: ''
-        }
-
-        const drawControl = new L.Control.Draw({
-          position: 'topleft',
-          draw: {
-            polygon: {
-              allowIntersection: false,
-              showArea: true,
-              showLength: true,
-              metric: true,
-              feet: false,
-              nautic: false,
-              drawError: {
-                color: '#e1e100',
-                message: '<strong>Error:</strong> shape edges cannot cross!'
-              },
-              shapeOptions: {
-                color: '#d4351c',
-                weight: 3,
-                opacity: 0.8,
-                fillColor: '#d4351c',
-                fillOpacity: 0.2
-              }
-            },
-            polyline: false,
-            rectangle: false,
-            circle: false,
-            marker: false,
-            circlemarker: false
-          },
-          edit: {
-            featureGroup: drawnItems,
-            remove: true
-          }
-        })
-
+        configureDrawTooltips()
+        const drawControl = createDrawControl(drawnItems)
         map.addControl(drawControl)
 
-        // Hide the toolbar
-        setTimeout(() => {
-          const toolbar = document.querySelector('.leaflet-draw-toolbar')
-          if (toolbar) {
-            toolbar.style.display = 'none'
-          }
-        }, 100)
+        hideDrawToolbar()
 
         // Initialize location search
         initLocationSearch(map)
@@ -558,26 +373,404 @@
         initMapKey(map)
 
         // Load existing boundary data if available
-        const existingBoundaryData = loadExistingBoundary(drawnItems, map)
+        loadExistingBoundary(drawnItems, map)
 
         // Form submission validation
         setupFormValidation()
 
         // Initialize accessible controls
-        setTimeout(() => {
-          if (map && drawControl && drawnItems) {
-            initAccessibleControls(map, drawControl, drawnItems, edpLayers)
-          }
-        }, 500)
+        initAccessibleControlsDelayed(map, drawControl, drawnItems, edpData)
       } catch (error) {
         console.error('Error initializing map:', error)
-        const loadingDiv = document.getElementById('map-loading')
-        if (loadingDiv) {
-          loadingDiv.innerHTML =
-            '<p class="govuk-body map-error-message">Error loading map. Please refresh the page.</p>'
-        }
+        showMapError()
       }
-    }, 1000)
+    }, DELAY_GOVUK_READY_MS)
+  }
+
+  function checkLeafletLoaded() {
+    if (typeof L === 'undefined') {
+      console.error('Leaflet library not loaded')
+      const loadingDiv = document.getElementById(DOM_IDS.mapLoading)
+      if (loadingDiv) {
+        loadingDiv.innerHTML =
+          '<p class="govuk-body map-error-message">Error: Map library not loaded. Please refresh the page.</p>'
+      }
+      return false
+    }
+    return true
+  }
+
+  function hideLoadingMessage() {
+    const loadingDiv = document.getElementById(DOM_IDS.mapLoading)
+    if (loadingDiv) {
+      loadingDiv.classList.add('hidden')
+    }
+  }
+
+  function createBaseMap() {
+    return L.map(DOM_IDS.map, {
+      zoomControl: false
+    }).setView([ENGLAND_CENTER_LAT, ENGLAND_CENTER_LNG], ENGLAND_DEFAULT_ZOOM)
+  }
+
+  function createBaseLayers() {
+    const streetMap = L.tileLayer(
+      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      {
+        attribution: '© OpenStreetMap contributors'
+      }
+    )
+
+    const satelliteMap = L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      {
+        attribution:
+          'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, and others'
+      }
+    )
+
+    return { streetMap, satelliteMap }
+  }
+
+  function getSavedLayerPreference() {
+    if (!window.Cookies) {
+      return null
+    }
+    return window.Cookies.get(COOKIE_MAP_LAYER)
+  }
+
+  function addSavedLayerToMap(map, streetMap, satelliteMap) {
+    const savedLayer = getSavedLayerPreference()
+
+    if (savedLayer === 'satellite') {
+      satelliteMap.addTo(map)
+    } else {
+      streetMap.addTo(map)
+    }
+  }
+
+  function addMapStyleSwitcher(map, mapContainer, streetMap, satelliteMap) {
+    const mapStyleButton = L.control({ position: 'topright' })
+    mapStyleButton.onAdd = function () {
+      const button = createMapStyleButton()
+      L.DomEvent.disableClickPropagation(button)
+      L.DomEvent.on(button, 'click', function (e) {
+        L.DomEvent.stopPropagation(e)
+        showMapStyleModal(map, mapContainer, streetMap, satelliteMap)
+      })
+      return button
+    }
+    mapStyleButton.addTo(map)
+  }
+
+  function createMapStyleButton() {
+    const button = L.DomUtil.create('button', 'map-style-button')
+    button.type = 'button'
+    button.innerHTML = getMapStyleButtonSVG()
+    button.title = 'Change map style'
+    button.setAttribute('aria-label', 'Change map style')
+    return button
+  }
+
+  function getMapStyleButtonSVG() {
+    return `
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="2" width="9" height="9" fill="#505a5f" stroke="none"/>
+        <rect x="13" y="2" width="9" height="9" fill="#b1b4b6" stroke="none"/>
+        <rect x="2" y="13" width="9" height="9" fill="#b1b4b6" stroke="none"/>
+        <rect x="13" y="13" width="9" height="9" fill="#505a5f" stroke="none"/>
+      </svg>
+    `
+  }
+
+  function addZoomControl(map) {
+    L.control
+      .zoom({
+        position: 'topright'
+      })
+      .addTo(map)
+  }
+
+  function configureDrawTooltips() {
+    // Disable tooltips
+    L.drawLocal.draw.handlers.polygon.tooltip = {
+      start: '',
+      cont: '',
+      end: ''
+    }
+    L.drawLocal.edit.handlers.edit.tooltip = {
+      text: '',
+      subtext: ''
+    }
+    L.drawLocal.edit.handlers.remove.tooltip = {
+      text: ''
+    }
+  }
+
+  function createDrawControl(drawnItems) {
+    return new L.Control.Draw({
+      position: 'topleft',
+      draw: {
+        polygon: {
+          allowIntersection: false,
+          showArea: true,
+          showLength: true,
+          metric: true,
+          feet: false,
+          nautic: false,
+          drawError: {
+            color: COLOR_ERROR_YELLOW,
+            message: '<strong>Error:</strong> shape edges cannot cross!'
+          },
+          shapeOptions: BOUNDARY_STYLE
+        },
+        polyline: false,
+        rectangle: false,
+        circle: false,
+        marker: false,
+        circlemarker: false
+      },
+      edit: {
+        featureGroup: drawnItems,
+        remove: true
+      }
+    })
+  }
+
+  function hideDrawToolbar() {
+    setTimeout(() => {
+      const toolbar = document.querySelector('.leaflet-draw-toolbar')
+      if (toolbar) {
+        toolbar.classList.add('hidden')
+      }
+    }, DELAY_TOOLBAR_HIDE_MS)
+  }
+
+  function initAccessibleControlsDelayed(
+    map,
+    drawControl,
+    drawnItems,
+    edpData
+  ) {
+    setTimeout(() => {
+      if (map && drawControl && drawnItems) {
+        initAccessibleControls(map, drawControl, drawnItems, edpData.layers)
+      }
+    }, DELAY_ACCESSIBLE_CONTROLS_MS)
+  }
+
+  function showMapError() {
+    const loadingDiv = document.getElementById(DOM_IDS.mapLoading)
+    if (loadingDiv) {
+      loadingDiv.innerHTML =
+        '<p class="govuk-body map-error-message">Error loading map. Please refresh the page.</p>'
+    }
+  }
+
+  // Map style modal instance
+  let mapStyleModal = null
+
+  // Create map style modal
+  function showMapStyleModal(map, mapContainer, streetMap, satelliteMap) {
+    // Hide error banner when opening modal
+    hideErrorSummary()
+
+    // Re-read the cookie each time the modal opens to get the current selection
+    const currentLayer = getSavedLayerPreference()
+
+    // Create modal content
+    const modalContent = createMapStyleModalContent(currentLayer)
+
+    // Create modal using component
+    mapStyleModal = new Modal({
+      title: 'Map style',
+      position: 'top-right',
+      content: modalContent,
+      container: mapContainer,
+      closeOnOutsideClick: false, // We'll handle this manually to exclude the button
+      onClose: () => {
+        mapStyleModal = null
+      }
+    })
+
+    mapStyleModal.open()
+
+    // Setup event handlers after modal is created
+    setupMapStyleModalHandlers(map, streetMap, satelliteMap)
+  }
+
+  function createMapStyleModalContent(currentLayer) {
+    const streetSelected =
+      currentLayer !== 'satellite' ? 'map-style-option--selected' : ''
+    const satelliteSelected =
+      currentLayer === 'satellite' ? 'map-style-option--selected' : ''
+
+    return `
+      <div class="map-style-options">
+        <button class="map-style-option ${streetSelected}" data-style="street">
+          <div class="map-style-thumbnail">
+            <img src="${getStreetMapThumbnail()}" alt="Street map preview" />
+          </div>
+          <span class="map-style-label">Street map</span>
+        </button>
+        <button class="map-style-option ${satelliteSelected}" data-style="satellite">
+          <div class="map-style-thumbnail">
+            <img src="${getSatelliteMapThumbnail()}" alt="Satellite view preview" />
+          </div>
+          <span class="map-style-label">Satellite</span>
+        </button>
+      </div>
+    `
+  }
+
+  function getStreetMapThumbnail() {
+    return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23f2efe9' width='100' height='100'/%3E%3Cpath fill='%23fff' d='M20 30h15v20H20zM50 25h30v15H50zM25 60h20v25H25zM60 55h25v30H60z'/%3E%3Cpath stroke='%23ccc' stroke-width='2' fill='none' d='M0 40h100M40 0v100'/%3E%3Cpath fill='%23d4d4d4' d='M5 5h8v8H5zM65 70h6v6h-6z'/%3E%3C/svg%3E"
+  }
+
+  function getSatelliteMapThumbnail() {
+    return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3Cpattern id='terrain' width='10' height='10' patternUnits='userSpaceOnUse'%3E%3Crect fill='%234a5f3a' width='10' height='10'/%3E%3Crect fill='%235d7047' x='2' y='2' width='4' height='4'/%3E%3C/pattern%3E%3C/defs%3E%3Crect fill='url(%23terrain)' width='100' height='100'/%3E%3Cpath fill='%23667d52' d='M20 40h25v20H20z'/%3E%3Cpath fill='%2378916a' d='M60 60h30v25H60z'/%3E%3Cpath fill='%233d4f2f' d='M10 75h15v15H10z'/%3E%3C/svg%3E"
+  }
+
+  function setupMapStyleModalHandlers(map, streetMap, satelliteMap) {
+    setTimeout(() => {
+      const modalElement = mapStyleModal.getElement()
+      if (!modalElement) return
+
+      // Style option handlers
+      const options = modalElement.querySelectorAll('.map-style-option')
+      options.forEach((option) => {
+        option.addEventListener('click', () => {
+          const style = option.getAttribute('data-style')
+          handleMapStyleChange(style, options, map, streetMap, satelliteMap)
+        })
+      })
+
+      // Custom outside click handler (exclude the map style button)
+      setupOutsideClickHandler(modalElement)
+    }, DELAY_MODAL_SETUP_MS)
+  }
+
+  function handleMapStyleChange(style, options, map, streetMap, satelliteMap) {
+    // Update selected state visually
+    options.forEach((opt) => {
+      opt.classList.remove('map-style-option--selected')
+    })
+    options.forEach((opt) => {
+      if (opt.getAttribute('data-style') === style) {
+        opt.classList.add('map-style-option--selected')
+      }
+    })
+
+    // Remove all tile layers
+    map.eachLayer((layer) => {
+      if (layer instanceof L.TileLayer) {
+        map.removeLayer(layer)
+      }
+    })
+
+    // Add selected layer and save preference
+    if (style === 'satellite') {
+      satelliteMap.addTo(map)
+      saveLayerPreference('satellite')
+    } else {
+      streetMap.addTo(map)
+      saveLayerPreference('street')
+    }
+
+    // Close modal
+    mapStyleModal.close()
+  }
+
+  function saveLayerPreference(layerType) {
+    if (window.Cookies) {
+      window.Cookies.set(COOKIE_MAP_LAYER, layerType, {
+        expires: COOKIE_EXPIRY_DAYS,
+        path: '/'
+      })
+    }
+  }
+
+  function setupOutsideClickHandler(modalElement) {
+    const outsideClickHandler = (e) => {
+      if (
+        modalElement &&
+        !modalElement.contains(e.target) &&
+        !e.target.closest('.map-style-button')
+      ) {
+        mapStyleModal.close()
+        document.removeEventListener('click', outsideClickHandler, true)
+      }
+    }
+
+    setTimeout(() => {
+      document.addEventListener('click', outsideClickHandler, true)
+    }, DELAY_OUTSIDE_CLICK_MS)
+  }
+
+  function loadCatchmentData(map, edpData) {
+    fetch('/nrf-estimate-2-map-layers-spike/catchments.geojson')
+      .then((response) => response.json())
+      .then((data) => {
+        processCatchmentFeatures(data.features, map, edpData)
+      })
+      .catch((error) => {
+        console.error('Error loading GeoJSON data:', error)
+        showCatchmentLoadError()
+      })
+  }
+
+  function processCatchmentFeatures(features, map, edpData) {
+    features.forEach((feature, index) => {
+      const catchmentData = createCatchmentPolygon(feature, index, map)
+
+      if (catchmentData) {
+        edpData.layers.push(catchmentData)
+        edpData.boundaries.push({
+          name: catchmentData.name,
+          coordinates: catchmentData.coordinates
+        })
+      }
+    })
+
+    // Re-check any existing drawn polygons for intersections
+    recheckExistingPolygons(edpData.layers)
+
+    // Only fit map to catchments if no existing boundary is loaded
+    fitMapToCatchmentsIfNeeded(map, edpData.layers)
+  }
+
+  function recheckExistingPolygons(edpLayers) {
+    const drawnItems = window.drawnItemsRef
+    if (!drawnItems) return
+
+    drawnItems.eachLayer(function (layer) {
+      if (layer instanceof L.Polygon) {
+        const intersectingCatchment = findIntersectingCatchment(
+          layer,
+          edpLayers
+        )
+        updateBoundaryData(layer, intersectingCatchment)
+      }
+    })
+  }
+
+  function fitMapToCatchmentsIfNeeded(map, edpLayers) {
+    const existingBoundaryData = document.getElementById(
+      DOM_IDS.boundaryData
+    ).value
+
+    if (edpLayers.length > 0 && !existingBoundaryData) {
+      const group = new L.featureGroup(edpLayers.map((edp) => edp.polygon))
+      map.fitBounds(group.getBounds().pad(MAP_BOUNDS_PADDING))
+    }
+  }
+
+  function showCatchmentLoadError() {
+    const loadingDiv = document.getElementById(DOM_IDS.mapLoading)
+    if (loadingDiv) {
+      loadingDiv.innerHTML =
+        '<p class="govuk-body">Map loaded successfully. Catchment data temporarily unavailable.</p>'
+    }
   }
 
   // ============================================================================
@@ -726,7 +919,7 @@
 
   function updateBoundaryData(layer, intersectingCatchment) {
     if (!layer) {
-      document.getElementById('boundary-data').value = ''
+      document.getElementById(DOM_IDS.boundaryData).value = ''
       return
     }
 
@@ -743,7 +936,7 @@
         : null
     }
 
-    document.getElementById('boundary-data').value =
+    document.getElementById(DOM_IDS.boundaryData).value =
       JSON.stringify(boundaryData)
   }
 
@@ -761,331 +954,374 @@
       edpLayers = []
     }
 
-    const startDrawingBtn = document.getElementById('start-drawing')
-    const editBoundaryBtn = document.getElementById('edit-boundary')
-    const deleteBoundaryBtn = document.getElementById('delete-boundary')
-    const zoomToEnglandBtn = document.getElementById('zoom-to-england')
-    const zoomToBoundaryBtn = document.getElementById('zoom-to-boundary')
-
-    if (
-      !startDrawingBtn ||
-      !editBoundaryBtn ||
-      !deleteBoundaryBtn ||
-      !zoomToEnglandBtn ||
-      !zoomToBoundaryBtn
-    ) {
+    const controls = getControlElements()
+    if (!controls) {
       console.error('Control elements not found')
       return
     }
 
     let currentDrawingLayer = null
 
-    // Helper functions for edit mode UI
-    function enterEditMode() {
-      const panel = document.querySelector('.map-controls-panel')
-      const saveButtonContainer = document.getElementById(
-        'map-save-button-container'
-      )
-      const editButtonsContainer = document.getElementById(
-        'map-edit-buttons-container'
-      )
+    // Setup all button event handlers
+    setupDrawingControls(
+      controls,
+      map,
+      drawControl,
+      drawnItems,
+      currentDrawingLayer
+    )
+    setupMapEventHandlers(map, drawnItems, edpLayers)
 
-      // Hide the side panel
-      if (panel) {
-        panel.style.display = 'none'
-      }
+    updateLinkStates(controls, drawnItems)
+  }
 
-      // Hide the save button, show edit buttons
-      if (saveButtonContainer) {
-        saveButtonContainer.style.display = 'none'
-      }
-      if (editButtonsContainer) {
-        editButtonsContainer.style.display = 'block'
-      }
+  function getControlElements() {
+    const startDrawingBtn = document.getElementById(DOM_IDS.startDrawing)
+    const editBoundaryBtn = document.getElementById(DOM_IDS.editBoundary)
+    const deleteBoundaryBtn = document.getElementById(DOM_IDS.deleteBoundary)
+    const zoomToEnglandBtn = document.getElementById(DOM_IDS.zoomToEngland)
+    const zoomToBoundaryBtn = document.getElementById(DOM_IDS.zoomToBoundary)
+    const confirmEditBtn = document.getElementById(DOM_IDS.confirmEdit)
+    const cancelEditBtn = document.getElementById(DOM_IDS.cancelEdit)
 
-      // Hide search button and container
-      if (map._searchButton) {
-        map._searchButton.style.display = 'none'
-      }
-      if (map._searchContainer) {
-        map._searchContainer.style.display = 'none'
-      }
-
-      // Hide key button and modal
-      if (map._keyButton) {
-        map._keyButton.style.display = 'none'
-      }
-      if (map._keyModal) {
-        map._keyModal.close()
-      }
-
-      // Force Leaflet to recalculate map size after panel is hidden
-      setTimeout(() => {
-        map.invalidateSize()
-      }, 100)
+    if (
+      !startDrawingBtn ||
+      !editBoundaryBtn ||
+      !deleteBoundaryBtn ||
+      !zoomToEnglandBtn ||
+      !zoomToBoundaryBtn ||
+      !confirmEditBtn ||
+      !cancelEditBtn
+    ) {
+      return null
     }
 
-    function exitEditMode() {
-      const panel = document.querySelector('.map-controls-panel')
-      const saveButtonContainer = document.getElementById(
-        'map-save-button-container'
-      )
-      const editButtonsContainer = document.getElementById(
-        'map-edit-buttons-container'
-      )
-
-      // Show the side panel
-      if (panel) {
-        panel.style.display = 'block'
-      }
-
-      // Show the save button, hide edit buttons
-      if (saveButtonContainer && drawnItems.getLayers().length > 0) {
-        saveButtonContainer.style.display = 'block'
-      }
-      if (editButtonsContainer) {
-        editButtonsContainer.style.display = 'none'
-      }
-
-      // Show search button (but not the container)
-      if (map._searchButton) {
-        map._searchButton.style.display = 'flex'
-      }
-
-      // Show key button (modal stays closed)
-      if (map._keyButton) {
-        map._keyButton.style.display = 'flex'
-      }
-
-      // Force Leaflet to recalculate map size after panel is shown
-      setTimeout(() => {
-        map.invalidateSize()
-      }, 100)
+    return {
+      startDrawingBtn,
+      editBoundaryBtn,
+      deleteBoundaryBtn,
+      zoomToEnglandBtn,
+      zoomToBoundaryBtn,
+      confirmEditBtn,
+      cancelEditBtn
     }
+  }
 
-    // Button event handlers
+  function setupDrawingControls(
+    controls,
+    map,
+    drawControl,
+    drawnItems,
+    currentDrawingLayer
+  ) {
     // Start drawing
-    startDrawingBtn.addEventListener('click', function (e) {
+    controls.startDrawingBtn.addEventListener('click', function (e) {
       e.preventDefault()
-      if (isDrawing) {
-        if (currentDrawingLayer) {
-          drawnItems.removeLayer(currentDrawingLayer)
-          currentDrawingLayer = null
-        }
-        if (drawControl._toolbars?.draw?._modes?.polygon) {
-          drawControl._toolbars.draw._modes.polygon.handler.disable()
-        }
-        isDrawing = false
-        hideErrorSummary()
-        exitEditMode()
-      } else {
-        if (drawControl._toolbars?.draw?._modes?.polygon) {
-          drawControl._toolbars.draw._modes.polygon.handler.enable()
-          isDrawing = true
-          enterEditMode()
-        }
-      }
+      handleStartDrawingClick(drawControl, currentDrawingLayer, drawnItems, map)
     })
 
     // Edit boundary
-    editBoundaryBtn.addEventListener('click', function (e) {
+    controls.editBoundaryBtn.addEventListener('click', function (e) {
       e.preventDefault()
-      if (isEditing) {
-        // Save the edits before disabling edit mode
-        if (drawControl._toolbars?.edit?._modes?.edit) {
-          drawControl._toolbars.edit._modes.edit.handler.save()
-          drawControl._toolbars.edit._modes.edit.handler.disable()
-        }
-        isEditing = false
-        hideErrorSummary()
-        exitEditMode()
-      } else {
-        if (drawnItems.getLayers().length > 0) {
-          if (drawControl._toolbars?.edit?._modes?.edit) {
-            drawControl._toolbars.edit._modes.edit.handler.enable()
-            isEditing = true
-            enterEditMode()
-          }
-        } else {
-          showErrorSummary('No boundary to edit. Please draw a boundary first.')
-        }
-      }
+      handleEditBoundaryClick(drawControl, drawnItems, map)
     })
 
-    // Delete boundary - immediately delete without confirmation
-    deleteBoundaryBtn.addEventListener('click', function (e) {
+    // Delete boundary
+    controls.deleteBoundaryBtn.addEventListener('click', function (e) {
       e.preventDefault()
-      if (drawnItems.getLayers().length > 0) {
-        // Delete the boundary immediately
-        drawnItems.clearLayers()
-        updateBoundaryData(null, null)
-        hideErrorSummary()
-        updateLinkStates()
-
-        // Reset editing and drawing states
-        // Disable edit mode on the map
-        if (drawControl._toolbars?.edit?._modes?.edit) {
-          drawControl._toolbars.edit._modes.edit.handler.save()
-          drawControl._toolbars.edit._modes.edit.handler.disable()
-        }
-        // Disable drawing mode on the map
-        if (drawControl._toolbars?.draw?._modes?.polygon) {
-          drawControl._toolbars.draw._modes.polygon.handler.disable()
-        }
-
-        isEditing = false
-        isDrawing = false
-      } else {
-        showErrorSummary('No boundary to delete.')
-      }
+      handleDeleteBoundaryClick(drawControl, drawnItems, controls)
     })
 
-    // Edit/Drawing mode: Confirm area button
-    const confirmEditBtn = document.getElementById('confirm-edit-btn')
-    if (confirmEditBtn) {
-      confirmEditBtn.addEventListener('click', function (e) {
-        e.preventDefault()
+    // Confirm edit/drawing
+    controls.confirmEditBtn.addEventListener('click', function (e) {
+      e.preventDefault()
+      handleConfirmEdit(drawControl, map)
+    })
 
-        // Handle drawing mode - complete the drawing
-        if (isDrawing && drawControl._toolbars?.draw?._modes?.polygon) {
-          const drawHandler = drawControl._toolbars.draw._modes.polygon.handler
-
-          // If currently drawing, complete the polygon
-          if (drawHandler._enabled) {
-            drawHandler.completeShape()
-          }
-        }
-
-        // Handle edit mode - save edits
-        if (isEditing && drawControl._toolbars?.edit?._modes?.edit) {
-          const editHandler = drawControl._toolbars.edit._modes.edit.handler
-
-          // Complete any incomplete drawings
-          if (editHandler._enabled) {
-            // Save the edits
-            editHandler.save()
-            editHandler.disable()
-          }
-
-          // Exit edit mode
-          isEditing = false
-        }
-
-        // Exit drawing mode
-        if (isDrawing) {
-          if (drawControl._toolbars?.draw?._modes?.polygon) {
-            drawControl._toolbars.draw._modes.polygon.handler.disable()
-          }
-          isDrawing = false
-        }
-
-        hideErrorSummary()
-        exitEditMode()
-      })
-    }
-
-    // Edit/Drawing mode: Cancel button
-    const cancelEditBtn = document.getElementById('cancel-edit-btn')
-    if (cancelEditBtn) {
-      cancelEditBtn.addEventListener('click', function (e) {
-        e.preventDefault()
-
-        // Cancel drawing mode - remove any partial drawing
-        if (isDrawing) {
-          if (currentDrawingLayer) {
-            drawnItems.removeLayer(currentDrawingLayer)
-            currentDrawingLayer = null
-          }
-          if (drawControl._toolbars?.draw?._modes?.polygon) {
-            drawControl._toolbars.draw._modes.polygon.handler.disable()
-          }
-          isDrawing = false
-        }
-
-        // Cancel edit mode - revert any changes
-        if (isEditing) {
-          if (drawControl._toolbars?.edit?._modes?.edit) {
-            const editHandler = drawControl._toolbars.edit._modes.edit.handler
-
-            // Disable edit mode without saving
-            if (editHandler._enabled) {
-              editHandler.revertLayers()
-              editHandler.disable()
-            }
-          }
-          isEditing = false
-        }
-
-        hideErrorSummary()
-        exitEditMode()
-      })
-    }
+    // Cancel edit/drawing
+    controls.cancelEditBtn.addEventListener('click', function (e) {
+      e.preventDefault()
+      handleCancelEdit(drawControl, currentDrawingLayer, drawnItems, map)
+    })
 
     // Zoom to England
-    zoomToEnglandBtn.addEventListener('click', function (e) {
+    controls.zoomToEnglandBtn.addEventListener('click', function (e) {
       e.preventDefault()
-      map.setView([52.5, -1.5], 6)
+      map.setView(
+        [ENGLAND_CENTER_LAT, ENGLAND_CENTER_LNG],
+        ENGLAND_DEFAULT_ZOOM
+      )
     })
 
     // Zoom to boundary
-    zoomToBoundaryBtn.addEventListener('click', function (e) {
+    controls.zoomToBoundaryBtn.addEventListener('click', function (e) {
       e.preventDefault()
-      if (drawnItems.getLayers().length > 0) {
-        const group = new L.featureGroup(drawnItems.getLayers())
-        map.fitBounds(group.getBounds().pad(0.1))
-        hideErrorSummary()
-      } else {
-        showErrorSummary('No boundary to zoom to.')
-      }
+      handleZoomToBoundary(drawnItems, map)
     })
+  }
 
-    // Helper function to update button states based on boundary existence
-    function updateLinkStates() {
-      const hasBoundary = drawnItems.getLayers().length > 0
-      const saveButtonContainer = document.getElementById(
-        'map-save-button-container'
-      )
+  function handleStartDrawingClick(
+    drawControl,
+    currentDrawingLayer,
+    drawnItems,
+    map
+  ) {
+    if (isDrawing) {
+      if (currentDrawingLayer) {
+        drawnItems.removeLayer(currentDrawingLayer)
+        currentDrawingLayer = null
+      }
+      const polygonHandler = getPolygonHandler(drawControl, 'draw')
+      if (polygonHandler) {
+        polygonHandler.disable()
+      }
+      isDrawing = false
+      hideErrorSummary()
+      exitEditMode(map)
+    } else {
+      const polygonHandler = getPolygonHandler(drawControl, 'draw')
+      if (polygonHandler) {
+        polygonHandler.enable()
+        isDrawing = true
+        enterEditMode(map)
+      }
+    }
+  }
 
-      if (hasBoundary) {
-        // Hide start drawing button when boundary exists
-        hideElement(startDrawingBtn)
-
-        // Show and enable edit/delete/zoom buttons
-        showElement(editBoundaryBtn)
-        enableElement(editBoundaryBtn)
-        enableElement(deleteBoundaryBtn)
-        enableElement(zoomToBoundaryBtn)
-
-        // Show the floating save button
-        if (saveButtonContainer) {
-          saveButtonContainer.style.display = 'block'
+  function handleEditBoundaryClick(drawControl, drawnItems, map) {
+    if (isEditing) {
+      const editHandler = getEditHandler(drawControl)
+      if (editHandler) {
+        editHandler.save()
+        editHandler.disable()
+      }
+      isEditing = false
+      hideErrorSummary()
+      exitEditMode(map)
+    } else {
+      if (drawnItems.getLayers().length > 0) {
+        const editHandler = getEditHandler(drawControl)
+        if (editHandler) {
+          editHandler.enable()
+          isEditing = true
+          enterEditMode(map)
         }
       } else {
-        // Show start drawing button when no boundary
-        showElement(startDrawingBtn)
+        showErrorSummary('No boundary to edit. Please draw a boundary first.')
+      }
+    }
+  }
 
-        // Hide and disable edit button, disable delete/zoom buttons
-        hideElement(editBoundaryBtn)
-        disableElement(editBoundaryBtn)
-        disableElement(deleteBoundaryBtn)
-        disableElement(zoomToBoundaryBtn)
+  function handleDeleteBoundaryClick(drawControl, drawnItems, controls) {
+    if (drawnItems.getLayers().length > 0) {
+      // Delete the boundary immediately
+      drawnItems.clearLayers()
+      updateBoundaryData(null, null)
+      hideErrorSummary()
+      updateLinkStates(controls, drawnItems)
 
-        // Hide the floating save button
-        if (saveButtonContainer) {
-          saveButtonContainer.style.display = 'none'
-        }
+      // Reset editing and drawing states
+      const editHandler = getEditHandler(drawControl)
+      if (editHandler) {
+        editHandler.save()
+        editHandler.disable()
+      }
+
+      const polygonHandler = getPolygonHandler(drawControl, 'draw')
+      if (polygonHandler) {
+        polygonHandler.disable()
+      }
+
+      isEditing = false
+      isDrawing = false
+    } else {
+      showErrorSummary('No boundary to delete.')
+    }
+  }
+
+  function handleConfirmEdit(drawControl, map) {
+    // Handle drawing mode - complete the drawing
+    if (isDrawing) {
+      const drawHandler = getPolygonHandler(drawControl, 'draw')
+      if (drawHandler && drawHandler._enabled) {
+        drawHandler.completeShape()
       }
     }
 
-    // Map drawing event handlers
+    // Handle edit mode - save edits
+    if (isEditing) {
+      const editHandler = getEditHandler(drawControl)
+      if (editHandler && editHandler._enabled) {
+        editHandler.save()
+        editHandler.disable()
+      }
+      isEditing = false
+    }
+
+    // Exit drawing mode
+    if (isDrawing) {
+      const polygonHandler = getPolygonHandler(drawControl, 'draw')
+      if (polygonHandler) {
+        polygonHandler.disable()
+      }
+      isDrawing = false
+    }
+
+    hideErrorSummary()
+    exitEditMode(map)
+  }
+
+  function handleCancelEdit(drawControl, currentDrawingLayer, drawnItems, map) {
+    // Cancel drawing mode - remove any partial drawing
+    if (isDrawing) {
+      if (currentDrawingLayer) {
+        drawnItems.removeLayer(currentDrawingLayer)
+        currentDrawingLayer = null
+      }
+      const polygonHandler = getPolygonHandler(drawControl, 'draw')
+      if (polygonHandler) {
+        polygonHandler.disable()
+      }
+      isDrawing = false
+    }
+
+    // Cancel edit mode - revert any changes
+    if (isEditing) {
+      const editHandler = getEditHandler(drawControl)
+      if (editHandler && editHandler._enabled) {
+        editHandler.revertLayers()
+        editHandler.disable()
+      }
+      isEditing = false
+    }
+
+    hideErrorSummary()
+    exitEditMode(map)
+  }
+
+  function handleZoomToBoundary(drawnItems, map) {
+    if (drawnItems.getLayers().length > 0) {
+      const group = new L.featureGroup(drawnItems.getLayers())
+      map.fitBounds(group.getBounds().pad(MAP_BOUNDS_PADDING))
+      hideErrorSummary()
+    } else {
+      showErrorSummary('No boundary to zoom to.')
+    }
+  }
+
+  // Helper to safely access Leaflet draw handlers
+  function getPolygonHandler(drawControl, type) {
+    if (type === 'draw') {
+      return drawControl._toolbars?.draw?._modes?.polygon?.handler
+    }
+    return null
+  }
+
+  function getEditHandler(drawControl) {
+    return drawControl._toolbars?.edit?._modes?.edit?.handler
+  }
+
+  // Helper functions for edit mode UI
+  function enterEditMode(map) {
+    const panel = document.querySelector('.map-controls-panel')
+    const saveButtonContainer = document.getElementById(
+      DOM_IDS.saveButtonContainer
+    )
+    const editButtonsContainer = document.getElementById(
+      DOM_IDS.editButtonsContainer
+    )
+
+    // Hide the side panel
+    if (panel) {
+      panel.classList.add('hidden')
+    }
+
+    // Hide the save button, show edit buttons
+    if (saveButtonContainer) {
+      saveButtonContainer.classList.add('hidden')
+    }
+    if (editButtonsContainer) {
+      editButtonsContainer.classList.remove('hidden')
+    }
+
+    // Hide search button and container
+    if (map._searchButton) {
+      hideElement(map._searchButton)
+    }
+    if (map._searchContainer) {
+      hideElement(map._searchContainer)
+    }
+
+    // Hide key button and modal
+    if (map._keyButton) {
+      hideElement(map._keyButton)
+    }
+    if (map._keyModal) {
+      map._keyModal.close()
+    }
+
+    // Force Leaflet to recalculate map size after panel is hidden
+    setTimeout(() => {
+      map.invalidateSize()
+    }, DELAY_MAP_RESIZE_MS)
+  }
+
+  function exitEditMode(map) {
+    const panel = document.querySelector('.map-controls-panel')
+    const saveButtonContainer = document.getElementById(
+      DOM_IDS.saveButtonContainer
+    )
+    const editButtonsContainer = document.getElementById(
+      DOM_IDS.editButtonsContainer
+    )
+
+    // Show the side panel
+    if (panel) {
+      panel.classList.remove('hidden')
+    }
+
+    // Show the save button if boundary exists, hide edit buttons
+    const drawnItems = window.drawnItemsRef
+    if (
+      saveButtonContainer &&
+      drawnItems &&
+      drawnItems.getLayers().length > 0
+    ) {
+      saveButtonContainer.classList.remove('hidden')
+    }
+    if (editButtonsContainer) {
+      editButtonsContainer.classList.add('hidden')
+    }
+
+    // Show search button (but not the container)
+    if (map._searchButton) {
+      showElement(map._searchButton)
+    }
+
+    // Show key button (modal stays closed)
+    if (map._keyButton) {
+      showElement(map._keyButton)
+    }
+
+    // Force Leaflet to recalculate map size after panel is shown
+    setTimeout(() => {
+      map.invalidateSize()
+    }, DELAY_MAP_RESIZE_MS)
+  }
+
+  function setupMapEventHandlers(map, drawnItems, edpLayers) {
     map.on(L.Draw.Event.CREATED, function (event) {
       const layer = event.layer
       drawnItems.addLayer(layer)
-      currentDrawingLayer = layer
       isDrawing = false
       hideErrorSummary()
-      updateLinkStates()
-      exitEditMode()
+
+      const controls = getControlElements()
+      if (controls) {
+        updateLinkStates(controls, drawnItems)
+      }
+
+      exitEditMode(map)
 
       const intersectingCatchment = findIntersectingCatchment(layer, edpLayers)
       updateBoundaryData(layer, intersectingCatchment)
@@ -1103,11 +1339,50 @@
     })
 
     map.on(L.Draw.Event.DELETED, function () {
-      updateLinkStates()
-      document.getElementById('boundary-data').value = ''
+      const controls = getControlElements()
+      if (controls) {
+        updateLinkStates(controls, drawnItems)
+      }
+      document.getElementById(DOM_IDS.boundaryData).value = ''
     })
+  }
 
-    updateLinkStates()
+  // Helper function to update button states based on boundary existence
+  function updateLinkStates(controls, drawnItems) {
+    const hasBoundary = drawnItems.getLayers().length > 0
+    const saveButtonContainer = document.getElementById(
+      DOM_IDS.saveButtonContainer
+    )
+
+    if (hasBoundary) {
+      // Hide start drawing button when boundary exists
+      hideElement(controls.startDrawingBtn)
+
+      // Show and enable edit/delete/zoom buttons
+      showElement(controls.editBoundaryBtn)
+      enableElement(controls.editBoundaryBtn)
+      enableElement(controls.deleteBoundaryBtn)
+      enableElement(controls.zoomToBoundaryBtn)
+
+      // Show the floating save button
+      if (saveButtonContainer) {
+        saveButtonContainer.classList.remove('hidden')
+      }
+    } else {
+      // Show start drawing button when no boundary
+      showElement(controls.startDrawingBtn)
+
+      // Hide and disable edit button, disable delete/zoom buttons
+      hideElement(controls.editBoundaryBtn)
+      disableElement(controls.editBoundaryBtn)
+      disableElement(controls.deleteBoundaryBtn)
+      disableElement(controls.zoomToBoundaryBtn)
+
+      // Hide the floating save button
+      if (saveButtonContainer) {
+        saveButtonContainer.classList.add('hidden')
+      }
+    }
   }
 
   // ============================================================================
@@ -1122,22 +1397,27 @@
     resultsDropdown,
     map
   ) {
-    const isVisible = searchContainer.style.display === 'block'
-    searchContainer.style.display = isVisible ? 'none' : 'block'
-    searchButton.style.display = isVisible ? 'flex' : 'none'
+    const isVisible = !searchContainer.classList.contains('hidden')
+
+    if (isVisible) {
+      hideElement(searchContainer)
+      showElement(searchButton)
+    } else {
+      showElement(searchContainer)
+      hideElement(searchButton)
+    }
 
     // Toggle key button and modal visibility based on search panel state
     if (map._keyButton) {
-      map._keyButton.style.display = isVisible ? 'flex' : 'none'
+      if (isVisible) {
+        showElement(map._keyButton)
+      } else {
+        hideElement(map._keyButton)
+      }
     }
     if (map._keyModal) {
-      if (isVisible) {
-        // Search is closing, key button will be shown, close modal
-        map._keyModal.close()
-      } else {
-        // Search is opening, hide modal and button
-        map._keyModal.close()
-      }
+      // Always close modal when toggling search
+      map._keyModal.close()
     }
 
     if (!isVisible) {
@@ -1147,57 +1427,37 @@
         searchInput.value.trim().length > 0 &&
         resultsDropdown.children.length > 0
       ) {
-        resultsDropdown.style.display = 'block'
+        showElement(resultsDropdown)
       }
     }
   }
 
   // Helper function to hide search and show related UI elements
   function hideSearchPanel(searchContainer, searchButton, map) {
-    searchContainer.style.display = 'none'
-    searchButton.style.display = 'flex'
+    hideElement(searchContainer)
+    showElement(searchButton)
 
     // Show key button when search is hidden
     if (map._keyButton) {
-      map._keyButton.style.display = 'flex'
+      showElement(map._keyButton)
     }
   }
 
   function initLocationSearch(map) {
-    // Create search button
-    const searchButton = document.createElement('button')
-    searchButton.id = 'location-search-button'
-    searchButton.className = 'govuk-button govuk-button--secondary'
-    searchButton.innerHTML = `
-      <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 20 20" fill-rule="evenodd" fill="currentColor">
-        <path d="M12.084 14.312c-1.117.711-2.444 1.123-3.866 1.123C4.235 15.435 1 12.201 1 8.218S4.235 1 8.218 1s7.217 3.235 7.217 7.218c0 1.422-.412 2.749-1.123 3.866L19 16.773 16.773 19l-4.689-4.688zM8.218 2.818c2.98 0 5.4 2.419 5.4 5.4s-2.42 5.4-5.4 5.4-5.4-2.42-5.4-5.4 2.419-5.4 5.4-5.4z"></path>
-      </svg>
-      <span>Search</span>
-    `
-    searchButton.setAttribute('aria-label', 'Search for location')
+    // Get existing elements from DOM
+    const searchButton = document.getElementById(DOM_IDS.locationSearchButton)
+    const searchContainer = document.getElementById(
+      DOM_IDS.locationSearchContainer
+    )
+    const searchInput = document.getElementById(DOM_IDS.locationSearchInput)
+    const resultsDropdown = document.getElementById(
+      DOM_IDS.locationSearchResults
+    )
 
-    // Create search container
-    const searchContainer = document.createElement('div')
-    searchContainer.id = 'location-search-container'
-
-    // Create search input
-    const searchInput = document.createElement('input')
-    searchInput.id = 'location-search-input'
-    searchInput.className = 'govuk-input'
-    searchInput.type = 'text'
-    searchInput.placeholder = 'Search for a place in England'
-
-    // Create results dropdown
-    const resultsDropdown = document.createElement('div')
-    resultsDropdown.id = 'location-search-results'
-
-    searchContainer.appendChild(searchInput)
-    searchContainer.appendChild(resultsDropdown)
-
-    // Add to map container
-    const mapContainer = document.getElementById('map')
-    mapContainer.appendChild(searchButton)
-    mapContainer.appendChild(searchContainer)
+    if (!searchButton || !searchContainer || !searchInput || !resultsDropdown) {
+      console.error('Search elements not found in DOM')
+      return
+    }
 
     let searchTimeout
 
@@ -1221,7 +1481,7 @@
         !searchButton.contains(e.target)
       ) {
         hideSearchPanel(searchContainer, searchButton, map)
-        resultsDropdown.style.display = 'none'
+        hideElement(resultsDropdown)
       }
     })
 
@@ -1231,7 +1491,7 @@
         searchInput.value.trim().length > 0 &&
         resultsDropdown.children.length > 0
       ) {
-        resultsDropdown.style.display = 'block'
+        showElement(resultsDropdown)
       }
     })
 
@@ -1241,22 +1501,22 @@
 
       clearTimeout(searchTimeout)
 
-      if (query.length < 2) {
-        resultsDropdown.style.display = 'none'
+      if (query.length < SEARCH_MIN_QUERY_LENGTH) {
+        hideElement(resultsDropdown)
         return
       }
 
       searchTimeout = setTimeout(() => {
         searchLocation(query, resultsDropdown, map)
-      }, 300)
+      }, DEBOUNCE_SEARCH_MS)
     })
 
     // Handle keyboard navigation
     searchInput.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') {
-        searchContainer.style.display = 'none'
-        searchButton.style.display = 'flex'
-        resultsDropdown.style.display = 'none'
+        hideElement(searchContainer)
+        showElement(searchButton)
+        hideElement(resultsDropdown)
       }
     })
 
@@ -1268,82 +1528,91 @@
   // Search for location using postcodes.io API
   function searchLocation(query, resultsDropdown, map) {
     // Request more results to account for filtering out non-English locations
-    const apiUrl = `https://api.postcodes.io/places?q=${encodeURIComponent(query)}&limit=50`
+    const apiUrl = `${POSTCODES_API_BASE}?q=${encodeURIComponent(query)}&limit=${POSTCODES_API_LIMIT}`
 
     fetch(apiUrl)
       .then((response) => response.json())
       .then((data) => {
-        if (data.status === 200 && data.result && data.result.length > 0) {
-          // Filter results to only include English locations
-          const englishResults = data.result.filter(
-            (result) => result.country === 'England'
-          )
-
-          if (englishResults.length > 0) {
-            // Limit to 10 results after filtering
-            displaySearchResults(
-              englishResults.slice(0, 10),
-              resultsDropdown,
-              map
-            )
-          } else {
-            resultsDropdown.innerHTML =
-              '<div class="search-message">No English locations found. Try a different search term.</div>'
-            resultsDropdown.style.display = 'block'
-          }
-        } else {
-          resultsDropdown.innerHTML =
-            '<div class="search-message">No results found</div>'
-          resultsDropdown.style.display = 'block'
-        }
+        handleSearchResults(data, resultsDropdown, map)
       })
       .catch((error) => {
         console.error('Error searching location:', error)
         resultsDropdown.innerHTML =
           '<div class="search-error">Error searching location</div>'
-        resultsDropdown.style.display = 'block'
+        showElement(resultsDropdown)
       })
+  }
+
+  function handleSearchResults(data, resultsDropdown, map) {
+    if (data.status === 200 && data.result && data.result.length > 0) {
+      // Filter results to only include English locations
+      const englishResults = data.result.filter(
+        (result) => result.country === 'England'
+      )
+
+      if (englishResults.length > 0) {
+        // Limit to max results after filtering
+        displaySearchResults(
+          englishResults.slice(0, POSTCODES_MAX_DISPLAY_RESULTS),
+          resultsDropdown,
+          map
+        )
+      } else {
+        resultsDropdown.innerHTML =
+          '<div class="search-message">No English locations found. Try a different search term.</div>'
+        showElement(resultsDropdown)
+      }
+    } else {
+      resultsDropdown.innerHTML =
+        '<div class="search-message">No results found</div>'
+      showElement(resultsDropdown)
+    }
   }
 
   // Display search results
   function displaySearchResults(results, resultsDropdown, map) {
     resultsDropdown.innerHTML = ''
-    resultsDropdown.style.display = 'block'
+    showElement(resultsDropdown)
 
     results.forEach((result) => {
-      const resultItem = document.createElement('button')
-      resultItem.type = 'button'
-      resultItem.className = 'location-search-result-item'
-
-      // Create result text with location details
-      const nameText = document.createElement('div')
-      nameText.className = 'search-result-name'
-      nameText.textContent = result.name_1
-
-      const detailsText = document.createElement('div')
-      detailsText.className = 'search-result-details'
-      const details = []
-      if (result.local_type) details.push(result.local_type)
-      if (result.county_unitary) details.push(result.county_unitary)
-      if (result.region) details.push(result.region)
-      detailsText.textContent = details.join(', ')
-
-      resultItem.appendChild(nameText)
-      resultItem.appendChild(detailsText)
-
-      // Click handler
-      resultItem.addEventListener('click', function () {
-        zoomToLocation(result, map)
-        resultsDropdown.style.display = 'none'
-        const searchContainer = document.getElementById(
-          'location-search-container'
-        )
-        const searchButton = document.getElementById('location-search-button')
-        hideSearchPanel(searchContainer, searchButton, map)
-      })
-
+      const resultItem = createSearchResultItem(result, map, resultsDropdown)
       resultsDropdown.appendChild(resultItem)
     })
+  }
+
+  function createSearchResultItem(result, map, resultsDropdown) {
+    const resultItem = document.createElement('button')
+    resultItem.type = 'button'
+    resultItem.className = 'location-search-result-item'
+
+    // Create result text with location details
+    const nameText = document.createElement('div')
+    nameText.className = 'search-result-name'
+    nameText.textContent = result.name_1
+
+    const detailsText = document.createElement('div')
+    detailsText.className = 'search-result-details'
+    const details = []
+    if (result.local_type) details.push(result.local_type)
+    if (result.county_unitary) details.push(result.county_unitary)
+    if (result.region) details.push(result.region)
+    detailsText.textContent = details.join(', ')
+
+    resultItem.appendChild(nameText)
+    resultItem.appendChild(detailsText)
+
+    // Click handler
+    resultItem.addEventListener('click', function () {
+      zoomToLocation(result, map)
+      hideElement(resultsDropdown)
+      const searchContainer = document.getElementById(
+        DOM_IDS.locationSearchContainer
+      )
+      const searchButton = document.getElementById(DOM_IDS.locationSearchButton)
+      hideSearchPanel(searchContainer, searchButton, map)
+    })
+
+    return resultItem
   }
 
   /**
@@ -1352,20 +1621,8 @@
    * @returns {number} The appropriate zoom level (11-15)
    */
   function getZoomLevelFromLocationType(localType) {
-    // Map local_type to appropriate zoom levels
-    // More specific types = more zoomed in
-    const typeToZoom = {
-      City: 11, // Large cities - zoomed out
-      Town: 12, // Medium towns
-      'Suburban Area': 13, // Suburban areas
-      Village: 14, // Small villages
-      Hamlet: 15, // Very small hamlets - street level
-      'Other Settlement': 14, // Default for settlements
-      Locality: 14 // Other localities
-    }
-
-    // Return zoom level or default to 13 if type not found
-    return typeToZoom[localType] || 13
+    // Return zoom level or default if type not found
+    return ZOOM_LEVEL_BY_TYPE[localType] || ZOOM_LEVEL_DEFAULT
   }
 
   // Zoom to selected location
@@ -1378,7 +1635,7 @@
 
     // Animate to location
     map.flyTo([lat, lng], zoomLevel, {
-      duration: 1.5
+      duration: FLY_TO_DURATION_SECONDS
     })
   }
 
@@ -1387,25 +1644,13 @@
   // ============================================================================
 
   function initMapKey(map) {
-    const mapContainer = document.getElementById('map')
+    const mapContainer = document.getElementById(DOM_IDS.map)
+    const keyButton = document.getElementById(DOM_IDS.mapKeyButton)
 
-    // Create key toggle button
-    const keyButton = document.createElement('button')
-    keyButton.id = 'map-key-button'
-    keyButton.className = 'govuk-button govuk-button--secondary'
-    keyButton.innerHTML = `
-      <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 20 20" fill-rule="evenodd" fill="currentColor">
-        <circle cx="3.5" cy="4" r="1.5"></circle>
-        <circle cx="3.5" cy="10" r="1.5"></circle>
-        <circle cx="3.5" cy="16" r="1.5"></circle>
-        <path d="M7 4h11M7 10h11M7 16h11" fill="none" stroke="currentColor" stroke-width="2"></path>
-      </svg>
-      <span>Key</span>
-    `
-    keyButton.setAttribute('aria-label', 'Toggle map key')
-
-    // Add to map container
-    mapContainer.appendChild(keyButton)
+    if (!keyButton || !mapContainer) {
+      console.error('Key button or map container not found in DOM')
+      return
+    }
 
     // Create key content
     const keyContent = `
@@ -1436,12 +1681,12 @@
       e.preventDefault()
       e.stopPropagation()
       const modalElement = keyModal.getElement()
-      if (modalElement && modalElement.style.display !== 'none') {
+      if (modalElement && !modalElement.classList.contains('hidden')) {
         keyModal.close()
-        keyButton.style.display = 'flex'
+        showElement(keyButton)
       } else {
         keyModal.open()
-        keyButton.style.display = 'none'
+        hideElement(keyButton)
       }
     })
 
@@ -1450,12 +1695,12 @@
       const modalElement = keyModal.getElement()
       if (
         modalElement &&
-        modalElement.style.display !== 'none' &&
+        !modalElement.classList.contains('hidden') &&
         !modalElement.contains(e.target) &&
         !keyButton.contains(e.target)
       ) {
         keyModal.close()
-        keyButton.style.display = 'flex'
+        showElement(keyButton)
       }
     })
 

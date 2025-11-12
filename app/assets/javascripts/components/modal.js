@@ -15,13 +15,13 @@
 
 class Modal {
   /**
-   * @param {Object} options
+   * @param {Object} options - Configuration options for the modal
    * @param {string} options.title - Modal title text
-   * @param {string} options.position - Position: 'top-right', 'top-left', 'center'
-   * @param {string} options.content - HTML content for modal body
-   * @param {Function} options.onClose - Callback when modal closes
-   * @param {HTMLElement} options.container - Container element (defaults to document.body)
-   * @param {boolean} options.closeOnOutsideClick - Close on outside click (default: true)
+   * @param {'top-right'|'top-left'|'center'} options.position - Modal position on screen (default: 'top-right')
+   * @param {string} options.content - HTML content string for modal body
+   * @param {Function} [options.onClose] - Optional callback function executed when modal closes
+   * @param {HTMLElement} [options.container] - Optional container element (defaults to document.body)
+   * @param {boolean} [options.closeOnOutsideClick=true] - Whether clicking outside closes the modal (default: true)
    */
   constructor(options) {
     this.options = {
@@ -169,11 +169,4 @@ class Modal {
   getElement() {
     return this.modal
   }
-}
-
-// Export for module systems or attach to window
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = Modal
-} else {
-  window.Modal = Modal
 }

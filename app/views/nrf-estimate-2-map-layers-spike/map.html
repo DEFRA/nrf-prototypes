@@ -142,7 +142,7 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
                 </p>
                 {% endif %}
 
-            <div id="client-error-summary" class="govuk-error-summary govuk-!-margin-top-6" aria-labelledby="error-summary-title" role="alert" style="display: none;">
+            <div id="client-error-summary" class="govuk-error-summary govuk-!-margin-top-6 hidden" aria-labelledby="error-summary-title" role="alert">
                 <h2 class="govuk-error-summary__title" id="error-summary-title">
                     There is a problem
                 </h2>
@@ -174,7 +174,7 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
                                 <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20"><path d="M16 6v7.996M14 16H6m-2-2.004V6m2-2h8" fill="none" stroke="currentColor" stroke-width="2"></path><path d="M2.081 2H6v4H2.081zm0 12H6v4H2.081zm11.96-12h3.919v4h-3.919zm0 11.996h3.919v4h-3.919z" fill="currentColor" stroke="none"></path></svg>
                                 <span>Add</span>
                             </button>
-                            <button type="button" class="tool-button" id="edit-boundary" data-tool="edit" disabled style="display: none;">
+                            <button type="button" class="tool-button hidden" id="edit-boundary" data-tool="edit" disabled>
                                 <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20"><path d="M16 6v7.996M14 16H6m-2-2.004V6m2-2h8" fill="none" stroke="currentColor" stroke-width="2"></path><path d="M2.081 2H6v4H2.081zm0 12H6v4H2.081zm11.96-12h3.919v4h-3.919zm0 11.996h3.919v4h-3.919z" fill="currentColor" stroke="none"></path></svg>
                                 <span>Edit</span>
                             </button>
@@ -208,24 +208,49 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
                                 style="text-align: center; padding: 2rem; background: #f8f8f8; border: 1px solid #ccc;">
                                 <p class="govuk-body">Loading map...</p>
                             </div>
+
+                            <!-- Location search button -->
+                            <button id="location-search-button" class="govuk-button govuk-button--secondary" aria-label="Search for location">
+                                <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 20 20" fill-rule="evenodd" fill="currentColor">
+                                    <path d="M12.084 14.312c-1.117.711-2.444 1.123-3.866 1.123C4.235 15.435 1 12.201 1 8.218S4.235 1 8.218 1s7.217 3.235 7.217 7.218c0 1.422-.412 2.749-1.123 3.866L19 16.773 16.773 19l-4.689-4.688zM8.218 2.818c2.98 0 5.4 2.419 5.4 5.4s-2.42 5.4-5.4 5.4-5.4-2.42-5.4-5.4 2.419-5.4 5.4-5.4z"></path>
+                                </svg>
+                                <span>Search</span>
+                            </button>
+
+                            <!-- Map key button -->
+                            <button id="map-key-button" class="govuk-button govuk-button--secondary" aria-label="Toggle map key">
+                                <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 20 20" fill-rule="evenodd" fill="currentColor">
+                                    <circle cx="3.5" cy="4" r="1.5"></circle>
+                                    <circle cx="3.5" cy="10" r="1.5"></circle>
+                                    <circle cx="3.5" cy="16" r="1.5"></circle>
+                                    <path d="M7 4h11M7 10h11M7 16h11" fill="none" stroke="currentColor" stroke-width="2"></path>
+                                </svg>
+                                <span>Key</span>
+                            </button>
+
+                            <!-- Location search container -->
+                            <div id="location-search-container" class="hidden">
+                                <input id="location-search-input" class="govuk-input" type="text" placeholder="Search for a place in England">
+                                <div id="location-search-results"></div>
+                            </div>
                         </div>
 
                         <!-- Floating save button - only shown when boundary exists -->
-                        <div id="map-save-button-container" style="display: none; position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000;">
+                        <div id="map-save-button-container" class="hidden" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000;">
                             <div style="background: #ffffff; padding: 20px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); border-radius: 4px;">
-                                <button class="govuk-button govuk-!-margin-bottom-0" type="submit" data-module="govuk-button">
+                                <button class="govuk-button govuk-!-margin-bottom-0" type="submit">
                                     Save and continue
                                 </button>
                             </div>
                         </div>
 
                         <!-- Edit mode buttons - only shown when in edit mode -->
-                        <div id="map-edit-buttons-container" style="display: none; position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000;">
+                        <div id="map-edit-buttons-container" class="hidden" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000;">
                             <div style="background: #ffffff; padding: 20px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); border-radius: 4px; display: flex; gap: 10px;">
-                                <button class="govuk-button govuk-!-margin-bottom-0" type="button" id="confirm-edit-btn" data-module="govuk-button">
+                                <button class="govuk-button govuk-!-margin-bottom-0" type="button" id="confirm-edit-btn">
                                     Confirm area
                                 </button>
-                                <button class="govuk-button govuk-button--secondary govuk-!-margin-bottom-0" type="button" id="cancel-edit-btn" data-module="govuk-button">
+                                <button class="govuk-button govuk-button--secondary govuk-!-margin-bottom-0" type="button" id="cancel-edit-btn">
                                     Cancel
                                 </button>
                             </div>
@@ -240,7 +265,7 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
-<script src="/public/javascripts/utils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
 <script src="/public/javascripts/components/modal.js"></script>
 <script src="/public/javascripts/map-drawing-layers-spike.js"></script>
 {% endblock %}
