@@ -27,8 +27,12 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .map-interface {
@@ -153,11 +157,9 @@
   text-decoration: none;
 }
 
-/* Map container */
 .map-container {
   position: relative;
   flex: 1;
-  height: 100%;
 }
 
 #map {
