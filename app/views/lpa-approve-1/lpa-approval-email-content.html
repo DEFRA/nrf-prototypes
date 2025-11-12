@@ -1,0 +1,50 @@
+{% extends "layouts/main.html" %}
+
+{% set pageName="Email sent from the Nature Restoration Fund service to LPA" %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+  text: "Back",
+  href: "/"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-inset-text">
+  <p><strong>To:</strong> lpa@example.com</p>
+  <p><strong>Subject:</strong> Nature Restoration Fund – Approve request to pay the Nature Restoration Fund levy</p>
+</div>
+
+<h1 class="govuk-heading-l">Nature Restoration Fund – Approve request to pay the Nature Restoration Fund levy</h1>
+
+<p class="govuk-body"><strong>Payment reference:</strong> 0006677</p>
+
+<p class="govuk-body">You need to approve the request to use the Nature Restoration Fund levy for Acme Developments.</p>
+
+<p class="govuk-body">They have agreed to pay the following:</p>
+
+<ul class="govuk-list govuk-list--bullet">
+  <li>Nature Restoration Fund greater crested newts levy: £2,500</li>
+  <li>Nature Restoration Fund nutrients levy: £2,500</li>
+</ul>
+
+<p class="govuk-body">
+  <a href="/lpa-approve-1/confirm-view-approve" class="govuk-link">Approve the Nature Restoration Fund levy</a>
+</p>
+
+<h2 class="govuk-heading-m">Get help with Nature Restoration Fund</h2>
+
+<p class="govuk-body">If you need help with Nature Restoration Fund, contact XXXX and give the estimate reference number.</p>
+
+<p class="govuk-body">
+  Email: <a href="mailto:xxxxx@defra.gov.uk" class="govuk-link">xxxxx@defra.gov.uk</a><br>
+  Telephone: 00000000000<br>
+  Monday to Friday, 8:30am to 5pm, except bank holidays
+</p>
+
+<p class="govuk-body">
+  Find out about call charges at <a href="https://www.gov.uk/call-charges" class="govuk-link">https://www.gov.uk/call-charges</a>
+</p>
+
+{% endblock %}
+
