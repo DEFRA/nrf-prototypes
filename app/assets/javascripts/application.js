@@ -6,11 +6,6 @@
 window.GOVUKPrototypeKit.documentReady(() => {
   // Add JavaScript here
 
-  // Initialize GOV.UK Frontend components
-  if (typeof window.GOVUKFrontend !== 'undefined') {
-    window.GOVUKFrontend.initAll()
-  }
-
   // Load EDP search functionality
   if (window.location.pathname.includes('/edp-search')) {
     // Load EDP search specific JavaScript

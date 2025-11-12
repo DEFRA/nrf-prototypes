@@ -1415,6 +1415,10 @@
         hideElement(map._helpButton)
       }
     }
+    if (map._helpModal) {
+      // Always close help modal when toggling search
+      map._helpModal.close()
+    }
 
     if (!isVisible) {
       searchInput.focus()
