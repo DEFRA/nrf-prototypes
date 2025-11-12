@@ -48,6 +48,7 @@
 
   // Cookie Configuration
   const COOKIE_MAP_LAYER = 'mapBaseLayer'
+  const COOKIE_MAP_HINTS_CLOSED = 'mapHintsClosed'
   const COOKIE_EXPIRY_DAYS = 365
 
   // API Configuration
@@ -96,7 +97,8 @@
     locationSearchContainer: 'location-search-container',
     locationSearchInput: 'location-search-input',
     locationSearchResults: 'location-search-results',
-    mapKeyButton: 'map-key-button'
+    mapKeyButton: 'map-key-button',
+    mapHelpButton: 'map-help-button'
   }
 
   // ============================================================================
@@ -157,34 +159,6 @@
 
   function hideElement(element) {
     element.classList.add('hidden')
-  }
-
-  // ============================================================================
-  // MODAL FUNCTIONALITY
-  // ============================================================================
-
-  // Map hints modal - shows on page load
-  function showMapHintsModal(container) {
-    const hintsContent = `
-      <div class="map-hints-content">
-        <h3 class="govuk-heading-s">How to draw a boundary</h3>
-        <p class="govuk-body">Click on the map to start drawing a red line boundary around your development site.</p>
-        <p class="govuk-body">Click on each corner of your site to create the boundary. Double-click to finish.</p>
-
-        <h3 class="govuk-heading-s govuk-!-margin-top-4">Keyboard controls</h3>
-        <p class="govuk-body">Use Tab and arrow keys to navigate the map. Press Enter to interact with controls.</p>
-      </div>
-    `
-
-    const hintsModal = new Modal({
-      title: 'Map hints',
-      position: 'center',
-      content: hintsContent,
-      container: container,
-      closeOnOutsideClick: true
-    })
-
-    hintsModal.open()
   }
 
   // ============================================================================
@@ -332,9 +306,6 @@
         return
       }
 
-      // Show map hints modal on page load
-      showMapHintsModal(mapContainer)
-
       try {
         hideLoadingMessage()
 
@@ -371,6 +342,9 @@
 
         // Initialize map key
         initMapKey(map)
+
+        // Initialize map help button
+        initMapHelp(map)
 
         // Load existing boundary data if available
         loadExistingBoundary(drawnItems, map)
@@ -1260,6 +1234,14 @@
       map._keyModal.close()
     }
 
+    // Hide help button and modal
+    if (map._helpButton) {
+      hideElement(map._helpButton)
+    }
+    if (map._helpModal) {
+      map._helpModal.close()
+    }
+
     // Force Leaflet to recalculate map size after panel is hidden
     setTimeout(() => {
       map.invalidateSize()
@@ -1301,6 +1283,11 @@
     // Show key button (modal stays closed)
     if (map._keyButton) {
       showElement(map._keyButton)
+    }
+
+    // Show help button
+    if (map._helpButton) {
+      showElement(map._helpButton)
     }
 
     // Force Leaflet to recalculate map size after panel is shown
@@ -1420,6 +1407,15 @@
       map._keyModal.close()
     }
 
+    // Toggle help button visibility based on search panel state
+    if (map._helpButton) {
+      if (isVisible) {
+        showElement(map._helpButton)
+      } else {
+        hideElement(map._helpButton)
+      }
+    }
+
     if (!isVisible) {
       searchInput.focus()
       // Show results dropdown if there are results and input has value
@@ -1440,6 +1436,11 @@
     // Show key button when search is hidden
     if (map._keyButton) {
       showElement(map._keyButton)
+    }
+
+    // Show help button when search is hidden
+    if (map._helpButton) {
+      showElement(map._helpButton)
     }
   }
 
@@ -1656,7 +1657,7 @@
     const keyContent = `
       <div class="map-key-item">
         <div class="map-key-swatch"></div>
-        <span class="map-key-label">EDP areas</span>
+        <span class="map-key-label">Nutrient EDP areas</span>
       </div>
     `
 
@@ -1683,10 +1684,12 @@
       const modalElement = keyModal.getElement()
       if (modalElement && !modalElement.classList.contains('hidden')) {
         keyModal.close()
-        showElement(keyButton)
       } else {
+        // Close help modal if it's open
+        if (map._helpModal && map._helpModal.isOpened()) {
+          map._helpModal.close()
+        }
         keyModal.open()
-        hideElement(keyButton)
       }
     })
 
@@ -1700,12 +1703,93 @@
         !keyButton.contains(e.target)
       ) {
         keyModal.close()
-        showElement(keyButton)
       }
     })
 
     // Store references for hiding during edit/draw mode and when search is open
     map._keyModal = keyModal
     map._keyButton = keyButton
+  }
+
+  // ============================================================================
+  // MAP HELP
+  // ============================================================================
+
+  function initMapHelp(map) {
+    const mapContainer = document.getElementById(DOM_IDS.map)
+    const helpButton = document.getElementById(DOM_IDS.mapHelpButton)
+
+    if (!helpButton || !mapContainer) {
+      console.error('Help button or map container not found in DOM')
+      return
+    }
+
+    // Create help modal content
+    const hintsContent = `
+      <div class="map-hints-content">
+        <h3 class="govuk-heading-s">How to draw a boundary</h3>
+        <p class="govuk-body">Click on the map to start drawing a red line boundary around your development site.</p>
+        <p class="govuk-body">Click on each corner of your site to create the boundary. Double-click to finish.</p>
+
+        <h3 class="govuk-heading-s govuk-!-margin-top-4">Keyboard controls</h3>
+        <p class="govuk-body">Use Tab and arrow keys to navigate the map. Press Enter to interact with controls.</p>
+      </div>
+    `
+
+    // Create modal instance with onClose callback to save cookie
+    const helpModal = new Modal({
+      title: 'Map hints',
+      position: 'top-left',
+      content: hintsContent,
+      container: mapContainer,
+      closeOnOutsideClick: false,
+      onClose: function () {
+        // Save closed state to cookie whenever modal is closed
+        window.Cookies.set(COOKIE_MAP_HINTS_CLOSED, 'true', {
+          expires: COOKIE_EXPIRY_DAYS,
+          path: '/'
+        })
+      }
+    })
+
+    // Check cookie to see if modal should be shown on page load
+    const hintsClosed = window.Cookies.get(COOKIE_MAP_HINTS_CLOSED)
+    if (!hintsClosed || hintsClosed !== 'true') {
+      // Open modal on first visit or if not explicitly closed before
+      helpModal.open()
+    }
+
+    // Toggle help modal on button click
+    helpButton.addEventListener('click', function (e) {
+      e.preventDefault()
+      e.stopPropagation()
+
+      if (helpModal.isOpened()) {
+        helpModal.close()
+      } else {
+        // Close key modal if it's open
+        if (map._keyModal && map._keyModal.isOpened()) {
+          map._keyModal.close()
+        }
+        helpModal.open()
+        // Remove closed state cookie when user explicitly opens it
+        window.Cookies.remove(COOKIE_MAP_HINTS_CLOSED, { path: '/' })
+      }
+    })
+
+    // Close modal when clicking outside (but not on help button)
+    document.addEventListener('click', function (e) {
+      if (
+        helpModal.isOpened() &&
+        !helpButton.contains(e.target) &&
+        !helpModal.getElement().contains(e.target)
+      ) {
+        helpModal.close()
+      }
+    })
+
+    // Store references for hiding during edit/draw mode
+    map._helpButton = helpButton
+    map._helpModal = helpModal
   }
 })()

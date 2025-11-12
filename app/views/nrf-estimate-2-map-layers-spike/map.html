@@ -204,9 +204,11 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
                     <!-- Map container -->
                     <div class="map-container" style="height: 100%;">
                         <div id="map" role="img" aria-label="Interactive map for drawing development boundary" style="height: 100%;">
-                            <div id="map-loading"
-                                style="text-align: center; padding: 2rem; background: #f8f8f8; border: 1px solid #ccc;">
-                                <p class="govuk-body">Loading map...</p>
+                            <div id="map-loading" class="map-loading-overlay">
+                                <div class="map-loading-content">
+                                    <div class="map-loading-spinner"></div>
+                                    <p class="govuk-body govuk-!-margin-top-2">Loading map...</p>
+                                </div>
                             </div>
 
                             <!-- Location search button -->
@@ -226,6 +228,15 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
                                     <path d="M7 4h11M7 10h11M7 16h11" fill="none" stroke="currentColor" stroke-width="2"></path>
                                 </svg>
                                 <span>Key</span>
+                            </button>
+
+                            <!-- Map help button -->
+                            <button id="map-help-button" class="govuk-button govuk-button--secondary" aria-label="Show map help">
+                                <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 20 20" fill-rule="evenodd">
+                                    <circle cx="10" cy="10" r="8.5" fill="none" stroke="currentColor" stroke-width="1.5"></circle>
+                                    <path d="M10.935 11.673H8.708v-.223c0-1.997 2.445-2.651 2.085-3.597-.175-.46-1.57-.837-1.757.843l-2.273-.281c.407-4.359 7.331-3.069 6.405.161-.025.09-.143.502-.625.986-1.252 1.258-1.608 1.111-1.608 2.111zm-2.303.592h2.385v2.104H8.632z" fill="currentColor" stroke="none"></path>
+                                </svg>
+                                <span>Help</span>
                             </button>
 
                             <!-- Location search container -->
