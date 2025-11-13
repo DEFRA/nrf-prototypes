@@ -134,11 +134,15 @@ class Modal {
    * @param {string} content - New HTML content
    */
   updateContent(content) {
-    if (!this.modal) return
+    // Always update the stored content so it's used when modal is next opened
+    this.options.content = content
 
-    const body = this.modal.querySelector('.modal__body')
-    if (body) {
-      body.innerHTML = DOMPurify.sanitize(content)
+    // If modal is currently open, update the DOM immediately
+    if (this.modal) {
+      const body = this.modal.querySelector('.modal__body')
+      if (body) {
+        body.innerHTML = DOMPurify.sanitize(content)
+      }
     }
   }
 
