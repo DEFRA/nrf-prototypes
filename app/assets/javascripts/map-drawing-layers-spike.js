@@ -34,7 +34,15 @@
     weight: 2,
     opacity: 0.8,
     fillColor: COLOR_CATCHMENT_PURPLE,
-    fillOpacity: 0.6
+    fillOpacity: 0.3
+  }
+
+  const CATCHMENT_STYLE_SATELLITE = {
+    color: '#ffffff',
+    weight: 2,
+    opacity: 1,
+    fillColor: '#ffffff',
+    fillOpacity: 0.3
   }
 
   // Timing Constants (milliseconds)
@@ -108,6 +116,8 @@
   let isDrawing = false
   let isEditing = false
   let drawnItems = null
+  let catchmentLayers = []
+  let currentMapStyle = 'street'
 
   // ============================================================================
   // INITIALIZATION
@@ -182,7 +192,12 @@
         coord[0]
       ]) // Convert [lng, lat] to [lat, lng]
 
-      const polygon = L.polygon(coordinates, CATCHMENT_STYLE).addTo(map)
+      // Use appropriate style based on current map style
+      const style =
+        currentMapStyle === 'satellite'
+          ? CATCHMENT_STYLE_SATELLITE
+          : CATCHMENT_STYLE
+      const polygon = L.polygon(coordinates, style).addTo(map)
 
       // Add popup with catchment information
       const popupContent = buildCatchmentPopupContent(catchmentName, properties)
@@ -419,8 +434,10 @@
 
     if (savedLayer === 'satellite') {
       satelliteMap.addTo(map)
+      currentMapStyle = 'satellite'
     } else {
       streetMap.addTo(map)
+      currentMapStyle = 'street'
     }
   }
 
@@ -625,6 +642,14 @@
     }, DELAY_MODAL_SETUP_MS)
   }
 
+  function updateCatchmentStyles(style) {
+    const targetStyle =
+      style === 'satellite' ? CATCHMENT_STYLE_SATELLITE : CATCHMENT_STYLE
+    catchmentLayers.forEach((polygon) => {
+      polygon.setStyle(targetStyle)
+    })
+  }
+
   function handleMapStyleChange(style, options, map, streetMap, satelliteMap) {
     // Update selected state visually
     options.forEach((opt) => {
@@ -647,10 +672,15 @@
     if (style === 'satellite') {
       satelliteMap.addTo(map)
       saveLayerPreference('satellite')
+      currentMapStyle = 'satellite'
     } else {
       streetMap.addTo(map)
       saveLayerPreference('street')
+      currentMapStyle = 'street'
     }
+
+    // Update catchment polygon styles
+    updateCatchmentStyles(style)
 
     // Close modal
     mapStyleModal.close()
@@ -704,6 +734,8 @@
           name: catchmentData.name,
           coordinates: catchmentData.coordinates
         })
+        // Store catchment layers globally for style updates
+        catchmentLayers.push(catchmentData.polygon)
       }
     })
 
