@@ -107,6 +107,7 @@
 
   let isDrawing = false
   let isEditing = false
+  let drawnItems = null
 
   // ============================================================================
   // INITIALIZATION
@@ -328,7 +329,7 @@
         loadCatchmentData(map, edpData)
 
         // Initialize the draw control
-        const drawnItems = new L.FeatureGroup()
+        drawnItems = new L.FeatureGroup()
         map.addLayer(drawnItems)
 
         configureDrawTooltips()
@@ -714,7 +715,6 @@
   }
 
   function recheckExistingPolygons(edpLayers) {
-    const drawnItems = window.drawnItemsRef
     if (!drawnItems) return
 
     drawnItems.eachLayer(function (layer) {
@@ -1143,6 +1143,18 @@
 
     hideErrorSummary()
     exitEditMode(map)
+
+    // Ensure save button is shown after confirming edit
+    const saveButtonContainer = document.getElementById(
+      DOM_IDS.saveButtonContainer
+    )
+    if (
+      saveButtonContainer &&
+      drawnItems &&
+      drawnItems.getLayers().length > 0
+    ) {
+      saveButtonContainer.classList.remove('hidden')
+    }
   }
 
   function handleCancelEdit(drawControl, currentDrawingLayer, drawnItems, map) {
@@ -1263,7 +1275,6 @@
     }
 
     // Show the save button if boundary exists, hide edit buttons
-    const drawnItems = window.drawnItemsRef
     if (
       saveButtonContainer &&
       drawnItems &&
