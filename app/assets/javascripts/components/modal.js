@@ -2,6 +2,7 @@
  * Reusable Modal Component
  *
  * Creates a positioned modal with close button and custom content
+ * Automatically sanitizes HTML content using DOMPurify to prevent XSS attacks
  *
  * @example
  * const modal = new Modal({
@@ -58,7 +59,7 @@ class Modal {
           </button>
         </div>
         <div class="modal__body">
-          ${this.options.content}
+          ${DOMPurify.sanitize(this.options.content)}
         </div>
       </div>
     `
@@ -137,7 +138,7 @@ class Modal {
 
     const body = this.modal.querySelector('.modal__body')
     if (body) {
-      body.innerHTML = content
+      body.innerHTML = DOMPurify.sanitize(content)
     }
   }
 
