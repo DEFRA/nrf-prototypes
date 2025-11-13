@@ -121,25 +121,23 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
             {% endif %}
 
             {% if error %}
-            <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert">
-                <h2 class="govuk-error-summary__title" id="error-summary-title">
-                    There is a problem
-                </h2>
-                <div class="govuk-error-summary__body">
-                    <ul class="govuk-list govuk-error-summary__list">
-                        <li>
-                            <a href="#map">{{ error }}</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+            {{ govukErrorSummary({
+                titleText: "There is a problem",
+                errorList: [
+                    {
+                        text: error,
+                        href: "#map"
+                    }
+                ]
+            }) }}
             {% endif %}
 
             <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
                 {% if error %}
-                <p id="map-error" class="govuk-error-message">
-                    <span class="govuk-visually-hidden">Error:</span> {{ error }}
-                </p>
+                {{ govukErrorMessage({
+                    id: "map-error",
+                    text: error
+                }) }}
                 {% endif %}
 
             <div id="client-error-summary" class="govuk-error-summary govuk-!-margin-top-6 hidden" aria-labelledby="error-summary-title" role="alert">
@@ -162,7 +160,10 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
                 <div class="map-interface" style="height: 100%;">
                     <!-- Left control panel -->
                     <div class="map-controls-panel">
-                        <a href="{{ backLink }}" class="govuk-back-link">Back</a>
+                        {{ govukBackLink({
+                            text: "Back",
+                            href: backLink
+                        }) }}
 
                         <h1 class="govuk-heading-m">
                             Draw a red line boundary
@@ -241,7 +242,7 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
 
                             <!-- Location search container -->
                             <div id="location-search-container" class="hidden">
-                                <input id="location-search-input" class="govuk-input" type="text" placeholder="Search for a place in England">
+                                <input id="location-search-input" class="govuk-input" type="text" placeholder="Search for a place in England" autocomplete="off">
                                 <div id="location-search-results"></div>
                             </div>
                         </div>
@@ -249,21 +250,29 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
                         <!-- Floating save button - only shown when boundary exists -->
                         <div id="map-save-button-container" class="hidden" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000;">
                             <div style="background: #ffffff; padding: 20px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); border-radius: 4px;">
-                                <button class="govuk-button govuk-!-margin-bottom-0" type="submit">
-                                    Save and continue
-                                </button>
+                                {{ govukButton({
+                                    text: "Save and continue",
+                                    type: "submit",
+                                    classes: "govuk-!-margin-bottom-0"
+                                }) }}
                             </div>
                         </div>
 
                         <!-- Edit mode buttons - only shown when in edit mode -->
                         <div id="map-edit-buttons-container" class="hidden" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000;">
                             <div style="background: #ffffff; padding: 20px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); border-radius: 4px; display: flex; gap: 10px;">
-                                <button class="govuk-button govuk-!-margin-bottom-0" type="button" id="confirm-edit-btn">
-                                    Confirm area
-                                </button>
-                                <button class="govuk-button govuk-button--secondary govuk-!-margin-bottom-0" type="button" id="cancel-edit-btn">
-                                    Cancel
-                                </button>
+                                {{ govukButton({
+                                    text: "Confirm area",
+                                    type: "button",
+                                    id: "confirm-edit-btn",
+                                    classes: "govuk-!-margin-bottom-0"
+                                }) }}
+                                {{ govukButton({
+                                    text: "Cancel",
+                                    type: "button",
+                                    id: "cancel-edit-btn",
+                                    classes: "govuk-button--secondary govuk-!-margin-bottom-0"
+                                }) }}
                             </div>
                         </div>
                     </div>
@@ -277,6 +286,15 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
 <script src="/public/javascripts/components/modal.js"></script>
+<!-- Map modules - loaded in dependency order -->
+<script src="/public/javascripts/map-geometry.js"></script>
+<script src="/public/javascripts/map-ui.js"></script>
+<script src="/public/javascripts/map-styles.js"></script>
+<script src="/public/javascripts/map-initialisation.js"></script>
+<script src="/public/javascripts/map-search.js"></script>
+<script src="/public/javascripts/map-drawing-controls.js"></script>
+<!-- Main orchestrator - loads last -->
 <script src="/public/javascripts/map-drawing-layers-spike.js"></script>
 {% endblock %}
