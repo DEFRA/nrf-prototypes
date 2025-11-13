@@ -1,13 +1,13 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-Check your answers - Pay Nature Restoration Fund Levy - GOV.UK
+Check your answers - Get an estimate for Nature Restoration Fund Levy - GOV.UK
 {% endblock %}
 
 {% block beforeContent %}
 {{ govukBackLink({
 text: "Back",
-href: backLink
+href: "/nrf-estimate-3/estimate-email-retrieval-content"
 }) }}
 {% endblock %}
 
@@ -18,15 +18,18 @@ href: backLink
         <h1 class="govuk-heading-l">Check your answers</h1>
 
         <dl class="govuk-summary-list govuk-!-margin-bottom-9">
-            {% if data.commitmentRef %}
+            {% if data.estimateReference %}
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">
-                    Commitment reference
+                    Estimate reference
                 </dt>
                 <dd class="govuk-summary-list__value">
-                    {{ data.commitmentRef }}
+                    {{ data.estimateReference }}
                 </dd>
                 <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="javascript:void(0)">
+                        Change<span class="govuk-visually-hidden"> estimate reference</span>
+                    </a>
                 </dd>
             </div>
             {% endif %}
@@ -43,6 +46,9 @@ href: backLink
                     {% endif %}
                 </dd>
                 <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="javascript:void(0)">
+                        Change<span class="govuk-visually-hidden"> red line boundary added</span>
+                    </a>
                 </dd>
             </div>
 
@@ -58,6 +64,9 @@ href: backLink
                     {% endif %}
                 </dd>
                 <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="javascript:void(0)">
+                        Change<span class="govuk-visually-hidden"> red line boundary file uploaded</span>
+                    </a>
                 </dd>
             </div>
 
@@ -76,6 +85,9 @@ href: backLink
                     </ul>
                 </dd>
                 <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="javascript:void(0)">
+                        Change<span class="govuk-visually-hidden"> building types</span>
+                    </a>
                 </dd>
             </div>
             {% endif %}
@@ -89,6 +101,9 @@ href: backLink
                     {{ data.residentialBuildingCount }}
                 </dd>
                 <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="javascript:void(0)">
+                        Change<span class="govuk-visually-hidden"> number of dwelling buildings</span>
+                    </a>
                 </dd>
             </div>
             {% endif %}
@@ -103,6 +118,9 @@ href: backLink
                     {{ data.roomCounts.hotelCount }}
                 </dd>
                 <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="javascript:void(0)">
+                        Change<span class="govuk-visually-hidden"> number of hotel rooms</span>
+                    </a>
                 </dd>
             </div>
             {% endif %}
@@ -116,6 +134,9 @@ href: backLink
                     {{ data.roomCounts.hmoCount }}
                 </dd>
                 <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="javascript:void(0)">
+                        Change<span class="govuk-visually-hidden"> number of multiple occupation rooms</span>
+                    </a>
                 </dd>
             </div>
             {% endif %}
@@ -129,6 +150,9 @@ href: backLink
                     {{ data.roomCounts.residentialInstitutionCount }}
                 </dd>
                 <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="javascript:void(0)">
+                        Change<span class="govuk-visually-hidden"> number of residential institution rooms</span>
+                    </a>
                 </dd>
             </div>
             {% endif %}
@@ -139,44 +163,17 @@ href: backLink
                     Email address
                 </dt>
                 <dd class="govuk-summary-list__value">
-                    {{ data.commitmentRetrievalEmail or data.email or 'Not provided' }}
+                    {{ data.email }}
                 </dd>
                 <dd class="govuk-summary-list__actions">
-                </dd>
-            </div>
-
-            <div class="govuk-summary-list__row">
-                <dt class="govuk-summary-list__key">
-                    Your details
-                </dt>
-                <dd class="govuk-summary-list__value">
-                    {% if data.fullName %}{{ data.fullName }}{% endif %}
-                    {% if data.businessName %}<br>{{ data.businessName }}{% endif %}
-                    {% if data.addressLine1 %}<br>{{ data.addressLine1 }}{% endif %}
-                    {% if data.addressLine2 %}<br>{{ data.addressLine2 }}{% endif %}
-                    {% if data.townOrCity %}<br>{{ data.townOrCity }}{% endif %}
-                    {% if data.county %}<br>{{ data.county }}{% endif %}
-                    {% if data.postcode %}<br>{{ data.postcode }}{% endif %}
-                    {% if data.companyRegistrationNumber %}<br>Company Registration Number: {{ data.companyRegistrationNumber }}{% endif %}
-                    {% if data.vatRegistrationNumber %}<br>VAT registration number: {{ data.vatRegistrationNumber }}{% endif %}
-                </dd>
-                <dd class="govuk-summary-list__actions">
-                </dd>
-            </div>
-
-            <div class="govuk-summary-list__row">
-                <dt class="govuk-summary-list__key">
-                    Local Planning Authority
-                </dt>
-                <dd class="govuk-summary-list__value">
-                    Stockton-on-Tees Borough Council
-                </dd>
-                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="javascript:void(0)">
+                        Change<span class="govuk-visually-hidden"> email address</span>
+                    </a>
                 </dd>
             </div>
         </dl>
 
-        <form action="/nrf-estimate-3/commit-summary" method="post" novalidate>
+        <form action="/nrf-estimate-3/retrieved-estimate-summary" method="post" novalidate>
             <button class="govuk-button" data-module="govuk-button">
                 Continue
             </button>

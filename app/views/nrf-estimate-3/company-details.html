@@ -1,0 +1,135 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Enter the company details - Get an estimate for Nature Restoration Fund Levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: "/nrf-estimate-3/retrieved-estimate-summary"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        {% if errors and errors.length %}
+        <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" data-module="govuk-error-summary">
+            <h2 class="govuk-error-summary__title" id="error-summary-title">There is a problem</h2>
+            <div class="govuk-error-summary__body">
+                <ul class="govuk-list govuk-error-summary__list">
+                    {% for error in errors %}
+                    <li><a href="#{{ error.field }}">{{ error.message }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+        <form method="post" novalidate>
+            <h1 class="govuk-heading-l">Enter your details</h1>
+            
+            <div class="govuk-hint">
+                Enter the details for the individual or company who will be paying the Nature Restoration Fund Levy.
+            </div>
+
+            {% set fullNameError = errorsByField.fullName %}
+            <div class="govuk-form-group{% if fullNameError %} govuk-form-group--error{% endif %}">
+                <label class="govuk-label" for="full-name">
+                    Full Name
+                </label>
+                {% if fullNameError %}
+                <p id="full-name-error" class="govuk-error-message">
+                    <span class="govuk-visually-hidden">Error:</span> {{ fullNameError.message }}
+                </p>
+                {% endif %}
+                <input class="govuk-input{% if fullNameError %} govuk-input--error{% endif %}" id="full-name" name="fullName" type="text" value="{{ data.fullName or '' }}">
+            </div>
+
+            <div class="govuk-form-group">
+                <label class="govuk-label" for="business-name">
+                    Business name (optional)
+                </label>
+                <input class="govuk-input" id="business-name" name="businessName" type="text" value="{{ data.businessName or '' }}">
+            </div>
+
+            <fieldset class="govuk-fieldset">
+                <legend class="govuk-fieldset__legend">
+                    Address
+                </legend>
+
+                {% set addressLine1Error = errorsByField.addressLine1 %}
+                <div class="govuk-form-group{% if addressLine1Error %} govuk-form-group--error{% endif %}">
+                    <label class="govuk-label" for="address-line-1">
+                        Address line 1
+                    </label>
+                    {% if addressLine1Error %}
+                    <p id="address-line-1-error" class="govuk-error-message">
+                        <span class="govuk-visually-hidden">Error:</span> {{ addressLine1Error.message }}
+                    </p>
+                    {% endif %}
+                    <input class="govuk-input{% if addressLine1Error %} govuk-input--error{% endif %}" id="address-line-1" name="addressLine1" type="text" value="{{ data.addressLine1 or '' }}">
+                </div>
+
+                <div class="govuk-form-group">
+                    <label class="govuk-label" for="address-line-2">
+                        Address line 2 (optional)
+                    </label>
+                    <input class="govuk-input" id="address-line-2" name="addressLine2" type="text" value="{{ data.addressLine2 or '' }}">
+                </div>
+
+                {% set townOrCityError = errorsByField.townOrCity %}
+                <div class="govuk-form-group{% if townOrCityError %} govuk-form-group--error{% endif %}">
+                    <label class="govuk-label" for="town-or-city">
+                        Town or city
+                    </label>
+                    {% if townOrCityError %}
+                    <p id="town-or-city-error" class="govuk-error-message">
+                        <span class="govuk-visually-hidden">Error:</span> {{ townOrCityError.message }}
+                    </p>
+                    {% endif %}
+                    <input class="govuk-input{% if townOrCityError %} govuk-input--error{% endif %}" id="town-or-city" name="townOrCity" type="text" value="{{ data.townOrCity or '' }}">
+                </div>
+
+                <div class="govuk-form-group">
+                    <label class="govuk-label" for="county">
+                        County (optional)
+                    </label>
+                    <input class="govuk-input" id="county" name="county" type="text" value="{{ data.county or '' }}">
+                </div>
+
+                {% set postcodeError = errorsByField.postcode %}
+                <div class="govuk-form-group{% if postcodeError %} govuk-form-group--error{% endif %}">
+                    <label class="govuk-label" for="postcode">
+                        Postcode
+                    </label>
+                    {% if postcodeError %}
+                    <p id="postcode-error" class="govuk-error-message">
+                        <span class="govuk-visually-hidden">Error:</span> {{ postcodeError.message }}
+                    </p>
+                    {% endif %}
+                    <input class="govuk-input govuk-input--width-10{% if postcodeError %} govuk-input--error{% endif %}" id="postcode" name="postcode" type="text" value="{{ data.postcode or '' }}">
+                </div>
+            </fieldset>
+
+            <div class="govuk-form-group">
+                <label class="govuk-label" for="company-registration-number">
+                    Company Registration Number (CRN) (optional)
+                </label>
+                <input class="govuk-input" id="company-registration-number" name="companyRegistrationNumber" type="text" value="{{ data.companyRegistrationNumber or '' }}">
+            </div>
+
+            <div class="govuk-form-group">
+                <label class="govuk-label" for="vat-registration-number">
+                    VAT Registration number (optional)
+                </label>
+                <input class="govuk-input" id="vat-registration-number" name="vatRegistrationNumber" type="text" value="{{ data.vatRegistrationNumber or '' }}">
+            </div>
+
+            <button class="govuk-button" data-module="govuk-button">Continue</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

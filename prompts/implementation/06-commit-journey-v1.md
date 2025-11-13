@@ -5,7 +5,7 @@
 - **Journey Name**: Commit to use the Nature Restoration Fund Levy
 - **Journey Description**:  
   A user journey for a developer to commit to use the Nature Restoration Fund levy. This journey starts when the link 'Commit to using Nature Restoration Fund' is clicked in the email.
-- **Journey Route Prefix**: nrf-estimate-2
+- **Journey Route Prefix**: nrf-estimate-3
 - **Start Page Title**: Get an estimate for Nature Restoration Fund Levy
 
 ## Page Flow and Conditional Logic
@@ -15,7 +15,7 @@
 | **Field**              | **Value**                                   |
 | ---------------------- | ------------------------------------------- |
 | Order number:          | 1                                           |
-| Path:                  | /nrf-estimate-1/do-you-have-an-estimate-ref |
+| Path:                  | /nrf-estimate-3/do-you-have-an-estimate-ref |
 | Title:                 | Do you have an estimate reference?          |
 | Conditional page flow: | none                                        |
 
@@ -23,12 +23,10 @@
 
 ```
 {
-    application: {
-        hasEstimateRef: {
-            type: radios
-            required: true
-            values: "yes" | "no"
-        }
+    hasEstimateReference: {
+        type: radios,
+        required: true,
+        values: "yes" | "no"
     }
 }
 ```
@@ -56,7 +54,7 @@
 | **Field**              | **Value**                          |
 | ---------------------- | ---------------------------------- |
 | Order number:          | 2                                  |
-| Path:                  | /nrf-estimate-1/enter-estimate-ref |
+| Path:                  | /nrf-estimate-3/enter-estimate-ref |
 | Title:                 | Enter your estimate reference      |
 | Conditional page flow: | none                               |
 
@@ -64,11 +62,9 @@
 
 ```
 {
-    application: {
-        estimateRef: {
-            type: text,
-            required: true
-        }
+    estimateReference: {
+        type: text,
+        required: true
     }
 }
 ```
@@ -98,7 +94,7 @@ hint text: Enter this reference to retrieve the details entered during the estim
 | **Field**              | **Value**                               |     |
 | ---------------------- | --------------------------------------- | --- |
 | Order number:          | 3                                       |     |
-| Path:                  | /nrf-estimate-1/retrieve-estimate-email |     |
+| Path:                  | /nrf-estimate-3/retrieve-estimate-email |     |
 | Title:                 | Enter your email address                |     |
 | Conditional page flow: | None                                    |     |
 
@@ -106,11 +102,9 @@ hint text: Enter this reference to retrieve the details entered during the estim
 
 ```
 {
-    applicant: {
-        email: {
-            type: email,
-            required: true
-        }
+    email: {
+        type: email,
+        required: true
     }
 }
 ```
@@ -140,7 +134,7 @@ Hint text: We will send you a link so you can retrieve the details from your est
 | **Field**             | **Value**                                        |
 | --------------------- | ------------------------------------------------ |
 | Order number:         | 4                                                |
-| Path:                 | /nrf-estimate-1/estimate-email-retrieval-content |
+| Path:                 | /nrf-estimate-3/estimate-email-retrieval-content |
 | Title:                | Email sent to get magic link to access estimate  |
 | Data points:          | None                                             |
 | Conditional pageflow: | None                                             |
@@ -174,12 +168,12 @@ Find out about call charges at https://www.gov.uk/call-charges
 
 ### Check your answers summary and submit
 
-| **Field**              | **Value**                      |
-| ---------------------- | ------------------------------ |
-| Order number:          | 5                              |
-| Path:                  | /nrf-estimate-1/commit-summary |
-| Title:                 | Check your answers             |
-| Conditional page flow: | None                           |
+| **Field**              | **Value**                                  |
+| ---------------------- | ------------------------------------------ |
+| Order number:          | 5                                          |
+| Path:                  | /nrf-estimate-3/retrieved-estimate-summary |
+| Title:                 | Check your answers                         |
+| Conditional page flow: | None                                       |
 
 #### Data points
 
@@ -215,7 +209,7 @@ None
 | **Field**              | **Value**                       |
 | ---------------------- | ------------------------------- |
 | Order number:          | 6                               |
-| Path:                  | /nrf-estimate-2/company-details |
+| Path:                  | /nrf-estimate-3/company-details |
 | Title:                 | Enter the company details       |
 | Conditional page flow: | None                            |
 
@@ -224,42 +218,40 @@ None
 ```
 {
     fullName: {
-        type: text
+        type: text,
         required: true
     },
     businessName: {
-        type: text
+        type: text,
         required: false
     },
     addressLine1: {
-        type: text
+        type: text,
         required: true
     },
     addressLine2: {
-        type: text
+        type: text,
         required: false
     },
     townOrCity: {
-        type: text
+        type: text,
         required: true
     },
     county: {
-        type: text
+        type: text,
         required: false
     },
     postcode: {
-        type: text
+        type: text,
         required: true
-    }
-       },
-    Company Registration Number (CRN): {
-        type: text
-        required: true
-    }
-          },
-    VAT registration number: {
-        type: text
-        required: true
+    },
+    companyRegistrationNumber: {
+        type: text,
+        required: false
+    },
+    vatRegistrationNumber: {
+        type: text,
+        required: false
     }
 }
 ```
@@ -312,7 +304,7 @@ Postcode
 | **Field**              | **Value**                                               |
 | ---------------------- | ------------------------------------------------------- |
 | Order number:          | 7                                                       |
-| Path:                  | /nrf-estimate-2/lpa-confirm                             |
+| Path:                  | /nrf-estimate-3/lpa-confirm                             |
 | Title:                 | Confirm the name of your Local Planning Authority (LPA) |
 | Conditional page flow: | None                                                    |
 
@@ -335,7 +327,7 @@ CTA: Confirm
 | **Field**              | **Value**                               |
 | ---------------------- | --------------------------------------- |
 | Order number:          | 8                                       |
-| Path:                  | /nrf-estimate-2/summary-and-declaration |
+| Path:                  | /nrf-estimate-3/summary-and-declaration |
 | Title:                 | Check your answers                      |
 | Conditional page flow: | None                                    |
 
@@ -379,7 +371,7 @@ None
 | **Field**             | **Value**                        |
 | --------------------- | -------------------------------- |
 | Order number:         | 9                                |
-| Path:                 | /nrf-estimate-2/confirmation     |
+| Path:                 | /nrf-estimate-3/confirmation     |
 | Title:                | Your details have been submitted |
 | Data points:          | None                             |
 | Conditional pageflow: | None                             |
@@ -408,7 +400,7 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 
 Find out about call charges at https://www.gov.uk/call-charges
 
-Link: View the email content (links to /nrf-estimate-2/commit-email-content)
+Link: View the email content (links to /nrf-estimate-3/commit-email-content)
 ```
 
 **Note:** The confirmation page uses conditional rendering based on `data.paymentReference` to display different content for commit journey vs estimate journey. The invoice journey content is shown when `data.paymentReference` exists.
@@ -424,7 +416,7 @@ None
 | **Field**             | **Value**                                           |
 | --------------------- | --------------------------------------------------- |
 | Order number:         | 10                                                  |
-| Path:                 | /nrf-estimate-2/commit-email-content                |
+| Path:                 | /nrf-estimate-3/commit-email-content                |
 | Title:                | Email sent from the Nature Restoration Fund service |
 | Data points:          | None                                                |
 | Conditional pageflow: | None                                                |
@@ -439,7 +431,7 @@ Subject: Nature Restoration Fund – commitment to use the Nature Restoration Fu
 
 # Nature Restoration Fund – commitment to use the Nature Restoration Fund levy
 
-**Commitment reference:** {{ data.committReference }}
+**Commitment reference:** {{ data.commitmentReference }}
 
 Attached is a commitment document that you can send to your Local Planning Authority to include in your planning application.
 
@@ -461,7 +453,7 @@ You do not need to pay anything at this point, you can send the attached documen
 
 Keep this email as a record of your commitment to use the Nature Restoration Fund. You can use the commitment reference to retrieve this commitment when you are ready to pay.
 
-[Pay your Nature Restoration Fund levy](/nrf-estimate-1/do-you-have-a-commitment-ref)
+[Pay your Nature Restoration Fund levy](/nrf-estimate-3/do-you-have-a-commitment-ref)
 
 ## What your levy will pay for
 
@@ -486,8 +478,8 @@ Find out about call charges at https://www.gov.uk/call-charges
 
 Create the following files in the GOV.UK Prototype Kit structure:
 
-1. **Route File**: `app/routes/nrf-estimate-2.js`
-2. **View Directory**: `app/views/nrf-estimate-2/`
+1. **Route File**: `app/routes/nrf-estimate-3.js`
+2. **View Directory**: `app/views/nrf-estimate-3/`
 3. **View Files**: One HTML file per page in the journey
 4. **Data File**: Uses existing session data structure
 
@@ -535,11 +527,11 @@ Create the following files in the GOV.UK Prototype Kit structure:
 
 ## Implementation Instructions
 
-1. **Routes are integrated** into existing `app/routes/nrf-estimate-2.js` file
-2. **Views are in** `app/views/nrf-estimate-2/` directory
+1. **Routes are integrated** into existing `app/routes/nrf-estimate-3.js` file
+2. **Views are in** `app/views/nrf-estimate-3/` directory
 3. **Form validation** is implemented with proper error handling
 4. **Conditional routing** based on journey type
-5. **Routes use** centralized route constants from `app/config/nrf-estimate-2/routes.js`
+5. **Routes use** centralized route constants from `app/config/nrf-estimate-3/routes.js`
 6. **Journey can be accessed** via payment-email page link or directly
 
 ## Expected Output
@@ -566,7 +558,8 @@ Create the following files in the GOV.UK Prototype Kit structure:
 - **Dynamic content**: Levies and their impacts are displayed dynamically based on user selections
 - **Levy naming**: Uses "greater crested newts" terminology instead of just "newts"
 - **Data structure**: Uses `leviesSelected` array and `lpaEmail` field for data storage. Company details stored in `fullName`, `businessName`, `addressLine1`, `addressLine2`, `townOrCity`, `county`, `postcode`
-- **Route organization**: All routes integrated into existing nrf-estimate-2.js file with proper separation of concerns
+- **Route organization**: All routes integrated into existing nrf-estimate-3.js file with proper separation of concerns
 - **Email template**: Invoice email content is available as a separate viewable page for reference
 - **Path naming**: All paths use lowercase with hyphens (e.g., `/company-details`, `/lpa-email`, `/summary-and-declaration`)
 - **Company details page**: New page in the invoice journey flow between confirm and LPA email entry
+- **Route conflict resolution**: The retrieved estimate summary page uses `/nrf-estimate-3/retrieved-estimate-summary` instead of `/nrf-estimate-3/commit-summary` to avoid conflict with the existing payment journey commit-summary route

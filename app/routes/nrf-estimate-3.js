@@ -154,8 +154,7 @@ router.post(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO, (req, res) => {
   } else if (journeyType === 'payment') {
     res.redirect(ROUTES.DO_YOU_HAVE_A_COMMITMENT_REF)
   } else if (journeyType === 'commit') {
-    // Coming soon - for now redirect back with a message or to a placeholder
-    res.redirect(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO)
+    res.redirect(ROUTES.DO_YOU_HAVE_AN_ESTIMATE_REF)
   } else {
     res.redirect(ROUTES.REDLINE_MAP)
   }
@@ -1076,6 +1075,263 @@ router.get(ROUTES.INVOICE_EMAIL_CONTENT, (req, res) => {
   }
 
   res.render(TEMPLATES.INVOICE_EMAIL_CONTENT, {
+    data: data
+  })
+})
+
+// ============================================
+// Commit Journey Routes
+// ============================================
+
+// Do you have an estimate reference?
+router.get(ROUTES.DO_YOU_HAVE_AN_ESTIMATE_REF, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.DO_YOU_HAVE_AN_ESTIMATE_REF, {
+    data: data,
+    backLink: ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO
+  })
+})
+
+router.post(ROUTES.DO_YOU_HAVE_AN_ESTIMATE_REF, (req, res) => {
+  const hasEstimateReference = req.body['has-estimate-reference']
+
+  if (!hasEstimateReference) {
+    return res.render(TEMPLATES.DO_YOU_HAVE_AN_ESTIMATE_REF, {
+      error: 'Select yes if you have an estimate reference',
+      data: req.session.data || {},
+      backLink: ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO
+    })
+  }
+
+  req.session.data = req.session.data || {}
+  req.session.data.hasEstimateReference = hasEstimateReference
+
+  if (hasEstimateReference === 'yes') {
+    res.redirect(ROUTES.ENTER_ESTIMATE_REF)
+  } else {
+    res.redirect(ROUTES.RETRIEVE_ESTIMATE_EMAIL)
+  }
+})
+
+// Enter your estimate reference
+router.get(ROUTES.ENTER_ESTIMATE_REF, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.ENTER_ESTIMATE_REF, {
+    data: data,
+    backLink: ROUTES.DO_YOU_HAVE_AN_ESTIMATE_REF
+  })
+})
+
+router.post(ROUTES.ENTER_ESTIMATE_REF, (req, res) => {
+  const estimateReference = req.body['estimate-reference']
+
+  if (!estimateReference || estimateReference.trim() === '') {
+    return res.render(TEMPLATES.ENTER_ESTIMATE_REF, {
+      error: 'Enter your estimate reference to continue',
+      data: req.session.data || {},
+      backLink: ROUTES.DO_YOU_HAVE_AN_ESTIMATE_REF
+    })
+  }
+
+  if (isNaN(estimateReference)) {
+    return res.render(TEMPLATES.ENTER_ESTIMATE_REF, {
+      error: 'Enter a valid estimate reference number',
+      data: req.session.data || {},
+      backLink: ROUTES.DO_YOU_HAVE_AN_ESTIMATE_REF
+    })
+  }
+
+  req.session.data = req.session.data || {}
+  req.session.data.estimateReference = estimateReference
+
+  res.redirect(ROUTES.RETRIEVE_ESTIMATE_EMAIL)
+})
+
+// Retrieve estimate email
+router.get(ROUTES.RETRIEVE_ESTIMATE_EMAIL, (req, res) => {
+  const data = req.session.data || {}
+
+  let backLink = ROUTES.DO_YOU_HAVE_AN_ESTIMATE_REF
+  if (data.hasEstimateReference === 'yes' && data.estimateReference) {
+    backLink = ROUTES.ENTER_ESTIMATE_REF
+  }
+
+  res.render(TEMPLATES.RETRIEVE_ESTIMATE_EMAIL, {
+    data: data,
+    backLink: backLink
+  })
+})
+
+router.post(ROUTES.RETRIEVE_ESTIMATE_EMAIL, (req, res) => {
+  const email = req.body['email']
+  const data = req.session.data || {}
+
+  let backLink = ROUTES.DO_YOU_HAVE_AN_ESTIMATE_REF
+  if (data.hasEstimateReference === 'yes' && data.estimateReference) {
+    backLink = ROUTES.ENTER_ESTIMATE_REF
+  }
+
+  const validation = validators.validateEmail(email)
+  if (!validation.valid) {
+    return res.render(TEMPLATES.RETRIEVE_ESTIMATE_EMAIL, {
+      error: validation.error,
+      data: data,
+      backLink: backLink
+    })
+  }
+
+  req.session.data = req.session.data || {}
+  req.session.data.email = email
+
+  res.redirect(ROUTES.ESTIMATE_EMAIL_RETRIEVAL_CONTENT)
+})
+
+// Estimate email retrieval content
+router.get(ROUTES.ESTIMATE_EMAIL_RETRIEVAL_CONTENT, (req, res) => {
+  const data = req.session.data || {}
+
+  let backLink = ROUTES.DO_YOU_HAVE_AN_ESTIMATE_REF
+  if (data.hasEstimateReference === 'yes' && data.estimateReference) {
+    backLink = ROUTES.ENTER_ESTIMATE_REF
+  } else {
+    backLink = ROUTES.RETRIEVE_ESTIMATE_EMAIL
+  }
+
+  res.render(TEMPLATES.ESTIMATE_EMAIL_RETRIEVAL_CONTENT, {
+    data: data,
+    backLink: backLink
+  })
+})
+
+// Retrieved estimate summary
+router.get(ROUTES.RETRIEVED_ESTIMATE_SUMMARY, (req, res) => {
+  const data = req.session.data || {}
+
+  if (!data.email) {
+    return res.redirect(ROUTES.RETRIEVE_ESTIMATE_EMAIL)
+  }
+
+  res.render(TEMPLATES.RETRIEVED_ESTIMATE_SUMMARY, {
+    data: data
+  })
+})
+
+router.post(ROUTES.RETRIEVED_ESTIMATE_SUMMARY, (req, res) => {
+  res.redirect(ROUTES.COMPANY_DETAILS)
+})
+
+// Company details
+router.get(ROUTES.COMPANY_DETAILS, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.COMPANY_DETAILS, {
+    data: data,
+    errors: [],
+    errorsByField: {}
+  })
+})
+
+router.post(ROUTES.COMPANY_DETAILS, (req, res) => {
+  const fullName = req.body.fullName
+  const businessName = req.body.businessName
+  const addressLine1 = req.body.addressLine1
+  const addressLine2 = req.body.addressLine2
+  const townOrCity = req.body.townOrCity
+  const county = req.body.county
+  const postcode = req.body.postcode
+  const companyRegistrationNumber = req.body.companyRegistrationNumber
+  const vatRegistrationNumber = req.body.vatRegistrationNumber
+
+  const errors = []
+
+  if (!fullName || fullName.trim() === '') {
+    errors.push({ field: 'fullName', message: 'Enter your full name' })
+  }
+
+  if (!addressLine1 || addressLine1.trim() === '') {
+    errors.push({ field: 'addressLine1', message: 'Enter address line 1' })
+  }
+
+  if (!townOrCity || townOrCity.trim() === '') {
+    errors.push({ field: 'townOrCity', message: 'Enter a town or city' })
+  }
+
+  if (!postcode || postcode.trim() === '') {
+    errors.push({ field: 'postcode', message: 'Enter a postcode' })
+  }
+
+  if (errors.length > 0) {
+    const errorsByField = {}
+    errors.forEach((error) => {
+      errorsByField[error.field] = error
+    })
+    return res.render(TEMPLATES.COMPANY_DETAILS, {
+      errors: errors,
+      errorsByField: errorsByField,
+      data: req.session.data || {}
+    })
+  }
+
+  req.session.data = req.session.data || {}
+  req.session.data.fullName = fullName
+  req.session.data.businessName = businessName || ''
+  req.session.data.addressLine1 = addressLine1
+  req.session.data.addressLine2 = addressLine2 || ''
+  req.session.data.townOrCity = townOrCity
+  req.session.data.county = county || ''
+  req.session.data.postcode = postcode
+  req.session.data.companyRegistrationNumber = companyRegistrationNumber || ''
+  req.session.data.vatRegistrationNumber = vatRegistrationNumber || ''
+
+  res.redirect(ROUTES.LPA_CONFIRM)
+})
+
+// LPA confirm
+router.get(ROUTES.LPA_CONFIRM, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.LPA_CONFIRM, {
+    data: data
+  })
+})
+
+router.post(ROUTES.LPA_CONFIRM, (req, res) => {
+  req.session.data = req.session.data || {}
+  req.session.data.lpaName = 'Stockton-on-Tees Borough Council'
+  res.redirect(ROUTES.SUMMARY_AND_DECLARATION)
+})
+
+// Summary and declaration
+router.get(ROUTES.SUMMARY_AND_DECLARATION, (req, res) => {
+  const data = req.session.data || {}
+
+  if (!data.fullName) {
+    return res.redirect(ROUTES.COMPANY_DETAILS)
+  }
+
+  res.render(TEMPLATES.SUMMARY_AND_DECLARATION, {
+    data: data
+  })
+})
+
+router.post(ROUTES.SUMMARY_AND_DECLARATION, (req, res) => {
+  const commitmentReference = 'COM-' + Date.now().toString().slice(-6)
+
+  req.session.data = req.session.data || {}
+  req.session.data.commitmentReference = commitmentReference
+  req.session.data.levyAmount = req.session.data.levyAmount || '2,500'
+  req.session.data.lpaEmail = req.session.data.lpaEmail || 'lpa@example.com'
+
+  res.redirect(ROUTES.CONFIRMATION)
+})
+
+// Commit email content page
+router.get(ROUTES.COMMIT_EMAIL_CONTENT, (req, res) => {
+  const data = req.session.data || {}
+
+  if (!data.commitmentReference) {
+    return res.redirect(ROUTES.CONFIRMATION)
+  }
+
+  res.render(TEMPLATES.COMMIT_EMAIL_CONTENT, {
     data: data
   })
 })

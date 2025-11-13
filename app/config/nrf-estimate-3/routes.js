@@ -43,7 +43,18 @@ const ROUTES = {
   PLANNING_REF: `${BASE_PATH}/planning-ref`,
   COMMIT_SUMMARY_SUBMIT: `${BASE_PATH}/commit-summary-submit`,
   PAYMENT_CONFIRMATION: `${BASE_PATH}/payment-confirmation`,
-  INVOICE_EMAIL_CONTENT: `${BASE_PATH}/invoice-email-content`
+  INVOICE_EMAIL_CONTENT: `${BASE_PATH}/invoice-email-content`,
+
+  // Commit journey routes
+  DO_YOU_HAVE_AN_ESTIMATE_REF: `${BASE_PATH}/do-you-have-an-estimate-ref`,
+  ENTER_ESTIMATE_REF: `${BASE_PATH}/enter-estimate-ref`,
+  RETRIEVE_ESTIMATE_EMAIL: `${BASE_PATH}/retrieve-estimate-email`,
+  ESTIMATE_EMAIL_RETRIEVAL_CONTENT: `${BASE_PATH}/estimate-email-retrieval-content`,
+  RETRIEVED_ESTIMATE_SUMMARY: `${BASE_PATH}/retrieved-estimate-summary`,
+  COMPANY_DETAILS: `${BASE_PATH}/company-details`,
+  LPA_CONFIRM: `${BASE_PATH}/lpa-confirm`,
+  SUMMARY_AND_DECLARATION: `${BASE_PATH}/summary-and-declaration`,
+  COMMIT_EMAIL_CONTENT: `${BASE_PATH}/commit-email-content`
 }
 
 // View template paths (for res.render)
@@ -73,7 +84,19 @@ const TEMPLATES = {
   PLANNING_REF: 'nrf-estimate-3/planning-ref',
   COMMIT_SUMMARY_SUBMIT: 'nrf-estimate-3/commit-summary-submit',
   PAYMENT_CONFIRMATION: 'nrf-estimate-3/payment-confirmation',
-  INVOICE_EMAIL_CONTENT: 'nrf-estimate-3/invoice-email-content'
+  INVOICE_EMAIL_CONTENT: 'nrf-estimate-3/invoice-email-content',
+
+  // Commit journey templates
+  DO_YOU_HAVE_AN_ESTIMATE_REF: 'nrf-estimate-3/do-you-have-an-estimate-ref',
+  ENTER_ESTIMATE_REF: 'nrf-estimate-3/enter-estimate-ref',
+  RETRIEVE_ESTIMATE_EMAIL: 'nrf-estimate-3/retrieve-estimate-email',
+  ESTIMATE_EMAIL_RETRIEVAL_CONTENT:
+    'nrf-estimate-3/estimate-email-retrieval-content',
+  RETRIEVED_ESTIMATE_SUMMARY: 'nrf-estimate-3/retrieved-estimate-summary',
+  COMPANY_DETAILS: 'nrf-estimate-3/company-details',
+  LPA_CONFIRM: 'nrf-estimate-3/lpa-confirm',
+  SUMMARY_AND_DECLARATION: 'nrf-estimate-3/summary-and-declaration',
+  COMMIT_EMAIL_CONTENT: 'nrf-estimate-3/commit-email-content'
 }
 
 module.exports = { ROUTES, TEMPLATES }
