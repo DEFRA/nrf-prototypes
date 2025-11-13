@@ -30,6 +30,13 @@
   const COOKIE_MAP_HINTS_CLOSED = 'mapHintsClosed'
   const COOKIE_EXPIRY_DAYS = 365
 
+  // UI positioning constants
+  const UI_POSITIONS = {
+    MODAL_KEY: { top: '65px', left: '10px' },
+    BUTTON_KEY: { top: '10px', left: '145px' },
+    BUTTON_HELP: { top: '10px', left: '253px' }
+  }
+
   // ============================================================================
   // MAP CREATION
   // ============================================================================
@@ -360,8 +367,8 @@
 
     const modalElement = keyModal.getElement()
     if (modalElement) {
-      modalElement.style.top = '65px'
-      modalElement.style.left = '10px'
+      modalElement.style.top = UI_POSITIONS.MODAL_KEY.top
+      modalElement.style.left = UI_POSITIONS.MODAL_KEY.left
     }
 
     keyButton.addEventListener('click', function (e) {
