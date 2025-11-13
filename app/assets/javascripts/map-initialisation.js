@@ -48,11 +48,6 @@
   function checkLeafletLoaded() {
     if (typeof L === 'undefined') {
       console.error('Leaflet library not loaded')
-      const loadingDiv = document.getElementById(DOM_IDS.mapLoading)
-      if (loadingDiv) {
-        loadingDiv.innerHTML =
-          '<p class="govuk-body map-error-message">Error: Map library not loaded. Please refresh the page.</p>'
-      }
       return false
     }
     return true
@@ -70,12 +65,24 @@
 
   /**
    * Show map error message
+   * @param {string} message - Optional custom error message
    */
-  function showMapError() {
+  function showMapError(message) {
     const loadingDiv = document.getElementById(DOM_IDS.mapLoading)
     if (loadingDiv) {
-      loadingDiv.innerHTML =
-        '<p class="govuk-body map-error-message">Error loading map. Please refresh the page.</p>'
+      const errorMessage =
+        message ||
+        'There was a problem loading the map. Please refresh the page and try again.'
+      loadingDiv.innerHTML = `
+        <div class="govuk-error-summary" role="alert" style="max-width: 400px; margin: 0 auto;">
+          <h2 class="govuk-error-summary__title">
+            There is a problem
+          </h2>
+          <div class="govuk-error-summary__body">
+            <p class="govuk-body">${errorMessage}</p>
+          </div>
+        </div>
+      `
     }
   }
 
