@@ -1507,6 +1507,9 @@
       return
     }
 
+    // Disable map scroll zoom when hovering over results dropdown
+    L.DomEvent.disableScrollPropagation(resultsDropdown)
+
     let searchTimeout
 
     // Toggle search container
