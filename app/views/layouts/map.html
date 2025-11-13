@@ -1,0 +1,16 @@
+{#
+Full-width map layout without container constraints
+Used for pages that need full viewport width and height (e.g., interactive maps)
+#}
+
+{% extends "layouts/main.html" %}
+
+{# Override the main block to remove govuk-width-container #}
+{% block main %}
+  <main class="govuk-main-wrapper" id="main-content" style="padding: 0; height: calc(100vh - 60px);">
+    {% block content %}{% endblock %}
+  </main>
+{% endblock %}
+
+{# Remove footer for full-height map #}
+{% block footer %}{% endblock %}

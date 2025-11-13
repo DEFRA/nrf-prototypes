@@ -1,43 +1,59 @@
-/* Accessible map interface layout - GOV.UK compliant */
+/* Map loading overlay */
+.map-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.map-loading-content {
+  text-align: center;
+}
+
+.map-loading-spinner {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #1d70b8;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 .map-interface {
   display: flex;
-  gap: 30px;
-  margin-bottom: 30px;
+  gap: 0;
+  margin-bottom: 0;
+  height: 100%;
 }
 
 .map-controls-panel {
-  width: 300px;
-  background: #f3f2f1;
-  border: 1px solid #b1b4b6;
-  padding: 20px;
+  width: 350px;
+  background: #ffffff;
+  border-right: 1px solid #b1b4b6;
+  padding: 0 20px 20px 20px;
   flex-shrink: 0;
+  overflow-y: auto;
+  height: 100%;
+  box-sizing: border-box;
 }
 
-/* Typography following GOV.UK design system */
-.map-controls-panel h2 {
-  font-family: 'GDS Transport', arial, sans-serif;
-  font-size: 19px;
-  line-height: 1.31579;
-  font-weight: 700;
-  margin-top: 0;
-  margin-bottom: 15px;
-  color: #0b0c0c;
-}
-
-.map-controls-panel h3 {
-  font-family: 'GDS Transport', arial, sans-serif;
-  font-size: 16px;
-  line-height: 1.25;
-  font-weight: 700;
-  margin-top: 20px;
-  margin-bottom: 10px;
-  color: #0b0c0c;
-}
-
-.map-controls-panel h3:first-of-type {
-  margin-top: 0;
-}
-
+/* Search container */
 .search-container {
   display: flex;
   gap: 10px;
@@ -53,6 +69,55 @@
   margin-bottom: 0;
 }
 
+/* Drawing tool buttons */
+.drawing-tool-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.tool-button {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  font-size: 16px;
+  font-family: 'GDS Transport', arial, sans-serif;
+  line-height: 1;
+  color: #1d70b8;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.tool-button:hover {
+  color: #003078;
+}
+
+.tool-button:focus {
+  outline: 3px solid #ffdd00;
+  outline-offset: 0;
+  background-color: #ffdd00;
+  color: #0b0c0c;
+}
+
+.tool-button svg {
+  flex-shrink: 0;
+  color: #0b0c0c;
+}
+
+.tool-button:disabled {
+  color: #505a5f;
+  cursor: not-allowed;
+}
+
+.tool-button:disabled svg {
+  color: #505a5f;
+}
+
 /* GOV.UK link styling for tool links */
 .tool-links {
   display: flex;
@@ -60,67 +125,47 @@
   gap: 15px;
 }
 
+/* Button as link reset */
+.tool-links button.govuk-link {
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  font-size: 16px;
+  font-family: 'GDS Transport', arial, sans-serif;
+  line-height: normal;
+}
+
+/* Focus state for buttons styled as links */
+.tool-links button.govuk-link:focus {
+  outline: 3px solid #ffdd00;
+  outline-offset: 0;
+  background-color: #ffdd00;
+  color: #0b0c0c;
+  text-decoration: none;
+}
+
 /* Disabled state for tool links */
-.tool-links .govuk-link[aria-disabled='true'] {
+.tool-links button.govuk-link:disabled {
   color: #505a5f;
   cursor: not-allowed;
   text-decoration: none;
 }
 
-.tool-links .govuk-link[aria-disabled='true']:hover {
+.tool-links button.govuk-link:disabled:hover {
   color: #505a5f;
   text-decoration: none;
-}
-
-.tool-links .govuk-link[aria-disabled='true']:focus {
-  outline: 3px solid #ffdd00;
-  outline-offset: 0;
-  background-color: #ffdd00;
-  color: #0b0c0c;
-}
-
-/* Destructive action styling */
-.tool-links .govuk-link--destructive {
-  color: #d4351c;
-}
-
-.tool-links .govuk-link--destructive:hover {
-  color: #a52814;
-  text-decoration-thickness: max(3px, 0.1875rem, 0.12em);
-}
-
-.tool-links .govuk-link--destructive:focus {
-  color: #0b0c0c;
-  background-color: #ffdd00;
-}
-
-.map-controls-panel .govuk-hint {
-  font-family: 'GDS Transport', arial, sans-serif;
-  font-size: 16px;
-  line-height: 1.25;
-  margin-top: 5px;
-  margin-bottom: 10px;
-  color: #505a5f;
-}
-
-.map-controls-panel .govuk-form-group {
-  margin-bottom: 20px;
-}
-
-.map-controls-panel .govuk-form-group:last-child {
-  margin-bottom: 0;
 }
 
 .map-container {
   position: relative;
   flex: 1;
-  min-height: 500px;
 }
 
 #map {
-  height: 500px;
+  height: 100%;
   width: 100%;
-  border: 1px solid #b1b4b6;
+  border: none;
 }
 
 /* Hide the default Leaflet draw toolbar and action buttons since we're using our own controls */
@@ -150,4 +195,162 @@
   .search-button {
     margin-top: 0;
   }
+}
+
+/* Error messages */
+.map-error-message {
+  color: #d4351c;
+}
+
+/* Location search components */
+#location-search-button {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1000;
+  margin: 0;
+  padding: 8px 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
+  border-radius: 0;
+  height: 45px;
+  box-sizing: border-box;
+
+  svg {
+    margin-right: 10px;
+  }
+}
+
+#location-search-container {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 999;
+  background: #b1dcf3;
+  padding: 0;
+  box-shadow: none;
+  border-radius: 0;
+  min-width: 400px;
+}
+
+#location-search-input {
+  width: 100%;
+  margin: 0;
+  border-radius: 0;
+  padding: 8px 12px;
+  font-size: 19px;
+  line-height: 1.25;
+  box-sizing: border-box;
+  outline: none;
+  height: 45px;
+  border: 2px solid #0b0c0c;
+}
+
+#location-search-results {
+  background: white;
+  border: 1px solid #b1b4b6;
+  border-top: none;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.location-search-result-item {
+  width: 100%;
+  text-align: left;
+  padding: 10px 15px;
+  border: none;
+  background: white;
+  cursor: pointer;
+  display: block;
+  font-family: inherit;
+  font-size: inherit;
+
+  &:hover {
+    background: #f3f2f1;
+  }
+}
+
+.search-result-name {
+  font-weight: bold;
+}
+
+.search-result-details {
+  font-size: 14px;
+  color: #505a5f;
+}
+
+.search-message {
+  padding: 10px;
+  color: #505a5f;
+}
+
+.search-error {
+  padding: 10px;
+  color: #d4351c;
+}
+
+/* Map key button */
+#map-key-button {
+  position: absolute;
+  top: 10px;
+  left: 145px;
+  z-index: 1000;
+  margin: 0;
+  padding: 8px 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
+  border-radius: 0;
+  height: 45px;
+  box-sizing: border-box;
+
+  svg {
+    margin-right: 10px;
+  }
+}
+
+#map-help-button {
+  position: absolute;
+  top: 10px;
+  left: 253px;
+  z-index: 1000;
+  margin: 0;
+  padding: 8px 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
+  border-radius: 0;
+  height: 45px;
+  box-sizing: border-box;
+
+  svg {
+    margin-right: 10px;
+  }
+}
+
+.map-key-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.map-key-swatch {
+  width: 30px;
+  height: 20px;
+  border: 2px solid #ab47bc;
+  background-color: rgba(171, 71, 188, 0.6);
+}
+
+.map-key-label {
+  font-size: 16px;
+  font-family: 'GDS Transport', arial, sans-serif;
+}
+
+/* Utility class for hiding elements */
+.hidden {
+  display: none !important;
 }

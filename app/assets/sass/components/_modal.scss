@@ -1,0 +1,104 @@
+/**
+ * Reusable Modal Component
+ * A positioned modal with close button
+ */
+
+.modal {
+  position: absolute;
+  z-index: 10000;
+
+  &--top-right {
+    top: 10px;
+    right: 60px;
+  }
+
+  &--top-left {
+    top: 65px;
+    left: 10px;
+  }
+
+  &--center {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.modal__content {
+  background: white;
+  padding: 15px 30px 20px 20px;
+  border-radius: 0;
+  width: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+.modal__header {
+  margin-bottom: 20px;
+  padding-right: 35px;
+}
+
+.modal__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: 'GDS Transport', arial, sans-serif;
+  line-height: 1.25;
+}
+
+.modal__close {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0b0c0c;
+  margin: 0;
+  position: absolute;
+  top: 5px;
+  right: 5px;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+  }
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  &:focus {
+    outline: 3px solid #ffdd00;
+    outline-offset: 0;
+  }
+}
+
+.modal__body {
+  /* Content area - styling controlled by consumer */
+}
+
+// Centered modal specific styling
+.modal--center .modal__content {
+  max-width: 600px;
+  min-width: 400px;
+}
+
+// Map hints specific content styling
+.map-hints-content {
+  h3 {
+    margin-bottom: 10px;
+  }
+
+  p {
+    margin-bottom: 15px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
