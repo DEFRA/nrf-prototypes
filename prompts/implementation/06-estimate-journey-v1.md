@@ -4,8 +4,8 @@
 
 - **Journey Name**: Get an estimate for Nature Restoration Fund Levy
 - **Journey Description**:  
-  A user journey for a developer to obtain a quote for the Nature Restoration Fund levy required when submitting planning permission to build a development of some sort. A significant page in the journey is /nrf-estimate-1/map where the user will be able to plot a polygon on a map to define the development site boundary. There will also be 5 polygon areas over England that are known as EDP boundaries. If the development site boundary does not fall within an EDP area then the user will be navigated to the exit page /nrf-estimate-1/no-edp.
-- **Journey Route Prefix**: nrf-estimate-1
+  A user journey for a developer to obtain a quote for the Nature Restoration Fund levy required when submitting planning permission to build a development of some sort. A significant page in the journey is /nrf-estimate-3/map where the user will be able to plot a polygon on a map to define the development site boundary. There will also be 5 polygon areas over England that are known as EDP boundaries. If the development site boundary does not fall within an EDP area then the user will be navigated to the exit page /nrf-estimate-3/no-edp.
+- **Journey Route Prefix**: nrf-estimate-3
 - **Start Page Title**: Get an estimate for Nature Restoration Fund Levy
 
 ## Page Flow and Conditional Logic
@@ -15,7 +15,7 @@
 | **Field**                  | **Value**                                        |
 | -------------------------- | ------------------------------------------------ |
 | **Order number:**          | 1                                                |
-| **Path:**                  | /nrf-estimate-1/start                            |
+| **Path:**                  | /nrf-estimate-3/start                            |
 | **Title:**                 | Get an estimate for Nature Restoration Fund Levy |
 | **Conditional page flow:** | none                                             |
 
@@ -93,7 +93,7 @@ Find out about call charges at https://www.gov.uk/call-charges
 | **Field**              | **Value**                                 |
 | ---------------------- | ----------------------------------------- |
 | Order number:          | 2                                         |
-| Path:                  | /nrf-estimate-1/what-would-you-like-to-do |
+| Path:                  | /nrf-estimate-3/what-would-you-like-to-do |
 | Title:                 | What would you like to do?                |
 | Conditional page flow: | none                                      |
 
@@ -101,7 +101,7 @@ Find out about call charges at https://www.gov.uk/call-charges
 
 ```
 {
-    application: {
+    data: {
         journeyType: {
             type: radios
             required: true
@@ -139,7 +139,7 @@ Find out about call charges at https://www.gov.uk/call-charges
 | **Field**              | **Value**                                                             |
 | ---------------------- | --------------------------------------------------------------------- |
 | Order number:          | 3                                                                     |
-| Path:                  | /nrf-estimate-1/redline-map                                           |
+| Path:                  | /nrf-estimate-3/redline-map                                           |
 | Title:                 | Choose how you would like to show us the boundary of your development |
 | Conditional page flow: | none                                                                  |
 
@@ -147,8 +147,8 @@ Find out about call charges at https://www.gov.uk/call-charges
 
 ```
 {
-     application: {
-        journeyType: {
+     data: {
+        hasRedlineBoundaryFile: {
             type: radios
             required: true
             values: "Draw on a map" |
@@ -182,7 +182,7 @@ Find out about call charges at https://www.gov.uk/call-charges
 | **Field**             | **Value**                                  |
 | --------------------- | ------------------------------------------ |
 | Order number:         | 3.1                                        |
-| Path:                 | /nrf-estimate-1/upload-redline             |
+| Path:                 | /nrf-estimate-3/upload-redline             |
 | Title:                | Upload a red line boundary file            |
 | Conditional pageflow: | display if hasRedlineBoundaryFile === true |
 
@@ -190,7 +190,7 @@ Find out about call charges at https://www.gov.uk/call-charges
 
 ```
 {
-    application: {
+    data: {
         redlineFile: {
             type: file,
             conditional: required if hasRedlineBoundaryFile === true
@@ -230,7 +230,7 @@ Hint text: Upload a shapefile (.shp) or GeoJSON file (.geojson). The file must b
 | **Field**             | **Value**                                   |
 | --------------------- | ------------------------------------------- |
 | Order number:         | 3.2                                         |
-| Path:                 | /nrf-estimate-1/map                         |
+| Path:                 | /nrf-estimate-3/map                         |
 | Title:                | Draw a red line boundary                    |
 | Conditional pageflow: | display if hasRedlineBoundaryFile === false |
 
@@ -238,7 +238,7 @@ Hint text: Upload a shapefile (.shp) or GeoJSON file (.geojson). The file must b
 
 ```
 {
-    application: {
+    data: {
         redlineBoundaryPolygon: {
             type: array,
             conditional: required if hasRedlineBoundaryFile === false
@@ -278,7 +278,7 @@ Note: The button text on this page is "Save and continue" (not just "Continue").
 | **Field**             | **Value**                                                  |
 | --------------------- | ---------------------------------------------------------- |
 | Order number:         | 3.3                                                        |
-| Path:                 | /nrf-estimate-1/no-edp                                     |
+| Path:                 | /nrf-estimate-3/no-edp                                     |
 | Title:                | Nature Restoration Fund levy is not available in this area |
 | Data points:          | None                                                       |
 | Conditional pageflow: | display if development site is not within an EDP area      |
@@ -307,7 +307,7 @@ None
 | **Field**             | **Value**                                                   |
 | --------------------- | ----------------------------------------------------------- |
 | Order number:         | 4                                                           |
-| Path:                 | /nrf-estimate-1/building-type                               |
+| Path:                 | /nrf-estimate-3/building-type                               |
 | Name:                 | Building type entry (conditional)                           |
 | Conditional pageflow: | display if red line boundary falls within EDP boundary area |
 
@@ -315,7 +315,7 @@ None
 
 ```
 {
-    application: {
+    data: {
         buildingTypes: {
             type: checkboxes,
             values: Dwelling | Hotel | House of multiple occupation (HMO) | Non-residential development | Residential institution,
@@ -347,10 +347,10 @@ Select all that apply
 | **Field**             | **Value**                                                                      |
 | --------------------- | ------------------------------------------------------------------------------ |
 | Order number:         | 4.1                                                                            |
-| Path:                 | /nrf-estimate-1/non-residential                                                |
+| Path:                 | /nrf-estimate-3/non-residential                                                |
 | Title:                | Nature Restoration Fund levy is not available for non-residential developments |
 | Data points:          | None                                                                           |
-| Conditional pageflow: | display if application.buildingTypes includes "Non-residential development"    |
+| Conditional pageflow: | display if data.buildingTypes includes "Non-residential development"           |
 
 #### Content
 
@@ -372,18 +372,18 @@ None
 | **Field**              | **Value**                                                          |
 | ---------------------- | ------------------------------------------------------------------ |
 | Order number:          | 4.2                                                                |
-| Path:                  | /nrf-estimate-1/residential                                        |
+| Path:                  | /nrf-estimate-3/residential                                        |
 | Title:                 | Enter the number of dwelling buildings planned for the development |
-| Conditional page flow: | display if buildingTypes includes Dwelling                         |
+| Conditional page flow: | display if data.buildingTypes includes Dwelling                    |
 
 #### Data points
 
 ```
 {
-    application: {
+    data: {
         residentialBuildingCount: {
             type: number,
-            required: conditional - required if application.buildingTypes includes Dwelling
+            required: conditional - required if data.buildingTypes includes Dwelling
         }
     }
 }
@@ -407,29 +407,31 @@ None
 
 ### Enter the number of rooms in your [building type] building(s) planned for the development
 
-| **Field**              | **Value**                                                                                                        |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Order number:          | 4.3                                                                                                              |
-| Path:                  | /nrf-estimate-1/room-count                                                                                       |
-| Title:                 | Enter the number of rooms in your [lowercase(application.building Type)] building(s) planned for the development |
-| Conditional page flow: | display if buildingType includes "Hotel", "House of multiple occupation (HMO)", "Residential institution"        |
+| **Field**              | **Value**                                                                                                       |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Order number:          | 4.3                                                                                                             |
+| Path:                  | /nrf-estimate-3/room-count                                                                                      |
+| Title:                 | Enter the number of rooms in your [lowercase(data.buildingTypes)] building(s) planned for the development       |
+| Conditional page flow: | display if data.buildingTypes includes "Hotel", "House of multiple occupation (HMO)", "Residential institution" |
 
 #### Data points
 
 ```
 {
-    application: {
-        hmoCount: {
-            type: number,
-            required: conditional - required and shown only if buildingType includes "House of multiple occupation (HMO)"
-        },
-        residentialInstitutionCount: {
-            type: number,
-            required: conditional - required and shown only if buildingType includes "Residential institution"
-        },
-        hotelCount: {
-            type: number,
-            required: conditional - required and shown only if buildingType includes "Hotel"
+    data: {
+        roomCounts: {
+            hmoCount: {
+                type: number,
+                required: conditional - required and shown only if data.buildingTypes includes "House of multiple occupation (HMO)"
+            },
+            residentialInstitutionCount: {
+                type: number,
+                required: conditional - required and shown only if data.buildingTypes includes "Residential institution"
+            },
+            hotelCount: {
+                type: number,
+                required: conditional - required and shown only if data.buildingTypes includes "Hotel"
+            }
         }
     }
 }
@@ -438,7 +440,7 @@ None
 #### Content
 
 ```
-# Enter the number of rooms in your [lowercase(application.building Type)] building(s) planned for the development
+# Enter the number of rooms in your [lowercase(data.buildingTypes)] building(s) planned for the development
 
 Note: The label dynamically adjusts based on building type. For "House of multiple occupation (HMO)", it shows the full name rather than lowercase.
 ```
@@ -458,7 +460,7 @@ Note: The label dynamically adjusts based on building type. For "House of multip
 | **Field**              | **Value**                |
 | ---------------------- | ------------------------ |
 | Order number:          | 5                        |
-| Path:                  | /nrf-estimate-1/email    |
+| Path:                  | /nrf-estimate-3/email    |
 | Title:                 | Enter your email address |
 | Conditional page flow: | None                     |
 
@@ -466,7 +468,7 @@ Note: The label dynamically adjusts based on building type. For "House of multip
 
 ```
 {
-    applicant: {
+    data: {
         email: {
             type: email,
             required: true
@@ -481,7 +483,7 @@ Note: The label dynamically adjusts based on building type. For "House of multip
 # Enter your email address
 Hint text: Once your Nature Restoration Fund levy amount is calculated, the estimate will be emailed to you. This could take up to 00 minutes.
 
-Note: For the payment journey with estimate reference retrieval, there is a separate email entry page at /nrf-estimate-1/retrieve-estimate-email with hint text: "We will send you a link so you can retrieve the details from your estimate."
+Note: For the payment journey with estimate reference retrieval, there is a separate email entry page at /nrf-estimate-3/retrieve-estimate-email with hint text: "We will send you a link so you can retrieve the details from your estimate."
 ```
 
 #### Errors
@@ -502,7 +504,7 @@ Note: For the payment journey with estimate reference retrieval, there is a sepa
 | **Field**              | **Value**               |
 | ---------------------- | ----------------------- |
 | Order number:          | 6                       |
-| Path:                  | /nrf-estimate-1/summary |
+| Path:                  | /nrf-estimate-3/summary |
 | Title:                 | Check your answers      |
 | Conditional page flow: | None                    |
 
@@ -535,7 +537,7 @@ None
 | **Field**             | **Value**                        |
 | --------------------- | -------------------------------- |
 | Order number:         | 7                                |
-| Path:                 | /nrf-estimate-1/confirmation     |
+| Path:                 | /nrf-estimate-3/confirmation     |
 | Title:                | Your details have been submitted |
 | Data points:          | None                             |
 | Conditional pageflow: | None                             |
@@ -568,7 +570,7 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 
 Find out about call charges at https://www.gov.uk/call-charges
 
-View the email content (link to /nrf-estimate-1/estimate-email-content)
+View the email content (link to /nrf-estimate-3/estimate-email-content)
 ```
 
 #### Errors
@@ -582,7 +584,7 @@ None
 | **Field**             | **Value**                                           |
 | --------------------- | --------------------------------------------------- |
 | Order number:         | 8                                                   |
-| Path:                 | /nrf-estimate-1/estimate-email-content              |
+| Path:                 | /nrf-estimate-3/estimate-email-content              |
 | Title:                | Email sent from the Nature Restoration Fund service |
 | Data points:          | None                                                |
 | Conditional pageflow: | None                                                |
@@ -612,7 +614,7 @@ You do not need to pay anything at this point, this service is designed to help 
 
 If you do decide to mitigate using Nature Restoration Fund levy, you can commit and include the commitment when applying for planning permission.
 
-[Commit to using Nature Restoration Fund](/nrf-estimate-1/do-you-have-an-estimate-ref)
+[Commit to using Nature Restoration Fund](/nrf-estimate-3/do-you-have-an-estimate-ref)
 
 Keep this email as a record of your estimate and reference number, you can use it to retrieve this estimate when you are ready to commit.
 
@@ -640,10 +642,10 @@ Find out about call charges at https://www.gov.uk/call-charges
 
 Create the following files in the GOV.UK Prototype Kit structure:
 
-1. **Route File**: `app/routes/nrf-estimate-1.js`
-2. **View Directory**: `app/views/nrf-estimate-1/`
+1. **Route File**: `app/routes/nrf-estimate-3.js`
+2. **View Directory**: `app/views/nrf-estimate-3/`
 3. **View Files**: One HTML file per page in the journey
-4. **Data File**: `app/data/nrf-estimate-1-data.js` (if needed)
+4. **Data File**: `app/data/nrf-estimate-3-data.js` (if needed)
 
 ### Route Implementation
 

@@ -18,6 +18,7 @@ const lpaApprove1Routes = require('./routes/lpa-approve-1.js')
 const nrfEstimate1Routes = require('./routes/nrf-estimate-1.js')
 const nrfEstimate2Routes = require('./routes/nrf-estimate-2.js')
 const nrfEstimate2MapLayersSpikeRoutes = require('./routes/nrf-estimate-2-map-layers-spike.js')
+const nrfEstimate3Routes = require('./routes/nrf-estimate-3.js')
 
 // Use journey-specific routes
 router.use('/', userJourney1Routes)
@@ -31,5 +32,6 @@ router.use('/', lpaApprove1Routes)
 router.use('/', nrfEstimate1Routes)
 router.use('/', nrfEstimate2Routes)
 router.use('/', nrfEstimate2MapLayersSpikeRoutes)
+router.use('/', nrfEstimate3Routes)
 
 module.exports = router
