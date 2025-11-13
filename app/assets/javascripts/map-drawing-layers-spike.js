@@ -38,7 +38,7 @@
   }
 
   const CATCHMENT_STYLE_SATELLITE = {
-    color: '#ffffff',
+    color: '#e0e0e0',
     weight: 2,
     opacity: 1,
     fillColor: '#ffffff',
@@ -151,6 +151,23 @@
     if (errorSummary) {
       errorSummary.classList.add('hidden')
     }
+  }
+
+  // ============================================================================
+  // UTILITY HELPERS
+  // ============================================================================
+
+  /**
+   * Convert hex color to rgba with alpha transparency
+   * @param {string} hex - Hex color code (e.g., '#ffffff')
+   * @param {number} alpha - Alpha value between 0 and 1
+   * @returns {string} rgba color string (e.g., 'rgba(255, 255, 255, 0.5)')
+   */
+  function hexToRgba(hex, alpha) {
+    const r = parseInt(hex.slice(1, 3), 16)
+    const g = parseInt(hex.slice(3, 5), 16)
+    const b = parseInt(hex.slice(5, 7), 16)
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`
   }
 
   // ============================================================================
@@ -650,6 +667,13 @@
     })
   }
 
+  function updateMapKey(style, map) {
+    if (map._keyModal) {
+      const newContent = getKeyContent(style)
+      map._keyModal.updateContent(newContent)
+    }
+  }
+
   function handleMapStyleChange(style, options, map, streetMap, satelliteMap) {
     // Update selected state visually
     options.forEach((opt) => {
@@ -681,6 +705,9 @@
 
     // Update catchment polygon styles
     updateCatchmentStyles(style)
+
+    // Update map key to reflect new style
+    updateMapKey(style, map)
 
     // Close modal
     mapStyleModal.close()
@@ -1694,6 +1721,23 @@
   // MAP KEY
   // ============================================================================
 
+  function getKeyContent(style) {
+    const catchmentStyle =
+      style === 'satellite' ? CATCHMENT_STYLE_SATELLITE : CATCHMENT_STYLE
+
+    // Convert hex color to rgba with opacity for fill
+    const fillColor = catchmentStyle.fillColor
+    const fillOpacity = catchmentStyle.fillOpacity
+    const rgba = hexToRgba(fillColor, fillOpacity)
+
+    return `
+      <div class="map-key-item">
+        <div class="map-key-swatch" style="background-color: ${rgba}; border: 2px solid ${catchmentStyle.color};"></div>
+        <span class="map-key-label">Nutrient EDP areas</span>
+      </div>
+    `
+  }
+
   function initMapKey(map) {
     const mapContainer = document.getElementById(DOM_IDS.map)
     const keyButton = document.getElementById(DOM_IDS.mapKeyButton)
@@ -1703,13 +1747,8 @@
       return
     }
 
-    // Create key content
-    const keyContent = `
-      <div class="map-key-item">
-        <div class="map-key-swatch"></div>
-        <span class="map-key-label">Nutrient EDP areas</span>
-      </div>
-    `
+    // Create key content based on current map style
+    const keyContent = getKeyContent(currentMapStyle)
 
     // Create modal instance
     const keyModal = new Modal({
