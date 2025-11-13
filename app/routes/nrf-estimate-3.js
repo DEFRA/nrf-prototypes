@@ -137,12 +137,28 @@ router.get(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO, (req, res) => {
 router.post(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO, (req, res) => {
   const journeyType = req.body['journey-type']
 
+  if (!journeyType) {
+    return res.render(TEMPLATES.WHAT_WOULD_YOU_LIKE_TO_DO, {
+      error: 'Select what you would like to do',
+      data: req.session.data || {}
+    })
+  }
+
   // Store in session
   req.session.data = req.session.data || {}
   req.session.data.journeyType = journeyType
 
-  // Always redirect to redline-map for estimate journey
-  res.redirect(ROUTES.REDLINE_MAP)
+  // Route based on journey type
+  if (journeyType === 'estimate') {
+    res.redirect(ROUTES.REDLINE_MAP)
+  } else if (journeyType === 'payment') {
+    res.redirect(ROUTES.DO_YOU_HAVE_A_COMMITMENT_REF)
+  } else if (journeyType === 'commit') {
+    // Coming soon - for now redirect back with a message or to a placeholder
+    res.redirect(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO)
+  } else {
+    res.redirect(ROUTES.REDLINE_MAP)
+  }
 })
 
 // Redline boundary file question
@@ -848,6 +864,218 @@ router.get(ROUTES.ESTIMATE_EMAIL_CONTENT, (req, res) => {
   }
 
   res.render(TEMPLATES.ESTIMATE_EMAIL_CONTENT, {
+    data: data
+  })
+})
+
+// ============================================
+// Payment Journey Routes
+// ============================================
+
+// Do you have a commitment reference?
+router.get(ROUTES.DO_YOU_HAVE_A_COMMITMENT_REF, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.DO_YOU_HAVE_A_COMMITMENT_REF, {
+    data: data,
+    backLink: ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO
+  })
+})
+
+router.post(ROUTES.DO_YOU_HAVE_A_COMMITMENT_REF, (req, res) => {
+  const hasCommitmentRef = req.body['has-commitment-ref']
+
+  if (!hasCommitmentRef) {
+    return res.render(TEMPLATES.DO_YOU_HAVE_A_COMMITMENT_REF, {
+      error: 'Select whether you have a commitment reference',
+      data: req.session.data || {},
+      backLink: ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO
+    })
+  }
+
+  req.session.data = req.session.data || {}
+  req.session.data.hasCommitmentRef = hasCommitmentRef
+
+  if (hasCommitmentRef === 'yes') {
+    res.redirect(ROUTES.ENTER_COMMITMENT_REF)
+  } else {
+    res.redirect(ROUTES.RETRIEVE_COMMITMENT_EMAIL)
+  }
+})
+
+// Enter your commitment reference
+router.get(ROUTES.ENTER_COMMITMENT_REF, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.ENTER_COMMITMENT_REF, {
+    data: data,
+    backLink: ROUTES.DO_YOU_HAVE_A_COMMITMENT_REF
+  })
+})
+
+router.post(ROUTES.ENTER_COMMITMENT_REF, (req, res) => {
+  const commitmentRef = req.body['commitment-ref']
+
+  if (!commitmentRef || commitmentRef.trim() === '') {
+    return res.render(TEMPLATES.ENTER_COMMITMENT_REF, {
+      error: 'Enter your commitment reference to continue',
+      data: req.session.data || {},
+      backLink: ROUTES.DO_YOU_HAVE_A_COMMITMENT_REF
+    })
+  }
+
+  if (isNaN(commitmentRef)) {
+    return res.render(TEMPLATES.ENTER_COMMITMENT_REF, {
+      error: 'Enter a valid commitment reference number',
+      data: req.session.data || {},
+      backLink: ROUTES.DO_YOU_HAVE_A_COMMITMENT_REF
+    })
+  }
+
+  req.session.data = req.session.data || {}
+  req.session.data.commitmentRef = commitmentRef
+
+  res.redirect(ROUTES.RETRIEVE_COMMITMENT_EMAIL)
+})
+
+// Retrieve commitment email
+router.get(ROUTES.RETRIEVE_COMMITMENT_EMAIL, (req, res) => {
+  const data = req.session.data || {}
+
+  let backLink = ROUTES.DO_YOU_HAVE_A_COMMITMENT_REF
+  if (data.hasCommitmentRef === 'yes' && data.commitmentRef) {
+    backLink = ROUTES.ENTER_COMMITMENT_REF
+  }
+
+  res.render(TEMPLATES.RETRIEVE_COMMITMENT_EMAIL, {
+    data: data,
+    backLink: backLink
+  })
+})
+
+router.post(ROUTES.RETRIEVE_COMMITMENT_EMAIL, (req, res) => {
+  const commitmentRetrievalEmail = req.body['commitment-retrieval-email']
+  const data = req.session.data || {}
+
+  let backLink = ROUTES.DO_YOU_HAVE_A_COMMITMENT_REF
+  if (data.hasCommitmentRef === 'yes' && data.commitmentRef) {
+    backLink = ROUTES.ENTER_COMMITMENT_REF
+  }
+
+  const validation = validators.validateEmail(commitmentRetrievalEmail)
+  if (!validation.valid) {
+    return res.render(TEMPLATES.RETRIEVE_COMMITMENT_EMAIL, {
+      error: validation.error,
+      data: data,
+      backLink: backLink
+    })
+  }
+
+  req.session.data = req.session.data || {}
+  req.session.data.commitmentRetrievalEmail = commitmentRetrievalEmail
+
+  res.redirect(ROUTES.COMMITMENT_EMAIL_RETRIEVAL_CONTENT)
+})
+
+// Commitment email retrieval content
+router.get(ROUTES.COMMITMENT_EMAIL_RETRIEVAL_CONTENT, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.COMMITMENT_EMAIL_RETRIEVAL_CONTENT, {
+    data: data,
+    backLink: ROUTES.RETRIEVE_COMMITMENT_EMAIL
+  })
+})
+
+// Commit summary (check your answers)
+router.get(ROUTES.COMMIT_SUMMARY, (req, res) => {
+  const data = req.session.data || {}
+
+  if (!data.commitmentRef && !data.commitmentRetrievalEmail) {
+    return res.redirect(ROUTES.DO_YOU_HAVE_A_COMMITMENT_REF)
+  }
+
+  res.render(TEMPLATES.COMMIT_SUMMARY, {
+    data: data,
+    backLink: data.commitmentRef
+      ? ROUTES.ENTER_COMMITMENT_REF
+      : ROUTES.COMMITMENT_EMAIL_RETRIEVAL_CONTENT
+  })
+})
+
+router.post(ROUTES.COMMIT_SUMMARY, (req, res) => {
+  res.redirect(ROUTES.PLANNING_REF)
+})
+
+// Planning reference entry
+router.get(ROUTES.PLANNING_REF, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.PLANNING_REF, {
+    data: data,
+    backLink: ROUTES.COMMIT_SUMMARY
+  })
+})
+
+router.post(ROUTES.PLANNING_REF, (req, res) => {
+  const planningRef = req.body['planning-ref']
+
+  if (!planningRef || planningRef.trim() === '') {
+    return res.render(TEMPLATES.PLANNING_REF, {
+      error: 'Enter the planning application reference',
+      data: req.session.data || {},
+      backLink: ROUTES.COMMIT_SUMMARY
+    })
+  }
+
+  req.session.data = req.session.data || {}
+  req.session.data.planningRef = planningRef
+
+  res.redirect(ROUTES.COMMIT_SUMMARY_SUBMIT)
+})
+
+// Commit summary submit (final check before submission)
+router.get(ROUTES.COMMIT_SUMMARY_SUBMIT, (req, res) => {
+  const data = req.session.data || {}
+
+  if (!data.planningRef) {
+    return res.redirect(ROUTES.PLANNING_REF)
+  }
+
+  res.render(TEMPLATES.COMMIT_SUMMARY_SUBMIT, {
+    data: data,
+    backLink: ROUTES.PLANNING_REF
+  })
+})
+
+router.post(ROUTES.COMMIT_SUMMARY_SUBMIT, (req, res) => {
+  const paymentReference = 'PAY-' + Date.now().toString().slice(-6)
+
+  req.session.data = req.session.data || {}
+  req.session.data.paymentReference = paymentReference
+  req.session.data.levyAmount = req.session.data.levyAmount || '2,500'
+
+  res.redirect(ROUTES.PAYMENT_CONFIRMATION)
+})
+
+// Payment confirmation page
+router.get(ROUTES.PAYMENT_CONFIRMATION, (req, res) => {
+  const data = req.session.data || {}
+
+  if (!data.paymentReference) {
+    return res.redirect(ROUTES.COMMIT_SUMMARY_SUBMIT)
+  }
+
+  res.render(TEMPLATES.PAYMENT_CONFIRMATION, {
+    data: data
+  })
+})
+
+// Invoice email content page
+router.get(ROUTES.INVOICE_EMAIL_CONTENT, (req, res) => {
+  const data = req.session.data || {}
+
+  if (!data.paymentReference) {
+    return res.redirect(ROUTES.PAYMENT_CONFIRMATION)
+  }
+
+  res.render(TEMPLATES.INVOICE_EMAIL_CONTENT, {
     data: data
   })
 })

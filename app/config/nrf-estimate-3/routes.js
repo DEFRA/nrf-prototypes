@@ -32,7 +32,18 @@ const ROUTES = {
   // Additional pages
   NO_EDP: `${BASE_PATH}/no-edp`,
   ESTIMATE_EMAIL_CONTENT: `${BASE_PATH}/estimate-email-content`,
-  CATCHMENTS_GEOJSON: `${BASE_PATH}/catchments.geojson`
+  CATCHMENTS_GEOJSON: `${BASE_PATH}/catchments.geojson`,
+
+  // Payment journey routes
+  DO_YOU_HAVE_A_COMMITMENT_REF: `${BASE_PATH}/do-you-have-a-commitment-ref`,
+  ENTER_COMMITMENT_REF: `${BASE_PATH}/enter-commitment-ref`,
+  RETRIEVE_COMMITMENT_EMAIL: `${BASE_PATH}/retrieve-commitment-email`,
+  COMMITMENT_EMAIL_RETRIEVAL_CONTENT: `${BASE_PATH}/commitment-email-retrieval-content`,
+  COMMIT_SUMMARY: `${BASE_PATH}/commit-summary`,
+  PLANNING_REF: `${BASE_PATH}/planning-ref`,
+  COMMIT_SUMMARY_SUBMIT: `${BASE_PATH}/commit-summary-submit`,
+  PAYMENT_CONFIRMATION: `${BASE_PATH}/payment-confirmation`,
+  INVOICE_EMAIL_CONTENT: `${BASE_PATH}/invoice-email-content`
 }
 
 // View template paths (for res.render)
@@ -50,7 +61,19 @@ const TEMPLATES = {
   EMAIL: 'nrf-estimate-3/email',
   CONFIRMATION: 'nrf-estimate-3/confirmation',
   NO_EDP: 'nrf-estimate-3/no-edp',
-  ESTIMATE_EMAIL_CONTENT: 'nrf-estimate-3/estimate-email-content'
+  ESTIMATE_EMAIL_CONTENT: 'nrf-estimate-3/estimate-email-content',
+
+  // Payment journey templates
+  DO_YOU_HAVE_A_COMMITMENT_REF: 'nrf-estimate-3/do-you-have-a-commitment-ref',
+  ENTER_COMMITMENT_REF: 'nrf-estimate-3/enter-commitment-ref',
+  RETRIEVE_COMMITMENT_EMAIL: 'nrf-estimate-3/retrieve-commitment-email',
+  COMMITMENT_EMAIL_RETRIEVAL_CONTENT:
+    'nrf-estimate-3/commitment-email-retrieval-content',
+  COMMIT_SUMMARY: 'nrf-estimate-3/commit-summary',
+  PLANNING_REF: 'nrf-estimate-3/planning-ref',
+  COMMIT_SUMMARY_SUBMIT: 'nrf-estimate-3/commit-summary-submit',
+  PAYMENT_CONFIRMATION: 'nrf-estimate-3/payment-confirmation',
+  INVOICE_EMAIL_CONTENT: 'nrf-estimate-3/invoice-email-content'
 }
 
 module.exports = { ROUTES, TEMPLATES }

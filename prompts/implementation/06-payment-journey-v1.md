@@ -5,8 +5,9 @@
 - **Journey Name**: Pay Nature Restoration Fund Levy
 - **Journey Description**:  
   A user journey for a developer to pay for the Nature Restoration Fund levy required when submitting planning permission to build a development of some sort.
-- **Journey Route Prefix**: nrf-estimate-1
-- **Start Page Title**: Get an estimate for Nature Restoration Fund Levy
+- **Journey Route Prefix**: nrf-estimate-3
+- **Start Page Title**: Pay Nature Restoration Fund Levy
+- **Integration Point**: This journey starts from `/nrf-estimate-3/what-would-you-like-to-do` when the user selects "I am ready to commit to using the Nature Restoration Fund levy"
 
 ## Page Flow and Conditional Logic
 
@@ -15,7 +16,7 @@
 | **Field**              | **Value**                                    |
 | ---------------------- | -------------------------------------------- |
 | Order number:          | 1                                            |
-| Path:                  | /nrf-estimate-1/do-you-have-a-commitment-ref |
+| Path:                  | /nrf-estimate-3/do-you-have-a-commitment-ref |
 | Title:                 | Do you have a commitment reference?          |
 | Conditional page flow: | none                                         |
 
@@ -23,12 +24,10 @@
 
 ```
 {
-    application: {
-        hasCommitmentRef: {
-            type: radios
-            required: true
-            values: "yes" | "no"
-        }
+    hasCommitmentRef: {
+        type: radios
+        required: true
+        values: "yes" | "no"
     }
 }
 ```
@@ -45,9 +44,9 @@
 
 | **Field**      | **Value**                                               |
 | -------------- | ------------------------------------------------------- |
-| Description:   | User has selected ‘Continue’ without choosing an option |
+| Description:   | User has selected 'Continue' without choosing an option |
 | Error summary: | There is a problem                                      |
-| Error message: | Select yes if you have a commitment reference           |
+| Error message: | Select whether you have a commitment reference          |
 
 ---
 
@@ -56,7 +55,7 @@
 | **Field**              | **Value**                            |
 | ---------------------- | ------------------------------------ |
 | Order number:          | 2                                    |
-| Path:                  | /nrf-estimate-1/enter-commitment-ref |
+| Path:                  | /nrf-estimate-3/enter-commitment-ref |
 | Title:                 | Enter your commitment reference      |
 | Conditional page flow: | none                                 |
 
@@ -64,11 +63,9 @@
 
 ```
 {
-    application: {
-        commitmentRef: {
-            type: text,
-            required: true
-        }
+    commitmentRef: {
+        type: text,
+        required: true
     }
 }
 ```
@@ -98,7 +95,7 @@ hint text: Enter this reference to retrieve the details entered when you commite
 | **Field**              | **Value**                                 |     |
 | ---------------------- | ----------------------------------------- | --- |
 | Order number:          | 3                                         |     |
-| Path:                  | /nrf-estimate-1/retrieve-commitment-email |     |
+| Path:                  | /nrf-estimate-3/retrieve-commitment-email |     |
 | Title:                 | Enter your email address                  |     |
 | Conditional page flow: | None                                      |     |
 
@@ -106,11 +103,9 @@ hint text: Enter this reference to retrieve the details entered when you commite
 
 ```
 {
-    applicant: {
-        email: {
-            type: email,
-            required: true
-        }
+    commitmentRetrievalEmail: {
+        type: email,
+        required: true
     }
 }
 ```
@@ -140,7 +135,7 @@ Hint text: We will send you a link so you can retrieve the details from your com
 | **Field**             | **Value**                                          |
 | --------------------- | -------------------------------------------------- |
 | Order number:         | 4                                                  |
-| Path:                 | /nrf-estimate-1/commitment-email-retrieval-content |
+| Path:                 | /nrf-estimate-3/commitment-email-retrieval-content |
 | Title:                | Email sent to get magic link to access commitment  |
 | Data points:          | None                                               |
 | Conditional pageflow: | None                                               |
@@ -149,7 +144,7 @@ Hint text: We will send you a link so you can retrieve the details from your com
 
 ```
 <div class="govuk-inset-text">
-    <p><strong>To:</strong> {{ data.email or 'user@example.com' }}</p>
+    <p><strong>To:</strong> {{ data.commitmentRetrievalEmail or 'user@example.com' }}</p>
     <p><strong>Subject:</strong> Nature Restoration Fund - retrieve your commitment details for the Nature Restoration Fund levy</p>
 </div>
 
@@ -157,7 +152,7 @@ Hint text: We will send you a link so you can retrieve the details from your com
 
 You can use the details you previously gave us for your commitment to complete the information needed for your levy payment.
 
-[Retrieve the commitment details](/nrf-estimate-1/commit-summary)
+[Retrieve the commitment details](/nrf-estimate-3/commit-summary)
 
 ## Get help with Nature Restoration Fund
 
@@ -177,7 +172,7 @@ Find out about call charges at https://www.gov.uk/call-charges
 | **Field**              | **Value**                      |
 | ---------------------- | ------------------------------ |
 | Order number:          | 5                              |
-| Path:                  | /nrf-estimate-1/commit-summary |
+| Path:                  | /nrf-estimate-3/commit-summary |
 | Title:                 | Check your answers             |
 | Conditional page flow: | None                           |
 
@@ -199,7 +194,7 @@ None
 | [IF they pick Hotel THEN show] | Number of hotel rooms |
 | [IF they pick "House of multiple occupation (HMO)" THEN show] | Number of multiple occupation rooms |
 | [IF they pick "Residential institution" THEN show] | Number of residential institution rooms |
-| Email address | [show email address] |
+| Email address | [show commitmentRetrievalEmail if provided, otherwise show email] |
 | Your details | [show full name, business name if provided, address, Company Registration Number and VAT registration number] |
 | Local Planning Authority| [Stockton-on-Tees Borough Council] |
 
@@ -217,23 +212,19 @@ None
 | **Field**              | **Value**                                 |     |
 | ---------------------- | ----------------------------------------- | --- |
 | Order number:          | 6                                         |     |
-| Path:                  | /nrf-estimate-1/planning-ref              |     |
+| Path:                  | /nrf-estimate-3/planning-ref              |     |
 | Title:                 | Enter your planning application reference |     |
 | Conditional page flow: | None                                      |     |
 
 #### Data points
 
 ```
-
 {
-applicant: {
-planningRef: {
-type: text,
-required: true
+    planningRef: {
+        type: text,
+        required: true
+    }
 }
-}
-}
-
 ```
 
 #### Content
@@ -261,7 +252,7 @@ Hint text: Enter the reference of the planning application that you want to pay 
 | **Field**              | **Value**                             |
 | ---------------------- | ------------------------------------- |
 | Order number:          | 7                                     |
-| Path:                  | /nrf-estimate-1/commit-summary-submit |
+| Path:                  | /nrf-estimate-3/commit-summary-submit |
 | Title:                 | Check your answers                    |
 | Conditional page flow: | None                                  |
 
@@ -283,7 +274,7 @@ None
 | [IF they pick Hotel THEN show] | Number of hotel rooms |
 | [IF they pick "House of multiple occupation (HMO)" THEN show] | Number of multiple occupation rooms |
 | [IF they pick "Residential institution" THEN show] | Number of residential institution rooms |
-| Email address | [show email address] |
+| Email address | [show commitmentRetrievalEmail if provided, otherwise show email] |
 | Your details | [show full name, business name if provided, address, Company Registration Number and VAT registration number] |
 | Local Planning Authority| [Stockton-on-Tees Borough Council] |
 | Planning reference | [show planning reference |
@@ -306,13 +297,13 @@ None
 
 ### Details submitted confirmation page
 
-| **Field**             | **Value**                        |
-| --------------------- | -------------------------------- |
-| Order number:         | 8                                |
-| Path:                 | /nrf-estimate-1/confirmation     |
-| Title:                | Your details have been submitted |
-| Data points:          | None                             |
-| Conditional pageflow: | None                             |
+| **Field**             | **Value**                            |
+| --------------------- | ------------------------------------ |
+| Order number:         | 8                                    |
+| Path:                 | /nrf-estimate-3/payment-confirmation |
+| Title:                | Your details have been submitted     |
+| Data points:          | None                                 |
+| Conditional pageflow: | None                                 |
 
 #### Content
 
@@ -357,7 +348,7 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 
 Find out about call charges at https://www.gov.uk/call-charges
 
-Link: View the email content (links to /nrf-estimate-2/invoice-email-content)
+Link: View the email content (links to /nrf-estimate-3/invoice-email-content)
 ```
 
 **Note:** The confirmation page uses conditional rendering based on `data.paymentReference` to display different content for invoice journey vs estimate journey. The invoice journey content is shown when `data.paymentReference` exists.
@@ -373,7 +364,7 @@ None
 | **Field**             | **Value**                                           |
 | --------------------- | --------------------------------------------------- |
 | Order number:         | 9                                                   |
-| Path:                 | /nrf-estimate-1/invoice-email-content               |
+| Path:                 | /nrf-estimate-3/invoice-email-content               |
 | Title:                | Email sent from the Nature Restoration Fund service |
 | Data points:          | None                                                |
 | Conditional pageflow: | None                                                |
@@ -439,10 +430,10 @@ Find out about call charges at https://www.gov.uk/call-charges
 
 Create the following files in the GOV.UK Prototype Kit structure:
 
-1. **Route File**: `app/routes/nrf-estimate-1.js`
-2. **View Directory**: `app/views/nrf-estimate-1/`
-3. **View Files**: One HTML file per page in the journey
-4. **Data File**: `app/data/nrf-estimate-1-data.js` (if needed)
+1. **Route File**: Routes should be added to `app/routes/nrf-estimate-3.js` (existing file)
+2. **View Directory**: `app/views/nrf-estimate-3/` (existing directory)
+3. **View Files**: One HTML file per page in the journey, added to existing directory
+4. **Data File**: Use existing session data structure, no separate data file needed
 
 ### Route Implementation
 
@@ -492,8 +483,9 @@ Create the following files in the GOV.UK Prototype Kit structure:
 2. **Create the view directory** and all HTML template files
 3. **Implement form validation** with proper error handling
 4. **Add conditional routing** based on user selections
-5. **Update the main routes.js** to include the new journey routes
-6. **Test the complete journey** to ensure all paths work correctly
+5. **Update the route handler** in `app/routes/nrf-estimate-3.js` for `/what-would-you-like-to-do` to redirect to `/do-you-have-a-commitment-ref` when `journeyType === 'commit'`
+6. **Add back link** on the first page (`/do-you-have-a-commitment-ref`) that links back to `/what-would-you-like-to-do`
+7. **Test the complete journey** to ensure all paths work correctly
 
 ## Expected Output
 
@@ -511,3 +503,6 @@ Create the following files in the GOV.UK Prototype Kit structure:
 - Implement basic validation without complex security measures
 - Focus on demonstrating the user flow and interface design
 - Ensure the journey works end-to-end for user testing
+- **Important**: The confirmation page path is `/payment-confirmation` (not `/confirmation`) to avoid conflict with the existing estimate journey confirmation page
+- **Integration**: This journey is triggered from `/what-would-you-like-to-do` when user selects "I am ready to commit to using the Nature Restoration Fund levy"
+- **Data Property Note**: Use `commitmentRetrievalEmail` instead of `email` for the commitment retrieval email to avoid conflicts with the estimate journey's email field
