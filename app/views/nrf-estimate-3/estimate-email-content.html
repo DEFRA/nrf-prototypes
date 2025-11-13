@@ -25,7 +25,7 @@ Email sent from the Nature Restoration Fund service - Get an estimate for Nature
             <li>is planned in an area {{ data.redlineBoundaryPolygon.intersectingCatchment or 'Thames Valley EDP' }}</li>
             {% if data.buildingTypes %}
             <li>has
-                {% if data.buildingTypes.includes('Dwellinghouse') and data.residentialBuildingCount %}
+                {% if data.buildingTypes.includes('Dwelling') and data.residentialBuildingCount %}
                 {{ data.residentialBuildingCount }} dwelling buildings (if applicable)
                 {% if data.buildingTypes.includes('Hotel') and data.roomCounts.hotelCount %}, {% endif %}
                 {% endif %}
@@ -50,7 +50,7 @@ Email sent from the Nature Restoration Fund service - Get an estimate for Nature
 
         <p class="govuk-body">The estimated total amount you may need to pay if you develop in this area is: <strong>£{{ data.levyAmount or '2,500' }}</strong></p>
 
-        <p class="govuk-body">You do not need to pay anything at this point, this service is designed to help you plan how to mitigate your environmental obligations. <a href="#" class="govuk-link">[Get another estimate](ADD PATH HERE)</a></p>
+        <p class="govuk-body">You do not need to pay anything at this point, this service is designed to help you plan how to mitigate your environmental obligations. <a href="#" class="govuk-link">Get another estimate</a></p>
 
         <p class="govuk-body">If you do decide to mitigate using Nature Restoration Fund levy, you can commit and include the commitment when applying for planning permission.</p>
 
