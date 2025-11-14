@@ -18,48 +18,38 @@ href: "/nrf-estimate-3/do-you-have-an-estimate-ref"
         <form action="/nrf-estimate-3/enter-estimate-ref" method="post" novalidate>
 
             {% if error %}
-            <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert"
-                data-module="govuk-error-summary">
-                <h2 class="govuk-error-summary__title" id="error-summary-title">
-                    There is a problem
-                </h2>
-                <div class="govuk-error-summary__body">
-                    <ul class="govuk-list govuk-error-summary__list">
-                        <li>
-                            <a href="#estimate-reference">{{ error }}</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+            {{ govukErrorSummary({
+                titleText: "There is a problem",
+                errorList: [
+                    {
+                        text: error,
+                        href: "#estimate-reference"
+                    }
+                ]
+            }) }}
             {% endif %}
 
-            <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
-                <h1 class="govuk-label-wrapper">
-                    <label class="govuk-label govuk-label--l" for="estimate-reference">
-                        Enter your estimate reference
-                    </label>
-                </h1>
+            {{ govukInput({
+                label: {
+                    text: "Enter your estimate reference",
+                    classes: "govuk-label--l",
+                    isPageHeading: true
+                },
+                hint: {
+                    text: "Enter this reference to retrieve the details entered during the estimate."
+                },
+                id: "estimate-reference",
+                name: "estimate-reference",
+                type: "text",
+                value: data.estimateReference,
+                errorMessage: { text: error } if error
+            }) }}
 
-                <div id="estimate-reference-hint" class="govuk-hint">
-                    Enter this reference to retrieve the details entered during the estimate.
-                </div>
-
-                {% if error %}
-                <p id="estimate-reference-error" class="govuk-error-message">
-                    <span class="govuk-visually-hidden">Error:</span> {{ error }}
-                </p>
-                {% endif %}
-
-                <input class="govuk-input {% if error %}govuk-input--error{% endif %}" id="estimate-reference" name="estimate-reference"
-                    type="text" value="" aria-describedby="estimate-reference-hint">
-            </div>
-
-            <button class="govuk-button" data-module="govuk-button">
-                Continue
-            </button>
+            {{ govukButton({
+                text: "Continue"
+            }) }}
 
         </form>
     </div>
 </div>
 {% endblock %}
-

@@ -15,51 +15,41 @@ href: backLink
 <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
 
-        <form action="/nrf-estimate-3/enter-commitment-ref" method="post" novalidate>
+        <form action="/nrf-estimate-3/enter-commitment-ref" method="post" novalidate">
 
             {% if error %}
-            <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert"
-                data-module="govuk-error-summary">
-                <h2 class="govuk-error-summary__title" id="error-summary-title">
-                    There is a problem
-                </h2>
-                <div class="govuk-error-summary__body">
-                    <ul class="govuk-list govuk-error-summary__list">
-                        <li>
-                            <a href="#commitment-ref">{{ error }}</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+            {{ govukErrorSummary({
+                titleText: "There is a problem",
+                errorList: [
+                    {
+                        text: error,
+                        href: "#commitment-ref"
+                    }
+                ]
+            }) }}
             {% endif %}
 
-            <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
-                <h1 class="govuk-label-wrapper">
-                    <label class="govuk-label govuk-label--l" for="commitment-ref">
-                        Enter your commitment reference
-                    </label>
-                </h1>
+            {{ govukInput({
+                label: {
+                    text: "Enter your commitment reference",
+                    classes: "govuk-label--l",
+                    isPageHeading: true
+                },
+                hint: {
+                    text: "Enter this reference to retrieve the details entered when you committed to using Nature Restoration Fund."
+                },
+                id: "commitment-ref",
+                name: "commitment-ref",
+                type: "text",
+                value: data.commitmentRef,
+                errorMessage: { text: error } if error
+            }) }}
 
-                <div id="commitment-ref-hint" class="govuk-hint">
-                    Enter this reference to retrieve the details entered when you committed to using Nature Restoration Fund.
-                </div>
-
-                {% if error %}
-                <p id="commitment-ref-error" class="govuk-error-message">
-                    <span class="govuk-visually-hidden">Error:</span> {{ error }}
-                </p>
-                {% endif %}
-
-                <input class="govuk-input {% if error %}govuk-input--error{% endif %}" id="commitment-ref" name="commitment-ref"
-                    type="text" value="{% if data.commitmentRef %}{{ data.commitmentRef }}{% endif %}" aria-describedby="commitment-ref-hint">
-            </div>
-
-            <button class="govuk-button" data-module="govuk-button">
-                Continue
-            </button>
+            {{ govukButton({
+                text: "Continue"
+            }) }}
 
         </form>
     </div>
 </div>
 {% endblock %}
-

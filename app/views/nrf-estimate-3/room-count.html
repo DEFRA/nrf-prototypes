@@ -27,42 +27,36 @@ href: "/nrf-estimate-3/building-type"
             {% endif %}
 
             {% if error %}
-            <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert"
-                data-module="govuk-error-summary">
-                <h2 class="govuk-error-summary__title" id="error-summary-title">
-                    There is a problem
-                </h2>
-                <div class="govuk-error-summary__body">
-                    <ul class="govuk-list govuk-error-summary__list">
-                        <li>
-                            <a href="#room-count">{{ error }}</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+            {{ govukErrorSummary({
+                titleText: "There is a problem",
+                errorList: [
+                    {
+                        text: error,
+                        href: "#room-count"
+                    }
+                ]
+            }) }}
             {% endif %}
 
-            <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
-                <h1 class="govuk-label-wrapper">
-                    <label class="govuk-label govuk-label--l" for="room-count">
-                        Enter the number of rooms in your {{ buildingType | lower if buildingType != 'House of multiple occupation (HMO)' else buildingType }} building(s) planned for the development
-                    </label>
-                </h1>
+            {{ govukInput({
+                label: {
+                    text: "Enter the number of rooms in your " + (buildingType | lower if buildingType != 'House of multiple occupation (HMO)' else buildingType) + " building(s) planned for the development",
+                    classes: "govuk-label--l",
+                    isPageHeading: true
+                },
+                id: "room-count",
+                name: "room-count",
+                type: "number",
+                classes: "govuk-input--width-5",
+                inputmode: "numeric",
+                pattern: "[0-9]*",
+                value: data.roomCounts.hotelCount if buildingType === 'Hotel' else (data.roomCounts.hmoCount if buildingType === 'House of multiple occupation (HMO)' else (data.roomCounts.residentialInstitutionCount if buildingType === 'Residential institution')),
+                errorMessage: { text: error } if error
+            }) }}
 
-                {% if error %}
-                <p id="room-count-error" class="govuk-error-message">
-                    <span class="govuk-visually-hidden">Error:</span> {{ error }}
-                </p>
-                {% endif %}
-
-                <input class="govuk-input govuk-input--width-5 {% if error %}govuk-input--error{% endif %}"
-                    id="room-count" name="room-count" type="number" pattern="[0-9]*" inputmode="numeric"
-                    value="{% if data.roomCounts %}{% if buildingType === 'Hotel' and data.roomCounts.hotelCount %}{{ data.roomCounts.hotelCount }}{% elif buildingType === 'House of multiple occupation (HMO)' and data.roomCounts.hmoCount %}{{ data.roomCounts.hmoCount }}{% elif buildingType === 'Residential institution' and data.roomCounts.residentialInstitutionCount %}{{ data.roomCounts.residentialInstitutionCount }}{% endif %}{% endif %}">
-            </div>
-
-            <button class="govuk-button" data-module="govuk-button" type="submit">
-                Continue
-            </button>
+            {{ govukButton({
+                text: "Continue"
+            }) }}
 
         </form>
     </div>

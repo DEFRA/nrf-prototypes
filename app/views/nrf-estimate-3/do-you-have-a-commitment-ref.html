@@ -18,60 +18,46 @@ href: backLink
         <form action="/nrf-estimate-3/do-you-have-a-commitment-ref" method="post" novalidate>
 
             {% if error %}
-            <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert"
-                data-module="govuk-error-summary">
-                <h2 class="govuk-error-summary__title" id="error-summary-title">
-                    There is a problem
-                </h2>
-                <div class="govuk-error-summary__body">
-                    <ul class="govuk-list govuk-error-summary__list">
-                        <li>
-                            <a href="#has-commitment-ref">{{ error }}</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+            {{ govukErrorSummary({
+                titleText: "There is a problem",
+                errorList: [
+                    {
+                        text: error,
+                        href: "#has-commitment-ref"
+                    }
+                ]
+            }) }}
             {% endif %}
 
-            <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
-                <fieldset class="govuk-fieldset">
-                    <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
-                        <h1 class="govuk-fieldset__heading">
-                            Do you have a commitment reference?
-                        </h1>
-                    </legend>
+            {{ govukRadios({
+                name: "has-commitment-ref",
+                fieldset: {
+                    legend: {
+                        text: "Do you have a commitment reference?",
+                        isPageHeading: true,
+                        classes: "govuk-fieldset__legend--l"
+                    }
+                },
+                errorMessage: { text: error } if error,
+                items: [
+                    {
+                        value: "yes",
+                        text: "Yes",
+                        checked: data.hasCommitmentRef == 'yes'
+                    },
+                    {
+                        value: "no",
+                        text: "No",
+                        checked: data.hasCommitmentRef == 'no'
+                    }
+                ]
+            }) }}
 
-                    {% if error %}
-                    <p id="has-commitment-ref-error" class="govuk-error-message">
-                        <span class="govuk-visually-hidden">Error:</span> {{ error }}
-                    </p>
-                    {% endif %}
-
-                    <div class="govuk-radios" data-module="govuk-radios">
-                        <div class="govuk-radios__item">
-                            <input class="govuk-radios__input" id="has-commitment-ref-yes" name="has-commitment-ref"
-                                type="radio" value="yes" {% if data.hasCommitmentRef==='yes' %}checked{% endif %}>
-                            <label class="govuk-label govuk-radios__label" for="has-commitment-ref-yes">
-                                Yes
-                            </label>
-                        </div>
-                        <div class="govuk-radios__item">
-                            <input class="govuk-radios__input" id="has-commitment-ref-no" name="has-commitment-ref"
-                                type="radio" value="no" {% if data.hasCommitmentRef==='no' %}checked{% endif %}>
-                            <label class="govuk-label govuk-radios__label" for="has-commitment-ref-no">
-                                No
-                            </label>
-                        </div>
-                    </div>
-                </fieldset>
-            </div>
-
-            <button class="govuk-button" data-module="govuk-button">
-                Continue
-            </button>
+            {{ govukButton({
+                text: "Continue"
+            }) }}
 
         </form>
     </div>
 </div>
 {% endblock %}
-

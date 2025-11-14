@@ -18,48 +18,38 @@ href: backLink
         <form action="/nrf-estimate-3/planning-ref" method="post" novalidate>
 
             {% if error %}
-            <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert"
-                data-module="govuk-error-summary">
-                <h2 class="govuk-error-summary__title" id="error-summary-title">
-                    There is a problem
-                </h2>
-                <div class="govuk-error-summary__body">
-                    <ul class="govuk-list govuk-error-summary__list">
-                        <li>
-                            <a href="#planning-ref">{{ error }}</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+            {{ govukErrorSummary({
+                titleText: "There is a problem",
+                errorList: [
+                    {
+                        text: error,
+                        href: "#planning-ref"
+                    }
+                ]
+            }) }}
             {% endif %}
 
-            <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
-                <h1 class="govuk-label-wrapper">
-                    <label class="govuk-label govuk-label--l" for="planning-ref">
-                        Enter your planning application reference
-                    </label>
-                </h1>
+            {{ govukInput({
+                label: {
+                    text: "Enter your planning application reference",
+                    classes: "govuk-label--l",
+                    isPageHeading: true
+                },
+                hint: {
+                    text: "Enter the reference of the planning application that you want to pay the Nature Restoration Fund levy for"
+                },
+                id: "planning-ref",
+                name: "planning-ref",
+                type: "text",
+                value: data.planningRef,
+                errorMessage: { text: error } if error
+            }) }}
 
-                <div id="planning-ref-hint" class="govuk-hint">
-                    Enter the reference of the planning application that you want to pay the Nature Restoration Fund levy for
-                </div>
-
-                {% if error %}
-                <p id="planning-ref-error" class="govuk-error-message">
-                    <span class="govuk-visually-hidden">Error:</span> {{ error }}
-                </p>
-                {% endif %}
-
-                <input class="govuk-input {% if error %}govuk-input--error{% endif %}" id="planning-ref" name="planning-ref"
-                    type="text" value="{% if data.planningRef %}{{ data.planningRef }}{% endif %}" aria-describedby="planning-ref-hint">
-            </div>
-
-            <button class="govuk-button" data-module="govuk-button">
-                Continue
-            </button>
+            {{ govukButton({
+                text: "Continue"
+            }) }}
 
         </form>
     </div>
 </div>
 {% endblock %}
-

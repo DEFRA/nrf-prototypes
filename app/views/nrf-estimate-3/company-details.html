@@ -15,44 +15,44 @@ href: "/nrf-estimate-3/retrieved-estimate-summary"
 <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
         {% if errors and errors.length %}
-        <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" data-module="govuk-error-summary">
-            <h2 class="govuk-error-summary__title" id="error-summary-title">There is a problem</h2>
-            <div class="govuk-error-summary__body">
-                <ul class="govuk-list govuk-error-summary__list">
-                    {% for error in errors %}
-                    <li><a href="#{{ error.field }}">{{ error.message }}</a></li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
+        {% set errorList = [] %}
+        {% for error in errors %}
+            {% set errorList = (errorList.push({
+                text: error.message,
+                href: "#" + error.field
+            }), errorList) %}
+        {% endfor %}
+        {{ govukErrorSummary({
+            titleText: "There is a problem",
+            errorList: errorList
+        }) }}
         {% endif %}
 
         <form method="post" novalidate>
             <h1 class="govuk-heading-l">Enter your details</h1>
-            
+
             <div class="govuk-hint">
                 Enter the details for the individual or company who will be paying the Nature Restoration Fund levy.
             </div>
 
-            {% set fullNameError = errorsByField.fullName %}
-            <div class="govuk-form-group{% if fullNameError %} govuk-form-group--error{% endif %}">
-                <label class="govuk-label" for="full-name">
-                    Full Name
-                </label>
-                {% if fullNameError %}
-                <p id="full-name-error" class="govuk-error-message">
-                    <span class="govuk-visually-hidden">Error:</span> {{ fullNameError.message }}
-                </p>
-                {% endif %}
-                <input class="govuk-input{% if fullNameError %} govuk-input--error{% endif %}" id="full-name" name="fullName" type="text" value="{{ data.fullName or '' }}">
-            </div>
+            {{ govukInput({
+                label: {
+                    text: "Full Name"
+                },
+                id: "full-name",
+                name: "fullName",
+                value: data.fullName,
+                errorMessage: errorsByField.fullName
+            }) }}
 
-            <div class="govuk-form-group">
-                <label class="govuk-label" for="business-name">
-                    Business name (optional)
-                </label>
-                <input class="govuk-input" id="business-name" name="businessName" type="text" value="{{ data.businessName or '' }}">
-            </div>
+            {{ govukInput({
+                label: {
+                    text: "Business name (optional)"
+                },
+                id: "business-name",
+                name: "businessName",
+                value: data.businessName
+            }) }}
 
             <fieldset class="govuk-fieldset">
                 <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
@@ -61,84 +61,91 @@ href: "/nrf-estimate-3/retrieved-estimate-summary"
                     </h2>
                 </legend>
 
-                {% set addressLine1Error = errorsByField.addressLine1 %}
-                <div class="govuk-form-group{% if addressLine1Error %} govuk-form-group--error{% endif %}">
-                    <label class="govuk-label" for="address-line-1">
-                        Address line 1
-                    </label>
-                    {% if addressLine1Error %}
-                    <p id="address-line-1-error" class="govuk-error-message">
-                        <span class="govuk-visually-hidden">Error:</span> {{ addressLine1Error.message }}
-                    </p>
-                    {% endif %}
-                    <input class="govuk-input{% if addressLine1Error %} govuk-input--error{% endif %}" id="address-line-1" name="addressLine1" type="text" value="{{ data.addressLine1 or '' }}">
-                </div>
+                {{ govukInput({
+                    label: {
+                        text: "Address line 1"
+                    },
+                    id: "address-line-1",
+                    name: "addressLine1",
+                    value: data.addressLine1,
+                    errorMessage: errorsByField.addressLine1,
+                    autocomplete: "address-line1"
+                }) }}
 
-                <div class="govuk-form-group">
-                    <label class="govuk-label" for="address-line-2">
-                        Address line 2 (optional)
-                    </label>
-                    <input class="govuk-input" id="address-line-2" name="addressLine2" type="text" value="{{ data.addressLine2 or '' }}">
-                </div>
+                {{ govukInput({
+                    label: {
+                        text: "Address line 2 (optional)"
+                    },
+                    id: "address-line-2",
+                    name: "addressLine2",
+                    value: data.addressLine2,
+                    autocomplete: "address-line2"
+                }) }}
 
-                {% set townOrCityError = errorsByField.townOrCity %}
-                <div class="govuk-form-group{% if townOrCityError %} govuk-form-group--error{% endif %}">
-                    <label class="govuk-label" for="town-or-city">
-                        Town or city
-                    </label>
-                    {% if townOrCityError %}
-                    <p id="town-or-city-error" class="govuk-error-message">
-                        <span class="govuk-visually-hidden">Error:</span> {{ townOrCityError.message }}
-                    </p>
-                    {% endif %}
-                    <input class="govuk-input{% if townOrCityError %} govuk-input--error{% endif %}" id="town-or-city" name="townOrCity" type="text" value="{{ data.townOrCity or '' }}">
-                </div>
+                {{ govukInput({
+                    label: {
+                        text: "Town or city"
+                    },
+                    id: "town-or-city",
+                    name: "townOrCity",
+                    value: data.townOrCity,
+                    errorMessage: errorsByField.townOrCity,
+                    autocomplete: "address-level2"
+                }) }}
 
-                <div class="govuk-form-group">
-                    <label class="govuk-label" for="county">
-                        County (optional)
-                    </label>
-                    <input class="govuk-input" id="county" name="county" type="text" value="{{ data.county or '' }}">
-                </div>
+                {{ govukInput({
+                    label: {
+                        text: "County (optional)"
+                    },
+                    id: "county",
+                    name: "county",
+                    value: data.county
+                }) }}
 
-                {% set postcodeError = errorsByField.postcode %}
-                <div class="govuk-form-group{% if postcodeError %} govuk-form-group--error{% endif %}">
-                    <label class="govuk-label" for="postcode">
-                        Postcode
-                    </label>
-                    {% if postcodeError %}
-                    <p id="postcode-error" class="govuk-error-message">
-                        <span class="govuk-visually-hidden">Error:</span> {{ postcodeError.message }}
-                    </p>
-                    {% endif %}
-                    <input class="govuk-input govuk-input--width-10{% if postcodeError %} govuk-input--error{% endif %}" id="postcode" name="postcode" type="text" value="{{ data.postcode or '' }}">
-                </div>
+                {{ govukInput({
+                    label: {
+                        text: "Postcode"
+                    },
+                    id: "postcode",
+                    name: "postcode",
+                    value: data.postcode,
+                    classes: "govuk-input--width-10",
+                    errorMessage: errorsByField.postcode,
+                    autocomplete: "postal-code"
+                }) }}
             </fieldset>
 
-            <div class="govuk-form-group">
-                <label class="govuk-label" for="company-registration-number">
-                    Company Registration Number (CRN) (optional)
-                </label>
-                <input class="govuk-input" id="company-registration-number" name="companyRegistrationNumber" type="text" value="{{ data.companyRegistrationNumber or '' }}">
-            </div>
+            {{ govukInput({
+                label: {
+                    text: "Company Registration Number (CRN) (optional)"
+                },
+                id: "company-registration-number",
+                name: "companyRegistrationNumber",
+                value: data.companyRegistrationNumber
+            }) }}
 
-            <div class="govuk-form-group">
-                <label class="govuk-label" for="vat-registration-number">
-                    VAT registration number (optional)
-                </label>
-                <input class="govuk-input" id="vat-registration-number" name="vatRegistrationNumber" type="text" value="{{ data.vatRegistrationNumber or '' }}">
-            </div>
+            {{ govukInput({
+                label: {
+                    text: "VAT registration number (optional)"
+                },
+                id: "vat-registration-number",
+                name: "vatRegistrationNumber",
+                value: data.vatRegistrationNumber
+            }) }}
 
-            <div class="govuk-form-group">
-                <label class="govuk-label" for="purchase-order-number">
-                    Purchase order number (optional)
-                </label>
-                <input class="govuk-input" id="purchase-order-number" name="purchaseOrderNumber" type="text" value="{{ data.purchaseOrderNumber or '' }}">
-            </div>
+            {{ govukInput({
+                label: {
+                    text: "Purchase order number (optional)"
+                },
+                id: "purchase-order-number",
+                name: "purchaseOrderNumber",
+                value: data.purchaseOrderNumber
+            }) }}
 
-            <button class="govuk-button" data-module="govuk-button">Continue</button>
+            {{ govukButton({
+                text: "Continue"
+            }) }}
         </form>
     </div>
 </div>
 {% endblock %}
-
