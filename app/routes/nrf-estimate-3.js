@@ -922,14 +922,6 @@ router.post(ROUTES.ENTER_COMMITMENT_REF, (req, res) => {
     })
   }
 
-  if (isNaN(commitmentRef)) {
-    return res.render(TEMPLATES.ENTER_COMMITMENT_REF, {
-      error: 'Enter a valid commitment reference number',
-      data: req.session.data || {},
-      backLink: ROUTES.DO_YOU_HAVE_A_COMMITMENT_REF
-    })
-  }
-
   req.session.data = req.session.data || {}
   req.session.data.commitmentRef = commitmentRef
 
@@ -1131,14 +1123,6 @@ router.post(ROUTES.ENTER_ESTIMATE_REF, (req, res) => {
   if (!estimateReference || estimateReference.trim() === '') {
     return res.render(TEMPLATES.ENTER_ESTIMATE_REF, {
       error: 'Enter your estimate reference to continue',
-      data: req.session.data || {},
-      backLink: ROUTES.DO_YOU_HAVE_AN_ESTIMATE_REF
-    })
-  }
-
-  if (isNaN(estimateReference)) {
-    return res.render(TEMPLATES.ENTER_ESTIMATE_REF, {
-      error: 'Enter a valid estimate reference number',
       data: req.session.data || {},
       backLink: ROUTES.DO_YOU_HAVE_AN_ESTIMATE_REF
     })
