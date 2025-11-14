@@ -1,0 +1,55 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Enter your estimate reference - Get an estimate for Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: "/nrf-estimate-3/do-you-have-an-estimate-ref"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <form action="/nrf-estimate-3/enter-estimate-ref" method="post" novalidate>
+
+            {% if error %}
+            {{ govukErrorSummary({
+                titleText: "There is a problem",
+                errorList: [
+                    {
+                        text: error,
+                        href: "#estimate-reference"
+                    }
+                ]
+            }) }}
+            {% endif %}
+
+            {{ govukInput({
+                label: {
+                    text: "Enter your estimate reference",
+                    classes: "govuk-label--l",
+                    isPageHeading: true
+                },
+                hint: {
+                    text: "Enter this reference to retrieve the details entered during the estimate."
+                },
+                id: "estimate-reference",
+                name: "estimate-reference",
+                type: "text",
+                value: data.estimateReference,
+                errorMessage: { text: error } if error
+            }) }}
+
+            {{ govukButton({
+                text: "Continue"
+            }) }}
+
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,184 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Check your answers - Get an estimate for Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: "/nrf-estimate-3/estimate-email-retrieval-content"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-l">Check your answers</h1>
+
+        <dl class="govuk-summary-list govuk-!-margin-bottom-9">
+            {% if data.estimateReference %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Estimate reference
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.estimateReference }}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="javascript:void(0)">
+                        Change<span class="govuk-visually-hidden"> estimate reference</span>
+                    </a>
+                </dd>
+            </div>
+            {% endif %}
+
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Red line boundary added
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {% if data.redlineBoundaryPolygon %}
+                    Yes
+                    {% else %}
+                    No
+                    {% endif %}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="javascript:void(0)">
+                        Change<span class="govuk-visually-hidden"> red line boundary added</span>
+                    </a>
+                </dd>
+            </div>
+
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Red line boundary file uploaded
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {% if data.hasRedlineBoundaryFile %}
+                    Yes
+                    {% else %}
+                    No
+                    {% endif %}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="javascript:void(0)">
+                        Change<span class="govuk-visually-hidden"> red line boundary file uploaded</span>
+                    </a>
+                </dd>
+            </div>
+
+            {% if data.buildingTypes and data.buildingTypes.length > 0 %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Building types
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    <ul class="govuk-list">
+                        {% for type in data.buildingTypes %}
+                        {% if type and type !== '_unchecked' %}
+                        <li>{{ buildingTypeLabels[type] or type }}</li>
+                        {% endif %}
+                        {% endfor %}
+                    </ul>
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="javascript:void(0)">
+                        Change<span class="govuk-visually-hidden"> building types</span>
+                    </a>
+                </dd>
+            </div>
+            {% endif %}
+
+            {% if data.residentialBuildingCount %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Number of dwelling buildings
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.residentialBuildingCount }}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="javascript:void(0)">
+                        Change<span class="govuk-visually-hidden"> number of dwelling buildings</span>
+                    </a>
+                </dd>
+            </div>
+            {% endif %}
+
+            {% if data.roomCounts %}
+            {% if data.roomCounts.hotelCount %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Number of hotel rooms
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.roomCounts.hotelCount }}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="javascript:void(0)">
+                        Change<span class="govuk-visually-hidden"> number of hotel rooms</span>
+                    </a>
+                </dd>
+            </div>
+            {% endif %}
+
+            {% if data.roomCounts.hmoCount %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Number of multiple occupation rooms
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.roomCounts.hmoCount }}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="javascript:void(0)">
+                        Change<span class="govuk-visually-hidden"> number of multiple occupation rooms</span>
+                    </a>
+                </dd>
+            </div>
+            {% endif %}
+
+            {% if data.roomCounts.residentialInstitutionCount %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Number of residential institution rooms
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.roomCounts.residentialInstitutionCount }}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="javascript:void(0)">
+                        Change<span class="govuk-visually-hidden"> number of residential institution rooms</span>
+                    </a>
+                </dd>
+            </div>
+            {% endif %}
+            {% endif %}
+
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Email address
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.email }}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="javascript:void(0)">
+                        Change<span class="govuk-visually-hidden"> email address</span>
+                    </a>
+                </dd>
+            </div>
+        </dl>
+
+        <form action="/nrf-estimate-3/retrieved-estimate-summary" method="post" novalidate>
+            <button class="govuk-button" data-module="govuk-button">
+                Continue
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

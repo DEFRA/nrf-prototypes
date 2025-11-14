@@ -127,12 +127,14 @@
   function initMap() {
     setTimeout(function () {
       if (!window.MapInitialisation.checkLeafletLoaded()) {
+        window.MapInitialisation.showMapError()
         return
       }
 
       const mapContainer = document.getElementById('map')
       if (!mapContainer) {
         console.error('Map container not found')
+        window.MapInitialisation.showMapError()
         return
       }
 

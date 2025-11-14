@@ -1,0 +1,64 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Upload a red line boundary file - Get an estimate for Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: "/nrf-estimate-3/redline-map"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <form action="/nrf-estimate-3/upload-redline" method="post" enctype="multipart/form-data" novalidate>
+
+            {% if error %}
+            <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert"
+                data-module="govuk-error-summary">
+                <h2 class="govuk-error-summary__title" id="error-summary-title">
+                    There is a problem
+                </h2>
+                <div class="govuk-error-summary__body">
+                    <ul class="govuk-list govuk-error-summary__list">
+                        <li>
+                            <a href="#redline-file">{{ error }}</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
+                <h1 class="govuk-label-wrapper">
+                    <label class="govuk-label govuk-label--l" for="redline-file">
+                        Upload a red line boundary file
+                    </label>
+                </h1>
+
+                {% if error %}
+                <p id="redline-file-error" class="govuk-error-message">
+                    <span class="govuk-visually-hidden">Error:</span> {{ error }}
+                </p>
+                {% endif %}
+
+                <div id="redline-file-hint" class="govuk-hint">
+                    Upload a shapefile (.shp) or GeoJSON file (.geojson). The file must be smaller than 2MB.
+                </div>
+
+                <input class="govuk-file-upload {% if error %}govuk-file-upload--error{% endif %}" id="redline-file"
+                    name="redline-file" type="file" accept=".shp,.geojson" aria-describedby="redline-file-hint">
+            </div>
+
+            <button class="govuk-button" data-module="govuk-button">
+                Continue
+            </button>
+
+        </form>
+    </div>
+</div>
+{% endblock %}

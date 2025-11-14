@@ -51,7 +51,7 @@ class Modal {
     modal.innerHTML = `
       <div class="modal__content">
         <div class="modal__header">
-          <h2 class="modal__title">${this.options.title}</h2>
+          <h2 class="govuk-heading-m">${this.options.title}</h2>
           <button class="modal__close" aria-label="Close">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M1 1L15 15M15 1L1 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>

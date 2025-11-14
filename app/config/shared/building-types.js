@@ -20,7 +20,7 @@ const BUILDING_TYPES_REQUIRING_ROOM_COUNT = [
 
 // Labels for display (these match the values since they're user-facing strings)
 const BUILDING_TYPE_LABELS = {
-  [BUILDING_TYPES.DWELLINGHOUSE]: 'Dwellinghouse',
+  [BUILDING_TYPES.DWELLINGHOUSE]: 'Dwelling',
   [BUILDING_TYPES.HOTEL]: 'Hotel',
   [BUILDING_TYPES.HMO]: 'House of multiple occupation (HMO)',
   [BUILDING_TYPES.RESIDENTIAL_INSTITUTION]: 'Residential institution',
