@@ -45,7 +45,7 @@ href: "/nrf-estimate-3/email"
                     <ul class="govuk-list">
                         {% for type in data.buildingTypes %}
                         {% if type and type !== '_unchecked' %}
-                        <li>{{ type }}</li>
+                        <li>{{ buildingTypeLabels[type] or type }}</li>
                         {% endif %}
                         {% endfor %}
                     </ul>

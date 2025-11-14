@@ -79,7 +79,7 @@ href: backLink
                     <ul class="govuk-list">
                         {% for type in data.buildingTypes %}
                         {% if type and type !== '_unchecked' %}
-                        <li>{{ type }}</li>
+                        <li>{{ buildingTypeLabels[type] or type }}</li>
                         {% endif %}
                         {% endfor %}
                     </ul>
@@ -228,7 +228,7 @@ href: backLink
         <p class="govuk-body">You will be emailed an invoice which you must pay.</p>
         <p class="govuk-body">You will then receive a receipt and you can use it to discharge your environmental obligations.</p>
 
-        <p class="govuk-body"><strong>Your Nature Restoration Fund Nutrient levy amount is £{{ data.levyAmount or '2,500' }}.</strong></p>
+        <p class="govuk-body"><strong>Your Nature Restoration Fund nutrient levy amount is £{{ data.levyAmount or '2,500' }}.</strong></p>
 
         <form action="/nrf-estimate-3/commit-summary-submit" method="post" novalidate>
             <button class="govuk-button" data-module="govuk-button">

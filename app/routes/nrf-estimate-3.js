@@ -807,7 +807,8 @@ router.get(ROUTES.SUMMARY, (req, res) => {
   }
 
   res.render(TEMPLATES.SUMMARY, {
-    data: data
+    data: data,
+    buildingTypeLabels: BUILDING_TYPE_LABELS
   })
 })
 
@@ -993,6 +994,7 @@ router.get(ROUTES.COMMIT_SUMMARY, (req, res) => {
 
   res.render(TEMPLATES.COMMIT_SUMMARY, {
     data: data,
+    buildingTypeLabels: BUILDING_TYPE_LABELS,
     backLink: data.commitmentRef
       ? ROUTES.ENTER_COMMITMENT_REF
       : ROUTES.COMMITMENT_EMAIL_RETRIEVAL_CONTENT
@@ -1039,6 +1041,7 @@ router.get(ROUTES.COMMIT_SUMMARY_SUBMIT, (req, res) => {
 
   res.render(TEMPLATES.COMMIT_SUMMARY_SUBMIT, {
     data: data,
+    buildingTypeLabels: BUILDING_TYPE_LABELS,
     backLink: ROUTES.PLANNING_REF
   })
 })
@@ -1212,7 +1215,8 @@ router.get(ROUTES.RETRIEVED_ESTIMATE_SUMMARY, (req, res) => {
   }
 
   res.render(TEMPLATES.RETRIEVED_ESTIMATE_SUMMARY, {
-    data: data
+    data: data,
+    buildingTypeLabels: BUILDING_TYPE_LABELS
   })
 })
 
@@ -1308,7 +1312,8 @@ router.get(ROUTES.SUMMARY_AND_DECLARATION, (req, res) => {
   }
 
   res.render(TEMPLATES.SUMMARY_AND_DECLARATION, {
-    data: data
+    data: data,
+    buildingTypeLabels: BUILDING_TYPE_LABELS
   })
 })
 
