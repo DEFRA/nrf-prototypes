@@ -286,13 +286,27 @@
    * @param {L.Control.Draw} drawControl - Draw control instance
    * @param {L.FeatureGroup} drawnItemsGroup - Feature group for drawn items
    * @param {Object} controls - Control elements object
+   * @param {L.Map} map - Leaflet map instance
    */
-  function handleDeleteBoundaryClick(drawControl, drawnItemsGroup, controls) {
+  function handleDeleteBoundaryClick(
+    drawControl,
+    drawnItemsGroup,
+    controls,
+    map
+  ) {
     if (drawnItemsGroup.getLayers().length > 0) {
       drawnItemsGroup.clearLayers()
       updateBoundaryData(null, null)
       window.MapUI.hideErrorSummary()
       window.MapUI.updateLinkStates(controls, drawnItemsGroup)
+
+      // Update help modal after delete
+      if (
+        window.MapInitialisation &&
+        window.MapInitialisation.updateHelpModalContent
+      ) {
+        window.MapInitialisation.updateHelpModalContent(map)
+      }
 
       const editHandler = getEditHandler(drawControl)
       if (editHandler) {
@@ -453,7 +467,7 @@
 
     controls.deleteBoundaryBtn.addEventListener('click', function (e) {
       e.preventDefault()
-      handleDeleteBoundaryClick(drawControl, drawnItemsGroup, controls)
+      handleDeleteBoundaryClick(drawControl, drawnItemsGroup, controls, map)
     })
 
     controls.confirmEditBtn.addEventListener('click', function (e) {
@@ -500,6 +514,14 @@
       const intersectingCatchment =
         window.MapGeometry.findIntersectingCatchment(layer, edpLayers)
       updateBoundaryData(layer, intersectingCatchment)
+
+      // Update help modal AFTER boundary data is saved
+      if (
+        window.MapInitialisation &&
+        window.MapInitialisation.updateHelpModalContent
+      ) {
+        window.MapInitialisation.updateHelpModalContent(map)
+      }
     })
 
     map.on(L.Draw.Event.EDITED, function (event) {
@@ -509,6 +531,14 @@
           window.MapGeometry.findIntersectingCatchment(layer, edpLayers)
         updateBoundaryData(layer, intersectingCatchment)
       })
+
+      // Update help modal AFTER boundary data is saved
+      if (
+        window.MapInitialisation &&
+        window.MapInitialisation.updateHelpModalContent
+      ) {
+        window.MapInitialisation.updateHelpModalContent(map)
+      }
     })
 
     map.on(L.Draw.Event.DELETED, function () {

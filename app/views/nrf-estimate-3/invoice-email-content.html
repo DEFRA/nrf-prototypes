@@ -4,6 +4,13 @@
 Email sent from the Nature Restoration Fund service - Pay Nature Restoration Fund levy - GOV.UK
 {% endblock %}
 
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: "/nrf-estimate-3/payment-confirmation"
+}) }}
+{% endblock %}
+
 {% block content %}
 <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
@@ -34,7 +41,7 @@ Email sent from the Nature Restoration Fund service - Pay Nature Restoration Fun
 
         <h3 class="govuk-heading-s">Paying using GOV.UK Pay</h3>
         <p class="govuk-body">You can use GOV.UK Pay to pay your levy, you will need a bank card or credit card to make this payment.</p>
-        <p class="govuk-body"><a href="#" class="govuk-link">Pay your levy using GOV.UK Pay</a></p>
+        <p class="govuk-body"><a href="javascript:void(0)" class="govuk-link">Pay your levy using GOV.UK Pay</a></p>
 
         <h3 class="govuk-heading-s">Paying by instalments</h3>
         <p class="govuk-body">You can request to pay your levy in instalments.</p>

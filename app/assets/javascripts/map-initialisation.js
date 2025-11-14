@@ -413,6 +413,31 @@
   // ============================================================================
 
   /**
+   * Get hints content based on whether boundary exists
+   * @returns {string} HTML content for hints
+   */
+  function getHintsContent() {
+    const existingBoundaryData = document.getElementById(DOM_IDS.boundaryData)
+    const hasBoundary = existingBoundaryData && existingBoundaryData.value
+
+    if (hasBoundary) {
+      return `
+        <div class="map-hints-content">
+          <h3 class="govuk-heading-s">How to edit a boundary</h3>
+          <p class="govuk-body">Click "Edit" in the side panel to begin. Move each point to the correct location. Press "Confirm area" to finish.</p>
+        </div>
+      `
+    } else {
+      return `
+        <div class="map-hints-content">
+          <h3 class="govuk-heading-s">How to add a boundary</h3>
+          <p class="govuk-body">Click "Add" in the side panel to begin. Then click on each corner of your site on the map to create the boundary. Click the first point again, "double-click", or press "Confirm area" to finish.</p>
+        </div>
+      `
+    }
+  }
+
+  /**
    * Initialize map help modal
    * @param {L.Map} map - Leaflet map instance
    */
@@ -425,16 +450,7 @@
       return
     }
 
-    const hintsContent = `
-      <div class="map-hints-content">
-        <h3 class="govuk-heading-s">How to draw a boundary</h3>
-        <p class="govuk-body">Click on the map to start drawing a red line boundary around your development site.</p>
-        <p class="govuk-body">Click on each corner of your site to create the boundary. Double-click to finish.</p>
-
-        <h3 class="govuk-heading-s govuk-!-margin-top-4">Keyboard controls</h3>
-        <p class="govuk-body">Use Tab and arrow keys to navigate the map. Press Enter to interact with controls.</p>
-      </div>
-    `
+    const hintsContent = getHintsContent()
 
     const helpModal = new Modal({
       title: 'Map hints',
@@ -484,6 +500,17 @@
     map._helpModal = helpModal
   }
 
+  /**
+   * Update help modal content based on current boundary state
+   * @param {L.Map} map - Leaflet map instance
+   */
+  function updateHelpModalContent(map) {
+    if (map && map._helpModal) {
+      const newContent = getHintsContent()
+      map._helpModal.updateContent(newContent)
+    }
+  }
+
   // Export functions and constants to global namespace
   window.MapInitialisation.ENGLAND_CENTER_LAT = ENGLAND_CENTER_LAT
   window.MapInitialisation.ENGLAND_CENTER_LNG = ENGLAND_CENTER_LNG
@@ -499,4 +526,5 @@
   window.MapInitialisation.loadExistingBoundary = loadExistingBoundary
   window.MapInitialisation.initMapKey = initMapKey
   window.MapInitialisation.initMapHelp = initMapHelp
+  window.MapInitialisation.updateHelpModalContent = updateHelpModalContent
 })()
