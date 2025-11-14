@@ -16,9 +16,22 @@
   You will receive an email with a link.
 </div>
 
-<p class="govuk-body"><strong>Payment reference:</strong> 0006677</p>
-
-<p class="govuk-body"><strong>Business name:</strong> Acme Developments</p>
+{{ govukSummaryList({
+  rows: [
+    {
+      key: { text: "Payment reference" },
+      value: { text: "0006677" }
+    },
+    {
+      key: { text: "Business name" },
+      value: { text: "Acme Developments" }
+    },
+    {
+      key: { text: "Planning reference" },
+      value: { text: "APP/2025/24019/FUL" }
+    }
+  ]
+}) }}
 
 <p class="govuk-body">
   <a href="/lpa-approve-1/lpa-approval-email-magiclink" role="button" draggable="false" class="govuk-button" data-module="govuk-button">

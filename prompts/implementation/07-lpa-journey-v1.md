@@ -22,11 +22,6 @@
 #### Content
 
 ```
-{{ govukBackLink({
-  text: "Back",
-  href: "/"
-}) }}
-
 <div class="govuk-inset-text">
   <p><strong>To:</strong> lpa@example.com</p>
   <p><strong>Subject:</strong> Nature Restoration Fund – Approve request to pay the Nature Restoration Fund levy</p>
@@ -34,16 +29,16 @@
 
 # Nature Restoration Fund – Approve request to pay the Nature Restoration Fund levy
 
-Payment reference: 0006677
+**Payment reference:** 0006677
+**Planning reference** APP/2025/24019/FUL
 
 You need to approve the request to use the Nature Restoration Fund levy for Acme Developments.
 
+Approving the request will enable Acme Developments to use Nature Restoration Fund levy to mitigate their environmental impact.
+
 They have agreed to pay the following:
 
-<ul class="govuk-list govuk-list--bullet">
-  <li>Nature Restoration Fund greater crested newts levy: £2,500</li>
-  <li>Nature Restoration Fund nutrients levy: £2,500</li>
-</ul>
+- Nature Restoration Fund nutrients levy: £2,500
 
 [Approve the Nature Restoration Fund levy](/lpa-approve-1/confirm-view-approve)
 
@@ -56,7 +51,6 @@ Telephone: 00000000000
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
 Find out about call charges at https://www.gov.uk/call-charges
-
 
 ```
 
@@ -78,23 +72,14 @@ None
 #### Content
 
 ```
-{{ govukBackLink({
-  text: "Back",
-  href: "/lpa-approve-1/lpa-approval-email-content"
-}) }}
-
 # Confirm you want to view and approve these Nature Restoration Fund levy details.
-
-<div class="govuk-hint">
-  You will receive an email with a link.
-</div>
+Hint text: You will receive an email with a link.
 
 Payment reference: 0006677
 Business name: Acme Developments
+**Planning reference** APP/2025/24019/FUL
 
-<a href="/lpa-approve-1/lpa-approval-email-magiclink" role="button" draggable="false" class="govuk-button" data-module="govuk-button">
-  Confirm
-</a>
+**Button:** Confirm (links to `/lpa-approve-1/lpa-approval-email-magiclink`)
 ```
 
 #### Errors
@@ -116,10 +101,6 @@ None
 #### Content
 
 ```
-{{ govukBackLink({
-  text: "Back",
-  href: "/lpa-approve-1/confirm-view-approve"
-}) }}
 
 <div class="govuk-inset-text">
   <p><strong>To:</strong> lpa@example.com</p>
@@ -128,7 +109,8 @@ None
 
 # Nature Restoration Fund – View details: Approve request to pay the Nature Restoration Fund levy
 
-Payment reference: 0006677
+**Payment reference:** 0006677
+**Planning reference** APP/2025/24019/FUL
 
 You need to approve the request to use the Nature Restoration Fund levy for Acme Developments.
 
@@ -145,7 +127,6 @@ Telephone: 00000000000
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
 Find out about call charges at https://www.gov.uk/call-charges
-
 
 ```
 
@@ -170,43 +151,24 @@ None
 #### Content
 
 ```
-{{ govukBackLink({
-  text: "Back",
-  href: "/lpa-approve-1/lpa-approval-email-magiclink"
-}) }}
 
 # Approve these details
 
 [Map displaying red line boundary - use existing map component]
 
-{{ govukSummaryList({
-  rows: [
-    {
-      key: { text: "Nature Restoration Fund levy confirmed" },
-      value: { text: "Nature Restoration Fund greater crested newts levy: £2,500, Nature Restoration Fund nutrients levy: £2,500" }
-    },
-    {
-      key: { text: "Developer Details" },
-      value: { text: "Bob Acme, Acme Developments, 1 Willow Lane, London, N1 9HG" }
-    },
-    {
-      key: { text: "Building types" },
-      value: { text: "Dwelling" }
-    },
-    {
-      key: { text: "Number of dwelling buildings" },
-      value: { text: "100" }
-    },
-    {
-      key: { text: "Developer email address" },
-      value: { text: "admin@acme.co.uk" }
-    }
-  ]
-}) }}
+**Summary list:**
 
-<a href="/lpa-approve-1/approval-confirmation" role="button" draggable="false" class="govuk-button" data-module="govuk-button">
-  Approve
-</a>
+- Nature Restoration Fund levy confirmed: Nature Restoration Fund nutrients levy: £2,500
+- Developer Details: Bob Acme, Acme Developments, 1 Willow Lane, London, N1 9HG, Company Registration Number (CRN): 12345678, VAT registration number: GB123456789
+- Building types: Dwelling
+- Number of dwelling buildings: 100
+- Developer email address: admin@acme.co.uk
+
+Check these details against the details submitted as part of the planning permission application by Acme Development.
+Approving these details will enable Acme Developments to use Nature Restoration Fund levy to mitigate their environmental impact.
+
+**Button:** Approve (links to `/lpa-approve-1/approval-confirmation`)
+
 ```
 
 #### Errors
@@ -228,41 +190,33 @@ None
 #### Content
 
 ```
-{{ govukBackLink({
-  text: "Back",
-  href: "/lpa-approve-1/approve-details"
-}) }}
-
-{{ govukPanel({
-  titleText: "The details have been approved",
-  html: "Approval reference: <strong>APPROVAL-001</strong>"
-}) }}
+<green-panel>
+- Title: The details have been approved
+- Approval reference: **APPROVAL-001**
+</green-panel>
 
 You have approved the Nature Restoration Fund levy for Bob Acme at Acme Developments.
 
-An invoice for the total amount of the levy has been sent to admin@acme.co.uk.
+An invoice for the total amount of the levy will be sent to admin@acme.co.uk.
 
 They have agreed to pay the following:
-
-<ul class="govuk-list govuk-list--bullet">
-  <li>Nature Restoration Fund greater crested newts levy: £2,500</li>
-  <li>Nature Restoration Fund nutrients levy: £2,500</li>
-</ul>
+- Nature Restoration Fund nutrients levy: £2,500
 
 ## What happens next
 
-Once Acme Developments has paid, you will be sent an email with a receipt which you can use to discharge the obligation.
+Once Acme Developments has paid, you will be sent an email with a receipt which you can use to discharge their obligation.
 
 ## Get help with Nature Restoration Fund
+
 If you need help with Nature Restoration Fund, contact XXXX and give the estimate reference number.
 
-Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
+Email: xxxxx@defra.gov.uk
 Telephone: 00000000000
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
 Find out about call charges at https://www.gov.uk/call-charges
 
-<p><a href="/lpa-approve-1/lpa-approval-confirmation-email" class="govuk-link">View the email content</a></p>
+[View the email content](/lpa-approve-1/lpa-approval-confirmation-email)
 ```
 
 #### Errors
@@ -285,34 +239,27 @@ None
 #### Content
 
 ```
-{{ govukBackLink({
-  text: "Back",
-  href: "/lpa-approve-1/approval-confirmation"
-}) }}
 
 <div class="govuk-inset-text">
   <p><strong>To:</strong> lpa@example.com</p>
-  <p><strong>Subject:</strong> Nature Restoration Fund – Confirmation: Approved request to pay the Nature Restoration Fund levy</p>
+  <p><strong>Subject:</strong> Nature Restoration Fund – Confirmation: Approved request to pay the Nature Restoration Fund levy
 </div>
-
 # Nature Restoration Fund – Confirmation: Approved request to pay the Nature Restoration Fund levy
 
 You have approved the Nature Restoration Fund levy for Bob Acme at Acme Developments.
 
-An invoice for the total amount of the levy has been sent to admin@acme.co.uk.
+An invoice for the total amount of the levy will be sent to admin@acme.co.uk.
 
 They have agreed to pay the following:
 
-<ul class="govuk-list govuk-list--bullet">
-  <li>Nature Restoration Fund greater crested newts levy: £2,500</li>
-  <li>Nature Restoration Fund nutrients levy: £2,500</li>
-</ul>
+- Nature Restoration Fund nutrients levy: £2,500
 
 ## What happens next
 
-Once Acme Developments has paid, you will be sent an email with a receipt which you can use to discharge the obligation.
+Once Acme Developments has paid, you will be sent an email with a receipt which you can use to discharge their obligation.
 
 ## Get help with Nature Restoration Fund
+
 If you need help with Nature Restoration Fund, contact XXXX and give the estimate reference number.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
@@ -328,8 +275,6 @@ Find out about call charges at https://www.gov.uk/call-charges
 None
 
 ---
-
-```
 
 ## Technical Requirements
 
@@ -410,4 +355,3 @@ Create the following files in the GOV.UK Prototype Kit structure:
 - **Path naming**: All paths use lowercase with hyphens (e.g., `/lpa-approve-1/approve-details`, `/lpa-approve-1/approval-confirmation`)
 - **Back links**: All pages include back links, including email confirmation pages
 - **No forms**: Journey uses button links only - no form inputs or validation required
-```
