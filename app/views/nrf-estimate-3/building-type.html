@@ -1,7 +1,7 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-Select the types of buildings - Get an estimate for Nature Restoration Fund Levy - GOV.UK
+Select the types of buildings - Get an estimate for Nature Restoration Fund levy - GOV.UK
 {% endblock %}
 
 {% block beforeContent %}
@@ -60,8 +60,8 @@ href: "/nrf-estimate-3/map"
                     <div class="govuk-checkboxes" data-module="govuk-checkboxes">
                         <div class="govuk-checkboxes__item">
                             <input class="govuk-checkboxes__input" id="building-types-dwellinghouse"
-                                name="building-types" type="checkbox" value="Dwellinghouse" {% if data.buildingTypes and
-                                data.buildingTypes.includes('Dwellinghouse') %}checked{% endif %}>
+                                name="building-types" type="checkbox" value="Dwelling" {% if data.buildingTypes and
+                                data.buildingTypes.includes('Dwelling') %}checked{% endif %}>
                             <label class="govuk-label govuk-checkboxes__label" for="building-types-dwellinghouse">
                                 Dwelling
                             </label>

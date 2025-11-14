@@ -1,7 +1,7 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-Enter your estimate reference - Get an estimate for Nature Restoration Fund Levy - GOV.UK
+Enter your estimate reference - Get an estimate for Nature Restoration Fund levy - GOV.UK
 {% endblock %}
 
 {% block beforeContent %}
@@ -51,7 +51,7 @@ href: "/nrf-estimate-3/do-you-have-an-estimate-ref"
                 {% endif %}
 
                 <input class="govuk-input {% if error %}govuk-input--error{% endif %}" id="estimate-reference" name="estimate-reference"
-                    type="text" value="{% if data.estimateReference %}{{ data.estimateReference }}{% endif %}" aria-describedby="estimate-reference-hint">
+                    type="text" value="" aria-describedby="estimate-reference-hint">
             </div>
 
             <button class="govuk-button" data-module="govuk-button">

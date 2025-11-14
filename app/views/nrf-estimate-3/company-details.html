@@ -1,7 +1,7 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-Enter the company details - Get an estimate for Nature Restoration Fund Levy - GOV.UK
+Enter the company details - Get an estimate for Nature Restoration Fund levy - GOV.UK
 {% endblock %}
 
 {% block beforeContent %}
@@ -31,7 +31,7 @@ href: "/nrf-estimate-3/retrieved-estimate-summary"
             <h1 class="govuk-heading-l">Enter your details</h1>
             
             <div class="govuk-hint">
-                Enter the details for the individual or company who will be paying the Nature Restoration Fund Levy.
+                Enter the details for the individual or company who will be paying the Nature Restoration Fund levy.
             </div>
 
             {% set fullNameError = errorsByField.fullName %}
@@ -122,9 +122,16 @@ href: "/nrf-estimate-3/retrieved-estimate-summary"
 
             <div class="govuk-form-group">
                 <label class="govuk-label" for="vat-registration-number">
-                    VAT Registration number (optional)
+                    VAT registration number (optional)
                 </label>
                 <input class="govuk-input" id="vat-registration-number" name="vatRegistrationNumber" type="text" value="{{ data.vatRegistrationNumber or '' }}">
+            </div>
+
+            <div class="govuk-form-group">
+                <label class="govuk-label" for="purchase-order-number">
+                    Purchase order number (optional)
+                </label>
+                <input class="govuk-input" id="purchase-order-number" name="purchaseOrderNumber" type="text" value="{{ data.purchaseOrderNumber or '' }}">
             </div>
 
             <button class="govuk-button" data-module="govuk-button">Continue</button>

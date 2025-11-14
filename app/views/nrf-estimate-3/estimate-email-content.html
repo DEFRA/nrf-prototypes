@@ -1,7 +1,7 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-Email sent from the Nature Restoration Fund service - Get an estimate for Nature Restoration Fund Levy - GOV.UK
+Email sent from the Nature Restoration Fund service - Get an estimate for Nature Restoration Fund levy - GOV.UK
 {% endblock %}
 
 {% block content %}
@@ -17,36 +17,20 @@ Email sent from the Nature Restoration Fund service - Get an estimate for Nature
 
         <h2 class="govuk-heading-m">Estimate reference: {{ data.estimateReference }}</h2>
 
-        <p class="govuk-body">Thank you for submitting details of the development on the Get an estimate for Nature Restoration Fund Levy service.</p>
+        <p class="govuk-body">Thank you for submitting details of the development on the Get an estimate for Nature Restoration Fund levy service.</p>
 
         <p class="govuk-body">You told us the development:</p>
 
         <ul class="govuk-list govuk-list--bullet">
-            <li>is planned in an area {{ data.redlineBoundaryPolygon.intersectingCatchment or 'Thames Valley EDP' }}</li>
+            <li>is planned in {{ data.redlineBoundaryPolygon.intersectingCatchment or 'Thames Valley EDP' }}</li>
             {% if data.buildingTypes %}
-            <li>has
-                {% if data.buildingTypes.includes('Dwelling') and data.residentialBuildingCount %}
-                {{ data.residentialBuildingCount }} dwelling buildings (if applicable)
-                {% if data.buildingTypes.includes('Hotel') and data.roomCounts.hotelCount %}, {% endif %}
-                {% endif %}
-                {% if data.buildingTypes.includes('Hotel') and data.roomCounts.hotelCount %}
-                hotel buildings with a total of {{ data.roomCounts.hotelCount }} rooms (if applicable)
-                {% if data.buildingTypes.includes('House of multiple occupation (HMO)') and data.roomCounts.hmoCount %}, {% endif %}
-                {% endif %}
-                {% if data.buildingTypes.includes('House of multiple occupation (HMO)') and data.roomCounts.hmoCount %}
-                house of multiple occupation buildings with a total of {{ data.roomCounts.hmoCount }} rooms (if applicable)
-                {% if data.buildingTypes.includes('Residential institution') and data.roomCounts.residentialInstitutionCount %}, {% endif %}
-                {% endif %}
-                {% if data.buildingTypes.includes('Residential institution') and data.roomCounts.residentialInstitutionCount %}
-                and residential institution buildings with a total of {{ data.roomCounts.residentialInstitutionCount }} rooms (if applicable)
-                {% endif %}
-            </li>
+            <li>has 6 dwelling buildings and 3 hotel rooms</li>
             {% endif %}
         </ul>
 
         <h2 class="govuk-heading-m">What you might need to pay</h2>
 
-        <p class="govuk-body">Based on the information you have provided, the development falls into an area with an Enviromental Delivery Plan (EDP), so you can use the Nature Restoration Fund Nutrients Levy.</p>
+        <p class="govuk-body">Based on the information you have provided, the development falls into an area with an Enviromental Delivery Plan (EDP), so you can use the Nature Restoration Fund Nutrients levy.</p>
 
         <p class="govuk-body">The estimated total amount you may need to pay if you develop in this area is: <strong>£{{ data.levyAmount or '2,500' }}</strong></p>
 

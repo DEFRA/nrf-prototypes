@@ -10,24 +10,15 @@
 {% endblock %}
 
 {% block content %}
-<h1 class="govuk-heading-l">Confirm you want to view and approve these Nature Restoration Fund levy details</h1>
+<h1 class="govuk-heading-l">Confirm you want to view and approve these Nature Restoration Fund levy details.</h1>
 
 <div class="govuk-hint">
   You will receive an email with a link.
 </div>
 
-{{ govukSummaryList({
-  rows: [
-    {
-      key: { text: "Payment reference" },
-      value: { text: "0006677" }
-    },
-    {
-      key: { text: "Business name" },
-      value: { text: "Acme Developments" }
-    }
-  ]
-}) }}
+<p class="govuk-body"><strong>Payment reference:</strong> 0006677</p>
+
+<p class="govuk-body"><strong>Business name:</strong> Acme Developments</p>
 
 <p class="govuk-body">
   <a href="/lpa-approve-1/lpa-approval-email-magiclink" role="button" draggable="false" class="govuk-button" data-module="govuk-button">

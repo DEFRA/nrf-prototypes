@@ -1,7 +1,7 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-Email sent from the Nature Restoration Fund service - Get an estimate for Nature Restoration Fund Levy - GOV.UK
+Email sent from the Nature Restoration Fund service - Get an estimate for Nature Restoration Fund levy - GOV.UK
 {% endblock %}
 
 {% block content %}
@@ -19,21 +19,21 @@ Email sent from the Nature Restoration Fund service - Get an estimate for Nature
 
         <p class="govuk-body">Attached is a commitment document that you can send to your Local Planning Authority to include in your planning application.</p>
 
-        <p class="govuk-body">The document outlines your commitment to use the Nature Restoration Fund levy. To mitigate your environmental impact for nutrients.</p>
+        <p class="govuk-body">The document outlines your commitment to use the Nature Restoration Fund levy to mitigate your environmental impact for nutrients.</p>
 
         <p class="govuk-body">You told us the development:</p>
 
         <ul class="govuk-list govuk-list--bullet">
-            <li>is planned in an area {{ data.redlineBoundaryPolygon.intersectingCatchment or 'Thames Valley EDP' }}</li>
-            <li>has {% if data.residentialBuildingCount %}{{ data.residentialBuildingCount }} dwelling buildings{% endif %}{% if data.residentialBuildingCount and data.roomCounts %}, {% endif %}{% if data.roomCounts.hotelCount %}hotel buildings with a total of {{ data.roomCounts.hotelCount }} rooms{% endif %}{% if data.roomCounts.hotelCount and data.roomCounts.hmoCount %}, {% endif %}{% if data.roomCounts.hmoCount %}house of multiple occupation buildings with a total of {{ data.roomCounts.hmoCount }} rooms{% endif %}{% if data.roomCounts.hmoCount and data.roomCounts.residentialInstitutionCount %}, {% endif %}{% if data.roomCounts.residentialInstitutionCount %}and residential institution buildings with a total of {{ data.roomCounts.residentialInstitutionCount }} rooms{% endif %}</li>
+            <li>is planned in {{ data.redlineBoundaryPolygon.intersectingCatchment or 'Thames Valley EDP' }}</li>
+            <li>has 6 dwelling buildings and 3 hotel rooms</li>
         </ul>
 
         <h2 class="govuk-heading-m">What you will need to pay</h2>
 
-        <p class="govuk-body">Based on the information you have provided, the development falls into an area with an Enviromental Delivery Plan (EDP), so you can use the Nature Restoration Fund Nutrients Levy.</p>
+        <p class="govuk-body">Based on the information you have provided, the development falls into an area with an Enviromental Delivery Plan (EDP), so you can use the Nature Restoration Fund Nutrients levy.</p>
 
         <p class="govuk-body">The estimated total amount you may need to pay if you develop in this area is:</p>
-        <p class="govuk-body">£{{ data.levyAmount or '2,500' }}</p>
+        <p class="govuk-body"><strong>£{{ data.levyAmount or '2,500' }}</strong></p>
 
         <p class="govuk-body">You do not need to pay anything at this point, you can send the attached document to your Local Planning Authority to include in your planning application.</p>
 
@@ -47,7 +47,7 @@ Email sent from the Nature Restoration Fund service - Get an estimate for Nature
 
         <h2 class="govuk-heading-m">Get help with Nature Restoration Fund</h2>
 
-        <p class="govuk-body">If you need help with Nature Restoration Fund, contact XXXX and give the estimate reference number.</p>
+        <p class="govuk-body">If you need help with Nature Restoration Fund, contact XXXX and give the commitment reference number.</p>
 
         <p class="govuk-body">
             Email: <a href="mailto:xxxxx@defra.gov.uk" class="govuk-link">xxxxx@defra.gov.uk</a><br>
