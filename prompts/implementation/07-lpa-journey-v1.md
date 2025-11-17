@@ -30,7 +30,7 @@
 # Nature Restoration Fund – Approve request to pay the Nature Restoration Fund levy
 
 **Payment reference:** 0006677
-**Planning reference** APP/2025/24019/FUL
+**Planning reference:** APP/2025/24019/FUL
 
 You need to approve the request to use the Nature Restoration Fund levy for Acme Developments.
 
@@ -77,7 +77,7 @@ Hint text: You will receive an email with a link.
 
 Payment reference: 0006677
 Business name: Acme Developments
-**Planning reference** APP/2025/24019/FUL
+**Planning reference:** APP/2025/24019/FUL
 
 **Button:** Confirm (links to `/lpa-approve-1/lpa-approval-email-magiclink`)
 ```
@@ -110,7 +110,7 @@ None
 # Nature Restoration Fund – View details: Approve request to pay the Nature Restoration Fund levy
 
 **Payment reference:** 0006677
-**Planning reference** APP/2025/24019/FUL
+**Planning reference:** APP/2025/24019/FUL
 
 You need to approve the request to use the Nature Restoration Fund levy for Acme Developments.
 
@@ -146,9 +146,9 @@ None
 | Data points:           | None                           |
 | Conditional page flow: | None                           |
 
-{use a table or list pattern with no change links}
-
 #### Content
+
+Note: Use a table or list pattern with no change links for displaying the details.
 
 ```
 
@@ -210,7 +210,7 @@ Once Acme Developments has paid, you will be sent an email with a receipt which 
 
 If you need help with Nature Restoration Fund, contact XXXX and give the estimate reference number.
 
-Email: xxxxx@defra.gov.uk
+Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
 Monday to Friday, 8:30am to 5pm, except bank holidays
 

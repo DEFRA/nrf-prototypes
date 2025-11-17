@@ -7,7 +7,7 @@
   A user journey for a developer to pay for the Nature Restoration Fund levy required when submitting planning permission to build a development of some sort.
 - **Journey Route Prefix**: nrf-estimate-3
 - **Start Page Title**: Pay Nature Restoration Fund Levy
-- **Integration Point**: This journey starts from `/nrf-estimate-3/what-would-you-like-to-do` when the user selects "I am ready to commit to using the Nature Restoration Fund levy"
+- **Integration Point**: This journey starts from `/nrf-estimate-3/what-would-you-like-to-do` when the user selects "I am ready to pay the Nature Restoration Fund levy"
 
 ## Page Flow and Conditional Logic
 
@@ -74,7 +74,7 @@
 
 ```
 # Enter your commitment reference
-hint text: Enter this reference to retrieve the details entered when you commited to using Nature Restoration Fund.
+Hint text: Enter this reference to retrieve the details entered when you committed to using Nature Restoration Fund.
 ```
 
 #### Errors
@@ -277,7 +277,7 @@ None
 | Email address | [show commitmentRetrievalEmail if provided, otherwise show email] |
 | Your details | [show full name, business name if provided, address, Company Registration Number and VAT registration number] |
 | Local Planning Authority| [Stockton-on-Tees Borough Council] |
-| Planning reference | [show planning reference |
+| Planning reference | [show planning reference] |
 
 Text: By confirming and submitting these details, you are agreeing to pay the Nature Restoration Fund levy.
 The details you are submitting must be accurate and correct.
@@ -483,7 +483,7 @@ Create the following files in the GOV.UK Prototype Kit structure:
 2. **Create the view directory** and all HTML template files
 3. **Implement form validation** with proper error handling
 4. **Add conditional routing** based on user selections
-5. **Update the route handler** in `app/routes/nrf-estimate-3.js` for `/what-would-you-like-to-do` to redirect to `/do-you-have-a-commitment-ref` when `journeyType === 'commit'`
+5. **Update the route handler** in `app/routes/nrf-estimate-3.js` for `/what-would-you-like-to-do` to redirect to `/do-you-have-a-commitment-ref` when `journeyType === 'payment'`
 6. **Add back link** on the first page (`/do-you-have-a-commitment-ref`) that links back to `/what-would-you-like-to-do`
 7. **Test the complete journey** to ensure all paths work correctly
 
@@ -504,5 +504,5 @@ Create the following files in the GOV.UK Prototype Kit structure:
 - Focus on demonstrating the user flow and interface design
 - Ensure the journey works end-to-end for user testing
 - **Important**: The confirmation page path is `/payment-confirmation` (not `/confirmation`) to avoid conflict with the existing estimate journey confirmation page
-- **Integration**: This journey is triggered from `/what-would-you-like-to-do` when user selects "I am ready to commit to using the Nature Restoration Fund levy"
+- **Integration**: This journey is triggered from `/what-would-you-like-to-do` when user selects "I am ready to pay the Nature Restoration Fund levy"
 - **Data Property Note**: Use `commitmentRetrievalEmail` instead of `email` for the commitment retrieval email to avoid conflicts with the estimate journey's email field

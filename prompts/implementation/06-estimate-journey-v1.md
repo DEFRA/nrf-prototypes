@@ -179,12 +179,12 @@ Find out about call charges at https://www.gov.uk/call-charges
 
 ### Upload a red line boundary file
 
-| **Field**             | **Value**                                  |
-| --------------------- | ------------------------------------------ |
-| Order number:         | 3.1                                        |
-| Path:                 | /nrf-estimate-3/upload-redline             |
-| Title:                | Upload a red line boundary file            |
-| Conditional pageflow: | display if hasRedlineBoundaryFile === true |
+| **Field**             | **Value**                                       |
+| --------------------- | ----------------------------------------------- |
+| Order number:         | 3.1                                             |
+| Path:                 | /nrf-estimate-3/upload-redline                  |
+| Title:                | Upload a red line boundary file                 |
+| Conditional pageflow: | display if data.hasRedlineBoundaryFile === true |
 
 #### Data points
 
@@ -193,7 +193,7 @@ Find out about call charges at https://www.gov.uk/call-charges
     data: {
         redlineFile: {
             type: file,
-            conditional: required if hasRedlineBoundaryFile === true
+            conditional: required if data.hasRedlineBoundaryFile === true
         }
     }
 }
@@ -227,12 +227,12 @@ Hint text: Upload a shapefile (.shp) or GeoJSON file (.geojson). The file must b
 
 ### Draw a red line boundary
 
-| **Field**             | **Value**                                   |
-| --------------------- | ------------------------------------------- |
-| Order number:         | 3.2                                         |
-| Path:                 | /nrf-estimate-3/map                         |
-| Title:                | Draw a red line boundary                    |
-| Conditional pageflow: | display if hasRedlineBoundaryFile === false |
+| **Field**             | **Value**                                        |
+| --------------------- | ------------------------------------------------ |
+| Order number:         | 3.2                                              |
+| Path:                 | /nrf-estimate-3/map                              |
+| Title:                | Draw a red line boundary                         |
+| Conditional pageflow: | display if data.hasRedlineBoundaryFile === false |
 
 #### Data points
 
@@ -241,7 +241,7 @@ Hint text: Upload a shapefile (.shp) or GeoJSON file (.geojson). The file must b
     data: {
         redlineBoundaryPolygon: {
             type: array,
-            conditional: required if hasRedlineBoundaryFile === false
+            conditional: required if data.hasRedlineBoundaryFile === false
         }
     }
 }
@@ -457,19 +457,19 @@ Note: The label dynamically adjusts based on building type. For "House of multip
 
 ### Email entry
 
-| **Field**              | **Value**                |
-| ---------------------- | ------------------------ |
-| Order number:          | 5                        |
-| Path:                  | /nrf-estimate-3/email    |
-| Title:                 | Enter your email address |
-| Conditional page flow: | None                     |
+| **Field**              | **Value**                      |
+| ---------------------- | ------------------------------ |
+| Order number:          | 5                              |
+| Path:                  | /nrf-estimate-3/estimate-email |
+| Title:                 | Enter your email address       |
+| Conditional page flow: | None                           |
 
 #### Data points
 
 ```
 {
     data: {
-        email: {
+        estimateEmail: {
             type: email,
             required: true
         }
@@ -501,12 +501,12 @@ Note: For the payment journey with estimate reference retrieval, there is a sepa
 
 ### Check your answers summary and submit
 
-| **Field**              | **Value**               |
-| ---------------------- | ----------------------- |
-| Order number:          | 6                       |
-| Path:                  | /nrf-estimate-3/summary |
-| Title:                 | Check your answers      |
-| Conditional page flow: | None                    |
+| **Field**              | **Value**                        |
+| ---------------------- | -------------------------------- |
+| Order number:          | 6                                |
+| Path:                  | /nrf-estimate-3/estimate-summary |
+| Title:                 | Check your answers               |
+| Conditional page flow: | None                             |
 
 #### Data points
 
@@ -523,7 +523,7 @@ None
 | [IF they pick "House of multiple occupation (HMO)" THEN show] Number of multiple occupation rooms | [show count] |
 | [IF they pick "Residential institution" THEN show] Number of residential institution rooms | [show count] |
 | [IF they pick Hotel THEN show] Number of hotel rooms | [show count] |
-| Email address | [show email address] |
+| Email address | [show estimateEmail address] |
 ```
 
 #### Errors
