@@ -26,7 +26,7 @@ const ROUTES = {
 
   // Summary and confirmation
   SUMMARY: `${BASE_PATH}/summary`,
-  EMAIL: `${BASE_PATH}/email`,
+  ESTIMATE_EMAIL: `${BASE_PATH}/estimate-email`,
   CONFIRMATION: `${BASE_PATH}/confirmation`,
 
   // Additional pages
@@ -69,7 +69,7 @@ const TEMPLATES = {
   NON_RESIDENTIAL: 'nrf-estimate-3/non-residential',
   ROOM_COUNT: 'nrf-estimate-3/room-count',
   SUMMARY: 'nrf-estimate-3/summary',
-  EMAIL: 'nrf-estimate-3/email',
+  ESTIMATE_EMAIL: 'nrf-estimate-3/estimate-email',
   CONFIRMATION: 'nrf-estimate-3/confirmation',
   NO_EDP: 'nrf-estimate-3/no-edp',
   ESTIMATE_EMAIL_CONTENT: 'nrf-estimate-3/estimate-email-content',

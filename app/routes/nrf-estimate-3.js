@@ -546,7 +546,7 @@ router.post(ROUTES.BUILDING_TYPE, (req, res) => {
     } else if (buildingTypesArray.includes(BUILDING_TYPES.DWELLINGHOUSE)) {
       res.redirect(ROUTES.RESIDENTIAL)
     } else {
-      res.redirect(ROUTES.EMAIL)
+      res.redirect(ROUTES.ESTIMATE_EMAIL)
     }
   }
 })
@@ -596,7 +596,7 @@ router.get(ROUTES.ROOM_COUNT, (req, res) => {
     ) {
       res.redirect(ROUTES.RESIDENTIAL)
     } else {
-      res.redirect(ROUTES.EMAIL)
+      res.redirect(ROUTES.ESTIMATE_EMAIL)
     }
     return
   }
@@ -680,7 +680,7 @@ router.post(ROUTES.ROOM_COUNT, (req, res) => {
     ) {
       res.redirect(ROUTES.RESIDENTIAL)
     } else {
-      res.redirect(ROUTES.EMAIL)
+      res.redirect(ROUTES.ESTIMATE_EMAIL)
     }
   } else {
     res.redirect(ROUTES.ROOM_COUNT)
@@ -730,11 +730,11 @@ router.post(ROUTES.RESIDENTIAL, (req, res) => {
     return
   }
 
-  res.redirect(ROUTES.EMAIL)
+  res.redirect(ROUTES.ESTIMATE_EMAIL)
 })
 
 // Email entry
-router.get(ROUTES.EMAIL, (req, res) => {
+router.get(ROUTES.ESTIMATE_EMAIL, (req, res) => {
   const data = req.session.data || {}
   const isChange = req.query.change === 'true'
   const navFromSummary = req.query.nav === 'summary'
@@ -750,7 +750,7 @@ router.get(ROUTES.EMAIL, (req, res) => {
     }
   }
 
-  res.render(TEMPLATES.EMAIL, {
+  res.render(TEMPLATES.ESTIMATE_EMAIL, {
     data: data,
     isChange: isChange,
     navFromSummary: navFromSummary,
@@ -759,7 +759,7 @@ router.get(ROUTES.EMAIL, (req, res) => {
 })
 
 // Handle email submission
-router.post(ROUTES.EMAIL, (req, res) => {
+router.post(ROUTES.ESTIMATE_EMAIL, (req, res) => {
   const email = req.body['email']
   const isChange = req.body.isChange === 'true'
   const navFromSummary = req.body.navFromSummary === 'true'
@@ -803,7 +803,7 @@ router.get(ROUTES.SUMMARY, (req, res) => {
   const data = req.session.data || {}
 
   if (!data.email) {
-    return res.redirect(ROUTES.EMAIL)
+    return res.redirect(ROUTES.ESTIMATE_EMAIL)
   }
 
   res.render(TEMPLATES.SUMMARY, {
