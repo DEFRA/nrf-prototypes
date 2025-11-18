@@ -138,14 +138,19 @@
     )
 
     // Show/hide containers based on what's available
-    if (stats.totalArea > 0) {
+    // Always show Area when drawing or when area exists
+    if (stats.totalArea > 0.01) {
+      // Show area if it's meaningful (> 0.01 square meters)
       totalAreaContainer.style.display = 'flex'
       totalAreaEl.textContent = formatArea(stats.totalArea)
+    } else if (isDrawingActive) {
+      totalAreaContainer.style.display = 'flex'
+      totalAreaEl.textContent = '—'
     } else {
       totalAreaContainer.style.display = 'none'
     }
 
-    // Show current segment during drawing (even if 0 initially)
+    // Show current segment ONLY during active drawing (hide when polygon is complete)
     if (isDrawingActive && drawnPoints.length >= 1) {
       currentLineContainer.style.display = 'flex'
       if (stats.currentLineDistance > 0) {
@@ -153,19 +158,15 @@
       } else {
         currentLineEl.textContent = '—'
       }
-    } else if (stats.currentLineDistance > 0) {
-      currentLineContainer.style.display = 'flex'
-      currentLineEl.textContent = formatDistance(stats.currentLineDistance)
     } else {
       currentLineContainer.style.display = 'none'
     }
 
-    // Show total distance when drawing (even if area not complete)
+    // Show Perimeter when drawing or when perimeter exists
     if (stats.totalPerimeter > 0) {
       perimeterContainer.style.display = 'flex'
       perimeterEl.textContent = formatDistance(stats.totalPerimeter)
-    } else if (isDrawingActive && drawnPoints.length >= 2) {
-      // Show 0 when drawing with at least 2 points
+    } else if (isDrawingActive) {
       perimeterContainer.style.display = 'flex'
       perimeterEl.textContent = '—'
     } else {
@@ -284,7 +285,7 @@
       const layers = event.layers.getLayers()
 
       if (layers.length > 0) {
-        const points = layers.map(layer => layer.getLatLng())
+        const points = layers.map((layer) => layer.getLatLng())
         drawnPoints = points
 
         // Set last plotted point
@@ -304,6 +305,32 @@
         currentStats.totalArea = 0
         updateStatsDisplay(currentStats)
       }
+    }
+  }
+
+  /**
+   * Calculate area for polygon being drawn (with current mouse position)
+   * @param {Array} points - Array of L.LatLng points already placed
+   * @param {L.LatLng} mousePoint - Current mouse position
+   * @returns {number} Area in square meters
+   */
+  function calculateDrawingArea(points, mousePoint) {
+    if (!points || points.length < 2 || !mousePoint || !window.turf) {
+      return 0
+    }
+
+    try {
+      // Create a temporary polygon with all placed points plus mouse position
+      const allPoints = [...points, mousePoint]
+      const coordinates = allPoints.map((point) => [point.lng, point.lat])
+      // Close the polygon
+      coordinates.push(coordinates[0])
+
+      const polygon = window.turf.polygon([coordinates])
+      return window.turf.area(polygon)
+    } catch (error) {
+      console.error('Error calculating drawing area:', error)
+      return 0
     }
   }
 
@@ -332,14 +359,24 @@
       // Add the current segment distance to show what total would be
       const projectedTotalDistance = totalDrawnDistance + currentSegmentDistance
 
-      // Only update if values have changed
-      if (
-        currentStats.currentLineDistance !== currentSegmentDistance ||
-        currentStats.totalPerimeter !== projectedTotalDistance
-      ) {
+      // Calculate area if we have at least 2 points (will form triangle with mouse)
+      let projectedArea = 0
+      if (drawnPoints.length >= 2) {
+        projectedArea = calculateDrawingArea(drawnPoints, currentMousePosition)
+      }
+
+      // Only update if values have changed (using threshold to prevent floating point issues)
+      const areaChanged = Math.abs(currentStats.totalArea - projectedArea) > 1
+      const segmentChanged =
+        Math.abs(currentStats.currentLineDistance - currentSegmentDistance) >
+        0.1
+      const perimeterChanged =
+        Math.abs(currentStats.totalPerimeter - projectedTotalDistance) > 0.1
+
+      if (segmentChanged || perimeterChanged || areaChanged) {
         currentStats.currentLineDistance = currentSegmentDistance
         currentStats.totalPerimeter = projectedTotalDistance
-        currentStats.totalArea = 0
+        currentStats.totalArea = projectedArea
         updateStatsDisplay(currentStats)
       }
     }
