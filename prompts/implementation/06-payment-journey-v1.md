@@ -156,7 +156,7 @@ You can use the details you previously gave us for your commitment to complete t
 
 ## Get help with Nature Restoration Fund
 
-If you need help with Nature Restoration Fund, contact XXXX and give the estimate reference number.
+If you need help with Nature Restoration Fund, contact XXXX and give the commitment reference number.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
@@ -319,15 +319,15 @@ Payment reference: [dynamically generated]
 Your Local Planning Authority will review your details.
 You will receive an email with an invoice and details of how you can pay. You should receive this email within 0 working days.
 
-Once you have paid, you will be sent an email with a receipt which you can use as evidence for your planning application to discharge your obligation.
+Once you have your planning decision notice, you can pay your levy. You will then be sent an email with a receipt which you can use to discharge your obligation.
 
 You told us the development:
-* is planned in an area {{ data.redlineBoundaryPolygon.intersectingCatchment or 'Unknown' }}
-* has [dynamic list of building types with counts, e.g., "5 dwellinghouse buildings, 20 hotel rooms, 10 house of multiple occupation (HMO) rooms"]
+* is planned in {{ data.redlineBoundaryPolygon.intersectingCatchment or 'Thames Valley EDP' }}
+* has 6 dwelling buildings and 3 hotel rooms
 
 ## What you need to pay
 
-Based on the information you have provided, the development falls into the catchment area for the Nature Restoration Fund Nutrients Levy.
+Based on the information you have provided, the development falls into the area for the Nature Restoration Fund Nutrients levy.
 
 The total amount you need to pay is:
 
@@ -340,7 +340,7 @@ Your levy will be spent on conservation, with amounts being spent on monitoring 
 Levies are calculated as part of Environmental Delivery Plans (EDPs).
 
 ## Get help with Nature Restoration Fund
-If you need help with Nature Restoration Fund, contact XXXX and give the estimate reference number.
+If you need help with Nature Restoration Fund, contact XXXX and give the commitment reference number.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
@@ -373,26 +373,26 @@ None
 
 ```
 <div class="govuk-inset-text">
-To: [LPA email address - displays data.lpaEmail or defaults to 'user@example.com']
-Subject: Nature Restoration Fund – payment for the Nature Restoration Fund levy
+    <p><strong>To:</strong> {{ data.commitmentRetrievalEmail or data.email or 'user@example.com' }}</p>
+    <p><strong>Subject:</strong> Nature Restoration Fund – payment for the Nature Restoration Fund levy</p>
 </div>
 
 # Nature Restoration Fund – payment for the Nature Restoration Fund levy
 
-**Payment reference:** {{ data.paymentReference }}
+<strong>Payment reference:</strong> {{ data.paymentReference }}
 
-Thank you for using Nature Restoration Fund Levy to mitigate your environmental impact.
+Thank you for using Nature Restoration Fund levy to mitigate your environmental impact.
 An invoice for the total amount of the levy is attached.
 
 You have agreed to pay the following:
 
-Nature Restoration Fund nutrients levy: £2,500
+Nature Restoration Fund nutrients levy: £{{ data.levyAmount or '2,500' }}
 
 Your levy will be spent on conservation, with amounts being spent on monitoring and maintenance. There will also be an admin charge of £00 taken from the levy payment. Levies are calculated as part of Environmental Delivery Plans (EDPs).
 
 ## Ways to pay
 
-You can pay your levy by using a bank transfer or by using Gov pay.
+You can pay your levy by using a bank transfer or by using GOV.UK Pay.
 
 ### Paying by bank transfer
 You can make a transfer from a bank account by Faster Payments, Bacs or CHAPS. Use the payee details, sort code and account number on the invoice to make the payment. Use the payment reference as the reference when you make the transfer.
@@ -401,7 +401,7 @@ You can make a transfer from a bank account by Faster Payments, Bacs or CHAPS. U
 
 You can use GOV.UK Pay to pay your levy, you will need a bank card or credit card to make this payment.
 
-[Link: Pay your levy using GOV.UK Pay] (placeholder link with href="#")
+[Pay your levy using GOV.UK Pay](javascript:void(0))
 
 ### Paying by instalments
 
@@ -413,7 +413,7 @@ Once you have paid, you will be sent an email with a receipt which you can use a
 
 ## Get help with Nature Restoration Fund
 
-If you need help with Nature Restoration Fund, contact XXXX and give the estimate reference number.
+If you need help with Nature Restoration Fund, contact XXXX and give the commitment reference number.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
