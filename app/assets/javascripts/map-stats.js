@@ -14,10 +14,20 @@
   // CONSTANTS
   // ============================================================================
 
+  // Unit conversion constants
   const SQUARE_METERS_TO_HECTARES = 10000
-  const SQUARE_METERS_TO_ACRES = 4046.86
+  const SQUARE_METERS_TO_ACRES = 4046.8564224 // Exact conversion factor
   const METERS_TO_KILOMETERS = 1000
   const METERS_TO_MILES = 1609.34
+
+  // Display thresholds
+  const THRESHOLD_MIN_AREA_DISPLAY = 1.0 // m² - Don't show areas smaller than 1m²
+  const THRESHOLD_AREA_UPDATE = 1.0 // m² - Only update if area changes by more than this
+  const THRESHOLD_DISTANCE_UPDATE = 0.1 // m - Only update if distance changes by more than this
+
+  // Performance constants
+  const UPDATE_INTERVAL_MS = 100 // Update stats 10 times per second (throttled from 60fps)
+  const EDIT_MONITOR_INTERVAL_MS = 100 // Monitor editing changes every 100ms
 
   // ============================================================================
   // STATE
@@ -38,9 +48,39 @@
   let lastPlottedPoint = null
   let drawnPoints = []
 
+  // Performance tracking
+  let lastUpdateTime = 0
+  let editMonitorTimeoutId = null
+
   // ============================================================================
   // UI HELPERS
   // ============================================================================
+
+  /**
+   * Validate that all required dependencies are available
+   * @returns {Object} Object with boolean flags for each dependency
+   */
+  function validateDependencies() {
+    return {
+      hasTurf: !!window.turf,
+      hasMap: !!map,
+      hasDrawnItems: !!drawnItems,
+      hasStatsPanel: !!statsPanel
+    }
+  }
+
+  /**
+   * Reset current stats to zero values
+   * @returns {Object} Reset stats object
+   */
+  function resetCurrentStats() {
+    return {
+      totalArea: 0,
+      currentLineDistance: 0,
+      totalPerimeter: 0,
+      vertexCount: 0
+    }
+  }
 
   /**
    * Format area for display
@@ -118,8 +158,9 @@
    * @param {Object} stats - Statistics object
    */
   function updateStatsDisplay(stats) {
-    if (!statsPanel) {
-      console.warn('⚠️ statsPanel is null!')
+    const deps = validateDependencies()
+    if (!deps.hasStatsPanel) {
+      console.warn('[MapStats] Stats panel is not available')
       return
     }
 
@@ -139,8 +180,7 @@
 
     // Show/hide containers based on what's available
     // Always show Area when drawing or when area exists
-    if (stats.totalArea > 0.01) {
-      // Show area if it's meaningful (> 0.01 square meters)
+    if (stats.totalArea > THRESHOLD_MIN_AREA_DISPLAY) {
       totalAreaContainer.style.display = 'flex'
       totalAreaEl.textContent = formatArea(stats.totalArea)
     } else if (isDrawingActive) {
@@ -196,7 +236,8 @@
    * @returns {Object} Statistics object
    */
   function calculatePolygonStats(layer) {
-    if (!layer || !window.turf) {
+    const deps = validateDependencies()
+    if (!layer || !deps.hasTurf) {
       return { totalArea: 0, totalPerimeter: 0, vertexCount: 0 }
     }
 
@@ -219,7 +260,7 @@
         vertexCount: latLngs.length
       }
     } catch (error) {
-      console.error('Error calculating polygon stats:', error)
+      console.error('[MapStats] Error calculating polygon stats:', error)
       return { totalArea: 0, totalPerimeter: 0, vertexCount: 0 }
     }
   }
@@ -230,7 +271,8 @@
    * @returns {number} Distance in meters
    */
   function calculateTotalDrawnDistance(points) {
-    if (!points || points.length < 2 || !window.turf) {
+    const deps = validateDependencies()
+    if (!points || points.length < 2 || !deps.hasTurf) {
       return 0
     }
 
@@ -239,7 +281,7 @@
       const line = window.turf.lineString(coordinates)
       return window.turf.length(line, { units: 'meters' })
     } catch (error) {
-      console.error('Error calculating line distance:', error)
+      console.error('[MapStats] Error calculating line distance:', error)
       return 0
     }
   }
@@ -251,7 +293,8 @@
    * @returns {number} Distance in meters
    */
   function calculateCurrentSegmentDistance(lastPoint, mousePoint) {
-    if (!lastPoint || !mousePoint || !window.turf) {
+    const deps = validateDependencies()
+    if (!lastPoint || !mousePoint || !deps.hasTurf) {
       return 0
     }
 
@@ -262,7 +305,7 @@
       ])
       return window.turf.length(line, { units: 'meters' })
     } catch (error) {
-      console.error('Error calculating segment distance:', error)
+      console.error('[MapStats] Error calculating segment distance:', error)
       return 0
     }
   }
@@ -315,7 +358,8 @@
    * @returns {number} Area in square meters
    */
   function calculateDrawingArea(points, mousePoint) {
-    if (!points || points.length < 2 || !mousePoint || !window.turf) {
+    const deps = validateDependencies()
+    if (!points || points.length < 2 || !mousePoint || !deps.hasTurf) {
       return 0
     }
 
@@ -329,17 +373,28 @@
       const polygon = window.turf.polygon([coordinates])
       return window.turf.area(polygon)
     } catch (error) {
-      console.error('Error calculating drawing area:', error)
+      console.error('[MapStats] Error calculating drawing area:', error)
       return 0
     }
   }
 
   /**
-   * Monitor drawing progress in real-time
+   * Monitor drawing progress in real-time (throttled)
    * This polls the current drawing state to update stats as user moves mouse
+   * Throttled to UPDATE_INTERVAL_MS to prevent excessive CPU usage
+   * @param {number} currentTime - Current timestamp from requestAnimationFrame
    */
-  function monitorDrawingProgress() {
+  function monitorDrawingProgress(currentTime) {
     if (!isDrawingActive || !map) return
+
+    // Throttle updates to reduce CPU usage and prevent 60fps calculations
+    if (currentTime - lastUpdateTime < UPDATE_INTERVAL_MS) {
+      if (isDrawingActive) {
+        requestAnimationFrame(monitorDrawingProgress)
+      }
+      return
+    }
+    lastUpdateTime = currentTime
 
     // Only update if we have at least one point and mouse position
     if (lastPlottedPoint && currentMousePosition) {
@@ -366,12 +421,14 @@
       }
 
       // Only update if values have changed (using threshold to prevent floating point issues)
-      const areaChanged = Math.abs(currentStats.totalArea - projectedArea) > 1
+      const areaChanged =
+        Math.abs(currentStats.totalArea - projectedArea) > THRESHOLD_AREA_UPDATE
       const segmentChanged =
         Math.abs(currentStats.currentLineDistance - currentSegmentDistance) >
-        0.1
+        THRESHOLD_DISTANCE_UPDATE
       const perimeterChanged =
-        Math.abs(currentStats.totalPerimeter - projectedTotalDistance) > 0.1
+        Math.abs(currentStats.totalPerimeter - projectedTotalDistance) >
+        THRESHOLD_DISTANCE_UPDATE
 
       if (segmentChanged || perimeterChanged || areaChanged) {
         currentStats.currentLineDistance = currentSegmentDistance
@@ -388,12 +445,23 @@
 
   /**
    * Monitor editing progress in real-time
+   * Uses setTimeout with proper cleanup via editMonitorTimeoutId
    */
   function monitorEditingProgress() {
     if (!isEditingActive || !drawnItems) return
 
+    const deps = validateDependencies()
+    if (!deps.hasDrawnItems) return
+
     const layers = drawnItems.getLayers()
     if (layers.length > 0) {
+      // Currently only one polygon is supported
+      if (layers.length > 1) {
+        console.warn(
+          '[MapStats] Multiple polygons detected, only showing stats for first polygon'
+        )
+      }
+
       const layer = layers[0]
       const stats = calculatePolygonStats(layer)
 
@@ -413,7 +481,10 @@
     }
 
     if (isEditingActive) {
-      setTimeout(monitorEditingProgress, 100)
+      editMonitorTimeoutId = setTimeout(
+        monitorEditingProgress,
+        EDIT_MONITOR_INTERVAL_MS
+      )
     }
   }
 
@@ -446,12 +517,7 @@
    * Handle polygon deletion
    */
   function handlePolygonDelete() {
-    currentStats = {
-      totalArea: 0,
-      currentLineDistance: 0,
-      totalPerimeter: 0,
-      vertexCount: 0
-    }
+    currentStats = resetCurrentStats()
     updateStatsDisplay(currentStats)
   }
 
@@ -463,18 +529,18 @@
     drawnPoints = []
     lastPlottedPoint = null
     currentMousePosition = null
-    currentStats = {
-      totalArea: 0,
-      currentLineDistance: 0,
-      totalPerimeter: 0,
-      vertexCount: 0
-    }
+    lastUpdateTime = 0 // Reset throttle timer
+    currentStats = resetCurrentStats()
     updateStatsDisplay(currentStats)
 
-    // Add mousemove listener to track cursor position
-    if (map) {
-      map.on('mousemove', handleMouseMove)
+    const deps = validateDependencies()
+    if (!deps.hasMap) {
+      console.warn('[MapStats] Map not available for drawing')
+      return
     }
+
+    // Add mousemove listener to track cursor position
+    map.on('mousemove', handleMouseMove)
 
     // Start monitoring drawing progress
     requestAnimationFrame(monitorDrawingProgress)
@@ -498,8 +564,8 @@
     lastPlottedPoint = null
     currentMousePosition = null
 
-    // Remove mousemove listener
-    if (map) {
+    const deps = validateDependencies()
+    if (deps.hasMap) {
       map.off('mousemove', handleMouseMove)
     }
   }
@@ -513,40 +579,80 @@
   }
 
   /**
+   * Recalculate stats from the actual drawn polygon
+   * Used after edit operations complete
+   */
+  function recalculateStatsFromDrawnItems() {
+    const deps = validateDependencies()
+    if (!deps.hasDrawnItems) return
+
+    const layers = drawnItems.getLayers()
+    if (layers.length > 0) {
+      const existingLayer = layers[0]
+      const stats = calculatePolygonStats(existingLayer)
+      currentStats = {
+        totalArea: stats.totalArea,
+        currentLineDistance: 0,
+        totalPerimeter: stats.totalPerimeter,
+        vertexCount: stats.vertexCount
+      }
+      updateStatsDisplay(currentStats)
+    } else {
+      // No polygon exists, reset stats
+      currentStats = resetCurrentStats()
+      updateStatsDisplay(currentStats)
+    }
+  }
+
+  /**
    * Handle edit stop
+   * Uses requestAnimationFrame to ensure DOM is up to date
+   * This replaces the previous setTimeout hack
    */
   function handleEditStop() {
     isEditingActive = false
 
-    // When editing stops (e.g., cancel button), recalculate stats from the actual polygon
-    // Use a small timeout to avoid triggering during the EDITED event
-    setTimeout(() => {
-      if (drawnItems && drawnItems.getLayers().length > 0) {
-        const existingLayer = drawnItems.getLayers()[0]
-        const stats = calculatePolygonStats(existingLayer)
-        currentStats = {
-          totalArea: stats.totalArea,
-          currentLineDistance: 0,
-          totalPerimeter: stats.totalPerimeter,
-          vertexCount: stats.vertexCount
-        }
-        updateStatsDisplay(currentStats)
-      } else {
-        // No polygon exists, reset stats
-        currentStats = {
-          totalArea: 0,
-          currentLineDistance: 0,
-          totalPerimeter: 0,
-          vertexCount: 0
-        }
-        updateStatsDisplay(currentStats)
-      }
-    }, 50)
+    // Clear any pending edit monitor timeout
+    if (editMonitorTimeoutId) {
+      clearTimeout(editMonitorTimeoutId)
+      editMonitorTimeoutId = null
+    }
+
+    // Queue recalculation to ensure it happens after EDITED event handlers complete
+    // Using requestAnimationFrame ensures DOM is up to date
+    requestAnimationFrame(() => {
+      recalculateStatsFromDrawnItems()
+    })
   }
 
   // ============================================================================
   // INITIALIZATION
   // ============================================================================
+
+  /**
+   * Named handler for CREATED event
+   * @param {Object} event - Leaflet draw event
+   */
+  function handleCreated(event) {
+    isDrawingActive = false
+    handlePolygonComplete(event.layer)
+  }
+
+  /**
+   * Named handler for EDITED event
+   * @param {Object} event - Leaflet draw event
+   */
+  function handleEdited(event) {
+    isEditingActive = false
+
+    // Clear any pending edit monitor timeout
+    if (editMonitorTimeoutId) {
+      clearTimeout(editMonitorTimeoutId)
+      editMonitorTimeoutId = null
+    }
+
+    event.layers.eachLayer(handlePolygonEdit)
+  }
 
   /**
    * Initialize statistics panel
@@ -555,7 +661,7 @@
    */
   function init(mapInstance, drawnItemsGroup) {
     if (!mapInstance || !drawnItemsGroup) {
-      console.error('❌ Map or drawnItems not provided')
+      console.error('[MapStats] Map or drawnItems not provided')
       return
     }
 
@@ -565,41 +671,28 @@
 
     // Check if Turf.js is loaded
     if (!window.turf) {
-      console.warn('⚠️ Turf.js not loaded, statistics will be disabled')
+      console.warn('[MapStats] Turf.js not loaded, statistics will be disabled')
       return
     }
 
     // Create and append stats panel
     const mapContainer = document.getElementById('map')
     if (!mapContainer) {
-      console.error('❌ Map container not found')
+      console.error('[MapStats] Map container not found')
       return
     }
 
     statsPanel = createStatsPanel()
     mapContainer.appendChild(statsPanel)
 
-    // Set up event listeners
+    // Set up event listeners with named functions for proper cleanup
     map.on(L.Draw.Event.DRAWSTART, handleDrawStart)
-
     map.on(L.Draw.Event.DRAWSTOP, handleDrawStop)
-
     map.on(L.Draw.Event.DRAWVERTEX, handleDrawVertex)
-
-    map.on(L.Draw.Event.CREATED, function (event) {
-      isDrawingActive = false
-      handlePolygonComplete(event.layer)
-    })
-
+    map.on(L.Draw.Event.CREATED, handleCreated)
     map.on(L.Draw.Event.EDITSTART, handleEditStart)
-
     map.on(L.Draw.Event.EDITSTOP, handleEditStop)
-
-    map.on(L.Draw.Event.EDITED, function (event) {
-      isEditingActive = false
-      event.layers.eachLayer(handlePolygonEdit)
-    })
-
+    map.on(L.Draw.Event.EDITED, handleEdited)
     map.on(L.Draw.Event.DELETED, handlePolygonDelete)
 
     // Check for existing polygon
@@ -610,20 +703,60 @@
   }
 
   /**
+   * Clean up event listeners and remove stats panel
+   * Call this before re-initializing or when cleaning up the map
+   */
+  function destroy() {
+    const deps = validateDependencies()
+
+    // Remove event listeners
+    if (deps.hasMap) {
+      map.off(L.Draw.Event.DRAWSTART, handleDrawStart)
+      map.off(L.Draw.Event.DRAWSTOP, handleDrawStop)
+      map.off(L.Draw.Event.DRAWVERTEX, handleDrawVertex)
+      map.off(L.Draw.Event.CREATED, handleCreated)
+      map.off(L.Draw.Event.EDITSTART, handleEditStart)
+      map.off(L.Draw.Event.EDITSTOP, handleEditStop)
+      map.off(L.Draw.Event.EDITED, handleEdited)
+      map.off(L.Draw.Event.DELETED, handlePolygonDelete)
+      map.off('mousemove', handleMouseMove)
+    }
+
+    // Clear any pending timeouts
+    if (editMonitorTimeoutId) {
+      clearTimeout(editMonitorTimeoutId)
+      editMonitorTimeoutId = null
+    }
+
+    // Remove stats panel from DOM
+    if (statsPanel && statsPanel.parentNode) {
+      statsPanel.parentNode.removeChild(statsPanel)
+    }
+
+    // Reset state
+    statsPanel = null
+    map = null
+    drawnItems = null
+    isDrawingActive = false
+    isEditingActive = false
+    currentMousePosition = null
+    lastPlottedPoint = null
+    drawnPoints = []
+    lastUpdateTime = 0
+    currentStats = resetCurrentStats()
+  }
+
+  /**
    * Clean up and reset statistics
    */
   function reset() {
-    currentStats = {
-      totalArea: 0,
-      currentLineDistance: 0,
-      totalPerimeter: 0,
-      vertexCount: 0
-    }
+    currentStats = resetCurrentStats()
     updateStatsDisplay(currentStats)
   }
 
   // Export functions
   window.MapStats.init = init
+  window.MapStats.destroy = destroy
   window.MapStats.reset = reset
   window.MapStats.handleDrawVertex = handleDrawVertex
   window.MapStats.handlePolygonComplete = handlePolygonComplete

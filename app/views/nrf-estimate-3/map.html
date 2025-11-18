@@ -11,7 +11,6 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund levy - GO
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
-<script src="https://cdn.jsdelivr.net/npm/@turf/turf@7/turf.min.js"></script>
 <style>
     body, html {
         overflow: hidden !important;
@@ -363,6 +362,8 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund levy - GO
     // Set the catchment GeoJSON endpoint for this journey
     window.CATCHMENTS_GEOJSON_URL = '/nrf-estimate-3/catchments.geojson';
 </script>
+<!-- Vendor dependencies -->
+<script src="/public/javascripts/vendor/turf.min.js"></script>
 <!-- Map modules - loaded in dependency order -->
 <script src="/public/javascripts/map-geometry.js"></script>
 <script src="/public/javascripts/map-ui.js"></script>
