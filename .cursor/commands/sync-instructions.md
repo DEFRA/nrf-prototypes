@@ -1,22 +1,43 @@
 ---
+name: sync-instructions
 description: Compare implementation against markdown instructions and update instructions to match reality
 tags: [documentation, sync, review]
+parameters:
+  - name: view-path
+    description: Path to the implemented view directory (e.g., 'app/views/nrf-estimate-1/')
+    required: true
+    type: string
+  - name: spec-file
+    description: Path to the specification markdown file to sync (e.g., 'prompts/implementation/quote-journey-v3.md')
+    required: true
+    type: string
 ---
 
 # Sync Instructions with Implementation
+
+## Description
 
 This command compares the implemented content under a specified view path against the content described in markdown instructions, then updates the instructions to reflect what has actually been implemented.
 
 ## Usage
 
-When the user provides:
+Type `/sync-instructions` in the chat to sync a specification file with its implementation.
 
-1. A view path (e.g., `app/views/nrf-estimate-1/`)
-2. A markdown instructions file (e.g., `prompts/implementation/quote-journey-v3.md`)
+### Parameters
 
-## Process
+- `view-path` (required): Path to the implemented view directory
+- `spec-file` (required): Path to the specification markdown file to sync
 
-### 1. Discovery Phase
+### Examples
+
+- `/sync-instructions view-path:app/views/nrf-estimate-1/ spec-file:prompts/implementation/quote-journey-v3.md`
+- `/sync-instructions view-path:app/views/lpa-verify/ spec-file:prompts/implementation/lpa-journey-v2.md`
+
+# Instructions
+
+Take the instructions and parameters provided, then:
+
+## 1. Discovery Phase
 
 **Read the markdown instructions file:**
 
@@ -31,7 +52,7 @@ When the user provides:
 - Read the actual content of each file
 - Compare against what's documented in the instructions
 
-### 2. Comparison Phase
+## 2. Comparison Phase
 
 For each file mentioned in the instructions:
 
@@ -79,7 +100,7 @@ For each file mentioned in the instructions:
 
 - Note as "File not implemented" in summary
 
-### 3. Discovery of New Files
+## 3. Discovery of New Files
 
 **For files in implementation but NOT in instructions:**
 
@@ -92,7 +113,7 @@ For each file mentioned in the instructions:
 
 - Note as "Not yet implemented" in summary
 
-### 4. Update Phase
+## 4. Update Phase
 
 **Update the markdown instructions file:**
 
@@ -110,7 +131,7 @@ For each difference that should be updated:
 - Update one section at a time
 - Verify each update is in the correct location
 
-### 5. Summary Phase
+## 5. Summary Phase
 
 After all updates, provide a comprehensive summary:
 
