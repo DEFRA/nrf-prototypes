@@ -11,6 +11,7 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund levy - GO
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@7/turf.min.js"></script>
 <style>
     body, html {
         overflow: hidden !important;
@@ -106,6 +107,89 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund levy - GO
         color: #0b0c0c;
         text-align: center;
         font-family: "GDS Transport", arial, sans-serif;
+    }
+
+    /* Map statistics panel */
+    .map-stats-panel {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        background: white;
+        padding: 15px;
+        border-radius: 0;
+        border: 1px solid #b1b4b6;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        min-width: 260px;
+        max-width: 300px;
+        font-family: "GDS Transport", arial, sans-serif;
+    }
+
+    .map-stats-panel.hidden {
+        display: none;
+    }
+
+    .map-stats-content h3 {
+        margin: 0 0 12px 0;
+        padding: 0 0 8px 0;
+        font-size: 16px;
+        line-height: 1.25;
+        font-weight: 700;
+        color: #0b0c0c;
+        border-bottom: 1px solid #b1b4b6;
+    }
+
+    .map-stats-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .map-stat-item {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 8px;
+        padding: 6px 0;
+        border-bottom: 1px solid #f3f2f1;
+        align-items: baseline;
+    }
+
+    .map-stat-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .map-stat-label {
+        font-size: 14px;
+        line-height: 1.25;
+        font-weight: 400;
+        color: #0b0c0c;
+        margin: 0;
+        white-space: nowrap;
+    }
+
+    .map-stat-value {
+        font-size: 16px;
+        line-height: 1.25;
+        font-weight: 700;
+        color: #0b0c0c;
+        margin: 0;
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    /* Ensure stats panel is above other map controls */
+    @media (max-width: 640px) {
+        .map-stats-panel {
+            bottom: 80px;
+            right: 10px;
+            left: 10px;
+            min-width: auto;
+        }
+
+        .map-stat-item {
+            grid-template-columns: 1fr auto;
+        }
     }
 </style>
 {% endblock %}
@@ -289,6 +373,7 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund levy - GO
 <script src="/public/javascripts/map-initialisation.js"></script>
 <script src="/public/javascripts/map-search.js"></script>
 <script src="/public/javascripts/map-drawing-controls.js"></script>
+<script src="/public/javascripts/map-stats.js"></script>
 <!-- Main orchestrator - loads last -->
 <script src="/public/javascripts/map-drawing-layers-spike.js"></script>
 {% endblock %}

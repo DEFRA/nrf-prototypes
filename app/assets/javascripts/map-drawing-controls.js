@@ -300,6 +300,11 @@
       window.MapUI.hideErrorSummary()
       window.MapUI.updateLinkStates(controls, drawnItemsGroup)
 
+      // Update stats panel after delete
+      if (window.MapStats && window.MapStats.handlePolygonDelete) {
+        window.MapStats.handlePolygonDelete()
+      }
+
       // Update help modal after delete
       if (
         window.MapInitialisation &&
