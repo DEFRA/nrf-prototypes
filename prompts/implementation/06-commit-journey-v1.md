@@ -102,7 +102,7 @@ Hint text: Enter this reference to retrieve the details entered during the estim
 
 ```
 {
-    estimateRetrievalEmail: {
+    email: {
         type: email,
         required: true
     }
@@ -142,10 +142,10 @@ Hint text: We will send you a link so you can retrieve the details from your est
 #### Content
 
 ```
-<div class="govuk-inset-text">
-    <p><strong>To:</strong> {{ data.estimateRetrievalEmail or 'user@example.com' }}</p>
-    <p><strong>Subject:</strong> Nature Restoration Fund - retrieve your estimate details for the Nature Restoration Fund levy</p>
-</div>
+        <div class="govuk-inset-text">
+            <p><strong>To:</strong> {{ data.email or 'user@example.com' }}</p>
+            <p><strong>Subject:</strong> Nature Restoration Fund - retrieve your estimate details for the Nature Restoration Fund levy</p>
+        </div>
 
 # Nature Restoration Fund – retrieve your estimate details for the Nature Restoration Fund levy
 
@@ -193,7 +193,7 @@ None
 | [IF they pick Hotel THEN show] | Number of hotel rooms |
 | [IF they pick "House of multiple occupation (HMO)" THEN show] | Number of multiple occupation rooms |
 | [IF they pick "Residential institution" THEN show] | Number of residential institution rooms |
-| Email address | [show estimateRetrievalEmail address] |
+| Email address | [show email address] |
 
 Continue button at the bottom of the summary list.
 ```
@@ -210,7 +210,7 @@ None
 | ---------------------- | ------------------------------- |
 | Order number:          | 6                               |
 | Path:                  | /nrf-estimate-3/company-details |
-| Title:                 | Enter the company details       |
+| Title:                 | Enter your details              |
 | Conditional page flow: | None                            |
 
 #### Data points
@@ -252,6 +252,10 @@ None
     vatRegistrationNumber: {
         type: text,
         required: false
+    },
+    purchaseOrderNumber: {
+        type: text,
+        required: false
     }
 }
 ```
@@ -278,6 +282,8 @@ Postcode
 ## Company Registration Number (CRN) (optional)
 
 ## VAT Registration number (optional)
+
+## Purchase order number (optional)
 ```
 
 #### Errors
@@ -312,7 +318,7 @@ Postcode
 
 ```
 # Confirm your Local Planning Authority (LPA)
-Hint text: We will send your commitment to use the Nature Restoration Fund to this LPA.
+Hint text: Confirm this is the LPA that your red line boundary is under.
 
 Stockton-on-Tees Borough Council
 
@@ -348,13 +354,13 @@ None
 | [IF they pick Hotel THEN show] | Number of hotel rooms |
 | [IF they pick "House of multiple occupation (HMO)" THEN show] | Number of multiple occupation rooms |
 | [IF they pick "Residential institution" THEN show] | Number of residential institution rooms |
-| Email address | [show estimateRetrievalEmail address] |
+| Email address | [show email address] |
 | Your details | [show full name, business name if provided, address, Company Registration Number and VAT registration number] |
 | Local Planning Authority| [Stockton-on-Tees Borough Council] |
 
 Text: By confirming and submitting these details, you are committing to using the Nature Restoration Fund levy.
 The details you are submitting must be accurate and correct.
-By committing to use this levy, you will be emailed a document that you can use in your planning application. The commitment is proof of how you intend to mitigate your environmental impact for nutrients.
+By commiting to use this levy, you will be emailed a document that you can use in your planning application. The commitment is proof of how you intend to mitigate your environmental impact for nutrients.
 
 CTA: Confirm and submit
 
@@ -435,12 +441,12 @@ Subject: Nature Restoration Fund – commitment to use the Nature Restoration Fu
 
 Attached is a commitment document that you can send to your Local Planning Authority to include in your planning application.
 
-The document outlines your commitment to use the Nature Restoration Fund levy. To mitigate your environmental impact for nutrients.
+The document outlines your commitment to use the Nature Restoration Fund levy to mitigate your environmental impact for nutrients.
 
 You told us the development:
 
-- is planned in an area {{ data.redlineBoundaryPolygon.intersectingCatchment or 'Thames Valley EDP' }}
-- has {{ data.residentialBuildingCount }} dwelling buildings (if applicable), hotel buildings with a total of {{ data.roomCounts.hotelCount }} rooms (if applicable), house of multiple occupation buildings with a total of {{ data.roomCounts.hmoCount }} rooms (if applicable), and residential institution buildings with a total of {{ data.roomCounts.residentialInstitutionCount }} rooms (if applicable)
+- is planned in {{ data.redlineBoundaryPolygon.intersectingCatchment or 'Thames Valley EDP' }}
+- has 6 dwelling buildings and 3 hotel rooms
 
 ## What you will need to pay
 
@@ -563,4 +569,4 @@ Create the following files in the GOV.UK Prototype Kit structure:
 - **Path naming**: All paths use lowercase with hyphens (e.g., `/company-details`, `/lpa-email`, `/summary-and-declaration`)
 - **Company details page**: New page in the invoice journey flow between confirm and LPA email entry
 - **Route conflict resolution**: The retrieved estimate summary page uses `/nrf-estimate-3/retrieved-estimate-summary` instead of `/nrf-estimate-3/commit-summary` to avoid conflict with the existing payment journey commit-summary route
-- **Data Property Note**: Use `estimateRetrievalEmail` instead of `email` for the estimate retrieval email to avoid conflicts with other email fields in the journey
+- **Data Property Note**: The implementation uses `email` for the estimate retrieval email field, not `estimateRetrievalEmail`
