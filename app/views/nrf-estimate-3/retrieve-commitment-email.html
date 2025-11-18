@@ -1,0 +1,58 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Enter your email address - Pay Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: backLink
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <form action="/nrf-estimate-3/retrieve-commitment-email" method="post" novalidate>
+
+            {% if error %}
+            {{ govukErrorSummary({
+                titleText: "There is a problem",
+                errorList: [
+                    {
+                        text: error,
+                        href: "#commitment-retrieval-email"
+                    }
+                ]
+            }) }}
+            {% endif %}
+
+            {{ govukInput({
+                label: {
+                    text: "Enter your email address",
+                    classes: "govuk-label--l",
+                    isPageHeading: true
+                },
+                hint: {
+                    text: "We will send you a link so you can retrieve the details from your commitment to use Nature Restoration Fund levy."
+                },
+                id: "commitment-retrieval-email",
+                name: "commitment-retrieval-email",
+                type: "email",
+                autocomplete: "email",
+                spellcheck: false,
+                value: data.commitmentRetrievalEmail,
+                errorMessage: { text: error } if error
+            }) }}
+
+            {{ govukButton({
+                text: "Continue"
+            }) }}
+
+        </form>
+    </div>
+</div>
+{% endblock %}
+

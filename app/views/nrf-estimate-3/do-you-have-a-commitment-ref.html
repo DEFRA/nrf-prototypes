@@ -1,0 +1,63 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Do you have a commitment reference? - Pay Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: backLink
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <form action="/nrf-estimate-3/do-you-have-a-commitment-ref" method="post" novalidate>
+
+            {% if error %}
+            {{ govukErrorSummary({
+                titleText: "There is a problem",
+                errorList: [
+                    {
+                        text: error,
+                        href: "#has-commitment-ref"
+                    }
+                ]
+            }) }}
+            {% endif %}
+
+            {{ govukRadios({
+                name: "has-commitment-ref",
+                fieldset: {
+                    legend: {
+                        text: "Do you have a commitment reference?",
+                        isPageHeading: true,
+                        classes: "govuk-fieldset__legend--l"
+                    }
+                },
+                errorMessage: { text: error } if error,
+                items: [
+                    {
+                        value: "yes",
+                        text: "Yes",
+                        checked: data.hasCommitmentRef == 'yes'
+                    },
+                    {
+                        value: "no",
+                        text: "No",
+                        checked: data.hasCommitmentRef == 'no'
+                    }
+                ]
+            }) }}
+
+            {{ govukButton({
+                text: "Continue"
+            }) }}
+
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Do you have an estimate reference? - Get an estimate for Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: "/nrf-estimate-3/what-would-you-like-to-do"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <form action="/nrf-estimate-3/do-you-have-an-estimate-ref" method="post" novalidate>
+
+            {% if error %}
+            {{ govukErrorSummary({
+                titleText: "There is a problem",
+                errorList: [
+                    {
+                        text: error,
+                        href: "#has-estimate-reference"
+                    }
+                ]
+            }) }}
+            {% endif %}
+
+            {{ govukRadios({
+                name: "has-estimate-reference",
+                fieldset: {
+                    legend: {
+                        text: "Do you have an estimate reference?",
+                        isPageHeading: true,
+                        classes: "govuk-fieldset__legend--l"
+                    }
+                },
+                errorMessage: { text: error } if error,
+                items: [
+                    {
+                        value: "yes",
+                        text: "Yes",
+                        checked: data.hasEstimateReference == 'yes'
+                    },
+                    {
+                        value: "no",
+                        text: "No",
+                        checked: data.hasEstimateReference == 'no'
+                    }
+                ]
+            }) }}
+
+            {{ govukButton({
+                text: "Continue"
+            }) }}
+
+        </form>
+    </div>
+</div>
+{% endblock %}
