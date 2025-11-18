@@ -469,7 +469,7 @@ Note: The label dynamically adjusts based on building type. For "House of multip
 ```
 {
     data: {
-        estimateEmail: {
+        email: {
             type: email,
             required: true
         }
@@ -501,12 +501,12 @@ Note: For the payment journey with estimate reference retrieval, there is a sepa
 
 ### Check your answers summary and submit
 
-| **Field**              | **Value**                        |
-| ---------------------- | -------------------------------- |
-| Order number:          | 6                                |
-| Path:                  | /nrf-estimate-3/estimate-summary |
-| Title:                 | Check your answers               |
-| Conditional page flow: | None                             |
+| **Field**              | **Value**               |
+| ---------------------- | ----------------------- |
+| Order number:          | 6                       |
+| Path:                  | /nrf-estimate-3/summary |
+| Title:                 | Check your answers      |
+| Conditional page flow: | None                    |
 
 #### Data points
 
@@ -519,12 +519,13 @@ None
 
 | Red line boundary | [Show Added/Not added] |
 | Building types | [List all types picked here] |
-| [IF they pick Dwelling THEN show] Number of dwelling buildings | [show count] |
+| [IF they pick "Dwellinghouse" THEN show] Number of dwelling buildings | [show count] |
 | [IF they pick "House of multiple occupation (HMO)" THEN show] Number of multiple occupation rooms | [show count] |
 | [IF they pick "Residential institution" THEN show] Number of residential institution rooms | [show count] |
 | [IF they pick Hotel THEN show] Number of hotel rooms | [show count] |
-| Email address | [show estimateEmail address] |
-```
+| Email address | [show email address] |
+
+Submit button at the bottom of the summary list.
 
 #### Errors
 
@@ -545,6 +546,7 @@ None
 #### Content
 
 ```
+
 <green banner>
 # Your details have been submitted
 
@@ -559,9 +561,10 @@ You do not need to pay anything at this point, this service is designed to help 
 
 If you decide to mitigate environmental impact using Nature Restoration Fund levy, you can commit to use the Nature Restoration Fund levy.
 
-Keep the email as a record of the estimate and reference number. You can use the reference to retrieve this estimate when you are ready commit to using nature Restoration Fund.
+Keep the email as a record of the estimate and reference number. You can use the reference to retrieve this estimate when you are ready to commit to using Nature Restoration Fund.
 
 ## Get help with Nature Restoration Fund
+
 If you need help with Nature Restoration Fund, contact XXXX and give the estimate reference number.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
@@ -571,6 +574,7 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 Find out about call charges at https://www.gov.uk/call-charges
 
 View the email content (link to /nrf-estimate-3/estimate-email-content)
+
 ```
 
 #### Errors
@@ -592,25 +596,30 @@ None
 #### Content
 
 ```
+
+<div class="govuk-inset-text">
+    <p><strong>To:</strong> {{ data.email or 'user@example.com' }}</p>
+    <p><strong>Subject:</strong> Nature Restoration Fund – estimate for the Nature Restoration Fund levy</p>
+</div>
+
 # Nature Restoration Fund – estimate for the Nature Restoration Fund levy
 
-Estimate reference: {{ data.estimateReference }}
+## Estimate reference: {{ data.estimateReference }}
 
-Thank you for submitting details of the development on the Get an estimate for Nature Restoration Fund Levy service.
+Thank you for submitting details of the development on the Get an estimate for Nature Restoration Fund levy service.
 
 You told us the development:
 
-- is planned in an area {{ data.redlineBoundaryPolygon.intersectingCatchment or 'Thames Valley EDP' }}
-- has {{ data.residentialBuildingCount }} dwelling buildings (if applicable), hotel buildings with a total of {{ data.roomCounts.hotelCount }} rooms (if applicable), house of multiple occupation buildings with a total of {{ data.roomCounts.hmoCount }} rooms (if applicable), and residential institution buildings with a total of {{ data.roomCounts.residentialInstitutionCount }} rooms (if applicable)
+- is planned in {{ data.redlineBoundaryPolygon.intersectingCatchment or 'Thames Valley EDP' }}
+- has 6 dwelling buildings and 3 hotel rooms
 
 ## What you might need to pay
 
 Based on the information you have provided, the development falls into an area with an Enviromental Delivery Plan (EDP), so you can use the Nature Restoration Fund Nutrients Levy.
 
-The estimated total amount you may need to pay if you develop in this area is:
-£{{ data.levyAmount or '2,500' }}
+The estimated total amount you may need to pay if you develop in this area is: **£{{ data.levyAmount or '2,500' }}**
 
-You do not need to pay anything at this point, this service is designed to help you plan how to mitigate your environmental obligations.[Get another estimate](ADD PATH HERE)
+You do not need to pay anything at this point, this service is designed to help you plan how to mitigate your environmental obligations. [Get another estimate](<javascript:void(0)>)
 
 If you do decide to mitigate using Nature Restoration Fund levy, you can commit and include the commitment when applying for planning permission.
 
@@ -714,6 +723,8 @@ Create the following files in the GOV.UK Prototype Kit structure:
 - Implement basic validation without complex security measures
 - Focus on demonstrating the user flow and interface design
 - Ensure the journey works end-to-end for user testing
+
+```
 
 ```
 
