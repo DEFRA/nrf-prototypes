@@ -29,14 +29,14 @@ None
 # Nature Restoration Fund
 
 
-If a development falls into an area with an [Environmental Delivery Plan (EDP)](MAKE THIS A FAKE LINK), you can use [Nature Restoration Fund (NRF)](MAKE THIS A FAKE LINK) levies to discharge environmental obligations.
-If you choose not to use the NRF levy, you will still need to [discharge your obligations in other ways](MAKE THIS A FAKE LINK).
+If a development falls into an area with an [Environmental Delivery Plan (EDP)](javascript:void(0)), you can use [Nature Restoration Fund (NRF)](javascript:void(0)) levies to discharge environmental obligations.
+If you choose not to use the NRF levy, you will still need to [discharge your obligations in other ways](javascript:void(0)).
 
 ## Using NRF to discharge your environmental obligations
 
 Use this service to find out if your development is in an area with an EDP, get an estimate for the cost of the levy, commit to using the levy and pay the levy.
 
-{button}[Start now](https://gov.uk/random){/button}
+CTA: Start now
 
 ## What you need
 
@@ -83,7 +83,7 @@ Telephone: 00000000000
 
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
-Find out about call charges at https://www.gov.uk/call-charges
+[Find out about call charges](https://www.gov.uk/call-charges)
 ```
 
 ---
@@ -105,8 +105,8 @@ Find out about call charges at https://www.gov.uk/call-charges
         journeyType: {
             type: radios
             required: true
-            values: "I want an estimate for the Nature Restoration Fund levy" |
-        "I am ready to commit to using the Nature Restoration Fund levy" | "I am ready to pay the Nature Restoration Fund levy"
+            values: "estimate" | "commit" | "payment"
+            labels: "I want an estimate for the Nature Restoration Fund levy" | "I am ready to commit to using the Nature Restoration Fund levy" | "I am ready to pay the Nature Restoration Fund levy"
         }
     }
 }
@@ -120,17 +120,16 @@ Find out about call charges at https://www.gov.uk/call-charges
 - I am ready to commit to using the Nature Restoration Fund levy
   Hint text: You will need an estimate reference
 - I am ready to pay the Nature Restoration Fund levy
- Hint text: You will need a commitment reference
+  Hint text: You will need a commitment reference
 ```
 
 #### Errors
 
-| **Field**      | **Value**                                                           |
-| -------------- | ------------------------------------------------------------------- |
-| Description:   | User has selected ‘Continue’ without choosing an option             |
-| Error summary: | There is a problem                                                  |
-| Error message: | Select if you want an estimate, are ready to commit or ready to pay |
-|                |                                                                     |
+| **Field**      | **Value**                                               |
+| -------------- | ------------------------------------------------------- |
+| Description:   | User has selected 'Continue' without choosing an option |
+| Error summary: | There is a problem                                      |
+| Error message: | Select what you would like to do                        |
 
 ---
 
@@ -151,8 +150,7 @@ Find out about call charges at https://www.gov.uk/call-charges
         hasRedlineBoundaryFile: {
             type: radios
             required: true
-            values: "Draw on a map" |
-        "Upload a file"
+            values: "Draw on a map" | "Upload a file"
         }
     }
 }
@@ -269,7 +267,7 @@ Note: The implementation includes a complex map interface with:
 | Error summary: | There is a problem                                                 |
 | Error message: | Draw a red line boundary to continue                               |
 
-Note: The button text on this page is "Save and continue" (not just "Continue").
+Note: The button text on this page is "Save and continue" (not just "Continue"). The button only appears when a boundary has been drawn.
 
 ---
 
@@ -293,7 +291,7 @@ Other ways to mitigate environmental impact are:
 - Marine impact assessments for marine conservation zones
 - Species licensing applications for protected species
 
-Find out about mitigating environmental impact
+[Find out about mitigating environmental impact](javascript:void(0))
 ```
 
 #### Errors
@@ -318,7 +316,8 @@ None
     data: {
         buildingTypes: {
             type: checkboxes,
-            values: Dwelling | Hotel | House of multiple occupation (HMO) | Non-residential development | Residential institution,
+            values: "Dwellinghouse" | "Hotel" | "House of multiple occupation (HMO)" | "Non-residential development" | "Residential institution",
+            labels: "Dwelling" | "Hotel" | "House of multiple occupation (HMO)" | "Non-residential development" | "Residential institution",
             conditional: required if red line boundary falls within EDP boundary area
         }
     }
@@ -336,9 +335,11 @@ Select all that apply
 
 | **Field**      | **Value**                                                 |
 | -------------- | --------------------------------------------------------- |
-| Description:   | User has selected ‘Continue’ without choosing any options |
+| Description:   | User has selected 'Continue' without choosing any options |
 | Error summary: | There is a problem                                        |
 | Error message: | Select a building type to continue                        |
+
+Note: The checkbox value for dwelling buildings is "Dwellinghouse" but the label displayed to users is "Dwelling".
 
 ---
 
@@ -358,7 +359,7 @@ Select all that apply
 # Nature Restoration Fund levy is not available for non-residential developments
 The development must contain residential buildings to be eligible to mitigate environmental impact with a Nature Restoration Fund levy.
 
-Find out about planning a non-residential development
+[Find out about planning a non-residential development](javascript:void(0))
 ```
 
 #### Errors
@@ -407,12 +408,12 @@ None
 
 ### Enter the number of rooms in your [building type] building(s) planned for the development
 
-| **Field**              | **Value**                                                                                                       |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------- |
-| Order number:          | 4.3                                                                                                             |
-| Path:                  | /nrf-estimate-3/room-count                                                                                      |
-| Title:                 | Enter the number of rooms in your [lowercase(data.buildingTypes)] building(s) planned for the development       |
-| Conditional page flow: | display if data.buildingTypes includes "Hotel", "House of multiple occupation (HMO)", "Residential institution" |
+| **Field**              | **Value**                                                                                                                                                                                 |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Order number:          | 4.3                                                                                                                                                                                       |
+| Path:                  | /nrf-estimate-3/room-count                                                                                                                                                                |
+| Title:                 | Enter the number of rooms in your [lowercase(data.buildingTypes) if buildingType != 'House of multiple occupation (HMO)' else data.buildingTypes] building(s) planned for the development |
+| Conditional page flow: | display if data.buildingTypes includes "Hotel", "House of multiple occupation (HMO)", "Residential institution"                                                                           |
 
 #### Data points
 
@@ -440,9 +441,9 @@ None
 #### Content
 
 ```
-# Enter the number of rooms in your [lowercase(data.buildingTypes)] building(s) planned for the development
+# Enter the number of rooms in your [buildingType | lower if buildingType != 'House of multiple occupation (HMO)' else buildingType] building(s) planned for the development
 
-Note: The label dynamically adjusts based on building type. For "House of multiple occupation (HMO)", it shows the full name rather than lowercase.
+Note: The label dynamically adjusts based on building type using Nunjucks template syntax. For "House of multiple occupation (HMO)", it shows the full name rather than lowercase. The page handles multiple building types requiring room counts sequentially.
 ```
 
 #### Errors
@@ -517,15 +518,15 @@ None
 ```
 # Check your answers
 
-| Red line boundary | [Show Added/Not added] |
-| Building types | [List all types picked here] |
-| [IF they pick "Dwellinghouse" THEN show] Number of dwelling buildings | [show count] |
-| [IF they pick "House of multiple occupation (HMO)" THEN show] Number of multiple occupation rooms | [show count] |
-| [IF they pick "Residential institution" THEN show] Number of residential institution rooms | [show count] |
-| [IF they pick Hotel THEN show] Number of hotel rooms | [show count] |
-| Email address | [show email address] |
+| Red line boundary | [Show Added/Not added] | [Change link to /nrf-estimate-3/map?nav=summary] |
+| Building types | [List all types picked here using buildingTypeLabels mapping] | [Change link to /nrf-estimate-3/building-type?change=true&nav=summary] |
+| [IF they pick "Dwellinghouse" THEN show] Number of dwelling buildings | [show count] | [Change link to /nrf-estimate-3/residential?change=true&nav=summary] |
+| [IF they pick "House of multiple occupation (HMO)" THEN show] Number of multiple occupation rooms | [show count] | [Change link to /nrf-estimate-3/room-count?change=true&nav=summary&type=hmo] |
+| [IF they pick "Residential institution" THEN show] Number of residential institution rooms | [show count] | [Change link to /nrf-estimate-3/room-count?change=true&nav=summary&type=residential-institution] |
+| [IF they pick Hotel THEN show] Number of hotel rooms | [show count] | [Change link to /nrf-estimate-3/room-count?change=true&nav=summary&type=hotel] |
+| Email address | [show email address] | [Change link to /nrf-estimate-3/estimate-email?change=true&nav=summary] |
 
-Submit button at the bottom of the summary list.
+CTA: Submit
 
 #### Errors
 
@@ -547,11 +548,13 @@ None
 
 ```
 
-<green banner>
+<green-banner>
 # Your details have been submitted
 
 Estimate reference: {{ data.estimateReference }}
-</green banner>
+</green-banner>
+
+Note: This page conditionally displays different content based on journey type (estimate, commit, or payment). For the estimate journey, it shows:
 
 ## What happens next
 
@@ -571,9 +574,9 @@ Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
-Find out about call charges at https://www.gov.uk/call-charges
+[Find out about call charges](https://www.gov.uk/call-charges)
 
-View the email content (link to /nrf-estimate-3/estimate-email-content)
+[View the email content](/nrf-estimate-3/estimate-email-content)
 
 ```
 
@@ -597,10 +600,10 @@ None
 
 ```
 
-<div class="govuk-inset-text">
-    <p><strong>To:</strong> {{ data.email or 'user@example.com' }}</p>
-    <p><strong>Subject:</strong> Nature Restoration Fund – estimate for the Nature Restoration Fund levy</p>
-</div>
+<inset-text>
+**To:** {{ data.email or 'user@example.com' }}
+**Subject:** Nature Restoration Fund – estimate for the Nature Restoration Fund levy
+</inset-text>
 
 # Nature Restoration Fund – estimate for the Nature Restoration Fund levy
 
@@ -611,11 +614,11 @@ Thank you for submitting details of the development on the Get an estimate for N
 You told us the development:
 
 - is planned in {{ data.redlineBoundaryPolygon.intersectingCatchment or 'Thames Valley EDP' }}
-- has 6 dwelling buildings and 3 hotel rooms
+- has [dynamically constructed list based on building types selected, e.g., "6 dwelling buildings and 3 hotel rooms" or "house of multiple occupation buildings with a total of 5 rooms"]
 
 ## What you might need to pay
 
-Based on the information you have provided, the development falls into an area with an Enviromental Delivery Plan (EDP), so you can use the Nature Restoration Fund Nutrients Levy.
+Based on the information you have provided, the development falls into an area with an Environmental Delivery Plan (EDP), so you can use the Nature Restoration Fund Nutrients levy.
 
 The estimated total amount you may need to pay if you develop in this area is: **£{{ data.levyAmount or '2,500' }}**
 
@@ -639,7 +642,7 @@ Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
-Find out about call charges at https://www.gov.uk/call-charges
+[Find out about call charges](https://www.gov.uk/call-charges)
 
 ```
 

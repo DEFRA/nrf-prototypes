@@ -143,10 +143,10 @@ Hint text: We will send you a link so you can retrieve the details from your com
 #### Content
 
 ```
-<div class="govuk-inset-text">
-    <p><strong>To:</strong> {{ data.commitmentRetrievalEmail or 'user@example.com' }}</p>
-    <p><strong>Subject:</strong> Nature Restoration Fund - retrieve your commitment details for the Nature Restoration Fund levy</p>
-</div>
+<inset-text>
+**To:** {{ data.commitmentRetrievalEmail or 'user@example.com' }}
+**Subject:** Nature Restoration Fund - retrieve your commitment details for the Nature Restoration Fund levy
+</inset-text>
 
 # Nature Restoration Fund – retrieve your commitment details for the Nature Restoration Fund levy
 
@@ -162,7 +162,7 @@ Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
-Find out about call charges at https://www.gov.uk/call-charges
+[Find out about call charges](https://www.gov.uk/call-charges)
 ```
 
 ---
@@ -183,20 +183,21 @@ None
 #### Content
 
 ```
-
 # Check your answers
 
-| Commitment reference | [show commitment reference] |
-| Red line boundary added | [Show Yes/No] |
-| Red line boundary file uploaded | [Show Yes/No] |
-| Building types | [List all types picked here] |
-| [IF they pick Dwelling THEN show] | Number of dwelling buildings |
-| [IF they pick Hotel THEN show] | Number of hotel rooms |
-| [IF they pick "House of multiple occupation (HMO)" THEN show] | Number of multiple occupation rooms |
-| [IF they pick "Residential institution" THEN show] | Number of residential institution rooms |
-| Email address | [show commitmentRetrievalEmail if provided, otherwise show email] |
-| Your details | [show full name, business name if provided, address, Company Registration Number and VAT registration number] |
-| Local Planning Authority| [Stockton-on-Tees Borough Council] |
+| Field | Value | Action |
+|-------|-------|--------|
+| Commitment reference | {{ data.commitmentRef }} (if provided) | [Change] |
+| Red line boundary added | Yes/No (based on data.redlineBoundaryPolygon) | [Change] |
+| Red line boundary file uploaded | Yes/No (based on data.hasRedlineBoundaryFile) | [Change] |
+| Building types | List of all types selected (if any) | [Change] |
+| Number of dwelling buildings | {{ data.residentialBuildingCount }} (if Dwelling selected) | [Change] |
+| Number of hotel rooms | {{ data.roomCounts.hotelCount }} (if Hotel selected) | [Change] |
+| Number of multiple occupation rooms | {{ data.roomCounts.hmoCount }} (if "House of multiple occupation (HMO)" selected) | [Change] |
+| Number of residential institution rooms | {{ data.roomCounts.residentialInstitutionCount }} (if "Residential institution" selected) | [Change] |
+| Email address | {{ data.commitmentRetrievalEmail or data.email or 'Not provided' }} | [Change] |
+| Your details | Full name, business name if provided, address, Company Registration Number and VAT registration number | [Change] |
+| Local Planning Authority | Stockton-on-Tees Borough Council | [Change] |
 
 Continue button at the bottom of the summary list.
 ```
@@ -263,28 +264,29 @@ None
 #### Content
 
 ```
-
 # Check your answers
 
-| Commitment reference | [show commitment reference if provided] |
-| Red line boundary added | [Show Yes/No] |
-| Red line boundary file uploaded | [Show Yes/No] |
-| Building types | [List all types picked here] |
-| [IF they pick Dwelling THEN show] | Number of dwelling buildings |
-| [IF they pick Hotel THEN show] | Number of hotel rooms |
-| [IF they pick "House of multiple occupation (HMO)" THEN show] | Number of multiple occupation rooms |
-| [IF they pick "Residential institution" THEN show] | Number of residential institution rooms |
-| Email address | [show commitmentRetrievalEmail if provided, otherwise show email] |
-| Your details | [show full name, business name if provided, address, Company Registration Number and VAT registration number] |
-| Local Planning Authority| [Stockton-on-Tees Borough Council] |
-| Planning reference | [show planning reference] |
+| Field | Value | Action |
+|-------|-------|--------|
+| Commitment reference | {{ data.commitmentRef }} (if provided) | [Change] |
+| Red line boundary added | Yes/No (based on data.redlineBoundaryPolygon) | [Change] |
+| Red line boundary file uploaded | Yes/No (based on data.hasRedlineBoundaryFile) | [Change] |
+| Building types | List of all types selected (if any) | [Change] |
+| Number of dwelling buildings | {{ data.residentialBuildingCount }} (if Dwelling selected) | [Change] |
+| Number of hotel rooms | {{ data.roomCounts.hotelCount }} (if Hotel selected) | [Change] |
+| Number of multiple occupation rooms | {{ data.roomCounts.hmoCount }} (if "House of multiple occupation (HMO)" selected) | [Change] |
+| Number of residential institution rooms | {{ data.roomCounts.residentialInstitutionCount }} (if "Residential institution" selected) | [Change] |
+| Email address | {{ data.commitmentRetrievalEmail or data.email or 'Not provided' }} | [Change] |
+| Your details | Full name, business name if provided, address, Company Registration Number and VAT registration number | [Change] |
+| Local Planning Authority | Stockton-on-Tees Borough Council | [Change] |
+| Planning reference | {{ data.planningRef }} | [Change] |
 
-Text: By confirming and submitting these details, you are agreeing to pay the Nature Restoration Fund levy.
+By confirming and submitting these details, you are agreeing to pay the Nature Restoration Fund levy.
 The details you are submitting must be accurate and correct.
 You will be emailed an invoice which you must pay.
 You will then receive a receipt and you can use it to discharge your environmental obligations.
 
-Your Nature Restoration Fund Nutrient levy amount is £2,500.
+Your Nature Restoration Fund nutrient levy amount is £{{ data.levyAmount or '2,500' }}.
 
 CTA: Confirm and submit
 ```
@@ -308,11 +310,11 @@ None
 #### Content
 
 ```
-<green banner>
+<green-banner>
 # Your details have been submitted.
 
-Payment reference: [dynamically generated]
-</green banner>
+Payment reference: {{ data.paymentReference }}
+</green-banner>
 
 ## What happens next
 
@@ -323,7 +325,7 @@ Once you have your planning decision notice, you can pay your levy. You will the
 
 You told us the development:
 * is planned in {{ data.redlineBoundaryPolygon.intersectingCatchment or 'Thames Valley EDP' }}
-* has 6 dwelling buildings and 3 hotel rooms
+* has [dynamically generated list based on building types and counts with proper pluralization]
 
 ## What you need to pay
 
@@ -346,9 +348,9 @@ Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
-Find out about call charges at https://www.gov.uk/call-charges
+[Find out about call charges](https://www.gov.uk/call-charges)
 
-Link: View the email content (links to /nrf-estimate-3/invoice-email-content)
+[View the email content](/nrf-estimate-3/invoice-email-content)
 ```
 
 **Note:** The confirmation page uses conditional rendering based on `data.paymentReference` to display different content for invoice journey vs estimate journey. The invoice journey content is shown when `data.paymentReference` exists.
@@ -372,14 +374,14 @@ None
 #### Content
 
 ```
-<div class="govuk-inset-text">
-    <p><strong>To:</strong> {{ data.commitmentRetrievalEmail or data.email or 'user@example.com' }}</p>
-    <p><strong>Subject:</strong> Nature Restoration Fund – payment for the Nature Restoration Fund levy</p>
-</div>
+<inset-text>
+**To:** {{ data.commitmentRetrievalEmail or data.email or 'user@example.com' }}
+**Subject:** Nature Restoration Fund – payment for the Nature Restoration Fund levy
+</inset-text>
 
 # Nature Restoration Fund – payment for the Nature Restoration Fund levy
 
-<strong>Payment reference:</strong> {{ data.paymentReference }}
+**Payment reference:** {{ data.paymentReference }}
 
 Thank you for using Nature Restoration Fund levy to mitigate your environmental impact.
 An invoice for the total amount of the levy is attached.
@@ -419,7 +421,7 @@ Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
-Find out about call charges at https://www.gov.uk/call-charges
+[Find out about call charges](https://www.gov.uk/call-charges)
 ```
 
 ---

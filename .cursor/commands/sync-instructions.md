@@ -78,7 +78,7 @@ For each file mentioned in the instructions:
 - Heading text differs
 - Help text differs
 - Hint text differs
-- HTML structure is significantly different
+- Raw HTML has been used in the instructions instead of markdown or pseudo tags where markdown doesn't support the formatting such as with inset text
 - Form field names or IDs differ
 - Link destinations differ
 - File names differ
@@ -183,6 +183,10 @@ After all updates, provide a comprehensive summary:
 6. **Version Info**: If the markdown has version info or dates, consider updating those.
 
 7. **Multiple Code Blocks**: If a file appears in multiple places in the instructions (e.g., showing evolution), update ALL instances appropriately.
+
+8. **Favour markdown syntax over HTML**: If the instructions include HTML it should be pseudo HTML and used only for the specific cases to denote a confirmation panel `<green-banner>` or inset text `<inset-text>` and URLs can use the syntax `[label](URL)`
+
+9. **Use markdown tables to represent summary lists**: Style the summary list as a markdown table whenever the page is intended to use the summary list pattern, e.g., a check your answers page
 
 ## Example Interaction
 

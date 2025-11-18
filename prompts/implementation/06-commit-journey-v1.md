@@ -37,6 +37,8 @@
 # Do you have an estimate reference?
 - Yes
 - No
+
+CTA: Continue
 ```
 
 #### Errors
@@ -74,6 +76,8 @@
 ```
 # Enter your estimate reference
 Hint text: Enter this reference to retrieve the details entered during the estimate.
+
+CTA: Continue
 ```
 
 #### Errors
@@ -114,6 +118,8 @@ Hint text: Enter this reference to retrieve the details entered during the estim
 ```
 # Enter your email address
 Hint text: We will send you a link so you can retrieve the details from your estimate.
+
+CTA: Continue
 ```
 
 #### Errors
@@ -142,16 +148,16 @@ Hint text: We will send you a link so you can retrieve the details from your est
 #### Content
 
 ```
-        <div class="govuk-inset-text">
-            <p><strong>To:</strong> {{ data.email or 'user@example.com' }}</p>
-            <p><strong>Subject:</strong> Nature Restoration Fund - retrieve your estimate details for the Nature Restoration Fund levy</p>
-        </div>
+<inset-text>
+**To:** {{ data.email or 'user@example.com' }}
+**Subject:** Nature Restoration Fund - retrieve your estimate details for the Nature Restoration Fund levy
+</inset-text>
 
 # Nature Restoration Fund – retrieve your estimate details for the Nature Restoration Fund levy
 
 You can use the details you previously gave us for your estimate to fill in the information needed to commit to using Nature Restoration Fund levy.
 
-[Retrieve the estimate details](http://testurl-to-my-nrf-service.com)
+[Retrieve the estimate details](/nrf-estimate-3/retrieved-estimate-summary)
 
 ## Get help with Nature Restoration Fund
 
@@ -161,7 +167,7 @@ Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
-Find out about call charges at https://www.gov.uk/call-charges
+[Find out about call charges](https://www.gov.uk/call-charges)
 ```
 
 ---
@@ -195,7 +201,7 @@ None
 | [IF they pick "Residential institution" THEN show] | Number of residential institution rooms |
 | Email address | [show email address] |
 
-Continue button at the bottom of the summary list.
+CTA: Continue
 ```
 
 #### Errors
@@ -211,6 +217,7 @@ None
 | Order number:          | 6                               |
 | Path:                  | /nrf-estimate-3/company-details |
 | Title:                 | Enter your details              |
+| Page title (HTML):     | Enter the company details       |
 | Conditional page flow: | None                            |
 
 #### Data points
@@ -272,7 +279,6 @@ Hint text: Enter the details for the individual or company who will be paying th
 ## Business name (optional)
 
 ## Address
-Text:
 Address line 1
 Address line 2 (optional)
 Town or city
@@ -281,9 +287,11 @@ Postcode
 
 ## Company Registration Number (CRN) (optional)
 
-## VAT Registration number (optional)
+## VAT registration number (optional)
 
 ## Purchase order number (optional)
+
+CTA: Continue
 ```
 
 #### Errors
@@ -356,14 +364,13 @@ None
 | [IF they pick "Residential institution" THEN show] | Number of residential institution rooms |
 | Email address | [show email address] |
 | Your details | [show full name, business name if provided, address, Company Registration Number and VAT registration number] |
-| Local Planning Authority| [Stockton-on-Tees Borough Council] |
+| Local Planning Authority | [Stockton-on-Tees Borough Council] |
 
-Text: By confirming and submitting these details, you are committing to using the Nature Restoration Fund levy.
+By confirming and submitting these details, you are committing to using the Nature Restoration Fund levy.
 The details you are submitting must be accurate and correct.
 By commiting to use this levy, you will be emailed a document that you can use in your planning application. The commitment is proof of how you intend to mitigate your environmental impact for nutrients.
 
 CTA: Confirm and submit
-
 ```
 
 #### Errors
@@ -385,28 +392,28 @@ None
 #### Content
 
 ```
-<green banner>
-# Your details have been submitted.
+<green-banner>
+# Your details have been submitted
 
-Commitment reference: [dynamically generated]
-</green banner>
+Commitment reference: [dynamically generated - shows data.commitmentReference]
+</green-banner>
 
 ## What happens next
 
 You will be sent an email with a commitment document that you can send to your Local Planning Authority to include in your planning application.
 
-The document outlines your commitment to use the Nature Restoration Fund levy. To mitigate your environmental impact for nutrients.
+The document outlines your commitment to use the Nature Restoration Fund levy to mitigate your environmental impact for nutrients.
 
 ## Get help with Nature Restoration Fund
-If you need help with Nature Restoration Fund, contact XXXX and give the estimate reference number.
+If you need help with Nature Restoration Fund, contact XXXX and give the commitment reference number.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
-Find out about call charges at https://www.gov.uk/call-charges
+[Find out about call charges](https://www.gov.uk/call-charges)
 
-Link: View the email content (links to /nrf-estimate-3/commit-email-content)
+[View the email content](/nrf-estimate-3/commit-email-content)
 ```
 
 **Note:** The confirmation page uses conditional rendering based on `data.paymentReference` to display different content for commit journey vs estimate journey. The invoice journey content is shown when `data.paymentReference` exists.
@@ -430,10 +437,10 @@ None
 #### Content
 
 ```
-<div class="govuk-inset-text">
-To: [LPA email address - displays data.lpaEmail or defaults to 'user@example.com']
-Subject: Nature Restoration Fund – commitment to use the Nature Restoration Fund levy
-</div>
+<inset-text>
+**To:** {{ data.lpaEmail or 'user@example.com' }}
+**Subject:** Nature Restoration Fund – commitment to use the Nature Restoration Fund levy
+</inset-text>
 
 # Nature Restoration Fund – commitment to use the Nature Restoration Fund levy
 
@@ -450,10 +457,10 @@ You told us the development:
 
 ## What you will need to pay
 
-Based on the information you have provided, the development falls into an area with an Enviromental Delivery Plan (EDP), so you can use the Nature Restoration Fund Nutrients Levy.
+Based on the information you have provided, the development falls into an area with an Environmental Delivery Plan (EDP), so you can use the Nature Restoration Fund Nutrients Levy.
 
 The estimated total amount you may need to pay if you develop in this area is:
-£{{ data.levyAmount or '2,500' }}
+**£{{ data.levyAmount or '2,500' }}**
 
 You do not need to pay anything at this point, you can send the attached document to your Local Planning Authority to include in your planning application.
 
@@ -467,13 +474,13 @@ Your levy will be spent on conservation, with amounts being spent on monitoring 
 
 ## Get help with Nature Restoration Fund
 
-If you need help with Nature Restoration Fund, contact XXXX and give the estimate reference number.
+If you need help with Nature Restoration Fund, contact XXXX and give the commitment reference number.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
-Find out about call charges at https://www.gov.uk/call-charges
+[Find out about call charges](https://www.gov.uk/call-charges)
 ```
 
 ---
