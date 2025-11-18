@@ -317,13 +317,14 @@ Email preview pages must follow consistent structure:
 
 ### Email Page Requirements
 
-- **Inset box header**: Display recipient and subject
+- **Inset box header**: Display recipient and subject using pseudo-markdown tag `<inset-text>`:
 
-  ```nunjucks
-  <div class="govuk-inset-text">
-    <p><strong>To:</strong> {{ data.recipientEmail or 'user@example.com' }}</p>
-    <p><strong>Subject:</strong> Email subject line</p>
-  </div>
+  ```markdown
+  <inset-text>
+  **To:** {{ data.recipientEmail or 'user@example.com' }}
+
+  **Subject:** Email subject line
+  </inset-text>
   ```
 
 - **Reference number display**: Show appropriate reference
@@ -331,7 +332,7 @@ Email preview pages must follow consistent structure:
   - `{{ data.paymentReference }}` for payment/invoice emails
 
 - **Dynamic content**: Include user selections in email body
-- **Call to action**: Appropriate links or instructions
+- **Call to action**: Appropriate links or instructions using markdown link syntax `[label](URL)`
 
 ## 11. Summary Page Patterns
 
@@ -339,16 +340,18 @@ Check Your Answers pages must follow GOV.UK patterns:
 
 ### Summary List Requirements
 
-- **Use summary list component**: `govuk-summary-list`
-- **Include Change links**: Allow editing each answer
+- **Use markdown tables to represent summary lists**: Style the summary list as a markdown table whenever the page is intended to use the summary list pattern (e.g., a check your answers page)
 
-  ```html
-  <dd class="govuk-summary-list__actions">
-    <a class="govuk-link" href="/path/to/question">
-      Change<span class="govuk-visually-hidden"> descriptive text</span>
-    </a>
-  </dd>
+  Example:
+
+  ```markdown
+  | Question       | Answer                  | Action                            |
+  | -------------- | ----------------------- | --------------------------------- |
+  | Building types | Residential, Commercial | [Change](/path/to/building-types) |
+  | Site location  | SW1A 1AA                | [Change](/path/to/postcode)       |
   ```
+
+- **Include Change links**: Allow editing each answer using markdown link syntax `[Change](/path/to/question)`
 
 - **Filter display values**: Don't show `_unchecked` or empty values
 - **Format appropriately**: Remove bullets if not appropriate for display
@@ -416,7 +419,38 @@ Based on previous implementations, automatically check and fix these issues:
 - **Why critical**: `/confirm` easily confused with `/confirmation`, leading to wrong links and redirects
 - **Applies to**: Route constants, view file names, and data property names
 
-## 13. Update Specification File In Place
+## 13. Markdown Formatting Standards
+
+Ensure all specifications use markdown syntax consistently:
+
+### Markdown Requirements
+
+- **Favour markdown syntax over HTML**: Specifications should use markdown wherever possible
+  - Use markdown tables for summary lists (check your answers pages)
+  - Use markdown link syntax `[label](URL)` for all links
+  - Use pseudo-HTML tags only for specific GOV.UK components:
+    - `<green-banner>` for confirmation panels
+    - `<inset-text>` for inset text components
+  - Use markdown formatting for emphasis: `**bold**`, `*italic*`
+
+- **Links**: Always use markdown link syntax
+  - ✅ Correct: `[Continue button](URL)`
+  - ❌ Wrong: `<a href="URL">Continue button</a>`
+
+- **Tables**: Use markdown tables for structured data
+  - ✅ Correct: Pipe-separated markdown tables
+  - ❌ Wrong: HTML table tags
+
+### Auto-fix Markdown Issues
+
+For each page in the specification:
+
+1. Convert HTML links to markdown syntax
+2. Convert HTML tables to markdown tables
+3. Replace unnecessary HTML with markdown equivalents
+4. Keep only approved pseudo-HTML tags (`<green-banner>`, `<inset-text>`)
+
+## 14. Update Specification File In Place
 
 After all validations and fixes:
 
@@ -442,6 +476,10 @@ Updated file: {spec-file}
   - Example: /LPAemail → /lpa-email
 - Updated data property names: [list of changes if any]
 - Corrected back links: [list of pages]
+- Converted HTML to markdown: [list of changes]
+  - Converted HTML links to markdown syntax
+  - Converted HTML tables to markdown tables
+  - Replaced HTML with pseudo-tags where appropriate
 - Added validation fixes: [description]
 - Other fixes: [description]
 
@@ -462,7 +500,7 @@ Updated file: {spec-file}
 3. Run `/journey-updates journey:{journey} changes:{spec-file}`
 ```
 
-## 14. Integration with journey-updates Command
+## 15. Integration with journey-updates Command
 
 This command prepares specifications for seamless processing by `/journey-updates`:
 
