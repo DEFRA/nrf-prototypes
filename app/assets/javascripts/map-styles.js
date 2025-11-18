@@ -310,13 +310,19 @@
   }
 
   /**
-   * Show map style modal
+   * Show map style modal (or close if already open)
    * @param {L.Map} map - Leaflet map instance
    * @param {HTMLElement} mapContainer - Map container element
    * @param {L.TileLayer} streetMap - Street tile layer
    * @param {L.TileLayer} satelliteMap - Satellite tile layer
    */
   function showMapStyleModal(map, mapContainer, streetMap, satelliteMap) {
+    // If modal is already open, close it (toggle behavior)
+    if (mapStyleModal && mapStyleModal.isOpen) {
+      mapStyleModal.close()
+      return
+    }
+
     // Hide error banner when opening modal
     if (window.MapUI) {
       window.MapUI.hideErrorSummary()
@@ -331,7 +337,7 @@
     // Create modal using component
     mapStyleModal = new Modal({
       title: 'Map style',
-      position: 'top-right',
+      position: 'bottom-right',
       content: modalContent,
       container: mapContainer,
       closeOnOutsideClick: false,

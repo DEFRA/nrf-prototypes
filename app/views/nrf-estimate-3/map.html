@@ -109,10 +109,21 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund levy - GO
         font-family: "GDS Transport", arial, sans-serif;
     }
 
+    /* Move Leaflet zoom/layer controls to bottom right, above attribution */
+    .leaflet-top.leaflet-right {
+        top: auto !important;
+        bottom: 30px;
+    }
+
+    /* Keep attribution at the very bottom */
+    .leaflet-control-attribution {
+        bottom: 0 !important;
+    }
+
     /* Map statistics panel */
     .map-stats-panel {
         position: absolute;
-        bottom: 20px;
+        top: 20px;
         right: 20px;
         background: white;
         padding: 15px;
@@ -178,10 +189,10 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund levy - GO
         white-space: nowrap;
     }
 
-    /* Ensure stats panel is above other map controls */
+    /* Mobile responsive */
     @media (max-width: 640px) {
         .map-stats-panel {
-            bottom: 80px;
+            top: 10px;
             right: 10px;
             left: 10px;
             min-width: auto;
