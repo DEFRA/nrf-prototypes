@@ -143,10 +143,10 @@ Hint text: We will send you a link so you can retrieve the details from your com
 #### Content
 
 ```
-<div class="govuk-inset-text">
-    <p><strong>To:</strong> {{ data.commitmentRetrievalEmail or 'user@example.com' }}</p>
-    <p><strong>Subject:</strong> Nature Restoration Fund - retrieve your commitment details for the Nature Restoration Fund levy</p>
-</div>
+<inset-text>
+**To:** {{ data.commitmentRetrievalEmail or 'user@example.com' }}
+**Subject:** Nature Restoration Fund - retrieve your commitment details for the Nature Restoration Fund levy
+</inset-text>
 
 # Nature Restoration Fund – retrieve your commitment details for the Nature Restoration Fund levy
 
@@ -156,13 +156,13 @@ You can use the details you previously gave us for your commitment to complete t
 
 ## Get help with Nature Restoration Fund
 
-If you need help with Nature Restoration Fund, contact XXXX and give the estimate reference number.
+If you need help with Nature Restoration Fund, contact XXXX and give the commitment reference number.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
-Find out about call charges at https://www.gov.uk/call-charges
+[Find out about call charges](https://www.gov.uk/call-charges)
 ```
 
 ---
@@ -183,20 +183,21 @@ None
 #### Content
 
 ```
-
 # Check your answers
 
-| Commitment reference | [show commitment reference] |
-| Red line boundary added | [Show Yes/No] |
-| Red line boundary file uploaded | [Show Yes/No] |
-| Building types | [List all types picked here] |
-| [IF they pick Dwelling THEN show] | Number of dwelling buildings |
-| [IF they pick Hotel THEN show] | Number of hotel rooms |
-| [IF they pick "House of multiple occupation (HMO)" THEN show] | Number of multiple occupation rooms |
-| [IF they pick "Residential institution" THEN show] | Number of residential institution rooms |
-| Email address | [show commitmentRetrievalEmail if provided, otherwise show email] |
-| Your details | [show full name, business name if provided, address, Company Registration Number and VAT registration number] |
-| Local Planning Authority| [Stockton-on-Tees Borough Council] |
+| Field | Value | Action |
+|-------|-------|--------|
+| Commitment reference | {{ data.commitmentRef }} (if provided) | [Change] |
+| Red line boundary added | Yes/No (based on data.redlineBoundaryPolygon) | [Change] |
+| Red line boundary file uploaded | Yes/No (based on data.hasRedlineBoundaryFile) | [Change] |
+| Building types | List of all types selected (if any) | [Change] |
+| Number of dwelling buildings | {{ data.residentialBuildingCount }} (if Dwelling selected) | [Change] |
+| Number of hotel rooms | {{ data.roomCounts.hotelCount }} (if Hotel selected) | [Change] |
+| Number of multiple occupation rooms | {{ data.roomCounts.hmoCount }} (if "House of multiple occupation (HMO)" selected) | [Change] |
+| Number of residential institution rooms | {{ data.roomCounts.residentialInstitutionCount }} (if "Residential institution" selected) | [Change] |
+| Email address | {{ data.commitmentRetrievalEmail or data.email or 'Not provided' }} | [Change] |
+| Your details | Full name, business name if provided, address, Company Registration Number and VAT registration number | [Change] |
+| Local Planning Authority | Stockton-on-Tees Borough Council | [Change] |
 
 Continue button at the bottom of the summary list.
 ```
@@ -263,28 +264,29 @@ None
 #### Content
 
 ```
-
 # Check your answers
 
-| Commitment reference | [show commitment reference if provided] |
-| Red line boundary added | [Show Yes/No] |
-| Red line boundary file uploaded | [Show Yes/No] |
-| Building types | [List all types picked here] |
-| [IF they pick Dwelling THEN show] | Number of dwelling buildings |
-| [IF they pick Hotel THEN show] | Number of hotel rooms |
-| [IF they pick "House of multiple occupation (HMO)" THEN show] | Number of multiple occupation rooms |
-| [IF they pick "Residential institution" THEN show] | Number of residential institution rooms |
-| Email address | [show commitmentRetrievalEmail if provided, otherwise show email] |
-| Your details | [show full name, business name if provided, address, Company Registration Number and VAT registration number] |
-| Local Planning Authority| [Stockton-on-Tees Borough Council] |
-| Planning reference | [show planning reference] |
+| Field | Value | Action |
+|-------|-------|--------|
+| Commitment reference | {{ data.commitmentRef }} (if provided) | [Change] |
+| Red line boundary added | Yes/No (based on data.redlineBoundaryPolygon) | [Change] |
+| Red line boundary file uploaded | Yes/No (based on data.hasRedlineBoundaryFile) | [Change] |
+| Building types | List of all types selected (if any) | [Change] |
+| Number of dwelling buildings | {{ data.residentialBuildingCount }} (if Dwelling selected) | [Change] |
+| Number of hotel rooms | {{ data.roomCounts.hotelCount }} (if Hotel selected) | [Change] |
+| Number of multiple occupation rooms | {{ data.roomCounts.hmoCount }} (if "House of multiple occupation (HMO)" selected) | [Change] |
+| Number of residential institution rooms | {{ data.roomCounts.residentialInstitutionCount }} (if "Residential institution" selected) | [Change] |
+| Email address | {{ data.commitmentRetrievalEmail or data.email or 'Not provided' }} | [Change] |
+| Your details | Full name, business name if provided, address, Company Registration Number and VAT registration number | [Change] |
+| Local Planning Authority | Stockton-on-Tees Borough Council | [Change] |
+| Planning reference | {{ data.planningRef }} | [Change] |
 
-Text: By confirming and submitting these details, you are agreeing to pay the Nature Restoration Fund levy.
+By confirming and submitting these details, you are agreeing to pay the Nature Restoration Fund levy.
 The details you are submitting must be accurate and correct.
 You will be emailed an invoice which you must pay.
 You will then receive a receipt and you can use it to discharge your environmental obligations.
 
-Your Nature Restoration Fund Nutrient levy amount is £2,500.
+Your Nature Restoration Fund nutrient levy amount is £{{ data.levyAmount or '2,500' }}.
 
 CTA: Confirm and submit
 ```
@@ -308,26 +310,26 @@ None
 #### Content
 
 ```
-<green banner>
+<green-banner>
 # Your details have been submitted.
 
-Payment reference: [dynamically generated]
-</green banner>
+Payment reference: {{ data.paymentReference }}
+</green-banner>
 
 ## What happens next
 
 Your Local Planning Authority will review your details.
 You will receive an email with an invoice and details of how you can pay. You should receive this email within 0 working days.
 
-Once you have paid, you will be sent an email with a receipt which you can use as evidence for your planning application to discharge your obligation.
+Once you have your planning decision notice, you can pay your levy. You will then be sent an email with a receipt which you can use to discharge your obligation.
 
 You told us the development:
-* is planned in an area {{ data.redlineBoundaryPolygon.intersectingCatchment or 'Unknown' }}
-* has [dynamic list of building types with counts, e.g., "5 dwellinghouse buildings, 20 hotel rooms, 10 house of multiple occupation (HMO) rooms"]
+* is planned in {{ data.redlineBoundaryPolygon.intersectingCatchment or 'Thames Valley EDP' }}
+* has [dynamically generated list based on building types and counts with proper pluralization]
 
 ## What you need to pay
 
-Based on the information you have provided, the development falls into the catchment area for the Nature Restoration Fund Nutrients Levy.
+Based on the information you have provided, the development falls into the area for the Nature Restoration Fund Nutrients levy.
 
 The total amount you need to pay is:
 
@@ -340,15 +342,15 @@ Your levy will be spent on conservation, with amounts being spent on monitoring 
 Levies are calculated as part of Environmental Delivery Plans (EDPs).
 
 ## Get help with Nature Restoration Fund
-If you need help with Nature Restoration Fund, contact XXXX and give the estimate reference number.
+If you need help with Nature Restoration Fund, contact XXXX and give the commitment reference number.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
-Find out about call charges at https://www.gov.uk/call-charges
+[Find out about call charges](https://www.gov.uk/call-charges)
 
-Link: View the email content (links to /nrf-estimate-3/invoice-email-content)
+[View the email content](/nrf-estimate-3/invoice-email-content)
 ```
 
 **Note:** The confirmation page uses conditional rendering based on `data.paymentReference` to display different content for invoice journey vs estimate journey. The invoice journey content is shown when `data.paymentReference` exists.
@@ -372,27 +374,27 @@ None
 #### Content
 
 ```
-<div class="govuk-inset-text">
-To: [LPA email address - displays data.lpaEmail or defaults to 'user@example.com']
-Subject: Nature Restoration Fund – payment for the Nature Restoration Fund levy
-</div>
+<inset-text>
+**To:** {{ data.commitmentRetrievalEmail or data.email or 'user@example.com' }}
+**Subject:** Nature Restoration Fund – payment for the Nature Restoration Fund levy
+</inset-text>
 
 # Nature Restoration Fund – payment for the Nature Restoration Fund levy
 
 **Payment reference:** {{ data.paymentReference }}
 
-Thank you for using Nature Restoration Fund Levy to mitigate your environmental impact.
+Thank you for using Nature Restoration Fund levy to mitigate your environmental impact.
 An invoice for the total amount of the levy is attached.
 
 You have agreed to pay the following:
 
-Nature Restoration Fund nutrients levy: £2,500
+Nature Restoration Fund nutrients levy: £{{ data.levyAmount or '2,500' }}
 
 Your levy will be spent on conservation, with amounts being spent on monitoring and maintenance. There will also be an admin charge of £00 taken from the levy payment. Levies are calculated as part of Environmental Delivery Plans (EDPs).
 
 ## Ways to pay
 
-You can pay your levy by using a bank transfer or by using Gov pay.
+You can pay your levy by using a bank transfer or by using GOV.UK Pay.
 
 ### Paying by bank transfer
 You can make a transfer from a bank account by Faster Payments, Bacs or CHAPS. Use the payee details, sort code and account number on the invoice to make the payment. Use the payment reference as the reference when you make the transfer.
@@ -401,7 +403,7 @@ You can make a transfer from a bank account by Faster Payments, Bacs or CHAPS. U
 
 You can use GOV.UK Pay to pay your levy, you will need a bank card or credit card to make this payment.
 
-[Link: Pay your levy using GOV.UK Pay] (placeholder link with href="#")
+[Pay your levy using GOV.UK Pay](javascript:void(0))
 
 ### Paying by instalments
 
@@ -413,13 +415,13 @@ Once you have paid, you will be sent an email with a receipt which you can use a
 
 ## Get help with Nature Restoration Fund
 
-If you need help with Nature Restoration Fund, contact XXXX and give the estimate reference number.
+If you need help with Nature Restoration Fund, contact XXXX and give the commitment reference number.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
-Find out about call charges at https://www.gov.uk/call-charges
+[Find out about call charges](https://www.gov.uk/call-charges)
 ```
 
 ---

@@ -22,10 +22,10 @@
 #### Content
 
 ```
-<div class="govuk-inset-text">
-  <p><strong>To:</strong> lpa@example.com</p>
-  <p><strong>Subject:</strong> Nature Restoration Fund – Approve request to pay the Nature Restoration Fund levy</p>
-</div>
+<inset-text>
+To: lpa@example.com
+Subject: Nature Restoration Fund – Approve request to pay the Nature Restoration Fund levy
+</inset-text>
 
 # Nature Restoration Fund – Approve request to pay the Nature Restoration Fund levy
 
@@ -50,7 +50,7 @@ Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
-Find out about call charges at https://www.gov.uk/call-charges
+Find out about call charges at [https://www.gov.uk/call-charges](https://www.gov.uk/call-charges)
 
 ```
 
@@ -73,11 +73,14 @@ None
 
 ```
 # Confirm you want to view and approve these Nature Restoration Fund levy details.
+
 Hint text: You will receive an email with a link.
 
-Payment reference: 0006677
-Business name: Acme Developments
-**Planning reference:** APP/2025/24019/FUL
+**Summary list:**
+
+| Payment reference | 0006677 |
+| Business name | Acme Developments |
+| Planning reference | APP/2025/24019/FUL |
 
 **Button:** Confirm (links to `/lpa-approve-1/lpa-approval-email-magiclink`)
 ```
@@ -101,11 +104,10 @@ None
 #### Content
 
 ```
-
-<div class="govuk-inset-text">
-  <p><strong>To:</strong> lpa@example.com</p>
-  <p><strong>Subject:</strong> Nature Restoration Fund – View details: Approve request to pay the Nature Restoration Fund levy</p>
-</div>
+<inset-text>
+**To:** lpa@example.com
+**Subject:** Nature Restoration Fund – View details: Approve request to pay the Nature Restoration Fund levy
+</inset-text>
 
 # Nature Restoration Fund – View details: Approve request to pay the Nature Restoration Fund levy
 
@@ -126,7 +128,7 @@ Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
-Find out about call charges at https://www.gov.uk/call-charges
+Find out about call charges at [https://www.gov.uk/call-charges](https://www.gov.uk/call-charges)
 
 ```
 
@@ -154,17 +156,19 @@ Note: Use a table or list pattern with no change links for displaying the detail
 
 # Approve these details
 
-[Map displaying red line boundary - use existing map component]
+[Map displaying red line boundary - interactive Leaflet map with red line boundary polygon displayed]
 
 **Summary list:**
 
-- Nature Restoration Fund levy confirmed: Nature Restoration Fund nutrients levy: £2,500
-- Developer Details: Bob Acme, Acme Developments, 1 Willow Lane, London, N1 9HG, Company Registration Number (CRN): 12345678, VAT registration number: GB123456789
-- Building types: Dwelling
-- Number of dwelling buildings: 100
-- Developer email address: admin@acme.co.uk
+| Nature Restoration Fund levy confirmed | Nature Restoration Fund nutrients levy: £2,500 |
+| Developer Details | Bob Acme, Acme Developments, 1 Willow Lane, London, N1 9HG, Company Registration Number (CRN): 12345678, VAT registration number: GB123456789 |
+| Building types | Dwelling |
+| Number of dwelling buildings | 100 |
+| Developer email address | admin@acme.co.uk |
 
-Check these details against the details submitted as part of the planning permission application by Acme Development.
+[Download these details](javascript:void(0))
+
+Check these details against the details submitted as part of the planning permission application by Acme Developments.
 Approving these details will enable Acme Developments to use Nature Restoration Fund levy to mitigate their environmental impact.
 
 **Button:** Approve (links to `/lpa-approve-1/approval-confirmation`)
@@ -191,8 +195,8 @@ None
 
 ```
 <green-panel>
-- Title: The details have been approved
-- Approval reference: **APPROVAL-001**
+Title: The details have been approved
+Approval reference: **APPROVAL-001**
 </green-panel>
 
 You have approved the Nature Restoration Fund levy for Bob Acme at Acme Developments.
@@ -200,6 +204,7 @@ You have approved the Nature Restoration Fund levy for Bob Acme at Acme Developm
 An invoice for the total amount of the levy will be sent to admin@acme.co.uk.
 
 They have agreed to pay the following:
+
 - Nature Restoration Fund nutrients levy: £2,500
 
 ## What happens next
@@ -210,11 +215,11 @@ Once Acme Developments has paid, you will be sent an email with a receipt which 
 
 If you need help with Nature Restoration Fund, contact XXXX and give the estimate reference number.
 
-Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
+Email: xxxxx@defra.gov.uk
 Telephone: 00000000000
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
-Find out about call charges at https://www.gov.uk/call-charges
+Find out about call charges at [https://www.gov.uk/call-charges](https://www.gov.uk/call-charges)
 
 [View the email content](/lpa-approve-1/lpa-approval-confirmation-email)
 ```
@@ -239,11 +244,11 @@ None
 #### Content
 
 ```
+<inset-text>
+To: lpa@example.com
+Subject: Nature Restoration Fund – Confirmation: Approved request to pay the Nature Restoration Fund levy
+</inset-text>
 
-<div class="govuk-inset-text">
-  <p><strong>To:</strong> lpa@example.com</p>
-  <p><strong>Subject:</strong> Nature Restoration Fund – Confirmation: Approved request to pay the Nature Restoration Fund levy
-</div>
 # Nature Restoration Fund – Confirmation: Approved request to pay the Nature Restoration Fund levy
 
 You have approved the Nature Restoration Fund levy for Bob Acme at Acme Developments.
@@ -266,7 +271,7 @@ Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
-Find out about call charges at https://www.gov.uk/call-charges
+Find out about call charges at [https://www.gov.uk/call-charges](https://www.gov.uk/call-charges)
 
 ```
 
