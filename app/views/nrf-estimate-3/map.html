@@ -58,64 +58,6 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund levy - GO
         border-radius: 2px;
     }
 
-    /* Map style selector specific styles */
-    .map-style-options {
-        display: flex;
-        gap: 20px;
-    }
-
-    .map-style-option {
-        background: white;
-        border: none;
-        border-radius: 0;
-        padding: 0;
-        cursor: pointer;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 12px;
-        transition: all 0.2s;
-    }
-
-    .map-style-option:hover .map-style-thumbnail {
-        border: 3px solid #b1b4b6;
-    }
-
-    .map-style-option:focus {
-        outline: 3px solid #ffdd00;
-        outline-offset: 3px;
-    }
-
-    .map-style-option--selected .map-style-thumbnail {
-        border: 3px solid #0b0c0c;
-    }
-
-    .map-style-thumbnail {
-        width: 60px;
-        height: 60px;
-        border: 3px solid #ffffff;
-        border-radius: 0;
-        overflow: hidden;
-        transition: all 0.2s;
-        padding: 3px;
-        background: white;
-    }
-
-    .map-style-thumbnail img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-    }
-
-    .map-style-label {
-        font-size: 18px;
-        font-weight: 400;
-        color: #0b0c0c;
-        text-align: center;
-        font-family: "GDS Transport", arial, sans-serif;
-    }
-
     /* Move Leaflet zoom/layer controls to bottom right, above attribution */
     .leaflet-top.leaflet-right {
         top: auto !important;

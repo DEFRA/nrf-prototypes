@@ -334,6 +334,9 @@
           drawnItems.addLayer(existingPolygon)
           map.fitBounds(existingPolygon.getBounds().pad(MAP_BOUNDS_PADDING))
 
+          // Ensure boundary is on top of other layers
+          drawnItems.bringToFront()
+
           return true
         }
       } catch (error) {

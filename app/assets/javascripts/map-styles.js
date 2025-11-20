@@ -34,16 +34,12 @@
   const COOKIE_MAP_LAYER = 'mapBaseLayer'
   const COOKIE_EXPIRY_DAYS = 365
 
-  const DELAY_MODAL_SETUP_MS = 50
-  const DELAY_OUTSIDE_CLICK_MS = 100
-
   // ============================================================================
   // STATE
   // ============================================================================
 
   let currentMapStyle = 'satellite'
   let catchmentLayers = []
-  let mapStyleModal = null
   let mapStyleButton = null
   let streetMapLayer = null
   let satelliteMapLayer = null
@@ -157,6 +153,7 @@
     const img = document.createElement('img')
     img.className = 'map-style-button-thumbnail'
     img.alt = ''
+    img.setAttribute('role', 'presentation')
     button.appendChild(img)
 
     return button
@@ -200,179 +197,13 @@
   }
 
   /**
-   * Create map style modal content
-   * @param {string} currentLayer - Current layer selection
-   * @returns {string} Modal HTML content
-   */
-  function createMapStyleModalContent(currentLayer) {
-    const streetSelected =
-      currentLayer !== 'satellite' ? 'map-style-option--selected' : ''
-    const satelliteSelected =
-      currentLayer === 'satellite' ? 'map-style-option--selected' : ''
-
-    return `
-      <div class="map-style-options">
-        <button class="map-style-option ${streetSelected}" data-style="street">
-          <div class="map-style-thumbnail">
-            <img src="${getStreetMapThumbnail()}" alt="Street map preview" />
-          </div>
-          <span class="map-style-label">Street map</span>
-        </button>
-        <button class="map-style-option ${satelliteSelected}" data-style="satellite">
-          <div class="map-style-thumbnail">
-            <img src="${getSatelliteMapThumbnail()}" alt="Satellite view preview" />
-          </div>
-          <span class="map-style-label">Satellite</span>
-        </button>
-      </div>
-    `
-  }
-
-  /**
-   * Handle map style change
-   * @param {string} style - Selected style
-   * @param {NodeList} options - Option elements
-   * @param {L.Map} map - Leaflet map instance
-   * @param {L.TileLayer} streetMap - Street tile layer
-   * @param {L.TileLayer} satelliteMap - Satellite tile layer
-   */
-  function handleMapStyleChange(style, options, map, streetMap, satelliteMap) {
-    // Update selected state visually
-    options.forEach((opt) => {
-      opt.classList.remove('map-style-option--selected')
-    })
-    options.forEach((opt) => {
-      if (opt.getAttribute('data-style') === style) {
-        opt.classList.add('map-style-option--selected')
-      }
-    })
-
-    // Remove all tile layers
-    map.eachLayer((layer) => {
-      if (layer instanceof L.TileLayer) {
-        map.removeLayer(layer)
-      }
-    })
-
-    // Add selected layer and save preference
-    if (style === 'satellite') {
-      satelliteMap.addTo(map)
-      saveLayerPreference('satellite')
-      currentMapStyle = 'satellite'
-    } else {
-      streetMap.addTo(map)
-      saveLayerPreference('street')
-      currentMapStyle = 'street'
-    }
-
-    // Update catchment polygon styles
-    updateCatchmentStyles(style)
-
-    // Update map key to reflect new style
-    updateMapKey(style, map)
-
-    // Close modal
-    if (mapStyleModal) {
-      mapStyleModal.close()
-    }
-  }
-
-  /**
-   * Setup map style modal event handlers
-   * @param {L.Map} map - Leaflet map instance
-   * @param {L.TileLayer} streetMap - Street tile layer
-   * @param {L.TileLayer} satelliteMap - Satellite tile layer
-   */
-  function setupMapStyleModalHandlers(map, streetMap, satelliteMap) {
-    setTimeout(() => {
-      const modalElement = mapStyleModal.getElement()
-      if (!modalElement) return
-
-      // Style option handlers
-      const options = modalElement.querySelectorAll('.map-style-option')
-      options.forEach((option) => {
-        option.addEventListener('click', () => {
-          const style = option.getAttribute('data-style')
-          handleMapStyleChange(style, options, map, streetMap, satelliteMap)
-        })
-      })
-
-      // Custom outside click handler (exclude the map style button)
-      setupOutsideClickHandler(modalElement)
-    }, DELAY_MODAL_SETUP_MS)
-  }
-
-  /**
-   * Setup outside click handler for modal
-   * @param {HTMLElement} modalElement - Modal element
-   */
-  function setupOutsideClickHandler(modalElement) {
-    const outsideClickHandler = (e) => {
-      if (
-        modalElement &&
-        !modalElement.contains(e.target) &&
-        !e.target.closest('.map-style-button')
-      ) {
-        if (mapStyleModal) {
-          mapStyleModal.close()
-        }
-        document.removeEventListener('click', outsideClickHandler, true)
-      }
-    }
-
-    setTimeout(() => {
-      document.addEventListener('click', outsideClickHandler, true)
-    }, DELAY_OUTSIDE_CLICK_MS)
-  }
-
-  /**
-   * Show map style modal (or close if already open)
-   * @param {L.Map} map - Leaflet map instance
-   * @param {HTMLElement} mapContainer - Map container element
-   * @param {L.TileLayer} streetMap - Street tile layer
-   * @param {L.TileLayer} satelliteMap - Satellite tile layer
-   */
-  function showMapStyleModal(map, mapContainer, streetMap, satelliteMap) {
-    // If modal is already open, close it (toggle behavior)
-    if (mapStyleModal && mapStyleModal.isOpen) {
-      mapStyleModal.close()
-      return
-    }
-
-    // Hide error banner when opening modal
-    if (window.MapUI) {
-      window.MapUI.hideErrorSummary()
-    }
-
-    // Re-read the cookie each time the modal opens to get the current selection
-    const currentLayer = getSavedLayerPreference()
-
-    // Create modal content
-    const modalContent = createMapStyleModalContent(currentLayer)
-
-    // Create modal using component
-    mapStyleModal = new Modal({
-      title: 'Map style',
-      position: 'bottom-right',
-      content: modalContent,
-      container: mapContainer,
-      closeOnOutsideClick: false,
-      onClose: () => {
-        mapStyleModal = null
-      }
-    })
-
-    mapStyleModal.open()
-
-    // Setup event handlers after modal is created
-    setupMapStyleModalHandlers(map, streetMap, satelliteMap)
-  }
-
-  /**
    * Toggle between map styles directly
    */
   function toggleMapStyle() {
-    if (!mapInstance || !streetMapLayer || !satelliteMapLayer) return
+    if (!mapInstance || !streetMapLayer || !satelliteMapLayer) {
+      console.warn('toggleMapStyle: Required map layers not initialized')
+      return
+    }
 
     // Remove all tile layers
     mapInstance.eachLayer((layer) => {
