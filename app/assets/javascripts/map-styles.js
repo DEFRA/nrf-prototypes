@@ -41,9 +41,13 @@
   // STATE
   // ============================================================================
 
-  let currentMapStyle = 'street'
+  let currentMapStyle = 'satellite'
   let catchmentLayers = []
   let mapStyleModal = null
+  let mapStyleButton = null
+  let streetMapLayer = null
+  let satelliteMapLayer = null
+  let mapInstance = null
 
   // ============================================================================
   // UTILITY HELPERS
@@ -140,31 +144,43 @@
   // ============================================================================
 
   /**
-   * Create map style button SVG
-   * @returns {string} SVG markup
-   */
-  function getMapStyleButtonSVG() {
-    return `
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="2" y="2" width="9" height="9" fill="#505a5f" stroke="none"/>
-        <rect x="13" y="2" width="9" height="9" fill="#b1b4b6" stroke="none"/>
-        <rect x="2" y="13" width="9" height="9" fill="#b1b4b6" stroke="none"/>
-        <rect x="13" y="13" width="9" height="9" fill="#505a5f" stroke="none"/>
-      </svg>
-    `
-  }
-
-  /**
-   * Create map style button element
+   * Create map style button element with thumbnail
    * @returns {HTMLElement} Button element
    */
   function createMapStyleButton() {
     const button = L.DomUtil.create('button', 'map-style-button')
     button.type = 'button'
-    button.innerHTML = getMapStyleButtonSVG()
-    button.title = 'Change map style'
-    button.setAttribute('aria-label', 'Change map style')
+    button.title = 'Switch map style'
+    button.setAttribute('aria-label', 'Switch map style')
+
+    // Create thumbnail image - show the opposite layer's thumbnail
+    const img = document.createElement('img')
+    img.className = 'map-style-button-thumbnail'
+    img.alt = ''
+    button.appendChild(img)
+
     return button
+  }
+
+  /**
+   * Update the map style button to show the opposite layer's thumbnail
+   */
+  function updateMapStyleButtonThumbnail() {
+    if (!mapStyleButton) return
+
+    const img = mapStyleButton.querySelector('.map-style-button-thumbnail')
+    if (!img) return
+
+    // Show the thumbnail of the layer we can switch TO (opposite of current)
+    if (currentMapStyle === 'satellite') {
+      img.src = getStreetMapThumbnail()
+      mapStyleButton.title = 'Switch to street map'
+      mapStyleButton.setAttribute('aria-label', 'Switch to street map')
+    } else {
+      img.src = getSatelliteMapThumbnail()
+      mapStyleButton.title = 'Switch to satellite view'
+      mapStyleButton.setAttribute('aria-label', 'Switch to satellite view')
+    }
   }
 
   /**
@@ -353,6 +369,45 @@
   }
 
   /**
+   * Toggle between map styles directly
+   */
+  function toggleMapStyle() {
+    if (!mapInstance || !streetMapLayer || !satelliteMapLayer) return
+
+    // Remove all tile layers
+    mapInstance.eachLayer((layer) => {
+      if (layer instanceof L.TileLayer) {
+        mapInstance.removeLayer(layer)
+      }
+    })
+
+    // Toggle to the other style
+    if (currentMapStyle === 'satellite') {
+      streetMapLayer.addTo(mapInstance)
+      saveLayerPreference('street')
+      currentMapStyle = 'street'
+    } else {
+      satelliteMapLayer.addTo(mapInstance)
+      saveLayerPreference('satellite')
+      currentMapStyle = 'satellite'
+    }
+
+    // Update catchment polygon styles
+    updateCatchmentStyles(currentMapStyle)
+
+    // Update map key to reflect new style
+    updateMapKey(currentMapStyle, mapInstance)
+
+    // Update button thumbnail to show the new opposite layer
+    updateMapStyleButtonThumbnail()
+
+    // Refresh dataset layers to ensure they appear on top
+    if (window.MapDatasets && window.MapDatasets.refreshLayers) {
+      window.MapDatasets.refreshLayers()
+    }
+  }
+
+  /**
    * Add map style switcher control to map
    * @param {L.Map} map - Leaflet map instance
    * @param {HTMLElement} mapContainer - Map container element
@@ -360,17 +415,27 @@
    * @param {L.TileLayer} satelliteMap - Satellite tile layer
    */
   function addMapStyleSwitcher(map, mapContainer, streetMap, satelliteMap) {
-    const mapStyleButton = L.control({ position: 'topright' })
-    mapStyleButton.onAdd = function () {
+    // Store references for toggle function
+    mapInstance = map
+    streetMapLayer = streetMap
+    satelliteMapLayer = satelliteMap
+
+    const mapStyleControl = L.control({ position: 'bottomleft' })
+    mapStyleControl.onAdd = function () {
       const button = createMapStyleButton()
+      mapStyleButton = button
       L.DomEvent.disableClickPropagation(button)
       L.DomEvent.on(button, 'click', function (e) {
         L.DomEvent.stopPropagation(e)
-        showMapStyleModal(map, mapContainer, streetMap, satelliteMap)
+        toggleMapStyle()
       })
+
+      // Set initial thumbnail after a brief delay to ensure currentMapStyle is set
+      setTimeout(updateMapStyleButtonThumbnail, 0)
+
       return button
     }
-    mapStyleButton.addTo(map)
+    mapStyleControl.addTo(map)
   }
 
   // ============================================================================

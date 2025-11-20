@@ -20,24 +20,30 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund levy - GO
         margin-bottom: 20px;
     }
 
-    /* Map style switcher button */
+    /* Map style switcher button - positioned bottom left */
+    .leaflet-bottom.leaflet-left {
+        bottom: 20px;
+        left: 10px;
+    }
+
     .map-style-button {
         background: white;
-        border: 2px solid rgba(0, 0, 0, 0.2);
+        border: 2px solid rgba(0, 0, 0, 0.3);
         border-radius: 4px;
-        width: 40px;
-        height: 40px;
+        width: 80px;
+        height: 80px;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
-        padding: 0;
-        margin-bottom: 10px !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        padding: 4px;
+        margin: 0 !important;
     }
 
     .map-style-button:hover {
-        background: #f3f2f1;
+        border-color: rgba(0, 0, 0, 0.5);
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
     }
 
     .map-style-button:focus {
@@ -45,9 +51,11 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund levy - GO
         outline-offset: 0;
     }
 
-    .map-style-button svg {
-        width: 22px;
-        height: 22px;
+    .map-style-button-thumbnail {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 2px;
     }
 
     /* Map style selector specific styles */

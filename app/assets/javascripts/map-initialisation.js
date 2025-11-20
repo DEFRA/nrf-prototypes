@@ -120,7 +120,7 @@
   }
 
   /**
-   * Add saved layer to map based on cookie preference
+   * Add saved layer to map based on cookie preference (defaults to satellite)
    * @param {L.Map} map - Leaflet map instance
    * @param {L.TileLayer} streetMap - Street tile layer
    * @param {L.TileLayer} satelliteMap - Satellite tile layer
@@ -128,12 +128,13 @@
   function addSavedLayerToMap(map, streetMap, satelliteMap) {
     const savedLayer = window.MapStyles.getSavedLayerPreference()
 
-    if (savedLayer === 'satellite') {
-      satelliteMap.addTo(map)
-      window.MapStyles.setCurrentStyle('satellite')
-    } else {
+    // Default to satellite view unless explicitly set to street
+    if (savedLayer === 'street') {
       streetMap.addTo(map)
       window.MapStyles.setCurrentStyle('street')
+    } else {
+      satelliteMap.addTo(map)
+      window.MapStyles.setCurrentStyle('satellite')
     }
   }
 
