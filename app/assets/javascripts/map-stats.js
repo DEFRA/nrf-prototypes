@@ -92,11 +92,11 @@
     const acres = squareMeters / SQUARE_METERS_TO_ACRES
 
     if (hectares < 0.01) {
-      return `${squareMeters.toFixed(0)} m²`
+      return `${squareMeters.toFixed(0)}m²`
     } else if (hectares < 1) {
-      return `${hectares.toFixed(2)} ha (${acres.toFixed(2)} acres)`
+      return `${hectares.toFixed(2)}ha (${acres.toFixed(2)}acres)`
     } else {
-      return `${hectares.toFixed(2)} ha (${acres.toFixed(1)} acres)`
+      return `${hectares.toFixed(2)}ha (${acres.toFixed(1)}acres)`
     }
   }
 
@@ -110,9 +110,9 @@
     const miles = meters / METERS_TO_MILES
 
     if (meters < 1000) {
-      return `${meters.toFixed(0)} m`
+      return `${meters.toFixed(0)}m`
     } else {
-      return `${kilometers.toFixed(2)} km (${miles.toFixed(2)} mi)`
+      return `${kilometers.toFixed(2)}km (${miles.toFixed(2)}mi)`
     }
   }
 
