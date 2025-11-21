@@ -198,6 +198,11 @@
 
         // Initialize accessible controls
         initAccessibleControlsDelayed(map, drawControl, drawnItems, edpData)
+
+        // Initialize map statistics
+        if (window.MapStats && window.MapStats.init) {
+          window.MapStats.init(map, drawnItems)
+        }
       } catch (error) {
         console.error('Error initializing map:', error)
         window.MapInitialisation.showMapError()

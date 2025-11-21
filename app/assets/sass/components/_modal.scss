@@ -17,6 +17,11 @@
     left: 10px;
   }
 
+  &--bottom-right {
+    bottom: 30px;
+    right: 70px;
+  }
+
   &--center {
     top: 50%;
     left: 50%;
@@ -77,10 +82,6 @@
     outline: 3px solid #ffdd00;
     outline-offset: 0;
   }
-}
-
-.modal__body {
-  /* Content area - styling controlled by consumer */
 }
 
 // Centered modal specific styling

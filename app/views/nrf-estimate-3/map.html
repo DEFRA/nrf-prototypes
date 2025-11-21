@@ -20,24 +20,30 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund levy - GO
         margin-bottom: 20px;
     }
 
-    /* Map style switcher button */
+    /* Map style switcher button - positioned bottom left */
+    .leaflet-bottom.leaflet-left {
+        bottom: 20px;
+        left: 10px;
+    }
+
     .map-style-button {
         background: white;
-        border: 2px solid rgba(0, 0, 0, 0.2);
+        border: 2px solid rgba(0, 0, 0, 0.3);
         border-radius: 4px;
-        width: 40px;
-        height: 40px;
+        width: 80px;
+        height: 80px;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
-        padding: 0;
-        margin-bottom: 10px !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        padding: 4px;
+        margin: 0 !important;
     }
 
     .map-style-button:hover {
-        background: #f3f2f1;
+        border-color: rgba(0, 0, 0, 0.5);
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
     }
 
     .map-style-button:focus {
@@ -45,67 +51,91 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund levy - GO
         outline-offset: 0;
     }
 
-    .map-style-button svg {
-        width: 22px;
-        height: 22px;
-    }
-
-    /* Map style selector specific styles */
-    .map-style-options {
-        display: flex;
-        gap: 20px;
-    }
-
-    .map-style-option {
-        background: white;
-        border: none;
-        border-radius: 0;
-        padding: 0;
-        cursor: pointer;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 12px;
-        transition: all 0.2s;
-    }
-
-    .map-style-option:hover .map-style-thumbnail {
-        border: 3px solid #b1b4b6;
-    }
-
-    .map-style-option:focus {
-        outline: 3px solid #ffdd00;
-        outline-offset: 3px;
-    }
-
-    .map-style-option--selected .map-style-thumbnail {
-        border: 3px solid #0b0c0c;
-    }
-
-    .map-style-thumbnail {
-        width: 60px;
-        height: 60px;
-        border: 3px solid #ffffff;
-        border-radius: 0;
-        overflow: hidden;
-        transition: all 0.2s;
-        padding: 3px;
-        background: white;
-    }
-
-    .map-style-thumbnail img {
+    .map-style-button-thumbnail {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        display: block;
+        border-radius: 2px;
     }
 
-    .map-style-label {
-        font-size: 18px;
+    /* Move Leaflet zoom/layer controls to bottom right, above attribution */
+    .leaflet-top.leaflet-right {
+        top: auto !important;
+        bottom: 30px;
+    }
+
+    /* Keep attribution at the very bottom */
+    .leaflet-control-attribution {
+        bottom: 0 !important;
+    }
+
+    /* Map statistics panel */
+    .map-stats-panel {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: white;
+        padding: 15px;
+        border-radius: 0;
+        border: 1px solid #b1b4b6;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        min-width: 300px;
+        max-width: 350px;
+        font-family: "GDS Transport", arial, sans-serif;
+    }
+
+    .map-stats-panel.hidden {
+        display: none;
+    }
+
+    .map-stats-content h3 {
+        margin: 0 0 12px 0;
+        padding: 0 0 8px 0;
+        font-size: 16px;
+        line-height: 1.25;
+        font-weight: 700;
+        color: #0b0c0c;
+        border-bottom: 1px solid #b1b4b6;
+    }
+
+    .map-stats-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .map-stat-item {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 8px;
+        padding: 6px 0;
+        border-bottom: 1px solid #f3f2f1;
+        align-items: baseline;
+    }
+
+    .map-stat-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .map-stat-label {
+        font-size: 14px;
+        line-height: 1.25;
         font-weight: 400;
         color: #0b0c0c;
-        text-align: center;
-        font-family: "GDS Transport", arial, sans-serif;
+        margin: 0;
+        white-space: nowrap;
+    }
+
+    .map-stat-value {
+        font-size: 16px;
+        line-height: 1.25;
+        font-weight: 700;
+        color: #0b0c0c;
+        margin: 0;
+        text-align: right;
+        white-space: nowrap;
     }
 </style>
 {% endblock %}
@@ -282,6 +312,8 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund levy - GO
     // Set the catchment GeoJSON endpoint for this journey
     window.CATCHMENTS_GEOJSON_URL = '/nrf-estimate-3/catchments.geojson';
 </script>
+<!-- Vendor dependencies -->
+<script src="/public/javascripts/vendor/turf.min.js"></script>
 <!-- Map modules - loaded in dependency order -->
 <script src="/public/javascripts/map-geometry.js"></script>
 <script src="/public/javascripts/map-ui.js"></script>
@@ -289,6 +321,7 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund levy - GO
 <script src="/public/javascripts/map-initialisation.js"></script>
 <script src="/public/javascripts/map-search.js"></script>
 <script src="/public/javascripts/map-drawing-controls.js"></script>
+<script src="/public/javascripts/map-stats.js"></script>
 <!-- Main orchestrator - loads last -->
 <script src="/public/javascripts/map-drawing-layers-spike.js"></script>
 {% endblock %}
