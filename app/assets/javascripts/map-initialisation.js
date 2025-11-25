@@ -302,12 +302,12 @@
   // ============================================================================
 
   /**
-   * Load existing boundary from hidden input
+   * Load existing boundary and re-validate via API
    * @param {L.FeatureGroup} drawnItems - Feature group for drawn items
    * @param {L.Map} map - Leaflet map instance
-   * @returns {boolean} True if boundary was loaded
+   * @returns {Promise<boolean>} Promise resolving to true if boundary loaded
    */
-  function loadExistingBoundary(drawnItems, map) {
+  async function loadExistingBoundary(drawnItems, map) {
     const existingBoundaryData = document.getElementById(
       DOM_IDS.boundaryData
     ).value
@@ -336,6 +336,33 @@
 
           // Ensure boundary is on top of other layers
           drawnItems.bringToFront()
+
+          // Re-validate boundary via API
+          if (window.MapAPI) {
+            window.MapAPI.showLoadingState()
+
+            try {
+              const intersections = await window.MapAPI.checkEDPIntersection(
+                boundaryData.coordinates
+              )
+
+              // Update boundary data with fresh validation results
+              const updatedBoundaryData = {
+                ...boundaryData,
+                intersections: intersections,
+                intersectingCatchment: intersections.nutrient
+              }
+
+              document.getElementById(DOM_IDS.boundaryData).value =
+                JSON.stringify(updatedBoundaryData)
+
+              window.MapAPI.hideLoadingState()
+            } catch (error) {
+              console.error('Error re-validating existing boundary:', error)
+              window.MapAPI.hideLoadingState()
+              // Don't block user - existing data is still usable
+            }
+          }
 
           return true
         }

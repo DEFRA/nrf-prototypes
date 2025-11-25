@@ -7,6 +7,7 @@ const router = govukPrototypeKit.requests.setupRouter()
 const path = require('path')
 const fs = require('fs')
 const multer = require('multer')
+const turf = require('@turf/turf')
 
 // Import helpers and validators
 const validators = require('../lib/nrf-estimate-3/validators')
@@ -26,95 +27,178 @@ const upload = multer({
   }
 })
 
-// Mock EDP boundary data for validation
-const edpBoundaries = [
-  {
-    name: 'Thames Valley EDP',
-    coordinates: [
-      [-0.5, 51.3],
-      [-0.3, 51.3],
-      [-0.3, 51.7],
-      [-0.5, 51.7],
-      [-0.5, 51.3]
-    ]
-  },
-  {
-    name: 'Greater Manchester EDP',
-    coordinates: [
-      [-2.5, 53.3],
-      [-2.1, 53.3],
-      [-2.1, 53.7],
-      [-2.5, 53.7],
-      [-2.5, 53.3]
-    ]
-  },
-  {
-    name: 'West Midlands EDP',
-    coordinates: [
-      [-2.0, 52.3],
-      [-1.6, 52.3],
-      [-1.6, 52.7],
-      [-2.0, 52.7],
-      [-2.0, 52.3]
-    ]
-  },
-  {
-    name: 'South West EDP',
-    coordinates: [
-      [-3.0, 50.5],
-      [-2.5, 50.5],
-      [-2.5, 51.0],
-      [-3.0, 51.0],
-      [-3.0, 50.5]
-    ]
-  },
-  {
-    name: 'North East EDP',
-    coordinates: [
-      [-1.8, 54.5],
-      [-1.2, 54.5],
-      [-1.2, 55.0],
-      [-1.8, 55.0],
-      [-1.8, 54.5]
-    ]
-  }
-]
+// ============================================================================
+// EDP DATA LOADING - Load and cache GeoJSON files
+// ============================================================================
 
-// Helper function to check if a point is within a polygon
-function isPointInPolygon(point, polygon) {
-  const x = point[0],
-    y = point[1]
-  let inside = false
-  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+let nutrientEdpData = null
+let gcnEdpData = null
+
+/**
+ * Load EDP GeoJSON data into memory
+ * Called once at startup for performance
+ */
+function loadEdpData() {
+  try {
+    const nutrientPath = path.join(
+      __dirname,
+      '../assets/map-layers/catchments_nn_catchments_03_2024.geojson'
+    )
+    const gcnPath = path.join(
+      __dirname,
+      '../assets/map-layers/gcn_edp_all_regions.geojson'
+    )
+
+    nutrientEdpData = JSON.parse(fs.readFileSync(nutrientPath, 'utf8'))
+    gcnEdpData = JSON.parse(fs.readFileSync(gcnPath, 'utf8'))
+
+    console.log(
+      `Loaded ${nutrientEdpData.features.length} nutrient EDP areas and ${gcnEdpData.features.length} GCN EDP areas`
+    )
+  } catch (error) {
+    console.error('Error loading EDP data:', error)
+  }
+}
+
+// Load data at startup
+loadEdpData()
+
+/**
+ * Check if a boundary intersects with EDP areas using turf.js
+ * @param {Array} coordinates - Polygon coordinates [[lng, lat], ...]
+ * @returns {Object} Intersection results with nutrient and GCN data
+ */
+function checkEDPIntersections(coordinates) {
+  if (!coordinates || coordinates.length < 3) {
+    return { nutrient: null, gcn: null, intersections: [] }
+  }
+
+  try {
+    // Create polygon from boundary coordinates
+    // Ensure polygon is closed
+    const closedCoords = [...coordinates]
     if (
-      polygon[i][1] > y !== polygon[j][1] > y &&
-      x <
-        ((polygon[j][0] - polygon[i][0]) * (y - polygon[i][1])) /
-          (polygon[j][1] - polygon[i][1]) +
-          polygon[i][0]
+      closedCoords[0][0] !== closedCoords[closedCoords.length - 1][0] ||
+      closedCoords[0][1] !== closedCoords[closedCoords.length - 1][1]
     ) {
-      inside = !inside
+      closedCoords.push(closedCoords[0])
     }
+    const boundaryPolygon = turf.polygon([closedCoords])
+
+    const intersections = []
+    let nutrientIntersection = null
+    let gcnIntersection = null
+
+    // Check nutrient EDPs
+    if (nutrientEdpData && nutrientEdpData.features) {
+      for (const feature of nutrientEdpData.features) {
+        if (turf.booleanIntersects(boundaryPolygon, feature)) {
+          const name =
+            feature.properties.Label ||
+            feature.properties.N2K_Site_N ||
+            'Nutrient EDP Area'
+          intersections.push({
+            type: 'nutrient',
+            name: name,
+            properties: feature.properties
+          })
+          // Store first nutrient intersection for legacy compatibility
+          if (!nutrientIntersection) {
+            nutrientIntersection = name
+          }
+        }
+      }
+    }
+
+    // Check GCN EDPs
+    if (gcnEdpData && gcnEdpData.features) {
+      for (const feature of gcnEdpData.features) {
+        if (turf.booleanIntersects(boundaryPolygon, feature)) {
+          const name = feature.properties.NAME || 'GCN EDP Area'
+          intersections.push({
+            type: 'gcn',
+            name: name,
+            properties: feature.properties
+          })
+          // Store first GCN intersection
+          if (!gcnIntersection) {
+            gcnIntersection = name
+          }
+        }
+      }
+    }
+
+    return {
+      nutrient: nutrientIntersection,
+      gcn: gcnIntersection,
+      intersections: intersections
+    }
+  } catch (error) {
+    console.error('Error checking EDP intersections:', error)
+    return { nutrient: null, gcn: null, intersections: [] }
   }
-  return inside
 }
 
-// Helper function to check if development is within EDP boundary
-function checkEDPIntersection(boundary) {
-  if (!boundary?.coordinates) return null
+// ============================================================================
+// API ENDPOINT - Check EDP Intersection
+// ============================================================================
 
-  const center = boundary.center || [
-    boundary.coordinates[0][0],
-    boundary.coordinates[0][1]
-  ]
+/**
+ * API endpoint to check if a boundary intersects with EDP areas
+ * POST /nrf-estimate-3/api/check-edp-intersection
+ * Body: { coordinates: [[lng, lat], ...] }
+ * Returns: { success: true, intersections: { nutrient, gcn, intersections: [...] } }
+ */
+router.post(ROUTES.API_CHECK_EDP_INTERSECTION, (req, res) => {
+  try {
+    const { coordinates } = req.body
 
-  for (const edp of edpBoundaries) {
-    if (isPointInPolygon(center, edp.coordinates)) {
-      return edp
+    // Validate input
+    if (!coordinates || !Array.isArray(coordinates) || coordinates.length < 3) {
+      return res.status(400).json({
+        success: false,
+        error:
+          'Invalid boundary data. Coordinates must be an array of at least 3 points.'
+      })
     }
+
+    // Validate coordinate format
+    const validCoordinates = coordinates.every(
+      (coord) =>
+        Array.isArray(coord) &&
+        coord.length === 2 &&
+        typeof coord[0] === 'number' &&
+        typeof coord[1] === 'number'
+    )
+
+    if (!validCoordinates) {
+      return res.status(400).json({
+        success: false,
+        error:
+          'Invalid coordinate format. Each coordinate must be [longitude, latitude].'
+      })
+    }
+
+    // Check intersections using turf.js
+    const result = checkEDPIntersections(coordinates)
+
+    // Return results
+    return res.json({
+      success: true,
+      intersections: result
+    })
+  } catch (error) {
+    console.error('Error in API check-edp-intersection:', error)
+    return res.status(500).json({
+      success: false,
+      error: 'An error occurred while checking the boundary. Please try again.'
+    })
   }
-  return null
-}
+})
+
+// ============================================================================
+// PAGE ROUTES
+// ============================================================================
 
 // Start page
 router.get(ROUTES.START, (req, res) => {
@@ -379,27 +463,24 @@ router.post(ROUTES.MAP, (req, res) => {
   try {
     const parsedData = JSON.parse(boundaryData)
 
+    // Check EDP intersections using turf.js
+    const intersectionResults = checkEDPIntersections(parsedData.coordinates)
+
     req.session.data = req.session.data || {}
     req.session.data.redlineBoundaryPolygon = {
       center: parsedData.center,
       coordinates: parsedData.coordinates,
-      intersectingCatchment: parsedData.intersectingCatchment
+      // Store new intersection structure
+      intersections: {
+        nutrient: intersectionResults.nutrient,
+        gcn: intersectionResults.gcn
+      },
+      // Keep legacy field for backward compatibility
+      intersectingCatchment: intersectionResults.nutrient
     }
 
-    let edpIntersection = null
-    if (parsedData.intersectingCatchment) {
-      edpIntersection = {
-        name: parsedData.intersectingCatchment,
-        type: 'catchment'
-      }
-    } else {
-      edpIntersection = checkEDPIntersection({
-        center: parsedData.center,
-        coordinates: parsedData.coordinates
-      })
-    }
-
-    if (!edpIntersection) {
+    // Current behavior: redirect to NO_EDP if no nutrient intersection
+    if (!intersectionResults.nutrient) {
       res.redirect(ROUTES.NO_EDP)
     } else if (navFromSummary) {
       res.redirect(ROUTES.SUMMARY)
