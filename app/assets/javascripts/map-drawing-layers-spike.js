@@ -203,6 +203,11 @@
         if (window.MapStats && window.MapStats.init) {
           window.MapStats.init(map, drawnItems)
         }
+
+        // Initialize datasets (GCN EDP layers)
+        if (window.MapDatasets && window.MapDatasets.init) {
+          window.MapDatasets.init(map)
+        }
       } catch (error) {
         console.error('Error initializing map:', error)
         window.MapInitialisation.showMapError()

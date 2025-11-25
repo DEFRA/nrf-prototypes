@@ -13,11 +13,16 @@
   // CONSTANTS
   // ============================================================================
 
+  // ============================================================================
+  // LAYER STYLE CONFIGURATION
+  // ============================================================================
+
+  // Nutrient EDP styles
   const COLOR_CATCHMENT_PURPLE = '#ab47bc'
 
   const CATCHMENT_STYLE = {
     color: COLOR_CATCHMENT_PURPLE,
-    weight: 2,
+    weight: 1,
     opacity: 0.8,
     fillColor: COLOR_CATCHMENT_PURPLE,
     fillOpacity: 0.3
@@ -25,9 +30,28 @@
 
   const CATCHMENT_STYLE_SATELLITE = {
     color: '#e0e0e0',
-    weight: 2,
+    weight: 1,
     opacity: 1,
     fillColor: '#ffffff',
+    fillOpacity: 0.3
+  }
+
+  // GCN EDP styles
+  const COLOR_GCN_ORANGE = '#f47738'
+
+  const GCN_STYLE = {
+    color: COLOR_GCN_ORANGE,
+    weight: 1,
+    opacity: 0.8,
+    fillColor: COLOR_GCN_ORANGE,
+    fillOpacity: 0.3
+  }
+
+  const GCN_STYLE_SATELLITE = {
+    color: '#ffc107',
+    weight: 1,
+    opacity: 1,
+    fillColor: '#ffc107',
     fillOpacity: 0.3
   }
 
@@ -127,12 +151,53 @@
   }
 
   /**
+   * Show all catchment layers on the map
+   * @param {L.Map} map - Leaflet map instance
+   */
+  function showCatchmentLayers(map) {
+    catchmentLayers.forEach((polygon) => {
+      if (!map.hasLayer(polygon)) {
+        polygon.addTo(map)
+      }
+    })
+  }
+
+  /**
+   * Hide all catchment layers from the map
+   * @param {L.Map} map - Leaflet map instance
+   */
+  function hideCatchmentLayers(map) {
+    catchmentLayers.forEach((polygon) => {
+      if (map.hasLayer(polygon)) {
+        map.removeLayer(polygon)
+      }
+    })
+  }
+
+  /**
+   * Get catchment layers array
+   * @returns {Array} Array of catchment layer polygons
+   */
+  function getCatchmentLayers() {
+    return catchmentLayers
+  }
+
+  /**
    * Get appropriate catchment style for current map style
    * @param {string} style - Map style ('street' or 'satellite')
    * @returns {Object} Catchment style object
    */
   function getCatchmentStyle(style) {
     return style === 'satellite' ? CATCHMENT_STYLE_SATELLITE : CATCHMENT_STYLE
+  }
+
+  /**
+   * Get appropriate GCN style for current map style
+   * @param {string} style - Map style ('street' or 'satellite')
+   * @returns {Object} GCN style object
+   */
+  function getGcnStyle(style) {
+    return style === 'satellite' ? GCN_STYLE_SATELLITE : GCN_STYLE
   }
 
   // ============================================================================
@@ -270,8 +335,43 @@
   }
 
   // ============================================================================
-  // MAP KEY
+  // MAP KEY CONFIGURATION
   // ============================================================================
+
+  /**
+   * Key items configuration - centralized definition for map legend
+   * Each item has a label and functions to get street/satellite styles
+   */
+  const KEY_ITEMS = [
+    {
+      label: 'NRF nutrients levy',
+      getStyle: (style) =>
+        style === 'satellite' ? CATCHMENT_STYLE_SATELLITE : CATCHMENT_STYLE
+    },
+    {
+      label: 'NRF great crested newt levy',
+      getStyle: (style) =>
+        style === 'satellite' ? GCN_STYLE_SATELLITE : GCN_STYLE
+    }
+  ]
+
+  /**
+   * Generate a single key item HTML
+   * @param {Object} item - Key item config
+   * @param {string} style - Current map style
+   * @returns {string} Key item HTML
+   */
+  function generateKeyItemHTML(item, style) {
+    const itemStyle = item.getStyle(style)
+    const fillRgba = hexToRgba(itemStyle.fillColor, itemStyle.fillOpacity)
+
+    return `
+      <div class="map-key-item">
+        <div class="map-key-swatch" style="background-color: ${fillRgba}; border: ${itemStyle.weight}px solid ${itemStyle.color};"></div>
+        <span class="map-key-label">${item.label}</span>
+      </div>
+    `
+  }
 
   /**
    * Get key content HTML
@@ -279,20 +379,7 @@
    * @returns {string} Key content HTML
    */
   function getKeyContent(style) {
-    const catchmentStyle =
-      style === 'satellite' ? CATCHMENT_STYLE_SATELLITE : CATCHMENT_STYLE
-
-    // Convert hex color to rgba with opacity for fill
-    const fillColor = catchmentStyle.fillColor
-    const fillOpacity = catchmentStyle.fillOpacity
-    const rgba = hexToRgba(fillColor, fillOpacity)
-
-    return `
-      <div class="map-key-item">
-        <div class="map-key-swatch" style="background-color: ${rgba}; border: 2px solid ${catchmentStyle.color};"></div>
-        <span class="map-key-label">Nutrient EDP areas</span>
-      </div>
-    `
+    return KEY_ITEMS.map((item) => generateKeyItemHTML(item, style)).join('')
   }
 
   /**
@@ -315,7 +402,11 @@
   window.MapStyles.addCatchmentLayer = addCatchmentLayer
   window.MapStyles.updateCatchmentStyles = updateCatchmentStyles
   window.MapStyles.getCatchmentStyle = getCatchmentStyle
+  window.MapStyles.getGcnStyle = getGcnStyle
   window.MapStyles.addMapStyleSwitcher = addMapStyleSwitcher
   window.MapStyles.getKeyContent = getKeyContent
   window.MapStyles.updateMapKey = updateMapKey
+  window.MapStyles.showCatchmentLayers = showCatchmentLayers
+  window.MapStyles.hideCatchmentLayers = hideCatchmentLayers
+  window.MapStyles.getCatchmentLayers = getCatchmentLayers
 })()
