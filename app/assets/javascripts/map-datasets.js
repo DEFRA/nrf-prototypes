@@ -36,6 +36,59 @@
   const loadedLayers = {}
   let mapInstance = null
 
+  // Cookie name for persisting layer visibility
+  const COOKIE_NAME = 'edp-layer-visibility'
+
+  // ============================================================================
+  // COOKIE MANAGEMENT
+  // ============================================================================
+
+  /**
+   * Get layer visibility from cookie
+   * @returns {Object} Visibility state for each dataset
+   */
+  function getVisibilityFromCookie() {
+    const cookies = document.cookie.split(';')
+    for (let cookie of cookies) {
+      const [name, value] = cookie.trim().split('=')
+      if (name === COOKIE_NAME) {
+        try {
+          return JSON.parse(decodeURIComponent(value))
+        } catch (e) {
+          console.error('Error parsing visibility cookie:', e)
+        }
+      }
+    }
+    // Return defaults if no cookie found
+    return {
+      nutrientEdp: true,
+      gcnEdp: true
+    }
+  }
+
+  /**
+   * Save layer visibility to cookie
+   * @param {Object} visibility - Visibility state for each dataset
+   */
+  function saveVisibilityToCookie(visibility) {
+    const expires = new Date()
+    expires.setFullYear(expires.getFullYear() + 1) // 1 year expiry
+    document.cookie = `${COOKIE_NAME}=${encodeURIComponent(JSON.stringify(visibility))}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`
+  }
+
+  /**
+   * Get current visibility state from checkboxes
+   * @returns {Object} Current visibility state
+   */
+  function getCurrentVisibility() {
+    const visibility = {}
+    Object.keys(DATASETS).forEach((datasetId) => {
+      const checkbox = document.querySelector(`#dataset-${datasetId}`)
+      visibility[datasetId] = checkbox ? checkbox.checked : false
+    })
+    return visibility
+  }
+
   // ============================================================================
   // LAYER CREATION
   // ============================================================================
@@ -202,10 +255,16 @@
   /**
    * Generate checkbox HTML for a dataset
    * @param {Object} dataset - Dataset configuration
+   * @param {Object} savedVisibility - Saved visibility state from cookie
    * @returns {string} HTML string
    */
-  function generateCheckboxHTML(dataset) {
-    const checked = dataset.visible ? 'checked' : ''
+  function generateCheckboxHTML(dataset, savedVisibility) {
+    // Use saved visibility if available, otherwise use dataset default
+    const isVisible =
+      savedVisibility && savedVisibility.hasOwnProperty(dataset.id)
+        ? savedVisibility[dataset.id]
+        : dataset.visible
+    const checked = isVisible ? 'checked' : ''
     return `
       <div class="govuk-checkboxes__item">
         <input class="govuk-checkboxes__input"
@@ -232,9 +291,17 @@
       return
     }
 
+    // Get saved visibility from cookie
+    const savedVisibility = getVisibilityFromCookie()
+
+    // If no cookie exists, save the defaults so checkbox state persists
+    if (!document.cookie.includes(COOKIE_NAME)) {
+      saveVisibilityToCookie(savedVisibility)
+    }
+
     // Generate checkboxes for all datasets
     const checkboxesHTML = Object.values(DATASETS)
-      .map(generateCheckboxHTML)
+      .map((dataset) => generateCheckboxHTML(dataset, savedVisibility))
       .join('')
 
     container.innerHTML = `
@@ -249,6 +316,10 @@
       checkbox.addEventListener('change', function () {
         const datasetId = this.dataset.datasetId
         toggleDataset(datasetId, this.checked)
+
+        // Save visibility to cookie
+        const currentVisibility = getCurrentVisibility()
+        saveVisibilityToCookie(currentVisibility)
       })
     })
   }
@@ -264,16 +335,25 @@
   function init(map) {
     mapInstance = map
 
+    // Get saved visibility from cookie
+    const savedVisibility = getVisibilityFromCookie()
+
     // Initialize UI if container exists
     const container = document.getElementById('datasets-checkboxes')
     if (container) {
       initUI(container)
     }
 
-    // Load initially visible datasets (skip nutrientEdp as it's already loaded)
-    Object.values(DATASETS).forEach((dataset) => {
-      if (dataset.visible && dataset.id !== 'nutrientEdp') {
-        showDataset(dataset.id)
+    // Apply saved visibility to all datasets
+    Object.keys(DATASETS).forEach((datasetId) => {
+      const isVisible =
+        savedVisibility && savedVisibility.hasOwnProperty(datasetId)
+          ? savedVisibility[datasetId]
+          : DATASETS[datasetId].visible
+
+      // Apply visibility for GCN EDP (nutrient EDP is already handled by loadCatchmentData)
+      if (datasetId !== 'nutrientEdp' && isVisible) {
+        showDataset(datasetId)
       }
     })
   }
@@ -361,4 +441,5 @@
   window.MapDatasets.getDatasets = getDatasets
   window.MapDatasets.initUI = initUI
   window.MapDatasets.refreshLayers = refreshLayers
+  window.MapDatasets.getCookiePreference = getVisibilityFromCookie
 })()

@@ -56,6 +56,11 @@
         throw new Error(data.error || 'Unknown error occurred')
       }
 
+      // Immediately update the intersections display with the fresh API response data
+      if (window.MapStats && window.MapStats.updateIntersections) {
+        window.MapStats.updateIntersections(data.intersections)
+      }
+
       return data.intersections
     } catch (error) {
       clearTimeout(timeoutId)

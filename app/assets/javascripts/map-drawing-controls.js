@@ -169,6 +169,9 @@
 
     document.getElementById(DOM_IDS.boundaryData).value =
       JSON.stringify(boundaryData)
+
+    // Note: Intersections display will be updated automatically by MapAPI
+    // after the API response is received
   }
 
   // ============================================================================

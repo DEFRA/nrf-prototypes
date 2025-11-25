@@ -290,6 +290,17 @@
       .then((response) => response.json())
       .then((data) => {
         processCatchmentFeatures(data.features, map, edpData)
+
+        // Check cookie preference and hide nutrient layers if needed
+        if (window.MapDatasets && window.MapDatasets.getCookiePreference) {
+          const savedVisibility = window.MapDatasets.getCookiePreference()
+          if (savedVisibility && savedVisibility.nutrientEdp === false) {
+            // Hide nutrient layers immediately after loading
+            if (window.MapStyles && window.MapStyles.hideCatchmentLayers) {
+              window.MapStyles.hideCatchmentLayers(map)
+            }
+          }
+        }
       })
       .catch((error) => {
         console.error('Error loading GeoJSON data:', error)
@@ -337,14 +348,20 @@
           // Ensure boundary is on top of other layers
           drawnItems.bringToFront()
 
-          // Re-validate boundary via API
+          // Re-validate boundary via API using the polygon's current coordinates
           if (window.MapAPI) {
             window.MapAPI.showLoadingState()
 
             try {
-              const intersections = await window.MapAPI.checkEDPIntersection(
-                boundaryData.coordinates
-              )
+              // Get coordinates from the actual polygon layer
+              const latLngs = existingPolygon.getLatLngs()[0]
+              const coordinates = latLngs.map((latLng) => [
+                latLng.lng,
+                latLng.lat
+              ])
+
+              const intersections =
+                await window.MapAPI.checkEDPIntersection(coordinates)
 
               // Update boundary data with fresh validation results
               const updatedBoundaryData = {
@@ -357,6 +374,12 @@
                 JSON.stringify(updatedBoundaryData)
 
               window.MapAPI.hideLoadingState()
+
+              // Update stats for area/perimeter
+              // Note: Intersections display is already updated by MapAPI after API response
+              if (window.MapStats && window.MapStats.handlePolygonComplete) {
+                window.MapStats.handlePolygonComplete(existingPolygon)
+              }
             } catch (error) {
               console.error('Error re-validating existing boundary:', error)
               window.MapAPI.hideLoadingState()

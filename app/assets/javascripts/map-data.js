@@ -18,7 +18,7 @@
       id: 'gcnEdp',
       name: 'Nature Restoration Fund great crested newt levy',
       type: 'geojson',
-      visible: false,
+      visible: true,
       // Style is retrieved dynamically from MapStyles based on current map style
       getStyle: () =>
         window.MapStyles

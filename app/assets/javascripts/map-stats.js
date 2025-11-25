@@ -147,10 +147,79 @@
             <dd class="map-stat-value" id="stat-perimeter">—</dd>
           </div>
         </dl>
+
+        <div id="stat-intersections-container" style="display: none; margin-top: 20px; padding-top: 15px; border-top: 2px solid #b1b4b6;">
+          <h3 class="govuk-heading-s" style="margin: 0 0 12px 0; font-size: 16px; font-weight: 700;">Intersecting EDPs</h3>
+          <div id="stat-intersections-content"></div>
+        </div>
       </div>
     `
 
     return panel
+  }
+
+  /**
+   * Update intersections display
+   * Shows lists of intersecting nutrient and GCN EDP areas
+   * Called directly by MapAPI after each API response with fresh data
+   * @param {Object} intersections - Intersections data from API {nutrient, gcn, intersections: [...]}
+   */
+  function updateIntersectionsDisplay(intersections) {
+    const container = document.getElementById('stat-intersections-container')
+    const content = document.getElementById('stat-intersections-content')
+
+    if (!container || !content) {
+      return
+    }
+
+    // Check if we have intersection data structure (not checking length - we want to show even if empty)
+    if (!intersections || !intersections.intersections) {
+      container.style.display = 'none'
+      return
+    }
+
+    // Group intersections by type
+    const nutrientAreas = intersections.intersections.filter(
+      (i) => i.type === 'nutrient'
+    )
+    const gcnAreas = intersections.intersections.filter((i) => i.type === 'gcn')
+
+    let html = ''
+
+    // Nutrient EDPs - always show heading
+    html +=
+      '<div style="margin-bottom: 15px;"><div style="font-size: 14px; font-weight: 700; margin-bottom: 8px;">Nutrient levy areas</div>'
+    if (nutrientAreas.length > 0) {
+      html +=
+        '<ul class="govuk-list govuk-list--bullet" style="margin: 0; font-size: 14px; padding-left: 20px;">'
+      nutrientAreas.forEach((area) => {
+        html += `<li style="margin-bottom: 5px;">${area.name}</li>`
+      })
+      html += '</ul>'
+    } else {
+      html +=
+        '<p class="govuk-body-s" style="margin: 0; color: #505a5f;">None</p>'
+    }
+    html += '</div>'
+
+    // GCN EDPs - always show heading
+    html +=
+      '<div><div style="font-size: 14px; font-weight: 700; margin-bottom: 8px;">GCN levy areas</div>'
+    if (gcnAreas.length > 0) {
+      html +=
+        '<ul class="govuk-list govuk-list--bullet" style="margin: 0; font-size: 14px; padding-left: 20px;">'
+      gcnAreas.forEach((area) => {
+        html += `<li style="margin-bottom: 5px;">${area.name}</li>`
+      })
+      html += '</ul>'
+    } else {
+      html +=
+        '<p class="govuk-body-s" style="margin: 0; color: #505a5f;">None</p>'
+    }
+    html += '</div>'
+
+    content.innerHTML = html
+    container.style.display = 'block'
   }
 
   /**
@@ -212,6 +281,9 @@
     } else {
       perimeterContainer.style.display = 'none'
     }
+
+    // Note: updateIntersectionsDisplay() is NOT called here
+    // It's called automatically by MapAPI after each API response
 
     // Show panel if we have any stats OR if drawing is active
     if (
@@ -519,6 +591,12 @@
   function handlePolygonDelete() {
     currentStats = resetCurrentStats()
     updateStatsDisplay(currentStats)
+
+    // Hide intersections display when boundary is deleted
+    const container = document.getElementById('stat-intersections-container')
+    if (container) {
+      container.style.display = 'none'
+    }
   }
 
   /**
@@ -576,6 +654,12 @@
   function handleEditStart() {
     isEditingActive = true
     monitorEditingProgress()
+
+    // Hide intersections display while editing
+    const container = document.getElementById('stat-intersections-container')
+    if (container) {
+      container.style.display = 'none'
+    }
   }
 
   /**
@@ -700,6 +784,9 @@
       const existingLayer = drawnItems.getLayers()[0]
       handlePolygonComplete(existingLayer)
     }
+
+    // Note: updateIntersectionsDisplay() is called automatically by MapAPI
+    // after each /api/check-edp-intersection response
   }
 
   /**
@@ -762,4 +849,5 @@
   window.MapStats.handlePolygonComplete = handlePolygonComplete
   window.MapStats.handlePolygonEdit = handlePolygonEdit
   window.MapStats.handlePolygonDelete = handlePolygonDelete
+  window.MapStats.updateIntersections = updateIntersectionsDisplay
 })()
