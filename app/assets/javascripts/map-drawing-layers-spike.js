@@ -98,7 +98,7 @@
    * @param {L.Map} map - Leaflet map instance
    * @param {L.Control.Draw} drawControl - Draw control instance
    * @param {L.FeatureGroup} drawnItems - Feature group for drawn items
-   * @param {Object} edpData - EDP data object
+   * @param {Object} edpData - EDP data object (for visualization only)
    */
   function initAccessibleControlsDelayed(
     map,
@@ -162,7 +162,7 @@
         )
         window.MapInitialisation.addZoomControl(map)
 
-        // Load GeoJSON boundaries
+        // Load catchment GeoJSON for visualization (not used for intersection checking anymore)
         const edpData = {
           boundaries: [],
           layers: []
@@ -190,19 +190,27 @@
         // Initialize map help button
         window.MapInitialisation.initMapHelp(map)
 
-        // Load existing boundary data if available
-        window.MapInitialisation.loadExistingBoundary(drawnItems, map)
+        // Initialize map statistics first so it's ready to receive updates
+        if (window.MapStats && window.MapStats.init) {
+          window.MapStats.init(map, drawnItems)
+        }
+
+        // Load existing boundary data if available (async - will trigger intersection display update)
+        // Then initialize datasets after boundary is loaded to avoid race condition
+        window.MapInitialisation.loadExistingBoundary(drawnItems, map).then(
+          () => {
+            // Initialize datasets (GCN EDP layers) after boundary loads
+            if (window.MapDatasets && window.MapDatasets.init) {
+              window.MapDatasets.init(map)
+            }
+          }
+        )
 
         // Form submission validation
         setupFormValidation()
 
         // Initialize accessible controls
         initAccessibleControlsDelayed(map, drawControl, drawnItems, edpData)
-
-        // Initialize map statistics
-        if (window.MapStats && window.MapStats.init) {
-          window.MapStats.init(map, drawnItems)
-        }
       } catch (error) {
         console.error('Error initializing map:', error)
         window.MapInitialisation.showMapError()

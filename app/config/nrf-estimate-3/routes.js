@@ -34,6 +34,9 @@ const ROUTES = {
   ESTIMATE_EMAIL_CONTENT: `${BASE_PATH}/estimate-email-content`,
   CATCHMENTS_GEOJSON: `${BASE_PATH}/catchments.geojson`,
 
+  // API endpoints
+  API_CHECK_EDP_INTERSECTION: `${BASE_PATH}/api/check-edp-intersection`,
+
   // Payment journey routes
   DO_YOU_HAVE_A_COMMITMENT_REF: `${BASE_PATH}/do-you-have-a-commitment-ref`,
   ENTER_COMMITMENT_REF: `${BASE_PATH}/enter-commitment-ref`,

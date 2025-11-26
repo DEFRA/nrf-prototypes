@@ -34,7 +34,16 @@
     zoomToBoundary: 'zoom-to-boundary',
     confirmEdit: 'confirm-edit-btn',
     cancelEdit: 'cancel-edit-btn',
-    boundaryData: 'boundary-data'
+    boundaryData: 'boundary-data',
+    saveButtonContainer: 'save-btn-container',
+    boundaryProcessing: 'boundary-processing',
+    boundaryCheckError: 'boundary-check-error',
+    map: 'map'
+  }
+
+  const ERROR_MESSAGES = {
+    noBoundary: 'No boundary drawn',
+    unableToVerify: 'Unable to verify boundary. Please try again.'
   }
 
   const MAP_BOUNDS_PADDING = 0.1
@@ -144,10 +153,10 @@
 
   /**
    * Update boundary data in hidden form field
-   * @param {L.Layer} layer - Leaflet layer
-   * @param {Object} intersectingCatchment - Catchment data object
+   * @param {L.Layer} layer - The drawn layer
+   * @param {Object} intersections - Intersection results from API
    */
-  function updateBoundaryData(layer, intersectingCatchment) {
+  function updateBoundaryData(layer, intersections) {
     if (!layer) {
       document.getElementById(DOM_IDS.boundaryData).value = ''
       return
@@ -161,13 +170,41 @@
     const boundaryData = {
       center: [center.lng, center.lat],
       coordinates: coordinates,
-      intersectingCatchment: intersectingCatchment
-        ? intersectingCatchment.name
-        : null
+      // Store new intersection structure
+      intersections: intersections || { nutrient: null, gcn: null },
+      // Keep legacy field for backward compatibility
+      intersectingCatchment: intersections?.nutrient || null
     }
 
     document.getElementById(DOM_IDS.boundaryData).value =
       JSON.stringify(boundaryData)
+
+    // Note: Intersections display will be updated automatically by MapAPI
+    // after the API response is received
+  }
+
+  /**
+   * Handle intersection check - extracted to avoid duplication
+   * @param {Array} coordinates - Polygon coordinates
+   * @param {L.Layer} layer - Leaflet layer
+   * @returns {Promise} Promise resolving when check is complete
+   */
+  async function handleIntersectionCheck(coordinates, layer) {
+    const intersections = await window.MapAPI.checkEDPIntersection(coordinates)
+    updateBoundaryData(layer, intersections)
+
+    if (window.MapAPI) {
+      window.MapAPI.hideLoadingState()
+    }
+
+    const saveButtonContainer = document.getElementById(
+      DOM_IDS.saveButtonContainer
+    )
+    if (saveButtonContainer) {
+      saveButtonContainer.classList.remove('hidden')
+    }
+
+    return intersections
   }
 
   // ============================================================================
@@ -332,12 +369,13 @@
   }
 
   /**
-   * Handle confirm edit button click
+   * Handle confirm area button click - calls API to check EDP intersection
    * @param {L.Control.Draw} drawControl - Draw control instance
    * @param {L.Map} map - Leaflet map instance
    * @param {L.FeatureGroup} drawnItemsGroup - Feature group for drawn items
    */
-  function handleConfirmEdit(drawControl, map, drawnItemsGroup) {
+  async function handleConfirmEdit(drawControl, map, drawnItemsGroup) {
+    // Complete any in-progress drawing
     if (isDrawing) {
       const drawHandler = getPolygonHandler(drawControl, 'draw')
       if (drawHandler && drawHandler._enabled) {
@@ -345,6 +383,7 @@
       }
     }
 
+    // Save any in-progress edits
     if (isEditing) {
       const editHandler = getEditHandler(drawControl)
       if (editHandler && editHandler._enabled) {
@@ -354,6 +393,7 @@
       isEditing = false
     }
 
+    // Disable drawing mode
     if (isDrawing) {
       const polygonHandler = getPolygonHandler(drawControl, 'draw')
       if (polygonHandler) {
@@ -363,17 +403,38 @@
     }
 
     window.MapUI.hideErrorSummary()
-    window.MapUI.exitEditMode(map, drawnItemsGroup)
 
-    const saveButtonContainer = document.getElementById(
-      DOM_IDS.saveButtonContainer
-    )
-    if (
-      saveButtonContainer &&
-      drawnItemsGroup &&
-      drawnItemsGroup.getLayers().length > 0
-    ) {
-      saveButtonContainer.classList.remove('hidden')
+    const layers = drawnItemsGroup.getLayers()
+    if (layers.length === 0) {
+      console.error(ERROR_MESSAGES.noBoundary)
+      return
+    }
+
+    const layer = layers[0]
+    const latLngs = layer.getLatLngs()[0]
+    const coordinates = latLngs.map((latLng) => [latLng.lng, latLng.lat])
+
+    if (window.MapAPI) {
+      window.MapAPI.showLoadingState()
+    }
+
+    try {
+      await handleIntersectionCheck(coordinates, layer)
+
+      if (window.MapAPI) {
+        window.MapAPI.hideErrorState()
+      }
+
+      window.MapUI.exitEditMode(map, drawnItemsGroup)
+    } catch (error) {
+      console.error('Error checking EDP intersection:', error)
+
+      if (window.MapAPI) {
+        window.MapAPI.showErrorState(
+          error.message || ERROR_MESSAGES.unableToVerify,
+          () => handleConfirmEdit(drawControl, map, drawnItemsGroup)
+        )
+      }
     }
   }
 
@@ -497,60 +558,101 @@
   }
 
   /**
+   * Handle polygon created event
+   * @param {Object} event - Leaflet draw event
+   * @param {L.Map} map - Leaflet map instance
+   * @param {L.FeatureGroup} drawnItemsGroup - Feature group for drawn items
+   */
+  async function handlePolygonCreated(event, map, drawnItemsGroup) {
+    const layer = event.layer
+    drawnItemsGroup.addLayer(layer)
+    isDrawing = false
+    window.MapUI.hideErrorSummary()
+
+    const controls = getControlElements()
+    if (controls) {
+      window.MapUI.updateLinkStates(controls, drawnItemsGroup)
+    }
+
+    window.MapUI.exitEditMode(map, drawnItemsGroup)
+
+    const latLngs = layer.getLatLngs()[0]
+    const coordinates = latLngs.map((latLng) => [latLng.lng, latLng.lat])
+
+    if (window.MapAPI) {
+      window.MapAPI.showLoadingState()
+    }
+
+    try {
+      await handleIntersectionCheck(coordinates, layer)
+    } catch (error) {
+      console.error('Error checking EDP intersection on create:', error)
+      if (window.MapAPI) {
+        window.MapAPI.showErrorState(
+          error.message || ERROR_MESSAGES.unableToVerify,
+          async () => {
+            try {
+              window.MapAPI.hideErrorState()
+              window.MapAPI.showLoadingState()
+              await handleIntersectionCheck(coordinates, layer)
+            } catch (retryError) {
+              window.MapAPI.showErrorState(
+                retryError.message || ERROR_MESSAGES.unableToVerify,
+                null
+              )
+            }
+          }
+        )
+      }
+    }
+
+    if (
+      window.MapInitialisation &&
+      window.MapInitialisation.updateHelpModalContent
+    ) {
+      window.MapInitialisation.updateHelpModalContent(map)
+    }
+  }
+
+  /**
+   * Handle polygon edited event
+   * @param {Object} event - Leaflet draw event
+   * @param {L.Map} map - Leaflet map instance
+   */
+  function handlePolygonEdited(event, map) {
+    if (
+      window.MapInitialisation &&
+      window.MapInitialisation.updateHelpModalContent
+    ) {
+      window.MapInitialisation.updateHelpModalContent(map)
+    }
+  }
+
+  /**
+   * Handle polygon deleted event
+   */
+  function handlePolygonDeleted() {
+    const controls = getControlElements()
+    if (controls) {
+      window.MapUI.updateLinkStates(controls, drawnItems)
+    }
+  }
+
+  /**
    * Setup map event handlers for drawing
    * @param {L.Map} map - Leaflet map instance
    * @param {L.FeatureGroup} drawnItemsGroup - Feature group for drawn items
    * @param {Array} edpLayers - Array of EDP layer data
    */
   function setupMapEventHandlers(map, drawnItemsGroup, edpLayers) {
-    map.on(L.Draw.Event.CREATED, function (event) {
-      const layer = event.layer
-      drawnItemsGroup.addLayer(layer)
-      isDrawing = false
-      window.MapUI.hideErrorSummary()
+    map.on(L.Draw.Event.CREATED, (event) =>
+      handlePolygonCreated(event, map, drawnItemsGroup)
+    )
 
-      const controls = getControlElements()
-      if (controls) {
-        window.MapUI.updateLinkStates(controls, drawnItemsGroup)
-      }
+    map.on(L.Draw.Event.EDITED, (event) => handlePolygonEdited(event, map))
 
-      window.MapUI.exitEditMode(map, drawnItemsGroup)
-
-      const intersectingCatchment =
-        window.MapGeometry.findIntersectingCatchment(layer, edpLayers)
-      updateBoundaryData(layer, intersectingCatchment)
-
-      // Update help modal AFTER boundary data is saved
-      if (
-        window.MapInitialisation &&
-        window.MapInitialisation.updateHelpModalContent
-      ) {
-        window.MapInitialisation.updateHelpModalContent(map)
-      }
-    })
-
-    map.on(L.Draw.Event.EDITED, function (event) {
-      const layers = event.layers
-      layers.eachLayer(function (layer) {
-        const intersectingCatchment =
-          window.MapGeometry.findIntersectingCatchment(layer, edpLayers)
-        updateBoundaryData(layer, intersectingCatchment)
-      })
-
-      // Update help modal AFTER boundary data is saved
-      if (
-        window.MapInitialisation &&
-        window.MapInitialisation.updateHelpModalContent
-      ) {
-        window.MapInitialisation.updateHelpModalContent(map)
-      }
-    })
-
-    map.on(L.Draw.Event.DELETED, function () {
-      const controls = getControlElements()
-      if (controls) {
-        window.MapUI.updateLinkStates(controls, drawnItemsGroup)
-      }
+    map.on(L.Draw.Event.DELETED, () => {
+      handlePolygonDeleted()
       document.getElementById(DOM_IDS.boundaryData).value = ''
     })
   }

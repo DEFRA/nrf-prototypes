@@ -228,6 +228,14 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund levy - GO
                                 </button>
                             </div>
                         </div>
+
+                        <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+
+                        <!-- Data layers -->
+                        <div class="govuk-form-group">
+                            <h2 class="govuk-heading-s">Environmental Delivery Plan areas</h2>
+                            <div id="datasets-checkboxes"></div>
+                        </div>
                     </div>
 
                     <!-- Map container -->
@@ -317,11 +325,14 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund levy - GO
 <!-- Map modules - loaded in dependency order -->
 <script src="/public/javascripts/map-geometry.js"></script>
 <script src="/public/javascripts/map-ui.js"></script>
+<script src="/public/javascripts/map-api.js"></script>
 <script src="/public/javascripts/map-styles.js"></script>
 <script src="/public/javascripts/map-initialisation.js"></script>
 <script src="/public/javascripts/map-search.js"></script>
 <script src="/public/javascripts/map-drawing-controls.js"></script>
 <script src="/public/javascripts/map-stats.js"></script>
+<script src="/public/javascripts/map-data.js"></script>
+<script src="/public/javascripts/map-datasets.js"></script>
 <!-- Main orchestrator - loads last -->
 <script src="/public/javascripts/map-drawing-layers-spike.js"></script>
 {% endblock %}

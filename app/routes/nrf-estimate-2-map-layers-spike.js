@@ -945,7 +945,7 @@ router.get(ROUTES.CATCHMENTS_GEOJSON, (req, res) => {
   try {
     const geojsonPath = path.join(
       __dirname,
-      '../assets/catchments_nn_catchments_03_2024.geojson'
+      '../assets/map-layers/catchments_nn_catchments_03_2024.geojson'
     )
 
     // Check if file exists
