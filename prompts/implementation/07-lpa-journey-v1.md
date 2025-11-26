@@ -23,8 +23,8 @@
 
 ```
 <inset-text>
-To: lpa@example.com
-Subject: Nature Restoration Fund – Approve request to pay the Nature Restoration Fund levy
+**To:** lpa@example.com
+**Subject:** Nature Restoration Fund – Approve request to pay the Nature Restoration Fund levy
 </inset-text>
 
 # Nature Restoration Fund – Approve request to pay the Nature Restoration Fund levy
@@ -168,7 +168,7 @@ Note: Use a table or list pattern with no change links for displaying the detail
 
 [Download these details](javascript:void(0))
 
-Check these details against the details submitted as part of the planning permission application by Acme Developments.
+Check these details against the details submitted as part of the planning permission application by Acme Development.
 Approving these details will enable Acme Developments to use Nature Restoration Fund levy to mitigate their environmental impact.
 
 **Button:** Approve (links to `/lpa-approve-1/approval-confirmation`)
@@ -215,7 +215,7 @@ Once Acme Developments has paid, you will be sent an email with a receipt which 
 
 If you need help with Nature Restoration Fund, contact XXXX and give the estimate reference number.
 
-Email: xxxxx@defra.gov.uk
+Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
@@ -245,8 +245,8 @@ None
 
 ```
 <inset-text>
-To: lpa@example.com
-Subject: Nature Restoration Fund – Confirmation: Approved request to pay the Nature Restoration Fund levy
+**To:** lpa@example.com
+**Subject:** Nature Restoration Fund – Confirmation: Approved request to pay the Nature Restoration Fund levy
 </inset-text>
 
 # Nature Restoration Fund – Confirmation: Approved request to pay the Nature Restoration Fund levy
