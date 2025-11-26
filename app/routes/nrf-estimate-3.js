@@ -162,6 +162,15 @@ router.post(ROUTES.API_CHECK_EDP_INTERSECTION, (req, res) => {
       })
     }
 
+    // Limit maximum number of coordinates to prevent DoS
+    const MAX_COORDINATES = 10000
+    if (coordinates.length > MAX_COORDINATES) {
+      return res.status(400).json({
+        success: false,
+        error: `Too many coordinates. Maximum ${MAX_COORDINATES} allowed.`
+      })
+    }
+
     // Validate coordinate format
     const validCoordinates = coordinates.every(
       (coord) =>
@@ -188,7 +197,7 @@ router.post(ROUTES.API_CHECK_EDP_INTERSECTION, (req, res) => {
       intersections: result
     })
   } catch (error) {
-    console.error('Error in API check-edp-intersection:', error)
+    console.error('Error in API check-edp-intersection:', error.message)
     return res.status(500).json({
       success: false,
       error: 'An error occurred while checking the boundary. Please try again.'
@@ -462,6 +471,39 @@ router.post(ROUTES.MAP, (req, res) => {
 
   try {
     const parsedData = JSON.parse(boundaryData)
+
+    // Validate coordinates to prevent client-side tampering
+    if (
+      !parsedData.coordinates ||
+      !Array.isArray(parsedData.coordinates) ||
+      parsedData.coordinates.length < 3
+    ) {
+      return res.render(TEMPLATES.MAP, {
+        error: 'Invalid boundary data. Please draw a valid boundary.',
+        navFromSummary: navFromSummary,
+        data: req.session.data || {},
+        existingBoundaryData: '',
+        backLink:
+          req.session.data?.mapReferrer === 'upload-redline'
+            ? ROUTES.UPLOAD_REDLINE
+            : ROUTES.REDLINE_MAP
+      })
+    }
+
+    // Limit maximum number of coordinates
+    const MAX_COORDINATES = 10000
+    if (parsedData.coordinates.length > MAX_COORDINATES) {
+      return res.render(TEMPLATES.MAP, {
+        error: `Boundary is too complex. Maximum ${MAX_COORDINATES} points allowed.`,
+        navFromSummary: navFromSummary,
+        data: req.session.data || {},
+        existingBoundaryData: '',
+        backLink:
+          req.session.data?.mapReferrer === 'upload-redline'
+            ? ROUTES.UPLOAD_REDLINE
+            : ROUTES.REDLINE_MAP
+      })
+    }
 
     // Check EDP intersections using turf.js
     const intersectionResults = checkEDPIntersections(parsedData.coordinates)

@@ -48,15 +48,12 @@
    * @returns {Object} Visibility state for each dataset
    */
   function getVisibilityFromCookie() {
-    const cookies = document.cookie.split(';')
-    for (let cookie of cookies) {
-      const [name, value] = cookie.trim().split('=')
-      if (name === COOKIE_NAME) {
-        try {
-          return JSON.parse(decodeURIComponent(value))
-        } catch (e) {
-          console.error('Error parsing visibility cookie:', e)
-        }
+    const cookieValue = Cookies.get(COOKIE_NAME)
+    if (cookieValue) {
+      try {
+        return JSON.parse(cookieValue)
+      } catch (e) {
+        console.error('Error parsing visibility cookie:', e)
       }
     }
     // Return defaults if no cookie found
@@ -71,9 +68,14 @@
    * @param {Object} visibility - Visibility state for each dataset
    */
   function saveVisibilityToCookie(visibility) {
-    const expires = new Date()
-    expires.setFullYear(expires.getFullYear() + 1) // 1 year expiry
-    document.cookie = `${COOKIE_NAME}=${encodeURIComponent(JSON.stringify(visibility))}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`
+    // Use js-cookie library with 1 year expiry
+    // Secure flag is automatically added when using HTTPS
+    Cookies.set(COOKIE_NAME, JSON.stringify(visibility), {
+      expires: 365, // days
+      path: '/',
+      sameSite: 'Lax',
+      secure: window.location.protocol === 'https:'
+    })
   }
 
   /**
