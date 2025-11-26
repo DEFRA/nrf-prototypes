@@ -1,0 +1,77 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Sign in using Government Gateway - Get an estimate for Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: "/nrf-estimate-4/commit-how-would-you-like-to-sign-in"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <form action="/nrf-estimate-4/commit-sign-in-government-gateway" method="post" novalidate>
+            {% if errors %}
+            {{ govukErrorSummary({
+                titleText: "There is a problem",
+                errorList: errors
+            }) }}
+            {% endif %}
+
+            {{ govukInput({
+                label: {
+                    text: "Government Gateway user ID",
+                    classes: "govuk-label--l",
+                    isPageHeading: true
+                },
+                hint: {
+                    text: "This could be up to 12 characters."
+                },
+                id: "user-id",
+                name: "userId",
+                type: "text",
+                value: data.governmentGatewayUserId,
+                errorMessage: errorsByField.userId if errorsByField.userId
+            }) }}
+
+            {{ govukInput({
+                label: {
+                    text: "Password",
+                    classes: "govuk-label--l"
+                },
+                id: "password",
+                name: "password",
+                type: "password",
+                errorMessage: errorsByField.password if errorsByField.password
+            }) }}
+
+            <p class="govuk-body govuk-!-margin-bottom-2">
+                <strong>New users of Government Gateway</strong>
+            </p>
+            <p class="govuk-body">
+                Link
+            </p>
+
+            <p class="govuk-body govuk-!-margin-bottom-2">
+                <strong>Problems signing in</strong>
+            </p>
+            <ul class="govuk-list govuk-list--bullet">
+                <li><a href="javascript:void(0)" class="govuk-link">I have forgotten my password</a></li>
+                <li><a href="javascript:void(0)" class="govuk-link">I have forgotten my Government Gateway user ID</a></li>
+                <li><a href="javascript:void(0)" class="govuk-link">I have forgotten my Government Gateway user ID and password</a></li>
+                <li><a href="javascript:void(0)" class="govuk-link">Get help with this page</a></li>
+            </ul>
+
+            <button class="govuk-button" data-module="govuk-button">
+                Sign in
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

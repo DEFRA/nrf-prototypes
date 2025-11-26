@@ -15,7 +15,7 @@
 | **Field**              | **Value**                             |
 | ---------------------- | ------------------------------------- |
 | Order number:          | 1                                     |
-| Path:                  | /nrf-estimate-4/do-you-have-a-NRF-ref |
+| Path:                  | /nrf-estimate-4/do-you-have-a-nrf-ref |
 | Title:                 | Do you have an NRF reference?         |
 | Conditional page flow: | none                                  |
 
@@ -23,11 +23,11 @@
 
 ```
 {
-    hasNRFReference: {
+    hasNrfReference: {
         type: radios,
         required: true,
         values: "yes" | "no"
-        fieldName: "has-NRF-reference"
+        fieldName: "has-nrf-reference"
     }
 }
 ```
@@ -65,10 +65,10 @@ CTA: Continue
 
 ```
 {
-    NRFReference: {
+    nrfReference: {
         type: text,
         required: true
-        fieldName: "NRF-reference"
+        fieldName: "nrf-reference"
     }
 }
 ```
@@ -263,25 +263,27 @@ Hint text: Use your email address and password. If you don't have a GOV.UK One L
 
 ### Sign in Government Gateway
 
-| **Field**              | **Value**                         |
-| ---------------------- | --------------------------------- |
-| Order number:          | 7                                 |
-| Path:                  | /nrf-estimate-4/commit-Sign in-GG |
-| Title:                 | Sign in using Government Gateway  |
-| H1 heading:            | Sign in using Government Gateway  |
-| Conditional page flow: | None                              |
+| **Field**              | **Value**                                         |
+| ---------------------- | ------------------------------------------------- |
+| Order number:          | 7                                                 |
+| Path:                  | /nrf-estimate-4/commit-sign-in-government-gateway |
+| Title:                 | Sign in using Government Gateway                  |
+| H1 heading:            | Sign in using Government Gateway                  |
+| Conditional page flow: | None                                              |
 
 #### Data points
 
 ```
 {
-    GGuserID: {
+    governmentGatewayUserId: {
         type: text,
         required: true
+        fieldName: "userId"
     },
-    Password: {
+    governmentGatewayPassword: {
         type: text,
         required: true
+        fieldName: "password"
     }
 }
 ```
@@ -293,10 +295,10 @@ Hint text: Use your email address and password. If you don't have a GOV.UK One L
 
 Government Gateway user ID
 Hint text: This could be up to 12 characters.
-Field name: userID
+Field name: userId
 
 Password
-Field name: Password
+Field name: password
 Grey CTA: Show
 
 CTA: Sign in
@@ -528,7 +530,7 @@ None
 <green-banner>
 # Your details have been submitted
 
-Commitment reference: [dynamically generated - shows data.NRFReference]
+Commitment reference: [dynamically generated - shows data.nrfReference]
 </green-banner>
 
 ## What happens next
@@ -579,7 +581,7 @@ Note: This page uses the GOV.UK inset text component (govuk-inset-text) to displ
 
 # Nature Restoration Fund – commitment to use the Nature Restoration Fund levy
 
-**NRF reference:** {{ NRFReference }}
+**NRF reference:** {{ data.nrfReference }}
 
 Note: The commitment reference is displayed as a paragraph with bold formatting, not as a heading.
 
@@ -631,10 +633,10 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 
 Create the following files in the GOV.UK Prototype Kit structure:
 
-1. **Route File**: `app/routes/nrf-estimate-3.js`
-2. **View Directory**: `app/views/nrf-estimate-3/`
+1. **Route File**: `app/routes/nrf-estimate-4.js`
+2. **View Directory**: `app/views/nrf-estimate-4/`
 3. **View Files**: One HTML file per page in the journey
-4. **Data File**: Uses existing session data structure
+4. **Data File**: `app/data/nrf-estimate-4-data.js` (if needed)
 
 ### Route Implementation
 
@@ -680,11 +682,11 @@ Create the following files in the GOV.UK Prototype Kit structure:
 
 ## Implementation Instructions
 
-1. **Routes are integrated** into existing `app/routes/nrf-estimate-3.js` file
-2. **Views are in** `app/views/nrf-estimate-3/` directory
+1. **Routes are integrated** into `app/routes/nrf-estimate-4.js` (or the new commit journey file)
+2. **Views are in** `app/views/nrf-estimate-4/` directory
 3. **Form validation** is implemented with proper error handling
 4. **Conditional routing** based on journey type
-5. **Routes use** centralized route constants from `app/config/nrf-estimate-3/routes.js`
+5. **Routes use** centralized route constants from `app/config/nrf-estimate-4/routes.js`
 6. **Journey can be accessed** via payment-email page link or directly
 
 ## Expected Output
@@ -706,14 +708,14 @@ Create the following files in the GOV.UK Prototype Kit structure:
 
 ## Implementation Details
 
-- **Journey entry point**: Accessed from `/nrf-estimate-3/what-would-you-like-to-do` when user selects "I am ready to commit to using the Nature Restoration Fund levy", or from estimate email via link "Commit to using Nature Restoration Fund"
+- **Journey entry point**: Accessed from `/nrf-estimate-4/what-would-you-like-to-do` when the user selects "I am ready to commit to using the Nature Restoration Fund levy", or from the estimate email link "Commit to using Nature Restoration Fund"
 - **Shared confirmation page**: The confirmation.html page is shared between estimate and payment journeys with conditional content display
 - **Dynamic content**: Levies and their impacts are displayed dynamically based on user selections
 - **Levy naming**: Uses "greater crested newts" terminology instead of just "newts"
 - **Data structure**: Uses `leviesSelected` array and `lpaEmail` field for data storage. Company details stored in `fullName`, `businessName`, `addressLine1`, `addressLine2`, `townOrCity`, `county`, `postcode`
-- **Route organization**: All routes integrated into existing nrf-estimate-3.js file with proper separation of concerns
+- **Route organization**: All routes integrated into the new `nrf-estimate-4.js` file with proper separation of concerns
 - **Email template**: Invoice email content is available as a separate viewable page for reference
 - **Path naming**: All paths use lowercase with hyphens (e.g., `/company-details`, `/lpa-email`, `/summary-and-declaration`)
 - **Company details page**: New page in the invoice journey flow between confirm and LPA email entry
-- **Route conflict resolution**: The retrieved estimate summary page uses `/nrf-estimate-3/retrieved-estimate-summary` instead of `/nrf-estimate-3/commit-summary` to avoid conflict with the existing payment journey commit-summary route
+- **Route conflict resolution**: The retrieved estimate summary page uses `/nrf-estimate-4/retrieved-estimate-summary` instead of `/nrf-estimate-3/commit-summary` to avoid conflict with the existing payment journey route
 - **Data Property Note**: The implementation uses `email` for the estimate retrieval email field, not `estimateRetrievalEmail`

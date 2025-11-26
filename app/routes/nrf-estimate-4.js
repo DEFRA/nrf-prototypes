@@ -241,7 +241,13 @@ router.post(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO, (req, res) => {
   req.session.data = req.session.data || {}
   req.session.data.journeyType = journeyType
 
-  // Continue with the estimate flow for all selections for now
+  // Route to the commit flow when the user selects that option
+  if (journeyType === 'commit') {
+    res.redirect(ROUTES.DO_YOU_HAVE_A_NRF_REF)
+    return
+  }
+
+  // Otherwise continue with the estimate map flow
   res.redirect(ROUTES.REDLINE_MAP)
 })
 
@@ -985,6 +991,345 @@ router.get(ROUTES.ESTIMATE_EMAIL_CONTENT, (req, res) => {
   res.render(TEMPLATES.ESTIMATE_EMAIL_CONTENT, {
     data: data,
     buildingTypeDetails: formatBuildingTypeDetails(data)
+  })
+})
+
+const NRF_REFERENCE_REGEX = /^\d+$/
+
+// ============================================================================
+// Commit journey routes (estimate retrieval → commit)
+// ============================================================================
+
+router.get(ROUTES.DO_YOU_HAVE_A_NRF_REF, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.DO_YOU_HAVE_A_NRF_REF, {
+    data: data
+  })
+})
+
+router.post(ROUTES.DO_YOU_HAVE_A_NRF_REF, (req, res) => {
+  const hasNrfReference = req.body['has-nrf-reference']
+
+  if (!hasNrfReference) {
+    return res.render(TEMPLATES.DO_YOU_HAVE_A_NRF_REF, {
+      error: 'Select yes if you have an NRF reference',
+      data: req.session.data || {}
+    })
+  }
+
+  req.session.data = req.session.data || {}
+  req.session.data.hasNrfReference = hasNrfReference
+
+  if (hasNrfReference === 'yes') {
+    res.redirect(ROUTES.ENTER_ESTIMATE_REF)
+  } else {
+    res.redirect(ROUTES.START)
+  }
+})
+
+router.get(ROUTES.ENTER_ESTIMATE_REF, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.ENTER_ESTIMATE_REF, {
+    data: data,
+    backLink: ROUTES.DO_YOU_HAVE_A_NRF_REF
+  })
+})
+
+router.post(ROUTES.ENTER_ESTIMATE_REF, (req, res) => {
+  const nrfReference = req.body['nrf-reference']?.trim()
+
+  if (!nrfReference) {
+    return res.render(TEMPLATES.ENTER_ESTIMATE_REF, {
+      error: 'Enter your NRF reference to continue',
+      data: req.session.data || {},
+      backLink: ROUTES.DO_YOU_HAVE_A_NRF_REF
+    })
+  }
+
+  if (!NRF_REFERENCE_REGEX.test(nrfReference)) {
+    return res.render(TEMPLATES.ENTER_ESTIMATE_REF, {
+      error: 'Enter a valid NRF reference number',
+      data: req.session.data || {},
+      backLink: ROUTES.DO_YOU_HAVE_A_NRF_REF
+    })
+  }
+
+  req.session.data = req.session.data || {}
+  req.session.data.nrfReference = nrfReference
+
+  res.redirect(ROUTES.RETRIEVE_ESTIMATE_EMAIL)
+})
+
+router.get(ROUTES.RETRIEVE_ESTIMATE_EMAIL, (req, res) => {
+  const data = req.session.data || {}
+
+  let backLink = ROUTES.DO_YOU_HAVE_A_NRF_REF
+  if (data.hasNrfReference === 'yes' && data.nrfReference) {
+    backLink = ROUTES.ENTER_ESTIMATE_REF
+  }
+
+  res.render(TEMPLATES.RETRIEVE_ESTIMATE_EMAIL, {
+    data: data,
+    backLink: backLink
+  })
+})
+
+router.post(ROUTES.RETRIEVE_ESTIMATE_EMAIL, (req, res) => {
+  const email = req.body['email']
+  const data = req.session.data || {}
+
+  let backLink = ROUTES.DO_YOU_HAVE_A_NRF_REF
+  if (data.hasNrfReference === 'yes' && data.nrfReference) {
+    backLink = ROUTES.ENTER_ESTIMATE_REF
+  }
+
+  const validation = validators.validateEmail(email)
+  if (!validation.valid) {
+    return res.render(TEMPLATES.RETRIEVE_ESTIMATE_EMAIL, {
+      error: validation.error,
+      data: data,
+      backLink: backLink
+    })
+  }
+
+  req.session.data = req.session.data || {}
+  req.session.data.email = email
+
+  res.redirect(ROUTES.ESTIMATE_EMAIL_RETRIEVAL_CONTENT)
+})
+
+router.get(ROUTES.ESTIMATE_EMAIL_RETRIEVAL_CONTENT, (req, res) => {
+  const data = req.session.data || {}
+
+  let backLink = ROUTES.DO_YOU_HAVE_A_NRF_REF
+  if (data.hasNrfReference === 'yes' && data.nrfReference) {
+    backLink = ROUTES.ENTER_ESTIMATE_REF
+  } else {
+    backLink = ROUTES.RETRIEVE_ESTIMATE_EMAIL
+  }
+
+  res.render(TEMPLATES.ESTIMATE_EMAIL_RETRIEVAL_CONTENT, {
+    data: data,
+    backLink: backLink
+  })
+})
+
+router.get(ROUTES.RETRIEVED_ESTIMATE_SUMMARY, (req, res) => {
+  const data = req.session.data || {}
+
+  if (!data.email) {
+    return res.redirect(ROUTES.RETRIEVE_ESTIMATE_EMAIL)
+  }
+
+  res.render(TEMPLATES.RETRIEVED_ESTIMATE_SUMMARY, {
+    data: data,
+    buildingTypeLabels: BUILDING_TYPE_LABELS
+  })
+})
+
+router.post(ROUTES.RETRIEVED_ESTIMATE_SUMMARY, (req, res) => {
+  res.redirect(ROUTES.COMMIT_HOW_WOULD_YOU_LIKE_TO_SIGN_IN)
+})
+
+router.get(ROUTES.COMMIT_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.COMMIT_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, {
+    data: data
+  })
+})
+
+router.post(ROUTES.COMMIT_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, (req, res) => {
+  const option = req.body['sign-in-option']
+
+  if (!option) {
+    return res.render(TEMPLATES.COMMIT_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, {
+      error:
+        'Select if you want to log in with One Login or Government Gateway',
+      data: req.session.data || {}
+    })
+  }
+
+  req.session.data = req.session.data || {}
+  req.session.data.signInOption = option
+
+  if (option === 'government-gateway') {
+    res.redirect(ROUTES.COMMIT_SIGN_IN_GOVERNMENT_GATEWAY)
+    return
+  }
+
+  res.redirect(ROUTES.COMPANY_DETAILS)
+})
+
+router.get(ROUTES.COMMIT_SIGN_IN_GOVERNMENT_GATEWAY, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.COMMIT_SIGN_IN_GOVERNMENT_GATEWAY, {
+    data: data,
+    errors: [],
+    errorsByField: {}
+  })
+})
+
+router.post(ROUTES.COMMIT_SIGN_IN_GOVERNMENT_GATEWAY, (req, res) => {
+  const userId = req.body.userId
+  const password = req.body.password
+  const data = req.session.data || {}
+
+  const errors = []
+  const errorsByField = {}
+
+  if (!userId || userId.trim() === '') {
+    const message = 'Enter your Government Gateway user ID'
+    errors.push({ text: message, href: '#user-id' })
+    errorsByField.userId = { text: message }
+  }
+
+  if (!password || password.trim() === '') {
+    const message = 'Enter your password'
+    errors.push({ text: message, href: '#password' })
+    errorsByField.password = { text: message }
+  }
+
+  if (errors.length > 0) {
+    return res.render(TEMPLATES.COMMIT_SIGN_IN_GOVERNMENT_GATEWAY, {
+      data: data,
+      errors: errors,
+      errorsByField: errorsByField
+    })
+  }
+
+  req.session.data = req.session.data || {}
+  req.session.data.governmentGatewayUserId = userId
+
+  res.redirect(ROUTES.COMPANY_DETAILS)
+})
+
+router.get(ROUTES.COMPANY_DETAILS, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.COMPANY_DETAILS, {
+    data: data,
+    errors: [],
+    errorsByField: {}
+  })
+})
+
+router.post(ROUTES.COMPANY_DETAILS, (req, res) => {
+  const fullName = req.body.fullName
+  const businessName = req.body.businessName
+  const addressLine1 = req.body.addressLine1
+  const addressLine2 = req.body.addressLine2
+  const townOrCity = req.body.townOrCity
+  const county = req.body.county
+  const postcode = req.body.postcode
+  const companyRegistrationNumber = req.body.companyRegistrationNumber
+  const vatRegistrationNumber = req.body.vatRegistrationNumber
+  const purchaseOrderNumber = req.body.purchaseOrderNumber
+
+  const sessionData = req.session.data || {}
+  const formData = {
+    ...sessionData,
+    fullName,
+    businessName,
+    addressLine1,
+    addressLine2,
+    townOrCity,
+    county,
+    postcode,
+    companyRegistrationNumber,
+    vatRegistrationNumber,
+    purchaseOrderNumber
+  }
+
+  const errors = []
+
+  if (!fullName || fullName.trim() === '') {
+    errors.push({ field: 'fullName', message: 'Enter your full name' })
+  }
+
+  if (!addressLine1 || addressLine1.trim() === '') {
+    errors.push({ field: 'addressLine1', message: 'Enter address line 1' })
+  }
+
+  if (!townOrCity || townOrCity.trim() === '') {
+    errors.push({ field: 'townOrCity', message: 'Enter a town or city' })
+  }
+
+  if (!postcode || postcode.trim() === '') {
+    errors.push({ field: 'postcode', message: 'Enter a postcode' })
+  }
+
+  if (errors.length > 0) {
+    const errorsByField = {}
+    errors.forEach((error) => {
+      errorsByField[error.field] = { text: error.message }
+    })
+    return res.render(TEMPLATES.COMPANY_DETAILS, {
+      errors: errors,
+      errorsByField: errorsByField,
+      data: formData
+    })
+  }
+
+  req.session.data = formData
+  req.session.data.fullName = fullName
+  req.session.data.businessName = businessName || ''
+  req.session.data.addressLine1 = addressLine1
+  req.session.data.addressLine2 = addressLine2 || ''
+  req.session.data.townOrCity = townOrCity
+  req.session.data.county = county || ''
+  req.session.data.postcode = postcode
+  req.session.data.companyRegistrationNumber = companyRegistrationNumber || ''
+  req.session.data.vatRegistrationNumber = vatRegistrationNumber || ''
+  req.session.data.purchaseOrderNumber = purchaseOrderNumber || ''
+
+  res.redirect(ROUTES.LPA_CONFIRM)
+})
+
+router.get(ROUTES.LPA_CONFIRM, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.LPA_CONFIRM, {
+    data: data
+  })
+})
+
+router.post(ROUTES.LPA_CONFIRM, (req, res) => {
+  req.session.data = req.session.data || {}
+  req.session.data.lpaName = 'Stockton-on-Tees Borough Council'
+  res.redirect(ROUTES.SUMMARY_AND_DECLARATION)
+})
+
+router.get(ROUTES.SUMMARY_AND_DECLARATION, (req, res) => {
+  const data = req.session.data || {}
+
+  if (!data.fullName) {
+    return res.redirect(ROUTES.COMPANY_DETAILS)
+  }
+
+  res.render(TEMPLATES.SUMMARY_AND_DECLARATION, {
+    data: data,
+    buildingTypeLabels: BUILDING_TYPE_LABELS
+  })
+})
+
+router.post(ROUTES.SUMMARY_AND_DECLARATION, (req, res) => {
+  const commitmentReference = 'COM-' + Date.now().toString().slice(-6)
+
+  req.session.data = req.session.data || {}
+  req.session.data.commitmentReference = commitmentReference
+  req.session.data.levyAmount = req.session.data.levyAmount || '2,500'
+  req.session.data.lpaEmail = req.session.data.lpaEmail || 'lpa@example.com'
+
+  res.redirect(ROUTES.CONFIRMATION)
+})
+
+router.get(ROUTES.COMMIT_EMAIL_CONTENT, (req, res) => {
+  const data = req.session.data || {}
+
+  if (!data.commitmentReference) {
+    return res.redirect(ROUTES.SUMMARY_AND_DECLARATION)
+  }
+
+  res.render(TEMPLATES.COMMIT_EMAIL_CONTENT, {
+    data: data
   })
 })
 
