@@ -1,0 +1,41 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Your details have been submitted - Get an estimate for Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: "/nrf-estimate-4/summary"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <div class="govuk-panel govuk-panel--confirmation">
+            <h1 class="govuk-panel__title">Your details have been submitted</h1>
+            <div class="govuk-panel__body">
+                NRF reference: {{ data.nrfReference }}
+            </div>
+        </div>
+
+        <h2 class="govuk-heading-m">What happens next</h2>
+        <p class="govuk-body">You will receive an email with details of the estimate.</p>
+        <p class="govuk-body">You do not need to pay anything at this point, this service is designed to help you plan how to mitigate environmental obligations.</p>
+        <p class="govuk-body">If you decide to mitigate environmental impact using Nature Restoration Fund levy, you can commit to use the Nature Restoration Fund levy.</p>
+        <p class="govuk-body">Keep the email as a record of the estimate and NRF reference number. You can use the reference number to retrieve this estimate when you are ready to commit to using Nature Restoration Fund.</p>
+
+        <h2 class="govuk-heading-m">Get help with Nature Restoration Fund</h2>
+        <p class="govuk-body">If you need help with Nature Restoration Fund, contact XXXX and give the estimate reference number.</p>
+        <p class="govuk-body">
+            Email: <a href="mailto:xxxxx@defra.gov.uk" class="govuk-link">xxxxx@defra.gov.uk</a><br>
+            Telephone: 00000000000<br>
+            Monday to Friday, 8:30am to 5pm, except bank holidays
+        </p>
+        <p class="govuk-body"><a href="https://www.gov.uk/call-charges" class="govuk-link">Find out about call charges</a></p>
+        <p class="govuk-body"><a href="/nrf-estimate-4/estimate-email-content" class="govuk-link">View the email content</a></p>
+    </div>
+</div>
+{% endblock %}

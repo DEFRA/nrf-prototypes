@@ -4,7 +4,7 @@
 
 - **Journey Name**: Get an estimate for Nature Restoration Fund Levy
 - **Journey Description**:  
-  A user journey for a developer to obtain a quote for the Nature Restoration Fund levy required when submitting planning permission to build a development of some sort. A significant page in the journey is /nrf-estimate-3/map where the user will be able to plot a polygon on a map to define the development site boundary. There will also be 5 polygon areas over England that are known as EDP boundaries. If the development site boundary does not fall within an EDP area then the user will be navigated to the exit page /nrf-estimate-3/no-edp.
+  A user journey for a developer to obtain a quote for the Nature Restoration Fund levy required when submitting planning permission to build a development of some sort. A significant page in the journey is /nrf-estimate-4/map where the user will be able to plot a polygon on a map to define the development site boundary. There will also be 5 polygon areas over England that are known as EDP boundaries. If the development site boundary does not fall within an EDP area then the user will be navigated to the exit page /nrf-estimate-4/no-edp.
 - **Journey Route Prefix**: nrf-estimate-4
 - **Start Page Title**: Get an estimate for Nature Restoration Fund Levy
 
@@ -413,12 +413,12 @@ None
 
 ### Enter the number of rooms in your [building type] building(s) planned for the development
 
-| **Field**              | **Value**                                                                                                       |                                                                                                                            |
+| **Field**              | **Value**                                                                                                       |
 | ---------------------- | --------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Order number:          | 4.3                                                                                                             |                                                                                                                            |
-| Path:                  | /nrf-estimate-4/room-count                                                                                      |                                                                                                                            |
+| Order number:          | 4.3                                                                                                             |
+| Path:                  | /nrf-estimate-4/room-count                                                                                      |
 | Title:                 | Enter the number of rooms in your {{ buildingType                                                               | lower if buildingType != 'House of multiple occupation (HMO)' else buildingType }} building(s) planned for the development |
-| Conditional page flow: | display if data.buildingTypes includes "Hotel", "House of multiple occupation (HMO)", "Residential institution" |                                                                                                                            |
+| Conditional page flow: | display if data.buildingTypes includes "Hotel", "House of multiple occupation (HMO)", "Residential institution" |
 
 #### Data points
 
@@ -429,17 +429,17 @@ None
             hmoCount: {
                 type: number,
                 required: conditional - required and shown only if data.buildingTypes includes "House of multiple occupation (HMO)"
-                fieldName: "room-count"
+                fieldName: "room-count-hmo"
             },
             residentialInstitutionCount: {
                 type: number,
                 required: conditional - required and shown only if data.buildingTypes includes "Residential institution"
-                fieldName: "room-count"
+                fieldName: "room-count-residential-institution"
             },
             hotelCount: {
                 type: number,
                 required: conditional - required and shown only if data.buildingTypes includes "Hotel"
-                fieldName: "room-count"
+                fieldName: "room-count-hotel"
             }
         }
     }
@@ -526,13 +526,13 @@ None
 ```
 # Check your answers
 
-| Red line boundary | [Show Added/Not added] | [Change link to /nrf-estimate-3/map?nav=summary] |
-| Building types | [List all types picked here using buildingTypeLabels mapping] | [Change link to /nrf-estimate-3/building-type?change=true&nav=summary] |
+| Red line boundary | [Show Added/Not added] | [Change link to /nrf-estimate-4/map?nav=summary] |
+| Building types | [List all types picked here using buildingTypeLabels mapping] | [Change link to /nrf-estimate-4/building-type?change=true&nav=summary] |
 | [IF they pick "Dwellinghouse" THEN show] Number of dwelling buildings | [show count] | [Change link to /nrf-estimate-4/residential?change=true&nav=summary] |
-| [IF they pick "House of multiple occupation (HMO)" THEN show] Number of multiple occupation rooms | [show count] | [Change link to /nrf-estimate-3/room-count?change=true&nav=summary&type=hmo] |
-| [IF they pick "Residential institution" THEN show] Number of residential institution rooms | [show count] | [Change link to /nrf-estimate-3/room-count?change=true&nav=summary&type=residential-institution] |
+| [IF they pick "House of multiple occupation (HMO)" THEN show] Number of multiple occupation rooms | [show count] | [Change link to /nrf-estimate-4/room-count?change=true&nav=summary&type=hmo] |
+| [IF they pick "Residential institution" THEN show] Number of residential institution rooms | [show count] | [Change link to /nrf-estimate-4/room-count?change=true&nav=summary&type=residential-institution] |
 | [IF they pick Hotel THEN show] Number of hotel rooms | [show count] | [Change link to /nrf-estimate-4/room-count?change=true&nav=summary&type=hotel] |
-| Email address | [show email address] | [Change link to /nrf-estimate-3/estimate-email?change=true&nav=summary] |
+| Email address | [show email address] | [Change link to /nrf-estimate-4/estimate-email?change=true&nav=summary] |
 
 CTA: Submit
 
@@ -561,7 +561,7 @@ None
 <green-banner>
 # Your details have been submitted
 
-NRF reference: {{ data.NRFReference }}
+NRF reference: {{ data.nrfReference }}
 </green-banner>
 
 Note: This page uses the GOV.UK panel component (govuk-panel--confirmation) to display the green banner. The page conditionally displays different content based on journey type (estimate, commit, or payment). For the estimate journey, it shows:
@@ -586,7 +586,7 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 
 [Find out about call charges](https://www.gov.uk/call-charges)
 
-[View the email content](/nrf-estimate-3/estimate-email-content)
+[View the email content](/nrf-estimate-4/estimate-email-content)
 
 ```
 
@@ -638,7 +638,7 @@ You do not need to pay anything at this point, this service is designed to help 
 
 If you do decide to mitigate using Nature Restoration Fund levy, you can commit and include the commitment when applying for planning permission.
 
-[Commit to using Nature Restoration Fund](/nrf-estimate-4/do-you-have-a-NRF-ref)
+[Commit to using Nature Restoration Fund](/nrf-estimate-4/do-you-have-a-nrf-ref)
 
 Keep this email as a record of your estimate and NRF reference number, you can use it to retrieve this estimate when you are ready to commit.
 You can also [create an account now](<javascript:void(0)>)
@@ -667,10 +667,10 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 
 Create the following files in the GOV.UK Prototype Kit structure:
 
-1. **Route File**: `app/routes/nrf-estimate-3.js`
-2. **View Directory**: `app/views/nrf-estimate-3/`
+1. **Route File**: `app/routes/nrf-estimate-4.js`
+2. **View Directory**: `app/views/nrf-estimate-4/`
 3. **View Files**: One HTML file per page in the journey
-4. **Data File**: `app/data/nrf-estimate-3-data.js` (if needed)
+4. **Data File**: `app/data/nrf-estimate-4-data.js` (if needed)
 
 ### Route Implementation
 
