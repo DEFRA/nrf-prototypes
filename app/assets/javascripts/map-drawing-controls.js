@@ -34,7 +34,16 @@
     zoomToBoundary: 'zoom-to-boundary',
     confirmEdit: 'confirm-edit-btn',
     cancelEdit: 'cancel-edit-btn',
-    boundaryData: 'boundary-data'
+    boundaryData: 'boundary-data',
+    saveButtonContainer: 'save-btn-container',
+    boundaryProcessing: 'boundary-processing',
+    boundaryCheckError: 'boundary-check-error',
+    map: 'map'
+  }
+
+  const ERROR_MESSAGES = {
+    noBoundary: 'No boundary drawn',
+    unableToVerify: 'Unable to verify boundary. Please try again.'
   }
 
   const MAP_BOUNDS_PADDING = 0.1
@@ -172,6 +181,30 @@
 
     // Note: Intersections display will be updated automatically by MapAPI
     // after the API response is received
+  }
+
+  /**
+   * Handle intersection check - extracted to avoid duplication
+   * @param {Array} coordinates - Polygon coordinates
+   * @param {L.Layer} layer - Leaflet layer
+   * @returns {Promise} Promise resolving when check is complete
+   */
+  async function handleIntersectionCheck(coordinates, layer) {
+    const intersections = await window.MapAPI.checkEDPIntersection(coordinates)
+    updateBoundaryData(layer, intersections)
+
+    if (window.MapAPI) {
+      window.MapAPI.hideLoadingState()
+    }
+
+    const saveButtonContainer = document.getElementById(
+      DOM_IDS.saveButtonContainer
+    )
+    if (saveButtonContainer) {
+      saveButtonContainer.classList.remove('hidden')
+    }
+
+    return intersections
   }
 
   // ============================================================================
@@ -371,10 +404,9 @@
 
     window.MapUI.hideErrorSummary()
 
-    // Get the drawn layer
     const layers = drawnItemsGroup.getLayers()
     if (layers.length === 0) {
-      console.error('No boundary drawn')
+      console.error(ERROR_MESSAGES.noBoundary)
       return
     }
 
@@ -382,45 +414,24 @@
     const latLngs = layer.getLatLngs()[0]
     const coordinates = latLngs.map((latLng) => [latLng.lng, latLng.lat])
 
-    // Show loading state
     if (window.MapAPI) {
       window.MapAPI.showLoadingState()
     }
 
     try {
-      // Call API to check EDP intersection
-      const intersections =
-        await window.MapAPI.checkEDPIntersection(coordinates)
+      await handleIntersectionCheck(coordinates, layer)
 
-      // Update boundary data with API results
-      updateBoundaryData(layer, intersections)
-
-      // Hide loading state
       if (window.MapAPI) {
-        window.MapAPI.hideLoadingState()
         window.MapAPI.hideErrorState()
       }
 
-      // Exit edit mode and show save button
       window.MapUI.exitEditMode(map, drawnItemsGroup)
-
-      const saveButtonContainer = document.getElementById(
-        DOM_IDS.saveButtonContainer
-      )
-      if (
-        saveButtonContainer &&
-        drawnItemsGroup &&
-        drawnItemsGroup.getLayers().length > 0
-      ) {
-        saveButtonContainer.classList.remove('hidden')
-      }
     } catch (error) {
       console.error('Error checking EDP intersection:', error)
 
-      // Show error with retry option
       if (window.MapAPI) {
         window.MapAPI.showErrorState(
-          error.message || 'Unable to verify boundary. Please try again.',
+          error.message || ERROR_MESSAGES.unableToVerify,
           () => handleConfirmEdit(drawControl, map, drawnItemsGroup)
         )
       }
@@ -547,109 +558,101 @@
   }
 
   /**
+   * Handle polygon created event
+   * @param {Object} event - Leaflet draw event
+   * @param {L.Map} map - Leaflet map instance
+   * @param {L.FeatureGroup} drawnItemsGroup - Feature group for drawn items
+   */
+  async function handlePolygonCreated(event, map, drawnItemsGroup) {
+    const layer = event.layer
+    drawnItemsGroup.addLayer(layer)
+    isDrawing = false
+    window.MapUI.hideErrorSummary()
+
+    const controls = getControlElements()
+    if (controls) {
+      window.MapUI.updateLinkStates(controls, drawnItemsGroup)
+    }
+
+    window.MapUI.exitEditMode(map, drawnItemsGroup)
+
+    const latLngs = layer.getLatLngs()[0]
+    const coordinates = latLngs.map((latLng) => [latLng.lng, latLng.lat])
+
+    if (window.MapAPI) {
+      window.MapAPI.showLoadingState()
+    }
+
+    try {
+      await handleIntersectionCheck(coordinates, layer)
+    } catch (error) {
+      console.error('Error checking EDP intersection on create:', error)
+      if (window.MapAPI) {
+        window.MapAPI.showErrorState(
+          error.message || ERROR_MESSAGES.unableToVerify,
+          async () => {
+            try {
+              window.MapAPI.hideErrorState()
+              window.MapAPI.showLoadingState()
+              await handleIntersectionCheck(coordinates, layer)
+            } catch (retryError) {
+              window.MapAPI.showErrorState(
+                retryError.message || ERROR_MESSAGES.unableToVerify,
+                null
+              )
+            }
+          }
+        )
+      }
+    }
+
+    if (
+      window.MapInitialisation &&
+      window.MapInitialisation.updateHelpModalContent
+    ) {
+      window.MapInitialisation.updateHelpModalContent(map)
+    }
+  }
+
+  /**
+   * Handle polygon edited event
+   * @param {Object} event - Leaflet draw event
+   * @param {L.Map} map - Leaflet map instance
+   */
+  function handlePolygonEdited(event, map) {
+    if (
+      window.MapInitialisation &&
+      window.MapInitialisation.updateHelpModalContent
+    ) {
+      window.MapInitialisation.updateHelpModalContent(map)
+    }
+  }
+
+  /**
+   * Handle polygon deleted event
+   */
+  function handlePolygonDeleted() {
+    const controls = getControlElements()
+    if (controls) {
+      window.MapUI.updateLinkStates(controls, drawnItems)
+    }
+  }
+
+  /**
    * Setup map event handlers for drawing
    * @param {L.Map} map - Leaflet map instance
    * @param {L.FeatureGroup} drawnItemsGroup - Feature group for drawn items
    * @param {Array} edpLayers - Array of EDP layer data
    */
   function setupMapEventHandlers(map, drawnItemsGroup, edpLayers) {
-    map.on(L.Draw.Event.CREATED, async function (event) {
-      const layer = event.layer
-      drawnItemsGroup.addLayer(layer)
-      isDrawing = false
-      window.MapUI.hideErrorSummary()
+    map.on(L.Draw.Event.CREATED, (event) =>
+      handlePolygonCreated(event, map, drawnItemsGroup)
+    )
 
-      const controls = getControlElements()
-      if (controls) {
-        window.MapUI.updateLinkStates(controls, drawnItemsGroup)
-      }
+    map.on(L.Draw.Event.EDITED, (event) => handlePolygonEdited(event, map))
 
-      window.MapUI.exitEditMode(map, drawnItemsGroup)
-
-      // Check EDP intersection via API when drawing is completed
-      const latLngs = layer.getLatLngs()[0]
-      const coordinates = latLngs.map((latLng) => [latLng.lng, latLng.lat])
-
-      // Show loading state
-      if (window.MapAPI) {
-        window.MapAPI.showLoadingState()
-      }
-
-      try {
-        const intersections =
-          await window.MapAPI.checkEDPIntersection(coordinates)
-        updateBoundaryData(layer, intersections)
-
-        // Hide loading and show save button
-        if (window.MapAPI) {
-          window.MapAPI.hideLoadingState()
-        }
-
-        const saveButtonContainer = document.getElementById(
-          DOM_IDS.saveButtonContainer
-        )
-        if (saveButtonContainer) {
-          saveButtonContainer.classList.remove('hidden')
-        }
-      } catch (error) {
-        console.error('Error checking EDP intersection on create:', error)
-        if (window.MapAPI) {
-          window.MapAPI.showErrorState(
-            error.message || 'Unable to verify boundary. Please try again.',
-            async () => {
-              // Retry logic - call API again
-              try {
-                window.MapAPI.hideErrorState()
-                window.MapAPI.showLoadingState()
-                const intersections =
-                  await window.MapAPI.checkEDPIntersection(coordinates)
-                updateBoundaryData(layer, intersections)
-                window.MapAPI.hideLoadingState()
-                const saveButtonContainer = document.getElementById(
-                  DOM_IDS.saveButtonContainer
-                )
-                if (saveButtonContainer) {
-                  saveButtonContainer.classList.remove('hidden')
-                }
-              } catch (retryError) {
-                window.MapAPI.showErrorState(
-                  retryError.message ||
-                    'Unable to verify boundary. Please try again.',
-                  null
-                )
-              }
-            }
-          )
-        }
-      }
-
-      // Update help modal
-      if (
-        window.MapInitialisation &&
-        window.MapInitialisation.updateHelpModalContent
-      ) {
-        window.MapInitialisation.updateHelpModalContent(map)
-      }
-    })
-
-    map.on(L.Draw.Event.EDITED, function (event) {
-      // Note: EDP intersection checking is now done via API when user clicks "Confirm area"
-      // No need to check here anymore
-
-      // Update help modal
-      if (
-        window.MapInitialisation &&
-        window.MapInitialisation.updateHelpModalContent
-      ) {
-        window.MapInitialisation.updateHelpModalContent(map)
-      }
-    })
-
-    map.on(L.Draw.Event.DELETED, function () {
-      const controls = getControlElements()
-      if (controls) {
-        window.MapUI.updateLinkStates(controls, drawnItemsGroup)
-      }
+    map.on(L.Draw.Event.DELETED, () => {
+      handlePolygonDeleted()
       document.getElementById(DOM_IDS.boundaryData).value = ''
     })
   }

@@ -79,15 +79,23 @@
   // UI STATE MANAGEMENT
   // ============================================================================
 
+  // DOM IDs
+  const DOM_IDS = {
+    boundaryProcessing: 'boundary-processing',
+    boundaryCheckError: 'boundary-check-error',
+    boundaryCheckRetry: 'boundary-check-retry',
+    map: 'map'
+  }
+
   /**
    * Show loading state - centered on map without blocking background
    */
   function showLoadingState() {
-    let loadingEl = document.getElementById('boundary-processing')
+    let loadingEl = document.getElementById(DOM_IDS.boundaryProcessing)
     if (!loadingEl) {
       // Create dedicated loading indicator for boundary processing
       loadingEl = document.createElement('div')
-      loadingEl.id = 'boundary-processing'
+      loadingEl.id = DOM_IDS.boundaryProcessing
       loadingEl.style.cssText = `
         position: absolute;
         top: 0;
@@ -106,14 +114,13 @@
           <p class="govuk-body govuk-!-margin-top-2" style="font-weight: 600;">Processing boundary...</p>
         </div>
       `
-      const mapEl = document.getElementById('map')
+      const mapEl = document.getElementById(DOM_IDS.map)
       if (mapEl) {
         mapEl.appendChild(loadingEl)
       }
     }
     loadingEl.style.display = 'flex'
 
-    // Disable form submission
     const form = document.querySelector('form')
     if (form) {
       form.classList.add('api-checking')
@@ -124,12 +131,11 @@
    * Hide loading state
    */
   function hideLoadingState() {
-    const loadingEl = document.getElementById('boundary-processing')
+    const loadingEl = document.getElementById(DOM_IDS.boundaryProcessing)
     if (loadingEl) {
       loadingEl.style.display = 'none'
     }
 
-    // Re-enable form submission
     const form = document.querySelector('form')
     if (form) {
       form.classList.remove('api-checking')
@@ -144,11 +150,10 @@
   function showErrorState(message, retryCallback) {
     hideLoadingState()
 
-    // Create error notification
-    let errorEl = document.getElementById('boundary-check-error')
+    let errorEl = document.getElementById(DOM_IDS.boundaryCheckError)
     if (!errorEl) {
       errorEl = document.createElement('div')
-      errorEl.id = 'boundary-check-error'
+      errorEl.id = DOM_IDS.boundaryCheckError
       errorEl.className = 'govuk-error-summary'
       errorEl.setAttribute('role', 'alert')
       errorEl.setAttribute('aria-labelledby', 'error-summary-title')
@@ -174,8 +179,7 @@
 
     errorEl.style.display = 'block'
 
-    // Add retry handler
-    const retryBtn = document.getElementById('boundary-check-retry')
+    const retryBtn = document.getElementById(DOM_IDS.boundaryCheckRetry)
     if (retryBtn && retryCallback) {
       retryBtn.addEventListener('click', function () {
         errorEl.style.display = 'none'
@@ -183,7 +187,6 @@
       })
     }
 
-    // Focus on error for accessibility
     errorEl.focus()
   }
 
@@ -191,7 +194,7 @@
    * Hide error state
    */
   function hideErrorState() {
-    const errorEl = document.getElementById('boundary-check-error')
+    const errorEl = document.getElementById(DOM_IDS.boundaryCheckError)
     if (errorEl) {
       errorEl.style.display = 'none'
     }
