@@ -129,7 +129,7 @@
 
     panel.innerHTML = `
       <div class="map-stats-content">
-        <h3>Boundary information</h3>
+        <h2>Boundary information</h2>
 
         <dl class="map-stats-list">
           <div class="map-stat-item" id="stat-total-area-container" style="display: none;">
@@ -149,7 +149,7 @@
         </dl>
 
         <div id="stat-intersections-container" style="display: none; margin-top: 20px; padding-top: 15px; border-top: 2px solid #b1b4b6;">
-          <h3 class="govuk-heading-s" style="margin: 0 0 12px 0; font-size: 16px; font-weight: 700;">Intersecting EDPs</h3>
+          <h3 class="govuk-heading-s" style="margin: 0 0 12px 0; font-size: 16px; font-weight: 700;">EDPs in your red line boundary</h3>
           <div id="stat-intersections-content"></div>
         </div>
       </div>
@@ -188,7 +188,7 @@
 
     // Nutrient EDPs - always show heading
     html +=
-      '<div style="margin-bottom: 15px;"><div style="font-size: 14px; font-weight: 700; margin-bottom: 8px;">Nutrient levy areas</div>'
+      '<div style="margin-bottom: 15px;"><h4 style="font-size: 14px; font-weight: 700; margin-bottom: 8px;">Nature Restoration Fund nutrients levy areas</h4>'
     if (nutrientAreas.length > 0) {
       html +=
         '<ul class="govuk-list govuk-list--bullet" style="margin: 0; font-size: 14px; padding-left: 20px;">'
@@ -204,7 +204,7 @@
 
     // GCN EDPs - always show heading
     html +=
-      '<div><div style="font-size: 14px; font-weight: 700; margin-bottom: 8px;">GCN levy areas</div>'
+      '<div><h4 style="font-size: 14px; font-weight: 700; margin-bottom: 8px;">Nature Restoration Fund great crested newt levy areas</h4>'
     if (gcnAreas.length > 0) {
       html +=
         '<ul class="govuk-list govuk-list--bullet" style="margin: 0; font-size: 14px; padding-left: 20px;">'
