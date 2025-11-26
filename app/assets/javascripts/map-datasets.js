@@ -48,6 +48,14 @@
    * @returns {Object} Visibility state for each dataset
    */
   function getVisibilityFromCookie() {
+    if (typeof Cookies === 'undefined') {
+      console.warn('js-cookie library not loaded, using defaults')
+      return {
+        nutrientEdp: true,
+        gcnEdp: true
+      }
+    }
+
     const cookieValue = Cookies.get(COOKIE_NAME)
     if (cookieValue) {
       try {
@@ -56,7 +64,7 @@
         console.error('Error parsing visibility cookie:', e)
       }
     }
-    // Return defaults if no cookie found
+
     return {
       nutrientEdp: true,
       gcnEdp: true
@@ -68,10 +76,13 @@
    * @param {Object} visibility - Visibility state for each dataset
    */
   function saveVisibilityToCookie(visibility) {
-    // Use js-cookie library with 1 year expiry
-    // Secure flag is automatically added when using HTTPS
+    if (typeof Cookies === 'undefined') {
+      console.warn('js-cookie library not loaded, cannot save visibility')
+      return
+    }
+
     Cookies.set(COOKIE_NAME, JSON.stringify(visibility), {
-      expires: 365, // days
+      expires: 365,
       path: '/',
       sameSite: 'Lax',
       secure: window.location.protocol === 'https:'
@@ -284,6 +295,19 @@
   }
 
   /**
+   * Handle checkbox change event
+   * @param {Event} event - Change event
+   */
+  function handleCheckboxChange(event) {
+    const checkbox = event.target
+    const datasetId = checkbox.dataset.datasetId
+    toggleDataset(datasetId, checkbox.checked)
+
+    const currentVisibility = getCurrentVisibility()
+    saveVisibilityToCookie(currentVisibility)
+  }
+
+  /**
    * Initialize the datasets panel UI
    * @param {HTMLElement} container - Container element for checkboxes
    */
@@ -293,15 +317,20 @@
       return
     }
 
-    // Get saved visibility from cookie
+    // Remove existing event listeners before re-initialization
+    const existingCheckboxes = container.querySelectorAll(
+      'input[type="checkbox"]'
+    )
+    existingCheckboxes.forEach((checkbox) => {
+      checkbox.removeEventListener('change', handleCheckboxChange)
+    })
+
     const savedVisibility = getVisibilityFromCookie()
 
-    // If no cookie exists, save the defaults so checkbox state persists
     if (!document.cookie.includes(COOKIE_NAME)) {
       saveVisibilityToCookie(savedVisibility)
     }
 
-    // Generate checkboxes for all datasets
     const checkboxesHTML = Object.values(DATASETS)
       .map((dataset) => generateCheckboxHTML(dataset, savedVisibility))
       .join('')
@@ -312,17 +341,10 @@
       </div>
     `
 
-    // Add event listeners
+    // Add event listeners with named function for proper cleanup
     const checkboxes = container.querySelectorAll('input[type="checkbox"]')
     checkboxes.forEach((checkbox) => {
-      checkbox.addEventListener('change', function () {
-        const datasetId = this.dataset.datasetId
-        toggleDataset(datasetId, this.checked)
-
-        // Save visibility to cookie
-        const currentVisibility = getCurrentVisibility()
-        saveVisibilityToCookie(currentVisibility)
-      })
+      checkbox.addEventListener('change', handleCheckboxChange)
     })
   }
 
