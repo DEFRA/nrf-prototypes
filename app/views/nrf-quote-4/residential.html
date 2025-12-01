@@ -1,13 +1,13 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-Enter your email address - Get an estimate for Nature Restoration Fund levy - GOV.UK
+Enter the number of dwelling buildings planned for the development - Get a quote for Nature Restoration Fund levy - GOV.UK
 {% endblock %}
 
 {% block beforeContent %}
 {{ govukBackLink({
 text: "Back",
-href: backLink
+href: "/nrf-quote-4/building-type"
 }) }}
 {% endblock %}
 
@@ -15,7 +15,7 @@ href: backLink
 <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
 
-        <form action="/nrf-estimate-4/estimate-email" method="post" novalidate>
+        <form action="/nrf-quote-4/residential" method="post" novalidate>
             {% if isChange %}
             <input type="hidden" name="isChange" value="true">
             {% endif %}
@@ -29,7 +29,7 @@ href: backLink
                 errorList: [
                     {
                         text: error,
-                        href: "#email"
+                        href: "#residential-building-count"
                     }
                 ]
             }) }}
@@ -37,19 +37,17 @@ href: backLink
 
             {{ govukInput({
                 label: {
-                    text: "Enter your email address",
+                    text: "Enter the number of dwelling buildings planned for the development",
                     classes: "govuk-label--l",
                     isPageHeading: true
                 },
-                hint: {
-                    text: "Once your Nature Restoration Fund levy amount is calculated, the estimate will be emailed to you. This could take up to 00 minutes."
-                },
-                id: "email",
-                name: "email",
-                type: "email",
-                autocomplete: "email",
-                spellcheck: false,
-                value: data.email,
+                id: "residential-building-count",
+                name: "residential-building-count",
+                type: "number",
+                classes: "govuk-input--width-5",
+                inputmode: "numeric",
+                pattern: "[0-9]*",
+                value: data.residentialBuildingCount,
                 errorMessage: { text: error } if error
             }) }}
 

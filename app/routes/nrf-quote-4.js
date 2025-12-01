@@ -1,5 +1,5 @@
 //
-// NRF Estimate Journey Routes - Nature Restoration Fund Levy Estimate (v4)
+// NRF Quote Journey Routes - Nature Restoration Fund Levy Quote (v4)
 //
 
 const govukPrototypeKit = require('govuk-prototype-kit')
@@ -12,7 +12,7 @@ const turf = require('@turf/turf')
 // Import helpers and validators
 const validators = require('../lib/nrf-estimate-3/validators')
 const buildingTypeHelpers = require('../lib/nrf-estimate-3/building-type-helpers')
-const { ROUTES, TEMPLATES } = require('../config/nrf-estimate-4/routes')
+const { ROUTES, TEMPLATES } = require('../config/nrf-quote-4/routes')
 const {
   BUILDING_TYPES,
   BUILDING_TYPE_LABELS,
@@ -28,16 +28,12 @@ const upload = multer({
 })
 
 // ============================================================================
-// EDP DATA LOADING - Load and cache GeoJSON files
+// EDP DATA LOADING - Load and cache GeoJSON files (reused from nrf-estimate-3)
 // ============================================================================
 
 let nutrientEdpData = null
 let gcnEdpData = null
 
-/**
- * Load EDP GeoJSON data into memory
- * Called once at startup for performance
- */
 function loadEdpData() {
   try {
     const nutrientPath = path.join(
@@ -60,22 +56,14 @@ function loadEdpData() {
   }
 }
 
-// Load data at startup
 loadEdpData()
 
-/**
- * Check if a boundary intersects with EDP areas using turf.js
- * @param {Array} coordinates - Polygon coordinates [[lng, lat], ...]
- * @returns {Object} Intersection results with nutrient and GCN data
- */
 function checkEDPIntersections(coordinates) {
   if (!coordinates || coordinates.length < 3) {
     return { nutrient: null, gcn: null, intersections: [] }
   }
 
   try {
-    // Create polygon from boundary coordinates
-    // Ensure polygon is closed
     const closedCoords = [...coordinates]
     if (
       closedCoords[0][0] !== closedCoords[closedCoords.length - 1][0] ||
@@ -89,7 +77,6 @@ function checkEDPIntersections(coordinates) {
     let nutrientIntersection = null
     let gcnIntersection = null
 
-    // Check nutrient EDPs
     if (nutrientEdpData && nutrientEdpData.features) {
       for (const feature of nutrientEdpData.features) {
         if (turf.booleanIntersects(boundaryPolygon, feature)) {
@@ -102,7 +89,6 @@ function checkEDPIntersections(coordinates) {
             name: name,
             properties: feature.properties
           })
-          // Store first nutrient intersection for legacy compatibility
           if (!nutrientIntersection) {
             nutrientIntersection = name
           }
@@ -110,17 +96,18 @@ function checkEDPIntersections(coordinates) {
       }
     }
 
-    // Check GCN EDPs
     if (gcnEdpData && gcnEdpData.features) {
       for (const feature of gcnEdpData.features) {
         if (turf.booleanIntersects(boundaryPolygon, feature)) {
-          const name = feature.properties.NAME || 'GCN EDP Area'
+          const name =
+            feature.properties.Label ||
+            feature.properties.N2K_Site_N ||
+            'GCN EDP Area'
           intersections.push({
             type: 'gcn',
             name: name,
             properties: feature.properties
           })
-          // Store first GCN intersection
           if (!gcnIntersection) {
             gcnIntersection = name
           }
@@ -143,17 +130,10 @@ function checkEDPIntersections(coordinates) {
 // API ENDPOINT - Check EDP Intersection
 // ============================================================================
 
-/**
- * API endpoint to check if a boundary intersects with EDP areas
- * POST /nrf-estimate-4/api/check-edp-intersection
- * Body: { coordinates: [[lng, lat], ...] }
- * Returns: { success: true, intersections: { nutrient, gcn, intersections: [...] } }
- */
 router.post(ROUTES.API_CHECK_EDP_INTERSECTION, (req, res) => {
   try {
     const { coordinates } = req.body
 
-    // Validate input
     if (!coordinates || !Array.isArray(coordinates) || coordinates.length < 3) {
       return res.status(400).json({
         success: false,
@@ -162,7 +142,6 @@ router.post(ROUTES.API_CHECK_EDP_INTERSECTION, (req, res) => {
       })
     }
 
-    // Limit maximum number of coordinates to prevent DoS
     const MAX_COORDINATES = 10000
     if (coordinates.length > MAX_COORDINATES) {
       return res.status(400).json({
@@ -171,7 +150,6 @@ router.post(ROUTES.API_CHECK_EDP_INTERSECTION, (req, res) => {
       })
     }
 
-    // Validate coordinate format
     const validCoordinates = coordinates.every(
       (coord) =>
         Array.isArray(coord) &&
@@ -188,10 +166,8 @@ router.post(ROUTES.API_CHECK_EDP_INTERSECTION, (req, res) => {
       })
     }
 
-    // Check intersections using turf.js
     const result = checkEDPIntersections(coordinates)
 
-    // Return results
     return res.json({
       success: true,
       intersections: result
@@ -209,24 +185,20 @@ router.post(ROUTES.API_CHECK_EDP_INTERSECTION, (req, res) => {
 // PAGE ROUTES
 // ============================================================================
 
-// Start page
 router.get(ROUTES.START, (req, res) => {
   const data = req.session.data || {}
   res.render(TEMPLATES.START, { data: data })
 })
 
-// Handle start page submission
 router.post(ROUTES.START, (req, res) => {
   res.redirect(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO)
 })
 
-// What would you like to do page
 router.get(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO, (req, res) => {
   const data = req.session.data || {}
   res.render(TEMPLATES.WHAT_WOULD_YOU_LIKE_TO_DO, { data: data })
 })
 
-// Handle what would you like to do
 router.post(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO, (req, res) => {
   const journeyType = req.body['journey-type']
 
@@ -237,34 +209,26 @@ router.post(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO, (req, res) => {
     })
   }
 
-  // Store in session
   req.session.data = req.session.data || {}
   req.session.data.journeyType = journeyType
 
-  // Route to the commit flow when the user selects that option
-  if (journeyType === 'commit') {
+  if (journeyType === 'quote') {
+    res.redirect(ROUTES.REDLINE_MAP)
+  } else if (journeyType === 'commit') {
     res.redirect(ROUTES.DO_YOU_HAVE_A_NRF_REF)
-    return
+  } else if (journeyType === 'payment') {
+    res.redirect(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO)
+  } else {
+    res.redirect(ROUTES.REDLINE_MAP)
   }
-
-  // Route to the pay flow when the user selects the payment option
-  if (journeyType === 'payment') {
-    res.redirect(ROUTES.PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN)
-    return
-  }
-
-  // Otherwise continue with the estimate map flow
-  res.redirect(ROUTES.REDLINE_MAP)
 })
 
-// Redline boundary file question
 router.get(ROUTES.REDLINE_MAP, (req, res) => {
   const data = req.session.data || {}
   const backLink = ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO
   res.render(TEMPLATES.REDLINE_MAP, { data: data, backLink: backLink })
 })
 
-// Handle redline boundary file question
 router.post(ROUTES.REDLINE_MAP, (req, res) => {
   const hasRedlineBoundaryFile = req.body['has-redline-boundary-file']
 
@@ -276,7 +240,6 @@ router.post(ROUTES.REDLINE_MAP, (req, res) => {
     })
   }
 
-  // Store in session
   req.session.data = req.session.data || {}
   req.session.data.hasRedlineBoundaryFile =
     hasRedlineBoundaryFile === 'Upload a file'
@@ -290,13 +253,11 @@ router.post(ROUTES.REDLINE_MAP, (req, res) => {
   }
 })
 
-// Upload redline boundary file
 router.get(ROUTES.UPLOAD_REDLINE, (req, res) => {
   const data = req.session.data || {}
   res.render(TEMPLATES.UPLOAD_REDLINE, { data: data })
 })
 
-// Handle redline file upload
 router.post(
   ROUTES.UPLOAD_REDLINE,
   (req, res, next) => {
@@ -409,31 +370,37 @@ router.post(
     } else if (fileExtension === '.shp') {
       return res.render(TEMPLATES.UPLOAD_REDLINE, {
         error:
-          'Shapefile parsing is not yet supported. Please use GeoJSON format.',
+          'Shapefile upload is not yet supported. Please use a GeoJSON file.',
         data: req.session.data || {}
       })
     }
 
+    if (!boundaryData || !boundaryData.coordinates) {
+      return res.render(TEMPLATES.UPLOAD_REDLINE, {
+        error: 'Could not extract boundary data from the file',
+        data: req.session.data || {}
+      })
+    }
+
+    const intersectionResults = checkEDPIntersections(boundaryData.coordinates)
+
     req.session.data = req.session.data || {}
-    req.session.data.redlineFile = uploadedFile.originalname
-    req.session.data.hasRedlineBoundaryFile = true
-    req.session.data.redlineBoundaryPolygon = boundaryData
+    req.session.data.redlineBoundaryPolygon = {
+      coordinates: boundaryData.coordinates,
+      intersectingCatchment:
+        intersectionResults.nutrient || intersectionResults.gcn || null,
+      intersections: intersectionResults.intersections
+    }
     req.session.data.mapReferrer = 'upload-redline'
 
-    req.session.save((err) => {
-      if (err) {
-        console.error('Error saving session:', err)
-        return res.render(TEMPLATES.UPLOAD_REDLINE, {
-          error: 'There was a problem processing your file. Please try again.',
-          data: req.session.data || {}
-        })
-      }
-      res.redirect(ROUTES.MAP)
-    })
+    if (!intersectionResults.nutrient && !intersectionResults.gcn) {
+      res.redirect(ROUTES.NO_EDP)
+    } else {
+      res.redirect(ROUTES.BUILDING_TYPE)
+    }
   }
 )
 
-// Draw polygon on map
 router.get(ROUTES.MAP, (req, res) => {
   const data = req.session.data || {}
   const navFromSummary = req.query.nav === 'summary'
@@ -450,12 +417,11 @@ router.get(ROUTES.MAP, (req, res) => {
   res.render(TEMPLATES.MAP, {
     data: data,
     existingBoundaryData: existingBoundaryData,
-    backLink: backLink,
-    navFromSummary: navFromSummary
+    navFromSummary: navFromSummary,
+    backLink: backLink
   })
 })
 
-// Handle map polygon submission
 router.post(ROUTES.MAP, (req, res) => {
   const boundaryData = req.body['boundary-data']
   const navFromSummary = req.body.navFromSummary === 'true'
@@ -476,7 +442,6 @@ router.post(ROUTES.MAP, (req, res) => {
   try {
     const parsedData = JSON.parse(boundaryData)
 
-    // Validate coordinates to prevent client-side tampering
     if (
       !parsedData.coordinates ||
       !Array.isArray(parsedData.coordinates) ||
@@ -494,7 +459,6 @@ router.post(ROUTES.MAP, (req, res) => {
       })
     }
 
-    // Limit maximum number of coordinates
     const MAX_COORDINATES = 10000
     if (parsedData.coordinates.length > MAX_COORDINATES) {
       return res.render(TEMPLATES.MAP, {
@@ -509,34 +473,27 @@ router.post(ROUTES.MAP, (req, res) => {
       })
     }
 
-    // Check EDP intersections using turf.js
     const intersectionResults = checkEDPIntersections(parsedData.coordinates)
 
     req.session.data = req.session.data || {}
     req.session.data.redlineBoundaryPolygon = {
-      center: parsedData.center,
       coordinates: parsedData.coordinates,
-      // Store new intersection structure
-      intersections: {
-        nutrient: intersectionResults.nutrient,
-        gcn: intersectionResults.gcn
-      },
-      // Keep legacy field for backward compatibility
-      intersectingCatchment: intersectionResults.nutrient
+      intersectingCatchment:
+        intersectionResults.nutrient || intersectionResults.gcn || null,
+      intersections: intersectionResults.intersections
     }
 
-    // Current behavior: redirect to NO_EDP if no nutrient intersection
-    if (!intersectionResults.nutrient) {
-      res.redirect(ROUTES.NO_EDP)
-    } else if (navFromSummary) {
+    if (navFromSummary) {
       res.redirect(ROUTES.SUMMARY)
+    } else if (!intersectionResults.nutrient && !intersectionResults.gcn) {
+      res.redirect(ROUTES.NO_EDP)
     } else {
       res.redirect(ROUTES.BUILDING_TYPE)
     }
   } catch (error) {
-    console.error('Error parsing boundary data:', error)
+    console.error('Error processing boundary data:', error)
     return res.render(TEMPLATES.MAP, {
-      error: 'Draw a red line boundary to continue',
+      error: 'Invalid boundary data. Please draw a valid boundary.',
       navFromSummary: navFromSummary,
       data: req.session.data || {},
       existingBoundaryData: '',
@@ -548,13 +505,11 @@ router.post(ROUTES.MAP, (req, res) => {
   }
 })
 
-// No EDP area page
 router.get(ROUTES.NO_EDP, (req, res) => {
   const data = req.session.data || {}
   res.render(TEMPLATES.NO_EDP, { data: data })
 })
 
-// Building type selection
 router.get(ROUTES.BUILDING_TYPE, (req, res) => {
   const data = req.session.data || {}
   const isChange = req.query.change === 'true'
@@ -567,7 +522,6 @@ router.get(ROUTES.BUILDING_TYPE, (req, res) => {
   })
 })
 
-// Handle building type selection
 router.post(ROUTES.BUILDING_TYPE, (req, res) => {
   const buildingTypes = req.body['building-types']
   const isChange = req.body.isChange === 'true'
@@ -678,13 +632,11 @@ router.post(ROUTES.BUILDING_TYPE, (req, res) => {
   }
 })
 
-// Non-residential development page
 router.get(ROUTES.NON_RESIDENTIAL, (req, res) => {
   const data = req.session.data || {}
   res.render(TEMPLATES.NON_RESIDENTIAL, { data: data })
 })
 
-// Room count page (for Hotel, HMO, Residential institution)
 router.get(ROUTES.ROOM_COUNT, (req, res) => {
   const data = req.session.data || {}
   const isChange = req.query.change === 'true'
@@ -740,7 +692,6 @@ router.get(ROUTES.ROOM_COUNT, (req, res) => {
   })
 })
 
-// Handle room count submission
 router.post(ROUTES.ROOM_COUNT, (req, res) => {
   const data = req.session.data || {}
   const isChange = req.body.isChange === 'true'
@@ -814,7 +765,6 @@ router.post(ROUTES.ROOM_COUNT, (req, res) => {
   }
 })
 
-// Residential building count
 router.get(ROUTES.RESIDENTIAL, (req, res) => {
   const data = req.session.data || {}
   const isChange = req.query.change === 'true'
@@ -827,7 +777,6 @@ router.get(ROUTES.RESIDENTIAL, (req, res) => {
   })
 })
 
-// Handle residential building count
 router.post(ROUTES.RESIDENTIAL, (req, res) => {
   const residentialBuildingCount = req.body['residential-building-count']
   const isChange = req.body.isChange === 'true'
@@ -860,7 +809,6 @@ router.post(ROUTES.RESIDENTIAL, (req, res) => {
   res.redirect(ROUTES.ESTIMATE_EMAIL)
 })
 
-// Email entry
 router.get(ROUTES.ESTIMATE_EMAIL, (req, res) => {
   const data = req.session.data || {}
   const isChange = req.query.change === 'true'
@@ -885,7 +833,6 @@ router.get(ROUTES.ESTIMATE_EMAIL, (req, res) => {
   })
 })
 
-// Handle email submission
 router.post(ROUTES.ESTIMATE_EMAIL, (req, res) => {
   const email = req.body['email']
   const isChange = req.body.isChange === 'true'
@@ -925,7 +872,6 @@ router.post(ROUTES.ESTIMATE_EMAIL, (req, res) => {
   })
 })
 
-// Summary page
 router.get(ROUTES.SUMMARY, (req, res) => {
   const data = req.session.data || {}
 
@@ -939,21 +885,16 @@ router.get(ROUTES.SUMMARY, (req, res) => {
   })
 })
 
-// Handle summary submission
 router.post(ROUTES.SUMMARY, (req, res) => {
-  const timestampSuffix = Date.now().toString().slice(-6)
-  const estimateReference = 'EST-' + timestampSuffix
-  const nrfReference = 'NRF-' + timestampSuffix
+  const nrfReference = 'NRF-' + Date.now().toString().slice(-6)
 
   req.session.data = req.session.data || {}
-  req.session.data.estimateReference = estimateReference
   req.session.data.nrfReference = nrfReference
   req.session.data.levyAmount = req.session.data.levyAmount || '2,500'
 
   res.redirect(ROUTES.CONFIRMATION)
 })
 
-// Confirmation page
 router.get(ROUTES.CONFIRMATION, (req, res) => {
   const data = req.session.data || {}
 
@@ -962,7 +903,6 @@ router.get(ROUTES.CONFIRMATION, (req, res) => {
   })
 })
 
-// Serve GeoJSON catchment data
 router.get(ROUTES.CATCHMENTS_GEOJSON, (req, res) => {
   try {
     const geojsonPath = path.join(
@@ -986,24 +926,20 @@ router.get(ROUTES.CATCHMENTS_GEOJSON, (req, res) => {
   }
 })
 
-// Estimate email content page
 router.get(ROUTES.ESTIMATE_EMAIL_CONTENT, (req, res) => {
   const data = req.session.data || {}
 
-  if (!data.estimateReference) {
+  if (!data.nrfReference) {
     return res.redirect(ROUTES.SUMMARY)
   }
 
   res.render(TEMPLATES.ESTIMATE_EMAIL_CONTENT, {
-    data: data,
-    buildingTypeDetails: formatBuildingTypeDetails(data)
+    data: data
   })
 })
 
-const NRF_REFERENCE_REGEX = /^\d+$/
-
 // ============================================================================
-// Commit journey routes (estimate retrieval → commit)
+// Commit journey routes
 // ============================================================================
 
 router.get(ROUTES.DO_YOU_HAVE_A_NRF_REF, (req, res) => {
@@ -1029,7 +965,7 @@ router.post(ROUTES.DO_YOU_HAVE_A_NRF_REF, (req, res) => {
   if (hasNrfReference === 'yes') {
     res.redirect(ROUTES.ENTER_ESTIMATE_REF)
   } else {
-    res.redirect(ROUTES.START)
+    res.redirect(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO)
   }
 })
 
@@ -1047,14 +983,6 @@ router.post(ROUTES.ENTER_ESTIMATE_REF, (req, res) => {
   if (!nrfReference) {
     return res.render(TEMPLATES.ENTER_ESTIMATE_REF, {
       error: 'Enter your NRF reference to continue',
-      data: req.session.data || {},
-      backLink: ROUTES.DO_YOU_HAVE_A_NRF_REF
-    })
-  }
-
-  if (!NRF_REFERENCE_REGEX.test(nrfReference)) {
-    return res.render(TEMPLATES.ENTER_ESTIMATE_REF, {
-      error: 'Enter a valid NRF reference number',
       data: req.session.data || {},
       backLink: ROUTES.DO_YOU_HAVE_A_NRF_REF
     })
@@ -1166,86 +1094,13 @@ router.post(ROUTES.COMMIT_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, (req, res) => {
   res.redirect(ROUTES.COMPANY_DETAILS)
 })
 
-router.get(ROUTES.PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, (req, res) => {
-  const data = req.session.data || {}
-  res.render(TEMPLATES.PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, {
-    data: data
-  })
-})
-
-router.post(ROUTES.PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, (req, res) => {
-  const option = req.body['sign-in-option']
-
-  if (!option) {
-    return res.render(TEMPLATES.PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, {
-      error:
-        'Select if you want to log in with One Login or Government Gateway',
-      data: req.session.data || {}
-    })
-  }
-
-  req.session.data = req.session.data || {}
-  req.session.data.signInOption = option
-
-  if (option === 'government-gateway') {
-    res.redirect(ROUTES.PAY_SIGN_IN_GOVERNMENT_GATEWAY)
-    return
-  }
-
-  res.redirect(ROUTES.COMPANY_DETAILS)
-})
-
-router.get(ROUTES.PAY_SIGN_IN_GOVERNMENT_GATEWAY, (req, res) => {
-  const data = req.session.data || {}
-  res.render(TEMPLATES.COMMIT_SIGN_IN_GOVERNMENT_GATEWAY, {
-    data: data,
-    errors: [],
-    errorsByField: {},
-    backLink: ROUTES.PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN
-  })
-})
-
-router.post(ROUTES.PAY_SIGN_IN_GOVERNMENT_GATEWAY, (req, res) => {
-  const userId = req.body.userId
-  const password = req.body.password
-  const data = req.session.data || {}
-
-  const errors = []
-  const errorsByField = {}
-
-  if (!userId || userId.trim() === '') {
-    const message = 'Enter your Government Gateway user ID'
-    errors.push({ text: message, href: '#user-id' })
-    errorsByField.userId = { text: message }
-  }
-
-  if (!password || password.trim() === '') {
-    const message = 'Enter your password'
-    errors.push({ text: message, href: '#password' })
-    errorsByField.password = { text: message }
-  }
-
-  if (errors.length > 0) {
-    return res.render(TEMPLATES.COMMIT_SIGN_IN_GOVERNMENT_GATEWAY, {
-      data: data,
-      errors: errors,
-      errorsByField: errorsByField,
-      backLink: ROUTES.PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN
-    })
-  }
-
-  req.session.data = req.session.data || {}
-  req.session.data.governmentGatewayUserId = userId
-
-  res.redirect(ROUTES.COMPANY_DETAILS)
-})
-
 router.get(ROUTES.COMMIT_SIGN_IN_GOVERNMENT_GATEWAY, (req, res) => {
   const data = req.session.data || {}
   res.render(TEMPLATES.COMMIT_SIGN_IN_GOVERNMENT_GATEWAY, {
     data: data,
     errors: [],
-    errorsByField: {}
+    errorsByField: {},
+    backLink: ROUTES.COMMIT_HOW_WOULD_YOU_LIKE_TO_SIGN_IN
   })
 })
 
@@ -1273,7 +1128,8 @@ router.post(ROUTES.COMMIT_SIGN_IN_GOVERNMENT_GATEWAY, (req, res) => {
     return res.render(TEMPLATES.COMMIT_SIGN_IN_GOVERNMENT_GATEWAY, {
       data: data,
       errors: errors,
-      errorsByField: errorsByField
+      errorsByField: errorsByField,
+      backLink: ROUTES.COMMIT_HOW_WOULD_YOU_LIKE_TO_SIGN_IN
     })
   }
 
@@ -1412,46 +1268,5 @@ router.get(ROUTES.COMMIT_EMAIL_CONTENT, (req, res) => {
     data: data
   })
 })
-
-function formatBuildingTypeDetails(data) {
-  const parts = []
-  const residentialCount = Number(data.residentialBuildingCount)
-  if (!Number.isNaN(residentialCount) && residentialCount > 0) {
-    parts.push(`${residentialCount} dwelling buildings`)
-  }
-
-  const roomCounts = data.roomCounts || {}
-  const hotelCount = Number(roomCounts.hotelCount)
-  if (!Number.isNaN(hotelCount) && hotelCount > 0) {
-    parts.push(`${hotelCount} hotel rooms`)
-  }
-
-  const hmoCount = Number(roomCounts.hmoCount)
-  if (!Number.isNaN(hmoCount) && hmoCount > 0) {
-    parts.push(`${hmoCount} house of multiple occupation rooms`)
-  }
-
-  const residentialInstitutionCount = Number(
-    roomCounts.residentialInstitutionCount
-  )
-  if (
-    !Number.isNaN(residentialInstitutionCount) &&
-    residentialInstitutionCount > 0
-  ) {
-    parts.push(`${residentialInstitutionCount} residential institution rooms`)
-  }
-
-  if (parts.length === 0 && Array.isArray(data.buildingTypes)) {
-    const labels = data.buildingTypes
-      .filter((type) => type && type !== '_unchecked')
-      .map((type) => BUILDING_TYPE_LABELS[type] || type)
-
-    if (labels.length > 0) {
-      parts.push(labels.join(', '))
-    }
-  }
-
-  return parts.join(' and ')
-}
 
 module.exports = router

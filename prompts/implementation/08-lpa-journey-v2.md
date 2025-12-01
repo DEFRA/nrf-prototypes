@@ -44,13 +44,13 @@ They have agreed to pay the following:
 
 ## Get help with Nature Restoration Fund
 
-If you need help with Nature Restoration Fund, contact XXXX and give the estimate reference number.
+If you need help with Nature Restoration Fund, contact XXXX and give the NRF reference number.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
-Find out about call charges at [https://www.gov.uk/call-charges](https://www.gov.uk/call-charges)
+Find out about call charges: [https://www.gov.uk/call-charges](https://www.gov.uk/call-charges)
 
 ```
 
@@ -122,13 +122,13 @@ Use the link provided to view and approve the Nature Restoration Fund details.
 
 ## Get help with Nature Restoration Fund
 
-If you need help with Nature Restoration Fund, contact XXXX and give the estimate reference number.
+If you need help with Nature Restoration Fund, contact XXXX and give the NRF reference number.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
-Find out about call charges at [https://www.gov.uk/call-charges](https://www.gov.uk/call-charges)
+Find out about call charges: [https://www.gov.uk/call-charges](https://www.gov.uk/call-charges)
 
 ```
 
@@ -173,7 +173,7 @@ Note: Use a table or list pattern with no change links for displaying the detail
 Check these details against the details submitted as part of the planning permission application APP/2025/24019/FUL by Acme Development.
 Approving these details will enable Acme Developments to pay the Nature Restoration Fund levy to mitigate their environmental impact.
 
-**Button:** Approve (links to `/lpa-approve-2/LPA-details`)
+**Button:** Approve (links to `/lpa-approve-2/lpa-details`)
 
 ```
 
@@ -188,7 +188,7 @@ None
 | **Field**              | **Value**                  |
 | ---------------------- | -------------------------- |
 | Order number:          | 6                          |
-| Path:                  | /lpa-approve-2/LPA-details |
+| Path:                  | /lpa-approve-2/lpa-details |
 | Title:                 | Enter your details         |
 | H1 heading:            | Enter your details         |
 | Conditional page flow: | None                       |
@@ -199,11 +199,13 @@ None
 {
     fullName: {
         type: text,
-        required: true
-   {
+        required: true,
+        fieldName: "full-name"
+    },
     email: {
         type: email,
-        required: true
+        required: true,
+        fieldName: "email"
     }
 }
 ```
@@ -269,17 +271,17 @@ They have agreed to pay the following:
 
 ## What happens next
 
-Once Acme Developments has paid, you will be sent an email with a receipt which you can use to discharge their obligation.
+Once Acme Developments has paid, you will be sent an email with a receipt which you can use when discharging their planning conditions.
 
 ## Get help with Nature Restoration Fund
 
-If you need help with Nature Restoration Fund, contact XXXX and give the estimate reference number.
+If you need help with Nature Restoration Fund, contact XXXX and give the NRF reference number.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
-Find out about call charges at [https://www.gov.uk/call-charges](https://www.gov.uk/call-charges)
+Find out about call charges: [https://www.gov.uk/call-charges](https://www.gov.uk/call-charges)
 
 [View the email content](/lpa-approve-2/lpa-approval-confirmation-email)
 ```
@@ -321,17 +323,17 @@ They have agreed to pay the following:
 
 ## What happens next
 
-Once Acme Developments has paid, you will be sent an email with a receipt which you can use to discharge their obligation.
+Once Acme Developments has paid, you will be sent an email with a receipt which you can use when discharging their planning conditions.
 
 ## Get help with Nature Restoration Fund
 
-If you need help with Nature Restoration Fund, contact XXXX and give the estimate reference number.
+If you need help with Nature Restoration Fund, contact XXXX and give the NRF reference number.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
-Find out about call charges at [https://www.gov.uk/call-charges](https://www.gov.uk/call-charges)
+Find out about call charges: [https://www.gov.uk/call-charges](https://www.gov.uk/call-charges)
 
 ```
 
@@ -347,11 +349,11 @@ None
 
 Create the following files in the GOV.UK Prototype Kit structure:
 
-1. **Route File**: `app/routes/lpa-approve-1.js` (new route file for LPA approval journey)
-2. **View Directory**: `app/views/lpa-approve-1/` (new view directory)
+1. **Route File**: `app/routes/lpa-approve-2.js` (new route file for the LPA approval journey triggered by developers using nrf-estimate-4)
+2. **View Directory**: `app/views/lpa-approve-2/` (new view directory)
 3. **View Files**: One HTML file per page in the journey
-4. **Route Config File**: `app/config/lpa-approve-1/routes.js` (optional, for route constants)
-5. **Data File**: Uses existing session data structure
+4. **Route Config File**: `app/config/lpa-approve-2/routes.js` (optional, for route constants)
+5. **Data File**: Uses existing session data structure (static content only)
 
 ### Route Implementation
 
@@ -385,13 +387,13 @@ Create the following files in the GOV.UK Prototype Kit structure:
 
 ## Implementation Instructions
 
-1. **Routes are in** new `app/routes/lpa-approve-1.js` file (similar to `lpa-verify.js` structure)
-2. **Views are in** `app/views/lpa-approve-1/` directory
+1. **Routes are in** new `app/routes/lpa-approve-2.js` file (similar to `lpa-verify.js` structure)
+2. **Views are in** `app/views/lpa-approve-2/` directory
 3. **No form validation** required (click-through journey only)
 4. **No conditional routing** required (linear journey)
-5. **Routes use** centralized route constants from `app/config/lpa-approve-1/routes.js` (optional)
+5. **Routes use** centralized route constants from `app/config/lpa-approve-2/routes.js` (optional)
 6. **Journey can be accessed** via payment-email page link or directly
-7. **Route registration**: Add `const lpaApprove1Routes = require('./routes/lpa-approve-1.js')` and `router.use('/', lpaApprove1Routes)` in `app/routes.js`
+7. **Route registration**: Add `const lpaApprove2Routes = require('./routes/lpa-approve-2.js')` and `router.use('/', lpaApprove2Routes)` in `app/routes.js`
 
 ## Expected Output
 
@@ -411,12 +413,12 @@ Create the following files in the GOV.UK Prototype Kit structure:
 
 ## Implementation Details
 
-- **Journey entry point**: Accessed from payment-email.html page via link or directly
+- **Journey entry point**: Accessed via the payment email issued by the `nrf-estimate-4` payment journey (LPA clicks the link to `/lpa-approve-2/...`)
 - **Static content**: All content uses hardcoded values - no dynamic data binding
 - **Levy naming**: Uses "greater crested newts" terminology instead of just "newts"
 - **No data structure required**: All pages display static hardcoded values
-- **Route organization**: Routes in separate `lpa-approve-1.js` file following pattern of `lpa-verify.js`
+- **Route organization**: Routes in separate `lpa-approve-2.js` file following the pattern of `lpa-verify.js`
 - **Email template**: Email content pages follow standard inset-text pattern with recipient and subject
-- **Path naming**: All paths use lowercase with hyphens (e.g., `/lpa-approve-1/approve-details`, `/lpa-approve-1/approval-confirmation`)
+- **Path naming**: All paths use lowercase with hyphens (e.g., `/lpa-approve-2/approve-details`, `/lpa-approve-2/approval-confirmation`)
 - **Back links**: All pages include back links, including email confirmation pages
 - **No forms**: Journey uses button links only - no form inputs or validation required

@@ -5,9 +5,9 @@
 - **Journey Name**: Pay Nature Restoration Fund Levy
 - **Journey Description**:  
   A user journey for a developer to pay for the Nature Restoration Fund levy required when submitting planning permission to build a development of some sort.
-- **Journey Route Prefix**: nrf-estimate-3
+- **Journey Route Prefix**: nrf-estimate-4
 - **Start Page Title**: Pay Nature Restoration Fund Levy
-- **Integration Point**: This journey starts from `/nrf-estimate-3/what-would-you-like-to-do` when the user selects "I am ready to pay the Nature Restoration Fund levy"
+- **Integration Point**: This journey starts from `/nrf-estimate-4/what-would-you-like-to-do` when the user selects "I am ready to pay the Nature Restoration Fund levy"
 
 ## Page Flow and Conditional Logic
 
@@ -58,25 +58,27 @@ Hint text: Use your email address and password. If you don't have a GOV.UK One L
 
 ### Sign in Government Gateway
 
-| **Field**              | **Value**                        |
-| ---------------------- | -------------------------------- |
-| Order number:          | 4                                |
-| Path:                  | /nrf-estimate-4/pay-Sign in-GG   |
-| Title:                 | Sign in using Government Gateway |
-| H1 heading:            | Sign in using Government Gateway |
-| Conditional page flow: | None                             |
+| **Field**              | **Value**                                      |
+| ---------------------- | ---------------------------------------------- |
+| Order number:          | 4                                              |
+| Path:                  | /nrf-estimate-4/pay-sign-in-government-gateway |
+| Title:                 | Sign in using Government Gateway               |
+| H1 heading:            | Sign in using Government Gateway               |
+| Conditional page flow: | None                                           |
 
 #### Data points
 
 ```
 {
-    GGuserID: {
+    governmentGatewayUserId: {
         type: text,
         required: true
+        fieldName: "userId"
     },
-    Password: {
+    governmentGatewayPassword: {
         type: text,
         required: true
+        fieldName: "password"
     }
 }
 ```
@@ -88,10 +90,10 @@ Hint text: Use your email address and password. If you don't have a GOV.UK One L
 
 Government Gateway user ID
 Hint text: This could be up to 12 characters.
-Field name: userID
+Field name: userId
 
 Password
-Field name: Password
+Field name: password
 Grey CTA: Show
 
 CTA: Sign in
@@ -140,7 +142,7 @@ None
 ```
 # Check your answers
 
-| NRF reference | {{ data.NRFRef }} (if provided) | [Change link - disabled] |
+| NRF reference | {{ data.paymentReference }} (if provided) | [Change link - disabled] |
 | Red line boundary added | Yes/No (based on data.redlineBoundaryPolygon) | [Change link - disabled] |
 | Red line boundary file uploaded | Yes/No (based on data.hasRedlineBoundaryFile) | [Change link - disabled] |
 | Building types | List of all types selected (if any) | [Change link - disabled] |
@@ -222,7 +224,7 @@ None
 ```
 # Check your answers
 
-| NRF reference | {{ data.NRFRef }} (if provided) | [Change link - disabled] |
+| NRF reference | {{ data.paymentReference }} (if provided) | [Change link - disabled] |
 | Red line boundary added | Yes/No (based on data.redlineBoundaryPolygon) | [Change link - disabled] |
 | Red line boundary file uploaded | Yes/No (based on data.hasRedlineBoundaryFile) | [Change link - disabled] |
 | Building types | List of all types selected (if any) | [Change link - disabled] |
@@ -272,7 +274,7 @@ None
 <green-banner>
 # Your details have been submitted.
 
-**NRF reference:** {{ data.NRFReference }}
+**NRF reference:** {{ data.paymentReference }}
 </green-banner>
 
 Note: The H1 heading includes a period: "Your details have been submitted." This page uses the GOV.UK panel component (govuk-panel--confirmation) to display the green banner. The payment reference label is displayed in bold in the panel body.
@@ -306,7 +308,7 @@ Your levy will be spent on conservation, with amounts being spent on monitoring 
 Levies are calculated as part of Environmental Delivery Plans (EDPs).
 
 ## Get help with Nature Restoration Fund
-If you need help with Nature Restoration Fund, contact XXXX and give the commitment reference number.
+If you need help with Nature Restoration Fund, contact XXXX and give the NRF reference number.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
@@ -347,7 +349,7 @@ Note: This page uses the GOV.UK inset text component (govuk-inset-text) to displ
 
 # Nature Restoration Fund – payment request approved for the Nature Restoration Fund levy
 
-**NRF reference:** {{ data.NRFReference }}
+**NRF reference:** {{ data.paymentReference }}
 
 Note: The NRF reference is displayed as a paragraph with bold formatting, not as a heading.
 
@@ -355,7 +357,7 @@ Thank you for using Nature Restoration Fund levy to mitigate your environmental 
 The Local Planning Authority has approved your request to pay.
 Access your account and upload your Planning Decision Notice to receive a payment email with ways you can pay.
 
-[Upload your Planning Decision Notice](/nrf-estimate-4/PDN-how-would-you-like-to-sign-in]
+[Upload your Planning Decision Notice](/nrf-estimate-4/pdn-how-would-you-like-to-sign-in)
 
 You have agreed to pay the following:
 
@@ -371,7 +373,7 @@ Once you have paid, you will be sent an email with a receipt which you can use a
 
 ## Get help with Nature Restoration Fund
 
-If you need help with Nature Restoration Fund, contact XXXX and give the commitment reference number.
+If you need help with Nature Restoration Fund, contact XXXX and give the NRF reference number.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
@@ -387,7 +389,7 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 | **Field**              | **Value**                                         |
 | ---------------------- | ------------------------------------------------- |
 | Order number:          | 10                                                |
-| Path:                  | /nrf-estimate-4/PDN-how-would-you-like-to-sign-in |
+| Path:                  | /nrf-estimate-4/pdn-how-would-you-like-to-sign-in |
 | Title:                 | How would you like to sign in?                    |
 | Conditional page flow: | none                                              |
 
@@ -429,25 +431,27 @@ Hint text: Use your email address and password. If you don't have a GOV.UK One L
 
 ### Sign in Government Gateway
 
-| **Field**              | **Value**                        |
-| ---------------------- | -------------------------------- |
-| Order number:          | 11                               |
-| Path:                  | /nrf-estimate-4/PDN-Sign in-GG   |
-| Title:                 | Sign in using Government Gateway |
-| H1 heading:            | Sign in using Government Gateway |
-| Conditional page flow: | None                             |
+| **Field**              | **Value**                                      |
+| ---------------------- | ---------------------------------------------- |
+| Order number:          | 11                                             |
+| Path:                  | /nrf-estimate-4/pdn-sign-in-government-gateway |
+| Title:                 | Sign in using Government Gateway               |
+| H1 heading:            | Sign in using Government Gateway               |
+| Conditional page flow: | None                                           |
 
 #### Data points
 
 ```
 {
-    GGuserID: {
+    governmentGatewayUserId: {
         type: text,
         required: true
+        fieldName: "userId"
     },
-    Password: {
+    governmentGatewayPassword: {
         type: text,
         required: true
+        fieldName: "password"
     }
 }
 ```
@@ -459,10 +463,10 @@ Hint text: Use your email address and password. If you don't have a GOV.UK One L
 
 Government Gateway user ID
 Hint text: This could be up to 12 characters.
-Field name: userID
+Field name: userId
 
 Password
-Field name: Password
+Field name: password
 Grey CTA: Show
 
 CTA: Sign in
@@ -559,7 +563,7 @@ None
 ```
 # Check your answers
 
-| NRF reference | {{ data.NRFRef }} (if provided) |
+| NRF reference | {{ data.paymentReference }} (if provided) |
 | Red line boundary added | Yes/No (based on data.redlineBoundaryPolygon) |
 | Red line boundary file uploaded | Yes/No (based on data.hasRedlineBoundaryFile) |
 | Building types | List of all types selected (if any) |
@@ -571,7 +575,7 @@ None
 | Your details | Full name, business name if provided, address, Company Registration Number and VAT registration number |
 | Local Planning Authority | Stockton-on-Tees Borough Council |
 | Planning reference | {{ data.planningRef }} |
-| Planning Decision Notice | Yes/No
+| Planning Decision Notice | Yes/No |
 
 Your Nature Restoration Fund nutrient levy amount is £{{ data.levyAmount or '2,500' }}.
 
@@ -602,7 +606,7 @@ None
 <green-banner>
 # Your details have been submitted.
 
-**Payment reference:** {{ data.NRFReference }}
+**Payment reference:** {{ data.paymentReference }}
 </green-banner>
 
 Note: The H1 heading includes a period: "Your details have been submitted." This page uses the GOV.UK panel component (govuk-panel--confirmation) to display the green banner. The payment reference label is displayed in bold in the panel body.
@@ -610,7 +614,7 @@ Note: The H1 heading includes a period: "Your details have been submitted." This
 ## What happens next
 
 You will receive an email with an invoice, with the ways you can pay.
-Once you have paid, you will be sent an email with a receipt which you can use to discharge your obligation.
+Once you have paid, you will be sent an email with a receipt which you can use when discharging your planning conditions.
 
 You told us the development:
 
@@ -636,7 +640,7 @@ Your levy will be spent on conservation, with amounts being spent on monitoring 
 Levies are calculated as part of Environmental Delivery Plans (EDPs).
 
 ## Get help with Nature Restoration Fund
-If you need help with Nature Restoration Fund, contact XXXX and give the commitment reference number.
+If you need help with Nature Restoration Fund, contact XXXX and give the NRF reference number.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
@@ -677,7 +681,7 @@ Note: This page uses the GOV.UK inset text component (govuk-inset-text) to displ
 
 # Nature Restoration Fund – pay the Nature Restoration Fund levy
 
-**NRF reference:** {{ data.NRFReference }}
+**NRF reference:** {{ data.paymentReference }}
 
 Note: The payment reference is displayed as a paragraph with bold formatting, not as a heading.
 
@@ -711,11 +715,11 @@ Note: The payment methods are displayed as separate sections with appropriate he
 
 ## What happens next
 
-Once you have paid, you will be sent an email with a receipt which you can use as evidence for your planning application to discharge your obligation.
+Once you have paid, you will be sent an email with a receipt which you can use when discharging your planning conditions.
 
 ## Get help with Nature Restoration Fund
 
-If you need help with Nature Restoration Fund, contact XXXX and give the commitment reference number.
+If you need help with Nature Restoration Fund, contact XXXX and give the NRF reference number.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
@@ -732,10 +736,10 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 
 Create the following files in the GOV.UK Prototype Kit structure:
 
-1. **Route File**: Routes should be added to `app/routes/nrf-estimate-3.js` (existing file)
-2. **View Directory**: `app/views/nrf-estimate-3/` (existing directory)
+1. **Route File**: `app/routes/nrf-estimate-4.js` (create or update for the payment journey)
+2. **View Directory**: `app/views/nrf-estimate-4/`
 3. **View Files**: One HTML file per page in the journey, added to existing directory
-4. **Data File**: Use existing session data structure, no separate data file needed
+4. **Data File**: `app/data/nrf-estimate-4-data.js` (if needed) or reuse the existing session defaults
 
 ### Route Implementation
 
@@ -785,8 +789,8 @@ Create the following files in the GOV.UK Prototype Kit structure:
 2. **Create the view directory** and all HTML template files
 3. **Implement form validation** with proper error handling
 4. **Add conditional routing** based on user selections
-5. **Update the route handler** in `app/routes/nrf-estimate-3.js` for `/what-would-you-like-to-do` to redirect to `/do-you-have-a-commitment-ref` when `journeyType === 'payment'`
-6. **Add back link** on the first page (`/do-you-have-a-commitment-ref`) that links back to `/what-would-you-like-to-do`
+5. **Update the route handler** in `app/routes/nrf-estimate-4.js` for `/what-would-you-like-to-do` to redirect to `/pay-how-would-you-like-to-sign-in` when `journeyType === 'payment'`
+6. **Add back link** on the first page (`/pay-how-would-you-like-to-sign-in`) that links back to `/what-would-you-like-to-do`
 7. **Test the complete journey** to ensure all paths work correctly
 
 ## Expected Output

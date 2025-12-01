@@ -27,6 +27,8 @@ const ROUTES = {
   RETRIEVED_ESTIMATE_SUMMARY: `${BASE_PATH}/retrieved-estimate-summary`,
   COMMIT_HOW_WOULD_YOU_LIKE_TO_SIGN_IN: `${BASE_PATH}/commit-how-would-you-like-to-sign-in`,
   COMMIT_SIGN_IN_GOVERNMENT_GATEWAY: `${BASE_PATH}/commit-sign-in-government-gateway`,
+  PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN: `${BASE_PATH}/pay-how-would-you-like-to-sign-in`,
+  PAY_SIGN_IN_GOVERNMENT_GATEWAY: `${BASE_PATH}/pay-sign-in-government-gateway`,
   COMPANY_DETAILS: `${BASE_PATH}/company-details`,
   LPA_CONFIRM: `${BASE_PATH}/lpa-confirm`,
   SUMMARY_AND_DECLARATION: `${BASE_PATH}/summary-and-declaration`,
@@ -63,7 +65,11 @@ const TEMPLATES = {
   COMPANY_DETAILS: 'nrf-estimate-4/company-details',
   LPA_CONFIRM: 'nrf-estimate-4/lpa-confirm',
   SUMMARY_AND_DECLARATION: 'nrf-estimate-4/summary-and-declaration',
-  COMMIT_EMAIL_CONTENT: 'nrf-estimate-4/commit-email-content'
+  COMMIT_EMAIL_CONTENT: 'nrf-estimate-4/commit-email-content',
+  PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN:
+    'nrf-estimate-4/pay-how-would-you-like-to-sign-in',
+  PAY_SIGN_IN_GOVERNMENT_GATEWAY:
+    'nrf-estimate-4/pay-sign-in-government-gateway'
 }
 
 module.exports = { ROUTES, TEMPLATES }

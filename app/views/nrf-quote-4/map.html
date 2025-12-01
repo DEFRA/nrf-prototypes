@@ -3,7 +3,7 @@
 {% set pageName="Draw a red line boundary" %}
 
 {% block pageTitle %}
-Draw a red line boundary - Get an estimate for Nature Restoration Fund levy - GOV.UK
+Draw a red line boundary - Get a quote for Nature Restoration Fund levy - GOV.UK
 {% endblock %}
 
 {% block head %}
@@ -144,7 +144,7 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund levy - GO
 {% block content %}
 
 
-<form id="map-form" action="/nrf-estimate-4/map" method="post" novalidate style="height: 100%;">
+<form id="map-form" action="/nrf-quote-4/map" method="post" novalidate style="height: 100%;">
             {% if navFromSummary %}
             <input type="hidden" name="navFromSummary" value="true">
             {% endif %}
@@ -318,7 +318,9 @@ Draw a red line boundary - Get an estimate for Nature Restoration Fund levy - GO
 <script src="/public/javascripts/components/modal.js"></script>
 <script>
     // Set the catchment GeoJSON endpoint for this journey
-    window.CATCHMENTS_GEOJSON_URL = '/nrf-estimate-4/catchments.geojson';
+    window.CATCHMENTS_GEOJSON_URL = '/nrf-quote-4/catchments.geojson';
+    // Set the API endpoint for EDP intersection checking
+    window.API_CHECK_EDP_INTERSECTION_URL = '/nrf-quote-4/api/check-edp-intersection';
 </script>
 <!-- Vendor dependencies -->
 <script src="/public/javascripts/vendor/turf.min.js"></script>

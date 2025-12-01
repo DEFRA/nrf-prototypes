@@ -2,22 +2,22 @@
 
 ## Journey Information
 
-- **Journey Name**: Get an estimate for Nature Restoration Fund Levy
+- **Journey Name**: Get a quote for Nature Restoration Fund Levy
 - **Journey Description**:  
   A user journey for a developer to obtain a quote for the Nature Restoration Fund levy required when submitting planning permission to build a development of some sort. A significant page in the journey is /nrf-estimate-4/map where the user will be able to plot a polygon on a map to define the development site boundary. There will also be 5 polygon areas over England that are known as EDP boundaries. If the development site boundary does not fall within an EDP area then the user will be navigated to the exit page /nrf-estimate-4/no-edp.
 - **Journey Route Prefix**: nrf-estimate-4
-- **Start Page Title**: Get an estimate for Nature Restoration Fund Levy
+- **Start Page Title**: Get a quote for Nature Restoration Fund Levy
 
 ## Page Flow and Conditional Logic
 
 ### Landing page
 
-| **Field**                  | **Value**                                        |
-| -------------------------- | ------------------------------------------------ |
-| **Order number:**          | 1                                                |
-| **Path:**                  | /nrf-estimate-4/start                            |
-| **Title:**                 | Get an estimate for Nature Restoration Fund Levy |
-| **Conditional page flow:** | none                                             |
+| **Field**                  | **Value**                                    |
+| -------------------------- | -------------------------------------------- |
+| **Order number:**          | 1                                            |
+| **Path:**                  | /nrf-estimate-4/start                        |
+| **Title:**                 | Get a quote for Nature Restoration Fund Levy |
+| **Conditional page flow:** | none                                         |
 
 #### Data points
 
@@ -34,27 +34,27 @@ If you choose not to use the NRF levy, you will still need to [discharge your ob
 
 ## Using NRF to discharge your environmental obligations
 
-Use this service to find out if your development is in an area with an EDP, get an estimate for the cost of the levy, commit to using the levy and pay the levy.
+Use this service to find out if your development is in an area with an EDP, get a quote for the cost of the levy, commit to using the levy and pay the levy.
 
 CTA: Start now
 
 ## What you need
 
-### Getting an estimate
+### Getting a quote
 
-To get an estimate you will need:
+To get a quote you will need:
 
 * to show us where the development is planned – you can use a red line boundary file or draw a red line boundary
 * to tell us the types of buildings planned
 * details about the amount of buildings or rooms
 
-You will be sent an email with an NRF reference and the amount of the levy. You can get as many estimates as you like.
+You will be sent an email with an NRF reference and the amount of the levy. You can get as many quotes as you like.
 
 ### Committing to using NRF
 
 To commit to using NRF you will need:
 
-* the estimate reference
+* the NRF reference from your quote
 * to confirm the details of your development
 * the company details
 * the LPA details
@@ -66,12 +66,12 @@ You will receive a commitment document that you can submit with your planning ap
 
 To pay the NRF and discharge your environmental obligations, you will need:
 
-* the commitment reference
+* the NRF reference from your commitment
 * to confirm the details of your development
 * the planning reference
 * to agree to the terms and conditions
 
-Your LPA will ask you to pay the levy when it is time to discharge your planning obligations. Once you have confirmed the details and your Local Planning Authority has approved them, you will receive a ways to pay email.
+Your LPA will ask you to pay the levy when it is time to discharge your planning conditions. Once you have confirmed the details and your Local Planning Authority has approved them, you will receive an email with ways you can pay.
 
 ## Get help with Nature Restoration Fund
 
@@ -105,8 +105,8 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
         journeyType: {
             type: radios
             required: true
-            values: "estimate" | "commit" | "payment"
-            labels: "I want an estimate for the Nature Restoration Fund levy" | "I am ready to commit to using the Nature Restoration Fund levy" | "I am ready to pay the Nature Restoration Fund levy"
+            values: "quote" | "commit" | "payment"
+            labels: "I want a quote for the Nature Restoration Fund levy" | "I am ready to commit to using the Nature Restoration Fund levy" | "I am ready to pay the Nature Restoration Fund levy"
             fieldName: "journey-type"
         }
     }
@@ -117,11 +117,11 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 
 ```
 # What would you like to do?
-- I want an estimate for the Nature Restoration Fund levy
+- I want a quote for the Nature Restoration Fund levy
 - I am ready to commit to using the Nature Restoration Fund levy
   Hint text: Do this as part of your planning application
 - I am ready to pay the Nature Restoration Fund levy
- Hint text: Do this when you are ready to discharge your obligations
+ Hint text: Do this when you are ready to discharge your planning conditions
 ```
 
 #### Errors
@@ -490,9 +490,9 @@ Note: The label dynamically adjusts based on building type using Nunjucks templa
 
 ```
 # Enter your email address
-Hint text: Once your Nature Restoration Fund levy amount is calculated, the estimate will be emailed to you. This could take up to 00 minutes.
+Hint text: Once your Nature Restoration Fund levy amount is calculated, the quote will be emailed to you. This could take up to 00 minutes.
 
-Note: For the payment journey with estimate reference retrieval, there is a separate email entry page at /nrf-estimate-4/retrieve-estimate-email with hint text: "We will send you a link so you can retrieve the details from your estimate."
+Note: For the commitment journey with NRF reference retrieval, there is a separate email entry page at /nrf-estimate-4/retrieve-estimate-email with hint text: "We will send you a link so you can retrieve the details from your quote."
 ```
 
 #### Errors
@@ -568,17 +568,17 @@ Note: This page uses the GOV.UK panel component (govuk-panel--confirmation) to d
 
 ## What happens next
 
-You will receive an email with details of the estimate.
+You will receive an email with details of the quote.
 
 You do not need to pay anything at this point, this service is designed to help you plan how to mitigate environmental obligations.
 
-If you decide to mitigate environmental impact using Nature Restoration Fund levy, you can commit to use the Nature Restoration Fund levy.
+If you decide to mitigate environmental impact using Nature Restoration Fund levy, you can commit to using the Nature Restoration Fund levy.
 
-Keep the email as a record of the estimate and NRF reference number. You can use the reference number to retrieve this estimate when you are ready to commit to using Nature Restoration Fund.
+Keep the email as a record of the quote and NRF reference number. You can use the reference number to retrieve this quote when you are ready to commit to using Nature Restoration Fund.
 
 ## Get help with Nature Restoration Fund
 
-If you need help with Nature Restoration Fund, contact XXXX and give the estimate reference number.
+If you need help with Nature Restoration Fund, contact XXXX and give the NRF reference number.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
@@ -612,16 +612,16 @@ None
 
 <inset-text>
 **To:** {{ data.email or 'user@example.com' }}
-**Subject:** Nature Restoration Fund – estimate for the Nature Restoration Fund levy
+**Subject:** Nature Restoration Fund – quote for the Nature Restoration Fund levy
 </inset-text>
 
 Note: This page uses the GOV.UK inset text component (govuk-inset-text) to display the email header information.
 
-# Nature Restoration Fund – estimate for the Nature Restoration Fund levy
+# Nature Restoration Fund – quote for the Nature Restoration Fund levy
 
-## NRF reference: {{ data.estimateReference }}
+## NRF reference: {{ data.NRFReference }}
 
-Thank you for submitting details of the development on the Get an estimate for Nature Restoration Fund levy service.
+Thank you for submitting details of the development on the Get a quote for the Nature Restoration Fund levy service.
 
 You told us the development:
 
@@ -632,15 +632,15 @@ You told us the development:
 
 Based on the information you have provided, the development falls into an area with an Environmental Delivery Plan (EDP), so you can use the Nature Restoration Fund Nutrients levy.
 
-The estimated total amount you may need to pay if you develop in this area is: **£{{ data.levyAmount or '2,500' }}**
+The quote for the total amount you may need to pay if you develop in this area is: **£{{ data.levyAmount or '2,500' }}**
 
-You do not need to pay anything at this point, this service is designed to help you plan how to mitigate your environmental obligations. [Get another estimate](<javascript:void(0)>)
+You do not need to pay anything at this point, this service is designed to help you plan how to mitigate your environmental obligations. [Get another quote](<javascript:void(0)>)
 
 If you do decide to mitigate using Nature Restoration Fund levy, you can commit and include the commitment when applying for planning permission.
 
 [Commit to using Nature Restoration Fund](/nrf-estimate-4/do-you-have-a-nrf-ref)
 
-Keep this email as a record of your estimate and NRF reference number, you can use it to retrieve this estimate when you are ready to commit.
+Keep this email as a record of your quote and NRF reference number, you can use it to retrieve this quote when you are ready to commit.
 You can also [create an account now](<javascript:void(0)>)
 
 ## What your levy will pay for
@@ -649,7 +649,7 @@ Your levy will be spent on conservation, with amounts being spent on monitoring 
 
 ## Get help with Nature Restoration Fund
 
-If you need help with Nature Restoration Fund, contact XXXX and give the estimate reference number.
+If you need help with Nature Restoration Fund, contact XXXX and give the NRF reference number.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000

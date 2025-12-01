@@ -77,7 +77,7 @@ CTA: Continue
 
 ```
 # Enter your NRF reference
-Hint text: Enter this reference to retrieve the details entered during the estimate.
+Hint text: Enter this reference to retrieve the details entered during the quote.
 
 CTA: Continue
 ```
@@ -119,7 +119,7 @@ CTA: Continue
 
 ```
 # Enter your email address
-Hint text: We will send you a link so you can retrieve the details from your estimate.
+Hint text: We will send you a link so you can retrieve the details from your quote.
 
 CTA: Continue
 ```
@@ -157,15 +157,15 @@ CTA: Continue
 
 Note: This page uses the GOV.UK inset text component (govuk-inset-text) to display the email header information.
 
-# Nature Restoration Fund – retrieve your estimate details for the Nature Restoration Fund levy
+# Nature Restoration Fund – retrieve your quote details for the Nature Restoration Fund levy
 
-You can use the details you previously gave us for your estimate to fill in the information needed to commit to using Nature Restoration Fund levy.
+You can use the details you previously gave us for your quote to fill in the information needed to commit to using Nature Restoration Fund levy.
 
-[Retrieve the estimate details](/nrf-estimate-4/retrieved-estimate-summary)
+[Retrieve the quote details](/nrf-estimate-4/retrieved-estimate-summary)
 
 ## Get help with Nature Restoration Fund
 
-If you need help with Nature Restoration Fund, contact XXXX and give the estimate reference number.
+If you need help with Nature Restoration Fund, contact XXXX and give the NRF reference number.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
@@ -540,7 +540,7 @@ You will be sent an email with a commitment document that you can send to your L
 The document outlines your commitment to use the Nature Restoration Fund levy to mitigate your environmental impact for nutrients.
 
 ## Get help with Nature Restoration Fund
-If you need help with Nature Restoration Fund, contact XXXX and give the commitment reference number.
+If you need help with Nature Restoration Fund, contact XXXX and give the NRF reference number.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000
@@ -616,7 +616,7 @@ Your levy will be spent on conservation, with amounts being spent on monitoring 
 
 ## Get help with Nature Restoration Fund
 
-If you need help with Nature Restoration Fund, contact XXXX and give the commitment reference number.
+If you need help with Nature Restoration Fund, contact XXXX and give the NRF reference number.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 Telephone: 00000000000

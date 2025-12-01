@@ -1,13 +1,13 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-Select the types of buildings that are planned for this development - Get an estimate for Nature Restoration Fund levy - GOV.UK
+Select the types of buildings that are planned for this development - Get a quote for Nature Restoration Fund levy - GOV.UK
 {% endblock %}
 
 {% block beforeContent %}
 {{ govukBackLink({
 text: "Back",
-href: "/nrf-estimate-4/map"
+href: "/nrf-quote-4/map"
 }) }}
 {% endblock %}
 
@@ -15,7 +15,7 @@ href: "/nrf-estimate-4/map"
 <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
 
-        <form action="/nrf-estimate-4/building-type" method="post" novalidate>
+        <form action="/nrf-quote-4/building-type" method="post" novalidate>
             {% if isChange %}
             <input type="hidden" name="isChange" value="true">
             {% endif %}

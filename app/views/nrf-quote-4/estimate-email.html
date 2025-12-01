@@ -1,13 +1,13 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-Enter your NRF reference - Get an estimate for Nature Restoration Fund levy - GOV.UK
+Enter your email address - Get a quote for Nature Restoration Fund levy - GOV.UK
 {% endblock %}
 
 {% block beforeContent %}
 {{ govukBackLink({
 text: "Back",
-href: "/nrf-estimate-4/do-you-have-a-nrf-ref"
+href: backLink
 }) }}
 {% endblock %}
 
@@ -15,7 +15,13 @@ href: "/nrf-estimate-4/do-you-have-a-nrf-ref"
 <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
 
-        <form action="/nrf-estimate-4/enter-estimate-ref" method="post" novalidate>
+        <form action="/nrf-quote-4/estimate-email" method="post" novalidate>
+            {% if isChange %}
+            <input type="hidden" name="isChange" value="true">
+            {% endif %}
+            {% if navFromSummary %}
+            <input type="hidden" name="navFromSummary" value="true">
+            {% endif %}
 
             {% if error %}
             {{ govukErrorSummary({
@@ -23,7 +29,7 @@ href: "/nrf-estimate-4/do-you-have-a-nrf-ref"
                 errorList: [
                     {
                         text: error,
-                        href: "#estimate-reference"
+                        href: "#email"
                     }
                 ]
             }) }}
@@ -31,17 +37,19 @@ href: "/nrf-estimate-4/do-you-have-a-nrf-ref"
 
             {{ govukInput({
                 label: {
-                    text: "Enter your NRF reference",
+                    text: "Enter your email address",
                     classes: "govuk-label--l",
                     isPageHeading: true
                 },
                 hint: {
-                    text: "Enter this reference to retrieve the details entered during the estimate."
+                    text: "Once your Nature Restoration Fund levy amount is calculated, the quote will be emailed to you. This could take up to 00 minutes."
                 },
-                id: "nrf-reference",
-                name: "nrf-reference",
-                type: "text",
-                value: data.nrfReference,
+                id: "email",
+                name: "email",
+                type: "email",
+                autocomplete: "email",
+                spellcheck: false,
+                value: data.email,
                 errorMessage: { text: error } if error
             }) }}
 
