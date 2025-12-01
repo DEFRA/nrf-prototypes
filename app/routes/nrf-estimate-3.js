@@ -1162,7 +1162,7 @@ router.get(ROUTES.COMMIT_SUMMARY_SUBMIT, (req, res) => {
 })
 
 router.post(ROUTES.COMMIT_SUMMARY_SUBMIT, (req, res) => {
-  const paymentReference = 'PAY-' + Date.now().toString().slice(-6)
+  const paymentReference = 'NRF-' + Date.now().toString().slice(-6)
 
   req.session.data = req.session.data || {}
   req.session.data.paymentReference = paymentReference

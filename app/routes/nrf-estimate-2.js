@@ -908,7 +908,7 @@ router.post(ROUTES.SUMMARY, (req, res) => {
   // Check if this is a payment journey
   if (data.journeyType === 'payment') {
     // Payment journey - generate payment reference
-    const paymentReference = 'PAY-' + Date.now().toString().slice(-6)
+    const paymentReference = 'NRF-' + Date.now().toString().slice(-6)
 
     // Store payment reference in session
     req.session.data = req.session.data || {}

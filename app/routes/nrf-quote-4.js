@@ -1586,7 +1586,7 @@ router.post(ROUTES.PAYMENT_SUMMARY_SUBMIT, (req, res) => {
   }
 
   // Otherwise, this is the first submission - create payment reference and redirect to payment confirmation
-  const paymentReference = 'PAY-' + Date.now().toString().slice(-6)
+  const paymentReference = 'NRF-' + Date.now().toString().slice(-6)
 
   req.session.data = req.session.data || {}
   req.session.data.paymentReference = paymentReference
