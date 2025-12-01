@@ -1,13 +1,13 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-Enter your email address - Get a quote for Nature Restoration Fund levy - GOV.UK
+Enter your planning application reference - Pay Nature Restoration Fund levy - GOV.UK
 {% endblock %}
 
 {% block beforeContent %}
 {{ govukBackLink({
 text: "Back",
-href: backLink
+href: backLink or "/nrf-quote-4/payment-summary"
 }) }}
 {% endblock %}
 
@@ -15,7 +15,7 @@ href: backLink
 <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
 
-        <form action="/nrf-quote-4/retrieve-estimate-email" method="post" novalidate>
+        <form action="/nrf-quote-4/planning-ref" method="post" novalidate>
 
             {% if error %}
             <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert"
@@ -26,7 +26,7 @@ href: backLink
                 <div class="govuk-error-summary__body">
                     <ul class="govuk-list govuk-error-summary__list">
                         <li>
-                            <a href="#email">{{ error }}</a>
+                            <a href="#planning-ref">{{ error }}</a>
                         </li>
                     </ul>
                 </div>
@@ -35,24 +35,20 @@ href: backLink
 
             <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
                 <h1 class="govuk-label-wrapper">
-                    <label class="govuk-label govuk-label--l" for="email">
-                        Enter your email address
+                    <label class="govuk-label govuk-label--l" for="planning-ref">
+                        Enter your planning application reference
                     </label>
                 </h1>
-
-                <div id="email-hint" class="govuk-hint">
-                    We will send you a link so you can retrieve the details from your quote.
+                <div id="planning-ref-hint" class="govuk-hint">
+                    Enter the reference of the planning application that you want to pay the Nature Restoration Fund levy for
                 </div>
-
                 {% if error %}
-                <p id="email-error" class="govuk-error-message">
+                <p id="planning-ref-error" class="govuk-error-message">
                     <span class="govuk-visually-hidden">Error:</span> {{ error }}
                 </p>
                 {% endif %}
-
-                <input class="govuk-input {% if error %}govuk-input--error{% endif %}" id="email" name="email"
-                    type="email" spellcheck="false" autocomplete="email"
-                    value="{% if data.email %}{{ data.email }}{% endif %}" aria-describedby="email-hint">
+                <input class="govuk-input {% if error %}govuk-input--error{% endif %}" id="planning-ref"
+                    name="planning-ref" type="text" aria-describedby="planning-ref-hint {% if error %}planning-ref-error{% endif %}" value="{{ data.planningRef }}">
             </div>
 
             <button class="govuk-button" data-module="govuk-button">

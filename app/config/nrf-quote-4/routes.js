@@ -35,7 +35,21 @@ const ROUTES = {
   LPA_CONFIRM: `${BASE_PATH}/lpa-confirm`,
   SUMMARY_AND_DECLARATION: `${BASE_PATH}/summary-and-declaration`,
   COMMIT_CONFIRMATION: `${BASE_PATH}/commit-confirmation`,
-  COMMIT_EMAIL_CONTENT: `${BASE_PATH}/commit-email-content`
+  COMMIT_EMAIL_CONTENT: `${BASE_PATH}/commit-email-content`,
+
+  // Payment journey routes
+  PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN: `${BASE_PATH}/pay-how-would-you-like-to-sign-in`,
+  PAY_SIGN_IN_GOVERNMENT_GATEWAY: `${BASE_PATH}/pay-sign-in-government-gateway`,
+  PAYMENT_SUMMARY: `${BASE_PATH}/payment-summary`,
+  PLANNING_REF: `${BASE_PATH}/planning-ref`,
+  PAYMENT_SUMMARY_SUBMIT: `${BASE_PATH}/payment-summary-submit`,
+  PAYMENT_CONFIRMATION: `${BASE_PATH}/payment-confirmation`,
+  PAYMENT_REQUEST_EMAIL_CONTENT: `${BASE_PATH}/payment-request-email-content`,
+  PDN_HOW_WOULD_YOU_LIKE_TO_SIGN_IN: `${BASE_PATH}/pdn-how-would-you-like-to-sign-in`,
+  PDN_SIGN_IN_GOVERNMENT_GATEWAY: `${BASE_PATH}/pdn-sign-in-government-gateway`,
+  UPLOAD_DECISION_NOTICE: `${BASE_PATH}/upload-decision-notice`,
+  DECISION_NOTICE_CONFIRMATION: `${BASE_PATH}/decision-notice-confirmation`,
+  PAY_EMAIL_CONTENT: `${BASE_PATH}/pay-email-content`
 }
 
 const TEMPLATES = {
@@ -69,7 +83,23 @@ const TEMPLATES = {
   LPA_CONFIRM: 'nrf-quote-4/lpa-confirm',
   SUMMARY_AND_DECLARATION: 'nrf-quote-4/summary-and-declaration',
   COMMIT_CONFIRMATION: 'nrf-quote-4/commit-confirmation',
-  COMMIT_EMAIL_CONTENT: 'nrf-quote-4/commit-email-content'
+  COMMIT_EMAIL_CONTENT: 'nrf-quote-4/commit-email-content',
+
+  // Payment journey templates
+  PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN:
+    'nrf-quote-4/pay-how-would-you-like-to-sign-in',
+  PAY_SIGN_IN_GOVERNMENT_GATEWAY: 'nrf-quote-4/pay-sign-in-government-gateway',
+  PAYMENT_SUMMARY: 'nrf-quote-4/payment-summary',
+  PLANNING_REF: 'nrf-quote-4/planning-ref',
+  PAYMENT_SUMMARY_SUBMIT: 'nrf-quote-4/payment-summary-submit',
+  PAYMENT_CONFIRMATION: 'nrf-quote-4/payment-confirmation',
+  PAYMENT_REQUEST_EMAIL_CONTENT: 'nrf-quote-4/payment-request-email-content',
+  PDN_HOW_WOULD_YOU_LIKE_TO_SIGN_IN:
+    'nrf-quote-4/pdn-how-would-you-like-to-sign-in',
+  PDN_SIGN_IN_GOVERNMENT_GATEWAY: 'nrf-quote-4/pdn-sign-in-government-gateway',
+  UPLOAD_DECISION_NOTICE: 'nrf-quote-4/upload-decision-notice',
+  DECISION_NOTICE_CONFIRMATION: 'nrf-quote-4/decision-notice-confirmation',
+  PAY_EMAIL_CONTENT: 'nrf-quote-4/pay-email-content'
 }
 
 module.exports = { ROUTES, TEMPLATES }

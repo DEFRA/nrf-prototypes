@@ -1,7 +1,7 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-Enter the company details - Get an estimate for Nature Restoration Fund levy - GOV.UK
+Enter the company details - Get a quote for Nature Restoration Fund levy - GOV.UK
 {% endblock %}
 
 {% block beforeContent %}
@@ -54,12 +54,13 @@ href: "/nrf-quote-4/retrieved-estimate-summary"
                 value: data.businessName
             }) }}
 
-            <fieldset class="govuk-fieldset">
-                <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
-                    <h2 class="govuk-fieldset__heading">
-                        Address
-                    </h2>
-                </legend>
+            {% from "govuk/components/fieldset/macro.njk" import govukFieldset %}
+            {% call govukFieldset({
+                legend: {
+                    text: "Address",
+                    classes: "govuk-fieldset__legend--m"
+                }
+            }) %}
 
                 {{ govukInput({
                     label: {
@@ -86,6 +87,7 @@ href: "/nrf-quote-4/retrieved-estimate-summary"
                     label: {
                         text: "Town or city"
                     },
+                    classes: "govuk-!-width-two-thirds",
                     id: "town-or-city",
                     name: "townOrCity",
                     value: data.townOrCity,
@@ -113,7 +115,8 @@ href: "/nrf-quote-4/retrieved-estimate-summary"
                     errorMessage: errorsByField.postcode,
                     autocomplete: "postal-code"
                 }) }}
-            </fieldset>
+
+            {% endcall %}
 
             {{ govukInput({
                 label: {

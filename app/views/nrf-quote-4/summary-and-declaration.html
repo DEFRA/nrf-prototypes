@@ -1,7 +1,7 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-Check your answers - Get an estimate for Nature Restoration Fund levy - GOV.UK
+Check your answers - Get a quote for Nature Restoration Fund levy - GOV.UK
 {% endblock %}
 
 {% block beforeContent %}
@@ -18,13 +18,13 @@ href: "/nrf-quote-4/lpa-confirm"
         <h1 class="govuk-heading-l">Check your answers</h1>
 
         <dl class="govuk-summary-list govuk-!-margin-bottom-9">
-            {% if data.estimateReference %}
+            {% if data.quoteReference or data.estimateReference %}
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">
-                    Estimate reference
+                    Quote reference
                 </dt>
                 <dd class="govuk-summary-list__value">
-                    {{ data.estimateReference }}
+                    {{ data.quoteReference or data.estimateReference }}
                 </dd>
                 <dd class="govuk-summary-list__actions">
                     <a class="govuk-link" href="javascript:void(0)">

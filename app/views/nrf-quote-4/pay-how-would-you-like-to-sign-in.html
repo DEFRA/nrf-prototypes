@@ -1,0 +1,81 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+How would you like to sign in? - Pay Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: backLink or "/nrf-quote-4/what-would-you-like-to-do"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <form action="/nrf-quote-4/pay-how-would-you-like-to-sign-in" method="post" novalidate>
+
+            {% if error %}
+            <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert"
+                data-module="govuk-error-summary">
+                <h2 class="govuk-error-summary__title" id="error-summary-title">
+                    There is a problem
+                </h2>
+                <div class="govuk-error-summary__body">
+                    <ul class="govuk-list govuk-error-summary__list">
+                        <li>
+                            <a href="#sign-in-option">{{ error }}</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
+                <fieldset class="govuk-fieldset">
+                    <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
+                        <h1 class="govuk-fieldset__heading">
+                            How would you like to sign in?
+                        </h1>
+                    </legend>
+                    {% if error %}
+                    <p id="sign-in-option-error" class="govuk-error-message">
+                        <span class="govuk-visually-hidden">Error:</span> {{ error }}
+                    </p>
+                    {% endif %}
+                    <div class="govuk-radios" data-module="govuk-radios">
+                        <div class="govuk-radios__item">
+                            <input class="govuk-radios__input" id="sign-in-option-one-login" name="sign-in-option"
+                                type="radio" value="one-login" {% if data.paySignInOption=='one-login' %}checked{% endif %}>
+                            <label class="govuk-label govuk-radios__label" for="sign-in-option-one-login">
+                                Sign in with GOV UK One Login
+                            </label>
+                            <div id="sign-in-option-one-login-hint" class="govuk-hint govuk-radios__hint">
+                                Use your email address and password. If you don't have a GOV.UK One Login, you can create one.
+                            </div>
+                        </div>
+                        <div class="govuk-radios__item">
+                            <input class="govuk-radios__input" id="sign-in-option-government-gateway" name="sign-in-option"
+                                type="radio" value="government-gateway" {% if data.paySignInOption=='government-gateway' %}checked{% endif %}>
+                            <label class="govuk-label govuk-radios__label" for="sign-in-option-government-gateway">
+                                Sign in with Government Gateway
+                            </label>
+                            <div id="sign-in-option-government-gateway-hint" class="govuk-hint govuk-radios__hint">
+                                You'll have a user ID if you've registered for Self Assessment or filed a tax return online before.
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+
+            <button class="govuk-button" data-module="govuk-button">
+                Continue
+            </button>
+
+        </form>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,13 +1,13 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-Check your answers - Get a quote for Nature Restoration Fund levy - GOV.UK
+Check your answers - Pay Nature Restoration Fund levy - GOV.UK
 {% endblock %}
 
 {% block beforeContent %}
 {{ govukBackLink({
 text: "Back",
-href: "/nrf-quote-4/estimate-email-retrieval-content"
+href: backLink or "/nrf-quote-4/pay-sign-in-government-gateway"
 }) }}
 {% endblock %}
 
@@ -18,13 +18,13 @@ href: "/nrf-quote-4/estimate-email-retrieval-content"
         <h1 class="govuk-heading-l">Check your answers</h1>
 
         <dl class="govuk-summary-list govuk-!-margin-bottom-9">
-            {% if data.quoteReference or data.estimateReference %}
+            {% if data.paymentReference %}
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">
-                    Quote reference
+                    NRF reference
                 </dt>
                 <dd class="govuk-summary-list__value">
-                    {{ data.quoteReference or data.estimateReference }}
+                  NRF-746256
                 </dd>
                 <dd class="govuk-summary-list__actions">
                     <a class="govuk-link" href="javascript:void(0)">
@@ -163,7 +163,7 @@ href: "/nrf-quote-4/estimate-email-retrieval-content"
                     Email address
                 </dt>
                 <dd class="govuk-summary-list__value">
-                    {{ data.email }}
+                    {{ data.commitmentRetrievalEmail or data.email or 'Not provided' }}
                 </dd>
                 <dd class="govuk-summary-list__actions">
                     <a class="govuk-link" href="javascript:void(0)">
@@ -171,9 +171,47 @@ href: "/nrf-quote-4/estimate-email-retrieval-content"
                     </a>
                 </dd>
             </div>
+
+            {% if data.fullName %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Your details
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.fullName }}<br>
+                    {% if data.businessName %}{{ data.businessName }}<br>{% endif %}
+                    {{ data.addressLine1 }}<br>
+                    {% if data.addressLine2 %}{{ data.addressLine2 }}<br>{% endif %}
+                    {{ data.townOrCity }}<br>
+                    {% if data.county %}{{ data.county }}<br>{% endif %}
+                    {{ data.postcode }}<br>
+                    {% if data.companyRegistrationNumber %}Company Registration Number: {{ data.companyRegistrationNumber }}<br>{% endif %}
+                    {% if data.vatRegistrationNumber %}VAT registration number: {{ data.vatRegistrationNumber }}{% endif %}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="javascript:void(0)">
+                        Change<span class="govuk-visually-hidden"> your details</span>
+                    </a>
+                </dd>
+            </div>
+            {% endif %}
+
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Local Planning Authority
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    Stockton-on-Tees Borough Council
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="javascript:void(0)">
+                        Change<span class="govuk-visually-hidden"> Local Planning Authority</span>
+                    </a>
+                </dd>
+            </div>
         </dl>
 
-        <form action="/nrf-quote-4/retrieved-estimate-summary" method="post" novalidate>
+        <form action="/nrf-quote-4/payment-summary" method="post" novalidate>
             <button class="govuk-button" data-module="govuk-button">
                 Continue
             </button>

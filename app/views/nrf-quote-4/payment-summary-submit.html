@@ -1,13 +1,13 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-Check your answers - Get a quote for Nature Restoration Fund levy - GOV.UK
+Check your answers - Pay Nature Restoration Fund levy - GOV.UK
 {% endblock %}
 
 {% block beforeContent %}
 {{ govukBackLink({
 text: "Back",
-href: "/nrf-quote-4/estimate-email-retrieval-content"
+href: backLink or "/nrf-quote-4/planning-ref"
 }) }}
 {% endblock %}
 
@@ -18,13 +18,13 @@ href: "/nrf-quote-4/estimate-email-retrieval-content"
         <h1 class="govuk-heading-l">Check your answers</h1>
 
         <dl class="govuk-summary-list govuk-!-margin-bottom-9">
-            {% if data.quoteReference or data.estimateReference %}
+            {% if data.paymentReference %}
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">
-                    Quote reference
+                    NRF reference
                 </dt>
                 <dd class="govuk-summary-list__value">
-                    {{ data.quoteReference or data.estimateReference }}
+                  NRF-746256
                 </dd>
                 <dd class="govuk-summary-list__actions">
                     <a class="govuk-link" href="javascript:void(0)">
@@ -163,7 +163,7 @@ href: "/nrf-quote-4/estimate-email-retrieval-content"
                     Email address
                 </dt>
                 <dd class="govuk-summary-list__value">
-                    {{ data.email }}
+                    {{ data.commitmentRetrievalEmail or data.email or 'Not provided' }}
                 </dd>
                 <dd class="govuk-summary-list__actions">
                     <a class="govuk-link" href="javascript:void(0)">
@@ -171,11 +171,103 @@ href: "/nrf-quote-4/estimate-email-retrieval-content"
                     </a>
                 </dd>
             </div>
+
+            {% if data.fullName %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Your details
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.fullName }}<br>
+                    {% if data.businessName %}{{ data.businessName }}<br>{% endif %}
+                    {{ data.addressLine1 }}<br>
+                    {% if data.addressLine2 %}{{ data.addressLine2 }}<br>{% endif %}
+                    {{ data.townOrCity }}<br>
+                    {% if data.county %}{{ data.county }}<br>{% endif %}
+                    {{ data.postcode }}<br>
+                    {% if data.companyRegistrationNumber %}Company Registration Number: {{ data.companyRegistrationNumber }}<br>{% endif %}
+                    {% if data.vatRegistrationNumber %}VAT registration number: {{ data.vatRegistrationNumber }}{% endif %}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="javascript:void(0)">
+                        Change<span class="govuk-visually-hidden"> your details</span>
+                    </a>
+                </dd>
+            </div>
+            {% endif %}
+
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Local Planning Authority
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    Stockton-on-Tees Borough Council
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="javascript:void(0)">
+                        Change<span class="govuk-visually-hidden"> Local Planning Authority</span>
+                    </a>
+                </dd>
+            </div>
+
+            {% if data.planningRef %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Planning reference
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.planningRef }}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="javascript:void(0)">
+                        Change<span class="govuk-visually-hidden"> planning reference</span>
+                    </a>
+                </dd>
+            </div>
+            {% endif %}
+
+            {% if data.decisionNoticeUploaded %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Planning Decision Notice
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    Yes
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="javascript:void(0)">
+                        Change<span class="govuk-visually-hidden"> Planning Decision Notice</span>
+                    </a>
+                </dd>
+            </div>
+            {% endif %}
         </dl>
 
-        <form action="/nrf-quote-4/retrieved-estimate-summary" method="post" novalidate>
+        {% if not data.decisionNoticeUploaded %}
+        <p class="govuk-body">
+            By confirming and submitting these details, you are requesting to pay the Nature Restoration Fund levy.
+        </p>
+
+        <p class="govuk-body">
+            The details you are submitting must be accurate and correct.
+        </p>
+
+        <p class="govuk-body">
+            Once the Local Planning Authority has checked and approved your request, you will be asked to upload your Planning Decision Notice. You will then be sent an email with ways to pay.
+        </p>
+
+        <p class="govuk-body">
+            Once you have paid, you will then receive a receipt and you can use it to discharge your environmental obligations.
+        </p>
+        {% endif %}
+
+        <p class="govuk-body">
+            Your Nature Restoration Fund nutrient levy amount is £{{ data.levyAmount or '2,500' }}.
+        </p>
+
+        <form action="/nrf-quote-4/payment-summary-submit" method="post" novalidate>
             <button class="govuk-button" data-module="govuk-button">
-                Continue
+                {% if data.decisionNoticeUploaded %}Confirm{% else %}Confirm and submit{% endif %}
             </button>
         </form>
     </div>

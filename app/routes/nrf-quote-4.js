@@ -221,7 +221,7 @@ router.post(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO, (req, res) => {
     } else if (journeyType === 'commit') {
       res.redirect(ROUTES.DO_YOU_HAVE_A_NRF_REF)
     } else if (journeyType === 'payment') {
-      res.redirect(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO)
+      res.redirect(ROUTES.PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN)
     } else {
       res.redirect(ROUTES.REDLINE_MAP)
     }
@@ -1385,6 +1385,368 @@ router.get(ROUTES.COMMIT_EMAIL_CONTENT, (req, res) => {
   res.render(TEMPLATES.COMMIT_EMAIL_CONTENT, {
     data: data,
     backLink: ROUTES.COMMIT_CONFIRMATION
+  })
+})
+
+// ============================================================================
+// PAYMENT JOURNEY ROUTES
+// ============================================================================
+
+// Helper function to format building details for display
+function formatPaymentBuildingDetails(data) {
+  const parts = []
+  if (data.residentialBuildingCount) {
+    parts.push(
+      `${data.residentialBuildingCount} dwelling building${data.residentialBuildingCount !== 1 ? 's' : ''}`
+    )
+  }
+  if (data.roomCounts) {
+    if (data.roomCounts.hotelCount) {
+      parts.push(
+        `${data.roomCounts.hotelCount} hotel room${data.roomCounts.hotelCount !== 1 ? 's' : ''}`
+      )
+    }
+    if (data.roomCounts.hmoCount) {
+      parts.push(
+        `${data.roomCounts.hmoCount} multiple occupation room${data.roomCounts.hmoCount !== 1 ? 's' : ''}`
+      )
+    }
+    if (data.roomCounts.residentialInstitutionCount) {
+      parts.push(
+        `${data.roomCounts.residentialInstitutionCount} residential institution room${data.roomCounts.residentialInstitutionCount !== 1 ? 's' : ''}`
+      )
+    }
+  }
+  return parts.length > 0 ? parts.join(' and ') : 'No building details provided'
+}
+
+// Payment: How would you like to sign in?
+router.get(ROUTES.PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, {
+    data: data,
+    backLink: ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO
+  })
+})
+
+router.post(ROUTES.PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, (req, res) => {
+  const signInOption = req.body['sign-in-option']
+
+  if (!signInOption) {
+    return res.render(TEMPLATES.PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, {
+      error:
+        'Select if you want to log in with One Login or Government Gateway',
+      data: req.session.data || {},
+      backLink: ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO
+    })
+  }
+
+  req.session.data = req.session.data || {}
+  req.session.data.paySignInOption = signInOption
+
+  req.session.save((err) => {
+    if (err) {
+      console.error('Session save error:', err)
+    }
+    if (signInOption === 'government-gateway') {
+      res.redirect(ROUTES.PAY_SIGN_IN_GOVERNMENT_GATEWAY)
+    } else {
+      // One Login - for now redirect to government gateway as placeholder
+      res.redirect(ROUTES.PAY_SIGN_IN_GOVERNMENT_GATEWAY)
+    }
+  })
+})
+
+// Payment: Sign in Government Gateway
+router.get(ROUTES.PAY_SIGN_IN_GOVERNMENT_GATEWAY, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.PAY_SIGN_IN_GOVERNMENT_GATEWAY, {
+    data: data,
+    backLink: ROUTES.PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN
+  })
+})
+
+router.post(ROUTES.PAY_SIGN_IN_GOVERNMENT_GATEWAY, (req, res) => {
+  const userId = req.body.userId?.trim()
+  const password = req.body.password?.trim()
+  const errors = []
+  const errorsByField = {}
+
+  if (!userId) {
+    errors.push({
+      field: 'userId',
+      message: 'Enter your Government Gateway user ID',
+      href: '#user-id'
+    })
+    errorsByField.userId = { text: 'Enter your Government Gateway user ID' }
+  }
+
+  if (!password) {
+    errors.push({
+      field: 'password',
+      message: 'Enter your password',
+      href: '#password'
+    })
+    errorsByField.password = { text: 'Enter your password' }
+  }
+
+  if (errors.length > 0) {
+    return res.render(TEMPLATES.PAY_SIGN_IN_GOVERNMENT_GATEWAY, {
+      errors: errors,
+      errorsByField: errorsByField,
+      data: req.session.data || {},
+      backLink: ROUTES.PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN
+    })
+  }
+
+  req.session.data = req.session.data || {}
+  req.session.data.payGovernmentGatewayUserId = userId
+  req.session.data.payGovernmentGatewayPassword = password
+
+  req.session.save((err) => {
+    if (err) {
+      console.error('Session save error:', err)
+    }
+    res.redirect(ROUTES.PAYMENT_SUMMARY)
+  })
+})
+
+// Payment: Summary (Check your answers)
+router.get(ROUTES.PAYMENT_SUMMARY, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.PAYMENT_SUMMARY, {
+    data: data,
+    buildingTypeLabels: BUILDING_TYPE_LABELS,
+    backLink: ROUTES.PAY_SIGN_IN_GOVERNMENT_GATEWAY
+  })
+})
+
+router.post(ROUTES.PAYMENT_SUMMARY, (req, res) => {
+  req.session.save((err) => {
+    if (err) {
+      console.error('Session save error:', err)
+    }
+    res.redirect(ROUTES.PLANNING_REF)
+  })
+})
+
+// Payment: Planning reference
+router.get(ROUTES.PLANNING_REF, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.PLANNING_REF, {
+    data: data,
+    backLink: ROUTES.PAYMENT_SUMMARY
+  })
+})
+
+router.post(ROUTES.PLANNING_REF, (req, res) => {
+  const planningRef = req.body['planning-ref']?.trim()
+
+  if (!planningRef) {
+    return res.render(TEMPLATES.PLANNING_REF, {
+      error: 'Enter the planning application reference',
+      data: req.session.data || {},
+      backLink: ROUTES.PAYMENT_SUMMARY
+    })
+  }
+
+  req.session.data = req.session.data || {}
+  req.session.data.planningRef = planningRef
+
+  req.session.save((err) => {
+    if (err) {
+      console.error('Session save error:', err)
+    }
+    res.redirect(ROUTES.PAYMENT_SUMMARY_SUBMIT)
+  })
+})
+
+// Payment: Summary Submit (Check your answers with declaration)
+router.get(ROUTES.PAYMENT_SUMMARY_SUBMIT, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.PAYMENT_SUMMARY_SUBMIT, {
+    data: data,
+    buildingTypeLabels: BUILDING_TYPE_LABELS,
+    backLink: ROUTES.PLANNING_REF
+  })
+})
+
+router.post(ROUTES.PAYMENT_SUMMARY_SUBMIT, (req, res) => {
+  const data = req.session.data || {}
+
+  // If decision notice has been uploaded, redirect to decision notice confirmation
+  if (data.decisionNoticeUploaded) {
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err)
+      }
+      res.redirect(ROUTES.DECISION_NOTICE_CONFIRMATION)
+    })
+    return
+  }
+
+  // Otherwise, this is the first submission - create payment reference and redirect to payment confirmation
+  const paymentReference = 'PAY-' + Date.now().toString().slice(-6)
+
+  req.session.data = req.session.data || {}
+  req.session.data.paymentReference = paymentReference
+  req.session.data.levyAmount = req.session.data.levyAmount || '2,500'
+
+  req.session.save((err) => {
+    if (err) {
+      console.error('Session save error:', err)
+    }
+    res.redirect(ROUTES.PAYMENT_CONFIRMATION)
+  })
+})
+
+// Payment: Confirmation
+router.get(ROUTES.PAYMENT_CONFIRMATION, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.PAYMENT_CONFIRMATION, {
+    data: data,
+    formatBuildingDetails: formatPaymentBuildingDetails
+  })
+})
+
+// Payment: Request Email Content
+router.get(ROUTES.PAYMENT_REQUEST_EMAIL_CONTENT, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.PAYMENT_REQUEST_EMAIL_CONTENT, {
+    data: data,
+    backLink: ROUTES.PAYMENT_CONFIRMATION
+  })
+})
+
+// PDN: How would you like to sign in?
+router.get(ROUTES.PDN_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.PDN_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, {
+    data: data,
+    backLink: ROUTES.PAYMENT_REQUEST_EMAIL_CONTENT
+  })
+})
+
+router.post(ROUTES.PDN_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, (req, res) => {
+  const signInOption = req.body['sign-in-option']
+
+  if (!signInOption) {
+    return res.render(TEMPLATES.PDN_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, {
+      error:
+        'Select if you want to log in with One Login or Government Gateway',
+      data: req.session.data || {},
+      backLink: ROUTES.PAYMENT_REQUEST_EMAIL_CONTENT
+    })
+  }
+
+  req.session.data = req.session.data || {}
+  req.session.data.pdnSignInOption = signInOption
+
+  req.session.save((err) => {
+    if (err) {
+      console.error('Session save error:', err)
+    }
+    if (signInOption === 'government-gateway') {
+      res.redirect(ROUTES.PDN_SIGN_IN_GOVERNMENT_GATEWAY)
+    } else {
+      res.redirect(ROUTES.PDN_SIGN_IN_GOVERNMENT_GATEWAY)
+    }
+  })
+})
+
+// PDN: Sign in Government Gateway
+router.get(ROUTES.PDN_SIGN_IN_GOVERNMENT_GATEWAY, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.PDN_SIGN_IN_GOVERNMENT_GATEWAY, {
+    data: data,
+    backLink: ROUTES.PDN_HOW_WOULD_YOU_LIKE_TO_SIGN_IN
+  })
+})
+
+router.post(ROUTES.PDN_SIGN_IN_GOVERNMENT_GATEWAY, (req, res) => {
+  const userId = req.body.userId?.trim()
+  const password = req.body.password?.trim()
+  const errors = []
+  const errorsByField = {}
+
+  if (!userId) {
+    errors.push({
+      field: 'userId',
+      message: 'Enter your Government Gateway user ID',
+      href: '#user-id'
+    })
+    errorsByField.userId = { text: 'Enter your Government Gateway user ID' }
+  }
+
+  if (!password) {
+    errors.push({
+      field: 'password',
+      message: 'Enter your password',
+      href: '#password'
+    })
+    errorsByField.password = { text: 'Enter your password' }
+  }
+
+  if (errors.length > 0) {
+    return res.render(TEMPLATES.PDN_SIGN_IN_GOVERNMENT_GATEWAY, {
+      errors: errors,
+      errorsByField: errorsByField,
+      data: req.session.data || {},
+      backLink: ROUTES.PDN_HOW_WOULD_YOU_LIKE_TO_SIGN_IN
+    })
+  }
+
+  req.session.data = req.session.data || {}
+  req.session.data.pdnGovernmentGatewayUserId = userId
+  req.session.data.pdnGovernmentGatewayPassword = password
+
+  req.session.save((err) => {
+    if (err) {
+      console.error('Session save error:', err)
+    }
+    res.redirect(ROUTES.UPLOAD_DECISION_NOTICE)
+  })
+})
+
+// PDN: Upload Decision Notice
+router.get(ROUTES.UPLOAD_DECISION_NOTICE, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.UPLOAD_DECISION_NOTICE, {
+    data: data,
+    backLink: ROUTES.PDN_SIGN_IN_GOVERNMENT_GATEWAY
+  })
+})
+
+router.post(ROUTES.UPLOAD_DECISION_NOTICE, (req, res) => {
+  // Fake upload - no actual file validation needed for prototype
+  // Just mark as uploaded and continue
+  req.session.data = req.session.data || {}
+  req.session.data.decisionNoticeUploaded = true
+  req.session.data.decisionNoticeFileName = 'Planning Decision Notice.pdf'
+
+  req.session.save((err) => {
+    if (err) {
+      console.error('Session save error:', err)
+    }
+    res.redirect(ROUTES.PAYMENT_SUMMARY_SUBMIT)
+  })
+})
+
+// Decision Notice: Confirmation
+router.get(ROUTES.DECISION_NOTICE_CONFIRMATION, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.DECISION_NOTICE_CONFIRMATION, {
+    data: data,
+    formatBuildingDetails: formatPaymentBuildingDetails
+  })
+})
+
+// Payment: Pay Email Content
+router.get(ROUTES.PAY_EMAIL_CONTENT, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.PAY_EMAIL_CONTENT, {
+    data: data,
+    backLink: ROUTES.DECISION_NOTICE_CONFIRMATION
   })
 })
 
