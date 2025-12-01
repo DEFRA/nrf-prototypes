@@ -55,12 +55,7 @@ href: "/nrf-quote-4/retrieved-estimate-summary"
             }) }}
 
             {% from "govuk/components/fieldset/macro.njk" import govukFieldset %}
-            {% call govukFieldset({
-                legend: {
-                    text: "Address",
-                    classes: "govuk-fieldset__legend--m"
-                }
-            }) %}
+            
 
                 {{ govukInput({
                     label: {
@@ -99,6 +94,7 @@ href: "/nrf-quote-4/retrieved-estimate-summary"
                     label: {
                         text: "County (optional)"
                     },
+                    classes: "govuk-!-width-two-thirds",
                     id: "county",
                     name: "county",
                     value: data.county
@@ -116,12 +112,12 @@ href: "/nrf-quote-4/retrieved-estimate-summary"
                     autocomplete: "postal-code"
                 }) }}
 
-            {% endcall %}
 
             {{ govukInput({
                 label: {
                     text: "Company Registration Number (CRN) (optional)"
                 },
+                classes: "govuk-!-width-two-thirds",
                 id: "company-registration-number",
                 name: "companyRegistrationNumber",
                 value: data.companyRegistrationNumber
@@ -131,6 +127,7 @@ href: "/nrf-quote-4/retrieved-estimate-summary"
                 label: {
                     text: "VAT registration number (optional)"
                 },
+                classes: "govuk-!-width-two-thirds",
                 id: "vat-registration-number",
                 name: "vatRegistrationNumber",
                 value: data.vatRegistrationNumber
@@ -140,6 +137,7 @@ href: "/nrf-quote-4/retrieved-estimate-summary"
                 label: {
                     text: "Purchase order number (optional)"
                 },
+                classes: "govuk-!-width-two-thirds",
                 id: "purchase-order-number",
                 name: "purchaseOrderNumber",
                 value: data.purchaseOrderNumber

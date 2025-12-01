@@ -1,0 +1,59 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Confirm you want to view and approve these Nature Restoration Fund levy details - LPA approve developer request to pay NRF - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: backLink or "/lpa-approve-2/lpa-approval-email-content"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-l">Confirm you want to view and approve these Nature Restoration Fund levy details.</h1>
+
+        <div class="govuk-hint">
+            You will receive an email with a link.
+        </div>
+
+        <dl class="govuk-summary-list govuk-!-margin-bottom-9">
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Payment reference
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    0006677
+                </dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Business name
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    Acme Developments
+                </dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Planning reference
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    APP/2025/24019/FUL
+                </dd>
+            </div>
+        </dl>
+
+        <form action="/lpa-approve-2/confirm-view-approve" method="post" novalidate>
+            <button class="govuk-button" data-module="govuk-button">
+                Confirm
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
