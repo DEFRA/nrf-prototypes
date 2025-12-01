@@ -1,0 +1,105 @@
+/**
+ * Route path constants for the NRF Quote v4 journey
+ */
+
+const BASE_PATH = '/nrf-quote-4'
+
+const ROUTES = {
+  BASE: BASE_PATH,
+  START: `${BASE_PATH}/start`,
+  WHAT_WOULD_YOU_LIKE_TO_DO: `${BASE_PATH}/what-would-you-like-to-do`,
+  REDLINE_MAP: `${BASE_PATH}/redline-map`,
+  UPLOAD_REDLINE: `${BASE_PATH}/upload-redline`,
+  MAP: `${BASE_PATH}/map`,
+  NO_EDP: `${BASE_PATH}/no-edp`,
+  BUILDING_TYPE: `${BASE_PATH}/building-type`,
+  RESIDENTIAL: `${BASE_PATH}/residential`,
+  NON_RESIDENTIAL: `${BASE_PATH}/non-residential`,
+  ROOM_COUNT: `${BASE_PATH}/room-count`,
+  ESTIMATE_EMAIL: `${BASE_PATH}/estimate-email`,
+  SUMMARY: `${BASE_PATH}/summary`,
+  QUOTE_CONFIRMATION: `${BASE_PATH}/quote-confirmation`,
+  ESTIMATE_EMAIL_CONTENT: `${BASE_PATH}/quote-email-content`,
+  CATCHMENTS_GEOJSON: `${BASE_PATH}/catchments.geojson`,
+  API_CHECK_EDP_INTERSECTION: `${BASE_PATH}/api/check-edp-intersection`,
+
+  // Commit journey routes
+  DO_YOU_HAVE_A_NRF_REF: `${BASE_PATH}/do-you-have-a-nrf-ref`,
+  ENTER_ESTIMATE_REF: `${BASE_PATH}/enter-estimate-ref`,
+  RETRIEVE_ESTIMATE_EMAIL: `${BASE_PATH}/retrieve-estimate-email`,
+  ESTIMATE_EMAIL_RETRIEVAL_CONTENT: `${BASE_PATH}/estimate-email-retrieval-content`,
+  RETRIEVED_ESTIMATE_SUMMARY: `${BASE_PATH}/retrieved-estimate-summary`,
+  COMMIT_HOW_WOULD_YOU_LIKE_TO_SIGN_IN: `${BASE_PATH}/commit-how-would-you-like-to-sign-in`,
+  COMMIT_SIGN_IN_GOVERNMENT_GATEWAY: `${BASE_PATH}/commit-sign-in-government-gateway`,
+  COMPANY_DETAILS: `${BASE_PATH}/company-details`,
+  LPA_CONFIRM: `${BASE_PATH}/lpa-confirm`,
+  SUMMARY_AND_DECLARATION: `${BASE_PATH}/summary-and-declaration`,
+  COMMIT_CONFIRMATION: `${BASE_PATH}/commit-confirmation`,
+  COMMIT_EMAIL_CONTENT: `${BASE_PATH}/commit-email-content`,
+
+  // Payment journey routes
+  PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN: `${BASE_PATH}/pay-how-would-you-like-to-sign-in`,
+  PAY_SIGN_IN_GOVERNMENT_GATEWAY: `${BASE_PATH}/pay-sign-in-government-gateway`,
+  PAYMENT_SUMMARY: `${BASE_PATH}/payment-summary`,
+  PLANNING_REF: `${BASE_PATH}/planning-ref`,
+  PAYMENT_SUMMARY_SUBMIT: `${BASE_PATH}/payment-summary-submit`,
+  PAYMENT_CONFIRMATION: `${BASE_PATH}/payment-confirmation`,
+  PAYMENT_REQUEST_EMAIL_CONTENT: `${BASE_PATH}/payment-request-email-content`,
+  PDN_HOW_WOULD_YOU_LIKE_TO_SIGN_IN: `${BASE_PATH}/pdn-how-would-you-like-to-sign-in`,
+  PDN_SIGN_IN_GOVERNMENT_GATEWAY: `${BASE_PATH}/pdn-sign-in-government-gateway`,
+  UPLOAD_DECISION_NOTICE: `${BASE_PATH}/upload-decision-notice`,
+  DECISION_NOTICE_CONFIRMATION: `${BASE_PATH}/decision-notice-confirmation`,
+  PAY_EMAIL_CONTENT: `${BASE_PATH}/pay-email-content`
+}
+
+const TEMPLATES = {
+  START: 'nrf-quote-4/start',
+  WHAT_WOULD_YOU_LIKE_TO_DO: 'nrf-quote-4/what-would-you-like-to-do',
+  REDLINE_MAP: 'nrf-quote-4/redline-map',
+  UPLOAD_REDLINE: 'nrf-quote-4/upload-redline',
+  MAP: 'nrf-quote-4/map',
+  NO_EDP: 'nrf-quote-4/no-edp',
+  BUILDING_TYPE: 'nrf-quote-4/building-type',
+  RESIDENTIAL: 'nrf-quote-4/residential',
+  NON_RESIDENTIAL: 'nrf-quote-4/non-residential',
+  ROOM_COUNT: 'nrf-quote-4/room-count',
+  ESTIMATE_EMAIL: 'nrf-quote-4/estimate-email',
+  SUMMARY: 'nrf-quote-4/summary',
+  QUOTE_CONFIRMATION: 'nrf-quote-4/quote-confirmation',
+  ESTIMATE_EMAIL_CONTENT: 'nrf-quote-4/quote-email-content',
+
+  // Commit journey templates
+  DO_YOU_HAVE_A_NRF_REF: 'nrf-quote-4/do-you-have-a-nrf-ref',
+  ENTER_ESTIMATE_REF: 'nrf-quote-4/enter-estimate-ref',
+  RETRIEVE_ESTIMATE_EMAIL: 'nrf-quote-4/retrieve-estimate-email',
+  ESTIMATE_EMAIL_RETRIEVAL_CONTENT:
+    'nrf-quote-4/estimate-email-retrieval-content',
+  RETRIEVED_ESTIMATE_SUMMARY: 'nrf-quote-4/retrieved-estimate-summary',
+  COMMIT_HOW_WOULD_YOU_LIKE_TO_SIGN_IN:
+    'nrf-quote-4/commit-how-would-you-like-to-sign-in',
+  COMMIT_SIGN_IN_GOVERNMENT_GATEWAY:
+    'nrf-quote-4/commit-sign-in-government-gateway',
+  COMPANY_DETAILS: 'nrf-quote-4/company-details',
+  LPA_CONFIRM: 'nrf-quote-4/lpa-confirm',
+  SUMMARY_AND_DECLARATION: 'nrf-quote-4/summary-and-declaration',
+  COMMIT_CONFIRMATION: 'nrf-quote-4/commit-confirmation',
+  COMMIT_EMAIL_CONTENT: 'nrf-quote-4/commit-email-content',
+
+  // Payment journey templates
+  PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN:
+    'nrf-quote-4/pay-how-would-you-like-to-sign-in',
+  PAY_SIGN_IN_GOVERNMENT_GATEWAY: 'nrf-quote-4/pay-sign-in-government-gateway',
+  PAYMENT_SUMMARY: 'nrf-quote-4/payment-summary',
+  PLANNING_REF: 'nrf-quote-4/planning-ref',
+  PAYMENT_SUMMARY_SUBMIT: 'nrf-quote-4/payment-summary-submit',
+  PAYMENT_CONFIRMATION: 'nrf-quote-4/payment-confirmation',
+  PAYMENT_REQUEST_EMAIL_CONTENT: 'nrf-quote-4/payment-request-email-content',
+  PDN_HOW_WOULD_YOU_LIKE_TO_SIGN_IN:
+    'nrf-quote-4/pdn-how-would-you-like-to-sign-in',
+  PDN_SIGN_IN_GOVERNMENT_GATEWAY: 'nrf-quote-4/pdn-sign-in-government-gateway',
+  UPLOAD_DECISION_NOTICE: 'nrf-quote-4/upload-decision-notice',
+  DECISION_NOTICE_CONFIRMATION: 'nrf-quote-4/decision-notice-confirmation',
+  PAY_EMAIL_CONTENT: 'nrf-quote-4/pay-email-content'
+}
+
+module.exports = { ROUTES, TEMPLATES }

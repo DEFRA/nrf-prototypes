@@ -1,0 +1,36 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Confirm the name of your Local Planning Authority (LPA) - Get a quote for Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: "/nrf-quote-4/company-details"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <form action="/nrf-quote-4/lpa-confirm" method="post" novalidate>
+
+            <h1 class="govuk-heading-l">Confirm your Local Planning Authority (LPA)</h1>
+
+            <div class="govuk-hint">
+                Confirm this is the LPA that your red line boundary is under.
+            </div>
+
+            <p class="govuk-body">Stockton-on-Tees Borough Council</p>
+
+            <button class="govuk-button" data-module="govuk-button">
+                Confirm
+            </button>
+
+        </form>
+    </div>
+</div>
+{% endblock %}
+

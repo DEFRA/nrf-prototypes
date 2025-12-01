@@ -1,0 +1,86 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Email sent from the Nature Restoration Fund service - Get a quote for Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: backLink or "/nrf-quote-4/commit-confirmation"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <div class="govuk-inset-text">
+            <p><strong>To:</strong> {{ data.lpaEmail or 'user@example.com' }}</p>
+            <p><strong>Subject:</strong> Nature Restoration Fund – commitment to use the Nature Restoration Fund levy</p>
+        </div>
+
+        <h1 class="govuk-heading-l">Nature Restoration Fund – commitment to use the Nature Restoration Fund levy</h1>
+
+        <p class="govuk-body"><strong>NRF reference:</strong> {{ data.nrfReference }}</p>
+
+        <p class="govuk-body">Attached is a commitment document that you can send to your Local Planning Authority to include in your planning application.</p>
+
+        <p class="govuk-body">The document outlines your commitment to use the Nature Restoration Fund levy to mitigate your environmental impact for nutrients.</p>
+
+        <p class="govuk-body">You told us the development:</p>
+
+        <ul class="govuk-list govuk-list--bullet">
+            <li>is planned in {{ data.redlineBoundaryPolygon.intersectingCatchment or 'Thames Valley EDP' }}</li>
+            {% if data.buildingTypes %}
+            {% if data.residentialBuildingCount %}
+            <li>has {{ data.residentialBuildingCount }} dwelling building{% if data.residentialBuildingCount != 1 %}s{% endif %}</li>
+            {% endif %}
+            {% if data.roomCounts %}
+            {% if data.roomCounts.hotelCount %}
+            <li>has {{ data.roomCounts.hotelCount }} hotel room{% if data.roomCounts.hotelCount != 1 %}s{% endif %}</li>
+            {% endif %}
+            {% if data.roomCounts.hmoCount %}
+            <li>has house of multiple occupation buildings with a total of {{ data.roomCounts.hmoCount }} room{% if data.roomCounts.hmoCount != 1 %}s{% endif %}</li>
+            {% endif %}
+            {% if data.roomCounts.residentialInstitutionCount %}
+            <li>has {{ data.roomCounts.residentialInstitutionCount }} residential institution room{% if data.roomCounts.residentialInstitutionCount != 1 %}s{% endif %}</li>
+            {% endif %}
+            {% endif %}
+            {% endif %}
+        </ul>
+
+        <h2 class="govuk-heading-m">What you will need to pay</h2>
+
+        <p class="govuk-body">Based on the information you have provided, the development falls into an area with an Environmental Delivery Plan (EDP), so you can use the Nature Restoration Fund Nutrients Levy.</p>
+
+        <p class="govuk-body">The quoted total amount you may need to pay if you develop in this area is:</p>
+        <p class="govuk-body"><strong>£{{ data.levyAmount or '2,500' }}</strong></p>
+
+        <p class="govuk-body">You do not need to pay anything at this point, you can send the attached document to your Local Planning Authority to include in your planning application.</p>
+
+        <p class="govuk-body">Keep this email as a record of your commitment to use the Nature Restoration Fund. You can sign in to your account when you are ready to pay.</p>
+
+        <p class="govuk-body"><a href="/nrf-quote-4/pay-how-would-you-like-to-sign-in" class="govuk-link">Pay your Nature Restoration Fund levy</a></p>
+
+        <h2 class="govuk-heading-m">What your levy will pay for</h2>
+
+        <p class="govuk-body">Your levy will be spent on conservation, with amounts being spent on monitoring and maintenance. There will also be an admin charge of £00 taken from the levy payment. Levies are calculated as part of Environmental Delivery Plans (EDPs).</p>
+
+        <h2 class="govuk-heading-m">Get help with Nature Restoration Fund</h2>
+
+        <p class="govuk-body">If you need help with Nature Restoration Fund, contact XXXX and give the NRF reference number.</p>
+
+        <p class="govuk-body">
+            Email: <a href="mailto:xxxxx@defra.gov.uk" class="govuk-link">xxxxx@defra.gov.uk</a><br>
+            Telephone: 00000000000<br>
+            Monday to Friday, 8:30am to 5pm, except bank holidays
+        </p>
+
+        <p class="govuk-body">
+            <a href="https://www.gov.uk/call-charges" class="govuk-link">Find out about call charges</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
+

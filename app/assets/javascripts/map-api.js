@@ -13,7 +13,10 @@
   // CONSTANTS
   // ============================================================================
 
-  const API_ENDPOINT = '/nrf-estimate-3/api/check-edp-intersection'
+  // Allow journey-specific API endpoint to be set via global variable
+  const API_ENDPOINT =
+    window.API_CHECK_EDP_INTERSECTION_URL ||
+    '/nrf-estimate-3/api/check-edp-intersection'
   const API_TIMEOUT_MS = 10000 // 10 seconds
 
   // ============================================================================

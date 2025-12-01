@@ -1,0 +1,105 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Get a quote for Nature Restoration Fund Levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: "/"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <h1 class="govuk-heading-l">Nature Restoration Fund</h1>
+
+        <p class="govuk-body">
+            If a development falls into an area with an <a href="javascript:void(0)" class="govuk-link">Environmental Delivery Plan (EDP)</a>, you can use <a href="javascript:void(0)" class="govuk-link">Nature Restoration Fund (NRF)</a> levies to discharge environmental obligations.
+        </p>
+        <p class="govuk-body">
+            If you choose not to use the NRF levy, you will still need to <a href="javascript:void(0)" class="govuk-link">discharge your obligations in other ways</a>.
+        </p>
+
+        <h2 class="govuk-heading-m">Using NRF to discharge your environmental obligations</h2>
+
+        <p class="govuk-body">
+            Use this service to find out if your development is in an area with an EDP, get a quote for the cost of the levy, commit to using the levy and pay the levy.
+        </p>
+
+        <form action="/nrf-quote-4/start" method="post" novalidate>
+            <button class="govuk-button govuk-button--start" data-module="govuk-button">
+                Start now
+                <svg class="govuk-button__start-icon" xmlns="http://www.w3.org/2000/svg" width="17.5" height="19"
+                    viewBox="0 0 33 40" aria-hidden="true" focusable="false">
+                    <path fill="currentColor" d="M0 0h13l20 20-20 20H0l20-20z" />
+                </svg>
+            </button>
+        </form>
+
+        <h2 class="govuk-heading-m">What you need</h2>
+
+        <h3 class="govuk-heading-s">Getting a quote</h3>
+
+        <p class="govuk-body">To get a quote you will need:</p>
+
+        <ul class="govuk-list govuk-list--bullet">
+            <li>to show us where the development is planned – you can use a red line boundary file or draw a red line boundary</li>
+            <li>to tell us the types of buildings planned</li>
+            <li>details about the amount of buildings or rooms</li>
+        </ul>
+
+        <p class="govuk-body">
+            You will be sent an email with an NRF reference and the amount of the levy. You can get as many quotes as you like.
+        </p>
+
+        <h3 class="govuk-heading-s">Committing to using NRF</h3>
+
+        <p class="govuk-body">To commit to using NRF you will need:</p>
+
+        <ul class="govuk-list govuk-list--bullet">
+            <li>the NRF reference from your quote</li>
+            <li>to confirm the details of your development</li>
+            <li>the company details</li>
+            <li>the LPA details</li>
+            <li>to agree to the terms and conditions</li>
+        </ul>
+
+        <p class="govuk-body">
+            You will receive a commitment document that you can submit with your planning application.
+        </p>
+
+        <h3 class="govuk-heading-s">Paying the NRF</h3>
+
+        <p class="govuk-body">To pay the NRF and discharge your environmental obligations, you will need:</p>
+
+        <ul class="govuk-list govuk-list--bullet">
+            <li>the NRF reference from your commitment</li>
+            <li>to confirm the details of your development</li>
+            <li>the planning reference</li>
+            <li>to agree to the terms and conditions</li>
+        </ul>
+
+        <p class="govuk-body">
+            Your LPA will ask you to pay the levy when it is time to discharge your planning conditions. Once you have confirmed the details and your Local Planning Authority has approved them, you will receive an email with ways you can pay.
+        </p>
+
+        <h2 class="govuk-heading-m">Get help with Nature Restoration Fund</h2>
+
+        <p class="govuk-body">If you need help with Nature Restoration Fund, contact XXXX.</p>
+
+        <p class="govuk-body">
+            Email: <a href="mailto:xxxxx@defra.gov.uk" class="govuk-link">xxxxx@defra.gov.uk</a><br>
+            Telephone: 00000000000<br>
+            Monday to Friday, 8:30am to 5pm, except bank holidays
+        </p>
+
+        <p class="govuk-body">
+            <a href="https://www.gov.uk/call-charges" class="govuk-link">Find out about call charges</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
+

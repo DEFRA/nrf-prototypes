@@ -1,0 +1,152 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Enter the company details - Get a quote for Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: "/nrf-quote-4/retrieved-estimate-summary"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        {% if errors and errors.length %}
+        {% set errorList = [] %}
+        {% for error in errors %}
+            {% set errorList = (errorList.push({
+                text: error.message,
+                href: "#" + error.field
+            }), errorList) %}
+        {% endfor %}
+        {{ govukErrorSummary({
+            titleText: "There is a problem",
+            errorList: errorList
+        }) }}
+        {% endif %}
+
+        <form method="post" novalidate>
+            <h1 class="govuk-heading-l">Enter your details</h1>
+
+            <div class="govuk-hint">
+                Enter the details for the individual or company who will be paying the Nature Restoration Fund levy.
+            </div>
+
+            {{ govukInput({
+                label: {
+                    text: "Full Name"
+                },
+                id: "full-name",
+                name: "fullName",
+                value: data.fullName,
+                errorMessage: errorsByField.fullName
+            }) }}
+
+            {{ govukInput({
+                label: {
+                    text: "Business name (optional)"
+                },
+                id: "business-name",
+                name: "businessName",
+                value: data.businessName
+            }) }}
+
+            {% from "govuk/components/fieldset/macro.njk" import govukFieldset %}
+            
+
+                {{ govukInput({
+                    label: {
+                        text: "Address line 1"
+                    },
+                    id: "address-line-1",
+                    name: "addressLine1",
+                    value: data.addressLine1,
+                    errorMessage: errorsByField.addressLine1,
+                    autocomplete: "address-line1"
+                }) }}
+
+                {{ govukInput({
+                    label: {
+                        text: "Address line 2 (optional)"
+                    },
+                    id: "address-line-2",
+                    name: "addressLine2",
+                    value: data.addressLine2,
+                    autocomplete: "address-line2"
+                }) }}
+
+                {{ govukInput({
+                    label: {
+                        text: "Town or city"
+                    },
+                    classes: "govuk-!-width-two-thirds",
+                    id: "town-or-city",
+                    name: "townOrCity",
+                    value: data.townOrCity,
+                    errorMessage: errorsByField.townOrCity,
+                    autocomplete: "address-level2"
+                }) }}
+
+                {{ govukInput({
+                    label: {
+                        text: "County (optional)"
+                    },
+                    classes: "govuk-!-width-two-thirds",
+                    id: "county",
+                    name: "county",
+                    value: data.county
+                }) }}
+
+                {{ govukInput({
+                    label: {
+                        text: "Postcode"
+                    },
+                    id: "postcode",
+                    name: "postcode",
+                    value: data.postcode,
+                    classes: "govuk-input--width-10",
+                    errorMessage: errorsByField.postcode,
+                    autocomplete: "postal-code"
+                }) }}
+
+
+            {{ govukInput({
+                label: {
+                    text: "Company Registration Number (CRN) (optional)"
+                },
+                classes: "govuk-!-width-two-thirds",
+                id: "company-registration-number",
+                name: "companyRegistrationNumber",
+                value: data.companyRegistrationNumber
+            }) }}
+
+            {{ govukInput({
+                label: {
+                    text: "VAT registration number (optional)"
+                },
+                classes: "govuk-!-width-two-thirds",
+                id: "vat-registration-number",
+                name: "vatRegistrationNumber",
+                value: data.vatRegistrationNumber
+            }) }}
+
+            {{ govukInput({
+                label: {
+                    text: "Purchase order number (optional)"
+                },
+                classes: "govuk-!-width-two-thirds",
+                id: "purchase-order-number",
+                name: "purchaseOrderNumber",
+                value: data.purchaseOrderNumber
+            }) }}
+
+            {{ govukButton({
+                text: "Continue"
+            }) }}
+        </form>
+    </div>
+</div>
+{% endblock %}

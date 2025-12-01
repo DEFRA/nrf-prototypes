@@ -1,0 +1,90 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+What would you like to do? - Get a quote for Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: "/nrf-quote-4/start"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <form action="/nrf-quote-4/what-would-you-like-to-do" method="post" novalidate>
+
+            {% if error %}
+            <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert"
+                data-module="govuk-error-summary">
+                <h2 class="govuk-error-summary__title" id="error-summary-title">
+                    There is a problem
+                </h2>
+                <div class="govuk-error-summary__body">
+                    <ul class="govuk-list govuk-error-summary__list">
+                        <li>
+                            <a href="#journey-type">{{ error }}</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
+                <fieldset class="govuk-fieldset">
+                    <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
+                        <h1 class="govuk-fieldset__heading">
+                            What would you like to do?
+                        </h1>
+                    </legend>
+
+                    {% if error %}
+                    <p id="journey-type-error" class="govuk-error-message">
+                        <span class="govuk-visually-hidden">Error:</span> {{ error }}
+                    </p>
+                    {% endif %}
+
+                    <div class="govuk-radios" data-module="govuk-radios">
+                        <div class="govuk-radios__item">
+                            <input class="govuk-radios__input" id="journey-type-quote" name="journey-type"
+                                type="radio" value="quote" {% if data.journeyType=='quote' %}checked{% endif %}>
+                            <label class="govuk-label govuk-radios__label" for="journey-type-quote">
+                                I want a quote for the Nature Restoration Fund levy
+                            </label>
+                        </div>
+                        <div class="govuk-radios__item">
+                            <input class="govuk-radios__input" id="journey-type-commit" name="journey-type"
+                                type="radio" value="commit" {% if data.journeyType=='commit' %}checked{% endif %}>
+                            <label class="govuk-label govuk-radios__label" for="journey-type-commit">
+                                I am ready to commit to using the Nature Restoration Fund levy
+                            </label>
+                            <div id="journey-type-commit-hint" class="govuk-hint govuk-radios__hint">
+                                Do this as part of your planning application
+                            </div>
+                        </div>
+                        <div class="govuk-radios__item">
+                            <input class="govuk-radios__input" id="journey-type-pay" name="journey-type" type="radio"
+                                value="payment" {% if data.journeyType=='payment' %}checked{% endif %}>
+                            <label class="govuk-label govuk-radios__label" for="journey-type-pay">
+                                I am ready to pay the Nature Restoration Fund levy
+                            </label>
+                            <div id="journey-type-pay-hint" class="govuk-hint govuk-radios__hint">
+                                Do this when you are ready to discharge your planning conditions
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+
+            <button class="govuk-button" data-module="govuk-button">
+                Continue
+            </button>
+
+        </form>
+    </div>
+</div>
+{% endblock %}
+
