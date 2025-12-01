@@ -212,15 +212,20 @@ router.post(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO, (req, res) => {
   req.session.data = req.session.data || {}
   req.session.data.journeyType = journeyType
 
-  if (journeyType === 'quote') {
-    res.redirect(ROUTES.REDLINE_MAP)
-  } else if (journeyType === 'commit') {
-    res.redirect(ROUTES.DO_YOU_HAVE_A_NRF_REF)
-  } else if (journeyType === 'payment') {
-    res.redirect(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO)
-  } else {
-    res.redirect(ROUTES.REDLINE_MAP)
-  }
+  req.session.save((err) => {
+    if (err) {
+      console.error('Session save error:', err)
+    }
+    if (journeyType === 'quote') {
+      res.redirect(ROUTES.REDLINE_MAP)
+    } else if (journeyType === 'commit') {
+      res.redirect(ROUTES.DO_YOU_HAVE_A_NRF_REF)
+    } else if (journeyType === 'payment') {
+      res.redirect(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO)
+    } else {
+      res.redirect(ROUTES.REDLINE_MAP)
+    }
+  })
 })
 
 router.get(ROUTES.REDLINE_MAP, (req, res) => {
@@ -245,11 +250,21 @@ router.post(ROUTES.REDLINE_MAP, (req, res) => {
     hasRedlineBoundaryFile === 'Upload a file'
 
   if (hasRedlineBoundaryFile === 'Upload a file') {
-    res.redirect(ROUTES.UPLOAD_REDLINE)
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err)
+      }
+      res.redirect(ROUTES.UPLOAD_REDLINE)
+    })
   } else {
     req.session.data.mapReferrer = 'redline-map'
     req.session.data.hasRedlineBoundaryFile = false
-    res.redirect(ROUTES.MAP)
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err)
+      }
+      res.redirect(ROUTES.MAP)
+    })
   }
 })
 
@@ -393,11 +408,16 @@ router.post(
     }
     req.session.data.mapReferrer = 'upload-redline'
 
-    if (!intersectionResults.nutrient && !intersectionResults.gcn) {
-      res.redirect(ROUTES.NO_EDP)
-    } else {
-      res.redirect(ROUTES.BUILDING_TYPE)
-    }
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err)
+      }
+      if (!intersectionResults.nutrient && !intersectionResults.gcn) {
+        res.redirect(ROUTES.NO_EDP)
+      } else {
+        res.redirect(ROUTES.BUILDING_TYPE)
+      }
+    })
   }
 )
 
@@ -483,13 +503,18 @@ router.post(ROUTES.MAP, (req, res) => {
       intersections: intersectionResults.intersections
     }
 
-    if (navFromSummary) {
-      res.redirect(ROUTES.SUMMARY)
-    } else if (!intersectionResults.nutrient && !intersectionResults.gcn) {
-      res.redirect(ROUTES.NO_EDP)
-    } else {
-      res.redirect(ROUTES.BUILDING_TYPE)
-    }
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err)
+      }
+      if (navFromSummary) {
+        res.redirect(ROUTES.SUMMARY)
+      } else if (!intersectionResults.nutrient && !intersectionResults.gcn) {
+        res.redirect(ROUTES.NO_EDP)
+      } else {
+        res.redirect(ROUTES.BUILDING_TYPE)
+      }
+    })
   } catch (error) {
     console.error('Error processing boundary data:', error)
     return res.render(TEMPLATES.MAP, {
@@ -574,7 +599,12 @@ router.post(ROUTES.BUILDING_TYPE, (req, res) => {
       JSON.stringify(buildingTypesArray.sort())
 
     if (!hasChanges) {
-      res.redirect(ROUTES.SUMMARY)
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error:', err)
+        }
+        res.redirect(ROUTES.SUMMARY)
+      })
       return
     }
 
@@ -592,27 +622,52 @@ router.post(ROUTES.BUILDING_TYPE, (req, res) => {
 
     if (needsRoomCount || needsResidentialCount) {
       if (needsResidentialCount) {
-        res.redirect(`${ROUTES.RESIDENTIAL}?change=true&nav=summary`)
+        req.session.save((err) => {
+          if (err) {
+            console.error('Session save error:', err)
+          }
+          res.redirect(`${ROUTES.RESIDENTIAL}?change=true&nav=summary`)
+        })
         return
       } else if (needsRoomCount) {
         req.session.data.roomCountTypes = newlyAddedRoomCountTypes
         req.session.data.currentRoomCountIndex = 0
-        res.redirect(`${ROUTES.ROOM_COUNT}?change=true&nav=summary`)
+        req.session.save((err) => {
+          if (err) {
+            console.error('Session save error:', err)
+          }
+          res.redirect(`${ROUTES.ROOM_COUNT}?change=true&nav=summary`)
+        })
         return
       }
     }
 
-    res.redirect(ROUTES.SUMMARY)
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err)
+      }
+      res.redirect(ROUTES.SUMMARY)
+    })
     return
   }
 
   if (isChange) {
-    res.redirect(ROUTES.SUMMARY)
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err)
+      }
+      res.redirect(ROUTES.SUMMARY)
+    })
     return
   }
 
   if (buildingTypesArray.includes(BUILDING_TYPES.NON_RESIDENTIAL)) {
-    res.redirect(ROUTES.NON_RESIDENTIAL)
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err)
+      }
+      res.redirect(ROUTES.NON_RESIDENTIAL)
+    })
   } else {
     const hasRoomCountTypes = buildingTypesArray.some((type) =>
       BUILDING_TYPES_REQUIRING_ROOM_COUNT.includes(type)
@@ -623,11 +678,26 @@ router.post(ROUTES.BUILDING_TYPE, (req, res) => {
         BUILDING_TYPES_REQUIRING_ROOM_COUNT.includes(type)
       )
       req.session.data.currentRoomCountIndex = 0
-      res.redirect(ROUTES.ROOM_COUNT)
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error:', err)
+        }
+        res.redirect(ROUTES.ROOM_COUNT)
+      })
     } else if (buildingTypesArray.includes(BUILDING_TYPES.DWELLINGHOUSE)) {
-      res.redirect(ROUTES.RESIDENTIAL)
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error:', err)
+        }
+        res.redirect(ROUTES.RESIDENTIAL)
+      })
     } else {
-      res.redirect(ROUTES.ESTIMATE_EMAIL)
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error:', err)
+        }
+        res.redirect(ROUTES.ESTIMATE_EMAIL)
+      })
     }
   }
 })
@@ -724,7 +794,13 @@ router.post(ROUTES.ROOM_COUNT, (req, res) => {
       req.session.data.roomCounts[dataKey] = parseInt(roomCount)
     }
 
-    return res.redirect(ROUTES.SUMMARY)
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err)
+      }
+      res.redirect(ROUTES.SUMMARY)
+    })
+    return
   }
 
   const roomCountTypes = data.roomCountTypes || []
@@ -745,23 +821,48 @@ router.post(ROUTES.ROOM_COUNT, (req, res) => {
   req.session.data.currentRoomCountIndex = currentIndex + 1
 
   if (isChange && navFromSummary && currentIndex + 1 >= roomCountTypes.length) {
-    res.redirect(ROUTES.SUMMARY)
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err)
+      }
+      res.redirect(ROUTES.SUMMARY)
+    })
     return
   }
 
   if (currentIndex + 1 >= roomCountTypes.length) {
     if (isChange) {
-      res.redirect(ROUTES.SUMMARY)
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error:', err)
+        }
+        res.redirect(ROUTES.SUMMARY)
+      })
     } else if (
       data.buildingTypes &&
       data.buildingTypes.includes('Dwellinghouse')
     ) {
-      res.redirect(ROUTES.RESIDENTIAL)
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error:', err)
+        }
+        res.redirect(ROUTES.RESIDENTIAL)
+      })
     } else {
-      res.redirect(ROUTES.ESTIMATE_EMAIL)
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error:', err)
+        }
+        res.redirect(ROUTES.ESTIMATE_EMAIL)
+      })
     }
   } else {
-    res.redirect(ROUTES.ROOM_COUNT)
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err)
+      }
+      res.redirect(ROUTES.ROOM_COUNT)
+    })
   }
 })
 
@@ -798,15 +899,18 @@ router.post(ROUTES.RESIDENTIAL, (req, res) => {
   req.session.data = req.session.data || {}
   req.session.data.residentialBuildingCount = parseInt(residentialBuildingCount)
 
-  if (isChange && navFromSummary) {
-    res.redirect(ROUTES.SUMMARY)
-    return
-  } else if (isChange) {
-    res.redirect(ROUTES.SUMMARY)
-    return
-  }
-
-  res.redirect(ROUTES.ESTIMATE_EMAIL)
+  req.session.save((err) => {
+    if (err) {
+      console.error('Session save error:', err)
+    }
+    if (isChange && navFromSummary) {
+      res.redirect(ROUTES.SUMMARY)
+    } else if (isChange) {
+      res.redirect(ROUTES.SUMMARY)
+    } else {
+      res.redirect(ROUTES.ESTIMATE_EMAIL)
+    }
+  })
 })
 
 router.get(ROUTES.ESTIMATE_EMAIL, (req, res) => {
@@ -892,13 +996,18 @@ router.post(ROUTES.SUMMARY, (req, res) => {
   req.session.data.nrfReference = nrfReference
   req.session.data.levyAmount = req.session.data.levyAmount || '2,500'
 
-  res.redirect(ROUTES.CONFIRMATION)
+  req.session.save((err) => {
+    if (err) {
+      console.error('Session save error:', err)
+    }
+    res.redirect(ROUTES.QUOTE_CONFIRMATION)
+  })
 })
 
-router.get(ROUTES.CONFIRMATION, (req, res) => {
+router.get(ROUTES.QUOTE_CONFIRMATION, (req, res) => {
   const data = req.session.data || {}
 
-  res.render(TEMPLATES.CONFIRMATION, {
+  res.render(TEMPLATES.QUOTE_CONFIRMATION, {
     data: data
   })
 })
@@ -934,7 +1043,8 @@ router.get(ROUTES.ESTIMATE_EMAIL_CONTENT, (req, res) => {
   }
 
   res.render(TEMPLATES.ESTIMATE_EMAIL_CONTENT, {
-    data: data
+    data: data,
+    backLink: ROUTES.QUOTE_CONFIRMATION
   })
 })
 
@@ -1254,7 +1364,15 @@ router.post(ROUTES.SUMMARY_AND_DECLARATION, (req, res) => {
   req.session.data.levyAmount = req.session.data.levyAmount || '2,500'
   req.session.data.lpaEmail = req.session.data.lpaEmail || 'lpa@example.com'
 
-  res.redirect(ROUTES.CONFIRMATION)
+  res.redirect(ROUTES.COMMIT_CONFIRMATION)
+})
+
+router.get(ROUTES.COMMIT_CONFIRMATION, (req, res) => {
+  const data = req.session.data || {}
+
+  res.render(TEMPLATES.COMMIT_CONFIRMATION, {
+    data: data
+  })
 })
 
 router.get(ROUTES.COMMIT_EMAIL_CONTENT, (req, res) => {
@@ -1265,7 +1383,8 @@ router.get(ROUTES.COMMIT_EMAIL_CONTENT, (req, res) => {
   }
 
   res.render(TEMPLATES.COMMIT_EMAIL_CONTENT, {
-    data: data
+    data: data,
+    backLink: ROUTES.COMMIT_CONFIRMATION
   })
 })
 

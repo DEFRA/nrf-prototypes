@@ -7,7 +7,7 @@ Email sent from the Nature Restoration Fund service - Get a quote for Nature Res
 {% block beforeContent %}
 {{ govukBackLink({
 text: "Back",
-href: "/nrf-quote-4/confirmation"
+href: backLink or "/nrf-quote-4/quote-confirmation"
 }) }}
 {% endblock %}
 
@@ -22,7 +22,7 @@ href: "/nrf-quote-4/confirmation"
 
         <h1 class="govuk-heading-l">Nature Restoration Fund – quote for the Nature Restoration Fund levy</h1>
 
-        <h2 class="govuk-heading-m">NRF reference: {{ data.nrfReference }}</h2>
+        <h2 class="govuk-heading-m">NRF reference: {{ data.nrfReference or data.NRFReference }}</h2>
 
         <p class="govuk-body">Thank you for submitting details of the development on the Get a quote for the Nature Restoration Fund levy service.</p>
 

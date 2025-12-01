@@ -18,8 +18,8 @@ const ROUTES = {
   ROOM_COUNT: `${BASE_PATH}/room-count`,
   ESTIMATE_EMAIL: `${BASE_PATH}/estimate-email`,
   SUMMARY: `${BASE_PATH}/summary`,
-  CONFIRMATION: `${BASE_PATH}/confirmation`,
-  ESTIMATE_EMAIL_CONTENT: `${BASE_PATH}/estimate-email-content`,
+  QUOTE_CONFIRMATION: `${BASE_PATH}/quote-confirmation`,
+  ESTIMATE_EMAIL_CONTENT: `${BASE_PATH}/quote-email-content`,
   CATCHMENTS_GEOJSON: `${BASE_PATH}/catchments.geojson`,
   API_CHECK_EDP_INTERSECTION: `${BASE_PATH}/api/check-edp-intersection`,
 
@@ -34,6 +34,7 @@ const ROUTES = {
   COMPANY_DETAILS: `${BASE_PATH}/company-details`,
   LPA_CONFIRM: `${BASE_PATH}/lpa-confirm`,
   SUMMARY_AND_DECLARATION: `${BASE_PATH}/summary-and-declaration`,
+  COMMIT_CONFIRMATION: `${BASE_PATH}/commit-confirmation`,
   COMMIT_EMAIL_CONTENT: `${BASE_PATH}/commit-email-content`
 }
 
@@ -50,8 +51,8 @@ const TEMPLATES = {
   ROOM_COUNT: 'nrf-quote-4/room-count',
   ESTIMATE_EMAIL: 'nrf-quote-4/estimate-email',
   SUMMARY: 'nrf-quote-4/summary',
-  CONFIRMATION: 'nrf-quote-4/confirmation',
-  ESTIMATE_EMAIL_CONTENT: 'nrf-quote-4/estimate-email-content',
+  QUOTE_CONFIRMATION: 'nrf-quote-4/quote-confirmation',
+  ESTIMATE_EMAIL_CONTENT: 'nrf-quote-4/quote-email-content',
 
   // Commit journey templates
   DO_YOU_HAVE_A_NRF_REF: 'nrf-quote-4/do-you-have-a-nrf-ref',
@@ -67,6 +68,7 @@ const TEMPLATES = {
   COMPANY_DETAILS: 'nrf-quote-4/company-details',
   LPA_CONFIRM: 'nrf-quote-4/lpa-confirm',
   SUMMARY_AND_DECLARATION: 'nrf-quote-4/summary-and-declaration',
+  COMMIT_CONFIRMATION: 'nrf-quote-4/commit-confirmation',
   COMMIT_EMAIL_CONTENT: 'nrf-quote-4/commit-email-content'
 }
 
