@@ -168,9 +168,9 @@
   border: none;
 }
 
-/* Hide the default Leaflet draw toolbar and action buttons since we're using our own controls */
-.leaflet-draw-toolbar,
-.leaflet-draw-actions {
+/* Hide the default Mapbox GL Draw toolbar since we're using our own controls */
+.mapbox-gl-draw_ctrl-draw-btn,
+.mapbox-gl-draw_trash {
   display: none !important;
 }
 

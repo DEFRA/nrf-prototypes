@@ -113,34 +113,38 @@
    * @returns {L.Layer} Leaflet layer
    */
   function createGeoJSONLayer(dataset, data) {
-    // Get style - use getStyle() if available for dynamic styles, otherwise use static style
-    const getStyleFn = dataset.getStyle || (() => dataset.style)
+    // TODO: Phase 6 - Convert to MapLibre GeoJSON layers
+    console.warn('GCN dataset loading temporarily disabled during migration')
+    return null
 
-    const layer = L.geoJSON(data, {
-      style: function () {
-        const style = getStyleFn()
-        return {
-          color: style.color,
-          fillColor: style.fillColor,
-          fillOpacity: style.fillOpacity,
-          weight: style.weight,
-          opacity: style.opacity || 0.8
-        }
-      },
-      onEachFeature: function (feature, layer) {
-        const props = feature.properties
-        const name =
-          props.Label ||
-          props.N2K_Site_N ||
-          props.name ||
-          props.ZoneName ||
-          'Feature'
-        layer.bindPopup(`<strong>${name}</strong>`)
-      }
-    })
+    // Get style - use getStyle() if available for dynamic styles, otherwise use static style
+    // const getStyleFn = dataset.getStyle || (() => dataset.style)
+
+    // const layer = L.geoJSON(data, {
+    //   style: function () {
+    //     const style = getStyleFn()
+    //     return {
+    //       color: style.color,
+    //       fillColor: style.fillColor,
+    //       fillOpacity: style.fillOpacity,
+    //       weight: style.weight,
+    //       opacity: style.opacity || 0.8
+    //     }
+    //   },
+    //   onEachFeature: function (feature, layer) {
+    //     const props = feature.properties
+    //     const name =
+    //       props.Label ||
+    //       props.N2K_Site_N ||
+    //       props.name ||
+    //       props.ZoneName ||
+    //       'Feature'
+    //     layer.bindPopup(`<strong>${name}</strong>`)
+    //   }
+    // })
 
     // Store reference to dataset for style updates
-    layer._datasetId = dataset.id
+    // layer._datasetId = dataset.id
 
     return layer
   }
@@ -196,21 +200,28 @@
 
     loadDataset(datasetId)
       .then((layer) => {
-        if (!mapInstance.hasLayer(layer)) {
-          layer.addTo(mapInstance)
+        if (!layer) {
+          console.warn(
+            `Dataset ${datasetId} could not be loaded (migration in progress)`
+          )
+          return
         }
+        // TODO: Phase 6 - Update for MapLibre
+        // if (!mapInstance.hasLayer(layer)) {
+        //   layer.addTo(mapInstance)
+        // }
         console.log(`Dataset shown: ${datasetId}`)
 
         // Ensure red line boundary stays on top of data layers
-        if (
-          window.MapDrawingControls &&
-          window.MapDrawingControls.getDrawnItems
-        ) {
-          const drawnItems = window.MapDrawingControls.getDrawnItems()
-          if (drawnItems) {
-            drawnItems.bringToFront()
-          }
-        }
+        // if (
+        //   window.MapDrawingControls &&
+        //   window.MapDrawingControls.getDrawnItems
+        // ) {
+        //   const drawnItems = window.MapDrawingControls.getDrawnItems()
+        //   if (drawnItems) {
+        //     drawnItems.bringToFront()
+        //   }
+        // }
       })
       .catch((error) => {
         console.error(`Error showing dataset ${datasetId}:`, error)

@@ -42,12 +42,12 @@
   // ============================================================================
 
   /**
-   * Check if Leaflet is loaded
-   * @returns {boolean} True if Leaflet is available
+   * Check if MapLibre is loaded
+   * @returns {boolean} True if MapLibre is available
    */
-  function checkLeafletLoaded() {
-    if (typeof L === 'undefined') {
-      console.error('Leaflet library not loaded')
+  function checkMapLibreLoaded() {
+    if (typeof maplibregl === 'undefined') {
+      console.error('MapLibre library not loaded')
       return false
     }
     return true
@@ -88,66 +88,101 @@
 
   /**
    * Create base map instance
-   * @returns {L.Map} Leaflet map instance
+   * @returns {maplibregl.Map} MapLibre map instance
    */
   function createBaseMap() {
-    return L.map(DOM_IDS.map, {
-      zoomControl: false
-    }).setView([ENGLAND_CENTER_LAT, ENGLAND_CENTER_LNG], ENGLAND_DEFAULT_ZOOM)
+    const map = new maplibregl.Map({
+      container: DOM_IDS.map,
+      style: {
+        version: 8,
+        sources: {},
+        layers: []
+      },
+      center: [ENGLAND_CENTER_LNG, ENGLAND_CENTER_LAT], // MapLibre uses [lng, lat]
+      zoom: ENGLAND_DEFAULT_ZOOM
+    })
+
+    return map
   }
 
   /**
-   * Create base tile layers
-   * @returns {Object} Object with streetMap and satelliteMap layers
+   * Create base tile layer configurations
+   * @returns {Object} Object with streetMap and satelliteMap source configs
    */
   function createBaseLayers() {
-    const streetMap = L.tileLayer(
-      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      {
+    const streetMap = {
+      sourceId: 'osm-tiles',
+      layerId: 'osm-layer',
+      source: {
+        type: 'raster',
+        tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+        tileSize: 256,
         attribution: '© OpenStreetMap contributors'
+      },
+      layer: {
+        id: 'osm-layer',
+        type: 'raster',
+        source: 'osm-tiles'
       }
-    )
+    }
 
-    const satelliteMap = L.tileLayer(
-      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      {
+    const satelliteMap = {
+      sourceId: 'esri-tiles',
+      layerId: 'esri-layer',
+      source: {
+        type: 'raster',
+        tiles: [
+          'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+        ],
+        tileSize: 256,
         attribution:
           'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, and others'
+      },
+      layer: {
+        id: 'esri-layer',
+        type: 'raster',
+        source: 'esri-tiles'
       }
-    )
+    }
 
     return { streetMap, satelliteMap }
   }
 
   /**
    * Add saved layer to map based on cookie preference (defaults to satellite)
-   * @param {L.Map} map - Leaflet map instance
-   * @param {L.TileLayer} streetMap - Street tile layer
-   * @param {L.TileLayer} satelliteMap - Satellite tile layer
+   * @param {maplibregl.Map} map - MapLibre map instance
+   * @param {Object} streetMap - Street tile layer config
+   * @param {Object} satelliteMap - Satellite tile layer config
    */
   function addSavedLayerToMap(map, streetMap, satelliteMap) {
     const savedLayer = window.MapStyles.getSavedLayerPreference()
 
-    // Default to satellite view unless explicitly set to street
-    if (savedLayer === 'street') {
-      streetMap.addTo(map)
-      window.MapStyles.setCurrentStyle('street')
-    } else {
-      satelliteMap.addTo(map)
-      window.MapStyles.setCurrentStyle('satellite')
-    }
+    // Add layer after map loads
+    map.on('load', () => {
+      // Default to satellite view unless explicitly set to street
+      if (savedLayer === 'street') {
+        map.addSource(streetMap.sourceId, streetMap.source)
+        map.addLayer(streetMap.layer)
+        window.MapStyles.setCurrentStyle('street')
+      } else {
+        map.addSource(satelliteMap.sourceId, satelliteMap.source)
+        map.addLayer(satelliteMap.layer)
+        window.MapStyles.setCurrentStyle('satellite')
+      }
+    })
   }
 
   /**
    * Add zoom control to map
-   * @param {L.Map} map - Leaflet map instance
+   * @param {maplibregl.Map} map - MapLibre map instance
    */
   function addZoomControl(map) {
-    L.control
-      .zoom({
-        position: 'topright'
-      })
-      .addTo(map)
+    map.addControl(
+      new maplibregl.NavigationControl({
+        showCompass: false
+      }),
+      'top-right'
+    )
   }
 
   // ============================================================================
@@ -173,7 +208,7 @@
    * Create catchment polygon from GeoJSON feature
    * @param {Object} feature - GeoJSON feature
    * @param {number} index - Feature index
-   * @param {L.Map} map - Leaflet map instance
+   * @param {maplibregl.Map} map - MapLibre map instance
    * @returns {Object|null} Catchment data object or null
    */
   function createCatchmentPolygon(feature, index, map) {
@@ -184,26 +219,77 @@
       properties.Label || properties.N2K_Site_N || `Catchment ${index + 1}`
 
     if (geometry.type === 'Polygon') {
-      const coordinates = geometry.coordinates[0].map((coord) => [
-        coord[1],
-        coord[0]
-      ])
+      // Keep coordinates in GeoJSON format [lng, lat] for MapLibre
+      const coordinates = geometry.coordinates
 
+      const sourceId = `catchment-${index}`
+      const layerId = `catchment-layer-${index}`
+
+      // Add source
+      map.addSource(sourceId, {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          geometry: geometry,
+          properties: properties
+        }
+      })
+
+      // Get style from MapStyles
       const style = window.MapStyles.getCatchmentStyle(
         window.MapStyles.getCurrentStyle()
       )
-      const polygon = L.polygon(coordinates, style).addTo(map)
 
+      // Add fill layer
+      map.addLayer({
+        id: layerId,
+        type: 'fill',
+        source: sourceId,
+        paint: {
+          'fill-color': style.fillColor || style.color,
+          'fill-opacity': style.fillOpacity || 0.5
+        }
+      })
+
+      // Add border layer
+      map.addLayer({
+        id: `${layerId}-border`,
+        type: 'line',
+        source: sourceId,
+        paint: {
+          'line-color': style.color,
+          'line-width': style.weight || 2,
+          'line-opacity': style.opacity || 1
+        }
+      })
+
+      // Add click handler for popup
       const popupContent = buildCatchmentPopupContent(catchmentName, properties)
-      polygon.bindPopup(popupContent)
+      map.on('click', layerId, (e) => {
+        new maplibregl.Popup()
+          .setLngLat(e.lngLat)
+          .setHTML(popupContent)
+          .addTo(map)
+      })
 
-      window.MapStyles.addCatchmentLayer(polygon)
+      // Change cursor on hover
+      map.on('mouseenter', layerId, () => {
+        map.getCanvas().style.cursor = 'pointer'
+      })
+      map.on('mouseleave', layerId, () => {
+        map.getCanvas().style.cursor = ''
+      })
+
+      // Register layer with MapStyles
+      window.MapStyles.addCatchmentLayer(layerId, sourceId)
 
       return {
         name: catchmentName,
-        polygon: polygon,
+        layerId: layerId,
+        sourceId: sourceId,
         coordinates: coordinates,
-        properties: properties
+        properties: properties,
+        geometry: geometry
       }
     }
 
@@ -215,24 +301,27 @@
    * @param {Array} edpLayers - Array of EDP layer data
    */
   function recheckExistingPolygons(edpLayers) {
-    const drawnItems = window.MapDrawingControls.getDrawnItems()
-    if (!drawnItems) return
+    const draw = window.MapDrawingControls.getDrawInstance()
+    if (!draw) return
 
-    drawnItems.eachLayer(function (layer) {
-      if (layer instanceof L.Polygon) {
-        const intersectingCatchment =
-          window.MapGeometry.findIntersectingCatchment(layer, edpLayers)
-        window.MapDrawingControls.updateBoundaryData(
-          layer,
-          intersectingCatchment
-        )
-      }
-    })
+    const allFeatures = draw.getAll()
+    if (allFeatures.features && allFeatures.features.length > 0) {
+      allFeatures.features.forEach((feature) => {
+        if (feature.geometry.type === 'Polygon') {
+          const intersectingCatchment =
+            window.MapGeometry.findIntersectingCatchment(feature, edpLayers)
+          window.MapDrawingControls.updateBoundaryData(
+            feature,
+            intersectingCatchment
+          )
+        }
+      })
+    }
   }
 
   /**
    * Fit map to catchments if no existing boundary
-   * @param {L.Map} map - Leaflet map instance
+   * @param {maplibregl.Map} map - MapLibre map instance
    * @param {Array} edpLayers - Array of EDP layer data
    */
   function fitMapToCatchmentsIfNeeded(map, edpLayers) {
@@ -241,8 +330,21 @@
     ).value
 
     if (edpLayers.length > 0 && !existingBoundaryData) {
-      const group = new L.featureGroup(edpLayers.map((edp) => edp.polygon))
-      map.fitBounds(group.getBounds().pad(MAP_BOUNDS_PADDING))
+      // Calculate bounds from all catchment geometries
+      const bounds = new maplibregl.LngLatBounds()
+
+      edpLayers.forEach((edp) => {
+        if (edp.geometry && edp.geometry.coordinates) {
+          // Extend bounds with all coordinates
+          edp.geometry.coordinates[0].forEach((coord) => {
+            bounds.extend(coord)
+          })
+        }
+      })
+
+      if (!bounds.isEmpty()) {
+        map.fitBounds(bounds, { padding: 50 })
+      }
     }
   }
 
@@ -317,11 +419,12 @@
 
   /**
    * Load existing boundary and re-validate via API
-   * @param {L.FeatureGroup} drawnItems - Feature group for drawn items
-   * @param {L.Map} map - Leaflet map instance
+   * @param {MapboxDraw} draw - Mapbox Draw instance
+   * @param {maplibregl.Map} map - MapLibre map instance
    * @returns {Promise<boolean>} Promise resolving to true if boundary loaded
    */
-  async function loadExistingBoundary(drawnItems, map) {
+  async function loadExistingBoundary(draw, map) {
+    // TODO: Update for MapboxDraw in Phase 4
     const existingBoundaryData = document.getElementById(
       DOM_IDS.boundaryData
     ).value
@@ -572,7 +675,7 @@
   window.MapInitialisation.ENGLAND_CENTER_LAT = ENGLAND_CENTER_LAT
   window.MapInitialisation.ENGLAND_CENTER_LNG = ENGLAND_CENTER_LNG
   window.MapInitialisation.ENGLAND_DEFAULT_ZOOM = ENGLAND_DEFAULT_ZOOM
-  window.MapInitialisation.checkLeafletLoaded = checkLeafletLoaded
+  window.MapInitialisation.checkMapLibreLoaded = checkMapLibreLoaded
   window.MapInitialisation.hideLoadingMessage = hideLoadingMessage
   window.MapInitialisation.showMapError = showMapError
   window.MapInitialisation.createBaseMap = createBaseMap

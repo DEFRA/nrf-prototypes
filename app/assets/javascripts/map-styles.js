@@ -63,10 +63,10 @@
   // ============================================================================
 
   let currentMapStyle = 'satellite'
-  let catchmentLayers = []
+  let catchmentLayers = [] // Now stores {layerId, sourceId} objects instead of Leaflet layers
   let mapStyleButton = null
-  let streetMapLayer = null
-  let satelliteMapLayer = null
+  let streetMapConfig = null
+  let satelliteMapConfig = null
   let mapInstance = null
 
   // ============================================================================
@@ -132,10 +132,15 @@
 
   /**
    * Add catchment layer to tracking array
-   * @param {L.Polygon} polygon - Leaflet polygon layer
+   * @param {string} layerId - MapLibre layer ID
+   * @param {string} sourceId - MapLibre source ID
    */
-  function addCatchmentLayer(polygon) {
-    catchmentLayers.push(polygon)
+  function addCatchmentLayer(layerId, sourceId) {
+    catchmentLayers.push({
+      layerId,
+      sourceId,
+      borderLayerId: `${layerId}-border`
+    })
   }
 
   /**
@@ -143,33 +148,73 @@
    * @param {string} style - Target style ('street' or 'satellite')
    */
   function updateCatchmentStyles(style) {
+    if (!mapInstance) return
+
     const targetStyle =
       style === 'satellite' ? CATCHMENT_STYLE_SATELLITE : CATCHMENT_STYLE
-    catchmentLayers.forEach((polygon) => {
-      polygon.setStyle(targetStyle)
+
+    catchmentLayers.forEach(({ layerId, borderLayerId }) => {
+      // Update fill layer
+      if (mapInstance.getLayer(layerId)) {
+        mapInstance.setPaintProperty(
+          layerId,
+          'fill-color',
+          targetStyle.fillColor || targetStyle.color
+        )
+        mapInstance.setPaintProperty(
+          layerId,
+          'fill-opacity',
+          targetStyle.fillOpacity
+        )
+      }
+
+      // Update border layer
+      if (mapInstance.getLayer(borderLayerId)) {
+        mapInstance.setPaintProperty(
+          borderLayerId,
+          'line-color',
+          targetStyle.color
+        )
+        mapInstance.setPaintProperty(
+          borderLayerId,
+          'line-width',
+          targetStyle.weight
+        )
+        mapInstance.setPaintProperty(
+          borderLayerId,
+          'line-opacity',
+          targetStyle.opacity
+        )
+      }
     })
   }
 
   /**
    * Show all catchment layers on the map
-   * @param {L.Map} map - Leaflet map instance
+   * @param {maplibregl.Map} map - MapLibre map instance
    */
   function showCatchmentLayers(map) {
-    catchmentLayers.forEach((polygon) => {
-      if (!map.hasLayer(polygon)) {
-        polygon.addTo(map)
+    catchmentLayers.forEach(({ layerId, borderLayerId }) => {
+      if (map.getLayer(layerId)) {
+        map.setLayoutProperty(layerId, 'visibility', 'visible')
+      }
+      if (map.getLayer(borderLayerId)) {
+        map.setLayoutProperty(borderLayerId, 'visibility', 'visible')
       }
     })
   }
 
   /**
    * Hide all catchment layers from the map
-   * @param {L.Map} map - Leaflet map instance
+   * @param {maplibregl.Map} map - MapLibre map instance
    */
   function hideCatchmentLayers(map) {
-    catchmentLayers.forEach((polygon) => {
-      if (map.hasLayer(polygon)) {
-        map.removeLayer(polygon)
+    catchmentLayers.forEach(({ layerId, borderLayerId }) => {
+      if (map.getLayer(layerId)) {
+        map.setLayoutProperty(layerId, 'visibility', 'none')
+      }
+      if (map.getLayer(borderLayerId)) {
+        map.setLayoutProperty(borderLayerId, 'visibility', 'none')
       }
     })
   }
@@ -209,7 +254,8 @@
    * @returns {HTMLElement} Button element
    */
   function createMapStyleButton() {
-    const button = L.DomUtil.create('button', 'map-style-button')
+    const button = document.createElement('button')
+    button.className = 'map-style-button'
     button.type = 'button'
     button.title = 'Switch map style'
     button.setAttribute('aria-label', 'Switch map style')
@@ -265,25 +311,41 @@
    * Toggle between map styles directly
    */
   function toggleMapStyle() {
-    if (!mapInstance || !streetMapLayer || !satelliteMapLayer) {
+    if (!mapInstance || !streetMapConfig || !satelliteMapConfig) {
       console.warn('toggleMapStyle: Required map layers not initialized')
       return
     }
 
-    // Remove all tile layers
-    mapInstance.eachLayer((layer) => {
-      if (layer instanceof L.TileLayer) {
-        mapInstance.removeLayer(layer)
-      }
-    })
-
     // Toggle to the other style
     if (currentMapStyle === 'satellite') {
-      streetMapLayer.addTo(mapInstance)
+      // Remove satellite, add street
+      if (mapInstance.getLayer(satelliteMapConfig.layerId)) {
+        mapInstance.removeLayer(satelliteMapConfig.layerId)
+      }
+      if (mapInstance.getSource(satelliteMapConfig.sourceId)) {
+        mapInstance.removeSource(satelliteMapConfig.sourceId)
+      }
+
+      mapInstance.addSource(streetMapConfig.sourceId, streetMapConfig.source)
+      mapInstance.addLayer(streetMapConfig.layer)
+
       saveLayerPreference('street')
       currentMapStyle = 'street'
     } else {
-      satelliteMapLayer.addTo(mapInstance)
+      // Remove street, add satellite
+      if (mapInstance.getLayer(streetMapConfig.layerId)) {
+        mapInstance.removeLayer(streetMapConfig.layerId)
+      }
+      if (mapInstance.getSource(streetMapConfig.sourceId)) {
+        mapInstance.removeSource(streetMapConfig.sourceId)
+      }
+
+      mapInstance.addSource(
+        satelliteMapConfig.sourceId,
+        satelliteMapConfig.source
+      )
+      mapInstance.addLayer(satelliteMapConfig.layer)
+
       saveLayerPreference('satellite')
       currentMapStyle = 'satellite'
     }
@@ -305,33 +367,44 @@
 
   /**
    * Add map style switcher control to map
-   * @param {L.Map} map - Leaflet map instance
+   * @param {maplibregl.Map} map - MapLibre map instance
    * @param {HTMLElement} mapContainer - Map container element
-   * @param {L.TileLayer} streetMap - Street tile layer
-   * @param {L.TileLayer} satelliteMap - Satellite tile layer
+   * @param {Object} streetMap - Street tile layer config
+   * @param {Object} satelliteMap - Satellite tile layer config
    */
   function addMapStyleSwitcher(map, mapContainer, streetMap, satelliteMap) {
     // Store references for toggle function
     mapInstance = map
-    streetMapLayer = streetMap
-    satelliteMapLayer = satelliteMap
+    streetMapConfig = streetMap
+    satelliteMapConfig = satelliteMap
 
-    const mapStyleControl = L.control({ position: 'bottomleft' })
-    mapStyleControl.onAdd = function () {
-      const button = createMapStyleButton()
-      mapStyleButton = button
-      L.DomEvent.disableClickPropagation(button)
-      L.DomEvent.on(button, 'click', function (e) {
-        L.DomEvent.stopPropagation(e)
-        toggleMapStyle()
-      })
+    // Create button
+    const button = createMapStyleButton()
+    mapStyleButton = button
 
-      // Set initial thumbnail after a brief delay to ensure currentMapStyle is set
-      setTimeout(updateMapStyleButtonThumbnail, 0)
+    // Add click handler
+    button.addEventListener('click', function (e) {
+      e.stopPropagation()
+      toggleMapStyle()
+    })
 
-      return button
+    // Create custom control
+    class StyleSwitcherControl {
+      onAdd(map) {
+        this._map = map
+        this._container = button
+        // Set initial thumbnail after a brief delay
+        setTimeout(updateMapStyleButtonThumbnail, 0)
+        return this._container
+      }
+
+      onRemove() {
+        this._container.parentNode.removeChild(this._container)
+        this._map = undefined
+      }
     }
-    mapStyleControl.addTo(map)
+
+    map.addControl(new StyleSwitcherControl(), 'bottom-left')
   }
 
   // ============================================================================

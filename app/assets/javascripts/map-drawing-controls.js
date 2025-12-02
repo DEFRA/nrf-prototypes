@@ -732,6 +732,15 @@
     return drawnItems
   }
 
+  /**
+   * Get MapboxDraw instance (stub for Phase 4)
+   * @returns {Object|null} MapboxDraw instance
+   */
+  function getDrawInstance() {
+    // TODO: Implement in Phase 4
+    return null
+  }
+
   // Export functions to global namespace
   window.MapDrawingControls.configureDrawTooltips = configureDrawTooltips
   window.MapDrawingControls.createDrawControl = createDrawControl
@@ -741,5 +750,6 @@
   window.MapDrawingControls.getDrawingState = getDrawingState
   window.MapDrawingControls.setDrawnItems = setDrawnItems
   window.MapDrawingControls.getDrawnItems = getDrawnItems
+  window.MapDrawingControls.getDrawInstance = getDrawInstance
   window.MapDrawingControls.BOUNDARY_STYLE = BOUNDARY_STYLE
 })()
