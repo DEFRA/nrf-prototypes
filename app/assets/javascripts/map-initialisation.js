@@ -286,7 +286,10 @@
    * @param {Object} edpData - EDP data object
    */
   function loadCatchmentData(map, edpData) {
-    fetch('/nrf-estimate-2-map-layers-spike/catchments.geojson')
+    const catchmentsUrl =
+      window.CATCHMENTS_GEOJSON_URL ||
+      '/nrf-estimate-2-map-layers-spike/catchments.geojson'
+    fetch(catchmentsUrl)
       .then((response) => response.json())
       .then((data) => {
         processCatchmentFeatures(data.features, map, edpData)
