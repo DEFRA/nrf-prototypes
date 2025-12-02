@@ -5,8 +5,10 @@
 
 const govukPrototypeKit = require('govuk-prototype-kit')
 const router = govukPrototypeKit.requests.setupRouter()
+const { JOURNEYS } = require('./config/shared/journeys')
 
-// Import journey-specific route modules
+// Import non-journey route modules (utilities, search, etc.)
+const indexRoutes = require('./routes/index.js')
 const userJourney1Routes = require('./routes/user-journey-1.js')
 const edpSearchRoutes = require('./routes/edp-search.js')
 const applicationsRoutes = require('./routes/applications.js')
@@ -14,16 +16,9 @@ const applications1Routes = require('./routes/applications-1.js')
 const applications2Routes = require('./routes/applications-2.js')
 const caseManagementRoutes = require('./routes/case-management.js')
 const lpaVerifyRoutes = require('./routes/lpa-verify.js')
-const lpaApprove1Routes = require('./routes/lpa-approve-1.js')
-const nrfEstimate1Routes = require('./routes/nrf-estimate-1.js')
-const nrfEstimate2Routes = require('./routes/nrf-estimate-2.js')
-const nrfEstimate2MapLayersSpikeRoutes = require('./routes/nrf-estimate-2-map-layers-spike.js')
-const nrfEstimate3Routes = require('./routes/nrf-estimate-3.js')
-const nrfEstimate4Routes = require('./routes/nrf-estimate-4.js')
-const nrfQuote4Routes = require('./routes/nrf-quote-4.js')
-const lpaApprove2Routes = require('./routes/lpa-approve-2.js')
 
-// Use journey-specific routes
+// Use non-journey routes
+router.use('/', indexRoutes)
 router.use('/', userJourney1Routes)
 router.use('/', edpSearchRoutes)
 router.use('/', applicationsRoutes)
@@ -31,13 +26,22 @@ router.use('/', applications1Routes)
 router.use('/', applications2Routes)
 router.use('/', caseManagementRoutes)
 router.use('/', lpaVerifyRoutes)
-router.use('/', lpaApprove1Routes)
-router.use('/', nrfEstimate1Routes)
-router.use('/', nrfEstimate2Routes)
-router.use('/', nrfEstimate2MapLayersSpikeRoutes)
-router.use('/', nrfEstimate3Routes)
-router.use('/', nrfEstimate4Routes)
-router.use('/', nrfQuote4Routes)
-router.use('/', lpaApprove2Routes)
+
+// Dynamically load journey routes from shared config
+// This ensures that all journeys defined in config/shared/journeys.js are automatically loaded
+JOURNEYS.forEach((journey) => {
+  try {
+    // Convert base path to route file name (e.g., /nrf-estimate-1 -> nrf-estimate-1.js)
+    const routeFileName = journey.basePath.substring(1) // Remove leading slash
+    const routeModule = require(`./routes/${routeFileName}.js`)
+    router.use('/', routeModule)
+    console.log(`✓ Loaded journey: ${journey.name} (${journey.basePath})`)
+  } catch (error) {
+    console.warn(
+      `⚠ Warning: Could not load route file for journey ${journey.name} (${journey.basePath})`
+    )
+    console.warn(`  Error: ${error.message}`)
+  }
+})
 
 module.exports = router

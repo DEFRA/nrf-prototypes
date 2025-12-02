@@ -15,3 +15,8 @@ usage-data-config.json
 
 # Script data files
 scripts/data/data/
+
+# Playwright test results
+test-results/
+playwright-report/
+playwright/.cache/
