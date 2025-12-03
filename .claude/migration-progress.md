@@ -1,0 +1,260 @@
+# MapLibre Migration Progress
+
+## ✅ COMPLETED: Phases 1-3 (Committed: cf7c05e)
+
+### Phase 1: HTML Templates ✅
+
+**Files Updated:**
+
+- app/views/nrf-estimate-1/map.html
+- app/views/nrf-estimate-2/map.html
+- app/views/nrf-estimate-2-map-layers-spike/map.html
+- app/views/nrf-estimate-3/map.html
+- app/views/nrf-quote-4/map.html
+
+**Changes:**
+
+- Replaced Leaflet CDN links with MapLibre GL JS v5.13.0
+- Replaced Leaflet Draw with Mapbox GL Draw v1.5.1
+- Updated CSS classes: `.leaflet-*` → `.maplibregl-*`
+- Specific updates:
+  - `.leaflet-bottom.leaflet-left` → `.maplibregl-ctrl-bottom-left`
+  - `.leaflet-top.leaflet-right` → `.maplibregl-ctrl-top-right`
+  - `.leaflet-control-attribution` → `.maplibregl-ctrl-attrib`
+
+### Phase 2: Map Initialization (map-initialisation.js) ✅
+
+**Key Changes:**
+
+1. **Library Check:** `checkLeafletLoaded()` → `checkMapLibreLoaded()`
+2. **Map Creation:**
+   - `L.map()` → `new maplibregl.Map()`
+   - Uses style object with version 8, empty sources/layers
+   - Coordinate order: `[lng, lat]` not `[lat, lng]`
+3. **Base Layers:**
+   - Returns config objects instead of Leaflet tile layers
+   - Structure: `{sourceId, layerId, source, layer}`
+4. **Layer Addition:**
+   - Uses `map.on('load')` event
+   - `map.addSource()` and `map.addLayer()`
+5. **Zoom Control:** `L.control.zoom()` → `maplibregl.NavigationControl()`
+6. **Catchment Polygons:**
+   - Creates GeoJSON sources for each catchment
+   - Adds fill + border layers with unique IDs
+   - Implements click handlers for popups with `maplibregl.Popup()`
+   - Mouse cursor changes on hover
+7. **Bounds Fitting:** `L.featureGroup().getBounds()` → `maplibregl.LngLatBounds()`
+
+### Phase 3: Layer Management (map-styles.js) ✅
+
+**Key Changes:**
+
+1. **State Storage:**
+   - Changed from storing Leaflet layer objects to storing `{layerId, sourceId, borderLayerId}`
+   - `streetMapLayer/satelliteMapLayer` → `streetMapConfig/satelliteMapConfig`
+2. **Layer Visibility:**
+   - `map.addLayer()/removeLayer()` → `setLayoutProperty('visibility', 'visible/none')`
+3. **Style Updates:**
+   - `polygon.setStyle()` → `setPaintProperty()` for fill-color, fill-opacity, line-color, etc.
+4. **Button Creation:**
+   - `L.DomUtil.create()` → `document.createElement()`
+5. **Style Toggle:**
+   - Remove source + layer, then add new ones
+   - Uses `map.removeLayer()`, `map.removeSource()`, `map.addSource()`, `map.addLayer()`
+6. **Control Addition:**
+   - Custom control class with `onAdd()`/`onRemove()` methods
+   - `map.addControl(new StyleSwitcherControl(), 'bottom-left')`
+
+### Additional Files Modified ✅
+
+**app/assets/sass/\_map-drawing.scss:**
+
+- `.leaflet-draw-toolbar, .leaflet-draw-actions` → `.mapbox-gl-draw_ctrl-draw-btn, .mapbox-gl-draw_trash`
+
+**app/assets/javascripts/map-drawing-controls.js:**
+
+- Added stub `getDrawInstance()` function (returns null for now)
+
+**app/assets/javascripts/map-datasets.js:**
+
+- Temporarily disabled GCN dataset loading (returns null from `createGeoJSONLayer()`)
+- Added null checks to prevent errors
+
+**app/assets/javascripts/map-drawing-layers-spike.js:**
+
+- Commented out drawing control initialization
+- Commented out stats initialization
+- Commented out search initialization
+- Commented out accessible controls initialization
+
+### Phase 4: Drawing Controls ✅
+
+**Files Updated:**
+
+- app/assets/javascripts/map-drawing-layers-spike.js
+- app/assets/javascripts/map-drawing-controls.js
+- app/assets/javascripts/map-ui.js
+
+**Key Changes:**
+
+1. **MapboxDraw Initialization (orchestrator):**
+   - Created MapboxDraw instance with custom red boundary styles (#d4351c)
+   - Configured polygon fill, stroke, and vertex point styles
+   - Added draw control to map and stored instance via `setDrawInstance()`
+   - Set `defaultMode: 'simple_select'` and `userProperties: true`
+
+2. **Helper Functions:**
+   - Added `getFeatures(draw)` - abstracts getting features from MapboxDraw
+   - Added `hasFeatures(draw)` - checks if any features exist
+   - Added `setDrawInstance(instance)` and `getDrawInstance()` for state management
+
+3. **Event Handlers Updated:**
+   - `handleStartDrawingClick` → uses `draw.changeMode('draw_polygon')`
+   - `handleEditBoundaryClick` → uses `draw.changeMode('direct_select')` for vertex editing
+   - `handleDeleteBoundaryClick` → uses `draw.deleteAll()`
+   - `handleConfirmEdit` → gets features via `draw.getAll().features`
+   - `handleCancelEdit` → uses `draw.changeMode('simple_select')`
+   - `handleZoomToBoundary` → calculates bounds from GeoJSON coordinates using `maplibregl.LngLatBounds`
+   - `handlePolygonCreated` → works with `event.features[0]` from MapboxDraw
+
+4. **Map Event Handlers:**
+   - Changed from `L.Draw.Event.CREATED` to `map.on('draw.create')`
+   - Changed from `L.Draw.Event.EDITED` to `map.on('draw.update')`
+   - Changed from `L.Draw.Event.DELETED` to `map.on('draw.delete')`
+
+5. **Boundary Data Management:**
+   - `updateBoundaryData()` now accepts GeoJSON feature instead of Leaflet layer
+   - Extracts coordinates from `feature.geometry.coordinates[0]`
+   - Calculates center from coordinate bounds
+   - Maintains backward compatibility with `intersectingCatchment` field
+
+6. **UI Updates (map-ui.js):**
+   - Changed `.getLayers()` calls to `draw.getAll().features`
+   - Changed `map.invalidateSize()` to `map.resize()` (Phase 7 partial)
+
+7. **Control Setup:**
+   - `setupDrawingControls()` updated to pass MapboxDraw instance
+   - Zoom to England now uses `map.flyTo()` with [lng, lat] coordinates
+
+8. **Cursor Customization:**
+   - Added CSS rules targeting `.maplibregl-canvas-container.maplibregl-interactive.mode-{mode}`
+   - Manually add mode classes in button click handlers (since `draw.modechange` event is unreliable)
+   - Uses `!important` to override MapLibre's cursor changes
+   - **Drawing mode**: crosshair cursor
+   - **Edit mode**: move cursor
+   - **Normal mode**: default cursor
+
+## 🔄 REMAINING WORK: Phases 5-7
+
+### Phase 5: Stats Panel (map-stats.js)
+
+**What needs updating:**
+
+- Update coordinate extraction: `layer.getLatLngs()` → `feature.geometry.coordinates`
+- Update edit monitoring to poll MapboxDraw instance
+- Keep Turf.js calculations unchanged (just pass different coords)
+- Keep all display logic unchanged
+
+### Phase 6: Search & Datasets (map-search.js, map-datasets.js)
+
+**map-search.js:**
+
+- `map.setView()` → `map.flyTo()`
+- `L.marker()` → `new maplibregl.Marker()`
+
+**map-datasets.js:**
+
+- Convert `L.geoJSON()` to MapLibre GeoJSON sources + layers
+- Update `createGeoJSONLayer()` to return layer ID instead of Leaflet layer
+- Update visibility toggle logic
+- Update popup binding
+
+### Phase 7: UI Module (map-ui.js)
+
+**What needs updating:**
+
+- `map.invalidateSize()` → `map.resize()`
+- All other UI state logic stays unchanged
+
+## Current Working State (After Phase 4)
+
+**What Works:**
+✅ Map loads and displays
+✅ Satellite tiles show
+✅ Zoom controls functional
+✅ Style switcher button appears
+✅ Purple catchment areas display
+✅ Catchment popups work on click
+✅ **Drawing boundaries (Add button activates drawing mode with crosshair cursor)**
+✅ **Edit mode UI transitions (Confirm/Cancel buttons appear)**
+✅ **MapboxDraw polygon styling (red boundary)**
+✅ **Custom cursor (crosshair for drawing, move for editing)**
+✅ No console errors (only expected GCN warnings)
+
+**What Doesn't Work Yet:**
+❌ Completing polygon drawing (needs user testing)
+❌ Editing existing boundaries (direct_select mode implemented, needs user testing)
+❌ Deleting boundaries (deleteAll() implemented, needs user testing)
+❌ Stats panel (Phase 5)
+❌ Location search (Phase 6)
+❌ GCN dataset layers (Phase 6)
+❌ Toggle catchments visibility (should work, needs user testing)
+
+## Key Architectural Decisions
+
+1. **Coordinate Order:** MapLibre uses `[lng, lat]` everywhere, Leaflet used `[lat, lng]`
+2. **Layer Management:** Store IDs instead of objects, use `getLayer()` to check existence
+3. **Style Updates:** Use `setPaintProperty()` and `setLayoutProperty()` instead of `setStyle()`
+4. **Event Handling:** MapLibre uses different event names and payload structures
+5. **Deferred Operations:** Use `map.on('load')` for operations that need the map fully initialized
+
+## Testing Checklist (After Full Migration)
+
+- [ ] Map loads and displays correctly
+- [ ] Base layer switching (street/satellite) works
+- [ ] Drawing a new boundary works
+- [ ] Editing an existing boundary works
+- [ ] Deleting a boundary works
+- [ ] Catchment layers display correctly
+- [ ] Catchment popups work
+- [ ] Location search works
+- [ ] Zoom controls work
+- [ ] Map key displays correctly
+- [ ] Map help modal displays correctly
+- [ ] Boundary data is saved correctly to hidden field
+- [ ] Form submission validation works
+- [ ] EDP intersection detection works
+- [ ] Area and perimeter calculations are accurate
+- [ ] Mobile responsiveness works
+
+## Important Notes for Phase 4
+
+1. **MapboxDraw Initialization:**
+
+   ```javascript
+   const draw = new MapboxDraw({
+     displayControlsDefault: false,
+     modes: MapboxDraw.modes
+   })
+   map.addControl(draw)
+   ```
+
+2. **Starting Drawing:**
+
+   ```javascript
+   draw.changeMode('draw_polygon')
+   ```
+
+3. **Getting Features:**
+
+   ```javascript
+   const features = draw.getAll().features
+   ```
+
+4. **Coordinate Format:**
+   - Features are already in GeoJSON format with `[lng, lat]`
+   - No need to convert coordinates like with Leaflet
+
+5. **Events:**
+   - Use `map.on('draw.create', callback)`
+   - Event payload: `e.features` (array of GeoJSON features)

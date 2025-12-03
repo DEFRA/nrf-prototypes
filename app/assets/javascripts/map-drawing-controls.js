@@ -55,9 +55,67 @@
   let isDrawing = false
   let isEditing = false
   let drawnItems = null
+  let drawInstance = null
 
   // ============================================================================
-  // DRAW CONTROL SETUP
+  // MAPBOXDRAW HELPER FUNCTIONS
+  // ============================================================================
+
+  /**
+   * Get features from MapboxDraw instance
+   * @param {MapboxDraw} draw - MapboxDraw instance
+   * @returns {Array} Array of GeoJSON features
+   */
+  function getFeatures(draw) {
+    if (!draw || !draw.getAll) return []
+    return draw.getAll().features
+  }
+
+  /**
+   * Check if MapboxDraw has any features
+   * @param {MapboxDraw} draw - MapboxDraw instance
+   * @returns {boolean} True if features exist
+   */
+  function hasFeatures(draw) {
+    return getFeatures(draw).length > 0
+  }
+
+  /**
+   * Set the MapboxDraw instance
+   * @param {MapboxDraw} instance - MapboxDraw instance
+   */
+  function setDrawInstance(instance) {
+    drawInstance = instance
+    drawnItems = instance // For backward compatibility
+  }
+
+  /**
+   * Get the MapboxDraw instance
+   * @returns {MapboxDraw|null} MapboxDraw instance or null
+   */
+  function getDrawInstance() {
+    return drawInstance
+  }
+
+  /**
+   * Set the drawn items reference
+   * @param {MapboxDraw} instance - MapboxDraw instance
+   */
+  function setDrawnItems(instance) {
+    drawnItems = instance
+    drawInstance = instance
+  }
+
+  /**
+   * Get the drawn items reference
+   * @returns {MapboxDraw|null} MapboxDraw instance or null
+   */
+  function getDrawnItems() {
+    return drawnItems
+  }
+
+  // ============================================================================
+  // DRAW CONTROL SETUP (Legacy Leaflet functions - kept for reference)
   // ============================================================================
 
   /**
@@ -153,22 +211,26 @@
 
   /**
    * Update boundary data in hidden form field
-   * @param {L.Layer} layer - The drawn layer
+   * @param {Object} feature - GeoJSON feature from MapboxDraw
    * @param {Object} intersections - Intersection results from API
    */
-  function updateBoundaryData(layer, intersections) {
-    if (!layer) {
+  function updateBoundaryData(feature, intersections) {
+    if (!feature) {
       document.getElementById(DOM_IDS.boundaryData).value = ''
       return
     }
 
-    const bounds = layer.getBounds()
-    const center = bounds.getCenter()
-    const latLngs = layer.getLatLngs()[0]
-    const coordinates = latLngs.map((latLng) => [latLng.lng, latLng.lat])
+    // Extract coordinates from GeoJSON feature
+    const coordinates = feature.geometry.coordinates[0]
+
+    // Calculate center from coordinates
+    const lngs = coordinates.map((coord) => coord[0])
+    const lats = coordinates.map((coord) => coord[1])
+    const centerLng = (Math.min(...lngs) + Math.max(...lngs)) / 2
+    const centerLat = (Math.min(...lats) + Math.max(...lats)) / 2
 
     const boundaryData = {
-      center: [center.lng, center.lat],
+      center: [centerLng, centerLat],
       coordinates: coordinates,
       // Store new intersection structure
       intersections: intersections || { nutrient: null, gcn: null },
@@ -186,12 +248,12 @@
   /**
    * Handle intersection check - extracted to avoid duplication
    * @param {Array} coordinates - Polygon coordinates
-   * @param {L.Layer} layer - Leaflet layer
+   * @param {Object} feature - GeoJSON feature
    * @returns {Promise} Promise resolving when check is complete
    */
-  async function handleIntersectionCheck(coordinates, layer) {
+  async function handleIntersectionCheck(coordinates, feature) {
     const intersections = await window.MapAPI.checkEDPIntersection(coordinates)
-    updateBoundaryData(layer, intersections)
+    updateBoundaryData(feature, intersections)
 
     if (window.MapAPI) {
       window.MapAPI.hideLoadingState()
@@ -252,64 +314,77 @@
   // ============================================================================
 
   /**
-   * Handle start drawing button click
-   * @param {L.Control.Draw} drawControl - Draw control instance
-   * @param {L.Layer} currentDrawingLayer - Current drawing layer
-   * @param {L.FeatureGroup} drawnItemsGroup - Feature group for drawn items
-   * @param {L.Map} map - Leaflet map instance
+   * Handle start drawing button click (MapboxDraw version)
+   * @param {Object} drawControl - Not used, kept for compatibility
+   * @param {MapboxDraw} draw - MapboxDraw instance
+   * @param {maplibregl.Map} map - MapLibre map instance
    */
-  function handleStartDrawingClick(
-    drawControl,
-    currentDrawingLayer,
-    drawnItemsGroup,
-    map
-  ) {
+  function handleStartDrawingClick(drawControl, draw, map) {
+    const canvasContainer = map.getCanvasContainer()
+
     if (isDrawing) {
-      if (currentDrawingLayer) {
-        drawnItemsGroup.removeLayer(currentDrawingLayer)
-        currentDrawingLayer = null
-      }
-      const polygonHandler = getPolygonHandler(drawControl, 'draw')
-      if (polygonHandler) {
-        polygonHandler.disable()
-      }
+      // Cancel drawing mode
+      draw.changeMode('simple_select')
       isDrawing = false
       window.MapUI.hideErrorSummary()
-      window.MapUI.exitEditMode(map, drawnItemsGroup)
+      window.MapUI.exitEditMode(map, draw)
+      // Remove mode classes
+      canvasContainer.classList.remove(
+        'mode-draw_polygon',
+        'mode-direct_select'
+      )
+      canvasContainer.classList.add('mode-simple_select')
     } else {
-      const polygonHandler = getPolygonHandler(drawControl, 'draw')
-      if (polygonHandler) {
-        polygonHandler.enable()
-        isDrawing = true
-        window.MapUI.enterEditMode(map)
-      }
+      // Enter drawing mode
+      draw.changeMode('draw_polygon')
+      isDrawing = true
+      window.MapUI.enterEditMode(map)
+      // Add mode class for cursor styling
+      canvasContainer.classList.remove(
+        'mode-simple_select',
+        'mode-direct_select'
+      )
+      canvasContainer.classList.add('mode-draw_polygon')
     }
   }
 
   /**
-   * Handle edit boundary button click
-   * @param {L.Control.Draw} drawControl - Draw control instance
-   * @param {L.FeatureGroup} drawnItemsGroup - Feature group for drawn items
-   * @param {L.Map} map - Leaflet map instance
+   * Handle edit boundary button click (MapboxDraw version)
+   * @param {Object} drawControl - Not used, kept for compatibility
+   * @param {MapboxDraw} draw - MapboxDraw instance
+   * @param {maplibregl.Map} map - MapLibre map instance
    */
-  function handleEditBoundaryClick(drawControl, drawnItemsGroup, map) {
+  function handleEditBoundaryClick(drawControl, draw, map) {
+    const canvasContainer = map.getCanvasContainer()
+
     if (isEditing) {
-      const editHandler = getEditHandler(drawControl)
-      if (editHandler) {
-        editHandler.save()
-        editHandler.disable()
-      }
+      // Exit edit mode
+      draw.changeMode('simple_select')
       isEditing = false
       window.MapUI.hideErrorSummary()
-      window.MapUI.exitEditMode(map, drawnItemsGroup)
+      window.MapUI.exitEditMode(map, draw)
+      // Remove mode classes
+      canvasContainer.classList.remove(
+        'mode-draw_polygon',
+        'mode-direct_select'
+      )
+      canvasContainer.classList.add('mode-simple_select')
     } else {
-      if (drawnItemsGroup.getLayers().length > 0) {
-        const editHandler = getEditHandler(drawControl)
-        if (editHandler) {
-          editHandler.enable()
-          isEditing = true
-          window.MapUI.enterEditMode(map)
-        }
+      // Check if there's a feature to edit
+      if (hasFeatures(draw)) {
+        // Enter direct_select mode for vertex editing
+        const featureId = getFeatures(draw)[0].id
+        draw.changeMode('direct_select', {
+          featureId: featureId
+        })
+        isEditing = true
+        window.MapUI.enterEditMode(map)
+        // Add mode class for cursor styling
+        canvasContainer.classList.remove(
+          'mode-simple_select',
+          'mode-draw_polygon'
+        )
+        canvasContainer.classList.add('mode-direct_select')
       } else {
         window.MapUI.showErrorSummary(
           'No boundary to edit. Please draw a boundary first.'
@@ -319,23 +394,19 @@
   }
 
   /**
-   * Handle delete boundary button click
-   * @param {L.Control.Draw} drawControl - Draw control instance
-   * @param {L.FeatureGroup} drawnItemsGroup - Feature group for drawn items
+   * Handle delete boundary button click (MapboxDraw version)
+   * @param {Object} drawControl - Not used, kept for compatibility
+   * @param {MapboxDraw} draw - MapboxDraw instance
    * @param {Object} controls - Control elements object
-   * @param {L.Map} map - Leaflet map instance
+   * @param {maplibregl.Map} map - MapLibre map instance
    */
-  function handleDeleteBoundaryClick(
-    drawControl,
-    drawnItemsGroup,
-    controls,
-    map
-  ) {
-    if (drawnItemsGroup.getLayers().length > 0) {
-      drawnItemsGroup.clearLayers()
+  function handleDeleteBoundaryClick(drawControl, draw, controls, map) {
+    if (hasFeatures(draw)) {
+      // Delete all features
+      draw.deleteAll()
       updateBoundaryData(null, null)
       window.MapUI.hideErrorSummary()
-      window.MapUI.updateLinkStates(controls, drawnItemsGroup)
+      window.MapUI.updateLinkStates(controls, draw)
 
       // Update stats panel after delete
       if (window.MapStats && window.MapStats.handlePolygonDelete) {
@@ -350,16 +421,8 @@
         window.MapInitialisation.updateHelpModalContent(map)
       }
 
-      const editHandler = getEditHandler(drawControl)
-      if (editHandler) {
-        editHandler.save()
-        editHandler.disable()
-      }
-
-      const polygonHandler = getPolygonHandler(drawControl, 'draw')
-      if (polygonHandler) {
-        polygonHandler.disable()
-      }
+      // Reset to simple_select mode
+      draw.changeMode('simple_select')
 
       isEditing = false
       isDrawing = false
@@ -369,122 +432,99 @@
   }
 
   /**
-   * Handle confirm area button click - calls API to check EDP intersection
-   * @param {L.Control.Draw} drawControl - Draw control instance
-   * @param {L.Map} map - Leaflet map instance
-   * @param {L.FeatureGroup} drawnItemsGroup - Feature group for drawn items
+   * Handle confirm area button click - calls API to check EDP intersection (MapboxDraw version)
+   * @param {Object} drawControl - Not used, kept for compatibility
+   * @param {maplibregl.Map} map - MapLibre map instance
+   * @param {MapboxDraw} draw - MapboxDraw instance
    */
-  async function handleConfirmEdit(drawControl, map, drawnItemsGroup) {
-    // Complete any in-progress drawing
-    if (isDrawing) {
-      const drawHandler = getPolygonHandler(drawControl, 'draw')
-      if (drawHandler && drawHandler._enabled) {
-        drawHandler.completeShape()
-      }
-    }
-
-    // Save any in-progress edits
-    if (isEditing) {
-      const editHandler = getEditHandler(drawControl)
-      if (editHandler && editHandler._enabled) {
-        editHandler.save()
-        editHandler.disable()
-      }
-      isEditing = false
-    }
-
-    // Disable drawing mode
-    if (isDrawing) {
-      const polygonHandler = getPolygonHandler(drawControl, 'draw')
-      if (polygonHandler) {
-        polygonHandler.disable()
-      }
+  async function handleConfirmEdit(drawControl, map, draw) {
+    // Exit any active modes
+    if (isDrawing || isEditing) {
+      draw.changeMode('simple_select')
       isDrawing = false
+      isEditing = false
     }
 
     window.MapUI.hideErrorSummary()
 
-    const layers = drawnItemsGroup.getLayers()
-    if (layers.length === 0) {
+    const features = getFeatures(draw)
+    if (features.length === 0) {
       console.error(ERROR_MESSAGES.noBoundary)
       return
     }
 
-    const layer = layers[0]
-    const latLngs = layer.getLatLngs()[0]
-    const coordinates = latLngs.map((latLng) => [latLng.lng, latLng.lat])
+    const feature = features[0]
+    const coordinates = feature.geometry.coordinates[0]
 
     if (window.MapAPI) {
       window.MapAPI.showLoadingState()
     }
 
     try {
-      await handleIntersectionCheck(coordinates, layer)
+      await handleIntersectionCheck(coordinates, feature)
 
       if (window.MapAPI) {
         window.MapAPI.hideErrorState()
       }
 
-      window.MapUI.exitEditMode(map, drawnItemsGroup)
+      window.MapUI.exitEditMode(map, draw)
     } catch (error) {
       console.error('Error checking EDP intersection:', error)
 
       if (window.MapAPI) {
         window.MapAPI.showErrorState(
           error.message || ERROR_MESSAGES.unableToVerify,
-          () => handleConfirmEdit(drawControl, map, drawnItemsGroup)
+          () => handleConfirmEdit(drawControl, map, draw)
         )
       }
     }
   }
 
   /**
-   * Handle cancel edit button click
-   * @param {L.Control.Draw} drawControl - Draw control instance
-   * @param {L.Layer} currentDrawingLayer - Current drawing layer
-   * @param {L.FeatureGroup} drawnItemsGroup - Feature group for drawn items
-   * @param {L.Map} map - Leaflet map instance
+   * Handle cancel edit button click (MapboxDraw version)
+   * @param {Object} drawControl - Not used, kept for compatibility
+   * @param {Object} currentDrawingLayer - Not used, kept for compatibility
+   * @param {MapboxDraw} draw - MapboxDraw instance
+   * @param {maplibregl.Map} map - MapLibre map instance
    */
-  function handleCancelEdit(
-    drawControl,
-    currentDrawingLayer,
-    drawnItemsGroup,
-    map
-  ) {
-    if (isDrawing) {
-      if (currentDrawingLayer) {
-        drawnItemsGroup.removeLayer(currentDrawingLayer)
-        currentDrawingLayer = null
-      }
-      const polygonHandler = getPolygonHandler(drawControl, 'draw')
-      if (polygonHandler) {
-        polygonHandler.disable()
-      }
+  function handleCancelEdit(drawControl, currentDrawingLayer, draw, map) {
+    // Exit any active modes and return to simple_select
+    if (isDrawing || isEditing) {
+      draw.changeMode('simple_select')
       isDrawing = false
-    }
-
-    if (isEditing) {
-      const editHandler = getEditHandler(drawControl)
-      if (editHandler && editHandler._enabled) {
-        editHandler.revertLayers()
-        editHandler.disable()
-      }
       isEditing = false
     }
 
     window.MapUI.hideErrorSummary()
-    window.MapUI.exitEditMode(map, drawnItemsGroup)
+    window.MapUI.exitEditMode(map, draw)
   }
 
   /**
-   * Handle zoom to boundary button click
-   * @param {L.FeatureGroup} drawnItemsGroup - Feature group for drawn items
-   * @param {L.Map} map - Leaflet map instance
+   * Handle zoom to boundary button click (MapboxDraw version)
+   * @param {MapboxDraw} draw - MapboxDraw instance
+   * @param {maplibregl.Map} map - MapLibre map instance
    */
-  function handleZoomToBoundary(drawnItemsGroup, map) {
-    if (drawnItemsGroup.getLayers().length > 0) {
-      const group = new L.featureGroup(drawnItemsGroup.getLayers())
-      map.fitBounds(group.getBounds().pad(MAP_BOUNDS_PADDING))
+  function handleZoomToBoundary(draw, map) {
+    if (hasFeatures(draw)) {
+      const feature = getFeatures(draw)[0]
+      const coordinates = feature.geometry.coordinates[0]
+
+      // Calculate bounds from coordinates
+      const bounds = new maplibregl.LngLatBounds()
+      coordinates.forEach((coord) => {
+        bounds.extend(coord)
+      })
+
+      // Add padding and fit to bounds
+      map.fitBounds(bounds, {
+        padding: {
+          top: 50,
+          bottom: 50,
+          left: 50,
+          right: 50
+        }
+      })
+
       window.MapUI.hideErrorSummary()
     } else {
       window.MapUI.showErrorSummary('No boundary to zoom to.')
@@ -492,99 +532,94 @@
   }
 
   // ============================================================================
-  // DRAWING CONTROLS SETUP
+  // DRAWING CONTROLS SETUP (MapboxDraw version)
   // ============================================================================
 
   /**
-   * Setup drawing control event handlers
-   * @param {Object} controls - Control elements object
-   * @param {L.Map} map - Leaflet map instance
-   * @param {L.Control.Draw} drawControl - Draw control instance
-   * @param {L.FeatureGroup} drawnItemsGroup - Feature group for drawn items
-   * @param {L.Layer} currentDrawingLayer - Current drawing layer
-   * @param {number} englandCenterLat - England center latitude
-   * @param {number} englandCenterLng - England center longitude
-   * @param {number} englandDefaultZoom - England default zoom level
+   * Setup drawing control event handlers for MapboxDraw
+   * @param {maplibregl.Map} map - MapLibre map instance
+   * @param {MapboxDraw} draw - MapboxDraw instance
+   * @param {Array} edpLayers - EDP layer references (not used currently)
    */
-  function setupDrawingControls(
-    controls,
-    map,
-    drawControl,
-    drawnItemsGroup,
-    currentDrawingLayer,
-    englandCenterLat,
-    englandCenterLng,
-    englandDefaultZoom
-  ) {
+  function setupDrawingControls(map, draw, edpLayers) {
+    const controls = getControlElements()
+    if (!controls) {
+      console.error('Control elements not found')
+      return
+    }
+
     controls.startDrawingBtn.addEventListener('click', function (e) {
       e.preventDefault()
-      handleStartDrawingClick(
-        drawControl,
-        currentDrawingLayer,
-        drawnItemsGroup,
-        map
-      )
+      handleStartDrawingClick(null, draw, map)
     })
 
     controls.editBoundaryBtn.addEventListener('click', function (e) {
       e.preventDefault()
-      handleEditBoundaryClick(drawControl, drawnItemsGroup, map)
+      handleEditBoundaryClick(null, draw, map)
     })
 
     controls.deleteBoundaryBtn.addEventListener('click', function (e) {
       e.preventDefault()
-      handleDeleteBoundaryClick(drawControl, drawnItemsGroup, controls, map)
+      handleDeleteBoundaryClick(null, draw, controls, map)
     })
 
     controls.confirmEditBtn.addEventListener('click', function (e) {
       e.preventDefault()
-      handleConfirmEdit(drawControl, map, drawnItemsGroup)
+      handleConfirmEdit(null, map, draw)
     })
 
     controls.cancelEditBtn.addEventListener('click', function (e) {
       e.preventDefault()
-      handleCancelEdit(drawControl, currentDrawingLayer, drawnItemsGroup, map)
+      handleCancelEdit(null, null, draw, map)
     })
 
     controls.zoomToEnglandBtn.addEventListener('click', function (e) {
       e.preventDefault()
-      map.setView([englandCenterLat, englandCenterLng], englandDefaultZoom)
+      // Zoom to England using MapLibre's flyTo
+      map.flyTo({
+        center: [
+          window.MapInitialisation.ENGLAND_CENTER_LNG,
+          window.MapInitialisation.ENGLAND_CENTER_LAT
+        ],
+        zoom: window.MapInitialisation.ENGLAND_DEFAULT_ZOOM
+      })
     })
 
     controls.zoomToBoundaryBtn.addEventListener('click', function (e) {
       e.preventDefault()
-      handleZoomToBoundary(drawnItemsGroup, map)
+      handleZoomToBoundary(draw, map)
     })
+
+    // Setup MapboxDraw event handlers
+    setupMapEventHandlers(map, draw, edpLayers)
   }
 
   /**
-   * Handle polygon created event
-   * @param {Object} event - Leaflet draw event
-   * @param {L.Map} map - Leaflet map instance
-   * @param {L.FeatureGroup} drawnItemsGroup - Feature group for drawn items
+   * Handle polygon created event (MapboxDraw version)
+   * @param {Object} event - MapboxDraw event with features array
+   * @param {maplibregl.Map} map - MapLibre map instance
+   * @param {MapboxDraw} draw - MapboxDraw instance
    */
-  async function handlePolygonCreated(event, map, drawnItemsGroup) {
-    const layer = event.layer
-    drawnItemsGroup.addLayer(layer)
+  async function handlePolygonCreated(event, map, draw) {
+    const feature = event.features[0]
     isDrawing = false
     window.MapUI.hideErrorSummary()
 
     const controls = getControlElements()
     if (controls) {
-      window.MapUI.updateLinkStates(controls, drawnItemsGroup)
+      window.MapUI.updateLinkStates(controls, draw)
     }
 
-    window.MapUI.exitEditMode(map, drawnItemsGroup)
+    window.MapUI.exitEditMode(map, draw)
 
-    const latLngs = layer.getLatLngs()[0]
-    const coordinates = latLngs.map((latLng) => [latLng.lng, latLng.lat])
+    const coordinates = feature.geometry.coordinates[0]
 
     if (window.MapAPI) {
       window.MapAPI.showLoadingState()
     }
 
     try {
-      await handleIntersectionCheck(coordinates, layer)
+      await handleIntersectionCheck(coordinates, feature)
     } catch (error) {
       console.error('Error checking EDP intersection on create:', error)
       if (window.MapAPI) {
@@ -594,7 +629,7 @@
             try {
               window.MapAPI.hideErrorState()
               window.MapAPI.showLoadingState()
-              await handleIntersectionCheck(coordinates, layer)
+              await handleIntersectionCheck(coordinates, feature)
             } catch (retryError) {
               window.MapAPI.showErrorState(
                 retryError.message || ERROR_MESSAGES.unableToVerify,
@@ -615,9 +650,9 @@
   }
 
   /**
-   * Handle polygon edited event
-   * @param {Object} event - Leaflet draw event
-   * @param {L.Map} map - Leaflet map instance
+   * Handle polygon edited event (MapboxDraw version)
+   * @param {Object} event - MapboxDraw event with features array
+   * @param {maplibregl.Map} map - MapLibre map instance
    */
   function handlePolygonEdited(event, map) {
     if (
@@ -629,54 +664,52 @@
   }
 
   /**
-   * Handle polygon deleted event
+   * Handle polygon deleted event (MapboxDraw version)
    */
   function handlePolygonDeleted() {
     const controls = getControlElements()
     if (controls) {
-      window.MapUI.updateLinkStates(controls, drawnItems)
+      window.MapUI.updateLinkStates(controls, drawInstance)
     }
   }
 
   /**
-   * Setup map event handlers for drawing
-   * @param {L.Map} map - Leaflet map instance
-   * @param {L.FeatureGroup} drawnItemsGroup - Feature group for drawn items
-   * @param {Array} edpLayers - Array of EDP layer data
+   * Setup map event handlers for drawing (MapboxDraw version)
+   * @param {maplibregl.Map} map - MapLibre map instance
+   * @param {MapboxDraw} draw - MapboxDraw instance
+   * @param {Array} edpLayers - Array of EDP layer data (not used currently)
    */
-  function setupMapEventHandlers(map, drawnItemsGroup, edpLayers) {
-    map.on(L.Draw.Event.CREATED, (event) =>
-      handlePolygonCreated(event, map, drawnItemsGroup)
-    )
+  function setupMapEventHandlers(map, draw, edpLayers) {
+    map.on('draw.create', (event) => handlePolygonCreated(event, map, draw))
 
-    map.on(L.Draw.Event.EDITED, (event) => handlePolygonEdited(event, map))
+    map.on('draw.update', (event) => handlePolygonEdited(event, map))
 
-    map.on(L.Draw.Event.DELETED, () => {
+    map.on('draw.delete', () => {
       handlePolygonDeleted()
       document.getElementById(DOM_IDS.boundaryData).value = ''
     })
   }
 
   /**
-   * Initialize accessible drawing controls
-   * @param {L.Map} map - Leaflet map instance
-   * @param {L.Control.Draw} drawControl - Draw control instance
-   * @param {L.FeatureGroup} drawnItemsGroup - Feature group for drawn items
+   * Initialize accessible drawing controls (MapboxDraw version)
+   * @param {maplibregl.Map} map - MapLibre map instance
+   * @param {Object} drawControl - Not used, kept for compatibility
+   * @param {MapboxDraw} draw - MapboxDraw instance
    * @param {Array} edpLayers - Array of EDP layer data
-   * @param {number} englandCenterLat - England center latitude
-   * @param {number} englandCenterLng - England center longitude
-   * @param {number} englandDefaultZoom - England default zoom level
+   * @param {number} englandCenterLat - England center latitude (not used)
+   * @param {number} englandCenterLng - England center longitude (not used)
+   * @param {number} englandDefaultZoom - England default zoom level (not used)
    */
   function initAccessibleControls(
     map,
     drawControl,
-    drawnItemsGroup,
+    draw,
     edpLayers,
     englandCenterLat,
     englandCenterLng,
     englandDefaultZoom
   ) {
-    if (!map || !drawControl || !drawnItemsGroup) {
+    if (!map || !draw) {
       console.error('Missing required parameters')
       return
     }
@@ -691,21 +724,9 @@
       return
     }
 
-    let currentDrawingLayer = null
-
-    setupDrawingControls(
-      controls,
-      map,
-      drawControl,
-      drawnItemsGroup,
-      currentDrawingLayer,
-      englandCenterLat,
-      englandCenterLng,
-      englandDefaultZoom
-    )
-    setupMapEventHandlers(map, drawnItemsGroup, edpLayers)
-
-    window.MapUI.updateLinkStates(controls, drawnItemsGroup)
+    // Note: setupDrawingControls is already called from orchestrator
+    // This function is mainly for backward compatibility
+    window.MapUI.updateLinkStates(controls, draw)
   }
 
   /**
@@ -716,40 +737,17 @@
     return { isDrawing, isEditing }
   }
 
-  /**
-   * Set drawn items reference
-   * @param {L.FeatureGroup} items - Feature group for drawn items
-   */
-  function setDrawnItems(items) {
-    drawnItems = items
-  }
-
-  /**
-   * Get drawn items reference
-   * @returns {L.FeatureGroup} Feature group for drawn items
-   */
-  function getDrawnItems() {
-    return drawnItems
-  }
-
-  /**
-   * Get MapboxDraw instance (stub for Phase 4)
-   * @returns {Object|null} MapboxDraw instance
-   */
-  function getDrawInstance() {
-    // TODO: Implement in Phase 4
-    return null
-  }
-
   // Export functions to global namespace
   window.MapDrawingControls.configureDrawTooltips = configureDrawTooltips
   window.MapDrawingControls.createDrawControl = createDrawControl
   window.MapDrawingControls.hideDrawToolbar = hideDrawToolbar
+  window.MapDrawingControls.setupDrawingControls = setupDrawingControls
   window.MapDrawingControls.initAccessibleControls = initAccessibleControls
   window.MapDrawingControls.updateBoundaryData = updateBoundaryData
   window.MapDrawingControls.getDrawingState = getDrawingState
   window.MapDrawingControls.setDrawnItems = setDrawnItems
   window.MapDrawingControls.getDrawnItems = getDrawnItems
+  window.MapDrawingControls.setDrawInstance = setDrawInstance
   window.MapDrawingControls.getDrawInstance = getDrawInstance
   window.MapDrawingControls.BOUNDARY_STYLE = BOUNDARY_STYLE
 })()

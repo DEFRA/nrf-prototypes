@@ -169,17 +169,82 @@
         }
         window.MapInitialisation.loadCatchmentData(map, edpData)
 
-        // TODO: Phase 4 - Initialize drawing controls with MapboxDraw
-        // Temporarily stub out drawing functionality
-        const drawnItems = null // Will be MapboxDraw instance in Phase 4
-        // window.MapDrawingControls.setDrawnItems(drawnItems)
+        // Initialize MapboxDraw with custom red boundary styles
+        const draw = new MapboxDraw({
+          displayControlsDefault: false,
+          modes: MapboxDraw.modes,
+          defaultMode: 'simple_select',
+          userProperties: true,
+          styles: [
+            // Polygon fill
+            {
+              id: 'gl-draw-polygon-fill',
+              type: 'fill',
+              filter: [
+                'all',
+                ['==', '$type', 'Polygon'],
+                ['!=', 'mode', 'static']
+              ],
+              paint: {
+                'fill-color': '#d4351c',
+                'fill-opacity': 0.2
+              }
+            },
+            // Polygon outline
+            {
+              id: 'gl-draw-polygon-stroke-active',
+              type: 'line',
+              filter: [
+                'all',
+                ['==', '$type', 'Polygon'],
+                ['!=', 'mode', 'static']
+              ],
+              layout: {
+                'line-cap': 'round',
+                'line-join': 'round'
+              },
+              paint: {
+                'line-color': '#d4351c',
+                'line-width': 3,
+                'line-opacity': 0.8
+              }
+            },
+            // Vertex points
+            {
+              id: 'gl-draw-polygon-and-line-vertex-active',
+              type: 'circle',
+              filter: [
+                'all',
+                ['==', 'meta', 'vertex'],
+                ['==', '$type', 'Point']
+              ],
+              paint: {
+                'circle-radius': 5,
+                'circle-color': '#fff',
+                'circle-stroke-color': '#d4351c',
+                'circle-stroke-width': 2
+              }
+            }
+          ]
+        })
 
-        // window.MapDrawingControls.configureDrawTooltips()
-        // const drawControl =
-        //   window.MapDrawingControls.createDrawControl(drawnItems)
-        // map.addControl(drawControl)
+        map.addControl(draw)
+        window.MapDrawingControls.setDrawInstance(draw)
 
-        // window.MapDrawingControls.hideDrawToolbar()
+        // Set up cursor handling for drawing modes using CSS classes
+        const canvasContainer = map.getCanvasContainer()
+
+        // Track mode changes and add/remove CSS classes
+        map.on('draw.modechange', (e) => {
+          // Remove all mode classes
+          canvasContainer.classList.remove(
+            'mode-draw_polygon',
+            'mode-direct_select',
+            'mode-simple_select'
+          )
+          // Add current mode class
+          canvasContainer.classList.add(`mode-${e.mode}`)
+        })
 
         // Initialize location search
         // window.MapSearch.initLocationSearch(map)
@@ -192,25 +257,30 @@
 
         // Initialize map statistics first so it's ready to receive updates
         // if (window.MapStats && window.MapStats.init) {
-        //   window.MapStats.init(map, drawnItems)
+        //   window.MapStats.init(map, draw)
         // }
+
+        // Setup drawing controls and event handlers
+        window.MapDrawingControls.setupDrawingControls(
+          map,
+          draw,
+          edpData.layers
+        )
 
         // Load existing boundary data if available (async - will trigger intersection display update)
         // Then initialize datasets after boundary is loaded to avoid race condition
-        window.MapInitialisation.loadExistingBoundary(drawnItems, map).then(
-          () => {
-            // Initialize datasets (GCN EDP layers) after boundary loads
-            if (window.MapDatasets && window.MapDatasets.init) {
-              window.MapDatasets.init(map)
-            }
+        window.MapInitialisation.loadExistingBoundary(draw, map).then(() => {
+          // Initialize datasets (GCN EDP layers) after boundary loads
+          if (window.MapDatasets && window.MapDatasets.init) {
+            window.MapDatasets.init(map)
           }
-        )
+        })
 
         // Form submission validation
         setupFormValidation()
 
-        // TODO: Phase 4 - Initialize accessible controls with MapboxDraw
-        // initAccessibleControlsDelayed(map, drawControl, drawnItems, edpData)
+        // Initialize accessible controls with delay
+        initAccessibleControlsDelayed(map, draw, draw, edpData)
       } catch (error) {
         console.error('Error initializing map:', error)
         window.MapInitialisation.showMapError()
