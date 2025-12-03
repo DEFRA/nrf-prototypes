@@ -94,7 +94,7 @@
 
   /**
    * Enter edit mode - hide panels and show edit buttons
-   * @param {L.Map} map - Leaflet map instance
+   * @param {maplibregl.Map} map - MapLibre map instance
    */
   function enterEditMode(map) {
     const panel = document.querySelector('.map-controls-panel')
@@ -142,6 +142,11 @@
       map._helpModal.close()
     }
 
+    // Disable dataset layers during drawing/editing
+    if (window.MapDatasets && window.MapDatasets.disableAllLayers) {
+      window.MapDatasets.disableAllLayers()
+    }
+
     // Force MapLibre to recalculate map size after panel is hidden
     setTimeout(() => {
       map.resize()
@@ -150,8 +155,8 @@
 
   /**
    * Exit edit mode - show panels and hide edit buttons
-   * @param {L.Map} map - Leaflet map instance
-   * @param {L.FeatureGroup} drawnItems - Feature group containing drawn items
+   * @param {maplibregl.Map} map - MapLibre map instance
+   * @param {MapboxDraw} drawnItems - MapboxDraw instance
    */
   function exitEditMode(map, drawnItems) {
     const panel = document.querySelector('.map-controls-panel')
@@ -193,6 +198,11 @@
     // Show help button
     if (map._helpButton) {
       showElement(map._helpButton)
+    }
+
+    // Re-enable dataset layers after drawing/editing
+    if (window.MapDatasets && window.MapDatasets.enableAllLayers) {
+      window.MapDatasets.enableAllLayers()
     }
 
     // Force MapLibre to recalculate map size after panel is shown

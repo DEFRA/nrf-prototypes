@@ -163,16 +163,26 @@
 
         const feature = e.features[0]
         const props = feature.properties
+
+        // Get name from various possible property fields
         const name =
-          props.Label ||
-          props.N2K_Site_N ||
-          props.name ||
-          props.ZoneName ||
+          props.NAME || // GCN EDP (e.g., "Ashfield District")
+          props.name || // Generic name field
+          props.Label || // Other datasets
+          props.N2K_Site_N || // Natura 2000 sites
+          props.ZoneName || // Zone-based datasets
           'Feature'
+
+        // Build description with type if available
+        let description = `<strong>${name}</strong>`
+        if (props.DESCRIPTIO || props.Description) {
+          const type = props.DESCRIPTIO || props.Description
+          description += `<br><small>Type: ${type}</small>`
+        }
 
         new maplibregl.Popup()
           .setLngLat(e.lngLat)
-          .setHTML(`<strong>${name}</strong>`)
+          .setHTML(description)
           .addTo(mapInstance)
       })
 
@@ -529,6 +539,50 @@
     console.log('[MapDatasets] Refreshed layer styles after map style change')
   }
 
+  /**
+   * Disable all dataset layers (for drawing/editing mode)
+   * Hides all dataset layers and disables click interactions
+   */
+  function disableAllLayers() {
+    if (!mapInstance) return
+
+    Object.keys(loadedLayers).forEach((datasetId) => {
+      const layerInfo = loadedLayers[datasetId]
+      if (!layerInfo) return
+
+      // Hide fill and border layers
+      if (mapInstance.getLayer(layerInfo.fillLayerId)) {
+        mapInstance.setLayoutProperty(
+          layerInfo.fillLayerId,
+          'visibility',
+          'none'
+        )
+      }
+      if (mapInstance.getLayer(layerInfo.borderLayerId)) {
+        mapInstance.setLayoutProperty(
+          layerInfo.borderLayerId,
+          'visibility',
+          'none'
+        )
+      }
+    })
+  }
+
+  /**
+   * Re-enable all dataset layers (after drawing/editing mode)
+   * Restores visibility based on checkbox state
+   */
+  function enableAllLayers() {
+    if (!mapInstance) return
+
+    Object.keys(DATASETS).forEach((datasetId) => {
+      const checkbox = document.querySelector(`#dataset-${datasetId}`)
+      if (checkbox && checkbox.checked) {
+        showDataset(datasetId)
+      }
+    })
+  }
+
   // ============================================================================
   // EXPORTS
   // ============================================================================
@@ -543,5 +597,7 @@
   window.MapDatasets.getDatasets = getDatasets
   window.MapDatasets.initUI = initUI
   window.MapDatasets.refreshLayers = refreshLayers
+  window.MapDatasets.disableAllLayers = disableAllLayers
+  window.MapDatasets.enableAllLayers = enableAllLayers
   window.MapDatasets.getCookiePreference = getVisibilityFromCookie
 })()
