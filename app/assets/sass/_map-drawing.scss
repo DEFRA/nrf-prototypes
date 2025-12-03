@@ -174,17 +174,28 @@
   display: none !important;
 }
 
-/* Custom cursor for MapboxDraw modes */
-.maplibregl-canvas-container.maplibregl-interactive {
-  /* Use crosshair cursor when in draw_polygon mode */
-  &.mode-draw_polygon {
-    cursor: crosshair !important;
-  }
+/* Custom cursor for MapboxDraw modes - high specificity to override MapLibre defaults */
+.maplibregl-canvas-container.maplibregl-interactive.maplibregl-touch-zoom-rotate.maplibregl-touch-drag-pan.mode-draw_polygon,
+.maplibregl-canvas-container.maplibregl-interactive.maplibregl-touch-zoom-rotate.mode-draw_polygon,
+.maplibregl-canvas-container.maplibregl-interactive.maplibregl-touch-drag-pan.mode-draw_polygon,
+.maplibregl-canvas-container.maplibregl-interactive.mode-draw_polygon {
+  cursor: crosshair !important;
+}
 
-  /* Use move cursor when in direct_select mode (editing vertices) */
-  &.mode-direct_select {
-    cursor: move !important;
-  }
+.maplibregl-canvas-container.maplibregl-interactive.maplibregl-touch-zoom-rotate.maplibregl-touch-drag-pan.mode-direct_select,
+.maplibregl-canvas-container.maplibregl-interactive.maplibregl-touch-zoom-rotate.mode-direct_select,
+.maplibregl-canvas-container.maplibregl-interactive.maplibregl-touch-drag-pan.mode-direct_select,
+.maplibregl-canvas-container.maplibregl-interactive.mode-direct_select {
+  cursor: move !important;
+}
+
+/* Also target the canvas element directly */
+.maplibregl-canvas-container.mode-draw_polygon .maplibregl-canvas {
+  cursor: crosshair !important;
+}
+
+.maplibregl-canvas-container.mode-direct_select .maplibregl-canvas {
+  cursor: move !important;
 }
 
 /* Responsive design for smaller screens - GOV.UK compliant */
@@ -366,4 +377,9 @@
 /* Utility class for hiding elements */
 .hidden {
   display: none !important;
+}
+
+/* Override MapLibre's pointer-events: none on control containers */
+.maplibregl-ctrl-bottom-left {
+  pointer-events: auto !important;
 }

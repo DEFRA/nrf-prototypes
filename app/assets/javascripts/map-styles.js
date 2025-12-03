@@ -316,6 +316,20 @@
       return
     }
 
+    // Get the first non-base layer to insert base layer before it
+    const layers = mapInstance.getStyle().layers
+    let firstSymbolOrFillLayerId = null
+    for (const layer of layers) {
+      if (
+        layer.type === 'fill' ||
+        layer.type === 'line' ||
+        layer.type === 'symbol'
+      ) {
+        firstSymbolOrFillLayerId = layer.id
+        break
+      }
+    }
+
     // Toggle to the other style
     if (currentMapStyle === 'satellite') {
       // Remove satellite, add street
@@ -327,7 +341,8 @@
       }
 
       mapInstance.addSource(streetMapConfig.sourceId, streetMapConfig.source)
-      mapInstance.addLayer(streetMapConfig.layer)
+      // Insert base layer before other layers to keep them on top
+      mapInstance.addLayer(streetMapConfig.layer, firstSymbolOrFillLayerId)
 
       saveLayerPreference('street')
       currentMapStyle = 'street'
@@ -344,7 +359,8 @@
         satelliteMapConfig.sourceId,
         satelliteMapConfig.source
       )
-      mapInstance.addLayer(satelliteMapConfig.layer)
+      // Insert base layer before other layers to keep them on top
+      mapInstance.addLayer(satelliteMapConfig.layer, firstSymbolOrFillLayerId)
 
       saveLayerPreference('satellite')
       currentMapStyle = 'satellite'
@@ -384,6 +400,7 @@
 
     // Add click handler
     button.addEventListener('click', function (e) {
+      e.preventDefault()
       e.stopPropagation()
       toggleMapStyle()
     })
