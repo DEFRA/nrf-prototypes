@@ -107,46 +107,94 @@
   // ============================================================================
 
   /**
-   * Create a GeoJSON layer
+   * Create a GeoJSON layer (MapLibre version)
    * @param {Object} dataset - Dataset configuration
    * @param {Object} data - GeoJSON data
-   * @returns {L.Layer} Leaflet layer
+   * @returns {Object} Layer metadata {sourceId, fillLayerId, borderLayerId}
    */
   function createGeoJSONLayer(dataset, data) {
-    // TODO: Phase 6 - Convert to MapLibre GeoJSON layers
-    console.warn('GCN dataset loading temporarily disabled during migration')
-    return null
+    if (!mapInstance) {
+      console.error('Map not initialized')
+      return null
+    }
 
     // Get style - use getStyle() if available for dynamic styles, otherwise use static style
-    // const getStyleFn = dataset.getStyle || (() => dataset.style)
+    const getStyleFn = dataset.getStyle || (() => dataset.style)
+    const style = getStyleFn()
 
-    // const layer = L.geoJSON(data, {
-    //   style: function () {
-    //     const style = getStyleFn()
-    //     return {
-    //       color: style.color,
-    //       fillColor: style.fillColor,
-    //       fillOpacity: style.fillOpacity,
-    //       weight: style.weight,
-    //       opacity: style.opacity || 0.8
-    //     }
-    //   },
-    //   onEachFeature: function (feature, layer) {
-    //     const props = feature.properties
-    //     const name =
-    //       props.Label ||
-    //       props.N2K_Site_N ||
-    //       props.name ||
-    //       props.ZoneName ||
-    //       'Feature'
-    //     layer.bindPopup(`<strong>${name}</strong>`)
-    //   }
-    // })
+    // Create unique IDs for this dataset's layers
+    const sourceId = `${dataset.id}-source`
+    const fillLayerId = `${dataset.id}-fill`
+    const borderLayerId = `${dataset.id}-border`
 
-    // Store reference to dataset for style updates
-    // layer._datasetId = dataset.id
+    try {
+      // Add GeoJSON source
+      mapInstance.addSource(sourceId, {
+        type: 'geojson',
+        data: data
+      })
 
-    return layer
+      // Add fill layer
+      mapInstance.addLayer({
+        id: fillLayerId,
+        type: 'fill',
+        source: sourceId,
+        paint: {
+          'fill-color': style.fillColor || style.color,
+          'fill-opacity': style.fillOpacity || 0.3
+        }
+      })
+
+      // Add border layer
+      mapInstance.addLayer({
+        id: borderLayerId,
+        type: 'line',
+        source: sourceId,
+        paint: {
+          'line-color': style.color,
+          'line-width': style.weight || 2,
+          'line-opacity': style.opacity || 0.8
+        }
+      })
+
+      // Add click handler for popups
+      mapInstance.on('click', fillLayerId, (e) => {
+        if (!e.features || e.features.length === 0) return
+
+        const feature = e.features[0]
+        const props = feature.properties
+        const name =
+          props.Label ||
+          props.N2K_Site_N ||
+          props.name ||
+          props.ZoneName ||
+          'Feature'
+
+        new maplibregl.Popup()
+          .setLngLat(e.lngLat)
+          .setHTML(`<strong>${name}</strong>`)
+          .addTo(mapInstance)
+      })
+
+      // Change cursor on hover
+      mapInstance.on('mouseenter', fillLayerId, () => {
+        mapInstance.getCanvas().style.cursor = 'pointer'
+      })
+
+      mapInstance.on('mouseleave', fillLayerId, () => {
+        mapInstance.getCanvas().style.cursor = ''
+      })
+
+      return {
+        sourceId,
+        fillLayerId,
+        borderLayerId,
+        datasetId: dataset.id
+      }
+    } catch (error) {
+      console.error(`Error creating GeoJSON layer for ${dataset.id}:`, error)
+      return null
+    }
   }
 
   // ============================================================================
@@ -189,7 +237,7 @@
   }
 
   /**
-   * Show a dataset on the map
+   * Show a dataset on the map (MapLibre version)
    * @param {string} datasetId - Dataset ID
    */
   function showDataset(datasetId) {
@@ -199,29 +247,29 @@
     }
 
     loadDataset(datasetId)
-      .then((layer) => {
-        if (!layer) {
-          console.warn(
-            `Dataset ${datasetId} could not be loaded (migration in progress)`
-          )
+      .then((layerInfo) => {
+        if (!layerInfo) {
+          console.warn(`Dataset ${datasetId} could not be loaded`)
           return
         }
-        // TODO: Phase 6 - Update for MapLibre
-        // if (!mapInstance.hasLayer(layer)) {
-        //   layer.addTo(mapInstance)
-        // }
-        console.log(`Dataset shown: ${datasetId}`)
 
-        // Ensure red line boundary stays on top of data layers
-        // if (
-        //   window.MapDrawingControls &&
-        //   window.MapDrawingControls.getDrawnItems
-        // ) {
-        //   const drawnItems = window.MapDrawingControls.getDrawnItems()
-        //   if (drawnItems) {
-        //     drawnItems.bringToFront()
-        //   }
-        // }
+        // Set visibility to visible for both fill and border layers
+        if (mapInstance.getLayer(layerInfo.fillLayerId)) {
+          mapInstance.setLayoutProperty(
+            layerInfo.fillLayerId,
+            'visibility',
+            'visible'
+          )
+        }
+        if (mapInstance.getLayer(layerInfo.borderLayerId)) {
+          mapInstance.setLayoutProperty(
+            layerInfo.borderLayerId,
+            'visibility',
+            'visible'
+          )
+        }
+
+        console.log(`Dataset shown: ${datasetId}`)
       })
       .catch((error) => {
         console.error(`Error showing dataset ${datasetId}:`, error)
@@ -229,15 +277,28 @@
   }
 
   /**
-   * Hide a dataset from the map
+   * Hide a dataset from the map (MapLibre version)
    * @param {string} datasetId - Dataset ID
    */
   function hideDataset(datasetId) {
-    const layer = loadedLayers[datasetId]
-    if (layer && mapInstance && mapInstance.hasLayer(layer)) {
-      mapInstance.removeLayer(layer)
-      console.log(`Dataset hidden: ${datasetId}`)
+    const layerInfo = loadedLayers[datasetId]
+    if (!layerInfo || !mapInstance) {
+      return
     }
+
+    // Set visibility to none for both fill and border layers
+    if (mapInstance.getLayer(layerInfo.fillLayerId)) {
+      mapInstance.setLayoutProperty(layerInfo.fillLayerId, 'visibility', 'none')
+    }
+    if (mapInstance.getLayer(layerInfo.borderLayerId)) {
+      mapInstance.setLayoutProperty(
+        layerInfo.borderLayerId,
+        'visibility',
+        'none'
+      )
+    }
+
+    console.log(`Dataset hidden: ${datasetId}`)
   }
 
   /**
@@ -264,9 +325,9 @@
   }
 
   /**
-   * Get dataset layer (for external use)
+   * Get dataset layer info (for external use)
    * @param {string} datasetId - Dataset ID
-   * @returns {L.Layer|null} The layer or null
+   * @returns {Object|null} Layer info object {sourceId, fillLayerId, borderLayerId} or null
    */
   function getLayer(datasetId) {
     return loadedLayers[datasetId] || null
@@ -364,8 +425,8 @@
   // ============================================================================
 
   /**
-   * Initialize the datasets manager
-   * @param {L.Map} map - Leaflet map instance
+   * Initialize the datasets manager (MapLibre version)
+   * @param {maplibregl.Map} map - MapLibre map instance
    */
   function init(map) {
     mapInstance = map
@@ -402,64 +463,70 @@
   }
 
   /**
-   * Update layer styles based on current map style
+   * Update layer styles based on current map style (MapLibre version)
    * Called when map style changes between street and satellite
    */
   function updateLayerStyles() {
     if (!mapInstance) return
 
     Object.keys(loadedLayers).forEach((datasetId) => {
-      const layer = loadedLayers[datasetId]
+      const layerInfo = loadedLayers[datasetId]
       const dataset = DATASETS[datasetId]
 
-      if (layer && dataset && dataset.getStyle) {
+      if (layerInfo && dataset && dataset.getStyle) {
         // Update style for layers with dynamic styling
         const newStyle = dataset.getStyle()
-        layer.setStyle({
-          color: newStyle.color,
-          fillColor: newStyle.fillColor,
-          fillOpacity: newStyle.fillOpacity,
-          weight: newStyle.weight,
-          opacity: newStyle.opacity || 0.8
-        })
+
+        // Update fill layer
+        if (mapInstance.getLayer(layerInfo.fillLayerId)) {
+          mapInstance.setPaintProperty(
+            layerInfo.fillLayerId,
+            'fill-color',
+            newStyle.fillColor || newStyle.color
+          )
+          mapInstance.setPaintProperty(
+            layerInfo.fillLayerId,
+            'fill-opacity',
+            newStyle.fillOpacity || 0.3
+          )
+        }
+
+        // Update border layer
+        if (mapInstance.getLayer(layerInfo.borderLayerId)) {
+          mapInstance.setPaintProperty(
+            layerInfo.borderLayerId,
+            'line-color',
+            newStyle.color
+          )
+          mapInstance.setPaintProperty(
+            layerInfo.borderLayerId,
+            'line-width',
+            newStyle.weight || 2
+          )
+          mapInstance.setPaintProperty(
+            layerInfo.borderLayerId,
+            'line-opacity',
+            newStyle.opacity || 0.8
+          )
+        }
       }
     })
   }
 
   /**
-   * Refresh all visible datasets (re-add them to map)
+   * Refresh all visible datasets (MapLibre version)
    * Called after map style changes to ensure layers persist
+   * Note: MapLibre preserves layers automatically on style change, so we just update styles
    */
   function refreshLayers() {
     if (!mapInstance) return
 
-    // First update styles based on new map style
+    // Update styles based on new map style
     updateLayerStyles()
 
-    Object.keys(loadedLayers).forEach((datasetId) => {
-      const layer = loadedLayers[datasetId]
-      const checkbox = document.querySelector(`#dataset-${datasetId}`)
-
-      if (checkbox && checkbox.checked && layer) {
-        // Remove and re-add to ensure it's on top and visible
-        try {
-          if (mapInstance.hasLayer(layer)) {
-            mapInstance.removeLayer(layer)
-          }
-          layer.addTo(mapInstance)
-        } catch (e) {
-          console.error(`Error refreshing layer ${datasetId}:`, e)
-        }
-      }
-    })
-
-    // Ensure red line boundary stays on top of data layers
-    if (window.MapDrawingControls && window.MapDrawingControls.getDrawnItems) {
-      const drawnItems = window.MapDrawingControls.getDrawnItems()
-      if (drawnItems) {
-        drawnItems.bringToFront()
-      }
-    }
+    // Note: MapLibre automatically preserves layer visibility state
+    // No need to manually re-add layers like with Leaflet
+    console.log('[MapDatasets] Refreshed layer styles after map style change')
   }
 
   // ============================================================================

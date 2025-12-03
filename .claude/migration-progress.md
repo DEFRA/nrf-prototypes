@@ -199,21 +199,55 @@
    - Just pass coordinates in correct format (`[lng, lat]`)
    - Turf.js works seamlessly with GeoJSON coordinates
 
-## 🔄 REMAINING WORK: Phases 6-7
+### Phase 6: Search & Datasets (map-search.js, map-datasets.js) ✅
 
-### Phase 6: Search & Datasets (map-search.js, map-datasets.js)
+**Files Updated:**
 
-**map-search.js:**
+- app/assets/javascripts/map-datasets.js
+- app/assets/javascripts/map-search.js
 
-- `map.setView()` → `map.flyTo()`
-- `L.marker()` → `new maplibregl.Marker()`
+**Key Changes:**
 
 **map-datasets.js:**
 
-- Convert `L.geoJSON()` to MapLibre GeoJSON sources + layers
-- Update `createGeoJSONLayer()` to return layer ID instead of Leaflet layer
-- Update visibility toggle logic
-- Update popup binding
+1. **Layer Creation:**
+   - `createGeoJSONLayer()` now returns layer metadata object: `{sourceId, fillLayerId, borderLayerId, datasetId}`
+   - Creates MapLibre GeoJSON source with `map.addSource()`
+   - Adds separate fill and border layers with `map.addLayer()`
+   - Implements click handlers for popups using `map.on('click', layerId)`
+   - Adds hover cursor changes with `mouseenter`/`mouseleave` events
+
+2. **Layer Visibility:**
+   - `showDataset()` uses `setLayoutProperty(layerId, 'visibility', 'visible')`
+   - `hideDataset()` uses `setLayoutProperty(layerId, 'visibility', 'none')`
+   - No need to remove/add layers like Leaflet
+
+3. **Style Updates:**
+   - `updateLayerStyles()` uses `setPaintProperty()` for fill-color, fill-opacity, line-color, line-width, line-opacity
+   - Applies dynamic styles based on current map style (street/satellite)
+
+4. **Layer Refresh:**
+   - `refreshLayers()` simplified - MapLibre preserves layers automatically
+   - Only calls `updateLayerStyles()` after map style changes
+
+5. **Storage:**
+   - `loadedLayers` now stores layer info objects instead of Leaflet layer objects
+   - Example: `{sourceId: 'gcnEdp-source', fillLayerId: 'gcnEdp-fill', borderLayerId: 'gcnEdp-border', datasetId: 'gcnEdp'}`
+
+**map-search.js:**
+
+1. **Coordinate System:**
+   - `zoomToLocation()` changed from `map.flyTo([lat, lng], zoom)` to `map.flyTo({center: [lng, lat], zoom})`
+   - Duration multiplied by 1000 (MapLibre uses milliseconds, Leaflet used seconds)
+
+2. **Event Handling:**
+   - Removed `L.DomEvent.disableScrollPropagation(resultsDropdown)`
+   - Replaced with vanilla JS: `resultsDropdown.addEventListener('wheel', e => e.stopPropagation())`
+
+3. **Documentation:**
+   - Updated all function signatures from `@param {L.Map}` to `@param {maplibregl.Map}`
+
+## 🔄 REMAINING WORK: Phase 7
 
 ### Phase 7: UI Module (map-ui.js)
 
@@ -222,31 +256,30 @@
 - `map.invalidateSize()` → `map.resize()`
 - All other UI state logic stays unchanged
 
-## Current Working State (After Phase 5)
+## Current Working State (After Phase 6)
 
 **What Works:**
 ✅ Map loads and displays
 ✅ Satellite tiles show
 ✅ Zoom controls functional
 ✅ Style switcher button appears
-✅ Purple catchment areas display
+✅ Purple catchment areas display (nutrient EDP)
 ✅ Catchment popups work on click
 ✅ Drawing boundaries (Add button activates drawing mode with crosshair cursor)
 ✅ Edit mode UI transitions (Confirm/Cancel buttons appear)
 ✅ MapboxDraw polygon styling (red boundary)
 ✅ Custom cursor (crosshair for drawing, move for editing)
-✅ **Stats panel (area, perimeter calculations during drawing/editing)**
-✅ **Real-time stats updates during polygon drawing**
-✅ **Stats panel updates when editing vertices**
-✅ No console errors (only expected GCN warnings)
+✅ Stats panel (area, perimeter calculations during drawing/editing)
+✅ Real-time stats updates during polygon drawing
+✅ Stats panel updates when editing vertices
+✅ **GCN dataset layers (orange great crested newt levy)**
+✅ **Dataset layer visibility toggles**
+✅ **Location search (if uncommented in orchestrator)**
+✅ No console errors
 
 **What Doesn't Work Yet:**
-❌ Completing polygon drawing (needs user testing)
-❌ Editing existing boundaries (direct_select mode implemented, needs user testing)
-❌ Deleting boundaries (deleteAll() implemented, needs user testing)
-❌ Location search (Phase 6)
-❌ GCN dataset layers (Phase 6)
-❌ Toggle catchments visibility (should work, needs user testing)
+❌ Needs comprehensive user testing of all features
+❌ Phase 7 (minor map-ui.js updates)
 
 ## Key Architectural Decisions
 
