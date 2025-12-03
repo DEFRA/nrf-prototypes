@@ -247,6 +247,35 @@
 3. **Documentation:**
    - Updated all function signatures from `@param {L.Map}` to `@param {maplibregl.Map}`
 
+### Phase 6 Improvements: Popup Display & Layer Management ✅
+
+**Files Updated:**
+
+- app/assets/javascripts/map-datasets.js
+- app/assets/javascripts/map-ui.js
+
+**Key Changes:**
+
+1. **Enhanced Popup Display:**
+   - Fixed "Feature" fallback by checking `props.NAME` first (GCN EDP property)
+   - Added support for multiple property name fields in priority order:
+     - `props.NAME` (GCN EDP - e.g., "Ashfield District")
+     - `props.name` (Generic name field)
+     - `props.Label` (Other datasets)
+     - `props.N2K_Site_N` (Natura 2000 sites)
+     - `props.ZoneName` (Zone-based datasets)
+   - Display feature type/description if available (`DESCRIPTIO` or `Description`)
+   - Popup now shows: "Ashfield District\nType: District" instead of just "Feature"
+
+2. **Layer Management During Edit Mode:**
+   - Added `disableAllLayers()` function to hide all dataset layers during drawing/editing
+   - Added `enableAllLayers()` function to restore visibility based on checkbox state
+   - Integrated into `enterEditMode()` in map-ui.js - layers hidden when drawing/editing starts
+   - Integrated into `exitEditMode()` in map-ui.js - layers restored when done
+   - Prevents user confusion and interaction issues during boundary editing
+   - Dataset layers automatically disappear when clicking "Add" or "Edit"
+   - Dataset layers automatically reappear when clicking "Confirm" or "Cancel"
+
 ## 🔄 REMAINING WORK: Phase 7
 
 ### Phase 7: UI Module (map-ui.js)
