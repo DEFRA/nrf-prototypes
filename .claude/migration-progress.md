@@ -144,16 +144,62 @@
    - **Edit mode**: move cursor
    - **Normal mode**: default cursor
 
-## 🔄 REMAINING WORK: Phases 5-7
+### Phase 5: Stats Panel (map-stats.js) ✅
 
-### Phase 5: Stats Panel (map-stats.js)
+**Files Updated:**
 
-**What needs updating:**
+- app/assets/javascripts/map-stats.js
+- app/assets/javascripts/map-drawing-controls.js
+- app/assets/javascripts/map-drawing-layers-spike.js
 
-- Update coordinate extraction: `layer.getLatLngs()` → `feature.geometry.coordinates`
-- Update edit monitoring to poll MapboxDraw instance
-- Keep Turf.js calculations unchanged (just pass different coords)
-- Keep all display logic unchanged
+**Key Changes:**
+
+1. **Coordinate Extraction:**
+   - `calculatePolygonStats(layer)` → `calculatePolygonStats(feature)`
+   - Changed from `layer.getLatLngs()[0]` to `feature.geometry.coordinates[0]`
+   - Coordinates already in `[lng, lat]` format from GeoJSON
+   - Added logic to ensure polygon is closed for Turf.js
+
+2. **Edit Monitoring:**
+   - `monitorEditingProgress()` now polls MapboxDraw instance
+   - Changed from `drawnItems.getLayers()` to `drawnItems.getAll().features`
+   - `recalculateStatsFromDrawnItems()` updated to use features
+
+3. **Event Handlers:**
+   - `handleCreated(event)` → works with `event.features[0]`
+   - `handleEdited(event)` → iterates `event.features` array
+   - `handlePolygonComplete(feature)` → accepts GeoJSON feature
+   - `handlePolygonEdit(feature)` → accepts GeoJSON feature
+   - Removed `handleDrawVertex()` (MapboxDraw doesn't support vertex events)
+
+4. **Mouse Event Handling:**
+   - `handleMouseMove()` updated for MapLibre events
+   - Changed from `event.latlng` to `event.lngLat`
+   - Converts to `{lng, lat}` format for consistency
+
+5. **Initialization:**
+   - `init(mapInstance, drawInstance)` → accepts MapLibre map + MapboxDraw
+   - Changed from Leaflet Draw events to MapboxDraw events:
+     - `L.Draw.Event.CREATED` → `map.on('draw.create')`
+     - `L.Draw.Event.EDITED` → `map.on('draw.update')`
+     - `L.Draw.Event.DELETED` → `map.on('draw.delete')`
+   - Removed DRAWSTART, DRAWSTOP, EDITSTART, EDITSTOP event listeners
+
+6. **Exported Handlers:**
+   - Added exports for `handleDrawStart`, `handleDrawStop`, `handleEditStart`, `handleEditStop`
+   - These are now called manually from map-drawing-controls.js
+   - Called in `handleStartDrawingClick` and `handleEditBoundaryClick`
+
+7. **Cleanup:**
+   - `destroy()` updated to remove MapboxDraw event listeners
+   - Removed Leaflet-specific event cleanup
+
+8. **Turf.js Integration:**
+   - All Turf.js calculations remain unchanged
+   - Just pass coordinates in correct format (`[lng, lat]`)
+   - Turf.js works seamlessly with GeoJSON coordinates
+
+## 🔄 REMAINING WORK: Phases 6-7
 
 ### Phase 6: Search & Datasets (map-search.js, map-datasets.js)
 
@@ -176,7 +222,7 @@
 - `map.invalidateSize()` → `map.resize()`
 - All other UI state logic stays unchanged
 
-## Current Working State (After Phase 4)
+## Current Working State (After Phase 5)
 
 **What Works:**
 ✅ Map loads and displays
@@ -185,17 +231,19 @@
 ✅ Style switcher button appears
 ✅ Purple catchment areas display
 ✅ Catchment popups work on click
-✅ **Drawing boundaries (Add button activates drawing mode with crosshair cursor)**
-✅ **Edit mode UI transitions (Confirm/Cancel buttons appear)**
-✅ **MapboxDraw polygon styling (red boundary)**
-✅ **Custom cursor (crosshair for drawing, move for editing)**
+✅ Drawing boundaries (Add button activates drawing mode with crosshair cursor)
+✅ Edit mode UI transitions (Confirm/Cancel buttons appear)
+✅ MapboxDraw polygon styling (red boundary)
+✅ Custom cursor (crosshair for drawing, move for editing)
+✅ **Stats panel (area, perimeter calculations during drawing/editing)**
+✅ **Real-time stats updates during polygon drawing**
+✅ **Stats panel updates when editing vertices**
 ✅ No console errors (only expected GCN warnings)
 
 **What Doesn't Work Yet:**
 ❌ Completing polygon drawing (needs user testing)
 ❌ Editing existing boundaries (direct_select mode implemented, needs user testing)
 ❌ Deleting boundaries (deleteAll() implemented, needs user testing)
-❌ Stats panel (Phase 5)
 ❌ Location search (Phase 6)
 ❌ GCN dataset layers (Phase 6)
 ❌ Toggle catchments visibility (should work, needs user testing)

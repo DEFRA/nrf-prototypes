@@ -334,6 +334,11 @@
         'mode-direct_select'
       )
       canvasContainer.classList.add('mode-simple_select')
+
+      // Notify stats panel that drawing stopped
+      if (window.MapStats && window.MapStats.handleDrawStop) {
+        window.MapStats.handleDrawStop()
+      }
     } else {
       // Enter drawing mode
       draw.changeMode('draw_polygon')
@@ -345,6 +350,11 @@
         'mode-direct_select'
       )
       canvasContainer.classList.add('mode-draw_polygon')
+
+      // Notify stats panel that drawing started
+      if (window.MapStats && window.MapStats.handleDrawStart) {
+        window.MapStats.handleDrawStart()
+      }
     }
   }
 
@@ -369,6 +379,11 @@
         'mode-direct_select'
       )
       canvasContainer.classList.add('mode-simple_select')
+
+      // Notify stats panel that editing stopped
+      if (window.MapStats && window.MapStats.handleEditStop) {
+        window.MapStats.handleEditStop()
+      }
     } else {
       // Check if there's a feature to edit
       if (hasFeatures(draw)) {
@@ -385,6 +400,11 @@
           'mode-draw_polygon'
         )
         canvasContainer.classList.add('mode-direct_select')
+
+        // Notify stats panel that editing started
+        if (window.MapStats && window.MapStats.handleEditStart) {
+          window.MapStats.handleEditStart()
+        }
       } else {
         window.MapUI.showErrorSummary(
           'No boundary to edit. Please draw a boundary first.'

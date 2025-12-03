@@ -256,9 +256,9 @@
         window.MapInitialisation.initMapHelp(map)
 
         // Initialize map statistics first so it's ready to receive updates
-        // if (window.MapStats && window.MapStats.init) {
-        //   window.MapStats.init(map, draw)
-        // }
+        if (window.MapStats && window.MapStats.init) {
+          window.MapStats.init(map, draw)
+        }
 
         // Setup drawing controls and event handlers
         window.MapDrawingControls.setupDrawingControls(

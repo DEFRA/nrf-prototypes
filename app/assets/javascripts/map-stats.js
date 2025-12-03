@@ -303,22 +303,30 @@
   // ============================================================================
 
   /**
-   * Calculate statistics for a polygon layer
-   * @param {L.Polygon} layer - Leaflet polygon layer
+   * Calculate statistics for a polygon feature (MapboxDraw version)
+   * @param {Object} feature - GeoJSON feature from MapboxDraw
    * @returns {Object} Statistics object
    */
-  function calculatePolygonStats(layer) {
+  function calculatePolygonStats(feature) {
     const deps = validateDependencies()
-    if (!layer || !deps.hasTurf) {
+    if (!feature || !deps.hasTurf) {
       return { totalArea: 0, totalPerimeter: 0, vertexCount: 0 }
     }
 
     try {
-      const latLngs = layer.getLatLngs()[0]
-      const coordinates = latLngs.map((latLng) => [latLng.lng, latLng.lat])
-      coordinates.push(coordinates[0]) // Close the polygon
+      // Extract coordinates from GeoJSON feature
+      // MapboxDraw features have coordinates in [lng, lat] format already
+      const coordinates = feature.geometry.coordinates[0]
 
-      const polygon = window.turf.polygon([coordinates])
+      // Create a closed polygon for Turf.js (if not already closed)
+      const closedCoordinates = [...coordinates]
+      const first = closedCoordinates[0]
+      const last = closedCoordinates[closedCoordinates.length - 1]
+      if (first[0] !== last[0] || first[1] !== last[1]) {
+        closedCoordinates.push(closedCoordinates[0])
+      }
+
+      const polygon = window.turf.polygon([closedCoordinates])
 
       // Calculate area in square meters
       const area = window.turf.area(polygon)
@@ -329,7 +337,7 @@
       return {
         totalArea: area,
         totalPerimeter: perimeter,
-        vertexCount: latLngs.length
+        vertexCount: coordinates.length
       }
     } catch (error) {
       console.error('[MapStats] Error calculating polygon stats:', error)
@@ -386,42 +394,8 @@
   // EVENT HANDLERS
   // ============================================================================
 
-  /**
-   * Handle drawing vertex addition
-   * @param {Object} event - Leaflet draw event
-   */
-  function handleDrawVertex(event) {
-    if (!isDrawingActive) {
-      return
-    }
-
-    // The DRAWVERTEX event contains the newly added vertex in event.layers
-    if (event.layers) {
-      const layers = event.layers.getLayers()
-
-      if (layers.length > 0) {
-        const points = layers.map((layer) => layer.getLatLng())
-        drawnPoints = points
-
-        // Set last plotted point
-        if (drawnPoints.length > 0) {
-          lastPlottedPoint = drawnPoints[drawnPoints.length - 1]
-        }
-
-        // Update stats
-        if (drawnPoints.length === 1) {
-          currentStats.currentLineDistance = 0
-          currentStats.totalPerimeter = 0
-        } else {
-          currentStats.currentLineDistance = 0
-          currentStats.totalPerimeter = calculateTotalDrawnDistance(drawnPoints)
-        }
-
-        currentStats.totalArea = 0
-        updateStatsDisplay(currentStats)
-      }
-    }
-  }
+  // Note: MapboxDraw doesn't provide DRAWVERTEX events like Leaflet Draw
+  // Real-time drawing stats are handled by monitorDrawingProgress() which polls mouse position
 
   /**
    * Calculate area for polygon being drawn (with current mouse position)
@@ -516,7 +490,7 @@
   }
 
   /**
-   * Monitor editing progress in real-time
+   * Monitor editing progress in real-time (MapboxDraw version)
    * Uses setTimeout with proper cleanup via editMonitorTimeoutId
    */
   function monitorEditingProgress() {
@@ -525,17 +499,22 @@
     const deps = validateDependencies()
     if (!deps.hasDrawnItems) return
 
-    const layers = drawnItems.getLayers()
-    if (layers.length > 0) {
+    // Get features from MapboxDraw instance
+    const features =
+      drawnItems.getAll && drawnItems.getAll().features
+        ? drawnItems.getAll().features
+        : []
+
+    if (features.length > 0) {
       // Currently only one polygon is supported
-      if (layers.length > 1) {
+      if (features.length > 1) {
         console.warn(
           '[MapStats] Multiple polygons detected, only showing stats for first polygon'
         )
       }
 
-      const layer = layers[0]
-      const stats = calculatePolygonStats(layer)
+      const feature = features[0]
+      const stats = calculatePolygonStats(feature)
 
       // Only update if stats have changed (to avoid unnecessary DOM updates)
       if (
@@ -561,13 +540,13 @@
   }
 
   /**
-   * Handle polygon completion
-   * @param {L.Polygon} layer - Completed polygon layer
+   * Handle polygon completion (MapboxDraw version)
+   * @param {Object} feature - GeoJSON feature from MapboxDraw
    */
-  function handlePolygonComplete(layer) {
-    if (!layer) return
+  function handlePolygonComplete(feature) {
+    if (!feature) return
 
-    const stats = calculatePolygonStats(layer)
+    const stats = calculatePolygonStats(feature)
     currentStats = {
       totalArea: stats.totalArea,
       currentLineDistance: 0,
@@ -578,11 +557,11 @@
   }
 
   /**
-   * Handle polygon edit
-   * @param {L.Polygon} layer - Edited polygon layer
+   * Handle polygon edit (MapboxDraw version)
+   * @param {Object} feature - GeoJSON feature from MapboxDraw
    */
-  function handlePolygonEdit(layer) {
-    handlePolygonComplete(layer)
+  function handlePolygonEdit(feature) {
+    handlePolygonComplete(feature)
   }
 
   /**
@@ -625,12 +604,17 @@
   }
 
   /**
-   * Handle mouse move during drawing
-   * @param {Object} event - Leaflet mouse event
+   * Handle mouse move during drawing (MapLibre version)
+   * @param {Object} event - MapLibre mouse event
    */
   function handleMouseMove(event) {
     if (!isDrawingActive) return
-    currentMousePosition = event.latlng
+    // MapLibre uses event.lngLat instead of event.latlng
+    // Convert to format used by rest of code: { lng, lat }
+    currentMousePosition = {
+      lng: event.lngLat.lng,
+      lat: event.lngLat.lat
+    }
   }
 
   /**
@@ -663,17 +647,22 @@
   }
 
   /**
-   * Recalculate stats from the actual drawn polygon
+   * Recalculate stats from the actual drawn polygon (MapboxDraw version)
    * Used after edit operations complete
    */
   function recalculateStatsFromDrawnItems() {
     const deps = validateDependencies()
     if (!deps.hasDrawnItems) return
 
-    const layers = drawnItems.getLayers()
-    if (layers.length > 0) {
-      const existingLayer = layers[0]
-      const stats = calculatePolygonStats(existingLayer)
+    // Get features from MapboxDraw instance
+    const features =
+      drawnItems.getAll && drawnItems.getAll().features
+        ? drawnItems.getAll().features
+        : []
+
+    if (features.length > 0) {
+      const existingFeature = features[0]
+      const stats = calculatePolygonStats(existingFeature)
       currentStats = {
         totalArea: stats.totalArea,
         currentLineDistance: 0,
@@ -714,17 +703,19 @@
   // ============================================================================
 
   /**
-   * Named handler for CREATED event
-   * @param {Object} event - Leaflet draw event
+   * Named handler for CREATED event (MapboxDraw version)
+   * @param {Object} event - MapboxDraw event with features array
    */
   function handleCreated(event) {
     isDrawingActive = false
-    handlePolygonComplete(event.layer)
+    if (event.features && event.features.length > 0) {
+      handlePolygonComplete(event.features[0])
+    }
   }
 
   /**
-   * Named handler for EDITED event
-   * @param {Object} event - Leaflet draw event
+   * Named handler for EDITED event (MapboxDraw version)
+   * @param {Object} event - MapboxDraw event with features array
    */
   function handleEdited(event) {
     isEditingActive = false
@@ -735,23 +726,26 @@
       editMonitorTimeoutId = null
     }
 
-    event.layers.eachLayer(handlePolygonEdit)
+    // Handle all edited features (usually just one)
+    if (event.features && event.features.length > 0) {
+      event.features.forEach(handlePolygonEdit)
+    }
   }
 
   /**
-   * Initialize statistics panel
-   * @param {L.Map} mapInstance - Leaflet map instance
-   * @param {L.FeatureGroup} drawnItemsGroup - Feature group for drawn items
+   * Initialize statistics panel (MapboxDraw version)
+   * @param {maplibregl.Map} mapInstance - MapLibre map instance
+   * @param {MapboxDraw} drawInstance - MapboxDraw instance
    */
-  function init(mapInstance, drawnItemsGroup) {
-    if (!mapInstance || !drawnItemsGroup) {
-      console.error('[MapStats] Map or drawnItems not provided')
+  function init(mapInstance, drawInstance) {
+    if (!mapInstance || !drawInstance) {
+      console.error('[MapStats] Map or draw instance not provided')
       return
     }
 
     // Store references
     map = mapInstance
-    drawnItems = drawnItemsGroup
+    drawnItems = drawInstance
 
     // Check if Turf.js is loaded
     if (!window.turf) {
@@ -770,19 +764,21 @@
     mapContainer.appendChild(statsPanel)
 
     // Set up event listeners with named functions for proper cleanup
-    map.on(L.Draw.Event.DRAWSTART, handleDrawStart)
-    map.on(L.Draw.Event.DRAWSTOP, handleDrawStop)
-    map.on(L.Draw.Event.DRAWVERTEX, handleDrawVertex)
-    map.on(L.Draw.Event.CREATED, handleCreated)
-    map.on(L.Draw.Event.EDITSTART, handleEditStart)
-    map.on(L.Draw.Event.EDITSTOP, handleEditStop)
-    map.on(L.Draw.Event.EDITED, handleEdited)
-    map.on(L.Draw.Event.DELETED, handlePolygonDelete)
+    // MapboxDraw uses map.on('draw.create') instead of L.Draw.Event.CREATED
+    map.on('draw.create', handleCreated)
+    map.on('draw.update', handleEdited)
+    map.on('draw.delete', handlePolygonDelete)
+
+    // Note: MapboxDraw doesn't have DRAWSTART/DRAWSTOP/DRAWVERTEX/EDITSTART/EDITSTOP events
+    // We'll handle these in the map-drawing-controls.js module
 
     // Check for existing polygon
-    if (drawnItems.getLayers().length > 0) {
-      const existingLayer = drawnItems.getLayers()[0]
-      handlePolygonComplete(existingLayer)
+    const features =
+      drawnItems.getAll && drawnItems.getAll().features
+        ? drawnItems.getAll().features
+        : []
+    if (features.length > 0) {
+      handlePolygonComplete(features[0])
     }
 
     // Note: updateIntersectionsDisplay() is called automatically by MapAPI
@@ -790,7 +786,7 @@
   }
 
   /**
-   * Clean up event listeners and remove stats panel
+   * Clean up event listeners and remove stats panel (MapboxDraw version)
    * Call this before re-initializing or when cleaning up the map
    */
   function destroy() {
@@ -798,14 +794,9 @@
 
     // Remove event listeners
     if (deps.hasMap) {
-      map.off(L.Draw.Event.DRAWSTART, handleDrawStart)
-      map.off(L.Draw.Event.DRAWSTOP, handleDrawStop)
-      map.off(L.Draw.Event.DRAWVERTEX, handleDrawVertex)
-      map.off(L.Draw.Event.CREATED, handleCreated)
-      map.off(L.Draw.Event.EDITSTART, handleEditStart)
-      map.off(L.Draw.Event.EDITSTOP, handleEditStop)
-      map.off(L.Draw.Event.EDITED, handleEdited)
-      map.off(L.Draw.Event.DELETED, handlePolygonDelete)
+      map.off('draw.create', handleCreated)
+      map.off('draw.update', handleEdited)
+      map.off('draw.delete', handlePolygonDelete)
       map.off('mousemove', handleMouseMove)
     }
 
@@ -845,7 +836,10 @@
   window.MapStats.init = init
   window.MapStats.destroy = destroy
   window.MapStats.reset = reset
-  window.MapStats.handleDrawVertex = handleDrawVertex
+  window.MapStats.handleDrawStart = handleDrawStart
+  window.MapStats.handleDrawStop = handleDrawStop
+  window.MapStats.handleEditStart = handleEditStart
+  window.MapStats.handleEditStop = handleEditStop
   window.MapStats.handlePolygonComplete = handlePolygonComplete
   window.MapStats.handlePolygonEdit = handlePolygonEdit
   window.MapStats.handlePolygonDelete = handlePolygonDelete
