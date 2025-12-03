@@ -177,12 +177,48 @@
    * @param {maplibregl.Map} map - MapLibre map instance
    */
   function addZoomControl(map) {
-    map.addControl(
-      new maplibregl.NavigationControl({
-        showCompass: false
-      }),
-      'top-right'
-    )
+    // Custom control with specific positioning to avoid info panel overlap
+    class CustomNavigationControl {
+      onAdd(map) {
+        this._map = map
+        this._container = document.createElement('div')
+        this._container.className = 'maplibregl-ctrl maplibregl-ctrl-group'
+        this._container.style.marginTop = '70px' // Move down to avoid overlapping with info panel
+
+        // Create zoom in button
+        const zoomInButton = document.createElement('button')
+        zoomInButton.className = 'maplibregl-ctrl-icon maplibregl-ctrl-zoom-in'
+        zoomInButton.type = 'button'
+        zoomInButton.title = 'Zoom in'
+        zoomInButton.setAttribute('aria-label', 'Zoom in')
+        zoomInButton.addEventListener('click', () => {
+          this._map.zoomIn()
+        })
+
+        // Create zoom out button
+        const zoomOutButton = document.createElement('button')
+        zoomOutButton.className =
+          'maplibregl-ctrl-icon maplibregl-ctrl-zoom-out'
+        zoomOutButton.type = 'button'
+        zoomOutButton.title = 'Zoom out'
+        zoomOutButton.setAttribute('aria-label', 'Zoom out')
+        zoomOutButton.addEventListener('click', () => {
+          this._map.zoomOut()
+        })
+
+        this._container.appendChild(zoomInButton)
+        this._container.appendChild(zoomOutButton)
+
+        return this._container
+      }
+
+      onRemove() {
+        this._container.parentNode.removeChild(this._container)
+        this._map = undefined
+      }
+    }
+
+    map.addControl(new CustomNavigationControl(), 'top-right')
   }
 
   // ============================================================================
@@ -266,6 +302,13 @@
       // Add click handler for popup
       const popupContent = buildCatchmentPopupContent(catchmentName, properties)
       map.on('click', layerId, (e) => {
+        // Don't show popups during drawing/editing
+        if (
+          window.MapDrawingControls &&
+          window.MapDrawingControls.isInDrawingMode()
+        ) {
+          return
+        }
         new maplibregl.Popup()
           .setLngLat(e.lngLat)
           .setHTML(popupContent)
@@ -274,9 +317,23 @@
 
       // Change cursor on hover
       map.on('mouseenter', layerId, () => {
+        // Don't change cursor during drawing/editing - keep crosshair
+        if (
+          window.MapDrawingControls &&
+          window.MapDrawingControls.isInDrawingMode()
+        ) {
+          return
+        }
         map.getCanvas().style.cursor = 'pointer'
       })
       map.on('mouseleave', layerId, () => {
+        // Don't change cursor during drawing/editing
+        if (
+          window.MapDrawingControls &&
+          window.MapDrawingControls.isInDrawingMode()
+        ) {
+          return
+        }
         map.getCanvas().style.cursor = ''
       })
 
@@ -438,36 +495,52 @@
           Array.isArray(boundaryData.coordinates) &&
           boundaryData.coordinates.length > 0
         ) {
-          const latLngs = boundaryData.coordinates.map((point) => [
-            point[1],
-            point[0]
+          // Convert coordinates to [lng, lat] format for GeoJSON
+          const coordinates = boundaryData.coordinates.map((point) => [
+            point[0], // lng
+            point[1] // lat
           ])
 
-          const existingPolygon = L.polygon(
-            latLngs,
-            window.MapDrawingControls.BOUNDARY_STYLE
+          // Ensure polygon is closed
+          if (
+            coordinates[0][0] !== coordinates[coordinates.length - 1][0] ||
+            coordinates[0][1] !== coordinates[coordinates.length - 1][1]
+          ) {
+            coordinates.push(coordinates[0])
+          }
+
+          // Create GeoJSON feature for MapboxDraw
+          const feature = {
+            type: 'Feature',
+            properties: {},
+            geometry: {
+              type: 'Polygon',
+              coordinates: [coordinates]
+            }
+          }
+
+          // Add to MapboxDraw
+          const featureIds = draw.add(feature)
+
+          // Fit map to boundary
+          const bounds = coordinates.reduce(
+            (bounds, coord) => {
+              return bounds.extend(coord)
+            },
+            new maplibregl.LngLatBounds(coordinates[0], coordinates[0])
           )
-
-          drawnItems.addLayer(existingPolygon)
-          map.fitBounds(existingPolygon.getBounds().pad(MAP_BOUNDS_PADDING))
-
-          // Ensure boundary is on top of other layers
-          drawnItems.bringToFront()
+          map.fitBounds(bounds, { padding: 50 })
 
           // Re-validate boundary via API using the polygon's current coordinates
           if (window.MapAPI) {
             window.MapAPI.showLoadingState()
 
             try {
-              // Get coordinates from the actual polygon layer
-              const latLngs = existingPolygon.getLatLngs()[0]
-              const coordinates = latLngs.map((latLng) => [
-                latLng.lng,
-                latLng.lat
-              ])
+              // Remove closing point for API (API expects open polygon)
+              const coordinatesForAPI = coordinates.slice(0, -1)
 
               const intersections =
-                await window.MapAPI.checkEDPIntersection(coordinates)
+                await window.MapAPI.checkEDPIntersection(coordinatesForAPI)
 
               // Update boundary data with fresh validation results
               const updatedBoundaryData = {
@@ -484,7 +557,7 @@
               // Update stats for area/perimeter
               // Note: Intersections display is already updated by MapAPI after API response
               if (window.MapStats && window.MapStats.handlePolygonComplete) {
-                window.MapStats.handlePolygonComplete(existingPolygon)
+                window.MapStats.handlePolygonComplete(feature)
               }
             } catch (error) {
               console.error('Error re-validating existing boundary:', error)

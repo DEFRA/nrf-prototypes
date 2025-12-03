@@ -209,7 +209,12 @@
       html +=
         '<ul class="govuk-list govuk-list--bullet" style="margin: 0; font-size: 14px; padding-left: 20px;">'
       gcnAreas.forEach((area) => {
-        html += `<li style="margin-bottom: 5px;">${area.name}</li>`
+        // Display name and type if available from properties
+        let displayText = area.name
+        if (area.properties && area.properties.DESCRIPTIO) {
+          displayText += ` (${area.properties.DESCRIPTIO})`
+        }
+        html += `<li style="margin-bottom: 5px;">${displayText}</li>`
       })
       html += '</ul>'
     } else {
