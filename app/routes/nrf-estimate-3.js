@@ -114,6 +114,13 @@ function checkEDPIntersections(coordinates) {
     if (gcnEdpData && gcnEdpData.features) {
       for (const feature of gcnEdpData.features) {
         if (turf.booleanIntersects(boundaryPolygon, feature)) {
+          // Debug logging
+          if (!feature.properties.NAME) {
+            console.log(
+              'WARNING: GCN feature missing NAME property:',
+              feature.properties
+            )
+          }
           const name = feature.properties.NAME || 'GCN EDP Area'
           intersections.push({
             type: 'gcn',
