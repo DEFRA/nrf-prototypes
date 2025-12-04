@@ -183,25 +183,36 @@
         this._map = map
         this._container = document.createElement('div')
         this._container.className = 'maplibregl-ctrl maplibregl-ctrl-group'
-        this._container.style.marginTop = '70px' // Move down to avoid overlapping with info panel
 
-        // Create zoom in button
+        // Create zoom in button with explicit + text
         const zoomInButton = document.createElement('button')
         zoomInButton.className = 'maplibregl-ctrl-icon maplibregl-ctrl-zoom-in'
         zoomInButton.type = 'button'
         zoomInButton.title = 'Zoom in'
         zoomInButton.setAttribute('aria-label', 'Zoom in')
+        zoomInButton.textContent = '+'
+        zoomInButton.style.cssText = `
+          font-size: 20px;
+          font-weight: bold;
+          line-height: 1;
+        `
         zoomInButton.addEventListener('click', () => {
           this._map.zoomIn()
         })
 
-        // Create zoom out button
+        // Create zoom out button with explicit - text
         const zoomOutButton = document.createElement('button')
         zoomOutButton.className =
           'maplibregl-ctrl-icon maplibregl-ctrl-zoom-out'
         zoomOutButton.type = 'button'
         zoomOutButton.title = 'Zoom out'
         zoomOutButton.setAttribute('aria-label', 'Zoom out')
+        zoomOutButton.textContent = '−'
+        zoomOutButton.style.cssText = `
+          font-size: 20px;
+          font-weight: bold;
+          line-height: 1;
+        `
         zoomOutButton.addEventListener('click', () => {
           this._map.zoomOut()
         })

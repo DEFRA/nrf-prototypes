@@ -383,3 +383,8 @@
 .maplibregl-ctrl-bottom-left {
   pointer-events: auto !important;
 }
+
+/* Position zoom controls to avoid info panel overlap */
+.maplibregl-ctrl-top-right {
+  margin-bottom: 20px !important;
+}
