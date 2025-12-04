@@ -813,7 +813,7 @@ router.post(ROUTES.ROOM_COUNT, (req, res) => {
 
   const typeMapping = {
     Hotel: 'hotelCount',
-    'House of multiple occupation (HMO)': 'hmoCount',
+    'House in multiple occupation (HMO)': 'hmoCount',
     'Residential institution': 'residentialInstitutionCount'
   }
 

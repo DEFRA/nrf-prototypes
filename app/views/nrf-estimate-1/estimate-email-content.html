@@ -36,12 +36,12 @@ Fund Levy{% else %}Get an estimate for Nature Restoration Fund Levy{% endif %} -
                 {% endif %}
                 {% if data.buildingTypes.includes('Hotel') and data.roomCounts.hotelCount %}
                 hotel buildings with a total of {{ data.roomCounts.hotelCount }} rooms
-                {% if data.buildingTypes.includes('House of multiple occupation (HMO)') and data.roomCounts.hmoCount
+                {% if data.buildingTypes.includes('House in multiple occupation (HMO)') and data.roomCounts.hmoCount
                 %}, {% endif %}
                 {% endif %}
-                {% if data.buildingTypes.includes('House of multiple occupation (HMO)') and data.roomCounts.hmoCount
+                {% if data.buildingTypes.includes('House in multiple occupation (HMO)') and data.roomCounts.hmoCount
                 %}
-                house of multiple occupation buildings with a total of {{ data.roomCounts.hmoCount }} rooms
+                House in multiple occupation buildings with a total of {{ data.roomCounts.hmoCount }} rooms
                 {% if data.buildingTypes.includes('Residential institution') and
                 data.roomCounts.residentialInstitutionCount %}, {% endif %}
                 {% endif %}
@@ -57,7 +57,7 @@ Fund Levy{% else %}Get an estimate for Nature Restoration Fund Levy{% endif %} -
         <h2 class="govuk-heading-m">What you might need to pay</h2>
 
         <p class="govuk-body">Based on the information you have provided, the development falls into the catchment
-            area for the Nature Restoration Fund Nutrients Levy.</p>
+            area for the Nature Restoration Fund nutrients Levy.</p>
 
         <p class="govuk-body">The estimated total amount you may need to pay if you develop in this area is:
             <strong>£{{ data.levyAmount or '2,500' }}</strong>

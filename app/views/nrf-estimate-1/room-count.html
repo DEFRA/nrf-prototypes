@@ -40,7 +40,7 @@ Nature Restoration Fund Levy{% else %}Get an estimate for Nature Restoration Fun
             <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
                 <h1 class="govuk-label-wrapper">
                     <label class="govuk-label govuk-label--l" for="room-count">
-                        Enter the number of rooms in your {{ buildingType | lower if buildingType !== 'House of multiple occupation (HMO)' else buildingType }} building(s) planned for the
+                        Enter the number of rooms in your {{ buildingType | lower if buildingType !== 'House in multiple occupation (HMO)' else buildingType }} building(s) planned for the
                         development
                     </label>
                 </h1>
@@ -53,7 +53,7 @@ Nature Restoration Fund Levy{% else %}Get an estimate for Nature Restoration Fun
 
                 <input class="govuk-input govuk-input--width-5 {% if error %}govuk-input--error{% endif %}"
                     id="room-count" name="room-count" type="number" pattern="[0-9]*" inputmode="numeric"
-                    value="{% if data.roomCounts %}{% if buildingType === 'Hotel' and data.roomCounts.hotelCount %}{{ data.roomCounts.hotelCount }}{% elif buildingType === 'House of multiple occupation (HMO)' and data.roomCounts.hmoCount %}{{ data.roomCounts.hmoCount }}{% elif buildingType === 'Residential institution' and data.roomCounts.residentialInstitutionCount %}{{ data.roomCounts.residentialInstitutionCount }}{% endif %}{% endif %}">
+                    value="{% if data.roomCounts %}{% if buildingType === 'Hotel' and data.roomCounts.hotelCount %}{{ data.roomCounts.hotelCount }}{% elif buildingType === 'House in multiple occupation (HMO)' and data.roomCounts.hmoCount %}{{ data.roomCounts.hmoCount }}{% elif buildingType === 'Residential institution' and data.roomCounts.residentialInstitutionCount %}{{ data.roomCounts.residentialInstitutionCount }}{% endif %}{% endif %}">
             </div>
 
             <button class="govuk-button" data-module="govuk-button" type="submit">

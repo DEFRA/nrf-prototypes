@@ -789,7 +789,7 @@ router.post(ROUTES.ROOM_COUNT, (req, res) => {
 
   const typeMapping = {
     Hotel: 'hotelCount',
-    'House of multiple occupation (HMO)': 'hmoCount',
+    'House in multiple occupation (HMO)': 'hmoCount',
     'Residential institution': 'residentialInstitutionCount'
   }
 
@@ -1435,7 +1435,7 @@ function formatBuildingTypeDetails(data) {
 
   const hmoCount = Number(roomCounts.hmoCount)
   if (!Number.isNaN(hmoCount) && hmoCount > 0) {
-    parts.push(`${hmoCount} house of multiple occupation rooms`)
+    parts.push(`${hmoCount} House in multiple occupation rooms`)
   }
 
   const residentialInstitutionCount = Number(
