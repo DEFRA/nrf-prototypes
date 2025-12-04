@@ -159,6 +159,28 @@
   }
 
   /**
+   * Show loading state for intersections
+   * Displays a loading message while waiting for API response
+   */
+  function showIntersectionsLoading() {
+    const container = document.getElementById('stat-intersections-container')
+    const content = document.getElementById('stat-intersections-content')
+
+    if (!container || !content) {
+      return
+    }
+
+    const loadingHtml = `
+      <div style="text-align: center; padding: 10px; color: #505a5f;">
+        <p class="govuk-body-s" style="margin: 0;">Loading EDP information...</p>
+      </div>
+    `
+
+    content.innerHTML = loadingHtml
+    container.style.display = 'block'
+  }
+
+  /**
    * Update intersections display
    * Shows lists of intersecting nutrient and GCN EDP areas
    * Called directly by MapAPI after each API response with fresh data
@@ -845,4 +867,5 @@
   window.MapStats.handlePolygonEdit = handlePolygonEdit
   window.MapStats.handlePolygonDelete = handlePolygonDelete
   window.MapStats.updateIntersections = updateIntersectionsDisplay
+  window.MapStats.showIntersectionsLoading = showIntersectionsLoading
 })()
