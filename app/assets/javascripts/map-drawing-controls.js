@@ -56,6 +56,7 @@
   let isEditing = false
   let drawnItems = null
   let drawInstance = null
+  let originalFeatureBeforeEdit = null // Store original feature before editing
 
   // ============================================================================
   // MAPBOXDRAW HELPER FUNCTIONS
@@ -387,8 +388,12 @@
     } else {
       // Check if there's a feature to edit
       if (hasFeatures(draw)) {
+        // Store original feature before editing so we can restore on cancel
+        const currentFeature = getFeatures(draw)[0]
+        originalFeatureBeforeEdit = JSON.parse(JSON.stringify(currentFeature))
+
         // Enter direct_select mode for vertex editing
-        const featureId = getFeatures(draw)[0].id
+        const featureId = currentFeature.id
         draw.changeMode('direct_select', {
           featureId: featureId
         })
@@ -446,6 +451,9 @@
 
       isEditing = false
       isDrawing = false
+
+      // Clear the backup since boundary was deleted
+      originalFeatureBeforeEdit = null
     } else {
       window.MapUI.showErrorSummary('No boundary to delete.')
     }
@@ -463,6 +471,9 @@
       draw.changeMode('simple_select')
       isDrawing = false
       isEditing = false
+
+      // Clear the backup since edit was confirmed
+      originalFeatureBeforeEdit = null
     }
 
     window.MapUI.hideErrorSummary()
@@ -508,11 +519,47 @@
    * @param {maplibregl.Map} map - MapLibre map instance
    */
   function handleCancelEdit(drawControl, currentDrawingLayer, draw, map) {
-    // Exit any active modes and return to simple_select
-    if (isDrawing || isEditing) {
-      draw.changeMode('simple_select')
+    // Handle cancel during drawing - delete the incomplete polygon
+    if (isDrawing) {
+      draw.deleteAll()
       isDrawing = false
+      draw.changeMode('simple_select')
+
+      // Notify stats panel to reset
+      if (window.MapStats && window.MapStats.reset) {
+        window.MapStats.reset()
+      }
+    }
+
+    // Handle cancel during editing - restore original feature
+    if (isEditing) {
+      if (originalFeatureBeforeEdit) {
+        // Delete current modified feature
+        draw.deleteAll()
+
+        // Restore original feature
+        draw.add(originalFeatureBeforeEdit)
+
+        // Recalculate stats with original feature
+        if (
+          window.MapStats &&
+          window.MapStats.handlePolygonComplete &&
+          originalFeatureBeforeEdit
+        ) {
+          window.MapStats.handlePolygonComplete(originalFeatureBeforeEdit)
+        }
+
+        // Clear the backup
+        originalFeatureBeforeEdit = null
+      }
+
       isEditing = false
+      draw.changeMode('simple_select')
+
+      // Notify stats panel that editing stopped
+      if (window.MapStats && window.MapStats.handleEditStop) {
+        window.MapStats.handleEditStop()
+      }
     }
 
     window.MapUI.hideErrorSummary()
