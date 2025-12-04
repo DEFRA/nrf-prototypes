@@ -159,6 +159,14 @@
 
       // Add click handler for popups
       mapInstance.on('click', fillLayerId, (e) => {
+        // Don't show popups during drawing/editing
+        if (
+          window.MapDrawingControls &&
+          window.MapDrawingControls.isInDrawingMode()
+        ) {
+          return
+        }
+
         if (!e.features || e.features.length === 0) return
 
         const feature = e.features[0]
@@ -188,10 +196,24 @@
 
       // Change cursor on hover
       mapInstance.on('mouseenter', fillLayerId, () => {
+        // Don't change cursor during drawing/editing - keep crosshair
+        if (
+          window.MapDrawingControls &&
+          window.MapDrawingControls.isInDrawingMode()
+        ) {
+          return
+        }
         mapInstance.getCanvas().style.cursor = 'pointer'
       })
 
       mapInstance.on('mouseleave', fillLayerId, () => {
+        // Don't change cursor during drawing/editing
+        if (
+          window.MapDrawingControls &&
+          window.MapDrawingControls.isInDrawingMode()
+        ) {
+          return
+        }
         mapInstance.getCanvas().style.cursor = ''
       })
 
@@ -227,6 +249,17 @@
       return Promise.resolve(loadedLayers[datasetId])
     }
 
+    if (dataset.type === 'special') {
+      // Special datasets like nutrientEdp use existing catchment layers
+      // Return a placeholder since the layers are already loaded
+      const placeholderLayer = {
+        datasetId: datasetId,
+        isSpecial: true
+      }
+      loadedLayers[datasetId] = placeholderLayer
+      return Promise.resolve(placeholderLayer)
+    }
+
     if (dataset.type === 'geojson') {
       const url = dataset.getUrl()
       if (!url) {
@@ -256,10 +289,22 @@
       return
     }
 
+    // Special handling for nutrientEdp (uses MapStyles catchment layers)
+    if (datasetId === 'nutrientEdp') {
+      window.MapStyles.showCatchmentLayers(mapInstance)
+      console.log(`Dataset shown: ${datasetId}`)
+      return
+    }
+
     loadDataset(datasetId)
       .then((layerInfo) => {
         if (!layerInfo) {
           console.warn(`Dataset ${datasetId} could not be loaded`)
+          return
+        }
+
+        // Skip if this is a special dataset (already handled above)
+        if (layerInfo.isSpecial) {
           return
         }
 
@@ -291,8 +336,24 @@
    * @param {string} datasetId - Dataset ID
    */
   function hideDataset(datasetId) {
+    if (!mapInstance) {
+      return
+    }
+
+    // Special handling for nutrientEdp (uses MapStyles catchment layers)
+    if (datasetId === 'nutrientEdp') {
+      window.MapStyles.hideCatchmentLayers(mapInstance)
+      console.log(`Dataset hidden: ${datasetId}`)
+      return
+    }
+
     const layerInfo = loadedLayers[datasetId]
-    if (!layerInfo || !mapInstance) {
+    if (!layerInfo) {
+      return
+    }
+
+    // Skip if this is a special dataset (already handled above)
+    if (layerInfo.isSpecial) {
       return
     }
 
@@ -541,31 +602,13 @@
 
   /**
    * Disable all dataset layers (for drawing/editing mode)
-   * Hides all dataset layers and disables click interactions
+   * Note: Currently does nothing - layers stay visible during drawing/editing
+   * Popups and cursor changes are disabled via isInDrawingMode() checks instead
    */
   function disableAllLayers() {
-    if (!mapInstance) return
-
-    Object.keys(loadedLayers).forEach((datasetId) => {
-      const layerInfo = loadedLayers[datasetId]
-      if (!layerInfo) return
-
-      // Hide fill and border layers
-      if (mapInstance.getLayer(layerInfo.fillLayerId)) {
-        mapInstance.setLayoutProperty(
-          layerInfo.fillLayerId,
-          'visibility',
-          'none'
-        )
-      }
-      if (mapInstance.getLayer(layerInfo.borderLayerId)) {
-        mapInstance.setLayoutProperty(
-          layerInfo.borderLayerId,
-          'visibility',
-          'none'
-        )
-      }
-    })
+    // Intentionally left empty - we no longer hide layers during drawing/editing
+    // The cursor and popup behavior is controlled by isInDrawingMode() checks
+    // in the event handlers instead
   }
 
   /**

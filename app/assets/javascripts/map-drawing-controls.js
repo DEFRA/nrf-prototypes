@@ -757,6 +757,14 @@
     return { isDrawing, isEditing }
   }
 
+  /**
+   * Check if currently in drawing or editing mode
+   * @returns {boolean} True if in drawing or editing mode
+   */
+  function isInDrawingMode() {
+    return isDrawing || isEditing
+  }
+
   // Export functions to global namespace
   window.MapDrawingControls.configureDrawTooltips = configureDrawTooltips
   window.MapDrawingControls.createDrawControl = createDrawControl
@@ -765,6 +773,7 @@
   window.MapDrawingControls.initAccessibleControls = initAccessibleControls
   window.MapDrawingControls.updateBoundaryData = updateBoundaryData
   window.MapDrawingControls.getDrawingState = getDrawingState
+  window.MapDrawingControls.isInDrawingMode = isInDrawingMode
   window.MapDrawingControls.setDrawnItems = setDrawnItems
   window.MapDrawingControls.getDrawnItems = getDrawnItems
   window.MapDrawingControls.setDrawInstance = setDrawInstance

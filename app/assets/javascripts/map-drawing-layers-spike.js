@@ -247,7 +247,7 @@
         })
 
         // Initialize location search
-        // window.MapSearch.initLocationSearch(map)
+        window.MapSearch.initLocationSearch(map)
 
         // Initialize map key
         window.MapInitialisation.initMapKey(map)
