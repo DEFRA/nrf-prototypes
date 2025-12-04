@@ -168,10 +168,34 @@
   border: none;
 }
 
-/* Hide the default Leaflet draw toolbar and action buttons since we're using our own controls */
-.leaflet-draw-toolbar,
-.leaflet-draw-actions {
+/* Hide the default Mapbox GL Draw toolbar since we're using our own controls */
+.mapbox-gl-draw_ctrl-draw-btn,
+.mapbox-gl-draw_trash {
   display: none !important;
+}
+
+/* Custom cursor for MapboxDraw modes - high specificity to override MapLibre defaults */
+.maplibregl-canvas-container.maplibregl-interactive.maplibregl-touch-zoom-rotate.maplibregl-touch-drag-pan.mode-draw_polygon,
+.maplibregl-canvas-container.maplibregl-interactive.maplibregl-touch-zoom-rotate.mode-draw_polygon,
+.maplibregl-canvas-container.maplibregl-interactive.maplibregl-touch-drag-pan.mode-draw_polygon,
+.maplibregl-canvas-container.maplibregl-interactive.mode-draw_polygon {
+  cursor: crosshair !important;
+}
+
+.maplibregl-canvas-container.maplibregl-interactive.maplibregl-touch-zoom-rotate.maplibregl-touch-drag-pan.mode-direct_select,
+.maplibregl-canvas-container.maplibregl-interactive.maplibregl-touch-zoom-rotate.mode-direct_select,
+.maplibregl-canvas-container.maplibregl-interactive.maplibregl-touch-drag-pan.mode-direct_select,
+.maplibregl-canvas-container.maplibregl-interactive.mode-direct_select {
+  cursor: move !important;
+}
+
+/* Also target the canvas element directly */
+.maplibregl-canvas-container.mode-draw_polygon .maplibregl-canvas {
+  cursor: crosshair !important;
+}
+
+.maplibregl-canvas-container.mode-direct_select .maplibregl-canvas {
+  cursor: move !important;
 }
 
 /* Responsive design for smaller screens - GOV.UK compliant */
@@ -353,4 +377,14 @@
 /* Utility class for hiding elements */
 .hidden {
   display: none !important;
+}
+
+/* Override MapLibre's pointer-events: none on control containers */
+.maplibregl-ctrl-bottom-left {
+  pointer-events: auto !important;
+}
+
+/* Position zoom controls to avoid info panel overlap */
+.maplibregl-ctrl-top-right {
+  margin-bottom: 20px !important;
 }

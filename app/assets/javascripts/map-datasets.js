@@ -32,8 +32,9 @@
       : {}
   )
 
-  // Store for loaded layers
+  // Store for loaded layers and their event handlers
   const loadedLayers = {}
+  const layerEventHandlers = {} // Store event handlers for cleanup
   let mapInstance = null
 
   // Cookie name for persisting layer visibility
@@ -107,47 +108,231 @@
   // ============================================================================
 
   /**
-   * Create a GeoJSON layer
+   * Create a GeoJSON layer (MapLibre version)
    * @param {Object} dataset - Dataset configuration
    * @param {Object} data - GeoJSON data
-   * @returns {L.Layer} Leaflet layer
+   * @returns {Object} Layer metadata {sourceId, fillLayerId, borderLayerId}
    */
   function createGeoJSONLayer(dataset, data) {
+    if (!mapInstance) {
+      console.error('Map not initialized')
+      return null
+    }
+
     // Get style - use getStyle() if available for dynamic styles, otherwise use static style
     const getStyleFn = dataset.getStyle || (() => dataset.style)
+    const style = getStyleFn()
 
-    const layer = L.geoJSON(data, {
-      style: function () {
-        const style = getStyleFn()
-        return {
-          color: style.color,
-          fillColor: style.fillColor,
-          fillOpacity: style.fillOpacity,
-          weight: style.weight,
-          opacity: style.opacity || 0.8
+    // Create unique IDs for this dataset's layers
+    const sourceId = `${dataset.id}-source`
+    const fillLayerId = `${dataset.id}-fill`
+    const borderLayerId = `${dataset.id}-border`
+
+    try {
+      // Add GeoJSON source
+      mapInstance.addSource(sourceId, {
+        type: 'geojson',
+        data: data
+      })
+
+      // Add fill layer
+      mapInstance.addLayer({
+        id: fillLayerId,
+        type: 'fill',
+        source: sourceId,
+        paint: {
+          'fill-color': style.fillColor || style.color,
+          'fill-opacity': style.fillOpacity || 0.3
         }
-      },
-      onEachFeature: function (feature, layer) {
+      })
+
+      // Add border layer
+      mapInstance.addLayer({
+        id: borderLayerId,
+        type: 'line',
+        source: sourceId,
+        paint: {
+          'line-color': style.color,
+          'line-width': style.weight || 2,
+          'line-opacity': style.opacity || 0.8
+        }
+      })
+
+      // Create event handlers and store them for cleanup
+      const clickHandler = (e) => {
+        // Don't show popups during drawing/editing
+        if (
+          window.MapDrawingControls &&
+          window.MapDrawingControls.isInDrawingMode()
+        ) {
+          return
+        }
+
+        if (!e.features || e.features.length === 0) return
+
+        const feature = e.features[0]
         const props = feature.properties
+
+        // Get name from various possible property fields
         const name =
-          props.Label ||
-          props.N2K_Site_N ||
-          props.name ||
-          props.ZoneName ||
+          props.NAME || // GCN EDP (e.g., "Ashfield District")
+          props.name || // Generic name field
+          props.Label || // Other datasets
+          props.N2K_Site_N || // Natura 2000 sites
+          props.ZoneName || // Zone-based datasets
           'Feature'
-        layer.bindPopup(`<strong>${name}</strong>`)
+
+        // Build description with type if available
+        let description = `<strong>${name}</strong>`
+        if (props.DESCRIPTIO || props.Description) {
+          const type = props.DESCRIPTIO || props.Description
+          description += `<br><small>Type: ${type}</small>`
+        }
+
+        new maplibregl.Popup()
+          .setLngLat(e.lngLat)
+          .setHTML(description)
+          .addTo(mapInstance)
       }
-    })
 
-    // Store reference to dataset for style updates
-    layer._datasetId = dataset.id
+      const mouseenterHandler = () => {
+        // Don't change cursor during drawing/editing - keep crosshair
+        if (
+          window.MapDrawingControls &&
+          window.MapDrawingControls.isInDrawingMode()
+        ) {
+          return
+        }
+        mapInstance.getCanvas().style.cursor = 'pointer'
+      }
 
-    return layer
+      const mouseleaveHandler = () => {
+        // Don't change cursor during drawing/editing
+        if (
+          window.MapDrawingControls &&
+          window.MapDrawingControls.isInDrawingMode()
+        ) {
+          return
+        }
+        mapInstance.getCanvas().style.cursor = ''
+      }
+
+      // Add event handlers to map
+      mapInstance.on('click', fillLayerId, clickHandler)
+      mapInstance.on('mouseenter', fillLayerId, mouseenterHandler)
+      mapInstance.on('mouseleave', fillLayerId, mouseleaveHandler)
+
+      // Store handlers for cleanup
+      layerEventHandlers[dataset.id] = {
+        fillLayerId,
+        clickHandler,
+        mouseenterHandler,
+        mouseleaveHandler
+      }
+
+      return {
+        sourceId,
+        fillLayerId,
+        borderLayerId,
+        datasetId: dataset.id
+      }
+    } catch (error) {
+      console.error(`Error creating GeoJSON layer for ${dataset.id}:`, error)
+      return null
+    }
   }
 
   // ============================================================================
   // DATASET MANAGEMENT
   // ============================================================================
+
+  /**
+   * Re-attach event listeners to a layer
+   * Used when showing a previously hidden layer
+   * @param {string} datasetId - Dataset ID
+   */
+  function reattachEventListeners(datasetId) {
+    const layerInfo = loadedLayers[datasetId]
+    const dataset = DATASETS[datasetId]
+
+    if (!layerInfo || !dataset || layerInfo.isSpecial) {
+      return
+    }
+
+    // Only re-attach if handlers don't already exist
+    if (layerEventHandlers[datasetId]) {
+      return
+    }
+
+    const fillLayerId = layerInfo.fillLayerId
+
+    // Create the same event handlers as in createGeoJSONLayer
+    const clickHandler = (e) => {
+      if (
+        window.MapDrawingControls &&
+        window.MapDrawingControls.isInDrawingMode()
+      ) {
+        return
+      }
+
+      if (!e.features || e.features.length === 0) return
+
+      const feature = e.features[0]
+      const props = feature.properties
+
+      const name =
+        props.NAME ||
+        props.name ||
+        props.Label ||
+        props.N2K_Site_N ||
+        props.ZoneName ||
+        'Feature'
+
+      let description = `<strong>${name}</strong>`
+      if (props.DESCRIPTIO || props.Description) {
+        const type = props.DESCRIPTIO || props.Description
+        description += `<br><small>Type: ${type}</small>`
+      }
+
+      new maplibregl.Popup()
+        .setLngLat(e.lngLat)
+        .setHTML(description)
+        .addTo(mapInstance)
+    }
+
+    const mouseenterHandler = () => {
+      if (
+        window.MapDrawingControls &&
+        window.MapDrawingControls.isInDrawingMode()
+      ) {
+        return
+      }
+      mapInstance.getCanvas().style.cursor = 'pointer'
+    }
+
+    const mouseleaveHandler = () => {
+      if (
+        window.MapDrawingControls &&
+        window.MapDrawingControls.isInDrawingMode()
+      ) {
+        return
+      }
+      mapInstance.getCanvas().style.cursor = ''
+    }
+
+    // Add event handlers to map
+    mapInstance.on('click', fillLayerId, clickHandler)
+    mapInstance.on('mouseenter', fillLayerId, mouseenterHandler)
+    mapInstance.on('mouseleave', fillLayerId, mouseleaveHandler)
+
+    // Store handlers for cleanup
+    layerEventHandlers[datasetId] = {
+      fillLayerId,
+      clickHandler,
+      mouseenterHandler,
+      mouseleaveHandler
+    }
+  }
 
   /**
    * Load a dataset
@@ -163,6 +348,17 @@
 
     if (loadedLayers[datasetId]) {
       return Promise.resolve(loadedLayers[datasetId])
+    }
+
+    if (dataset.type === 'special') {
+      // Special datasets like nutrientEdp use existing catchment layers
+      // Return a placeholder since the layers are already loaded
+      const placeholderLayer = {
+        datasetId: datasetId,
+        isSpecial: true
+      }
+      loadedLayers[datasetId] = placeholderLayer
+      return Promise.resolve(placeholderLayer)
     }
 
     if (dataset.type === 'geojson') {
@@ -185,7 +381,7 @@
   }
 
   /**
-   * Show a dataset on the map
+   * Show a dataset on the map (MapLibre version)
    * @param {string} datasetId - Dataset ID
    */
   function showDataset(datasetId) {
@@ -194,23 +390,45 @@
       return
     }
 
-    loadDataset(datasetId)
-      .then((layer) => {
-        if (!mapInstance.hasLayer(layer)) {
-          layer.addTo(mapInstance)
-        }
-        console.log(`Dataset shown: ${datasetId}`)
+    // Special handling for nutrientEdp (uses MapStyles catchment layers)
+    if (datasetId === 'nutrientEdp') {
+      window.MapStyles.showCatchmentLayers(mapInstance)
+      console.log(`Dataset shown: ${datasetId}`)
+      return
+    }
 
-        // Ensure red line boundary stays on top of data layers
-        if (
-          window.MapDrawingControls &&
-          window.MapDrawingControls.getDrawnItems
-        ) {
-          const drawnItems = window.MapDrawingControls.getDrawnItems()
-          if (drawnItems) {
-            drawnItems.bringToFront()
-          }
+    loadDataset(datasetId)
+      .then((layerInfo) => {
+        if (!layerInfo) {
+          console.warn(`Dataset ${datasetId} could not be loaded`)
+          return
         }
+
+        // Skip if this is a special dataset (already handled above)
+        if (layerInfo.isSpecial) {
+          return
+        }
+
+        // Re-attach event listeners if they were removed
+        reattachEventListeners(datasetId)
+
+        // Set visibility to visible for both fill and border layers
+        if (mapInstance.getLayer(layerInfo.fillLayerId)) {
+          mapInstance.setLayoutProperty(
+            layerInfo.fillLayerId,
+            'visibility',
+            'visible'
+          )
+        }
+        if (mapInstance.getLayer(layerInfo.borderLayerId)) {
+          mapInstance.setLayoutProperty(
+            layerInfo.borderLayerId,
+            'visibility',
+            'visible'
+          )
+        }
+
+        console.log(`Dataset shown: ${datasetId}`)
       })
       .catch((error) => {
         console.error(`Error showing dataset ${datasetId}:`, error)
@@ -218,15 +436,61 @@
   }
 
   /**
-   * Hide a dataset from the map
+   * Hide a dataset from the map (MapLibre version)
    * @param {string} datasetId - Dataset ID
    */
   function hideDataset(datasetId) {
-    const layer = loadedLayers[datasetId]
-    if (layer && mapInstance && mapInstance.hasLayer(layer)) {
-      mapInstance.removeLayer(layer)
-      console.log(`Dataset hidden: ${datasetId}`)
+    if (!mapInstance) {
+      return
     }
+
+    // Special handling for nutrientEdp (uses MapStyles catchment layers)
+    if (datasetId === 'nutrientEdp') {
+      window.MapStyles.hideCatchmentLayers(mapInstance)
+      console.log(`Dataset hidden: ${datasetId}`)
+      return
+    }
+
+    const layerInfo = loadedLayers[datasetId]
+    if (!layerInfo) {
+      return
+    }
+
+    // Skip if this is a special dataset (already handled above)
+    if (layerInfo.isSpecial) {
+      return
+    }
+
+    // Clean up event listeners to prevent memory leak
+    const handlers = layerEventHandlers[datasetId]
+    if (handlers) {
+      mapInstance.off('click', handlers.fillLayerId, handlers.clickHandler)
+      mapInstance.off(
+        'mouseenter',
+        handlers.fillLayerId,
+        handlers.mouseenterHandler
+      )
+      mapInstance.off(
+        'mouseleave',
+        handlers.fillLayerId,
+        handlers.mouseleaveHandler
+      )
+      delete layerEventHandlers[datasetId]
+    }
+
+    // Set visibility to none for both fill and border layers
+    if (mapInstance.getLayer(layerInfo.fillLayerId)) {
+      mapInstance.setLayoutProperty(layerInfo.fillLayerId, 'visibility', 'none')
+    }
+    if (mapInstance.getLayer(layerInfo.borderLayerId)) {
+      mapInstance.setLayoutProperty(
+        layerInfo.borderLayerId,
+        'visibility',
+        'none'
+      )
+    }
+
+    console.log(`Dataset hidden: ${datasetId}`)
   }
 
   /**
@@ -253,9 +517,9 @@
   }
 
   /**
-   * Get dataset layer (for external use)
+   * Get dataset layer info (for external use)
    * @param {string} datasetId - Dataset ID
-   * @returns {L.Layer|null} The layer or null
+   * @returns {Object|null} Layer info object {sourceId, fillLayerId, borderLayerId} or null
    */
   function getLayer(datasetId) {
     return loadedLayers[datasetId] || null
@@ -353,8 +617,8 @@
   // ============================================================================
 
   /**
-   * Initialize the datasets manager
-   * @param {L.Map} map - Leaflet map instance
+   * Initialize the datasets manager (MapLibre version)
+   * @param {maplibregl.Map} map - MapLibre map instance
    */
   function init(map) {
     mapInstance = map
@@ -391,64 +655,96 @@
   }
 
   /**
-   * Update layer styles based on current map style
+   * Update layer styles based on current map style (MapLibre version)
    * Called when map style changes between street and satellite
    */
   function updateLayerStyles() {
     if (!mapInstance) return
 
     Object.keys(loadedLayers).forEach((datasetId) => {
-      const layer = loadedLayers[datasetId]
+      const layerInfo = loadedLayers[datasetId]
       const dataset = DATASETS[datasetId]
 
-      if (layer && dataset && dataset.getStyle) {
+      if (layerInfo && dataset && dataset.getStyle) {
         // Update style for layers with dynamic styling
         const newStyle = dataset.getStyle()
-        layer.setStyle({
-          color: newStyle.color,
-          fillColor: newStyle.fillColor,
-          fillOpacity: newStyle.fillOpacity,
-          weight: newStyle.weight,
-          opacity: newStyle.opacity || 0.8
-        })
+
+        // Update fill layer
+        if (mapInstance.getLayer(layerInfo.fillLayerId)) {
+          mapInstance.setPaintProperty(
+            layerInfo.fillLayerId,
+            'fill-color',
+            newStyle.fillColor || newStyle.color
+          )
+          mapInstance.setPaintProperty(
+            layerInfo.fillLayerId,
+            'fill-opacity',
+            newStyle.fillOpacity || 0.3
+          )
+        }
+
+        // Update border layer
+        if (mapInstance.getLayer(layerInfo.borderLayerId)) {
+          mapInstance.setPaintProperty(
+            layerInfo.borderLayerId,
+            'line-color',
+            newStyle.color
+          )
+          mapInstance.setPaintProperty(
+            layerInfo.borderLayerId,
+            'line-width',
+            newStyle.weight || 2
+          )
+          mapInstance.setPaintProperty(
+            layerInfo.borderLayerId,
+            'line-opacity',
+            newStyle.opacity || 0.8
+          )
+        }
       }
     })
   }
 
   /**
-   * Refresh all visible datasets (re-add them to map)
+   * Refresh all visible datasets (MapLibre version)
    * Called after map style changes to ensure layers persist
+   * Note: MapLibre preserves layers automatically on style change, so we just update styles
    */
   function refreshLayers() {
     if (!mapInstance) return
 
-    // First update styles based on new map style
+    // Update styles based on new map style
     updateLayerStyles()
 
-    Object.keys(loadedLayers).forEach((datasetId) => {
-      const layer = loadedLayers[datasetId]
-      const checkbox = document.querySelector(`#dataset-${datasetId}`)
+    // Note: MapLibre automatically preserves layer visibility state
+    // No need to manually re-add layers like with Leaflet
+    console.log('[MapDatasets] Refreshed layer styles after map style change')
+  }
 
-      if (checkbox && checkbox.checked && layer) {
-        // Remove and re-add to ensure it's on top and visible
-        try {
-          if (mapInstance.hasLayer(layer)) {
-            mapInstance.removeLayer(layer)
-          }
-          layer.addTo(mapInstance)
-        } catch (e) {
-          console.error(`Error refreshing layer ${datasetId}:`, e)
-        }
+  /**
+   * Disable all dataset layers (for drawing/editing mode)
+   * Note: Currently does nothing - layers stay visible during drawing/editing
+   * Popups and cursor changes are disabled via isInDrawingMode() checks instead
+   */
+  function disableAllLayers() {
+    // Intentionally left empty - we no longer hide layers during drawing/editing
+    // The cursor and popup behavior is controlled by isInDrawingMode() checks
+    // in the event handlers instead
+  }
+
+  /**
+   * Re-enable all dataset layers (after drawing/editing mode)
+   * Restores visibility based on checkbox state
+   */
+  function enableAllLayers() {
+    if (!mapInstance) return
+
+    Object.keys(DATASETS).forEach((datasetId) => {
+      const checkbox = document.querySelector(`#dataset-${datasetId}`)
+      if (checkbox && checkbox.checked) {
+        showDataset(datasetId)
       }
     })
-
-    // Ensure red line boundary stays on top of data layers
-    if (window.MapDrawingControls && window.MapDrawingControls.getDrawnItems) {
-      const drawnItems = window.MapDrawingControls.getDrawnItems()
-      if (drawnItems) {
-        drawnItems.bringToFront()
-      }
-    }
   }
 
   // ============================================================================
@@ -465,5 +761,7 @@
   window.MapDatasets.getDatasets = getDatasets
   window.MapDatasets.initUI = initUI
   window.MapDatasets.refreshLayers = refreshLayers
+  window.MapDatasets.disableAllLayers = disableAllLayers
+  window.MapDatasets.enableAllLayers = enableAllLayers
   window.MapDatasets.getCookiePreference = getVisibilityFromCookie
 })()

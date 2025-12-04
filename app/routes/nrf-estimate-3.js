@@ -114,6 +114,13 @@ function checkEDPIntersections(coordinates) {
     if (gcnEdpData && gcnEdpData.features) {
       for (const feature of gcnEdpData.features) {
         if (turf.booleanIntersects(boundaryPolygon, feature)) {
+          // Debug logging
+          if (!feature.properties.NAME) {
+            console.log(
+              'WARNING: GCN feature missing NAME property:',
+              feature.properties
+            )
+          }
           const name = feature.properties.NAME || 'GCN EDP Area'
           intersections.push({
             type: 'gcn',
@@ -512,11 +519,9 @@ router.post(ROUTES.MAP, (req, res) => {
     req.session.data.redlineBoundaryPolygon = {
       center: parsedData.center,
       coordinates: parsedData.coordinates,
-      // Store new intersection structure
-      intersections: {
-        nutrient: intersectionResults.nutrient,
-        gcn: intersectionResults.gcn
-      },
+      // Store the full intersectionResults object directly (flatter structure).
+      // The legacy field 'intersectingCatchment' is kept only for backward compatibility.
+      intersections: intersectionResults,
       // Keep legacy field for backward compatibility
       intersectingCatchment: intersectionResults.nutrient
     }
@@ -778,7 +783,7 @@ router.post(ROUTES.ROOM_COUNT, (req, res) => {
 
   const typeMapping = {
     Hotel: 'hotelCount',
-    'House of multiple occupation (HMO)': 'hmoCount',
+    'House in multiple occupation (HMO)': 'hmoCount',
     'Residential institution': 'residentialInstitutionCount'
   }
 

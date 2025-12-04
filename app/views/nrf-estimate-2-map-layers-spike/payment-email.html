@@ -43,7 +43,7 @@ href: "/nrf-estimate-2-map-layers-spike/payment-confirmation"
                 {{ data.residentialBuildingCount or 0 }} {{ buildingType | lower }} buildings
                 {% elif buildingType === 'Hotel' %}
                 {{ data.roomCounts.hotelCount or 0 }} {{ buildingType | lower }} rooms
-                {% elif buildingType === 'House of multiple occupation (HMO)' %}
+                {% elif buildingType === 'House in multiple occupation (HMO)' %}
                 {{ data.roomCounts.hmoCount or 0 }} {{ buildingType | lower }} rooms
                 {% elif buildingType === 'Residential institution' %}
                 {{ data.roomCounts.residentialInstitutionCount or 0 }} {{ buildingType | lower }} rooms

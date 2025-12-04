@@ -94,7 +94,7 @@
 
   /**
    * Enter edit mode - hide panels and show edit buttons
-   * @param {L.Map} map - Leaflet map instance
+   * @param {maplibregl.Map} map - MapLibre map instance
    */
   function enterEditMode(map) {
     const panel = document.querySelector('.map-controls-panel')
@@ -142,16 +142,21 @@
       map._helpModal.close()
     }
 
-    // Force Leaflet to recalculate map size after panel is hidden
+    // Disable dataset layers during drawing/editing
+    if (window.MapDatasets && window.MapDatasets.disableAllLayers) {
+      window.MapDatasets.disableAllLayers()
+    }
+
+    // Force MapLibre to recalculate map size after panel is hidden
     setTimeout(() => {
-      map.invalidateSize()
+      map.resize()
     }, DELAY_MAP_RESIZE_MS)
   }
 
   /**
    * Exit edit mode - show panels and hide edit buttons
-   * @param {L.Map} map - Leaflet map instance
-   * @param {L.FeatureGroup} drawnItems - Feature group containing drawn items
+   * @param {maplibregl.Map} map - MapLibre map instance
+   * @param {MapboxDraw} drawnItems - MapboxDraw instance
    */
   function exitEditMode(map, drawnItems) {
     const panel = document.querySelector('.map-controls-panel')
@@ -171,7 +176,8 @@
     if (
       saveButtonContainer &&
       drawnItems &&
-      drawnItems.getLayers().length > 0
+      drawnItems.getAll &&
+      drawnItems.getAll().features.length > 0
     ) {
       saveButtonContainer.classList.remove('hidden')
     }
@@ -194,19 +200,25 @@
       showElement(map._helpButton)
     }
 
-    // Force Leaflet to recalculate map size after panel is shown
+    // Re-enable dataset layers after drawing/editing
+    if (window.MapDatasets && window.MapDatasets.enableAllLayers) {
+      window.MapDatasets.enableAllLayers()
+    }
+
+    // Force MapLibre to recalculate map size after panel is shown
     setTimeout(() => {
-      map.invalidateSize()
+      map.resize()
     }, DELAY_MAP_RESIZE_MS)
   }
 
   /**
    * Update button states based on boundary existence
    * @param {Object} controls - Object containing control elements
-   * @param {L.FeatureGroup} drawnItems - Feature group containing drawn items
+   * @param {MapboxDraw} drawnItems - MapboxDraw instance
    */
   function updateLinkStates(controls, drawnItems) {
-    const hasBoundary = drawnItems.getLayers().length > 0
+    const hasBoundary =
+      drawnItems && drawnItems.getAll && drawnItems.getAll().features.length > 0
     const saveButtonContainer = document.getElementById(
       DOM_IDS.saveButtonContainer
     )

@@ -9,9 +9,8 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
 
 {% block head %}
 {{ super() }}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.13.0/dist/maplibre-gl.css" />
+<link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.5.1/mapbox-gl-draw.css" />
 <style>
     body, html {
         overflow: hidden !important;
@@ -22,7 +21,7 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
     }
 
     /* Map style switcher button - positioned bottom left */
-    .leaflet-bottom.leaflet-left {
+    .maplibregl-ctrl-bottom-left {
         bottom: 20px;
         left: 10px;
     }
@@ -232,9 +231,8 @@ estimate for Nature Restoration Fund Levy{% endif %} - GOV.UK
             </div>
         </form>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+<script src="https://unpkg.com/maplibre-gl@5.13.0/dist/maplibre-gl.js"></script>
+<script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.5.1/mapbox-gl-draw.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
 <script src="/public/javascripts/components/modal.js"></script>

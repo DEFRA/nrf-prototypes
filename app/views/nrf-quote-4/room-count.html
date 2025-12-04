@@ -1,7 +1,7 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-Enter the number of rooms in your {{ buildingType | lower if buildingType != 'House of multiple occupation (HMO)' else buildingType }} building - Get a quote for Nature Restoration Fund levy - GOV.UK
+Enter the number of rooms in your {{ buildingType | lower if buildingType != 'House in multiple occupation (HMO)' else buildingType }} building - Get a quote for Nature Restoration Fund levy - GOV.UK
 {% endblock %}
 
 {% block beforeContent %}
@@ -40,7 +40,7 @@ href: "/nrf-quote-4/building-type"
 
             {{ govukInput({
                 label: {
-                    text: "Enter the number of rooms in your " + (buildingType | lower if buildingType != 'House of multiple occupation (HMO)' else buildingType) + " building(s) planned for the development",
+                    text: "Enter the number of rooms in your " + (buildingType | lower if buildingType != 'House in multiple occupation (HMO)' else buildingType) + " building(s) planned for the development",
                     classes: "govuk-label--l",
                     isPageHeading: true
                 },
@@ -50,7 +50,7 @@ href: "/nrf-quote-4/building-type"
                 classes: "govuk-input--width-5",
                 inputmode: "numeric",
                 pattern: "[0-9]*",
-                value: data.roomCounts.hotelCount if buildingType === 'Hotel' else (data.roomCounts.hmoCount if buildingType === 'House of multiple occupation (HMO)' else (data.roomCounts.residentialInstitutionCount if buildingType === 'Residential institution')),
+                value: data.roomCounts.hotelCount if buildingType === 'Hotel' else (data.roomCounts.hmoCount if buildingType === 'House in multiple occupation (HMO)' else (data.roomCounts.residentialInstitutionCount if buildingType === 'Residential institution')),
                 errorMessage: { text: error } if error
             }) }}
 

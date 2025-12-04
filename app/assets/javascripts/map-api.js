@@ -33,6 +33,11 @@
       throw new Error('Invalid coordinates provided')
     }
 
+    // Show loading state in the stats panel intersection section
+    if (window.MapStats && window.MapStats.showIntersectionsLoading) {
+      window.MapStats.showIntersectionsLoading()
+    }
+
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS)
 

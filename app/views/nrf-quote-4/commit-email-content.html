@@ -41,7 +41,7 @@ href: backLink or "/nrf-quote-4/commit-confirmation"
             <li>has {{ data.roomCounts.hotelCount }} hotel room{% if data.roomCounts.hotelCount != 1 %}s{% endif %}</li>
             {% endif %}
             {% if data.roomCounts.hmoCount %}
-            <li>has house of multiple occupation buildings with a total of {{ data.roomCounts.hmoCount }} room{% if data.roomCounts.hmoCount != 1 %}s{% endif %}</li>
+            <li>has House in multiple occupation buildings with a total of {{ data.roomCounts.hmoCount }} room{% if data.roomCounts.hmoCount != 1 %}s{% endif %}</li>
             {% endif %}
             {% if data.roomCounts.residentialInstitutionCount %}
             <li>has {{ data.roomCounts.residentialInstitutionCount }} residential institution room{% if data.roomCounts.residentialInstitutionCount != 1 %}s{% endif %}</li>
@@ -52,7 +52,7 @@ href: backLink or "/nrf-quote-4/commit-confirmation"
 
         <h2 class="govuk-heading-m">What you will need to pay</h2>
 
-        <p class="govuk-body">Based on the information you have provided, the development falls into an area with an Environmental Delivery Plan (EDP), so you can use the Nature Restoration Fund Nutrients Levy.</p>
+        <p class="govuk-body">Based on the information you have provided, the development falls into an area with an Environmental Delivery Plan (EDP), so you can use the Nature Restoration Fund nutrients Levy.</p>
 
         <p class="govuk-body">The quoted total amount you may need to pay if you develop in this area is:</p>
         <p class="govuk-body"><strong>£{{ data.levyAmount or '2,500' }}</strong></p>

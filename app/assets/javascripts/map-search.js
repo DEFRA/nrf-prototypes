@@ -49,7 +49,7 @@
    * @param {HTMLElement} searchButton - Search button element
    * @param {HTMLElement} searchInput - Search input element
    * @param {HTMLElement} resultsDropdown - Results dropdown element
-   * @param {L.Map} map - Leaflet map instance
+   * @param {maplibregl.Map} map - MapLibre map instance
    */
   function toggleSearchVisibility(
     searchContainer,
@@ -110,7 +110,7 @@
    * Hide search panel and show related UI elements
    * @param {HTMLElement} searchContainer - Search container element
    * @param {HTMLElement} searchButton - Search button element
-   * @param {L.Map} map - Leaflet map instance
+   * @param {maplibregl.Map} map - MapLibre map instance
    */
   function hideSearchPanel(searchContainer, searchButton, map) {
     window.MapUI.hideElement(searchContainer)
@@ -137,9 +137,9 @@
   }
 
   /**
-   * Zoom to selected location
+   * Zoom to selected location (MapLibre version)
    * @param {Object} location - Location object from API
-   * @param {L.Map} map - Leaflet map instance
+   * @param {maplibregl.Map} map - MapLibre map instance
    */
   function zoomToLocation(location, map) {
     const lat = location.latitude
@@ -148,16 +148,18 @@
 
     const zoomLevel = getZoomLevelFromLocationType(localType)
 
-    // Animate to location
-    map.flyTo([lat, lng], zoomLevel, {
-      duration: FLY_TO_DURATION_SECONDS
+    // Animate to location - MapLibre uses [lng, lat] not [lat, lng]
+    map.flyTo({
+      center: [lng, lat],
+      zoom: zoomLevel,
+      duration: FLY_TO_DURATION_SECONDS * 1000 // MapLibre duration is in milliseconds
     })
   }
 
   /**
    * Create search result item element
    * @param {Object} result - Search result object
-   * @param {L.Map} map - Leaflet map instance
+   * @param {maplibregl.Map} map - MapLibre map instance
    * @param {HTMLElement} resultsDropdown - Results dropdown element
    * @returns {HTMLElement} Result item element
    */
@@ -200,7 +202,7 @@
    * Display search results
    * @param {Array} results - Array of search results
    * @param {HTMLElement} resultsDropdown - Results dropdown element
-   * @param {L.Map} map - Leaflet map instance
+   * @param {maplibregl.Map} map - MapLibre map instance
    */
   function displaySearchResults(results, resultsDropdown, map) {
     resultsDropdown.innerHTML = ''
@@ -216,7 +218,7 @@
    * Handle search results from API
    * @param {Object} data - API response data
    * @param {HTMLElement} resultsDropdown - Results dropdown element
-   * @param {L.Map} map - Leaflet map instance
+   * @param {maplibregl.Map} map - MapLibre map instance
    */
   function handleSearchResults(data, resultsDropdown, map) {
     if (data.status === 200 && data.result && data.result.length > 0) {
@@ -248,7 +250,7 @@
    * Search for location using postcodes.io API
    * @param {string} query - Search query
    * @param {HTMLElement} resultsDropdown - Results dropdown element
-   * @param {L.Map} map - Leaflet map instance
+   * @param {maplibregl.Map} map - MapLibre map instance
    */
   function searchLocation(query, resultsDropdown, map) {
     const apiUrl = `${POSTCODES_API_BASE}?q=${encodeURIComponent(query)}&limit=${POSTCODES_API_LIMIT}`
@@ -267,8 +269,8 @@
   }
 
   /**
-   * Initialize location search functionality
-   * @param {L.Map} map - Leaflet map instance
+   * Initialize location search functionality (MapLibre version)
+   * @param {maplibregl.Map} map - MapLibre map instance
    */
   function initLocationSearch(map) {
     // Get existing elements from DOM
@@ -286,8 +288,10 @@
       return
     }
 
-    // Disable map scroll zoom when hovering over results dropdown
-    L.DomEvent.disableScrollPropagation(resultsDropdown)
+    // Prevent map interaction when hovering over results dropdown
+    resultsDropdown.addEventListener('wheel', (e) => {
+      e.stopPropagation()
+    })
 
     let searchTimeout
 

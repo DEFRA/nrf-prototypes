@@ -651,7 +651,7 @@ router.post(ROUTES.ROOM_COUNT, (req, res) => {
   // Map building types to their data keys
   const typeMapping = {
     Hotel: 'hotelCount',
-    'House of multiple occupation (HMO)': 'hmoCount',
+    'House in multiple occupation (HMO)': 'hmoCount',
     'Residential institution': 'residentialInstitutionCount'
   }
 
@@ -751,7 +751,7 @@ router.post(ROUTES.RESIDENTIAL_INSTITUTION, (req, res) => {
   let residentialInstitutionCount = null
 
   // Check HMO count if HMO is selected
-  if (buildingTypes.includes('House of multiple occupation (HMO)')) {
+  if (buildingTypes.includes('House in multiple occupation (HMO)')) {
     hmoCount = req.body['hmo-count']
     if (!hmoCount || isNaN(hmoCount) || hmoCount < 1) {
       error = 'Enter the number of rooms to continue'

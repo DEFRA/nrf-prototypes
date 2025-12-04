@@ -6,7 +6,7 @@
 const BUILDING_TYPES = {
   DWELLINGHOUSE: 'Dwellinghouse',
   HOTEL: 'Hotel',
-  HMO: 'House of multiple occupation (HMO)',
+  HMO: 'House in multiple occupation (HMO)',
   RESIDENTIAL_INSTITUTION: 'Residential institution',
   NON_RESIDENTIAL: 'Non-residential development'
 }
@@ -22,7 +22,7 @@ const BUILDING_TYPES_REQUIRING_ROOM_COUNT = [
 const BUILDING_TYPE_LABELS = {
   [BUILDING_TYPES.DWELLINGHOUSE]: 'Dwelling',
   [BUILDING_TYPES.HOTEL]: 'Hotel',
-  [BUILDING_TYPES.HMO]: 'House of multiple occupation (HMO)',
+  [BUILDING_TYPES.HMO]: 'House in multiple occupation (HMO)',
   [BUILDING_TYPES.RESIDENTIAL_INSTITUTION]: 'Residential institution',
   [BUILDING_TYPES.NON_RESIDENTIAL]: 'Non-residential development'
 }
