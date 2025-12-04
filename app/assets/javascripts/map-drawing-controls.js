@@ -621,6 +621,8 @@
    * @param {MapboxDraw} draw - MapboxDraw instance
    */
   async function handlePolygonCreated(event, map, draw) {
+    if (!event.features || event.features.length === 0) return
+
     const feature = event.features[0]
     isDrawing = false
     window.MapUI.hideErrorSummary()

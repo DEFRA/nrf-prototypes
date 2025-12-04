@@ -519,7 +519,8 @@ router.post(ROUTES.MAP, (req, res) => {
     req.session.data.redlineBoundaryPolygon = {
       center: parsedData.center,
       coordinates: parsedData.coordinates,
-      // Store full intersection structure (same format as API response)
+      // Store the full intersectionResults object directly (flatter structure).
+      // The legacy field 'intersectingCatchment' is kept only for backward compatibility.
       intersections: intersectionResults,
       // Keep legacy field for backward compatibility
       intersectingCatchment: intersectionResults.nutrient

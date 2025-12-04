@@ -492,7 +492,6 @@
    * @returns {Promise<boolean>} Promise resolving to true if boundary loaded
    */
   async function loadExistingBoundary(draw, map) {
-    // TODO: Update for MapboxDraw in Phase 4
     const existingBoundaryData = document.getElementById(
       DOM_IDS.boundaryData
     ).value
