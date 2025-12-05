@@ -180,6 +180,11 @@
         map.addLayer(satelliteMap.layer, firstNonRasterLayer)
         window.MapStyles.setCurrentStyle('satellite')
       }
+
+      // Update the style toggle button thumbnail now that currentMapStyle is set
+      if (window.MapStyles && window.MapStyles.updateMapStyleButtonThumbnail) {
+        window.MapStyles.updateMapStyleButtonThumbnail()
+      }
     })
   }
 
