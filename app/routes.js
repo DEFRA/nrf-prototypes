@@ -16,8 +16,10 @@ const applications1Routes = require('./routes/applications-1.js')
 const applications2Routes = require('./routes/applications-2.js')
 const caseManagementRoutes = require('./routes/case-management.js')
 const lpaVerifyRoutes = require('./routes/lpa-verify.js')
+const tileserverProxyRoutes = require('./routes/tileserver-proxy.js')
 
 // Use non-journey routes
+router.use('/', tileserverProxyRoutes) // Add tileserver proxy first
 router.use('/', indexRoutes)
 router.use('/', userJourney1Routes)
 router.use('/', edpSearchRoutes)

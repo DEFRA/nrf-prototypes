@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      target: development
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - TILESERVER_URL=http://tileserver:8080
+    volumes:
+      - ./app:/home/node/app
+      - ./node_modules:/home/node/node_modules
+    depends_on:
+      - tileserver
+
+  tileserver:
+    build:
+      context: ./tileserver
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./tileserver/data:/data:ro

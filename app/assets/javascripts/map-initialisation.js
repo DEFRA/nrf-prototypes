@@ -451,34 +451,144 @@
   }
 
   /**
-   * Load catchment data from GeoJSON
-   * @param {L.Map} map - Leaflet map instance
+   * Load catchment data from vector tiles (tileserver)
+   * @param {maplibregl.Map} map - MapLibre map instance
    * @param {Object} edpData - EDP data object
    */
   function loadCatchmentData(map, edpData) {
-    const catchmentsUrl =
-      window.CATCHMENTS_GEOJSON_URL ||
-      '/nrf-estimate-2-map-layers-spike/catchments.geojson'
-    fetch(catchmentsUrl)
-      .then((response) => response.json())
-      .then((data) => {
-        processCatchmentFeatures(data.features, map, edpData)
+    // Use proxied tiles endpoint (goes through Express server on same port)
+    // This avoids CORS and port issues in production
+    const tilesPath = `${window.location.origin}/tiles/data/catchments_nn_catchments_03_2024/{z}/{x}/{y}.pbf`
 
-        // Check cookie preference and hide nutrient layers if needed
-        if (window.MapDatasets && window.MapDatasets.getCookiePreference) {
-          const savedVisibility = window.MapDatasets.getCookiePreference()
-          if (savedVisibility && savedVisibility.nutrientEdp === false) {
-            // Hide nutrient layers immediately after loading
-            if (window.MapStyles && window.MapStyles.hideCatchmentLayers) {
-              window.MapStyles.hideCatchmentLayers(map)
-            }
+    // Add vector tile source for nutrient catchments
+    const sourceId = 'nutrient-catchments'
+    const layerId = 'nutrient-catchments' // MapStyles will append '-border' for border layer
+    const borderLayerId = 'nutrient-catchments-border'
+
+    try {
+      // Check if source already exists
+      if (map.getSource(sourceId)) {
+        console.log('Vector tile source already exists, skipping')
+        return
+      }
+
+      // Add vector tile source
+      map.addSource(sourceId, {
+        type: 'vector',
+        tiles: [tilesPath],
+        minzoom: 0,
+        maxzoom: 14
+      })
+
+      // Get current style for catchments
+      const style = window.MapStyles
+        ? window.MapStyles.getCatchmentStyle()
+        : {
+            fillColor: '#FF6B6B',
+            fillOpacity: 0.3,
+            color: '#C92A2A',
+            weight: 2,
+            opacity: 0.8
           }
+
+      // Check cookie preference for initial visibility
+      let initialVisibility = 'visible'
+      if (window.MapDatasets && window.MapDatasets.getCookiePreference) {
+        const savedVisibility = window.MapDatasets.getCookiePreference()
+        if (savedVisibility && savedVisibility.nutrientEdp === false) {
+          initialVisibility = 'none'
+        }
+      }
+
+      // Add fill layer
+      map.addLayer({
+        id: layerId,
+        type: 'fill',
+        source: sourceId,
+        'source-layer': 'catchments_nn_catchments_03_2024',
+        layout: {
+          visibility: initialVisibility
+        },
+        paint: {
+          'fill-color': style.fillColor || style.color,
+          'fill-opacity': style.fillOpacity || 0.3
         }
       })
-      .catch((error) => {
-        console.error('Error loading GeoJSON data:', error)
-        showCatchmentLoadError()
+
+      // Add border layer
+      map.addLayer({
+        id: borderLayerId,
+        type: 'line',
+        source: sourceId,
+        'source-layer': 'catchments_nn_catchments_03_2024',
+        layout: {
+          visibility: initialVisibility
+        },
+        paint: {
+          'line-color': style.color,
+          'line-width': style.weight || 2,
+          'line-opacity': style.opacity || 0.8
+        }
       })
+
+      // Register layers with MapStyles for visibility control
+      if (window.MapStyles && window.MapStyles.addCatchmentLayer) {
+        window.MapStyles.addCatchmentLayer(layerId, sourceId)
+      }
+
+      // Add click handler for popups
+      map.on('click', layerId, (e) => {
+        if (
+          window.MapDrawingControls &&
+          window.MapDrawingControls.isInDrawingMode()
+        ) {
+          return
+        }
+
+        if (!e.features || e.features.length === 0) return
+
+        const feature = e.features[0]
+        const props = feature.properties
+        const name =
+          props.Label || props.NAME || props.name || 'Nutrient Catchment'
+
+        new maplibregl.Popup()
+          .setLngLat(e.lngLat)
+          .setHTML(`<strong>${name}</strong>`)
+          .addTo(map)
+      })
+
+      // Add hover cursor
+      map.on('mouseenter', layerId, () => {
+        if (
+          window.MapDrawingControls &&
+          window.MapDrawingControls.isInDrawingMode()
+        ) {
+          return
+        }
+        map.getCanvas().style.cursor = 'pointer'
+      })
+
+      map.on('mouseleave', layerId, () => {
+        if (
+          window.MapDrawingControls &&
+          window.MapDrawingControls.isInDrawingMode()
+        ) {
+          return
+        }
+        map.getCanvas().style.cursor = ''
+      })
+
+      console.log('Vector tile catchments loaded successfully from tileserver')
+    } catch (error) {
+      console.error('Error loading vector tile catchments:', error)
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      })
+      showCatchmentLoadError()
+    }
   }
 
   // ============================================================================
