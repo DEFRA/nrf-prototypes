@@ -159,14 +159,25 @@
 
     // Add layer after map loads
     map.on('load', () => {
+      // Find the first non-raster layer to insert base layer before it
+      // This ensures base layers stay at the bottom of the stack
+      const layers = map.getStyle().layers
+      let firstNonRasterLayer = null
+      for (const layer of layers) {
+        if (layer.type !== 'raster') {
+          firstNonRasterLayer = layer.id
+          break
+        }
+      }
+
       // Default to satellite view unless explicitly set to street
       if (savedLayer === 'street') {
         map.addSource(streetMap.sourceId, streetMap.source)
-        map.addLayer(streetMap.layer)
+        map.addLayer(streetMap.layer, firstNonRasterLayer)
         window.MapStyles.setCurrentStyle('street')
       } else {
         map.addSource(satelliteMap.sourceId, satelliteMap.source)
-        map.addLayer(satelliteMap.layer)
+        map.addLayer(satelliteMap.layer, firstNonRasterLayer)
         window.MapStyles.setCurrentStyle('satellite')
       }
     })

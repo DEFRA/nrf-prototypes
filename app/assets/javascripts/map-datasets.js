@@ -108,6 +108,181 @@
   // ============================================================================
 
   /**
+   * Create a vector tile layer (MapLibre version)
+   * @param {Object} dataset - Dataset configuration
+   * @returns {Object} Layer metadata {sourceId, fillLayerId, borderLayerId}
+   */
+  function createVectorTileLayer(dataset) {
+    if (!mapInstance) {
+      console.error('Map not initialized')
+      return null
+    }
+
+    // Don't throw error - let the caller handle waiting for style to load
+    if (!mapInstance.isStyleLoaded()) {
+      return null
+    }
+
+    // Get style - use getStyle() if available for dynamic styles, otherwise use static style
+    const getStyleFn = dataset.getStyle || (() => dataset.style)
+    const style = getStyleFn()
+
+    // Create unique IDs for this dataset's layers
+    const sourceId = `${dataset.id}-source`
+    const fillLayerId = `${dataset.id}-fill`
+    const borderLayerId = `${dataset.id}-border`
+
+    try {
+      // Check if source already exists
+      if (mapInstance.getSource(sourceId)) {
+        console.log(`Vector tile source ${sourceId} already exists, skipping`)
+        return { sourceId, fillLayerId, borderLayerId, datasetId: dataset.id }
+      }
+
+      // Add vector tile source
+      mapInstance.addSource(sourceId, {
+        type: 'vector',
+        tiles: [dataset.getTilesUrl()],
+        minzoom: dataset.minzoom || 0,
+        maxzoom: dataset.maxzoom || 14
+      })
+
+      // Find the first drawing layer to insert dataset layers before it
+      // This ensures dataset layers appear above base map but below user drawings
+      const layers = mapInstance.getStyle().layers
+      let firstDrawingLayer = null
+      for (const layer of layers) {
+        if (
+          layer.id.includes('gl-draw') ||
+          layer.id.includes('draw') ||
+          layer.type === 'symbol'
+        ) {
+          firstDrawingLayer = layer.id
+          break
+        }
+      }
+
+      // Add fill layer
+      mapInstance.addLayer(
+        {
+          id: fillLayerId,
+          type: 'fill',
+          source: sourceId,
+          'source-layer': dataset.sourceLayer,
+          paint: {
+            'fill-color': style.fillColor || style.color,
+            'fill-opacity': style.fillOpacity || 0.3
+          }
+        },
+        firstDrawingLayer
+      )
+
+      // Add border layer
+      mapInstance.addLayer(
+        {
+          id: borderLayerId,
+          type: 'line',
+          source: sourceId,
+          'source-layer': dataset.sourceLayer,
+          paint: {
+            'line-color': style.color,
+            'line-width': style.weight || 2,
+            'line-opacity': style.opacity || 0.8
+          }
+        },
+        firstDrawingLayer
+      )
+
+      // Add click handler for popups
+      const clickHandler = (e) => {
+        if (
+          window.MapDrawingControls &&
+          window.MapDrawingControls.isInDrawingMode()
+        ) {
+          return
+        }
+
+        if (!e.features || e.features.length === 0) return
+
+        const feature = e.features[0]
+        const props = feature.properties
+
+        const name =
+          props.NAME ||
+          props.name ||
+          props.Label ||
+          props.N2K_Site_N ||
+          props.ZoneName ||
+          'Feature'
+
+        let description = `<strong>${name}</strong>`
+        if (props.DESCRIPTIO || props.Description) {
+          const type = props.DESCRIPTIO || props.Description
+          description += `<br><small>Type: ${type}</small>`
+        }
+
+        new maplibregl.Popup()
+          .setLngLat(e.lngLat)
+          .setHTML(description)
+          .addTo(mapInstance)
+      }
+
+      const mouseenterHandler = () => {
+        if (
+          window.MapDrawingControls &&
+          window.MapDrawingControls.isInDrawingMode()
+        ) {
+          return
+        }
+        mapInstance.getCanvas().style.cursor = 'pointer'
+      }
+
+      const mouseleaveHandler = () => {
+        if (
+          window.MapDrawingControls &&
+          window.MapDrawingControls.isInDrawingMode()
+        ) {
+          return
+        }
+        mapInstance.getCanvas().style.cursor = ''
+      }
+
+      // Add event handlers to map
+      mapInstance.on('click', fillLayerId, clickHandler)
+      mapInstance.on('mouseenter', fillLayerId, mouseenterHandler)
+      mapInstance.on('mouseleave', fillLayerId, mouseleaveHandler)
+
+      // Store handlers for cleanup
+      layerEventHandlers[dataset.id] = {
+        fillLayerId,
+        clickHandler,
+        mouseenterHandler,
+        mouseleaveHandler
+      }
+
+      console.log(`✓ Created vector tile layer: ${dataset.id}`, {
+        sourceId,
+        fillLayerId,
+        borderLayerId,
+        style
+      })
+
+      return {
+        sourceId,
+        fillLayerId,
+        borderLayerId,
+        datasetId: dataset.id
+      }
+    } catch (error) {
+      console.error(
+        `Error creating vector tile layer for ${dataset.id}:`,
+        error
+      )
+      return null
+    }
+  }
+
+  /**
    * Create a GeoJSON layer (MapLibre version)
    * @param {Object} dataset - Dataset configuration
    * @param {Object} data - GeoJSON data
@@ -361,6 +536,21 @@
       return Promise.resolve(placeholderLayer)
     }
 
+    if (dataset.type === 'vector-tile') {
+      // Vector tiles don't need to be fetched - they're loaded on-demand
+      const layer = createVectorTileLayer(dataset)
+      if (layer) {
+        loadedLayers[datasetId] = layer
+        return Promise.resolve(layer)
+      } else {
+        return Promise.reject(
+          new Error(
+            `Failed to create vector tile layer for ${datasetId} - style may not be loaded`
+          )
+        )
+      }
+    }
+
     if (dataset.type === 'geojson') {
       const url = dataset.getUrl()
       if (!url) {
@@ -390,6 +580,8 @@
       return
     }
 
+    console.log(`[showDataset] Showing dataset: ${datasetId}`)
+
     // Special handling for nutrientEdp (uses MapStyles catchment layers)
     if (datasetId === 'nutrientEdp') {
       window.MapStyles.showCatchmentLayers(mapInstance)
@@ -397,8 +589,10 @@
       return
     }
 
+    console.log(`[showDataset] Loading dataset: ${datasetId}`)
     loadDataset(datasetId)
       .then((layerInfo) => {
+        console.log(`[showDataset] Dataset loaded:`, datasetId, layerInfo)
         if (!layerInfo) {
           console.warn(`Dataset ${datasetId} could not be loaded`)
           return
@@ -632,18 +826,35 @@
       initUI(container)
     }
 
-    // Apply saved visibility to all datasets
-    Object.keys(DATASETS).forEach((datasetId) => {
-      const isVisible =
-        savedVisibility && savedVisibility.hasOwnProperty(datasetId)
-          ? savedVisibility[datasetId]
-          : DATASETS[datasetId].visible
-
-      // Apply visibility for GCN EDP (nutrient EDP is already handled by loadCatchmentData)
-      if (datasetId !== 'nutrientEdp' && isVisible) {
-        showDataset(datasetId)
+    // Function to apply saved visibility
+    const applyVisibility = () => {
+      // Double-check style is loaded before applying
+      if (!mapInstance.isStyleLoaded()) {
+        console.log('[MapDatasets] Style not loaded yet, waiting...')
+        mapInstance.once('styledata', applyVisibility)
+        return
       }
-    })
+
+      console.log('[MapDatasets] Applying saved visibility to datasets')
+      Object.keys(DATASETS).forEach((datasetId) => {
+        const isVisible =
+          savedVisibility && savedVisibility.hasOwnProperty(datasetId)
+            ? savedVisibility[datasetId]
+            : DATASETS[datasetId].visible
+
+        // Apply visibility for GCN EDP (nutrient EDP is already handled by loadCatchmentData)
+        if (datasetId !== 'nutrientEdp' && isVisible) {
+          showDataset(datasetId)
+        }
+      })
+    }
+
+    // Wait for map style to load before applying visibility
+    if (mapInstance.isStyleLoaded()) {
+      applyVisibility()
+    } else {
+      mapInstance.once('styledata', applyVisibility)
+    }
   }
 
   /**

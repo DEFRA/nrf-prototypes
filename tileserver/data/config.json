@@ -25,6 +25,9 @@
     },
     "lpa_lpa_national": {
       "mbtiles": "lpa_lpa_national.mbtiles"
+    },
+    "gcn_edp_all_regions": {
+      "mbtiles": "gcn_edp_all_regions.mbtiles"
     }
   }
 }
