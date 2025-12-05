@@ -6,6 +6,7 @@
   "license": "(OGL-UK-3, MIT) see licenses in /LICENSES",
   "scripts": {
     "dev": "govuk-prototype-kit dev",
+    "dev:map": "docker-compose up -d tileserver && npm run dev",
     "serve": "govuk-prototype-kit serve",
     "start": "govuk-prototype-kit start",
     "format": "prettier --write \"**/*.{cjs,js,json,md,scss}\"",
