@@ -162,12 +162,22 @@
         )
         window.MapInitialisation.addZoomControl(map)
 
-        // Load catchment GeoJSON for visualization (not used for intersection checking anymore)
+        // Load catchment vector tiles for visualization (not used for intersection checking anymore)
+        // Wait for map style to finish loading before adding vector tile source
         const edpData = {
           boundaries: [],
           layers: []
         }
-        window.MapInitialisation.loadCatchmentData(map, edpData)
+
+        if (map.isStyleLoaded()) {
+          // Style already loaded, add immediately
+          window.MapInitialisation.loadCatchmentData(map, edpData)
+        } else {
+          // Wait for style to load
+          map.once('load', () => {
+            window.MapInitialisation.loadCatchmentData(map, edpData)
+          })
+        }
 
         // Initialize MapboxDraw with custom red boundary styles
         const draw = new MapboxDraw({

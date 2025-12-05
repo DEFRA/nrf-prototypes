@@ -494,6 +494,7 @@
   window.MapStyles.getCatchmentStyle = getCatchmentStyle
   window.MapStyles.getGcnStyle = getGcnStyle
   window.MapStyles.addMapStyleSwitcher = addMapStyleSwitcher
+  window.MapStyles.updateMapStyleButtonThumbnail = updateMapStyleButtonThumbnail
   window.MapStyles.getKeyContent = getKeyContent
   window.MapStyles.updateMapKey = updateMapKey
   window.MapStyles.showCatchmentLayers = showCatchmentLayers

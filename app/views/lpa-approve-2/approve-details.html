@@ -92,11 +92,11 @@ href: backLink or "/lpa-approve-2/lpa-approval-email-magiclink"
     </div>
 </div>
 
-<!-- Leaflet CSS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<!-- MapLibre GL JS CSS -->
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.13.0/dist/maplibre-gl.css" />
 
-<!-- Leaflet JavaScript -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- MapLibre GL JS -->
+<script src="https://unpkg.com/maplibre-gl@5.13.0/dist/maplibre-gl.js"></script>
 
 <script type="application/json" id="redline-boundary-data">
 {
@@ -156,27 +156,98 @@ href: backLink or "/lpa-approve-2/lpa-approval-email-magiclink"
 
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-    const map = L.map('map').setView([51.13, -1.24], 13);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
-
     const boundaryData = JSON.parse(document.getElementById('redline-boundary-data').textContent);
 
-    const redLineBoundary = L.geoJSON(boundaryData, {
+    // Initialize MapLibre map with basic style
+    const map = new maplibregl.Map({
+      container: 'map',
       style: {
-        color: '#d4351c',
-        weight: 3,
-        fillColor: '#d4351c',
-        fillOpacity: 0.3
-      }
-    }).addTo(map);
+        version: 8,
+        sources: {
+          'osm-tiles': {
+            type: 'raster',
+            tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+            tileSize: 256,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          }
+        },
+        layers: [
+          {
+            id: 'osm-tiles',
+            type: 'raster',
+            source: 'osm-tiles',
+            minzoom: 0,
+            maxzoom: 19
+          }
+        ]
+      },
+      center: [-1.24, 51.13],
+      zoom: 13
+    });
 
-    const boundaryName = boundaryData.properties?.name || 'Development site';
-    const boundaryDescription = boundaryData.properties?.description || 'Red line boundary';
-    redLineBoundary.bindPopup(`<strong>Red line boundary</strong><br>${boundaryName}<br>${boundaryDescription}`);
-    map.fitBounds(redLineBoundary.getBounds());
+    // Add navigation controls
+    map.addControl(new maplibregl.NavigationControl(), 'top-right');
+
+    // Add boundary when map loads
+    map.on('load', function () {
+      // Add the boundary source
+      map.addSource('boundary', {
+        type: 'geojson',
+        data: boundaryData
+      });
+
+      // Add fill layer
+      map.addLayer({
+        id: 'boundary-fill',
+        type: 'fill',
+        source: 'boundary',
+        paint: {
+          'fill-color': '#d4351c',
+          'fill-opacity': 0.3
+        }
+      });
+
+      // Add border layer
+      map.addLayer({
+        id: 'boundary-border',
+        type: 'line',
+        source: 'boundary',
+        paint: {
+          'line-color': '#d4351c',
+          'line-width': 3
+        }
+      });
+
+      // Add popup on click
+      const boundaryName = boundaryData.properties?.name || 'Development site';
+      const boundaryDescription = boundaryData.properties?.description || 'Red line boundary';
+
+      map.on('click', 'boundary-fill', function (e) {
+        new maplibregl.Popup()
+          .setLngLat(e.lngLat)
+          .setHTML(`<strong>Red line boundary</strong><br>${boundaryName}<br>${boundaryDescription}`)
+          .addTo(map);
+      });
+
+      // Change cursor on hover
+      map.on('mouseenter', 'boundary-fill', function () {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+
+      map.on('mouseleave', 'boundary-fill', function () {
+        map.getCanvas().style.cursor = '';
+      });
+
+      // Fit map to boundary
+      const coordinates = boundaryData.geometry.coordinates[0];
+      const bounds = coordinates.reduce(function (bounds, coord) {
+        return bounds.extend(coord);
+      }, new maplibregl.LngLatBounds(coordinates[0], coordinates[0]));
+
+      map.fitBounds(bounds, {
+        padding: 50
+      });
+    });
   });
 </script>
 {% endblock %}

@@ -20,3 +20,6 @@ scripts/data/data/
 test-results/
 playwright-report/
 playwright/.cache/
+
+# TileServer data files
+tileserver/data/mbtiles/*.mbtiles
