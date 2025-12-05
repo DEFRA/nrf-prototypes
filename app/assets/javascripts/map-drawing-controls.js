@@ -14,7 +14,6 @@
   // ============================================================================
 
   const COLOR_BOUNDARY_RED = '#d4351c'
-  const COLOR_ERROR_YELLOW = '#e1e100'
 
   const BOUNDARY_STYLE = {
     color: COLOR_BOUNDARY_RED,
@@ -23,8 +22,6 @@
     fillColor: COLOR_BOUNDARY_RED,
     fillOpacity: 0.2
   }
-
-  const DELAY_TOOLBAR_HIDE_MS = 100
 
   const DOM_IDS = {
     startDrawing: 'start-drawing',
@@ -113,97 +110,6 @@
    */
   function getDrawnItems() {
     return drawnItems
-  }
-
-  // ============================================================================
-  // DRAW CONTROL SETUP (Legacy Leaflet functions - kept for reference)
-  // ============================================================================
-
-  /**
-   * Configure draw tooltips (disable them)
-   */
-  function configureDrawTooltips() {
-    L.drawLocal.draw.handlers.polygon.tooltip = {
-      start: '',
-      cont: '',
-      end: ''
-    }
-    L.drawLocal.edit.handlers.edit.tooltip = {
-      text: '',
-      subtext: ''
-    }
-    L.drawLocal.edit.handlers.remove.tooltip = {
-      text: ''
-    }
-  }
-
-  /**
-   * Create draw control with configuration
-   * @param {L.FeatureGroup} drawnItemsGroup - Feature group for drawn items
-   * @returns {L.Control.Draw} Draw control instance
-   */
-  function createDrawControl(drawnItemsGroup) {
-    return new L.Control.Draw({
-      position: 'topleft',
-      draw: {
-        polygon: {
-          allowIntersection: false,
-          showArea: true,
-          showLength: true,
-          metric: true,
-          feet: false,
-          nautic: false,
-          drawError: {
-            color: COLOR_ERROR_YELLOW,
-            message: '<strong>Error:</strong> shape edges cannot cross!'
-          },
-          shapeOptions: BOUNDARY_STYLE
-        },
-        polyline: false,
-        rectangle: false,
-        circle: false,
-        marker: false,
-        circlemarker: false
-      },
-      edit: {
-        featureGroup: drawnItemsGroup,
-        remove: true
-      }
-    })
-  }
-
-  /**
-   * Hide the draw toolbar
-   */
-  function hideDrawToolbar() {
-    setTimeout(() => {
-      const toolbar = document.querySelector('.leaflet-draw-toolbar')
-      if (toolbar) {
-        toolbar.classList.add('hidden')
-      }
-    }, DELAY_TOOLBAR_HIDE_MS)
-  }
-
-  /**
-   * Get polygon handler from draw control
-   * @param {L.Control.Draw} drawControl - Draw control instance
-   * @param {string} type - Type of handler ('draw')
-   * @returns {Object|null} Handler object or null
-   */
-  function getPolygonHandler(drawControl, type) {
-    if (type === 'draw') {
-      return drawControl._toolbars?.draw?._modes?.polygon?.handler
-    }
-    return null
-  }
-
-  /**
-   * Get edit handler from draw control
-   * @param {L.Control.Draw} drawControl - Draw control instance
-   * @returns {Object|null} Handler object or null
-   */
-  function getEditHandler(drawControl) {
-    return drawControl._toolbars?.edit?._modes?.edit?.handler
   }
 
   // ============================================================================
@@ -815,9 +721,6 @@
   }
 
   // Export functions to global namespace
-  window.MapDrawingControls.configureDrawTooltips = configureDrawTooltips
-  window.MapDrawingControls.createDrawControl = createDrawControl
-  window.MapDrawingControls.hideDrawToolbar = hideDrawToolbar
   window.MapDrawingControls.setupDrawingControls = setupDrawingControls
   window.MapDrawingControls.initAccessibleControls = initAccessibleControls
   window.MapDrawingControls.updateBoundaryData = updateBoundaryData

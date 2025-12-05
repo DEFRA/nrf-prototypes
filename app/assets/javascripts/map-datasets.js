@@ -193,71 +193,19 @@
         firstDrawingLayer
       )
 
-      // Add click handler for popups
-      const clickHandler = (e) => {
-        if (
-          window.MapDrawingControls &&
-          window.MapDrawingControls.isInDrawingMode()
-        ) {
-          return
-        }
-
-        if (!e.features || e.features.length === 0) return
-
-        const feature = e.features[0]
-        const props = feature.properties
-
-        const name =
-          props.NAME ||
-          props.name ||
-          props.Label ||
-          props.N2K_Site_N ||
-          props.ZoneName ||
-          'Feature'
-
-        let description = `<strong>${name}</strong>`
-        if (props.DESCRIPTIO || props.Description) {
-          const type = props.DESCRIPTIO || props.Description
-          description += `<br><small>Type: ${type}</small>`
-        }
-
-        new maplibregl.Popup()
-          .setLngLat(e.lngLat)
-          .setHTML(description)
-          .addTo(mapInstance)
-      }
-
-      const mouseenterHandler = () => {
-        if (
-          window.MapDrawingControls &&
-          window.MapDrawingControls.isInDrawingMode()
-        ) {
-          return
-        }
-        mapInstance.getCanvas().style.cursor = 'pointer'
-      }
-
-      const mouseleaveHandler = () => {
-        if (
-          window.MapDrawingControls &&
-          window.MapDrawingControls.isInDrawingMode()
-        ) {
-          return
-        }
-        mapInstance.getCanvas().style.cursor = ''
-      }
-
-      // Add event handlers to map
-      mapInstance.on('click', fillLayerId, clickHandler)
-      mapInstance.on('mouseenter', fillLayerId, mouseenterHandler)
-      mapInstance.on('mouseleave', fillLayerId, mouseleaveHandler)
+      // Create and attach event handlers using shared utility
+      const handlers =
+        window.MapEventHandlers.createLayerEventHandlers(mapInstance)
+      window.MapEventHandlers.attachEventHandlers(
+        mapInstance,
+        fillLayerId,
+        handlers
+      )
 
       // Store handlers for cleanup
       layerEventHandlers[dataset.id] = {
         fillLayerId,
-        clickHandler,
-        mouseenterHandler,
-        mouseleaveHandler
+        ...handlers
       }
 
       console.log(`✓ Created vector tile layer: ${dataset.id}`, {
@@ -278,141 +226,6 @@
         `Error creating vector tile layer for ${dataset.id}:`,
         error
       )
-      return null
-    }
-  }
-
-  /**
-   * Create a GeoJSON layer (MapLibre version)
-   * @param {Object} dataset - Dataset configuration
-   * @param {Object} data - GeoJSON data
-   * @returns {Object} Layer metadata {sourceId, fillLayerId, borderLayerId}
-   */
-  function createGeoJSONLayer(dataset, data) {
-    if (!mapInstance) {
-      console.error('Map not initialized')
-      return null
-    }
-
-    // Get style - use getStyle() if available for dynamic styles, otherwise use static style
-    const getStyleFn = dataset.getStyle || (() => dataset.style)
-    const style = getStyleFn()
-
-    // Create unique IDs for this dataset's layers
-    const sourceId = `${dataset.id}-source`
-    const fillLayerId = `${dataset.id}-fill`
-    const borderLayerId = `${dataset.id}-border`
-
-    try {
-      // Add GeoJSON source
-      mapInstance.addSource(sourceId, {
-        type: 'geojson',
-        data: data
-      })
-
-      // Add fill layer
-      mapInstance.addLayer({
-        id: fillLayerId,
-        type: 'fill',
-        source: sourceId,
-        paint: {
-          'fill-color': style.fillColor || style.color,
-          'fill-opacity': style.fillOpacity || 0.3
-        }
-      })
-
-      // Add border layer
-      mapInstance.addLayer({
-        id: borderLayerId,
-        type: 'line',
-        source: sourceId,
-        paint: {
-          'line-color': style.color,
-          'line-width': style.weight || 2,
-          'line-opacity': style.opacity || 0.8
-        }
-      })
-
-      // Create event handlers and store them for cleanup
-      const clickHandler = (e) => {
-        // Don't show popups during drawing/editing
-        if (
-          window.MapDrawingControls &&
-          window.MapDrawingControls.isInDrawingMode()
-        ) {
-          return
-        }
-
-        if (!e.features || e.features.length === 0) return
-
-        const feature = e.features[0]
-        const props = feature.properties
-
-        // Get name from various possible property fields
-        const name =
-          props.NAME || // GCN EDP (e.g., "Ashfield District")
-          props.name || // Generic name field
-          props.Label || // Other datasets
-          props.N2K_Site_N || // Natura 2000 sites
-          props.ZoneName || // Zone-based datasets
-          'Feature'
-
-        // Build description with type if available
-        let description = `<strong>${name}</strong>`
-        if (props.DESCRIPTIO || props.Description) {
-          const type = props.DESCRIPTIO || props.Description
-          description += `<br><small>Type: ${type}</small>`
-        }
-
-        new maplibregl.Popup()
-          .setLngLat(e.lngLat)
-          .setHTML(description)
-          .addTo(mapInstance)
-      }
-
-      const mouseenterHandler = () => {
-        // Don't change cursor during drawing/editing - keep crosshair
-        if (
-          window.MapDrawingControls &&
-          window.MapDrawingControls.isInDrawingMode()
-        ) {
-          return
-        }
-        mapInstance.getCanvas().style.cursor = 'pointer'
-      }
-
-      const mouseleaveHandler = () => {
-        // Don't change cursor during drawing/editing
-        if (
-          window.MapDrawingControls &&
-          window.MapDrawingControls.isInDrawingMode()
-        ) {
-          return
-        }
-        mapInstance.getCanvas().style.cursor = ''
-      }
-
-      // Add event handlers to map
-      mapInstance.on('click', fillLayerId, clickHandler)
-      mapInstance.on('mouseenter', fillLayerId, mouseenterHandler)
-      mapInstance.on('mouseleave', fillLayerId, mouseleaveHandler)
-
-      // Store handlers for cleanup
-      layerEventHandlers[dataset.id] = {
-        fillLayerId,
-        clickHandler,
-        mouseenterHandler,
-        mouseleaveHandler
-      }
-
-      return {
-        sourceId,
-        fillLayerId,
-        borderLayerId,
-        datasetId: dataset.id
-      }
-    } catch (error) {
-      console.error(`Error creating GeoJSON layer for ${dataset.id}:`, error)
       return null
     }
   }
@@ -441,71 +254,19 @@
 
     const fillLayerId = layerInfo.fillLayerId
 
-    // Create the same event handlers as in createGeoJSONLayer
-    const clickHandler = (e) => {
-      if (
-        window.MapDrawingControls &&
-        window.MapDrawingControls.isInDrawingMode()
-      ) {
-        return
-      }
-
-      if (!e.features || e.features.length === 0) return
-
-      const feature = e.features[0]
-      const props = feature.properties
-
-      const name =
-        props.NAME ||
-        props.name ||
-        props.Label ||
-        props.N2K_Site_N ||
-        props.ZoneName ||
-        'Feature'
-
-      let description = `<strong>${name}</strong>`
-      if (props.DESCRIPTIO || props.Description) {
-        const type = props.DESCRIPTIO || props.Description
-        description += `<br><small>Type: ${type}</small>`
-      }
-
-      new maplibregl.Popup()
-        .setLngLat(e.lngLat)
-        .setHTML(description)
-        .addTo(mapInstance)
-    }
-
-    const mouseenterHandler = () => {
-      if (
-        window.MapDrawingControls &&
-        window.MapDrawingControls.isInDrawingMode()
-      ) {
-        return
-      }
-      mapInstance.getCanvas().style.cursor = 'pointer'
-    }
-
-    const mouseleaveHandler = () => {
-      if (
-        window.MapDrawingControls &&
-        window.MapDrawingControls.isInDrawingMode()
-      ) {
-        return
-      }
-      mapInstance.getCanvas().style.cursor = ''
-    }
-
-    // Add event handlers to map
-    mapInstance.on('click', fillLayerId, clickHandler)
-    mapInstance.on('mouseenter', fillLayerId, mouseenterHandler)
-    mapInstance.on('mouseleave', fillLayerId, mouseleaveHandler)
+    // Create and attach event handlers using shared utility
+    const handlers =
+      window.MapEventHandlers.createLayerEventHandlers(mapInstance)
+    window.MapEventHandlers.attachEventHandlers(
+      mapInstance,
+      fillLayerId,
+      handlers
+    )
 
     // Store handlers for cleanup
     layerEventHandlers[datasetId] = {
       fillLayerId,
-      clickHandler,
-      mouseenterHandler,
-      mouseleaveHandler
+      ...handlers
     }
   }
 
@@ -549,22 +310,6 @@
           )
         )
       }
-    }
-
-    if (dataset.type === 'geojson') {
-      const url = dataset.getUrl()
-      if (!url) {
-        console.log(`No URL configured for dataset: ${datasetId}`)
-        return Promise.reject(new Error(`No URL for ${datasetId}`))
-      }
-
-      return fetch(url)
-        .then((response) => response.json())
-        .then((data) => {
-          const layer = createGeoJSONLayer(dataset, data)
-          loadedLayers[datasetId] = layer
-          return layer
-        })
     }
 
     return Promise.reject(new Error(`Unknown dataset type: ${dataset.type}`))
@@ -658,16 +403,10 @@
     // Clean up event listeners to prevent memory leak
     const handlers = layerEventHandlers[datasetId]
     if (handlers) {
-      mapInstance.off('click', handlers.fillLayerId, handlers.clickHandler)
-      mapInstance.off(
-        'mouseenter',
+      window.MapEventHandlers.removeEventHandlers(
+        mapInstance,
         handlers.fillLayerId,
-        handlers.mouseenterHandler
-      )
-      mapInstance.off(
-        'mouseleave',
-        handlers.fillLayerId,
-        handlers.mouseleaveHandler
+        handlers
       )
       delete layerEventHandlers[datasetId]
     }
