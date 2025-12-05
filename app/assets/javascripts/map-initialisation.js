@@ -275,11 +275,13 @@
       }
 
       // Add vector tile source
+      // Set maxzoom to match MBTiles file so MapLibre knows tile availability
+      // MapLibre will automatically overzoom beyond this level
       map.addSource(sourceId, {
         type: 'vector',
         tiles: [tilesPath],
         minzoom: 0,
-        maxzoom: 14
+        maxzoom: 10 // Catchment tiles only available up to zoom 10, will overzoom beyond
       })
 
       // Get current style for catchments

@@ -140,11 +140,13 @@
       }
 
       // Add vector tile source
+      // Set maxzoom to match MBTiles file so MapLibre knows tile availability
+      // MapLibre will automatically overzoom beyond this level
       mapInstance.addSource(sourceId, {
         type: 'vector',
         tiles: [dataset.getTilesUrl()],
-        minzoom: dataset.minzoom || 0,
-        maxzoom: dataset.maxzoom || 14
+        minzoom: 0,
+        maxzoom: 12 // GCN tiles only available up to zoom 12, will overzoom beyond
       })
 
       // Find the first drawing layer to insert dataset layers before it

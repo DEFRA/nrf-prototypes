@@ -32,9 +32,7 @@
       // Vector tile configuration
       getTilesUrl: () =>
         `${window.location.origin}/tiles/data/gcn_edp_all_regions/{z}/{x}/{y}.pbf`,
-      sourceLayer: 'gcn_edp_all_regions',
-      minzoom: 0,
-      maxzoom: 14
+      sourceLayer: 'gcn_edp_all_regions'
     }
   }
 
