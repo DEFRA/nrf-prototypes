@@ -391,7 +391,9 @@
         stack: error.stack,
         name: error.name
       })
-      showCatchmentLoadError()
+      showMapError(
+        'Map loaded successfully. Catchment data temporarily unavailable.'
+      )
     }
   }
 

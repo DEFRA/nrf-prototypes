@@ -145,8 +145,8 @@
       mapInstance.addSource(sourceId, {
         type: 'vector',
         tiles: [dataset.getTilesUrl()],
-        minzoom: 0,
-        maxzoom: 12 // GCN tiles only available up to zoom 12, will overzoom beyond
+        minzoom: dataset.minzoom || 0,
+        maxzoom: dataset.maxzoom || 12 // Use dataset-specific maxzoom or default to 12
       })
 
       // Find the first drawing layer to insert dataset layers before it

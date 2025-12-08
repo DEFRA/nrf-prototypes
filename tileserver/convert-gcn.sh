@@ -19,6 +19,9 @@ if ! command -v tippecanoe &> /dev/null; then
     exit 1
 fi
 
+# Create output directory if it doesn't exist
+mkdir -p "$(dirname "$OUTPUT_MBTILES")"
+
 # Generate MBTiles with tippecanoe
 echo "Running tippecanoe..."
 tippecanoe -o "$OUTPUT_MBTILES" \

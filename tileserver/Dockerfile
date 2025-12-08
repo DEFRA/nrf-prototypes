@@ -6,4 +6,4 @@ WORKDIR /data
 
 EXPOSE 8080
 
-CMD ["tileserver-gl-light", "--port", "8080"]
+CMD ["tileserver-gl-light", "--config", "config.json", "--port", "8080"]

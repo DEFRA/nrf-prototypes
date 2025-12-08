@@ -14,7 +14,8 @@ services:
       - ./app:/home/node/app
       - ./node_modules:/home/node/node_modules
     depends_on:
-      - tileserver
+      tileserver:
+        condition: service_healthy
 
   tileserver:
     build:
@@ -23,3 +24,9 @@ services:
       - "8080:8080"
     volumes:
       - ./tileserver/data:/data:ro
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s

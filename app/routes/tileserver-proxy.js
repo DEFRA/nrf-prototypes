@@ -18,6 +18,14 @@ router.get('/tiles/*', async (req, res) => {
   try {
     // Extract the path after /tiles/
     const tilePath = req.params[0]
+
+    // Validate that the path matches expected tile URL patterns
+    // This prevents SSRF attacks by ensuring only legitimate tile requests are proxied
+    if (!/^data\/[\w_]+\/\d+\/\d+\/\d+\.pbf$/.test(tilePath)) {
+      console.warn(`[Tileserver Proxy] Invalid tile path rejected: ${tilePath}`)
+      return res.status(400).json({ error: 'Invalid tile path' })
+    }
+
     const targetUrl = `${TILESERVER_URL}/${tilePath}`
 
     // Log for debugging

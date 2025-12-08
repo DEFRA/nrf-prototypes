@@ -222,10 +222,14 @@ href: backLink or "/lpa-approve-2/lpa-approval-email-magiclink"
       const boundaryName = boundaryData.properties?.name || 'Development site';
       const boundaryDescription = boundaryData.properties?.description || 'Red line boundary';
 
+      // Sanitize HTML to prevent XSS attacks
+      const sanitizedName = String(boundaryName).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const sanitizedDescription = String(boundaryDescription).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
       map.on('click', 'boundary-fill', function (e) {
         new maplibregl.Popup()
           .setLngLat(e.lngLat)
-          .setHTML(`<strong>Red line boundary</strong><br>${boundaryName}<br>${boundaryDescription}`)
+          .setHTML(`<strong>Red line boundary</strong><br>${sanitizedName}<br>${sanitizedDescription}`)
           .addTo(map);
       });
 

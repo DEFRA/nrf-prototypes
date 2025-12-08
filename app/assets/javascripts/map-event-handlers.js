@@ -23,10 +23,24 @@
       properties.ZoneName ||
       'Feature'
 
-    let description = `<strong>${name}</strong>`
+    // Sanitize HTML to prevent XSS attacks
+    const sanitizedName = String(name)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;')
+
+    let description = `<strong>${sanitizedName}</strong>`
     if (properties.DESCRIPTIO || properties.Description) {
       const type = properties.DESCRIPTIO || properties.Description
-      description += `<br><small>Type: ${type}</small>`
+      const sanitizedType = String(type)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;')
+      description += `<br><small>Type: ${sanitizedType}</small>`
     }
 
     return description
