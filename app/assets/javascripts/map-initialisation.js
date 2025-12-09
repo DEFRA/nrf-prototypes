@@ -159,15 +159,31 @@
 
     // Add layer after map loads
     map.on('load', () => {
+      // Find the first non-raster layer to insert base layer before it
+      // This ensures base layers stay at the bottom of the stack
+      const layers = map.getStyle().layers
+      let firstNonRasterLayer = null
+      for (const layer of layers) {
+        if (layer.type !== 'raster') {
+          firstNonRasterLayer = layer.id
+          break
+        }
+      }
+
       // Default to satellite view unless explicitly set to street
       if (savedLayer === 'street') {
         map.addSource(streetMap.sourceId, streetMap.source)
-        map.addLayer(streetMap.layer)
+        map.addLayer(streetMap.layer, firstNonRasterLayer)
         window.MapStyles.setCurrentStyle('street')
       } else {
         map.addSource(satelliteMap.sourceId, satelliteMap.source)
-        map.addLayer(satelliteMap.layer)
+        map.addLayer(satelliteMap.layer, firstNonRasterLayer)
         window.MapStyles.setCurrentStyle('satellite')
+      }
+
+      // Update the style toggle button thumbnail now that currentMapStyle is set
+      if (window.MapStyles && window.MapStyles.updateMapStyleButtonThumbnail) {
+        window.MapStyles.updateMapStyleButtonThumbnail()
       }
     })
   }
@@ -237,98 +253,117 @@
   // ============================================================================
 
   /**
-   * Build catchment popup content
-   * @param {string} catchmentName - Catchment name
-   * @param {Object} properties - Catchment properties
-   * @returns {string} Popup HTML content
-   */
-  function buildCatchmentPopupContent(catchmentName, properties) {
-    return `
-      <strong>${catchmentName}</strong><br>
-      ${properties.PopupInfo ? `Type: ${properties.PopupInfo}<br>` : ''}
-      ${properties.DateAmend ? `Last Updated: ${properties.DateAmend}<br>` : ''}
-      ${properties.Notes ? `Notes: ${properties.Notes}` : ''}
-    `
-  }
-
-  /**
-   * Create catchment polygon from GeoJSON feature
-   * @param {Object} feature - GeoJSON feature
-   * @param {number} index - Feature index
+   * Load catchment data from vector tiles (tileserver)
    * @param {maplibregl.Map} map - MapLibre map instance
-   * @returns {Object|null} Catchment data object or null
+   * @param {Object} edpData - EDP data object
    */
-  function createCatchmentPolygon(feature, index, map) {
-    const properties = feature.properties
-    const geometry = feature.geometry
+  function loadCatchmentData(map, edpData) {
+    // Use proxied tiles endpoint (goes through Express server on same port)
+    // This avoids CORS and port issues in production
+    const tilesPath = `${window.location.origin}/tiles/data/catchments_nn_catchments_03_2024/{z}/{x}/{y}.pbf`
 
-    const catchmentName =
-      properties.Label || properties.N2K_Site_N || `Catchment ${index + 1}`
+    // Add vector tile source for nutrient catchments
+    const sourceId = 'nutrient-catchments'
+    const layerId = 'nutrient-catchments' // MapStyles will append '-border' for border layer
+    const borderLayerId = 'nutrient-catchments-border'
 
-    if (geometry.type === 'Polygon') {
-      // Keep coordinates in GeoJSON format [lng, lat] for MapLibre
-      const coordinates = geometry.coordinates
+    try {
+      // Check if source already exists
+      if (map.getSource(sourceId)) {
+        console.log('Vector tile source already exists, skipping')
+        return
+      }
 
-      const sourceId = `catchment-${index}`
-      const layerId = `catchment-layer-${index}`
-
-      // Add source
+      // Add vector tile source
+      // Set maxzoom to match MBTiles file so MapLibre knows tile availability
+      // MapLibre will automatically overzoom beyond this level
       map.addSource(sourceId, {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          geometry: geometry,
-          properties: properties
-        }
+        type: 'vector',
+        tiles: [tilesPath],
+        minzoom: 0,
+        maxzoom: 10 // Catchment tiles only available up to zoom 10, will overzoom beyond
       })
 
-      // Get style from MapStyles
-      const style = window.MapStyles.getCatchmentStyle(
-        window.MapStyles.getCurrentStyle()
-      )
+      // Get current style for catchments
+      const style = window.MapStyles
+        ? window.MapStyles.getCatchmentStyle()
+        : {
+            fillColor: '#FF6B6B',
+            fillOpacity: 0.3,
+            color: '#C92A2A',
+            weight: 2,
+            opacity: 0.8
+          }
+
+      // Check cookie preference for initial visibility
+      let initialVisibility = 'visible'
+      if (window.MapDatasets && window.MapDatasets.getCookiePreference) {
+        const savedVisibility = window.MapDatasets.getCookiePreference()
+        if (savedVisibility && savedVisibility.nutrientEdp === false) {
+          initialVisibility = 'none'
+        }
+      }
 
       // Add fill layer
       map.addLayer({
         id: layerId,
         type: 'fill',
         source: sourceId,
+        'source-layer': 'catchments_nn_catchments_03_2024',
+        layout: {
+          visibility: initialVisibility
+        },
         paint: {
           'fill-color': style.fillColor || style.color,
-          'fill-opacity': style.fillOpacity || 0.5
+          'fill-opacity': style.fillOpacity || 0.3
         }
       })
 
       // Add border layer
       map.addLayer({
-        id: `${layerId}-border`,
+        id: borderLayerId,
         type: 'line',
         source: sourceId,
+        'source-layer': 'catchments_nn_catchments_03_2024',
+        layout: {
+          visibility: initialVisibility
+        },
         paint: {
           'line-color': style.color,
           'line-width': style.weight || 2,
-          'line-opacity': style.opacity || 1
+          'line-opacity': style.opacity || 0.8
         }
       })
 
-      // Add click handler for popup
-      const popupContent = buildCatchmentPopupContent(catchmentName, properties)
+      // Register layers with MapStyles for visibility control
+      if (window.MapStyles && window.MapStyles.addCatchmentLayer) {
+        window.MapStyles.addCatchmentLayer(layerId, sourceId)
+      }
+
+      // Add click handler for popups
       map.on('click', layerId, (e) => {
-        // Don't show popups during drawing/editing
         if (
           window.MapDrawingControls &&
           window.MapDrawingControls.isInDrawingMode()
         ) {
           return
         }
+
+        if (!e.features || e.features.length === 0) return
+
+        const feature = e.features[0]
+        const props = feature.properties
+        const name =
+          props.Label || props.NAME || props.name || 'Nutrient Catchment'
+
         new maplibregl.Popup()
           .setLngLat(e.lngLat)
-          .setHTML(popupContent)
+          .setHTML(`<strong>${name}</strong>`)
           .addTo(map)
       })
 
-      // Change cursor on hover
+      // Add hover cursor
       map.on('mouseenter', layerId, () => {
-        // Don't change cursor during drawing/editing - keep crosshair
         if (
           window.MapDrawingControls &&
           window.MapDrawingControls.isInDrawingMode()
@@ -337,8 +372,8 @@
         }
         map.getCanvas().style.cursor = 'pointer'
       })
+
       map.on('mouseleave', layerId, () => {
-        // Don't change cursor during drawing/editing
         if (
           window.MapDrawingControls &&
           window.MapDrawingControls.isInDrawingMode()
@@ -348,137 +383,18 @@
         map.getCanvas().style.cursor = ''
       })
 
-      // Register layer with MapStyles
-      window.MapStyles.addCatchmentLayer(layerId, sourceId)
-
-      return {
-        name: catchmentName,
-        layerId: layerId,
-        sourceId: sourceId,
-        coordinates: coordinates,
-        properties: properties,
-        geometry: geometry
-      }
-    }
-
-    return null
-  }
-
-  /**
-   * Recheck existing polygons for catchment intersections
-   * @param {Array} edpLayers - Array of EDP layer data
-   */
-  function recheckExistingPolygons(edpLayers) {
-    const draw = window.MapDrawingControls.getDrawInstance()
-    if (!draw) return
-
-    const allFeatures = draw.getAll()
-    if (allFeatures.features && allFeatures.features.length > 0) {
-      allFeatures.features.forEach((feature) => {
-        if (feature.geometry.type === 'Polygon') {
-          const intersectingCatchment =
-            window.MapGeometry.findIntersectingCatchment(feature, edpLayers)
-          window.MapDrawingControls.updateBoundaryData(
-            feature,
-            intersectingCatchment
-          )
-        }
+      console.log('Vector tile catchments loaded successfully from tileserver')
+    } catch (error) {
+      console.error('Error loading vector tile catchments:', error)
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
       })
+      showMapError(
+        'Map loaded successfully. Catchment data temporarily unavailable.'
+      )
     }
-  }
-
-  /**
-   * Fit map to catchments if no existing boundary
-   * @param {maplibregl.Map} map - MapLibre map instance
-   * @param {Array} edpLayers - Array of EDP layer data
-   */
-  function fitMapToCatchmentsIfNeeded(map, edpLayers) {
-    const existingBoundaryData = document.getElementById(
-      DOM_IDS.boundaryData
-    ).value
-
-    if (edpLayers.length > 0 && !existingBoundaryData) {
-      // Calculate bounds from all catchment geometries
-      const bounds = new maplibregl.LngLatBounds()
-
-      edpLayers.forEach((edp) => {
-        if (edp.geometry && edp.geometry.coordinates) {
-          // Extend bounds with all coordinates
-          edp.geometry.coordinates[0].forEach((coord) => {
-            bounds.extend(coord)
-          })
-        }
-      })
-
-      if (!bounds.isEmpty()) {
-        map.fitBounds(bounds, { padding: 50 })
-      }
-    }
-  }
-
-  /**
-   * Show catchment load error message
-   */
-  function showCatchmentLoadError() {
-    const loadingDiv = document.getElementById(DOM_IDS.mapLoading)
-    if (loadingDiv) {
-      loadingDiv.innerHTML =
-        '<p class="govuk-body">Map loaded successfully. Catchment data temporarily unavailable.</p>'
-    }
-  }
-
-  /**
-   * Process catchment features
-   * @param {Array} features - Array of GeoJSON features
-   * @param {L.Map} map - Leaflet map instance
-   * @param {Object} edpData - EDP data object
-   */
-  function processCatchmentFeatures(features, map, edpData) {
-    features.forEach((feature, index) => {
-      const catchmentData = createCatchmentPolygon(feature, index, map)
-
-      if (catchmentData) {
-        edpData.layers.push(catchmentData)
-        edpData.boundaries.push({
-          name: catchmentData.name,
-          coordinates: catchmentData.coordinates
-        })
-      }
-    })
-
-    recheckExistingPolygons(edpData.layers)
-    fitMapToCatchmentsIfNeeded(map, edpData.layers)
-  }
-
-  /**
-   * Load catchment data from GeoJSON
-   * @param {L.Map} map - Leaflet map instance
-   * @param {Object} edpData - EDP data object
-   */
-  function loadCatchmentData(map, edpData) {
-    const catchmentsUrl =
-      window.CATCHMENTS_GEOJSON_URL ||
-      '/nrf-estimate-2-map-layers-spike/catchments.geojson'
-    fetch(catchmentsUrl)
-      .then((response) => response.json())
-      .then((data) => {
-        processCatchmentFeatures(data.features, map, edpData)
-
-        // Check cookie preference and hide nutrient layers if needed
-        if (window.MapDatasets && window.MapDatasets.getCookiePreference) {
-          const savedVisibility = window.MapDatasets.getCookiePreference()
-          if (savedVisibility && savedVisibility.nutrientEdp === false) {
-            // Hide nutrient layers immediately after loading
-            if (window.MapStyles && window.MapStyles.hideCatchmentLayers) {
-              window.MapStyles.hideCatchmentLayers(map)
-            }
-          }
-        }
-      })
-      .catch((error) => {
-        console.error('Error loading GeoJSON data:', error)
-        showCatchmentLoadError()
-      })
   }
 
   // ============================================================================

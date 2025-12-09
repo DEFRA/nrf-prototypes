@@ -17,7 +17,7 @@
     gcnEdp: {
       id: 'gcnEdp',
       name: 'Nature Restoration Fund great crested newt levy',
-      type: 'geojson',
+      type: 'vector-tile',
       visible: true,
       // Style is retrieved dynamically from MapStyles based on current map style
       getStyle: () =>
@@ -29,7 +29,12 @@
               fillOpacity: 0.3,
               weight: 2
             },
-      getUrl: () => '/public/map-layers/gcn_edp_all_regions.geojson'
+      // Vector tile configuration
+      getTilesUrl: () =>
+        `${window.location.origin}/tiles/data/gcn_edp_all_regions/{z}/{x}/{y}.pbf`,
+      sourceLayer: 'gcn_edp_all_regions',
+      minzoom: 0,
+      maxzoom: 12 // GCN tiles available up to zoom 12 (from MBTiles metadata)
     }
   }
 
