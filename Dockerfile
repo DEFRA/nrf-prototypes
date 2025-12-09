@@ -30,6 +30,7 @@ ENV NODE_ENV=production
 
 COPY --from=development /home/node/package*.json ./
 COPY --from=development /home/node/app ./app/
+COPY --chown=node:node ./tileserver/data/mbtiles ./tileserver/data/mbtiles/
 
 RUN npm ci --omit=dev
 

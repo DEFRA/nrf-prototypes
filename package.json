@@ -6,8 +6,6 @@
   "license": "(OGL-UK-3, MIT) see licenses in /LICENSES",
   "scripts": {
     "dev": "govuk-prototype-kit dev",
-    "dev:map": "docker-compose up -d tileserver && npm run dev",
-    "map:stop": "docker-compose stop tileserver",
     "serve": "govuk-prototype-kit serve",
     "start": "govuk-prototype-kit start",
     "format": "prettier --write \"**/*.{cjs,js,json,md,scss}\"",
@@ -29,6 +27,7 @@
     "axios": "^1.6.0",
     "axios-rate-limit": "^1.3.0",
     "axios-retry": "^4.0.0",
+    "better-sqlite3": "12.5.0",
     "dotenv": "17.2.1",
     "govuk-frontend": "5.11.1",
     "govuk-prototype-kit": "13.17.0",

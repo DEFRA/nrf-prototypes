@@ -1,18 +1,54 @@
 /**
- * TileServer Proxy Routes
- * Proxies requests to the tileserver to avoid CORS and port issues in production
+ * TileServer Routes
+ * Serves vector tiles directly from MBTiles files
  */
 
 const govukPrototypeKit = require('govuk-prototype-kit')
 const router = govukPrototypeKit.requests.setupRouter()
-const axios = require('axios')
+const Database = require('better-sqlite3')
+const path = require('path')
 
-// Get tileserver URL from environment or default
-const TILESERVER_URL = process.env.TILESERVER_URL || 'http://localhost:8080'
+// MBTiles database connections (cached)
+const mbtilesConnections = {}
 
 /**
- * Proxy all tileserver requests through /tiles/*
- * This allows the frontend to request tiles from the same origin (port 3000)
+ * Get or create an MBTiles database connection
+ * @param {string} layerName - Name of the layer (e.g., 'gcn_edp_all_regions')
+ * @returns {Database} SQLite database connection
+ */
+function getMBTilesDB(layerName) {
+  if (!mbtilesConnections[layerName]) {
+    const mbtilesPath = path.join(
+      __dirname,
+      '..',
+      '..',
+      'tileserver',
+      'data',
+      'mbtiles',
+      `${layerName}.mbtiles`
+    )
+
+    try {
+      mbtilesConnections[layerName] = new Database(mbtilesPath, {
+        readonly: true,
+        fileMustExist: true
+      })
+      console.log(`[TileServer] Opened MBTiles: ${layerName}`)
+    } catch (error) {
+      console.error(
+        `[TileServer] Failed to open MBTiles ${layerName}:`,
+        error.message
+      )
+      throw error
+    }
+  }
+
+  return mbtilesConnections[layerName]
+}
+
+/**
+ * Serve vector tiles directly from MBTiles files
+ * Handles /tiles/data/{layer}/{z}/{x}/{y}.pbf
  */
 router.get('/tiles/*', async (req, res) => {
   try {
@@ -20,56 +56,67 @@ router.get('/tiles/*', async (req, res) => {
     const tilePath = req.params[0]
 
     // Validate that the path matches expected tile URL patterns
-    // This prevents SSRF attacks by ensuring only legitimate tile requests are proxied
-    if (!/^data\/[\w_]+\/\d+\/\d+\/\d+\.pbf$/.test(tilePath)) {
-      console.warn(`[Tileserver Proxy] Invalid tile path rejected: ${tilePath}`)
+    // This prevents path traversal attacks
+    const tileMatch = tilePath.match(
+      /^data\/([\w_]+)\/(\d+)\/(\d+)\/(\d+)\.pbf$/
+    )
+
+    if (!tileMatch) {
+      console.warn(`[TileServer] Invalid tile path rejected: ${tilePath}`)
       return res.status(400).json({ error: 'Invalid tile path' })
     }
 
-    const targetUrl = `${TILESERVER_URL}/${tilePath}`
+    const [, layerName, z, x, y] = tileMatch
+    const zoom = parseInt(z, 10)
+    const tileX = parseInt(x, 10)
+    const tileY = parseInt(y, 10)
 
     // Log for debugging
     console.log(
-      `[Tileserver Proxy] ${req.method} /tiles/${tilePath} -> ${targetUrl}`
+      `[TileServer] Serving tile: ${layerName}/${zoom}/${tileX}/${tileY}`
     )
 
-    // Forward the request to the tileserver
-    const response = await axios.get(targetUrl, {
-      responseType: 'arraybuffer', // Important for binary tile data
-      headers: {
-        'Accept-Encoding': 'gzip, deflate'
-      }
-    })
+    // Get MBTiles database connection
+    const db = getMBTilesDB(layerName)
 
-    // Forward response headers
-    if (response.headers['content-type']) {
-      res.set('Content-Type', response.headers['content-type'])
-    }
-    if (response.headers['content-encoding']) {
-      res.set('Content-Encoding', response.headers['content-encoding'])
-    }
-    if (response.headers['cache-control']) {
-      res.set('Cache-Control', response.headers['cache-control'])
+    // MBTiles uses TMS (Tile Map Service) coordinate system where Y is flipped
+    // Convert from XYZ to TMS: tms_y = (2^zoom - 1) - y
+    const tileYTMS = (1 << zoom) - 1 - tileY
+
+    // Query the tile from the database
+    const stmt = db.prepare(
+      'SELECT tile_data FROM tiles WHERE zoom_level = ? AND tile_column = ? AND tile_row = ?'
+    )
+    const row = stmt.get(zoom, tileX, tileYTMS)
+
+    if (!row) {
+      // No tile found - return 204 No Content
+      return res.status(204).end()
     }
 
-    // Add CORS headers (if needed)
+    // Decompress the tile data (MBTiles stores tiles gzipped)
+    const tileData = row.tile_data
+
+    // Set headers
+    res.set('Content-Type', 'application/x-protobuf')
+    res.set('Content-Encoding', 'gzip')
+    res.set('Cache-Control', 'public, max-age=86400') // Cache for 24 hours
     res.set('Access-Control-Allow-Origin', '*')
 
-    // Send the tile data
-    res.status(response.status).send(response.data)
+    // Send the tile data (already gzipped in MBTiles)
+    res.status(200).send(tileData)
   } catch (error) {
-    console.error('[Tileserver Proxy] Error:', error.message)
+    console.error('[TileServer] Error:', error.message)
 
-    // Handle 404s from tileserver (empty tiles)
-    if (error.response && error.response.status === 404) {
-      res.status(404).send('Tile not found')
-    } else if (error.response && error.response.status === 204) {
-      // 204 No Content - empty tile
-      res.status(204).end()
+    // Handle different error types
+    if (error.message.includes('does not exist')) {
+      res.status(404).json({
+        error: 'Layer not found',
+        message: 'The requested layer does not exist'
+      })
     } else {
-      // Other errors
       res.status(500).json({
-        error: 'Failed to fetch tile from tileserver',
+        error: 'Failed to fetch tile',
         message: error.message
       })
     }
