@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "govuk-prototype-kit dev",
     "dev:map": "docker-compose up -d tileserver && npm run dev",
+    "map:stop": "docker-compose stop tileserver",
     "serve": "govuk-prototype-kit serve",
     "start": "govuk-prototype-kit start",
     "format": "prettier --write \"**/*.{cjs,js,json,md,scss}\"",
@@ -17,7 +18,7 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
     "tiles:install": "brew list tippecanoe || brew install tippecanoe",
-    "tiles:convert-gcn": "cd tileserver && ./convert-gcn.sh"
+    "tiles:convert": "cd tileserver && ./convert-all.sh"
   },
   "lint-staged": {
     "*.{cjs,js,json,md}": "prettier --check"

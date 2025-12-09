@@ -11,21 +11,6 @@
     "catchments_nn_catchments_03_2024": {
       "mbtiles": "catchments_nn_catchments_03_2024.mbtiles"
     },
-    "catchments_wfd_surface_water_operational_catchments_cycle_2": {
-      "mbtiles": "catchments_wfd_surface_water_operational_catchments_cycle_2.mbtiles"
-    },
-    "inputs_iiat_layers_nrf_ponds": {
-      "mbtiles": "inputs_iiat_layers_nrf_ponds.mbtiles"
-    },
-    "inputs_iiat_layers_edp_edge": {
-      "mbtiles": "inputs_iiat_layers_edp_edge.mbtiles"
-    },
-    "wwtw_files_wwtw_all_features": {
-      "mbtiles": "wwtw_files_wwtw_all_features.mbtiles"
-    },
-    "lpa_lpa_national": {
-      "mbtiles": "lpa_lpa_national.mbtiles"
-    },
     "gcn_edp_all_regions": {
       "mbtiles": "gcn_edp_all_regions.mbtiles"
     }
