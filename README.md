@@ -13,10 +13,9 @@ the [GOV.UK Frontend](https://github.com/alphagov/govuk-frontend).
 - [Setting multiple passwords](#setting-multiple-passwords)
 - [Removing the need for a password](#removing-the-need-for-a-password)
 - [Map and Vector Tiles](#map-and-vector-tiles)
-  - [Running with maps (Development)](#running-with-maps-development)
-  - [Running in production mode (Docker)](#running-in-production-mode-docker)
+  - [Running with maps](#running-with-maps)
   - [Vector Tile Conversion](#vector-tile-conversion)
-  - [Available Scripts](#available-scripts)
+  - [How it works](#how-it-works)
 - [Npm scripts](#npm-scripts)
 - [Updating dependencies](#updating-dependencies)
 - [Environment Variables and Secrets](#environment-variables-and-secrets)
@@ -128,40 +127,17 @@ read [Environment Variables on CDP](#environment-variables-on-cdp).
 
 ## Map and Vector Tiles
 
-This prototype includes interactive maps powered by [MapLibre GL JS](https://maplibre.org/) and a local tileserver for serving vector tiles.
+This prototype includes interactive maps powered by [MapLibre GL JS](https://maplibre.org/). Vector tiles are served directly from the Node.js application using pre-generated MBTiles files.
 
-### Running with maps (Development)
+### Running with maps
 
-```bash
-npm run dev:map
-```
-
-This starts:
-
-1. A Docker container running the tileserver (port 8080)
-2. The prototype kit development server (port 3000)
-
-To stop the tileserver when done:
+Simply start the development server:
 
 ```bash
-npm run map:stop
+npm run dev
 ```
 
-### Running in production mode (Docker)
-
-To run both the app and tileserver together like production:
-
-```bash
-docker-compose up
-```
-
-This builds and runs both containers with proper healthchecks and network configuration.
-
-To stop everything:
-
-```bash
-docker-compose down
-```
+The app will automatically serve vector tiles from the MBTiles files in `tileserver/data/mbtiles/`. No separate tileserver is needed.
 
 ### Vector Tile Conversion
 
@@ -179,14 +155,12 @@ npm run tiles:convert
 
 The conversion script processes GeoJSON files from `app/assets/map-layers/` and outputs MBTiles to `tileserver/data/mbtiles/`.
 
-### Available Scripts
+### How it works
 
-```bash
-npm run dev:map      # Start tileserver + dev server
-npm run map:stop     # Stop tileserver
-npm run tiles:install # Install tippecanoe
-npm run tiles:convert # Convert GeoJSON to MBTiles
-```
+- Vector tiles are stored as MBTiles files (SQLite databases) in `tileserver/data/mbtiles/`
+- The Express app serves tiles directly via the `/tiles/data/{layer}/{z}/{x}/{y}.pbf` endpoint
+- Tiles are read from MBTiles using `better-sqlite3` for fast, efficient access
+- This approach works identically in development and production, with no external dependencies
 
 ## Npm scripts
 

@@ -31,6 +31,15 @@ ENV NODE_ENV=production
 COPY --from=development /home/node/package*.json ./
 COPY --from=development /home/node/app ./app/
 
+# Ensure MBTiles files exist before building the production image
+# The build will fail if the mbtiles directory is missing or empty
+RUN if [ ! -d "./tileserver/data/mbtiles" ] || [ -z "$(ls -A ./tileserver/data/mbtiles)" ]; then \
+  echo "ERROR: ./tileserver/data/mbtiles directory is missing or empty. Please generate MBTiles files before building the image." >&2; \
+  exit 1; \
+fi
+
+COPY --chown=node:node ./tileserver/data/mbtiles ./tileserver/data/mbtiles/
+
 RUN npm ci --omit=dev
 
 ARG PORT
