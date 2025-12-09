@@ -12,6 +12,11 @@ the [GOV.UK Frontend](https://github.com/alphagov/govuk-frontend).
 - [Setting a password](#setting-a-password)
 - [Setting multiple passwords](#setting-multiple-passwords)
 - [Removing the need for a password](#removing-the-need-for-a-password)
+- [Map and Vector Tiles](#map-and-vector-tiles)
+  - [Running with maps (Development)](#running-with-maps-development)
+  - [Running in production mode (Docker)](#running-in-production-mode-docker)
+  - [Vector Tile Conversion](#vector-tile-conversion)
+  - [Available Scripts](#available-scripts)
 - [Npm scripts](#npm-scripts)
 - [Updating dependencies](#updating-dependencies)
 - [Environment Variables and Secrets](#environment-variables-and-secrets)
@@ -120,6 +125,68 @@ ENV USE_AUTH=false
 
 This can be set in `cdp-app-config` for instructions on how to do so
 read [Environment Variables on CDP](#environment-variables-on-cdp).
+
+## Map and Vector Tiles
+
+This prototype includes interactive maps powered by [MapLibre GL JS](https://maplibre.org/) and a local tileserver for serving vector tiles.
+
+### Running with maps (Development)
+
+```bash
+npm run dev:map
+```
+
+This starts:
+
+1. A Docker container running the tileserver (port 8080)
+2. The prototype kit development server (port 3000)
+
+To stop the tileserver when done:
+
+```bash
+npm run map:stop
+```
+
+### Running in production mode (Docker)
+
+To run both the app and tileserver together like production:
+
+```bash
+docker-compose up
+```
+
+This builds and runs both containers with proper healthchecks and network configuration.
+
+To stop everything:
+
+```bash
+docker-compose down
+```
+
+### Vector Tile Conversion
+
+The map layers use vector tiles (MBTiles format) generated from GeoJSON source files. Pre-generated tiles are committed to the repository, so you typically don't need to regenerate them.
+
+If you need to regenerate tiles from source GeoJSON files:
+
+```bash
+# Install tippecanoe (one-time setup)
+npm run tiles:install
+
+# Convert all GeoJSON layers to MBTiles
+npm run tiles:convert
+```
+
+The conversion script processes GeoJSON files from `app/assets/map-layers/` and outputs MBTiles to `tileserver/data/mbtiles/`.
+
+### Available Scripts
+
+```bash
+npm run dev:map      # Start tileserver + dev server
+npm run map:stop     # Stop tileserver
+npm run tiles:install # Install tippecanoe
+npm run tiles:convert # Convert GeoJSON to MBTiles
+```
 
 ## Npm scripts
 
