@@ -11,6 +11,26 @@ const path = require('path')
 // MBTiles database connections (cached)
 const mbtilesConnections = {}
 
+// Clean up database connections on shutdown
+function closeDatabases() {
+  Object.keys(mbtilesConnections).forEach((layerName) => {
+    if (mbtilesConnections[layerName]) {
+      try {
+        mbtilesConnections[layerName].close()
+        console.log(`[TileServer] Closed MBTiles: ${layerName}`)
+      } catch (err) {
+        console.error(
+          `[TileServer] Error closing MBTiles ${layerName}:`,
+          err.message
+        )
+      }
+    }
+  })
+}
+
+process.on('SIGTERM', closeDatabases)
+process.on('SIGINT', closeDatabases)
+
 /**
  * Get or create an MBTiles database connection
  * @param {string} layerName - Name of the layer (e.g., 'gcn_edp_all_regions')
@@ -94,7 +114,7 @@ router.get('/tiles/*', async (req, res) => {
       return res.status(204).end()
     }
 
-    // Decompress the tile data (MBTiles stores tiles gzipped)
+    // Get the tile data (already gzipped in MBTiles)
     const tileData = row.tile_data
 
     // Set headers
@@ -106,7 +126,8 @@ router.get('/tiles/*', async (req, res) => {
     // Send the tile data (already gzipped in MBTiles)
     res.status(200).send(tileData)
   } catch (error) {
-    console.error('[TileServer] Error:', error.message)
+    // Log full error server-side for debugging
+    console.error('[TileServer] Error:', error)
 
     // Handle different error types
     if (error.message.includes('does not exist')) {
@@ -115,9 +136,10 @@ router.get('/tiles/*', async (req, res) => {
         message: 'The requested layer does not exist'
       })
     } else {
+      // Return generic error to client, don't leak internal details
       res.status(500).json({
-        error: 'Failed to fetch tile',
-        message: error.message
+        error: 'Internal server error',
+        message: 'An error occurred while processing your request'
       })
     }
   }
