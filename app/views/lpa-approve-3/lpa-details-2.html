@@ -1,0 +1,80 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Enter your details - LPA approve developer request to pay NRF - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: backLink or "/lpa-approve-3/approve-details"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <form action="/lpa-approve-3/lpa-details" method="post" novalidate>
+
+            {% if errors and errors.length > 0 %}
+            <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert"
+                data-module="govuk-error-summary">
+                <h2 class="govuk-error-summary__title" id="error-summary-title">
+                    There is a problem
+                </h2>
+                <div class="govuk-error-summary__body">
+                    <ul class="govuk-list govuk-error-summary__list">
+                        {% for error in errors %}
+                        <li>
+                            <a href="{{ error.href }}">{{ error.message }}</a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+
+            <h1 class="govuk-heading-l">Enter your details</h1>
+
+            <div class="govuk-hint">
+                Enter your details to create a record of who rejected the request.
+            </div>
+
+            <div class="govuk-form-group {% if errorsByField.fullName %}govuk-form-group--error{% endif %}">
+                <label class="govuk-label" for="full-name">
+                    Full Name
+                </label>
+                {% if errorsByField.fullName %}
+                <p id="full-name-error" class="govuk-error-message">
+                    <span class="govuk-visually-hidden">Error:</span> {{ errorsByField.fullName.text }}
+                </p>
+                {% endif %}
+                <input class="govuk-input {% if errorsByField.fullName %}govuk-input--error{% endif %}" id="full-name"
+                    name="full-name" type="text" aria-describedby="{% if errorsByField.fullName %}full-name-error{% endif %}" value="{{ data.lpaFullName }}">
+            </div>
+
+            <div class="govuk-form-group {% if errorsByField.email %}govuk-form-group--error{% endif %}">
+                <label class="govuk-label" for="email">
+                    Email address
+                </label>
+                {% if errorsByField.email %}
+                <p id="email-error" class="govuk-error-message">
+                    <span class="govuk-visually-hidden">Error:</span> {{ errorsByField.email.text }}
+                </p>
+                {% endif %}
+                <input class="govuk-input {% if errorsByField.email %}govuk-input--error{% endif %}" id="email"
+                    name="email" type="email" autocomplete="email" aria-describedby="{% if errorsByField.email %}email-error{% endif %}" value="{{ data.lpaEmail }}">
+            </div>
+
+            {% from "govuk/components/button/macro.njk" import govukButton %}
+
+{{ govukButton({
+  text: "Continue",
+  href: "/lpa-approve-3/reason-for-rejecting"
+}) }}
+
+        </form>
+    </div>
+</div>
+{% endblock %}

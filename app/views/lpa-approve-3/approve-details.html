@@ -1,0 +1,266 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Approve these details - LPA approve developer request to pay NRF - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: backLink or "/lpa-approve-3/lpa-approval-email-magiclink"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-l">Approve these details</h1>
+
+        <h2 class="govuk-heading-m">Red line boundary of development</h2>
+        <div id="map-container" style="height: 400px; width: 100%; border: 2px solid #0b0c0c; margin-bottom: 20px;">
+            <div id="map" style="height: 100%; width: 100%;"></div>
+        </div>
+
+        <dl class="govuk-summary-list govuk-!-margin-bottom-9">
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Nature Restoration Fund levy confirmed
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    Nature Restoration Fund nutrients levy: £2,500
+                </dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Developer Details
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    Bob Acme, Acme Developments, 1 Willow Lane, London, N1 9HG, Company Registration Number (CRN): 12345678, VAT registration number: GB123456789
+                </dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Building types
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    Dwelling
+                </dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Number of dwelling buildings
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    100
+                </dd>
+            </div>
+             <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Waste water treatment works
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    Great Billing WRC
+                </dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Developer email address
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    admin@acme.co.uk
+                </dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Planning reference
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    APP/2025/24019/FUL
+                </dd>
+            </div>
+        </dl>
+
+        <p class="govuk-body">
+            <a href="#" class="govuk-link">Download these details</a>
+        </p>
+
+        <p class="govuk-body">
+            Check these details against the details submitted as part of the planning permission application APP/2025/24019/FUL by Acme Development.
+        </p>
+        <p class="govuk-body">
+            Approving these details will enable Acme Developments to pay the Nature Restoration Fund levy to mitigate their environmental impact.
+        </p>
+
+
+    {% from "govuk/components/button/macro.njk" import govukButton %}
+
+    <div class="govuk-!-padding-bottom-3"></div>
+
+<div class="govuk-button-group">
+  {{ govukButton({
+    text: "Approve",
+    href: "/lpa-approve-3/lpa-details"
+  }) }}
+
+  {{ govukButton({
+    text: "Reject",
+    classes: "govuk-button--secondary",
+    href: "/lpa-approve-3/lpa-details-2"
+  }) }}
+</div>
+    </div>
+</div>
+
+<!-- MapLibre GL JS CSS -->
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.13.0/dist/maplibre-gl.css" />
+
+<!-- MapLibre GL JS -->
+<script src="https://unpkg.com/maplibre-gl@5.13.0/dist/maplibre-gl.js"></script>
+
+<script type="application/json" id="redline-boundary-data">
+{
+  "type": "Feature",
+  "properties": {
+    "name": "Micheldever Wood Area",
+    "description": "Boundary around Micheldever Wood"
+  },
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-1.2228298187255862, 51.14543276764624],
+        [-1.2303829193115237, 51.14543276764624],
+        [-1.2324428558349612, 51.14650966543826],
+        [-1.2374210357666018, 51.14575583962207],
+        [-1.2425708770751953, 51.14650966543826],
+        [-1.2480640411376955, 51.145217385072726],
+        [-1.2496089935302737, 51.14220192351367],
+        [-1.2509822845458987, 51.140694118862314],
+        [-1.25269889831543, 51.13886314700496],
+        [-1.2496089935302737, 51.13681668075868],
+        [-1.248579025268555, 51.13272347613288],
+        [-1.2494373321533205, 51.128845368619736],
+        [-1.252870559692383, 51.12367405199762],
+        [-1.2557888031005862, 51.12205789681453],
+        [-1.2599086761474612, 51.119687433598436],
+        [-1.2648868560791018, 51.11871766358896],
+        [-1.2648868560791018, 51.11516166606164],
+        [-1.2592220306396487, 51.114191801055554],
+        [-1.2561321258544924, 51.11182093422946],
+        [-1.2509822845458987, 51.111066542002845],
+        [-1.2480640411376955, 51.113006382847445],
+        [-1.2451457977294924, 51.11214424141388],
+        [-1.2406826019287112, 51.11332968173824],
+        [-1.2367343902587893, 51.11397627273416],
+        [-1.2406826019287112, 51.11796338395268],
+        [-1.240510940551758, 51.12098042861288],
+        [-1.2415409088134768, 51.12281210960311],
+        [-1.2410259246826174, 51.125182412487696],
+        [-1.2372493743896484, 51.126367518319235],
+        [-1.237936019897461, 51.128845368619736],
+        [-1.2365627288818362, 51.131538533389175],
+        [-1.2339878082275393, 51.13369295212583],
+        [-1.2355327606201174, 51.13595498362252],
+        [-1.2372493743896484, 51.1385400267861],
+        [-1.2372493743896484, 51.140694118862314],
+        [-1.2343311309814455, 51.141771127210056],
+        [-1.228322982788086, 51.141986525864404],
+        [-1.223859786987305, 51.14317120049778],
+        [-1.2228298187255862, 51.14543276764624]
+      ]
+    ]
+  }
+}
+</script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const boundaryData = JSON.parse(document.getElementById('redline-boundary-data').textContent);
+
+    const map = new maplibregl.Map({
+      container: 'map',
+      style: {
+        version: 8,
+        sources: {
+          'osm-tiles': {
+            type: 'raster',
+            tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+            tileSize: 256,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          }
+        },
+        layers: [
+          {
+            id: 'osm-tiles',
+            type: 'raster',
+            source: 'osm-tiles',
+            minzoom: 0,
+            maxzoom: 19
+          }
+        ]
+      },
+      center: [-1.24, 51.13],
+      zoom: 13
+    });
+
+    map.addControl(new maplibregl.NavigationControl(), 'top-right');
+
+    map.on('load', function () {
+      map.addSource('boundary', {
+        type: 'geojson',
+        data: boundaryData
+      });
+
+      map.addLayer({
+        id: 'boundary-fill',
+        type: 'fill',
+        source: 'boundary',
+        paint: {
+          'fill-color': '#d4351c',
+          'fill-opacity': 0.3
+        }
+      });
+
+      map.addLayer({
+        id: 'boundary-border',
+        type: 'line',
+        source: 'boundary',
+        paint: {
+          'line-color': '#d4351c',
+          'line-width': 3
+        }
+      });
+
+      const boundaryName = boundaryData.properties?.name || 'Development site';
+      const boundaryDescription = boundaryData.properties?.description || 'Red line boundary';
+      const sanitizedName = String(boundaryName).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const sanitizedDescription = String(boundaryDescription).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+      map.on('click', 'boundary-fill', function (e) {
+        new maplibregl.Popup()
+          .setLngLat(e.lngLat)
+          .setHTML('<strong>Red line boundary</strong><br>' + sanitizedName + '<br>' + sanitizedDescription)
+          .addTo(map);
+      });
+
+      map.on('mouseenter', 'boundary-fill', function () {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+
+      map.on('mouseleave', 'boundary-fill', function () {
+        map.getCanvas().style.cursor = '';
+      });
+
+      const coordinates = boundaryData.geometry.coordinates[0];
+      const bounds = coordinates.reduce(function (bounds, coord) {
+        return bounds.extend(coord);
+      }, new maplibregl.LngLatBounds(coordinates[0], coordinates[0]));
+
+      map.fitBounds(bounds, {
+        padding: 50
+      });
+    });
+  });
+</script>
+{% endblock %}

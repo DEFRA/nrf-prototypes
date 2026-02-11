@@ -49,6 +49,15 @@ const JOURNEYS = [
     entryPath: '/lpa-approval-email-content',
     description:
       'A user journey for the LPA to check and approve the details sent from the developer.'
+  },
+  {
+    name: 'LPA Approve 3',
+    displayName: 'LPA approve developer request to pay NRF (V3)',
+    basePath: '/lpa-approve-3',
+    hasStartPage: false,
+    entryPath: '/lpa-approval-email-content',
+    description:
+      'A user journey for the LPA to check and approve the details sent from the developer.'
   }
 ]
 

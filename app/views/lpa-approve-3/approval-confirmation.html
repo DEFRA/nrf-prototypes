@@ -1,0 +1,59 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+The details have been approved - LPA approve developer request to pay NRF - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: backLink or "/lpa-approve-3/lpa-details"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <div class="govuk-panel govuk-panel--confirmation">
+            <h1 class="govuk-panel__title">The details have been approved</h1>
+            <div class="govuk-panel__body">
+                Approval reference: <strong>APPROVAL-001</strong>
+            </div>
+        </div>
+
+        <p class="govuk-body">
+            You have approved the Nature Restoration Fund levy for Bob Acme at Acme Developments.
+        </p>
+
+        <p class="govuk-body">
+            Approval to pay the levy will be sent to admin@acme.co.uk.
+        </p>
+
+        <p class="govuk-body">They have agreed to pay the following:</p>
+        <ul class="govuk-list govuk-list--bullet">
+            <li>Nature Restoration Fund nutrients levy: £2,500</li>
+        </ul>
+
+        <h2 class="govuk-heading-m">What happens next</h2>
+        <p class="govuk-body">
+            Once Acme Developments has paid, you will be sent an email with a receipt which you can use when discharging their planning conditions.
+        </p>
+
+        <h2 class="govuk-heading-m">Get help with Nature Restoration Fund</h2>
+        <p class="govuk-body">
+            If you need help with Nature Restoration Fund, contact XXXX and give the NRF reference number.
+        </p>
+        <p class="govuk-body">
+            Email: <a href="mailto:xxxxx@defra.gov.uk" class="govuk-link">xxxxx@defra.gov.uk</a><br>
+            Telephone: 00000000000<br>
+            Monday to Friday, 8:30am to 5pm, except bank holidays
+        </p>
+        <p class="govuk-body">
+            <a href="https://www.gov.uk/call-charges" class="govuk-link">Find out about call charges</a>
+        </p>
+        <p class="govuk-body">
+            <a href="/lpa-approve-3/lpa-approval-confirmation-email" class="govuk-link">View the email content</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
