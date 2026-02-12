@@ -1,0 +1,338 @@
+{% extends "layouts/map.html" %}
+
+{% set pageName="Draw a red line boundary" %}
+
+{% block pageTitle %}
+Draw a red line boundary - Get a quote for Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.13.0/dist/maplibre-gl.css" />
+<link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.5.1/mapbox-gl-draw.css" />
+<style>
+    body, html {
+        overflow: hidden !important;
+    }
+
+    .map-controls-panel .govuk-back-link {
+        margin-bottom: 20px;
+    }
+
+    /* Map style switcher button - positioned bottom left */
+    .maplibregl-ctrl-bottom-left {
+        bottom: 20px;
+        left: 10px;
+    }
+
+    .map-style-button {
+        background: white;
+        border: 2px solid rgba(0, 0, 0, 0.3);
+        border-radius: 4px;
+        width: 80px;
+        height: 80px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        padding: 4px;
+        margin: 0 !important;
+    }
+
+    .map-style-button:hover {
+        border-color: rgba(0, 0, 0, 0.5);
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+    }
+
+    .map-style-button:focus {
+        outline: 3px solid #ffdd00;
+        outline-offset: 0;
+    }
+
+    .map-style-button-thumbnail {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 2px;
+    }
+
+    /* Move MapLibre zoom/layer controls to bottom right, above attribution */
+    .maplibregl-ctrl-top-right {
+        top: auto !important;
+        bottom: 30px;
+    }
+
+    /* Keep attribution at the very bottom */
+    .maplibregl-ctrl-attrib {
+        bottom: 0 !important;
+    }
+
+    /* Map statistics panel */
+    .map-stats-panel {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: white;
+        padding: 15px;
+        border-radius: 0;
+        border: 1px solid #b1b4b6;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        min-width: 300px;
+        max-width: 350px;
+        font-family: "GDS Transport", arial, sans-serif;
+    }
+
+    .map-stats-panel.hidden {
+        display: none;
+    }
+
+    .map-stats-content h3 {
+        margin: 0 0 12px 0;
+        padding: 0 0 8px 0;
+        font-size: 16px;
+        line-height: 1.25;
+        font-weight: 700;
+        color: #0b0c0c;
+        border-bottom: 1px solid #b1b4b6;
+    }
+
+    .map-stats-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .map-stat-item {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 8px;
+        padding: 6px 0;
+        border-bottom: 1px solid #f3f2f1;
+        align-items: baseline;
+    }
+
+    .map-stat-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .map-stat-label {
+        font-size: 14px;
+        line-height: 1.25;
+        font-weight: 400;
+        color: #0b0c0c;
+        margin: 0;
+        white-space: nowrap;
+    }
+
+    .map-stat-value {
+        font-size: 16px;
+        line-height: 1.25;
+        font-weight: 700;
+        color: #0b0c0c;
+        margin: 0;
+        text-align: right;
+        white-space: nowrap;
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+
+<form id="map-form" action="/nrf-estimate-4/map" method="post" novalidate style="height: 100%;">
+            {% if navFromSummary %}
+            <input type="hidden" name="navFromSummary" value="true">
+            {% endif %}
+
+            {% if error %}
+            <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert">
+                <h2 class="govuk-error-summary__title" id="error-summary-title">
+                    There is a problem
+                </h2>
+                <div class="govuk-error-summary__body">
+                    <ul class="govuk-list govuk-error-summary__list">
+                        <li>
+                            <a href="#map">{{ error }}</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
+                {% if error %}
+                <p id="map-error" class="govuk-error-message">
+                    <span class="govuk-visually-hidden">Error:</span> {{ error }}
+                </p>
+                {% endif %}
+
+            <div id="client-error-summary" class="govuk-error-summary govuk-!-margin-top-6 hidden" aria-labelledby="error-summary-title" role="alert">
+                <h2 class="govuk-error-summary__title" id="error-summary-title">
+                    There is a problem
+                </h2>
+                <div class="govuk-error-summary__body">
+                    <ul class="govuk-list govuk-error-summary__list">
+                        <li>
+                            <a href="#map" id="client-error-link"></a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+                <!-- Main map content container -->
+                <div id="map-content" style="height: calc(100vh - 60px);">
+
+                <!-- Accessible map interface with left panel -->
+                <div class="map-interface" style="height: 100%;">
+                    <!-- Left control panel -->
+                    <div class="map-controls-panel">
+                        <a href="{{ backLink }}" class="govuk-back-link">Back</a>
+
+                        <h1 class="govuk-heading-m">
+                            Draw a red line boundary
+                        </h1>
+
+                        <!-- Drawing tool buttons -->
+                        <div class="drawing-tool-buttons">
+                            <button type="button" class="tool-button" id="start-drawing" data-tool="polygon">
+                                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20"><path d="M16 6v7.996M14 16H6m-2-2.004V6m2-2h8" fill="none" stroke="currentColor" stroke-width="2"></path><path d="M2.081 2H6v4H2.081zm0 12H6v4H2.081zm11.96-12h3.919v4h-3.919zm0 11.996h3.919v4h-3.919z" fill="currentColor" stroke="none"></path></svg>
+                                <span>Add</span>
+                            </button>
+                            <button type="button" class="tool-button hidden" id="edit-boundary" data-tool="edit" disabled>
+                                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20"><path d="M16 6v7.996M14 16H6m-2-2.004V6m2-2h8" fill="none" stroke="currentColor" stroke-width="2"></path><path d="M2.081 2H6v4H2.081zm0 12H6v4H2.081zm11.96-12h3.919v4h-3.919zm0 11.996h3.919v4h-3.919z" fill="currentColor" stroke="none"></path></svg>
+                                <span>Edit</span>
+                            </button>
+                            <button type="button" class="tool-button" id="delete-boundary" data-tool="delete" disabled>
+                                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill-rule="evenodd"><path d="M3 5.963H2V3.989h4V2h8v1.989h4v1.974h-.956V18H3V5.963zm12 0H5.044v10.063H15V5.963z" fill="currentColor"></path><path d="M6.953 7L7 15m2.977-8l.046 8m2.954-8l.046 8" fill="none" stroke="currentColor" stroke-width="2"></path></svg>
+                                <span>Delete</span>
+                            </button>
+                        </div>
+
+                        <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+
+                        <!-- Map controls -->
+                        <div class="govuk-form-group">
+                            <h2 class="govuk-heading-s">Map view</h2>
+                            <div class="tool-links">
+                                <button type="button" class="govuk-link" id="zoom-to-england" aria-describedby="zoom-england-help">
+                                    Show all England
+                                </button>
+                                <button type="button" class="govuk-link" id="zoom-to-boundary"
+                                    aria-describedby="zoom-boundary-help" disabled>
+                                    Zoom to boundary
+                                </button>
+                            </div>
+                        </div>
+
+                        <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+
+                        <!-- Data layers -->
+                        <div class="govuk-form-group">
+                            <h2 class="govuk-heading-s">Environmental Delivery Plan areas</h2>
+                            <div id="datasets-checkboxes"></div>
+                        </div>
+                    </div>
+
+                    <!-- Map container -->
+                    <div class="map-container" style="height: 100%;">
+                        <div id="map" role="img" aria-label="Interactive map for drawing development boundary" style="height: 100%;">
+                            <div id="map-loading" class="map-loading-overlay">
+                                <div class="map-loading-content">
+                                    <div class="map-loading-spinner"></div>
+                                    <p class="govuk-body govuk-!-margin-top-2">Loading map...</p>
+                                </div>
+                            </div>
+
+                            <!-- Location search button -->
+                            <button id="location-search-button" class="govuk-button govuk-button--secondary" aria-label="Search for location">
+                                <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 20 20" fill-rule="evenodd" fill="currentColor">
+                                    <path d="M12.084 14.312c-1.117.711-2.444 1.123-3.866 1.123C4.235 15.435 1 12.201 1 8.218S4.235 1 8.218 1s7.217 3.235 7.217 7.218c0 1.422-.412 2.749-1.123 3.866L19 16.773 16.773 19l-4.689-4.688zM8.218 2.818c2.98 0 5.4 2.419 5.4 5.4s-2.42 5.4-5.4 5.4-5.4-2.42-5.4-5.4 2.419-5.4 5.4-5.4z"></path>
+                                </svg>
+                                <span>Search</span>
+                            </button>
+
+                            <!-- Map key button -->
+                            <button id="map-key-button" class="govuk-button govuk-button--secondary" aria-label="Toggle map key">
+                                <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 20 20" fill-rule="evenodd" fill="currentColor">
+                                    <circle cx="3.5" cy="4" r="1.5"></circle>
+                                    <circle cx="3.5" cy="10" r="1.5"></circle>
+                                    <circle cx="3.5" cy="16" r="1.5"></circle>
+                                    <path d="M7 4h11M7 10h11M7 16h11" fill="none" stroke="currentColor" stroke-width="2"></path>
+                                </svg>
+                                <span>Key</span>
+                            </button>
+
+                            <!-- Map help button -->
+                            <button id="map-help-button" class="govuk-button govuk-button--secondary" aria-label="Show map help">
+                                <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 20 20" fill-rule="evenodd">
+                                    <circle cx="10" cy="10" r="8.5" fill="none" stroke="currentColor" stroke-width="1.5"></circle>
+                                    <path d="M10.935 11.673H8.708v-.223c0-1.997 2.445-2.651 2.085-3.597-.175-.46-1.57-.837-1.757.843l-2.273-.281c.407-4.359 7.331-3.069 6.405.161-.025.09-.143.502-.625.986-1.252 1.258-1.608 1.111-1.608 2.111zm-2.303.592h2.385v2.104H8.632z" fill="currentColor" stroke="none"></path>
+                                </svg>
+                                <span>Help</span>
+                            </button>
+
+                            <!-- Location search container -->
+                            <div id="location-search-container" class="hidden">
+                                <input id="location-search-input" class="govuk-input" type="text" placeholder="Search for a place in England" autocomplete="off">
+                                <div id="location-search-results"></div>
+                            </div>
+                        </div>
+
+                        <!-- Floating save button - only shown when boundary exists -->
+                        <div id="map-save-button-container" class="hidden" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000;">
+                            <div style="background: #ffffff; padding: 20px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); border-radius: 4px;">
+                                <button class="govuk-button govuk-!-margin-bottom-0" type="submit">
+                                    Save and continue
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Edit mode buttons - only shown when in edit mode -->
+                        <div id="map-edit-buttons-container" class="hidden" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000;">
+                            <div style="background: #ffffff; padding: 20px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); border-radius: 4px; display: flex; gap: 10px;">
+                                <button class="govuk-button govuk-!-margin-bottom-0" type="button" id="confirm-edit-btn">
+                                    Confirm area
+                                </button>
+                                <button class="govuk-button govuk-button--secondary govuk-!-margin-bottom-0" type="button" id="cancel-edit-btn">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <input type="hidden" id="boundary-data" name="boundary-data" value="{{ existingBoundaryData }}">
+            </div>
+        </form>
+
+<script src="https://unpkg.com/maplibre-gl@5.13.0/dist/maplibre-gl.js"></script>
+<script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.5.1/mapbox-gl-draw.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+<script src="/public/javascripts/components/modal.js"></script>
+<script>
+    // Set the catchment GeoJSON endpoint for this journey
+    window.CATCHMENTS_GEOJSON_URL = '/nrf-estimate-4/catchments.geojson';
+    // Set the API endpoint for EDP intersection checking
+    window.API_CHECK_EDP_INTERSECTION_URL = '/nrf-estimate-4/api/check-edp-intersection';
+</script>
+<!-- Vendor dependencies -->
+<script src="/public/javascripts/vendor/turf.min.js"></script>
+<!-- Map modules - loaded in dependency order -->
+<script src="/public/javascripts/map-event-handlers.js"></script>
+<script src="/public/javascripts/map-ui.js"></script>
+<script src="/public/javascripts/map-api.js"></script>
+<script src="/public/javascripts/map-styles.js"></script>
+<script src="/public/javascripts/map-initialisation.js"></script>
+<script src="/public/javascripts/map-search.js"></script>
+<script src="/public/javascripts/map-drawing-controls.js"></script>
+<script src="/public/javascripts/map-stats.js"></script>
+<script src="/public/javascripts/map-data.js"></script>
+<script src="/public/javascripts/map-datasets.js"></script>
+<!-- Main orchestrator - loads last -->
+<script src="/public/javascripts/map-drawing-layers-spike.js"></script>
+{% endblock %}

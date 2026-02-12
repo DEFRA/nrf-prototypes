@@ -314,6 +314,67 @@ const PROTOTYPE_JOURNEYS = {
       }
     ],
     formData: {}
+  },
+  'lpa-approve-3': {
+    name: 'LPA Approve Developer Request to Pay NRF (V3)',
+    basePath: '/lpa-approve-3',
+    pages: [
+      {
+        path: '/lpa-approval-email-content',
+        name: 'lpa-approval-email-content',
+        title: 'Email sent from the Nature Restoration Fund service'
+      },
+      {
+        path: '/confirm-view-approve',
+        name: 'confirm-view-approve',
+        title: 'Confirm view and approve NRF levy details'
+      },
+      {
+        path: '/lpa-approval-email-magiclink',
+        name: 'lpa-approval-email-magiclink',
+        title: 'Email with magic link'
+      },
+      {
+        path: '/approve-details',
+        name: 'approve-details',
+        title: 'Approve these details'
+      },
+      {
+        path: '/lpa-details',
+        name: 'lpa-details',
+        title: 'Enter your details'
+      },
+      {
+        path: '/approval-confirmation',
+        name: 'approval-confirmation',
+        title: 'Details approved confirmation'
+      },
+      {
+        path: '/lpa-approval-confirmation-email',
+        name: 'lpa-approval-confirmation-email',
+        title: 'Email approval confirmation'
+      },
+      {
+        path: '/reason-for-rejecting',
+        name: 'reason-for-rejecting',
+        title: 'Reason for rejecting'
+      },
+      {
+        path: '/reject-confirmation',
+        name: 'reject-confirmation',
+        title: 'Details rejected confirmation'
+      },
+      {
+        path: '/lpa-rejection-confirmation-email',
+        name: 'lpa-rejection-confirmation-email',
+        title: 'Email rejection confirmation'
+      }
+    ],
+    formData: {
+      'full-name': 'Test LPA User',
+      email: 'lpa@example.com',
+      'rejection-reason': 'Test reason for rejecting this request.'
+    }
   }
   // Add more prototypes here as needed
 }

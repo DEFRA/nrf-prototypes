@@ -1,0 +1,44 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Email sent to get magic link to access estimate - Get a quote for Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: backLink
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <div class="govuk-inset-text">
+            <p><strong>To:</strong> {{ data.email or 'user@example.com' }}</p>
+            <p><strong>Subject:</strong> Nature Restoration Fund - retrieve your estimate details for the Nature Restoration Fund levy</p>
+        </div>
+
+        <h1 class="govuk-heading-l">Nature Restoration Fund – retrieve your quote details for the Nature Restoration Fund levy</h1>
+
+        <p class="govuk-body">You can use the details you previously gave us for your quote to fill in the information needed to commit to using Nature Restoration Fund levy.</p>
+
+        <p class="govuk-body"><a href="/nrf-estimate-4/retrieved-estimate-summary" class="govuk-link">Retrieve the quote details</a></p>
+
+        <h2 class="govuk-heading-m">Get help with Nature Restoration Fund</h2>
+
+        <p class="govuk-body">If you need help with Nature Restoration Fund, contact XXXX and give the NRF reference number.</p>
+
+        <p class="govuk-body">
+            Email: <a href="mailto:xxxxx@defra.gov.uk" class="govuk-link">xxxxx@defra.gov.uk</a><br>
+            Telephone: 00000000000<br>
+            Monday to Friday, 8:30am to 5pm, except bank holidays
+        </p>
+
+        <p class="govuk-body">
+            <a href="https://www.gov.uk/call-charges" class="govuk-link">Find out about call charges</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

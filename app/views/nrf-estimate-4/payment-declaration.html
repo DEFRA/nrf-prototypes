@@ -1,0 +1,204 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Check your answers - Pay Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: backLink or "/nrf-estimate-4/planning-ref"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-l">Check your answers</h1>
+
+        <dl class="govuk-summary-list govuk-!-margin-bottom-9">
+            {% if data.paymentReference %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    NRF reference
+                </dt>
+                <dd class="govuk-summary-list__value">
+                  {{ data.paymentReference or 'NRF-746256' }}
+                </dd>
+            </div>
+            {% endif %}
+
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Red line boundary added
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {% if data.redlineBoundaryPolygon %}
+                    Yes
+                    {% else %}
+                    No
+                    {% endif %}
+                </dd>
+            </div>
+
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Red line boundary file uploaded
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {% if data.hasRedlineBoundaryFile %}
+                    Yes
+                    {% else %}
+                    No
+                    {% endif %}
+                </dd>
+            </div>
+
+            {% if data.buildingTypes and data.buildingTypes.length > 0 %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Building types
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    <ul class="govuk-list">
+                        {% for type in data.buildingTypes %}
+                        {% if type and type !== '_unchecked' %}
+                        <li>{{ buildingTypeLabels[type] or type }}</li>
+                        {% endif %}
+                        {% endfor %}
+                    </ul>
+                </dd>
+            </div>
+            {% endif %}
+
+            {% if data.residentialBuildingCount %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Number of dwelling buildings
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.residentialBuildingCount }}
+                </dd>
+            </div>
+            {% endif %}
+
+            {% if data.roomCounts %}
+            {% if data.roomCounts.hotelCount %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Number of hotel rooms
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.roomCounts.hotelCount }}
+                </dd>
+            </div>
+            {% endif %}
+
+            {% if data.roomCounts.hmoCount %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Number of multiple occupation rooms
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.roomCounts.hmoCount }}
+                </dd>
+            </div>
+            {% endif %}
+
+            {% if data.roomCounts.residentialInstitutionCount %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Number of residential institution rooms
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.roomCounts.residentialInstitutionCount }}
+                </dd>
+            </div>
+            {% endif %}
+            {% endif %}
+
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Email address
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.commitmentRetrievalEmail or data.email or 'Not provided' }}
+                </dd>
+            </div>
+
+            {% if data.fullName %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Your details
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.fullName }}<br>
+                    {% if data.businessName %}{{ data.businessName }}<br>{% endif %}
+                    {{ data.addressLine1 }}<br>
+                    {% if data.addressLine2 %}{{ data.addressLine2 }}<br>{% endif %}
+                    {{ data.townOrCity }}<br>
+                    {% if data.county %}{{ data.county }}<br>{% endif %}
+                    {{ data.postcode }}<br>
+                    {% if data.companyRegistrationNumber %}Company Registration Number: {{ data.companyRegistrationNumber }}<br>{% endif %}
+                    {% if data.vatRegistrationNumber %}VAT registration number: {{ data.vatRegistrationNumber }}{% endif %}
+                </dd>
+            </div>
+            {% endif %}
+
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Local Planning Authority
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    Stockton-on-Tees Borough Council
+                </dd>
+            </div>
+
+            {% if data.planningRef %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Planning reference
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.planningRef }}
+                </dd>
+            </div>
+            {% endif %}
+        </dl>
+
+        <p class="govuk-body">
+            By confirming and submitting these details, you are requesting to pay the Nature Restoration Fund levy.
+        </p>
+
+        <p class="govuk-body">
+            The details you are submitting must be accurate and correct.
+        </p>
+
+        <p class="govuk-body">
+            Once the Local Planning Authority has checked and approved your request, you will be asked to upload your Planning Decision Notice. You will then be sent an email with ways to pay.
+        </p>
+
+        <p class="govuk-body">
+            Your Nature Restoration Fund nutrient levy amount is £{{ data.levyAmount or '2,500' }}.
+        </p>
+
+        <div class="govuk-!-padding-bottom-3"></div>
+
+        {% from "govuk/components/button/macro.njk" import govukButton %}
+
+<div class="govuk-button-group">
+  {{ govukButton({
+    text: "Confirm and submit",
+    href: "/nrf-estimate-4/payment-confirmation"
+  }) }}
+
+  {{ govukButton({
+    text: "Cancel action",
+    classes: "govuk-button--secondary"
+  }) }}
+</div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Upload a Planning Decision Notice - Pay Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: backLink or "/nrf-estimate-4/pdn-sign-in-government-gateway"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <form action="/nrf-estimate-4/upload-decision-notice" method="post" novalidate>
+
+            <h1 class="govuk-heading-l">Upload a Planning Decision Notice</h1>
+
+            <div class="govuk-hint">
+                You must have a Planning Decision Notice before you pay your levy.
+            </div>
+
+            <div class="govuk-form-group">
+                <label class="govuk-label" for="decision-file">
+                    Upload a file (optional)
+                </label>
+                <div class="govuk-hint">
+                    For prototype purposes, you can continue without uploading a file.
+                </div>
+                <input class="govuk-file-upload" id="decision-file"
+                    name="decision-file" type="file" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+
+            <button class="govuk-button" data-module="govuk-button">
+                Continue
+            </button>
+
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Select the types of buildings that are planned for this development - Get a quote for Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: "/nrf-estimate-4/map"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <form action="/nrf-estimate-4/building-type" method="post" novalidate>
+            {% if isChange %}
+            <input type="hidden" name="isChange" value="true">
+            {% endif %}
+            {% if navFromSummary %}
+            <input type="hidden" name="navFromSummary" value="true">
+            {% endif %}
+
+            {% if error %}
+            {{ govukErrorSummary({
+                titleText: "There is a problem",
+                errorList: [
+                    {
+                        text: error,
+                        href: "#building-types"
+                    }
+                ]
+            }) }}
+            {% endif %}
+
+            {{ govukCheckboxes({
+                name: "building-types",
+                fieldset: {
+                    legend: {
+                        text: "Select the types of buildings that are planned for this development",
+                        isPageHeading: true,
+                        classes: "govuk-fieldset__legend--l"
+                    }
+                },
+                hint: {
+                    text: "Select all that apply"
+                },
+                errorMessage: { text: error } if error,
+                items: [
+                    {
+                        value: "Dwellinghouse",
+                        text: "Dwelling",
+                        checked: data.buildingTypes and data.buildingTypes.includes('Dwellinghouse')
+                    },
+                    {
+                        value: "Hotel",
+                        text: "Hotel",
+                        checked: data.buildingTypes and data.buildingTypes.includes('Hotel')
+                    },
+                    {
+                        value: "House in multiple occupation (HMO)",
+                        text: "House in multiple occupation (HMO)",
+                        checked: data.buildingTypes and data.buildingTypes.includes('House in multiple occupation (HMO)')
+                    },
+                    {
+                        value: "Non-residential development",
+                        text: "Non-residential development",
+                        checked: data.buildingTypes and data.buildingTypes.includes('Non-residential development')
+                    },
+                    {
+                        value: "Residential institution",
+                        text: "Residential institution",
+                        checked: data.buildingTypes and data.buildingTypes.includes('Residential institution')
+                    }
+                ]
+            }) }}
+
+            {{ govukButton({
+                text: "Continue"
+            }) }}
+
+        </form>
+    </div>
+</div>
+{% endblock %}

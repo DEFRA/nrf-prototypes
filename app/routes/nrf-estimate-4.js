@@ -443,7 +443,7 @@ router.post(
 // Draw polygon on map
 router.get(ROUTES.MAP, (req, res) => {
   const data = req.session.data || {}
-  const navFromSummary = req.query.nav === 'summary'
+  const navFromSummary = (req.query.nav === 'summary' || req.query.nav === 'check-your-answers')
 
   const existingBoundaryData = data.redlineBoundaryPolygon
     ? JSON.stringify(data.redlineBoundaryPolygon)
@@ -536,7 +536,7 @@ router.post(ROUTES.MAP, (req, res) => {
     if (!intersectionResults.nutrient) {
       res.redirect(ROUTES.NO_EDP)
     } else if (navFromSummary) {
-      res.redirect(ROUTES.SUMMARY)
+      res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
     } else {
       res.redirect(ROUTES.BUILDING_TYPE)
     }
@@ -565,7 +565,7 @@ router.get(ROUTES.NO_EDP, (req, res) => {
 router.get(ROUTES.BUILDING_TYPE, (req, res) => {
   const data = req.session.data || {}
   const isChange = req.query.change === 'true'
-  const navFromSummary = req.query.nav === 'summary'
+  const navFromSummary = (req.query.nav === 'summary' || req.query.nav === 'check-your-answers')
 
   res.render(TEMPLATES.BUILDING_TYPE, {
     data: data,
@@ -627,7 +627,7 @@ router.post(ROUTES.BUILDING_TYPE, (req, res) => {
       JSON.stringify(buildingTypesArray.sort())
 
     if (!hasChanges) {
-      res.redirect(ROUTES.SUMMARY)
+      res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
       return
     }
 
@@ -655,12 +655,12 @@ router.post(ROUTES.BUILDING_TYPE, (req, res) => {
       }
     }
 
-    res.redirect(ROUTES.SUMMARY)
+    res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
     return
   }
 
   if (isChange) {
-    res.redirect(ROUTES.SUMMARY)
+    res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
     return
   }
 
@@ -695,7 +695,7 @@ router.get(ROUTES.NON_RESIDENTIAL, (req, res) => {
 router.get(ROUTES.ROOM_COUNT, (req, res) => {
   const data = req.session.data || {}
   const isChange = req.query.change === 'true'
-  const navFromSummary = req.query.nav === 'summary'
+  const navFromSummary = (req.query.nav === 'summary' || req.query.nav === 'check-your-answers')
   const error = req.query.error
   const buildingType = req.query.type
 
@@ -721,9 +721,9 @@ router.get(ROUTES.ROOM_COUNT, (req, res) => {
 
   if (currentIndex >= roomCountTypes.length) {
     if (isChange && navFromSummary) {
-      res.redirect(ROUTES.SUMMARY)
+      res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
     } else if (isChange) {
-      res.redirect(ROUTES.SUMMARY)
+      res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
     } else if (
       data.buildingTypes &&
       data.buildingTypes.includes('Dwellinghouse')
@@ -759,7 +759,7 @@ router.post(ROUTES.ROOM_COUNT, (req, res) => {
   if (!roomCount || isNaN(roomCount) || roomCount < 1) {
     let redirectUrl = ROUTES.ROOM_COUNT + '?'
     if (isChange) redirectUrl += 'change=true&'
-    if (navFromSummary) redirectUrl += 'nav=summary&'
+    if (navFromSummary) redirectUrl += 'nav=check-your-answers&'
     if (buildingType) redirectUrl += `type=${buildingType}&`
     redirectUrl = redirectUrl.replace(/&$/, '')
 
@@ -780,7 +780,7 @@ router.post(ROUTES.ROOM_COUNT, (req, res) => {
       req.session.data.roomCounts[dataKey] = parseInt(roomCount)
     }
 
-    return res.redirect(ROUTES.SUMMARY)
+    return res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
   }
 
   const roomCountTypes = data.roomCountTypes || []
@@ -801,13 +801,13 @@ router.post(ROUTES.ROOM_COUNT, (req, res) => {
   req.session.data.currentRoomCountIndex = currentIndex + 1
 
   if (isChange && navFromSummary && currentIndex + 1 >= roomCountTypes.length) {
-    res.redirect(ROUTES.SUMMARY)
+    res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
     return
   }
 
   if (currentIndex + 1 >= roomCountTypes.length) {
     if (isChange) {
-      res.redirect(ROUTES.SUMMARY)
+      res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
     } else if (
       data.buildingTypes &&
       data.buildingTypes.includes('Dwellinghouse')
@@ -825,7 +825,7 @@ router.post(ROUTES.ROOM_COUNT, (req, res) => {
 router.get(ROUTES.RESIDENTIAL, (req, res) => {
   const data = req.session.data || {}
   const isChange = req.query.change === 'true'
-  const navFromSummary = req.query.nav === 'summary'
+  const navFromSummary = (req.query.nav === 'summary' || req.query.nav === 'check-your-answers')
 
   res.render(TEMPLATES.RESIDENTIAL, {
     data: data,
@@ -857,10 +857,10 @@ router.post(ROUTES.RESIDENTIAL, (req, res) => {
   req.session.data.residentialBuildingCount = parseInt(residentialBuildingCount)
 
   if (isChange && navFromSummary) {
-    res.redirect(ROUTES.SUMMARY)
+    res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
     return
   } else if (isChange) {
-    res.redirect(ROUTES.SUMMARY)
+    res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
     return
   }
 
@@ -871,7 +871,7 @@ router.post(ROUTES.RESIDENTIAL, (req, res) => {
 router.get(ROUTES.ESTIMATE_EMAIL, (req, res) => {
   const data = req.session.data || {}
   const isChange = req.query.change === 'true'
-  const navFromSummary = req.query.nav === 'summary'
+  const navFromSummary = (req.query.nav === 'summary' || req.query.nav === 'check-your-answers')
 
   let backLink = ROUTES.BUILDING_TYPE
   if (data.buildingTypes) {
@@ -928,26 +928,26 @@ router.post(ROUTES.ESTIMATE_EMAIL, (req, res) => {
     if (err) {
       console.error('Session save error:', err)
     }
-    res.redirect(303, ROUTES.SUMMARY)
+    res.redirect(303, ROUTES.CHECK_YOUR_ANSWERS)
   })
 })
 
 // Summary page
-router.get(ROUTES.SUMMARY, (req, res) => {
+router.get(ROUTES.CHECK_YOUR_ANSWERS, (req, res) => {
   const data = req.session.data || {}
 
   if (!data.email) {
     return res.redirect(ROUTES.ESTIMATE_EMAIL)
   }
 
-  res.render(TEMPLATES.SUMMARY, {
+  res.render(TEMPLATES.CHECK_YOUR_ANSWERS, {
     data: data,
     buildingTypeLabels: BUILDING_TYPE_LABELS
   })
 })
 
 // Handle summary submission
-router.post(ROUTES.SUMMARY, (req, res) => {
+router.post(ROUTES.CHECK_YOUR_ANSWERS, (req, res) => {
   const timestampSuffix = Date.now().toString().slice(-6)
   const estimateReference = 'EST-' + timestampSuffix
   const nrfReference = 'NRF-' + timestampSuffix
@@ -998,7 +998,7 @@ router.get(ROUTES.ESTIMATE_EMAIL_CONTENT, (req, res) => {
   const data = req.session.data || {}
 
   if (!data.estimateReference) {
-    return res.redirect(ROUTES.SUMMARY)
+    return res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
   }
 
   res.render(TEMPLATES.ESTIMATE_EMAIL_CONTENT, {
@@ -1192,19 +1192,19 @@ router.post(ROUTES.PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, (req, res) => {
   }
 
   req.session.data = req.session.data || {}
-  req.session.data.signInOption = option
+  req.session.data.paySignInOption = option
 
   if (option === 'government-gateway') {
     res.redirect(ROUTES.PAY_SIGN_IN_GOVERNMENT_GATEWAY)
     return
   }
 
-  res.redirect(ROUTES.COMPANY_DETAILS)
+  res.redirect(ROUTES.PAYMENT_SUMMARY)
 })
 
 router.get(ROUTES.PAY_SIGN_IN_GOVERNMENT_GATEWAY, (req, res) => {
   const data = req.session.data || {}
-  res.render(TEMPLATES.COMMIT_SIGN_IN_GOVERNMENT_GATEWAY, {
+  res.render(TEMPLATES.PAY_SIGN_IN_GOVERNMENT_GATEWAY, {
     data: data,
     errors: [],
     errorsByField: {},
@@ -1233,7 +1233,7 @@ router.post(ROUTES.PAY_SIGN_IN_GOVERNMENT_GATEWAY, (req, res) => {
   }
 
   if (errors.length > 0) {
-    return res.render(TEMPLATES.COMMIT_SIGN_IN_GOVERNMENT_GATEWAY, {
+    return res.render(TEMPLATES.PAY_SIGN_IN_GOVERNMENT_GATEWAY, {
       data: data,
       errors: errors,
       errorsByField: errorsByField,
@@ -1242,9 +1242,9 @@ router.post(ROUTES.PAY_SIGN_IN_GOVERNMENT_GATEWAY, (req, res) => {
   }
 
   req.session.data = req.session.data || {}
-  req.session.data.governmentGatewayUserId = userId
+  req.session.data.payGovernmentGatewayUserId = userId
 
-  res.redirect(ROUTES.COMPANY_DETAILS)
+  res.redirect(ROUTES.PAYMENT_SUMMARY)
 })
 
 router.get(ROUTES.COMMIT_SIGN_IN_GOVERNMENT_GATEWAY, (req, res) => {
@@ -1367,8 +1367,9 @@ router.post(ROUTES.COMPANY_DETAILS, (req, res) => {
   req.session.data.companyRegistrationNumber = companyRegistrationNumber || ''
   req.session.data.vatRegistrationNumber = vatRegistrationNumber || ''
   req.session.data.purchaseOrderNumber = purchaseOrderNumber || ''
+  req.session.data.lpaName = req.session.data.lpaName || 'Stockton-on-Tees Borough Council'
 
-  res.redirect(ROUTES.LPA_CONFIRM)
+  res.redirect(ROUTES.SUMMARY_AND_DECLARATION)
 })
 
 router.get(ROUTES.LPA_CONFIRM, (req, res) => {
@@ -1405,7 +1406,14 @@ router.post(ROUTES.SUMMARY_AND_DECLARATION, (req, res) => {
   req.session.data.levyAmount = req.session.data.levyAmount || '2,500'
   req.session.data.lpaEmail = req.session.data.lpaEmail || 'lpa@example.com'
 
-  res.redirect(ROUTES.CONFIRMATION)
+  res.redirect(ROUTES.COMMIT_CONFIRMATION)
+})
+
+router.get(ROUTES.COMMIT_CONFIRMATION, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.COMMIT_CONFIRMATION, {
+    data: data
+  })
 })
 
 router.get(ROUTES.COMMIT_EMAIL_CONTENT, (req, res) => {
@@ -1417,6 +1425,204 @@ router.get(ROUTES.COMMIT_EMAIL_CONTENT, (req, res) => {
 
   res.render(TEMPLATES.COMMIT_EMAIL_CONTENT, {
     data: data
+  })
+})
+
+// ============================================================================
+// Payment journey routes
+// ============================================================================
+
+router.get(ROUTES.PAYMENT_SUMMARY, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.PAYMENT_SUMMARY, {
+    data: data,
+    buildingTypeLabels: BUILDING_TYPE_LABELS,
+    backLink: ROUTES.PAY_SIGN_IN_GOVERNMENT_GATEWAY
+  })
+})
+
+router.post(ROUTES.PAYMENT_SUMMARY, (req, res) => {
+  req.session.save((err) => {
+    if (err) console.error('Session save error:', err)
+    res.redirect(ROUTES.PLANNING_REF)
+  })
+})
+
+router.get(ROUTES.PLANNING_REF, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.PLANNING_REF, {
+    data: data,
+    backLink: ROUTES.PAYMENT_SUMMARY
+  })
+})
+
+router.post(ROUTES.PLANNING_REF, (req, res) => {
+  const planningRef = req.body['planning-ref']?.trim()
+  if (!planningRef) {
+    return res.render(TEMPLATES.PLANNING_REF, {
+      error: 'Enter the planning application reference',
+      data: req.session.data || {},
+      backLink: ROUTES.PAYMENT_SUMMARY
+    })
+  }
+  req.session.data = req.session.data || {}
+  req.session.data.planningRef = planningRef
+  req.session.save((err) => {
+    if (err) console.error('Session save error:', err)
+    res.redirect(ROUTES.PAYMENT_DECLARATION)
+  })
+})
+
+router.get(ROUTES.PAYMENT_DECLARATION, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.PAYMENT_DECLARATION, {
+    data: data,
+    buildingTypeLabels: BUILDING_TYPE_LABELS,
+    backLink: ROUTES.PLANNING_REF
+  })
+})
+
+router.post(ROUTES.PAYMENT_DECLARATION, (req, res) => {
+  const paymentReference = 'NRF-' + Date.now().toString().slice(-6)
+  req.session.data = req.session.data || {}
+  req.session.data.paymentReference = paymentReference
+  req.session.data.levyAmount = req.session.data.levyAmount || '2,500'
+  req.session.save((err) => {
+    if (err) console.error('Session save error:', err)
+    res.redirect(ROUTES.PAYMENT_CONFIRMATION)
+  })
+})
+
+router.get(ROUTES.PAYMENT_CONFIRMATION, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.PAYMENT_CONFIRMATION, {
+    data: data,
+    formatBuildingDetails: formatBuildingTypeDetails
+  })
+})
+
+router.get(ROUTES.PAYMENT_REQUEST_EMAIL_CONTENT, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.PAYMENT_REQUEST_EMAIL_CONTENT, {
+    data: data,
+    backLink: ROUTES.PAYMENT_CONFIRMATION
+  })
+})
+
+router.get(ROUTES.PDN_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.PDN_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, {
+    data: data,
+    backLink: ROUTES.PAYMENT_REQUEST_EMAIL_CONTENT
+  })
+})
+
+router.post(ROUTES.PDN_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, (req, res) => {
+  const signInOption = req.body['sign-in-option']
+  if (!signInOption) {
+    return res.render(TEMPLATES.PDN_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, {
+      error: 'Select if you want to log in with One Login or Government Gateway',
+      data: req.session.data || {},
+      backLink: ROUTES.PAYMENT_REQUEST_EMAIL_CONTENT
+    })
+  }
+  req.session.data = req.session.data || {}
+  req.session.data.pdnSignInOption = signInOption
+  if (signInOption === 'government-gateway') {
+    res.redirect(ROUTES.PDN_SIGN_IN_GOVERNMENT_GATEWAY)
+  } else {
+    res.redirect(ROUTES.PDN_SIGN_IN_GOVERNMENT_GATEWAY)
+  }
+})
+
+router.get(ROUTES.PDN_SIGN_IN_GOVERNMENT_GATEWAY, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.PDN_SIGN_IN_GOVERNMENT_GATEWAY, {
+    data: data,
+    errors: [],
+    errorsByField: {},
+    backLink: ROUTES.PDN_HOW_WOULD_YOU_LIKE_TO_SIGN_IN
+  })
+})
+
+router.post(ROUTES.PDN_SIGN_IN_GOVERNMENT_GATEWAY, (req, res) => {
+  const userId = req.body.userId?.trim()
+  const password = req.body.password?.trim()
+  const data = req.session.data || {}
+  const errors = []
+  const errorsByField = {}
+  if (!userId) {
+    errors.push({ text: 'Enter your Government Gateway user ID', href: '#user-id' })
+    errorsByField.userId = { text: 'Enter your Government Gateway user ID' }
+  }
+  if (!password) {
+    errors.push({ text: 'Enter your password', href: '#password' })
+    errorsByField.password = { text: 'Enter your password' }
+  }
+  if (errors.length > 0) {
+    return res.render(TEMPLATES.PDN_SIGN_IN_GOVERNMENT_GATEWAY, {
+      data: data,
+      errors,
+      errorsByField,
+      backLink: ROUTES.PDN_HOW_WOULD_YOU_LIKE_TO_SIGN_IN
+    })
+  }
+  req.session.data = req.session.data || {}
+  req.session.data.pdnGovernmentGatewayUserId = userId
+  req.session.save((err) => {
+    if (err) console.error('Session save error:', err)
+    res.redirect(ROUTES.UPLOAD_DECISION_NOTICE)
+  })
+})
+
+router.get(ROUTES.UPLOAD_DECISION_NOTICE, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.UPLOAD_DECISION_NOTICE, {
+    data: data,
+    backLink: ROUTES.PDN_SIGN_IN_GOVERNMENT_GATEWAY
+  })
+})
+
+router.post(ROUTES.UPLOAD_DECISION_NOTICE, (req, res) => {
+  req.session.data = req.session.data || {}
+  req.session.data.decisionNoticeUploaded = true
+  req.session.data.decisionNoticeFileName = 'Planning Decision Notice.pdf'
+  req.session.save((err) => {
+    if (err) console.error('Session save error:', err)
+    res.redirect(ROUTES.PAYMENT_SUMMARY_SUBMIT)
+  })
+})
+
+router.get(ROUTES.PAYMENT_SUMMARY_SUBMIT, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.PAYMENT_SUMMARY_SUBMIT, {
+    data: data,
+    buildingTypeLabels: BUILDING_TYPE_LABELS,
+    backLink: ROUTES.UPLOAD_DECISION_NOTICE
+  })
+})
+
+router.post(ROUTES.PAYMENT_SUMMARY_SUBMIT, (req, res) => {
+  req.session.data = req.session.data || {}
+  req.session.save((err) => {
+    if (err) console.error('Session save error:', err)
+    res.redirect(ROUTES.DECISION_NOTICE_CONFIRMATION)
+  })
+})
+
+router.get(ROUTES.DECISION_NOTICE_CONFIRMATION, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.DECISION_NOTICE_CONFIRMATION, {
+    data: data,
+    formatBuildingDetails: formatBuildingTypeDetails
+  })
+})
+
+router.get(ROUTES.PAY_EMAIL_CONTENT, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.PAY_EMAIL_CONTENT, {
+    data: data,
+    backLink: ROUTES.DECISION_NOTICE_CONFIRMATION
   })
 })
 

@@ -42,6 +42,14 @@ const JOURNEYS = [
       'A user journey for developers to obtain a quote for the Nature Restoration Fund levy required when submitting planning permission. Includes map-based boundary drawing and EDP area validation.'
   },
   {
+    name: 'NRF Estimate 4',
+    displayName: 'Get a quote for Nature Restoration Fund Levy (V4)',
+    basePath: '/nrf-estimate-4',
+    hasStartPage: true,
+    description:
+      'A user journey for developers to obtain a quote for the Nature Restoration Fund levy (v4). Quote journey with check your answers, confirmation and estimate email content.'
+  },
+  {
     name: 'LPA Approve 2',
     displayName: 'LPA approve developer request to pay NRF (V2)',
     basePath: '/lpa-approve-2',

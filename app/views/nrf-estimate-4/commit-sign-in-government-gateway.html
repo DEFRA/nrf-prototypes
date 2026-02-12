@@ -1,0 +1,125 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Sign in using Government Gateway - Get a quote for Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: backLink or "/nrf-estimate-4/commit-how-would-you-like-to-sign-in"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <form action="/nrf-estimate-4/commit-sign-in-government-gateway" method="post" novalidate>
+
+            {% if errors and errors.length > 0 %}
+            <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert"
+                data-module="govuk-error-summary">
+                <h2 class="govuk-error-summary__title" id="error-summary-title">
+                    There is a problem
+                </h2>
+                <div class="govuk-error-summary__body">
+                    <ul class="govuk-list govuk-error-summary__list">
+                        {% for error in errors %}
+                        <li>
+                            <a href="{{ error.href }}">{{ error.text }}</a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+
+            <h1 class="govuk-heading-l">Sign in using Government Gateway</h1>
+
+            <div class="govuk-form-group {% if errorsByField.userId %}govuk-form-group--error{% endif %}">
+                <label class="govuk-label" for="user-id">
+                    Government Gateway user ID
+                </label>
+                <div id="user-id-hint" class="govuk-hint">
+                    This could be up to 12 characters.
+                </div>
+                {% if errorsByField.userId %}
+                <p id="user-id-error" class="govuk-error-message">
+                    <span class="govuk-visually-hidden">Error:</span> {{ errorsByField.userId.text }}
+                </p>
+                {% endif %}
+                <input class="govuk-input {% if errorsByField.userId %}govuk-input--error{% endif %}" id="user-id"
+                    name="userId" type="text" aria-describedby="user-id-hint {% if errorsByField.userId %}user-id-error{% endif %}" value="{{ data.governmentGatewayUserId }}">
+            </div>
+
+            <div class="govuk-form-group {% if errorsByField.password %}govuk-form-group--error{% endif %}">
+                <label class="govuk-label" for="password">
+                    Password
+                </label>
+                {% if errorsByField.password %}
+                <p id="password-error" class="govuk-error-message">
+                    <span class="govuk-visually-hidden">Error:</span> {{ errorsByField.password.text }}
+                </p>
+                {% endif %}
+                <div class="govuk-input__wrapper">
+                    <input class="govuk-input govuk-input--width-20 {% if errorsByField.password %}govuk-input--error{% endif %}" id="password"
+                        name="password" type="password" aria-describedby="{% if errorsByField.password %}password-error{% endif %}" value="{{ data.password }}">
+                    <button class="govuk-button govuk-button--secondary" data-module="govuk-button" type="button" id="show-password" aria-label="Show password">
+                        Show
+                    </button>
+                </div>
+            </div>
+
+            <button class="govuk-button" data-module="govuk-button">
+                Sign in
+            </button>
+
+        </form>
+
+        <h2 class="govuk-heading-m">New users of Government Gateway</h2>
+        <p class="govuk-body">
+            <a href="javascript:void(0)" class="govuk-link">Create sign in details</a>
+        </p>
+
+        <h2 class="govuk-heading-m">Problems signing in</h2>
+        <ul class="govuk-list">
+            <li>
+                <a href="javascript:void(0)" class="govuk-link">I have forgotten my password</a>
+            </li>
+            <li>
+                <a href="javascript:void(0)" class="govuk-link">I have forgotten my Government Gateway user ID</a>
+            </li>
+            <li>
+                <a href="javascript:void(0)" class="govuk-link">I have forgotten my Government Gateway user ID and password</a>
+            </li>
+        </ul>
+
+        <p class="govuk-body">
+            <a href="javascript:void(0)" class="govuk-link">Get help with this page</a>
+        </p>
+
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const showPasswordButton = document.getElementById('show-password');
+        const passwordInput = document.getElementById('password');
+
+        if (showPasswordButton && passwordInput) {
+            showPasswordButton.addEventListener('click', function() {
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    showPasswordButton.textContent = 'Hide';
+                    showPasswordButton.setAttribute('aria-label', 'Hide password');
+                } else {
+                    passwordInput.type = 'password';
+                    showPasswordButton.textContent = 'Show';
+                    showPasswordButton.setAttribute('aria-label', 'Show password');
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

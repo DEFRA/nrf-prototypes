@@ -1,0 +1,61 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Enter the number of dwelling buildings planned for the development - Get a quote for Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: "/nrf-estimate-4/building-type"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <form action="/nrf-estimate-4/residential" method="post" novalidate>
+            {% if isChange %}
+            <input type="hidden" name="isChange" value="true">
+            {% endif %}
+            {% if navFromSummary %}
+            <input type="hidden" name="navFromSummary" value="true">
+            {% endif %}
+
+            {% if error %}
+            {{ govukErrorSummary({
+                titleText: "There is a problem",
+                errorList: [
+                    {
+                        text: error,
+                        href: "#residential-building-count"
+                    }
+                ]
+            }) }}
+            {% endif %}
+
+            {{ govukInput({
+                label: {
+                    text: "Enter the number of dwelling buildings planned for the development",
+                    classes: "govuk-label--l",
+                    isPageHeading: true
+                },
+                id: "residential-building-count",
+                name: "residential-building-count",
+                type: "number",
+                classes: "govuk-input--width-5",
+                inputmode: "numeric",
+                pattern: "[0-9]*",
+                value: data.residentialBuildingCount,
+                errorMessage: { text: error } if error
+            }) }}
+
+            {{ govukButton({
+                text: "Continue"
+            }) }}
+
+        </form>
+    </div>
+</div>
+{% endblock %}
