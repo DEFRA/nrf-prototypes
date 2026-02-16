@@ -28,13 +28,12 @@ None
 ```
 # Nature Restoration Fund
 
-
-If a development falls into an area with an [Environmental Delivery Plan (EDP)](javascript:void(0)), you can use [Nature Restoration Fund (NRF)](javascript:void(0)) levies to discharge environmental obligations.
-If you choose not to use the NRF levy, you will still need to [discharge your obligations in other ways](javascript:void(0)).
-
 ## Using NRF to discharge your environmental obligations
 
 Use this service to find out if your development is in an area with an EDP, get a quote for the cost of the levy, commit to using the levy and pay the levy.
+
+If a development falls into an area with an [Environmental Delivery Plan (EDP)](javascript:void(0)), you can use [Nature Restoration Fund (NRF)](javascript:void(0)) levies to discharge environmental obligations.
+If you choose not to use the NRF levy, you will still need to [discharge your obligations in other ways](javascript:void(0)).
 
 CTA: Start now
 
@@ -48,9 +47,11 @@ To get a quote you will need:
 * to tell us the types of buildings planned
 * details about the amount of buildings or rooms
 
-You will be sent an email with an NRF reference and the amount of the levy. You can get as many quotes as you like.
+We will send you an email with an NRF reference and the amount of the levy. You can get as many quotes as you like.
 
 ### Committing to using NRF
+
+Do this as part of your planning application.
 
 To commit to using NRF you will need:
 
@@ -63,6 +64,8 @@ To commit to using NRF you will need:
 You will receive a commitment document that you can submit with your planning application.
 
 ### Paying the NRF
+
+Do this once you have planning permission and have your Planning Decision Notice.
 
 To pay the NRF and discharge your environmental obligations, you will need:
 
@@ -420,7 +423,9 @@ Button: Continue
 
 ```
 # What is the maximum number of people the development will serve?
-Hint text: This should be the maximum capacity allowed for your development. Link: Find out how to calculate your maximum capacity for your development.
+Hint text: This should be the maximum capacity allowed for your development.
+
+Link (separate line below input): [Find out how to calculate your maximum capacity for your development](javascript:void(0))
 
 Button: Continue
 ```
@@ -452,7 +457,7 @@ Button: Continue
         wasteWaterTreatmentWorks: {
             type: radios
             required: true
-            values: "Great Billing WRC" | "Main Pump Hall" | "Letchworth Wastewater Treatment Plant" | "I don't know the waste water treatment works yet"
+            values: "Great Billing WRC" | "Letchworth Wastewater Treatment Plant" | "Main Pump Hall" | "I don't know the waste water treatment works yet"
             fieldName: "waste-water-treatment-works"
         }
     }
@@ -465,10 +470,10 @@ Button: Continue
 # Confirm which waste water treatment works will be used for this development
 Hint text: Your quote will be partially based on the waste water treatment works you choose. If you don't know your waste water treatment works yet, we will provide a quote range.
 - Great Billing WRC
-- Main Pump Hall
 - Letchworth Wastewater Treatment Plant
+- Main Pump Hall
 - I don't know the waste water treatment works yet
-  
+
 Button: Continue
 ```
 
@@ -553,10 +558,10 @@ None
 | Waste water treatment works | [show data.wasteWaterTreatmentWorks] | [Change](/nrf-estimate-4/waste-water?change=true&nav=check-your-answers) |
 | Email address | [show data.email] | [Change](/nrf-estimate-4/estimate-email?change=true&nav=check-your-answers) |
 
-Primary button: Submit
-Secondary button (red): Delete
+Primary button: Submit (form POST to /nrf-estimate-4/check-your-answers)
+Secondary button (red): Delete (link to /nrf-estimate-4/delete-quote)
 
-Note: Implementation uses the check-your-answers view; back link from estimate-email. Change links may use nav=check-your-answers or nav=summary (routes accept both).
+Note: Implementation uses the check-your-answers view; back link from estimate-email. Change links use nav=check-your-answers. The summary list may also include rows for room counts (e.g. Number of multiple occupation rooms, Number of hotel rooms) when those building types are present.
 
 #### Errors
 
@@ -626,8 +631,8 @@ Note: This page uses the GOV.UK panel component (govuk-panel--confirmation) to d
 
 ## What happens next
 
-Your quote details have been removed and deleted. 
-[Get another quote](<javascript:void(0)>)
+Your quote details have been removed and deleted.
+[Get another quote](/nrf-estimate-4/start)
 
 ## Get help with Nature Restoration Fund
 
