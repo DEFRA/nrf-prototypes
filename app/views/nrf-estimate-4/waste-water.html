@@ -1,0 +1,82 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Confirm which waste water treatment works will be used for this development - Get a quote for Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: backLink or "/nrf-estimate-4/people-count"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <form action="/nrf-estimate-4/waste-water" method="post" novalidate>
+            {% if isChange %}
+            <input type="hidden" name="isChange" value="true">
+            {% endif %}
+            {% if navFromSummary %}
+            <input type="hidden" name="navFromSummary" value="true">
+            {% endif %}
+
+            {% if error %}
+            {{ govukErrorSummary({
+                titleText: "There is a problem",
+                errorList: [
+                    {
+                        text: error,
+                        href: "#waste-water-treatment-works"
+                    }
+                ]
+            }) }}
+            {% endif %}
+
+            {{ govukRadios({
+                name: "waste-water-treatment-works",
+                fieldset: {
+                    legend: {
+                        text: "Confirm which waste water treatment works will be used for this development",
+                        isPageHeading: true,
+                        classes: "govuk-fieldset__legend--l"
+                    }
+                },
+                hint: {
+                    text: "Your quote will be partially based on the waste water treatment works you choose. If you don't know your waste water treatment works yet, we will provide a quote range."
+                },
+                errorMessage: { text: error } if error,
+                items: [
+                    {
+                        value: "Great Billing WRC",
+                        text: "Great Billing WRC",
+                        checked: data.wasteWaterTreatmentWorks == "Great Billing WRC"
+                    },
+                    {
+                        value: "Letchworth Wastewater Treatment Plant",
+                        text: "Letchworth Wastewater Treatment Plant",
+                        checked: data.wasteWaterTreatmentWorks == "Letchworth Wastewater Treatment Plant"
+                    },
+                    {
+                        value: "Main Pump Hall",
+                        text: "Main Pump Hall",
+                        checked: data.wasteWaterTreatmentWorks == "Main Pump Hall"
+                    },
+                         {
+                        value: "I don't know the waste water treatment works yet",
+                        text: "I don't know the waste water treatment works yet",
+                        checked: data.wasteWaterTreatmentWorks == "I don't know the waste water treatment works yet"
+                    }
+                ]
+            }) }}
+
+            {{ govukButton({
+                text: "Continue"
+            }) }}
+
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -58,7 +58,7 @@ CTA: Continue
 | ---------------------- | ---------------------------------- |
 | Order number:          | 2                                  |
 | Path:                  | /nrf-estimate-4/enter-estimate-ref |
-| Title:                 | Enter your estimate reference      |
+| Title:                 | Enter your NRF reference      |
 | Conditional page flow: | none                               |
 
 #### Data points
@@ -78,6 +78,8 @@ CTA: Continue
 ```
 # Enter your NRF reference
 Hint text: Enter this reference to retrieve the details entered during the quote.
+
+Note: The page title and label use "NRF reference" (implementation uses "Enter your NRF reference").
 
 CTA: Continue
 ```
@@ -519,7 +521,7 @@ None
 | **Field**             | **Value**                        |
 | --------------------- | -------------------------------- |
 | Order number:         | 11                               |
-| Path:                 | /nrf-estimate-4/confirmation     |
+| Path:                 | /nrf-estimate-4/commit-confirmation     |
 | Title:                | Your details have been submitted |
 | Data points:          | None                             |
 | Conditional pageflow: | None                             |
@@ -530,7 +532,7 @@ None
 <green-banner>
 # Your details have been submitted
 
-Commitment reference: [dynamically generated - shows data.nrfReference]
+Commitment reference: {{ data.commitmentReference }}
 </green-banner>
 
 ## What happens next
@@ -551,7 +553,7 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 [View the email content](/nrf-estimate-4/commit-email-content)
 ```
 
-**Note:** The confirmation page uses conditional rendering based on `data.paymentReference` and `data.commitmentReference` to display different content for payment, commit, and estimate journeys. The page uses the GOV.UK panel component (govuk-panel--confirmation) to display the green banner. For the commit journey, it shows when `data.commitmentReference` exists.
+**Note:** The commit journey uses the commit-confirmation page (path `/commit-confirmation`). The page uses the GOV.UK panel component (govuk-panel--confirmation) to display the green banner with Commitment reference.
 
 #### Errors
 
@@ -573,7 +575,7 @@ None
 
 ```
 <inset-text>
-**To:** {{ data.lpaEmail or 'user@example.com' }}
+**To:** {{ data.email or 'user@example.com' }}
 **Subject:** Nature Restoration Fund – commitment to use the Nature Restoration Fund levy
 </inset-text>
 

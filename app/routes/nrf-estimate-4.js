@@ -566,11 +566,13 @@ router.get(ROUTES.BUILDING_TYPE, (req, res) => {
   const data = req.session.data || {}
   const isChange = req.query.change === 'true'
   const navFromSummary = (req.query.nav === 'summary' || req.query.nav === 'check-your-answers')
+  const backLink = (isChange && navFromSummary) ? ROUTES.CHECK_YOUR_ANSWERS : ROUTES.MAP
 
   res.render(TEMPLATES.BUILDING_TYPE, {
     data: data,
     isChange: isChange,
-    navFromSummary: navFromSummary
+    navFromSummary: navFromSummary,
+    backLink: backLink
   })
 })
 
@@ -580,81 +582,53 @@ router.post(ROUTES.BUILDING_TYPE, (req, res) => {
   const isChange = req.body.isChange === 'true'
   const navFromSummary = req.body.navFromSummary === 'true'
 
-  if (!buildingTypes || buildingTypes === '_unchecked') {
+  // Quote journey: Housing | Other residential
+  const raw = buildingTypes
+  let buildingTypesArray = []
+  if (Array.isArray(raw)) {
+    buildingTypesArray = raw.filter((t) => t && t !== '_unchecked')
+  } else if (raw && raw !== '_unchecked') {
+    buildingTypesArray = [raw]
+  }
+
+  if (buildingTypesArray.length === 0) {
     return res.render(TEMPLATES.BUILDING_TYPE, {
-      error: 'Select a building type to continue',
+      error: 'Select a development type to continue',
       data: req.session.data || {},
       isChange: isChange,
       navFromSummary: navFromSummary
     })
   }
 
-  if (!req.session.data) {
-    req.session.data = {}
-  }
+  req.session.data = req.session.data || {}
   const previousBuildingTypes = req.session.data.buildingTypes || []
-
-  const buildingTypesArray =
-    buildingTypeHelpers.normalizeBuildingTypes(buildingTypes)
   req.session.data.buildingTypes = buildingTypesArray
 
+  const hasHousing = buildingTypesArray.includes('Housing')
+  const hasOtherResidential = buildingTypesArray.includes('Other residential')
+
   if (isChange && navFromSummary) {
-    const roomCountTypes = BUILDING_TYPES_REQUIRING_ROOM_COUNT
-    const residentialType = BUILDING_TYPES.DWELLINGHOUSE
-
-    if (!req.session.data.roomCounts) {
-      req.session.data.roomCounts = {}
+    if (!previousBuildingTypes.includes('Other residential') && !hasOtherResidential) {
+      delete req.session.data.peopleCount
     }
-
-    const removedTypes = buildingTypeHelpers.getRemovedBuildingTypes(
-      previousBuildingTypes,
-      buildingTypesArray
-    )
-    removedTypes.forEach((type) => {
-      if (type === BUILDING_TYPES.DWELLINGHOUSE) {
-        delete req.session.data.residentialBuildingCount
-      } else if (type === BUILDING_TYPES.HOTEL) {
-        delete req.session.data.roomCounts.hotelCount
-      } else if (type === BUILDING_TYPES.HMO) {
-        delete req.session.data.roomCounts.hmoCount
-      } else if (type === BUILDING_TYPES.RESIDENTIAL_INSTITUTION) {
-        delete req.session.data.roomCounts.residentialInstitutionCount
-      }
-    })
-
+    if (!previousBuildingTypes.includes('Housing') && !hasHousing) {
+      delete req.session.data.residentialBuildingCount
+    }
     const hasChanges =
-      JSON.stringify(previousBuildingTypes.sort()) !==
-      JSON.stringify(buildingTypesArray.sort())
-
+      JSON.stringify([...previousBuildingTypes].sort()) !==
+      JSON.stringify([...buildingTypesArray].sort())
     if (!hasChanges) {
       res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
       return
     }
-
-    const newlyAddedTypes = buildingTypeHelpers.getNewlyAddedBuildingTypes(
-      previousBuildingTypes,
-      buildingTypesArray
-    )
-    const newlyAddedRoomCountTypes = newlyAddedTypes.filter((type) =>
-      roomCountTypes.includes(type)
-    )
-    const newlyAddedResidentialType = newlyAddedTypes.includes(residentialType)
-
-    const needsRoomCount = newlyAddedRoomCountTypes.length > 0
-    const needsResidentialCount = newlyAddedResidentialType
-
-    if (needsRoomCount || needsResidentialCount) {
-      if (needsResidentialCount) {
-        res.redirect(`${ROUTES.RESIDENTIAL}?change=true&nav=summary`)
-        return
-      } else if (needsRoomCount) {
-        req.session.data.roomCountTypes = newlyAddedRoomCountTypes
-        req.session.data.currentRoomCountIndex = 0
-        res.redirect(`${ROUTES.ROOM_COUNT}?change=true&nav=summary`)
-        return
-      }
+    if (hasHousing && !req.session.data.residentialBuildingCount) {
+      res.redirect(`${ROUTES.RESIDENTIAL}?change=true&nav=summary`)
+      return
     }
-
+    if (hasOtherResidential && req.session.data.peopleCount == null) {
+      res.redirect(`${ROUTES.PEOPLE_COUNT}?change=true&nav=summary`)
+      return
+    }
     res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
     return
   }
@@ -664,25 +638,119 @@ router.post(ROUTES.BUILDING_TYPE, (req, res) => {
     return
   }
 
-  if (buildingTypesArray.includes(BUILDING_TYPES.NON_RESIDENTIAL)) {
-    res.redirect(ROUTES.NON_RESIDENTIAL)
-  } else {
-    const hasRoomCountTypes = buildingTypesArray.some((type) =>
-      BUILDING_TYPES_REQUIRING_ROOM_COUNT.includes(type)
-    )
-
-    if (hasRoomCountTypes) {
-      req.session.data.roomCountTypes = buildingTypesArray.filter((type) =>
-        BUILDING_TYPES_REQUIRING_ROOM_COUNT.includes(type)
-      )
-      req.session.data.currentRoomCountIndex = 0
-      res.redirect(ROUTES.ROOM_COUNT)
-    } else if (buildingTypesArray.includes(BUILDING_TYPES.DWELLINGHOUSE)) {
-      res.redirect(ROUTES.RESIDENTIAL)
-    } else {
-      res.redirect(ROUTES.ESTIMATE_EMAIL)
-    }
+  if (hasHousing) {
+    res.redirect(ROUTES.RESIDENTIAL)
+    return
   }
+  if (hasOtherResidential) {
+    res.redirect(ROUTES.PEOPLE_COUNT)
+    return
+  }
+  res.redirect(ROUTES.ESTIMATE_EMAIL)
+})
+
+// People count (Other residential) - quote journey
+router.get(ROUTES.PEOPLE_COUNT, (req, res) => {
+  const data = req.session.data || {}
+  const isChange = req.query.change === 'true'
+  const navFromSummary = req.query.nav === 'summary' || req.query.nav === 'check-your-answers'
+  let backLink = ROUTES.BUILDING_TYPE
+  if (data.buildingTypes && data.buildingTypes.includes('Housing')) {
+    backLink = ROUTES.RESIDENTIAL
+  }
+  res.render(TEMPLATES.PEOPLE_COUNT, {
+    data: data,
+    isChange: isChange,
+    navFromSummary: navFromSummary,
+    backLink: backLink
+  })
+})
+
+router.post(ROUTES.PEOPLE_COUNT, (req, res) => {
+  const peopleCount = req.body['people-count']
+  const isChange = req.body.isChange === 'true'
+  const navFromSummary = req.body.navFromSummary === 'true'
+  const data = req.session.data || {}
+
+  if (!peopleCount || isNaN(peopleCount) || parseInt(peopleCount, 10) < 1) {
+    let backLink = ROUTES.BUILDING_TYPE
+    if (data.buildingTypes && data.buildingTypes.includes('Housing')) {
+      backLink = ROUTES.RESIDENTIAL
+    }
+    return res.render(TEMPLATES.PEOPLE_COUNT, {
+      error: 'Enter the maximum number of people to continue',
+      data: data,
+      isChange: isChange,
+      navFromSummary: navFromSummary,
+      backLink: backLink
+    })
+  }
+
+  req.session.data = req.session.data || {}
+  req.session.data.peopleCount = parseInt(peopleCount, 10)
+
+  if (isChange && navFromSummary) {
+    res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
+    return
+  }
+  res.redirect(ROUTES.WASTE_WATER)
+})
+
+// Waste water treatment works - quote journey
+router.get(ROUTES.WASTE_WATER, (req, res) => {
+  const data = req.session.data || {}
+  const isChange = req.query.change === 'true'
+  const navFromSummary = req.query.nav === 'summary' || req.query.nav === 'check-your-answers'
+  let backLink = ROUTES.PEOPLE_COUNT
+  if (isChange && navFromSummary) {
+    backLink = ROUTES.CHECK_YOUR_ANSWERS
+  } else if (data.buildingTypes && data.buildingTypes.includes('Housing') && !data.buildingTypes.includes('Other residential')) {
+    backLink = ROUTES.RESIDENTIAL
+  } else if (data.buildingTypes && data.buildingTypes.includes('Housing')) {
+    backLink = ROUTES.PEOPLE_COUNT
+  } else {
+    backLink = ROUTES.BUILDING_TYPE
+  }
+  res.render(TEMPLATES.WASTE_WATER, {
+    data: data,
+    isChange: isChange,
+    navFromSummary: navFromSummary,
+    backLink: backLink
+  })
+})
+
+router.post(ROUTES.WASTE_WATER, (req, res) => {
+  const wasteWaterTreatmentWorks = req.body['waste-water-treatment-works']
+  const isChange = req.body.isChange === 'true'
+  const navFromSummary = req.body.navFromSummary === 'true'
+  const data = req.session.data || {}
+
+  if (!wasteWaterTreatmentWorks) {
+    let backLink = ROUTES.PEOPLE_COUNT
+    if (data.buildingTypes && data.buildingTypes.includes('Housing') && !data.buildingTypes.includes('Other residential')) {
+      backLink = ROUTES.RESIDENTIAL
+    } else if (data.buildingTypes && data.buildingTypes.includes('Housing')) {
+      backLink = ROUTES.PEOPLE_COUNT
+    } else {
+      backLink = ROUTES.BUILDING_TYPE
+    }
+    return res.render(TEMPLATES.WASTE_WATER, {
+      error: 'Select the waste water treatment works or tell us you don\'t know yet to continue',
+      data: data,
+      isChange: isChange,
+      navFromSummary: navFromSummary,
+      backLink: backLink
+    })
+  }
+
+  req.session.data = req.session.data || {}
+  req.session.data.wasteWaterTreatmentWorks = wasteWaterTreatmentWorks
+
+  if (isChange && navFromSummary) {
+    res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
+    return
+  }
+  res.redirect(ROUTES.ESTIMATE_EMAIL)
 })
 
 // Non-residential development page
@@ -826,11 +894,13 @@ router.get(ROUTES.RESIDENTIAL, (req, res) => {
   const data = req.session.data || {}
   const isChange = req.query.change === 'true'
   const navFromSummary = (req.query.nav === 'summary' || req.query.nav === 'check-your-answers')
+  const backLink = (isChange && navFromSummary) ? ROUTES.CHECK_YOUR_ANSWERS : ROUTES.BUILDING_TYPE
 
   res.render(TEMPLATES.RESIDENTIAL, {
     data: data,
     isChange: isChange,
-    navFromSummary: navFromSummary
+    navFromSummary: navFromSummary,
+    backLink: backLink
   })
 })
 
@@ -864,7 +934,12 @@ router.post(ROUTES.RESIDENTIAL, (req, res) => {
     return
   }
 
-  res.redirect(ROUTES.ESTIMATE_EMAIL)
+  // If Other residential selected, collect people count next
+  if (req.session.data.buildingTypes && req.session.data.buildingTypes.includes('Other residential')) {
+    res.redirect(ROUTES.PEOPLE_COUNT)
+    return
+  }
+  res.redirect(ROUTES.WASTE_WATER)
 })
 
 // Email entry
@@ -874,9 +949,13 @@ router.get(ROUTES.ESTIMATE_EMAIL, (req, res) => {
   const navFromSummary = (req.query.nav === 'summary' || req.query.nav === 'check-your-answers')
 
   let backLink = ROUTES.BUILDING_TYPE
-  if (data.buildingTypes) {
-    if (data.buildingTypes.includes('Dwellinghouse')) {
+  if (data.wasteWaterTreatmentWorks) {
+    backLink = ROUTES.WASTE_WATER
+  } else if (data.buildingTypes) {
+    if (data.buildingTypes.includes('Housing')) {
       backLink = ROUTES.RESIDENTIAL
+    } else if (data.buildingTypes.includes('Other residential')) {
+      backLink = ROUTES.PEOPLE_COUNT
     } else if (data.roomCountTypes && data.roomCountTypes.length > 0) {
       backLink = ROUTES.ROOM_COUNT
     } else {
@@ -900,9 +979,13 @@ router.post(ROUTES.ESTIMATE_EMAIL, (req, res) => {
   const data = req.session.data || {}
 
   let backLink = ROUTES.BUILDING_TYPE
-  if (data.buildingTypes) {
-    if (data.buildingTypes.includes('Dwellinghouse')) {
+  if (data.wasteWaterTreatmentWorks) {
+    backLink = ROUTES.WASTE_WATER
+  } else if (data.buildingTypes) {
+    if (data.buildingTypes.includes('Housing')) {
       backLink = ROUTES.RESIDENTIAL
+    } else if (data.buildingTypes.includes('Other residential')) {
+      backLink = ROUTES.PEOPLE_COUNT
     } else if (data.roomCountTypes && data.roomCountTypes.length > 0) {
       backLink = ROUTES.ROOM_COUNT
     } else {
@@ -969,6 +1052,34 @@ router.get(ROUTES.CONFIRMATION, (req, res) => {
   })
 })
 
+// Delete quote - confirm then redirect to delete confirmation
+router.get(ROUTES.DELETE_QUOTE, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.DELETE_QUOTE, { data: data })
+})
+
+router.post(ROUTES.DELETE_QUOTE, (req, res) => {
+  const confirmDelete = req.body['confirm-delete-quote']
+  if (confirmDelete === 'Yes') {
+    // Clear quote journey data
+    const keysToRemove = [
+      'redlineBoundaryPolygon', 'redlineFile', 'hasRedlineBoundaryFile', 'mapReferrer',
+      'buildingTypes', 'residentialBuildingCount', 'peopleCount', 'roomCounts', 'roomCountTypes', 'currentRoomCountIndex',
+      'wasteWaterTreatmentWorks', 'email', 'estimateReference', 'nrfReference', 'levyAmount'
+    ]
+    req.session.data = req.session.data || {}
+    keysToRemove.forEach((k) => delete req.session.data[k])
+    res.redirect(ROUTES.DELETE_CONFIRMATION)
+  } else {
+    res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
+  }
+})
+
+router.get(ROUTES.DELETE_CONFIRMATION, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.DELETE_CONFIRMATION, { data: data })
+})
+
 // Serve GeoJSON catchment data
 router.get(ROUTES.CATCHMENTS_GEOJSON, (req, res) => {
   try {
@@ -997,11 +1108,25 @@ router.get(ROUTES.CATCHMENTS_GEOJSON, (req, res) => {
 router.get(ROUTES.ESTIMATE_EMAIL_CONTENT, (req, res) => {
   const data = req.session.data || {}
 
-  if (!data.estimateReference) {
+  if (!data.estimateReference && !data.nrfReference) {
     return res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
   }
 
   res.render(TEMPLATES.ESTIMATE_EMAIL_CONTENT, {
+    data: data,
+    buildingTypeDetails: formatBuildingTypeDetails(data)
+  })
+})
+
+// Estimate email content (quote range) - when user chose "I don't know" waste water works
+router.get(ROUTES.ESTIMATE_EMAIL_CONTENT_RANGE, (req, res) => {
+  const data = req.session.data || {}
+
+  if (!data.estimateReference && !data.nrfReference) {
+    return res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
+  }
+
+  res.render(TEMPLATES.ESTIMATE_EMAIL_CONTENT_RANGE, {
     data: data,
     buildingTypeDetails: formatBuildingTypeDetails(data)
   })

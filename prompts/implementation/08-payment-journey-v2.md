@@ -103,7 +103,7 @@ Link
 
 ## Problems signing in
 
-[I have forgetten my password](javascript:void(0))
+[I have forgotten my password](javascript:void(0))
 [I have forgotten my Government Gateway user ID](javascript:void(0))
 [I have forgotten my Government Gateway user ID and password](javascript:void(0))
 
@@ -129,7 +129,7 @@ Link
 | **Field**              | **Value**                      |
 | ---------------------- | ------------------------------ |
 | Order number:          | 5                              |
-| Path:                  | /nrf-estimate-4/commit-summary |
+| Path:                  | /nrf-estimate-4/payment-summary |
 | Title:                 | Check your answers             |
 | Conditional page flow: | None                           |
 
@@ -140,7 +140,7 @@ None
 #### Content
 
 ```
-# Check your answers
+# Your commitment details
 
 | NRF reference | {{ data.paymentReference }} (if provided) | [Change link - disabled] |
 | Red line boundary added | Yes/No (based on data.redlineBoundaryPolygon) | [Change link - disabled] |
@@ -156,7 +156,7 @@ None
 
 CTA: Continue
 
-Note: This page uses the GOV.UK summary list component. Change links are disabled (javascript:void(0)) as this is a read-only summary of retrieved commitment data.
+Note: This page uses the GOV.UK summary list component with H1 "Your commitment details". Change links are disabled (javascript:void(0)) as this is a read-only summary of retrieved commitment data.
 ```
 
 #### Errors
@@ -194,6 +194,8 @@ None
 
 Hint text: Enter the reference of the planning application that you want to pay the Nature Restoration Fund levy for
 
+Note: The implementation includes an inset showing Local Planning Authority (e.g. Stockton-on-Tees Borough Council).
+
 ```
 
 #### Errors
@@ -211,7 +213,7 @@ Hint text: Enter the reference of the planning application that you want to pay 
 | **Field**              | **Value**                             |
 | ---------------------- | ------------------------------------- |
 | Order number:          | 7                                     |
-| Path:                  | /nrf-estimate-4/commit-summary-submit |
+| Path:                  | /nrf-estimate-4/payment-declaration |
 | Title:                 | Check your answers                    |
 | Conditional page flow: | None                                  |
 
@@ -249,7 +251,7 @@ Your Nature Restoration Fund nutrient levy amount is £{{ data.levyAmount or '2,
 
 CTA: Confirm and submit
 
-Note: This page uses the GOV.UK summary list component. Change links are disabled (javascript:void(0)). The declaration text is displayed as separate paragraphs before the submit button.
+Note: This page uses the GOV.UK summary list component (payment-declaration). Change links are disabled. The declaration text is displayed as separate paragraphs before the submit button. Implementation includes a "Cancel action" secondary button.
 ```
 
 #### Errors
@@ -476,7 +478,7 @@ Link
 
 ## Problems signing in
 
-[I have forgetten my password](javascript:void(0))
+[I have forgotten my password](javascript:void(0))
 [I have forgotten my Government Gateway user ID](javascript:void(0))
 [I have forgotten my Government Gateway user ID and password](javascript:void(0))
 
@@ -545,12 +547,12 @@ Hint text: You must have a Planning Decision Notice before you pay your levy.
 
 ---
 
-### Check your answers summary declaration and submit
+### Check your answers summary declaration and submit (after upload)
 
 | **Field**              | **Value**                             |
 | ---------------------- | ------------------------------------- |
 | Order number:          | 13                                    |
-| Path:                  | /nrf-estimate-4/commit-summary-submit |
+| Path:                  | /nrf-estimate-4/payment-summary-submit |
 | Title:                 | Check your answers                    |
 | Conditional page flow: | None                                  |
 
@@ -581,7 +583,7 @@ Your Nature Restoration Fund nutrient levy amount is £{{ data.levyAmount or '2,
 
 CTA: Confirm
 
-Note: This page uses the GOV.UK summary list component. Change links are removed. The amount text is displayed as separate paragraphs before the confirm button.
+Note: This page uses the GOV.UK summary list component (payment-summary-submit). Shown after upload decision notice; declaration text is conditional. Implementation includes a "Cancel action" secondary button. Links to decision-notice-confirmation.
 ```
 
 #### Errors
@@ -590,12 +592,12 @@ None
 
 ---
 
-### Details submitted confirmation page
+### Details submitted confirmation page (after upload)
 
 | **Field**             | **Value**                                    |
 | --------------------- | -------------------------------------------- |
 | Order number:         | 14                                           |
-| Path:                 | /nrf-estimate-4/decision_notice-confirmation |
+| Path:                 | /nrf-estimate-4/decision-notice-confirmation |
 | Title:                | Your details have been submitted             |
 | Data points:          | None                                         |
 | Conditional pageflow: | None                                         |
@@ -606,15 +608,14 @@ None
 <green-banner>
 # Your details have been submitted.
 
-**Payment reference:** {{ data.paymentReference }}
+**NRF reference:** {{ data.paymentReference }}
 </green-banner>
 
-Note: The H1 heading includes a period: "Your details have been submitted." This page uses the GOV.UK panel component (govuk-panel--confirmation) to display the green banner. The payment reference label is displayed in bold in the panel body.
+Note: The H1 heading includes a period: "Your details have been submitted." This page uses the GOV.UK panel component (govuk-panel--confirmation) to display the green banner. The NRF reference is displayed in bold in the panel body.
 
 ## What happens next
 
-You will receive an email with an invoice, with the ways you can pay.
-Once you have paid, you will be sent an email with a receipt which you can use when discharging your planning conditions.
+You will receive an email with an invoice and how you can pay. Once you have paid, you will be sent an email with a receipt which you can use when discharging your planning conditions.
 
 You told us the development:
 

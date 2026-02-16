@@ -1,7 +1,7 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-How many residential units in this development? - Get a quote for Nature Restoration Fund levy - GOV.UK
+What is the maximum number of people the development will serve? - Get a quote for Nature Restoration Fund levy - GOV.UK
 {% endblock %}
 
 {% block beforeContent %}
@@ -15,12 +15,15 @@ href: backLink or "/nrf-estimate-4/building-type"
 <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
 
-        <form action="/nrf-estimate-4/residential" method="post" novalidate>
+        <form action="/nrf-estimate-4/people-count" method="post" novalidate>
             {% if isChange %}
             <input type="hidden" name="isChange" value="true">
             {% endif %}
             {% if navFromSummary %}
             <input type="hidden" name="navFromSummary" value="true">
+            {% endif %}
+            {% if backLink %}
+            <input type="hidden" name="backLink" value="{{ backLink }}">
             {% endif %}
 
             {% if error %}
@@ -29,7 +32,7 @@ href: backLink or "/nrf-estimate-4/building-type"
                 errorList: [
                     {
                         text: error,
-                        href: "#residential-building-count"
+                        href: "#people-count"
                     }
                 ]
             }) }}
@@ -37,22 +40,26 @@ href: backLink or "/nrf-estimate-4/building-type"
 
             {{ govukInput({
                 label: {
-                    text: "How many residential units in this development?",
+                    text: "What is the maximum number of people the development will serve?",
                     classes: "govuk-label--l",
                     isPageHeading: true
                 },
                 hint: {
-                    text: "A unit is a house, a HMO with 6 or less residents, a flat within a block of flats or a caravan or mobile home on a site."
+                    text: "This should be the maximum capacity allowed for your development."
                 },
-                id: "residential-building-count",
-                name: "residential-building-count",
+                id: "people-count",
+                name: "people-count",
                 type: "number",
                 classes: "govuk-input--width-5",
                 inputmode: "numeric",
                 pattern: "[0-9]*",
-                value: data.residentialBuildingCount,
+                value: data.peopleCount,
                 errorMessage: { text: error } if error
             }) }}
+
+            <p class="govuk-body">
+                <a href="javascript:void(0)" class="govuk-link">Find out how to calculate your maximum capacity for your development</a>
+            </p>
 
             {{ govukButton({
                 text: "Continue"

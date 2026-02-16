@@ -1,13 +1,13 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-Select the types of buildings that are planned for this development - Get a quote for Nature Restoration Fund levy - GOV.UK
+What type of development is it? - Get a quote for Nature Restoration Fund levy - GOV.UK
 {% endblock %}
 
 {% block beforeContent %}
 {{ govukBackLink({
 text: "Back",
-href: "/nrf-estimate-4/map"
+href: backLink or "/nrf-estimate-4/map"
 }) }}
 {% endblock %}
 
@@ -39,7 +39,7 @@ href: "/nrf-estimate-4/map"
                 name: "building-types",
                 fieldset: {
                     legend: {
-                        text: "Select the types of buildings that are planned for this development",
+                        text: "What type of development is it?",
                         isPageHeading: true,
                         classes: "govuk-fieldset__legend--l"
                     }
@@ -50,29 +50,20 @@ href: "/nrf-estimate-4/map"
                 errorMessage: { text: error } if error,
                 items: [
                     {
-                        value: "Dwellinghouse",
-                        text: "Dwelling",
-                        checked: data.buildingTypes and data.buildingTypes.includes('Dwellinghouse')
+                        value: "Housing",
+                        text: "Housing",
+                        hint: {
+                            text: "Dwellings, HMOs of 6 or less residents, static caravans or mobile homes with permanent residents"
+                        },
+                        checked: data.buildingTypes and data.buildingTypes.includes('Housing')
                     },
                     {
-                        value: "Hotel",
-                        text: "Hotel",
-                        checked: data.buildingTypes and data.buildingTypes.includes('Hotel')
-                    },
-                    {
-                        value: "House in multiple occupation (HMO)",
-                        text: "House in multiple occupation (HMO)",
-                        checked: data.buildingTypes and data.buildingTypes.includes('House in multiple occupation (HMO)')
-                    },
-                    {
-                        value: "Non-residential development",
-                        text: "Non-residential development",
-                        checked: data.buildingTypes and data.buildingTypes.includes('Non-residential development')
-                    },
-                    {
-                        value: "Residential institution",
-                        text: "Residential institution",
-                        checked: data.buildingTypes and data.buildingTypes.includes('Residential institution')
+                        value: "Other residential",
+                        text: "Other residential",
+                        hint: {
+                            text: "HMOs for 7 or more residents, care homes, retirement homes, student accommodation, prisons and secure institutions, military accommodation, hotels, bed and breakfasts, Holiday lets, caravans and camping"
+                        },
+                        checked: data.buildingTypes and data.buildingTypes.includes('Other residential')
                     }
                 ]
             }) }}

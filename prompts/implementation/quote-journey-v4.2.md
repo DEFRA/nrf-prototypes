@@ -179,12 +179,12 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 
 ### Upload a red line boundary file
 
-| **Field**             | **Value**                                       |
-| --------------------- | ----------------------------------------------- |
-| Order number:         | 3.1                                             |
-| Path:                 | /nrf-estimate-4/upload-redline                  |
-| Title:                | Upload a red line boundary file                 |
-| Conditional pageflow: | display if data.hasRedlineBoundaryFile === true |
+| **Field**               | **Value**                                       |
+| ----------------------- | ----------------------------------------------- |
+| Order number:           | 3.1                                             |
+| Path:                   | /nrf-estimate-4/upload-redline                  |
+| Title:                  | Upload a red line boundary file                 |
+| Conditional page flow:  | display if data.hasRedlineBoundaryFile === true (user chose "Upload a file") |
 
 #### Data points
 
@@ -228,12 +228,12 @@ Hint text: Upload a shapefile (.shp) or GeoJSON file (.geojson). The file must b
 
 ### Draw a red line boundary
 
-| **Field**             | **Value**                                        |
-| --------------------- | ------------------------------------------------ |
-| Order number:         | 3.2                                              |
-| Path:                 | /nrf-estimate-4/map                              |
-| Title:                | Draw a red line boundary                         |
-| Conditional pageflow: | display if data.hasRedlineBoundaryFile === false |
+| **Field**               | **Value**                                        |
+| ----------------------- | ------------------------------------------------ |
+| Order number:           | 3.2                                              |
+| Path:                   | /nrf-estimate-4/map                              |
+| Title:                  | Draw a red line boundary                         |
+| Conditional page flow:  | display if data.hasRedlineBoundaryFile === false (user chose "Draw on a map") |
 
 #### Data points
 
@@ -276,13 +276,13 @@ Note: The button text on this page is "Save and continue" (not just "Continue").
 
 ### Exit page if the development site is not within an EDP area (conditional)
 
-| **Field**             | **Value**                                                  |
-| --------------------- | ---------------------------------------------------------- |
-| Order number:         | 3.3                                                        |
-| Path:                 | /nrf-estimate-4/no-edp                                     |
-| Title:                | Nature Restoration Fund levy is not available in this area |
-| Data points:          | None                                                       |
-| Conditional pageflow: | display if development site is not within an EDP area      |
+| **Field**               | **Value**                                                  |
+| ----------------------- | ---------------------------------------------------------- |
+| Order number:           | 3.3                                                        |
+| Path:                   | /nrf-estimate-4/no-edp                                     |
+| Title:                  | Nature Restoration Fund levy is not available in this area |
+| Data points:            | None                                                       |
+| Conditional page flow:   | display if development site is not within an EDP area      |
 
 #### Content
 
@@ -303,14 +303,14 @@ None
 
 ---
 
-### Select the types of buildings that might be included in this development
+### What type of development is it?
 
-| **Field**             | **Value**                                                   |
-| --------------------- | ----------------------------------------------------------- |
-| Order number:         | 4                                                           |
-| Path:                 | /nrf-estimate-4/building-type                               |
-| Name:                 | Building type entry (conditional)                           |
-| Conditional pageflow: | display if red line boundary falls within EDP boundary area |
+| **Field**               | **Value**                                                   |
+| ----------------------- | ----------------------------------------------------------- |
+| Order number:           | 4                                                           |
+| Path:                   | /nrf-estimate-4/building-type                               |
+| Title:                  | What type of development is it?                             |
+| Conditional page flow:  | display if red line boundary falls within EDP boundary area |
 
 #### Data points
 
@@ -319,8 +319,7 @@ None
     data: {
         buildingTypes: {
             type: checkboxes,
-            values: "Dwellinghouse" | "Hotel" | "House of multiple occupation (HMO)" | "Non-residential development" | "Residential institution",
-            labels: "Dwelling" | "Hotel" | "House of multiple occupation (HMO)" | "Non-residential development" | "Residential institution",
+            values: "Housing" | "Other residential",
             conditional: required if red line boundary falls within EDP boundary area
             fieldName: "building-types"
         }
@@ -331,8 +330,14 @@ None
 #### Content
 
 ```
-# Select the types of buildings that are planned for this development
+# What type of development is it?
 Select all that apply
+- Housing
+Hint text: Dwellings, HMOs of 6 or less residents, static caravans or mobile homes with permanent residents
+- Other residential
+Hint text: HMOs for 7 or more residents, care homes, retirement homes, student accommodation, prisons and secure institutions, military accommodation, hotels, bed and breakfasts, Holiday lets, caravans and camping
+
+Button: Continue
 ```
 
 #### Errors
@@ -341,45 +346,19 @@ Select all that apply
 | -------------- | --------------------------------------------------------- |
 | Description:   | User has selected 'Continue' without choosing any options |
 | Error summary: | There is a problem                                        |
-| Error message: | Select a building type to continue                        |
+| Error message: | Select a development type to continue                     |
 
-Note: The checkbox value for dwelling buildings is "Dwellinghouse" but the label displayed to users is "Dwelling".
-
----
-
-### Exit page if the building type is non-residential (conditional)
-
-| **Field**             | **Value**                                                                      |
-| --------------------- | ------------------------------------------------------------------------------ |
-| Order number:         | 4.1                                                                            |
-| Path:                 | /nrf-estimate-4/non-residential                                                |
-| Title:                | Nature Restoration Fund levy is not available for non-residential developments |
-| Data points:          | None                                                                           |
-| Conditional pageflow: | display if data.buildingTypes includes "Non-residential development"           |
-
-#### Content
-
-```
-# Nature Restoration Fund levy is not available for non-residential developments
-The development must contain residential buildings to be eligible to mitigate environmental impact with a Nature Restoration Fund levy.
-
-[Find out about planning a non-residential development](javascript:void(0))
-```
-
-#### Errors
-
-None
 
 ---
 
-### Number of dwelling buildings entry (conditional)
+### How many residential units in this development?
 
 | **Field**              | **Value**                                                          |
 | ---------------------- | ------------------------------------------------------------------ |
-| Order number:          | 4.2                                                                |
+| Order number:          | 4.1                                                                |
 | Path:                  | /nrf-estimate-4/residential                                        |
-| Title:                 | Enter the number of dwelling buildings planned for the development |
-| Conditional page flow: | display if data.buildingTypes includes Dwelling                    |
+| Title:                 | How many residential units in this development?                    |
+| Conditional page flow: | display if data.buildingTypes includes Housing                     |
 
 #### Data points
 
@@ -388,7 +367,7 @@ None
     data: {
         residentialBuildingCount: {
             type: number,
-            required: conditional - required if data.buildingTypes includes Dwelling
+            required: conditional - required if data.buildingTypes includes Housing
             fieldName: "residential-building-count"
         }
     }
@@ -398,7 +377,10 @@ None
 #### Content
 
 ```
-# Enter the number of dwelling buildings planned for the development
+# How many residential units in this development?
+Hint text: A unit is a house, a HMO with 6 or less residents, a flat within a block of flats or a caravan or mobile home on a site.
+
+Button: Continue
 ```
 
 #### Errors
@@ -411,36 +393,24 @@ None
 
 ---
 
-### Enter the number of rooms in your [building type] building(s) planned for the development
+### What is the maximum number of people the development will serve?
 
-| **Field**              | **Value**                                                                                                       |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Order number:          | 4.3                                                                                                             |
-| Path:                  | /nrf-estimate-4/room-count                                                                                      |
-| Title:                 | Enter the number of rooms in your {{ buildingType                                                               | lower if buildingType != 'House of multiple occupation (HMO)' else buildingType }} building(s) planned for the development |
-| Conditional page flow: | display if data.buildingTypes includes "Hotel", "House of multiple occupation (HMO)", "Residential institution" |
+| **Field**              | **Value**                                                                       |
+| ---------------------- | ------------------------------------------------------------------------------- |
+| Order number:          | 4.2                                                                             |
+| Path:                  | /nrf-estimate-4/people-count                                                    |
+| Title:                 | What is the maximum number of people the development will serve?                |
+| Conditional page flow: | display if data.buildingTypes includes "Other residential"                      |
 
 #### Data points
 
 ```
 {
     data: {
-        roomCounts: {
-            hmoCount: {
-                type: number,
-                required: conditional - required and shown only if data.buildingTypes includes "House of multiple occupation (HMO)"
-                fieldName: "room-count-hmo"
-            },
-            residentialInstitutionCount: {
-                type: number,
-                required: conditional - required and shown only if data.buildingTypes includes "Residential institution"
-                fieldName: "room-count-residential-institution"
-            },
-            hotelCount: {
-                type: number,
-                required: conditional - required and shown only if data.buildingTypes includes "Hotel"
-                fieldName: "room-count-hotel"
-            }
+        peopleCount: {
+            type: number,
+            required: conditional - required if data.buildingTypes includes "Other residential",
+            fieldName: "people-count"
         }
     }
 }
@@ -449,9 +419,10 @@ None
 #### Content
 
 ```
-# Enter the number of rooms in your {{ buildingType | lower if buildingType != 'House of multiple occupation (HMO)' else buildingType }} building(s) planned for the development
+# What is the maximum number of people the development will serve?
+Hint text: This should be the maximum capacity allowed for your development. Link: Find out how to calculate your maximum capacity for your development.
 
-Note: The label dynamically adjusts based on building type using Nunjucks template syntax. For "House of multiple occupation (HMO)", it shows the full name rather than lowercase. The page handles multiple building types requiring room counts sequentially.
+Button: Continue
 ```
 
 #### Errors
@@ -460,7 +431,55 @@ Note: The label dynamically adjusts based on building type using Nunjucks templa
 | -------------- | ------------------------------------------------------ |
 | Description:   | User has selected ‘Continue’ without entering a number |
 | Error summary: | There is a problem                                     |
-| Error message: | Enter the number of rooms to continue                  |
+| Error message: | Enter the maximum number of people to continue         |
+
+---
+
+### Confirm which waste water treatment works will be used for this development
+
+| **Field**              | **Value**                                                                   |
+| ---------------------- | --------------------------------------------------------------------------- |
+| Order number:          | 5                                                                           |
+| Path:                  | /nrf-estimate-4/waste-water                                                 |
+| Title:                 | Confirm which waste water treatment works will be used for this development |
+| Conditional page flow: | none                                                                        |
+
+#### Data points
+
+```
+{
+     data: {
+        wasteWaterTreatmentWorks: {
+            type: radios
+            required: true
+            values: "Great Billing WRC" | "Main Pump Hall" | "Letchworth Wastewater Treatment Plant" | "I don't know the waste water treatment works yet"
+            fieldName: "waste-water-treatment-works"
+        }
+    }
+}
+```
+
+#### Content
+
+```
+# Confirm which waste water treatment works will be used for this development
+Hint text: Your quote will be partially based on the waste water treatment works you choose. If you don't know your waste water treatment works yet, we will provide a quote range.
+- Great Billing WRC
+- Main Pump Hall
+- Letchworth Wastewater Treatment Plant
+- I don't know the waste water treatment works yet
+  
+Button: Continue
+```
+
+#### Errors
+
+| **Field**      | **Value**                                                                        |
+| -------------- | -------------------------------------------------------------------------------- |
+| Description:   | User has selected ‘Continue’ without choosing an option                          |
+| Error summary: | There is a problem                                                               |
+| Error message: | Select the waste water treatment works or tell us you don't know yet to continue |
+
 
 ---
 
@@ -468,7 +487,7 @@ Note: The label dynamically adjusts based on building type using Nunjucks templa
 
 | **Field**              | **Value**                      |
 | ---------------------- | ------------------------------ |
-| Order number:          | 5                              |
+| Order number:          | 6                              |
 | Path:                  | /nrf-estimate-4/estimate-email |
 | Title:                 | Enter your email address       |
 | Conditional page flow: | None                           |
@@ -480,7 +499,8 @@ Note: The label dynamically adjusts based on building type using Nunjucks templa
     data: {
         email: {
             type: email,
-            required: true
+            required: true,
+            fieldName: "email"
         }
     }
 }
@@ -510,12 +530,12 @@ Note: For the commitment journey with NRF reference retrieval, there is a separa
 
 ### Check your answers summary and submit
 
-| **Field**              | **Value**               |
-| ---------------------- | ----------------------- |
-| Order number:          | 6                       |
+| **Field**              | **Value**                          |
+| ---------------------- | ---------------------------------- |
+| Order number:          | 7                                  |
 | Path:                  | /nrf-estimate-4/check-your-answers |
-| Title:                 | Check your answers      |
-| Conditional page flow: | None                    |
+| Title:                 | Check your answers                 |
+| Conditional page flow: | None                               |
 
 #### Data points
 
@@ -526,15 +546,15 @@ None
 ```
 # Check your answers
 
-| Red line boundary | [Show Added/Not added] | [Change link to /nrf-estimate-4/map?nav=check-your-answers or /nrf-estimate-4/upload-redline?change=true&nav=check-your-answers] |
-| Building types | [List all types picked here using buildingTypeLabels mapping] | [Change link to /nrf-estimate-4/building-type?change=true&nav=summary] |
-| [IF they pick "Dwellinghouse" THEN show] Number of dwelling buildings | [show count] | [Change link to /nrf-estimate-4/residential?change=true&nav=summary] |
-| [IF they pick "House of multiple occupation (HMO)" THEN show] Number of multiple occupation rooms | [show count] | [Change link to /nrf-estimate-4/room-count?change=true&nav=summary&type=hmo] |
-| [IF they pick "Residential institution" THEN show] Number of residential institution rooms | [show count] | [Change link to /nrf-estimate-4/room-count?change=true&nav=summary&type=residential-institution] |
-| [IF they pick Hotel THEN show] Number of hotel rooms | [show count] | [Change link to /nrf-estimate-4/room-count?change=true&nav=summary&type=hotel] |
-| Email address | [show email address] | [Change link to /nrf-estimate-4/estimate-email?change=true&nav=summary] |
+| Red line boundary | [Show Added or Not added] | [Change](/nrf-estimate-4/map?nav=check-your-answers) or [Change](/nrf-estimate-4/upload-redline?change=true&nav=check-your-answers) as appropriate |
+| Development types | [List selected types, e.g. Housing, Other residential] | [Change](/nrf-estimate-4/building-type?change=true&nav=check-your-answers) |
+| [IF user selected "Housing" THEN show] Number of residential units | [show data.residentialBuildingCount] | [Change](/nrf-estimate-4/residential?change=true&nav=check-your-answers) |
+| [IF user selected "Other residential" THEN show] Maximum number of people | [show data.peopleCount] | [Change](/nrf-estimate-4/people-count?change=true&nav=check-your-answers) |
+| Waste water treatment works | [show data.wasteWaterTreatmentWorks] | [Change](/nrf-estimate-4/waste-water?change=true&nav=check-your-answers) |
+| Email address | [show data.email] | [Change](/nrf-estimate-4/estimate-email?change=true&nav=check-your-answers) |
 
-CTA: Submit
+Primary button: Submit
+Secondary button (red): Delete
 
 Note: Implementation uses the check-your-answers view; back link from estimate-email. Change links may use nav=check-your-answers or nav=summary (routes accept both).
 
@@ -546,15 +566,96 @@ None
 
 ---
 
+
+### Are you sure you want to delete this quote?
+
+| **Field**              | **Value**                                                                      |
+| ---------------------- | ------------------------------------------------------------------------------ |
+| Order number:          | 7.1                                                                            |
+| Path:                  | /nrf-estimate-4/delete-quote                                                   |
+| Title:                 | Are you sure you want to delete this quote?                                    |
+| Conditional page flow: | display if user clicks the delete button on /nrf-estimate-4/check-your-answers |
+
+#### Data points
+
+```
+{
+    data: {
+        confirmDeleteQuote: {
+            type: radios,
+            required: conditional - required if user clicked delete on check-your-answers,
+            values: "Yes" | "No",
+            fieldName: "confirm-delete-quote"
+        }
+    }
+}
+```
+
+#### Content
+
+```
+# Are you sure you want to delete this quote?
+This will permanently delete your quote. You can create a new quote. 
+
+Button: Yes
+Secondary button: No
+```
+
+
+---
+
+### Delete confirmation page
+
+| **Field**             | **Value**                           |
+| --------------------- | ----------------------------------- |
+| Order number:         | 7.2                                 |
+| Path:                 | /nrf-estimate-4/delete-confirmation |
+| Title:                | Your details have been deleted      |
+| Data points:           | None                                |
+| Conditional page flow: | None                                |
+
+#### Content
+
+```
+
+<green-banner>
+# Your details have been deleted
+</green-banner>
+
+Note: This page uses the GOV.UK panel component (govuk-panel--confirmation) to display the green banner. The page conditionally displays different content based on journey type (estimate, commit, or payment). For the estimate journey, it shows:
+
+## What happens next
+
+Your quote details have been removed and deleted. 
+[Get another quote](<javascript:void(0)>)
+
+## Get help with Nature Restoration Fund
+
+If you need help with Nature Restoration Fund, contact XXXX and give the NRF reference number.
+
+Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
+Telephone: 00000000000
+Monday to Friday, 8:30am to 5pm, except bank holidays
+
+[Find out about call charges](https://www.gov.uk/call-charges)
+
+```
+
+#### Errors
+
+None
+
+---
+
 ### Details submitted confirmation page
 
 | **Field**             | **Value**                        |
 | --------------------- | -------------------------------- |
-| Order number:         | 7                                |
+| Order number:         | 8                                |
 | Path:                 | /nrf-estimate-4/confirmation     |
 | Title:                | Your details have been submitted |
-| Data points:          | None                             |
-| Conditional pageflow: | None                             |
+| Data points:           | None                             |
+| Conditional page flow: | None                             |
 
 #### Content
 
@@ -590,6 +691,8 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 
 [View the email content](/nrf-estimate-4/estimate-email-content)
 
+Note: When the user chose "I don't know the waste water treatment works yet" on waste-water, the confirmation page should link to [estimate-email-content-range](/nrf-estimate-4/estimate-email-content-range) instead of estimate-email-content.
+
 ```
 
 #### Errors
@@ -602,11 +705,11 @@ None
 
 | **Field**             | **Value**                                           |
 | --------------------- | --------------------------------------------------- |
-| Order number:         | 8                                                   |
+| Order number:         | 9                                                   |
 | Path:                 | /nrf-estimate-4/estimate-email-content              |
 | Title:                | Email sent from the Nature Restoration Fund service |
-| Data points:          | None                                                |
-| Conditional pageflow: | None                                                |
+| Data points:           | None                                                |
+| Conditional page flow: | None                                                |
 
 #### Content
 
@@ -621,14 +724,15 @@ Note: This page uses the GOV.UK inset text component (govuk-inset-text) to displ
 
 # Nature Restoration Fund – quote for the Nature Restoration Fund levy
 
-## NRF reference: {{ data.NRFReference }}
+## NRF reference: {{ data.nrfReference }}
 
 Thank you for submitting details of the development on the Get a quote for the Nature Restoration Fund levy service.
 
 You told us the development:
 
-- is planned in {{ data.redlineBoundaryPolygon.intersectingCatchment or 'Thames Valley EDP' }}
-- has [dynamically constructed list based on building types selected, e.g., "6 dwelling buildings and 3 hotel rooms" or "house of multiple occupation buildings with a total of 5 rooms"]
+- is planned in {{ data.redlineBoundaryPolygon.intersectingCatchment or data.intersectingCatchment or 'Thames Valley EDP' }}
+- has [dynamically constructed list based on building types selected, e.g., "Housing with 6 residential units and a development with a maximum number of 80 people" or "Housing with a total of 5 residential units"]
+- has waste water works in {{'Great Billing WRC' }}
 
 ## What you might need to pay
 
@@ -662,6 +766,72 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 ```
 
 ---
+### Email sent from the Nature Restoration Fund service
+
+| **Field**             | **Value**                                                                                                        |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Order number:         | 9.1                                                                                                              |
+| Path:                 | /nrf-estimate-4/estimate-email-content-range                                                                     |
+| Title:                | Email sent from the Nature Restoration Fund service                                                              |
+| Data points:          | None                                                                                                             |
+| Conditional page flow: | display when data.wasteWaterTreatmentWorks === "I don't know the waste water treatment works yet"                |
+
+#### Content
+
+```
+
+<inset-text>
+**To:** {{ data.email or 'user@example.com' }}
+**Subject:** Nature Restoration Fund – quote for the Nature Restoration Fund levy
+</inset-text>
+
+Note: This page uses the GOV.UK inset text component (govuk-inset-text) to display the email header information.
+
+# Nature Restoration Fund – quote for the Nature Restoration Fund levy
+
+## NRF reference: {{ data.nrfReference }}
+
+Thank you for submitting details of the development on the Get a quote for the Nature Restoration Fund levy service.
+
+You told us the development:
+
+- is planned in {{ data.redlineBoundaryPolygon.intersectingCatchment or data.intersectingCatchment or 'Thames Valley EDP' }}
+- has [dynamically constructed list based on building types selected, e.g., "Housing with 6 residential units and a development with a maximum number of 80 people" or "Housing with a total of 5 residential units"]
+
+## What you might need to pay
+
+Based on the information you have provided, the development falls into an area with an Environmental Delivery Plan (EDP), so you can use the Nature Restoration Fund Nutrients levy.
+
+The quote for the total amount you may need to pay if you develop in this area will be in the range of: **£{{ data.levyAmount or '1,500 to 2,500' }}**
+
+You do not need to pay anything at this point, this service is designed to help you plan how to mitigate your environmental obligations. [Get another quote](<javascript:void(0)>)
+
+If you do decide to mitigate using Nature Restoration Fund levy, you can commit and include the commitment when applying for planning permission.
+
+[Commit to using Nature Restoration Fund](/nrf-estimate-4/do-you-have-a-nrf-ref)
+
+Keep this email as a record of your quote and NRF reference number, you can use it to retrieve this quote when you are ready to commit.
+You can also [create an account now](<javascript:void(0)>)
+
+## What your levy will pay for
+
+Your levy will be spent on conservation, with amounts being spent on monitoring and maintenance. There will also be an admin charge of £00 taken from the levy payment. Levies are calculated as part of Environmental Delivery Plans (EDPs).
+
+## Get help with Nature Restoration Fund
+
+If you need help with Nature Restoration Fund, contact XXXX and give the NRF reference number.
+
+Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
+Telephone: 00000000000
+Monday to Friday, 8:30am to 5pm, except bank holidays
+
+[Find out about call charges](https://www.gov.uk/call-charges)
+
+```
+
+
+---
+
 
 ## Technical Requirements
 
@@ -741,11 +911,3 @@ Create the following files in the GOV.UK Prototype Kit structure:
 - Implement basic validation without complex security measures
 - Focus on demonstrating the user flow and interface design
 - Ensure the journey works end-to-end for user testing
-
-```
-
-```
-
-```
-
-```
