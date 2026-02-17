@@ -20,20 +20,21 @@ Your details have been submitted - Pay Nature Restoration Fund levy - GOV.UK
         </p>
 
         <p class="govuk-body">You told us the development:</p>
-        <ul class="govuk-list govuk-list--bullet">
-            <li>is planned in {{ data.intersectingCatchment or 'Thames Valley EDP' }}</li>
-            <li>has {{ formatBuildingDetails(data) }}</li>
+        <ul class="govuk-list govuk-list--bullet">           
+            <li>is planned in {{ data.redlineBoundaryPolygon.intersectingCatchment or data.intersectingCatchment or 'Thames Valley EDP' }}</li>
+            {% if (data.buildingTypes and data.buildingTypes.includes('Housing') and data.residentialBuildingCount) or (data.buildingTypes and data.buildingTypes.includes('Other residential') and data.peopleCount) %}
+            <li>has {% if data.buildingTypes.includes('Housing') and data.residentialBuildingCount %}Housing with {% if data.buildingTypes.includes('Other residential') and data.peopleCount %}{{ data.residentialBuildingCount }} residential unit{% if data.residentialBuildingCount != 1 %}s{% endif %}{% else %}a total of {{ data.residentialBuildingCount }} residential unit{% if data.residentialBuildingCount != 1 %}s{% endif %}{% endif %}{% endif %}{% if data.buildingTypes.includes('Housing') and data.residentialBuildingCount and data.buildingTypes.includes('Other residential') and data.peopleCount %} and {% endif %}{% if data.buildingTypes.includes('Other residential') and data.peopleCount %}a development with a maximum number of {{ data.peopleCount }} people{% endif %}</li>
+            {% endif %}
+            <li>has waste water works in {{ data.wasteWaterTreatmentWorks or 'Great Billing WRC' }}</li>
         </ul>
+
 
         <h2 class="govuk-heading-m">What you need to pay</h2>
         <p class="govuk-body">
             Based on the information you have provided, the development falls into the area for the Nature Restoration Fund nutrients levy.
         </p>
         <p class="govuk-body">
-            The total amount you need to pay is:
-        </p>
-        <p class="govuk-body">
-            <strong>£{{ data.levyAmount or '2,500' }}</strong>
+            The total amount you need to pay is £2,500
         </p>
 
         <h2 class="govuk-heading-m">What your levy will pay for</h2>

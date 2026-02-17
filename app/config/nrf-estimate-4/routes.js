@@ -22,6 +22,8 @@ const ROUTES = {
   CHECK_YOUR_ANSWERS: `${BASE_PATH}/check-your-answers`,
   DELETE_QUOTE: `${BASE_PATH}/delete-quote`,
   DELETE_CONFIRMATION: `${BASE_PATH}/delete-confirmation`,
+  DELETE_SUMMARY: `${BASE_PATH}/delete-summary`,
+  DELETE_PAYMENT_DETAILS: `${BASE_PATH}/delete-payment-details`,
   ESTIMATE_EMAIL_CONTENT_RANGE: `${BASE_PATH}/estimate-email-content-range`,
   SUMMARY: `${BASE_PATH}/summary`,
   CONFIRMATION: `${BASE_PATH}/confirmation`,
@@ -37,9 +39,11 @@ const ROUTES = {
   PAY_SIGN_IN_GOVERNMENT_GATEWAY: `${BASE_PATH}/pay-sign-in-government-gateway`,
   PAYMENT_SUMMARY: `${BASE_PATH}/payment-summary`,
   PLANNING_REF: `${BASE_PATH}/planning-ref`,
+  WWTW_ENTRY: `${BASE_PATH}/wwtw-entry`,
   PAYMENT_DECLARATION: `${BASE_PATH}/payment-declaration`,
   PAYMENT_CONFIRMATION: `${BASE_PATH}/payment-confirmation`,
   PAYMENT_REQUEST_EMAIL_CONTENT: `${BASE_PATH}/payment-request-email-content`,
+  REJECT_EMAIL_CONTENT: `${BASE_PATH}/reject-email-content`,
   PDN_HOW_WOULD_YOU_LIKE_TO_SIGN_IN: `${BASE_PATH}/pdn-how-would-you-like-to-sign-in`,
   PDN_SIGN_IN_GOVERNMENT_GATEWAY: `${BASE_PATH}/pdn-sign-in-government-gateway`,
   UPLOAD_DECISION_NOTICE: `${BASE_PATH}/upload-decision-notice`,
@@ -51,6 +55,7 @@ const ROUTES = {
   SUMMARY_AND_DECLARATION: `${BASE_PATH}/summary-and-declaration`,
   COMMIT_CONFIRMATION: `${BASE_PATH}/commit-confirmation`,
   COMMIT_EMAIL_CONTENT: `${BASE_PATH}/commit-email-content`,
+  COMMIT_EMAIL_CONTENT_RANGE: `${BASE_PATH}/commit-email-content-range`,
   CATCHMENTS_GEOJSON: `${BASE_PATH}/catchments.geojson`,
   API_CHECK_EDP_INTERSECTION: `${BASE_PATH}/api/check-edp-intersection`
 }
@@ -72,6 +77,8 @@ const TEMPLATES = {
   CHECK_YOUR_ANSWERS: 'nrf-estimate-4/check-your-answers',
   DELETE_QUOTE: 'nrf-estimate-4/delete-quote',
   DELETE_CONFIRMATION: 'nrf-estimate-4/delete-confirmation',
+  DELETE_SUMMARY: 'nrf-estimate-4/delete-summary',
+  DELETE_PAYMENT_DETAILS: 'nrf-estimate-4/delete-payment-details',
   ESTIMATE_EMAIL_CONTENT: 'nrf-estimate-4/estimate-email-content',
   ESTIMATE_EMAIL_CONTENT_RANGE: 'nrf-estimate-4/estimate-email-content-range',
   SUMMARY: 'nrf-estimate-4/summary',
@@ -91,15 +98,18 @@ const TEMPLATES = {
   SUMMARY_AND_DECLARATION: 'nrf-estimate-4/summary-and-declaration',
   COMMIT_CONFIRMATION: 'nrf-estimate-4/commit-confirmation',
   COMMIT_EMAIL_CONTENT: 'nrf-estimate-4/commit-email-content',
+  COMMIT_EMAIL_CONTENT_RANGE: 'nrf-estimate-4/commit-email-content-range',
   PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN:
     'nrf-estimate-4/pay-how-would-you-like-to-sign-in',
   PAY_SIGN_IN_GOVERNMENT_GATEWAY:
     'nrf-estimate-4/pay-sign-in-government-gateway',
   PAYMENT_SUMMARY: 'nrf-estimate-4/payment-summary',
   PLANNING_REF: 'nrf-estimate-4/planning-ref',
+  WWTW_ENTRY: 'nrf-estimate-4/wwtw-entry',
   PAYMENT_DECLARATION: 'nrf-estimate-4/payment-declaration',
   PAYMENT_CONFIRMATION: 'nrf-estimate-4/payment-confirmation',
   PAYMENT_REQUEST_EMAIL_CONTENT: 'nrf-estimate-4/payment-request-email-content',
+  REJECT_EMAIL_CONTENT: 'nrf-estimate-4/reject-email-content',
   PDN_HOW_WOULD_YOU_LIKE_TO_SIGN_IN:
     'nrf-estimate-4/pdn-how-would-you-like-to-sign-in',
   PDN_SIGN_IN_GOVERNMENT_GATEWAY:

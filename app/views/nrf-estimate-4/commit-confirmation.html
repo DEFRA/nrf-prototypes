@@ -32,7 +32,11 @@ href: "/nrf-estimate-4/summary-and-declaration"
             Monday to Friday, 8:30am to 5pm, except bank holidays
         </p>
         <p class="govuk-body"><a href="https://www.gov.uk/call-charges" class="govuk-link">Find out about call charges</a></p>
+        {% if data.wasteWaterTreatmentWorks === "I don't know the waste water treatment works yet" %}
+        <p class="govuk-body"><a href="/nrf-estimate-4/commit-email-content-range" class="govuk-link">View the email content</a></p>
+        {% else %}
         <p class="govuk-body"><a href="/nrf-estimate-4/commit-email-content" class="govuk-link">View the email content</a></p>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

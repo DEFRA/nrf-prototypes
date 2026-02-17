@@ -54,11 +54,10 @@ href: backLink or "/nrf-estimate-4/upload-decision-notice"
                     {% endif %}
                 </dd>
             </div>
-
             {% if data.buildingTypes and data.buildingTypes.length > 0 %}
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">
-                    Building types
+                    Development types
                 </dt>
                 <dd class="govuk-summary-list__value">
                     <ul class="govuk-list">
@@ -72,10 +71,10 @@ href: backLink or "/nrf-estimate-4/upload-decision-notice"
             </div>
             {% endif %}
 
-            {% if data.residentialBuildingCount %}
+            {% if data.buildingTypes and data.buildingTypes.includes('Housing') and data.residentialBuildingCount %}
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">
-                    Number of dwelling buildings
+                    Number of residential units
                 </dt>
                 <dd class="govuk-summary-list__value">
                     {{ data.residentialBuildingCount }}
@@ -83,39 +82,26 @@ href: backLink or "/nrf-estimate-4/upload-decision-notice"
             </div>
             {% endif %}
 
-            {% if data.roomCounts %}
-            {% if data.roomCounts.hotelCount %}
+            {% if data.buildingTypes and data.buildingTypes.includes('Other residential') and data.peopleCount %}
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">
-                    Number of hotel rooms
+                    Maximum number of people
                 </dt>
                 <dd class="govuk-summary-list__value">
-                    {{ data.roomCounts.hotelCount }}
+                    {{ data.peopleCount }}
                 </dd>
             </div>
             {% endif %}
 
-            {% if data.roomCounts.hmoCount %}
+            {% if data.wasteWaterTreatmentWorks %}
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">
-                    Number of multiple occupation rooms
+                    Waste water treatment works
                 </dt>
                 <dd class="govuk-summary-list__value">
-                    {{ data.roomCounts.hmoCount }}
+                    {{ data.wasteWaterTreatmentWorks }}
                 </dd>
             </div>
-            {% endif %}
-
-            {% if data.roomCounts.residentialInstitutionCount %}
-            <div class="govuk-summary-list__row">
-                <dt class="govuk-summary-list__key">
-                    Number of residential institution rooms
-                </dt>
-                <dd class="govuk-summary-list__value">
-                    {{ data.roomCounts.residentialInstitutionCount }}
-                </dd>
-            </div>
-            {% endif %}
             {% endif %}
 
             <div class="govuk-summary-list__row">

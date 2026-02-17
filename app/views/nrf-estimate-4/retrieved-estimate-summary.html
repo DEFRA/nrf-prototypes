@@ -18,62 +18,34 @@ href: "/nrf-estimate-4/estimate-email-retrieval-content"
         <h1 class="govuk-heading-l">Your quote details</h1>
 
         <dl class="govuk-summary-list govuk-!-margin-bottom-9">
-            {% if data.nrfReference or data.quoteReference or data.estimateReference %}
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">
-                    NRF reference
-                </dt>
-                <dd class="govuk-summary-list__value">
-                    {{ data.nrfReference or data.quoteReference or data.estimateReference }}
-                </dd>
-                <dd class="govuk-summary-list__actions">
-                    <a class="govuk-link" href="#">
-                        Change<span class="govuk-visually-hidden"> NRF reference</span>
-                    </a>
-                </dd>
-            </div>
-            {% endif %}
-
-            <div class="govuk-summary-list__row">
-                <dt class="govuk-summary-list__key">
-                    Red line boundary added
+                    Red line boundary
                 </dt>
                 <dd class="govuk-summary-list__value">
                     {% if data.redlineBoundaryPolygon %}
-                    Yes
+                    Added
                     {% else %}
-                    No
+                    Not added
                     {% endif %}
                 </dd>
                 <dd class="govuk-summary-list__actions">
-                    <a class="govuk-link" href="#">
-                        Change<span class="govuk-visually-hidden"> red line boundary added</span>
-                    </a>
-                </dd>
-            </div>
-
-            <div class="govuk-summary-list__row">
-                <dt class="govuk-summary-list__key">
-                    Red line boundary file uploaded
-                </dt>
-                <dd class="govuk-summary-list__value">
                     {% if data.hasRedlineBoundaryFile %}
-                    Yes
-                    {% else %}
-                    No
-                    {% endif %}
-                </dd>
-                <dd class="govuk-summary-list__actions">
-                    <a class="govuk-link" href="#">
-                        Change<span class="govuk-visually-hidden"> red line boundary file uploaded</span>
+                    <a class="govuk-link" href="/nrf-estimate-4/upload-redline?change=true&amp;nav=check-your-answers">
+                        Change<span class="govuk-visually-hidden"> red line boundary</span>
                     </a>
+                    {% else %}
+                    <a class="govuk-link" href="/nrf-estimate-4/map?nav=check-your-answers">
+                        Change<span class="govuk-visually-hidden"> red line boundary</span>
+                    </a>
+                    {% endif %}
                 </dd>
             </div>
 
             {% if data.buildingTypes and data.buildingTypes.length > 0 %}
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">
-                    Building types
+                    Development types
                 </dt>
                 <dd class="govuk-summary-list__value">
                     <ul class="govuk-list">
@@ -85,77 +57,59 @@ href: "/nrf-estimate-4/estimate-email-retrieval-content"
                     </ul>
                 </dd>
                 <dd class="govuk-summary-list__actions">
-                    <a class="govuk-link" href="#">
-                        Change<span class="govuk-visually-hidden"> building types</span>
+                    <a class="govuk-link" href="/nrf-estimate-4/building-type?change=true&amp;nav=check-your-answers">
+                        Change<span class="govuk-visually-hidden"> development types</span>
                     </a>
                 </dd>
             </div>
             {% endif %}
 
-            {% if data.residentialBuildingCount %}
+            {% if data.buildingTypes and data.buildingTypes.includes('Housing') and data.residentialBuildingCount %}
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">
-                    Number of dwelling buildings
+                    Number of residential units
                 </dt>
                 <dd class="govuk-summary-list__value">
                     {{ data.residentialBuildingCount }}
                 </dd>
                 <dd class="govuk-summary-list__actions">
-                    <a class="govuk-link" href="#">
-                        Change<span class="govuk-visually-hidden"> number of dwelling buildings</span>
+                    <a class="govuk-link" href="/nrf-estimate-4/residential?change=true&amp;nav=check-your-answers">
+                        Change<span class="govuk-visually-hidden"> number of residential units</span>
                     </a>
                 </dd>
             </div>
             {% endif %}
 
-            {% if data.roomCounts %}
-            {% if data.roomCounts.hotelCount %}
+            {% if data.buildingTypes and data.buildingTypes.includes('Other residential') and data.peopleCount %}
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">
-                    Number of hotel rooms
+                    Maximum number of people
                 </dt>
                 <dd class="govuk-summary-list__value">
-                    {{ data.roomCounts.hotelCount }}
+                    {{ data.peopleCount }}
                 </dd>
                 <dd class="govuk-summary-list__actions">
-                    <a class="govuk-link" href="#">
-                        Change<span class="govuk-visually-hidden"> number of hotel rooms</span>
+                    <a class="govuk-link" href="/nrf-estimate-4/people-count?change=true&amp;nav=check-your-answers">
+                        Change<span class="govuk-visually-hidden"> maximum number of people</span>
                     </a>
                 </dd>
             </div>
             {% endif %}
 
-            {% if data.roomCounts.hmoCount %}
+            {% if data.wasteWaterTreatmentWorks %}
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">
-                    Number of multiple occupation rooms
+                    Waste water treatment works
                 </dt>
                 <dd class="govuk-summary-list__value">
-                    {{ data.roomCounts.hmoCount }}
+                    {{ data.wasteWaterTreatmentWorks }}
                 </dd>
                 <dd class="govuk-summary-list__actions">
-                    <a class="govuk-link" href="#">
-                        Change<span class="govuk-visually-hidden"> number of multiple occupation rooms</span>
+                    <a class="govuk-link" href="/nrf-estimate-4/waste-water?change=true&amp;nav=check-your-answers">
+                        Change<span class="govuk-visually-hidden"> waste water treatment works</span>
                     </a>
                 </dd>
             </div>
-            {% endif %}
-
-            {% if data.roomCounts.residentialInstitutionCount %}
-            <div class="govuk-summary-list__row">
-                <dt class="govuk-summary-list__key">
-                    Number of residential institution rooms
-                </dt>
-                <dd class="govuk-summary-list__value">
-                    {{ data.roomCounts.residentialInstitutionCount }}
-                </dd>
-                <dd class="govuk-summary-list__actions">
-                    <a class="govuk-link" href="#">
-                        Change<span class="govuk-visually-hidden"> number of residential institution rooms</span>
-                    </a>
-                </dd>
-            </div>
-            {% endif %}
             {% endif %}
 
             <div class="govuk-summary-list__row">
@@ -166,7 +120,7 @@ href: "/nrf-estimate-4/estimate-email-retrieval-content"
                     {{ data.email }}
                 </dd>
                 <dd class="govuk-summary-list__actions">
-                    <a class="govuk-link" href="#">
+                    <a class="govuk-link" href="/nrf-estimate-4/estimate-email?change=true&amp;nav=check-your-answers">
                         Change<span class="govuk-visually-hidden"> email address</span>
                     </a>
                 </dd>
@@ -175,17 +129,13 @@ href: "/nrf-estimate-4/estimate-email-retrieval-content"
 
         <p class="govuk-body">Amend the above information or continue. You will be asked to create or sign in to an account.</p>
 
-                <div class="govuk-button-group">
-  {{ govukButton({
-    text: "Confirm",
-    href: "/nrf-estimate-4/commit-how-would-you-like-to-sign-in"
-  }) }}
-
-  {{ govukButton({
-    text: "Cancel action",
-    classes: "govuk-button--secondary"
-  }) }}
-</div>
+        <form action="/nrf-estimate-4/retrieved-estimate-summary" method="post" novalidate class="govuk-!-display-inline-block">
+            <div class="govuk-button-group">
+                {{ govukButton({
+                    text: "Continue"
+                }) }}
+                <a class="govuk-link govuk-button govuk-button--warning" href="/nrf-estimate-4/delete-quote?from=retrieved">Delete</a>
+            </div>
         </form>
     </div>
 </div>

@@ -36,36 +36,18 @@ href: backLink or "/nrf-estimate-4/pay-sign-in-government-gateway"
 
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">
-                    Red line boundary added
+                    Red line boundary
                 </dt>
                 <dd class="govuk-summary-list__value">
-                    {% if data.redlineBoundaryPolygon %}
-                    Yes
+                    {% if data.redlineBoundaryPolygon or data.hasRedlineBoundaryFile %}
+                    Added
                     {% else %}
-                    No
+                    Not added
                     {% endif %}
                 </dd>
                 <dd class="govuk-summary-list__actions">
                     <a class="govuk-link" href="javascript:void(0)">
-                        Change<span class="govuk-visually-hidden"> red line boundary added</span>
-                    </a>
-                </dd>
-            </div>
-
-            <div class="govuk-summary-list__row">
-                <dt class="govuk-summary-list__key">
-                    Red line boundary file uploaded
-                </dt>
-                <dd class="govuk-summary-list__value">
-                    {% if data.hasRedlineBoundaryFile %}
-                    Yes
-                    {% else %}
-                    No
-                    {% endif %}
-                </dd>
-                <dd class="govuk-summary-list__actions">
-                    <a class="govuk-link" href="javascript:void(0)">
-                        Change<span class="govuk-visually-hidden"> red line boundary file uploaded</span>
+                        Change<span class="govuk-visually-hidden"> red line boundary</span>
                     </a>
                 </dd>
             </div>
@@ -73,7 +55,7 @@ href: backLink or "/nrf-estimate-4/pay-sign-in-government-gateway"
             {% if data.buildingTypes and data.buildingTypes.length > 0 %}
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">
-                    Building types
+                    Development types
                 </dt>
                 <dd class="govuk-summary-list__value">
                     <ul class="govuk-list">
@@ -86,77 +68,57 @@ href: backLink or "/nrf-estimate-4/pay-sign-in-government-gateway"
                 </dd>
                 <dd class="govuk-summary-list__actions">
                     <a class="govuk-link" href="javascript:void(0)">
-                        Change<span class="govuk-visually-hidden"> building types</span>
+                        Change<span class="govuk-visually-hidden"> development types</span>
                     </a>
                 </dd>
             </div>
             {% endif %}
 
-            {% if data.residentialBuildingCount %}
+            {% if data.buildingTypes and data.buildingTypes.includes('Housing') and data.residentialBuildingCount %}
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">
-                    Number of dwelling buildings
+                    Number of residential units
                 </dt>
                 <dd class="govuk-summary-list__value">
                     {{ data.residentialBuildingCount }}
                 </dd>
                 <dd class="govuk-summary-list__actions">
                     <a class="govuk-link" href="javascript:void(0)">
-                        Change<span class="govuk-visually-hidden"> number of dwelling buildings</span>
+                        Change<span class="govuk-visually-hidden"> number of residential units</span>
                     </a>
                 </dd>
             </div>
             {% endif %}
 
-            {% if data.roomCounts %}
-            {% if data.roomCounts.hotelCount %}
+            {% if data.buildingTypes and data.buildingTypes.includes('Other residential') and data.peopleCount %}
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">
-                    Number of hotel rooms
+                    Maximum number of people
                 </dt>
                 <dd class="govuk-summary-list__value">
-                    {{ data.roomCounts.hotelCount }}
+                    {{ data.peopleCount }}
                 </dd>
                 <dd class="govuk-summary-list__actions">
                     <a class="govuk-link" href="javascript:void(0)">
-                        Change<span class="govuk-visually-hidden"> number of hotel rooms</span>
+                        Change<span class="govuk-visually-hidden"> maximum number of people</span>
                     </a>
                 </dd>
             </div>
             {% endif %}
 
-            {% if data.roomCounts.hmoCount %}
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">
-                    Number of multiple occupation rooms
+                    Waste water treatment works
                 </dt>
                 <dd class="govuk-summary-list__value">
-                    {{ data.roomCounts.hmoCount }}
+                    {{ data.wasteWaterTreatmentWorks or 'Not provided' }}
                 </dd>
                 <dd class="govuk-summary-list__actions">
                     <a class="govuk-link" href="javascript:void(0)">
-                        Change<span class="govuk-visually-hidden"> number of multiple occupation rooms</span>
+                        Change<span class="govuk-visually-hidden"> waste water treatment works</span>
                     </a>
                 </dd>
             </div>
-            {% endif %}
-
-            {% if data.roomCounts.residentialInstitutionCount %}
-            <div class="govuk-summary-list__row">
-                <dt class="govuk-summary-list__key">
-                    Number of residential institution rooms
-                </dt>
-                <dd class="govuk-summary-list__value">
-                    {{ data.roomCounts.residentialInstitutionCount }}
-                </dd>
-                <dd class="govuk-summary-list__actions">
-                    <a class="govuk-link" href="javascript:void(0)">
-                        Change<span class="govuk-visually-hidden"> number of residential institution rooms</span>
-                    </a>
-                </dd>
-            </div>
-            {% endif %}
-            {% endif %}
 
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">
@@ -196,25 +158,17 @@ href: backLink or "/nrf-estimate-4/pay-sign-in-government-gateway"
             </div>
             {% endif %}
 
-            <div class="govuk-summary-list__row">
-                <dt class="govuk-summary-list__key">
-                    Local Planning Authority
-                </dt>
-                <dd class="govuk-summary-list__value">
-                    Stockton-on-Tees Borough Council
-                </dd>
-                <dd class="govuk-summary-list__actions">
-                    <a class="govuk-link" href="javascript:void(0)">
-                        Change<span class="govuk-visually-hidden"> Local Planning Authority</span>
-                    </a>
-                </dd>
-            </div>
         </dl>
 
         <form action="/nrf-estimate-4/payment-summary" method="post" novalidate>
-            <button class="govuk-button" data-module="govuk-button">
-                Continue
-            </button>
+            <div class="govuk-button-group">
+                <button class="govuk-button" data-module="govuk-button">
+                    Continue
+                </button>
+                <a class="govuk-link govuk-button govuk-button--warning" href="/nrf-estimate-4/delete-summary">
+                    Delete
+                </a>
+            </div>
         </form>
     </div>
 </div>

@@ -7,7 +7,7 @@ Email sent from the Nature Restoration Fund service - Get a quote for Nature Res
 {% block beforeContent %}
 {{ govukBackLink({
 text: "Back",
-href: backLink or "/nrf-estimate-4/confirmation"
+href: backLink or "/nrf-estimate-4/commit-confirmation"
 }) }}
 {% endblock %}
 
@@ -16,15 +16,17 @@ href: backLink or "/nrf-estimate-4/confirmation"
     <div class="govuk-grid-column-two-thirds">
 
         <div class="govuk-inset-text">
-            <p><strong>To:</strong> {{ data.estimateEmail or data.email or 'user@example.com' }}</p>
-            <p><strong>Subject:</strong> Nature Restoration Fund – quote for the Nature Restoration Fund levy</p>
+            <p><strong>To:</strong> {{ data.email or 'user@example.com' }}</p>
+            <p><strong>Subject:</strong> Nature Restoration Fund – commitment to use the Nature Restoration Fund levy</p>
         </div>
 
-        <h1 class="govuk-heading-l">Nature Restoration Fund – quote for the Nature Restoration Fund levy</h1>
+        <h1 class="govuk-heading-l">Nature Restoration Fund – commitment to use the Nature Restoration Fund levy</h1>
 
-        <h2 class="govuk-heading-m">NRF reference: {{ data.nrfReference or data.estimateReference }}</h2>
+        <p class="govuk-body"><strong>NRF reference:</strong> {{ data.nrfReference }}</p>
 
-        <p class="govuk-body">Thank you for submitting details of the development on the Get a quote for the Nature Restoration Fund levy service.</p>
+        <p class="govuk-body">Attached is a commitment document that you can send to your Local Planning Authority to include in your planning application.</p>
+
+        <p class="govuk-body">The document outlines your commitment to use the Nature Restoration Fund levy to mitigate your environmental impact for nutrients.</p>
 
         <p class="govuk-body">You told us the development:</p>
 
@@ -33,25 +35,19 @@ href: backLink or "/nrf-estimate-4/confirmation"
             {% if (data.buildingTypes and data.buildingTypes.includes('Housing') and data.residentialBuildingCount) or (data.buildingTypes and data.buildingTypes.includes('Other residential') and data.peopleCount) %}
             <li>has {% if data.buildingTypes.includes('Housing') and data.residentialBuildingCount %}Housing with {% if data.buildingTypes.includes('Other residential') and data.peopleCount %}{{ data.residentialBuildingCount }} residential unit{% if data.residentialBuildingCount != 1 %}s{% endif %}{% else %}a total of {{ data.residentialBuildingCount }} residential unit{% if data.residentialBuildingCount != 1 %}s{% endif %}{% endif %}{% endif %}{% if data.buildingTypes.includes('Housing') and data.residentialBuildingCount and data.buildingTypes.includes('Other residential') and data.peopleCount %} and {% endif %}{% if data.buildingTypes.includes('Other residential') and data.peopleCount %}a development with a maximum number of {{ data.peopleCount }} people{% endif %}</li>
             {% endif %}
-            <li>has waste water works in {{ data.wasteWaterTreatmentWorks or 'Great Billing WRC' }}</li>
         </ul>
 
-        <h2 class="govuk-heading-m">What you might need to pay</h2>
+        <h2 class="govuk-heading-m">What you will need to pay</h2>
 
-        <p class="govuk-body">Based on the information you have provided, the development falls into an area with an Environmental Delivery Plan (EDP), so you can use the Nature Restoration Fund Nutrients levy.</p>
+        <p class="govuk-body">Based on the information you have provided, the development falls into an area with an Environmental Delivery Plan (EDP), so you can use the Nature Restoration Fund Nutrients Levy.</p>
 
-        <p class="govuk-body">The quote for the total amount you may need to pay if you develop in this area is £2,500</p>
+        <p class="govuk-body">The quote for the total amount you may need to pay if you develop in this area will be in the range of £1,500 to 2,500</p>
 
-        <p class="govuk-body">You do not need to pay anything at this point, this service is designed to help you plan how to mitigate your environmental obligations. <a href="javascript:void(0)" class="govuk-link">Get another quote</a></p>
+        <p class="govuk-body">You do not need to pay anything at this point, you can send the attached document to your Local Planning Authority to include in your planning application.</p>
 
-        <p class="govuk-body">If you do decide to mitigate using Nature Restoration Fund levy, you can commit and include the commitment when applying for planning permission.</p>
+        <p class="govuk-body">Keep this email as a record of your commitment to use the Nature Restoration Fund. You can sign in to your account when you are ready to pay.</p>
 
-        <p class="govuk-body"><a href="/nrf-estimate-4/do-you-have-a-nrf-ref" class="govuk-link">Commit to using Nature Restoration Fund</a></p>
-
-        <p class="govuk-body">Keep this email as a record of your quote and NRF reference number, you can use it to retrieve this quote when you are ready to commit.</p>
-        <p class="govuk-body">
-            You can also <a href="javascript:void(0)" class="govuk-link">create an account now</a>
-        </p>
+        <p class="govuk-body"><a href="/nrf-estimate-4/pay-how-would-you-like-to-sign-in" class="govuk-link">Pay your Nature Restoration Fund levy</a></p>
 
         <h2 class="govuk-heading-m">What your levy will pay for</h2>
 

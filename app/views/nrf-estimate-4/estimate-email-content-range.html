@@ -30,24 +30,8 @@ href: backLink or "/nrf-estimate-4/confirmation"
 
         <ul class="govuk-list govuk-list--bullet">
             <li>is planned in {{ data.redlineBoundaryPolygon.intersectingCatchment or data.intersectingCatchment or 'Thames Valley EDP' }}</li>
-            {% if data.buildingTypes %}
-            {% if data.buildingTypes.includes('Housing') and data.residentialBuildingCount %}
-            <li>has {{ data.residentialBuildingCount }} dwelling building{% if data.residentialBuildingCount != 1 %}s{% endif %}</li>
-            {% endif %}
-            {% if data.buildingTypes.includes('Other residential') and data.peopleCount %}
-            <li>has a maximum of {{ data.peopleCount }} people</li>
-            {% endif %}
-            {% if data.roomCounts %}
-            {% if data.roomCounts.hotelCount %}
-            <li>has {{ data.roomCounts.hotelCount }} hotel room{% if data.roomCounts.hotelCount != 1 %}s{% endif %}</li>
-            {% endif %}
-            {% if data.roomCounts.hmoCount %}
-            <li>has House in multiple occupation buildings with a total of {{ data.roomCounts.hmoCount }} room{% if data.roomCounts.hmoCount != 1 %}s{% endif %}</li>
-            {% endif %}
-            {% if data.roomCounts.residentialInstitutionCount %}
-            <li>has {{ data.roomCounts.residentialInstitutionCount }} residential institution room{% if data.roomCounts.residentialInstitutionCount != 1 %}s{% endif %}</li>
-            {% endif %}
-            {% endif %}
+            {% if (data.buildingTypes and data.buildingTypes.includes('Housing') and data.residentialBuildingCount) or (data.buildingTypes and data.buildingTypes.includes('Other residential') and data.peopleCount) %}
+            <li>has {% if data.buildingTypes.includes('Housing') and data.residentialBuildingCount %}Housing with {% if data.buildingTypes.includes('Other residential') and data.peopleCount %}{{ data.residentialBuildingCount }} residential unit{% if data.residentialBuildingCount != 1 %}s{% endif %}{% else %}a total of {{ data.residentialBuildingCount }} residential unit{% if data.residentialBuildingCount != 1 %}s{% endif %}{% endif %}{% endif %}{% if data.buildingTypes.includes('Housing') and data.residentialBuildingCount and data.buildingTypes.includes('Other residential') and data.peopleCount %} and {% endif %}{% if data.buildingTypes.includes('Other residential') and data.peopleCount %}a development with a maximum number of {{ data.peopleCount }} people{% endif %}</li>
             {% endif %}
         </ul>
 

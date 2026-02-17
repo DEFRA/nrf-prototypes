@@ -1,0 +1,54 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Enter which waste water treatment works will be used for this development - Pay Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: backLink or "/nrf-estimate-4/planning-ref"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <form action="/nrf-estimate-4/wwtw-entry" method="post" novalidate>
+
+            {% if error %}
+            {{ govukErrorSummary({
+                titleText: "There is a problem",
+                errorList: [
+                    {
+                        text: error,
+                        href: "#waste-water-treatment-works"
+                    }
+                ]
+            }) }}
+            {% endif %}
+
+            <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
+                <h1 class="govuk-label-wrapper">
+                    <label class="govuk-label govuk-label--l" for="waste-water-treatment-works">
+                        Enter which waste water treatment works will be used for this development
+                    </label>
+                </h1>
+                {% if error %}
+                <p id="waste-water-treatment-works-error" class="govuk-error-message">
+                    <span class="govuk-visually-hidden">Error:</span> {{ error }}
+                </p>
+                {% endif %}
+                <input class="govuk-input {% if error %}govuk-input--error{% endif %}" id="waste-water-treatment-works"
+                    name="waste-water-treatment-works" type="text" value="{{ data.wasteWaterTreatmentWorks }}">
+            </div>
+
+            {{ govukButton({
+                text: "Continue"
+            }) }}
+
+        </form>
+    </div>
+</div>
+{% endblock %}

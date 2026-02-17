@@ -1052,32 +1052,89 @@ router.get(ROUTES.CONFIRMATION, (req, res) => {
   })
 })
 
-// Delete quote - confirm then redirect to delete confirmation
+// Delete quote or commitment - confirm then redirect to delete confirmation
 router.get(ROUTES.DELETE_QUOTE, (req, res) => {
   const data = req.session.data || {}
-  res.render(TEMPLATES.DELETE_QUOTE, { data: data })
+  const from = req.query.from || '' // 'commit' | 'retrieved' | '' (check-your-answers)
+  res.render(TEMPLATES.DELETE_QUOTE, { data: data, deleteFrom: from })
 })
 
 router.post(ROUTES.DELETE_QUOTE, (req, res) => {
   const confirmDelete = req.body['confirm-delete-quote']
+  const from = req.body.from || ''
   if (confirmDelete === 'Yes') {
+    req.session.data = req.session.data || {}
+    req.session.data.deleteContext = from === 'commit' ? 'commit' : 'quote'
     // Clear quote journey data
     const keysToRemove = [
       'redlineBoundaryPolygon', 'redlineFile', 'hasRedlineBoundaryFile', 'mapReferrer',
       'buildingTypes', 'residentialBuildingCount', 'peopleCount', 'roomCounts', 'roomCountTypes', 'currentRoomCountIndex',
       'wasteWaterTreatmentWorks', 'email', 'estimateReference', 'nrfReference', 'levyAmount'
     ]
-    req.session.data = req.session.data || {}
     keysToRemove.forEach((k) => delete req.session.data[k])
     res.redirect(ROUTES.DELETE_CONFIRMATION)
   } else {
-    res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
+    if (from === 'commit') {
+      res.redirect(ROUTES.SUMMARY_AND_DECLARATION)
+    } else if (from === 'retrieved') {
+      res.redirect(ROUTES.RETRIEVED_ESTIMATE_SUMMARY)
+    } else {
+      res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
+    }
   }
 })
 
 router.get(ROUTES.DELETE_CONFIRMATION, (req, res) => {
   const data = req.session.data || {}
-  res.render(TEMPLATES.DELETE_CONFIRMATION, { data: data })
+  const deleteContext = data.deleteContext || 'quote'
+  if (req.session.data && req.session.data.deleteContext) {
+    delete req.session.data.deleteContext
+  }
+  res.render(TEMPLATES.DELETE_CONFIRMATION, { data: data, deleteContext: deleteContext })
+})
+
+// Delete commitment (from payment-summary)
+router.get(ROUTES.DELETE_SUMMARY, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.DELETE_SUMMARY, { data: data })
+})
+
+router.post(ROUTES.DELETE_SUMMARY, (req, res) => {
+  const confirmDelete = req.body['confirm-delete-summary']
+  if (confirmDelete === 'Yes') {
+    const keysToRemove = [
+      'redlineBoundaryPolygon', 'redlineFile', 'hasRedlineBoundaryFile', 'mapReferrer',
+      'buildingTypes', 'residentialBuildingCount', 'peopleCount', 'roomCounts', 'roomCountTypes', 'currentRoomCountIndex',
+      'wasteWaterTreatmentWorks', 'email', 'commitmentRetrievalEmail', 'estimateReference', 'nrfReference', 'paymentReference', 'levyAmount', 'planningRef', 'fromWwtwEntry'
+    ]
+    req.session.data = req.session.data || {}
+    keysToRemove.forEach((k) => delete req.session.data[k])
+    res.redirect(ROUTES.DELETE_CONFIRMATION)
+  } else {
+    res.redirect(ROUTES.PAYMENT_SUMMARY)
+  }
+})
+
+// Delete payment details (from payment-declaration)
+router.get(ROUTES.DELETE_PAYMENT_DETAILS, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.DELETE_PAYMENT_DETAILS, { data: data })
+})
+
+router.post(ROUTES.DELETE_PAYMENT_DETAILS, (req, res) => {
+  const confirmDelete = req.body['confirm-delete-payment-details']
+  if (confirmDelete === 'Yes') {
+    const keysToRemove = [
+      'redlineBoundaryPolygon', 'redlineFile', 'hasRedlineBoundaryFile', 'mapReferrer',
+      'buildingTypes', 'residentialBuildingCount', 'peopleCount', 'roomCounts', 'roomCountTypes', 'currentRoomCountIndex',
+      'wasteWaterTreatmentWorks', 'email', 'commitmentRetrievalEmail', 'estimateReference', 'nrfReference', 'paymentReference', 'levyAmount', 'planningRef', 'fromWwtwEntry'
+    ]
+    req.session.data = req.session.data || {}
+    keysToRemove.forEach((k) => delete req.session.data[k])
+    res.redirect(ROUTES.DELETE_CONFIRMATION)
+  } else {
+    res.redirect(ROUTES.PAYMENT_DECLARATION)
+  }
 })
 
 // Serve GeoJSON catchment data
@@ -1175,19 +1232,21 @@ router.get(ROUTES.ENTER_ESTIMATE_REF, (req, res) => {
 
 router.post(ROUTES.ENTER_ESTIMATE_REF, (req, res) => {
   const nrfReference = req.body['nrf-reference']?.trim()
+  const data = req.session.data || {}
 
   if (!nrfReference) {
     return res.render(TEMPLATES.ENTER_ESTIMATE_REF, {
       error: 'Enter your NRF reference to continue',
-      data: req.session.data || {},
+      data: data,
       backLink: ROUTES.DO_YOU_HAVE_A_NRF_REF
     })
   }
 
-  if (!NRF_REFERENCE_REGEX.test(nrfReference)) {
+  const isAcceptedSessionRef = data.nrfReference && nrfReference === data.nrfReference
+  if (!isAcceptedSessionRef && !NRF_REFERENCE_REGEX.test(nrfReference)) {
     return res.render(TEMPLATES.ENTER_ESTIMATE_REF, {
       error: 'Enter a valid NRF reference number',
-      data: req.session.data || {},
+      data: data,
       backLink: ROUTES.DO_YOU_HAVE_A_NRF_REF
     })
   }
@@ -1549,7 +1608,21 @@ router.get(ROUTES.COMMIT_EMAIL_CONTENT, (req, res) => {
   }
 
   res.render(TEMPLATES.COMMIT_EMAIL_CONTENT, {
-    data: data
+    data: data,
+    buildingTypeLabels: BUILDING_TYPE_LABELS
+  })
+})
+
+router.get(ROUTES.COMMIT_EMAIL_CONTENT_RANGE, (req, res) => {
+  const data = req.session.data || {}
+
+  if (!data.commitmentReference) {
+    return res.redirect(ROUTES.SUMMARY_AND_DECLARATION)
+  }
+
+  res.render(TEMPLATES.COMMIT_EMAIL_CONTENT_RANGE, {
+    data: data,
+    buildingTypeLabels: BUILDING_TYPE_LABELS
   })
 })
 
@@ -1594,16 +1667,46 @@ router.post(ROUTES.PLANNING_REF, (req, res) => {
   req.session.data.planningRef = planningRef
   req.session.save((err) => {
     if (err) console.error('Session save error:', err)
+    const data = req.session.data || {}
+    const needsWwtwEntry = data.wasteWaterTreatmentWorks === "I don't know the waste water treatment works yet"
+    res.redirect(needsWwtwEntry ? ROUTES.WWTW_ENTRY : ROUTES.PAYMENT_DECLARATION)
+  })
+})
+
+router.get(ROUTES.WWTW_ENTRY, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.WWTW_ENTRY, {
+    data: data,
+    backLink: ROUTES.PLANNING_REF
+  })
+})
+
+router.post(ROUTES.WWTW_ENTRY, (req, res) => {
+  const wwtw = req.body['waste-water-treatment-works']?.trim()
+  const data = req.session.data || {}
+  if (!wwtw) {
+    return res.render(TEMPLATES.WWTW_ENTRY, {
+      data: data,
+      error: 'Enter the waste water treatment works for this development',
+      backLink: ROUTES.PLANNING_REF
+    })
+  }
+  req.session.data = req.session.data || {}
+  req.session.data.wasteWaterTreatmentWorks = wwtw
+  req.session.data.fromWwtwEntry = true
+  req.session.save((err) => {
+    if (err) console.error('Session save error:', err)
     res.redirect(ROUTES.PAYMENT_DECLARATION)
   })
 })
 
 router.get(ROUTES.PAYMENT_DECLARATION, (req, res) => {
   const data = req.session.data || {}
+  const backLink = data.fromWwtwEntry ? ROUTES.WWTW_ENTRY : ROUTES.PLANNING_REF
   res.render(TEMPLATES.PAYMENT_DECLARATION, {
     data: data,
     buildingTypeLabels: BUILDING_TYPE_LABELS,
-    backLink: ROUTES.PLANNING_REF
+    backLink: backLink
   })
 })
 
@@ -1621,14 +1724,21 @@ router.post(ROUTES.PAYMENT_DECLARATION, (req, res) => {
 router.get(ROUTES.PAYMENT_CONFIRMATION, (req, res) => {
   const data = req.session.data || {}
   res.render(TEMPLATES.PAYMENT_CONFIRMATION, {
-    data: data,
-    formatBuildingDetails: formatBuildingTypeDetails
+    data: data
   })
 })
 
 router.get(ROUTES.PAYMENT_REQUEST_EMAIL_CONTENT, (req, res) => {
   const data = req.session.data || {}
   res.render(TEMPLATES.PAYMENT_REQUEST_EMAIL_CONTENT, {
+    data: data,
+    backLink: ROUTES.PAYMENT_CONFIRMATION
+  })
+})
+
+router.get(ROUTES.REJECT_EMAIL_CONTENT, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.REJECT_EMAIL_CONTENT, {
     data: data,
     backLink: ROUTES.PAYMENT_CONFIRMATION
   })
