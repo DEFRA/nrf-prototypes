@@ -375,6 +375,193 @@ const PROTOTYPE_JOURNEYS = {
       email: 'lpa@example.com',
       'rejection-reason': 'Test reason for rejecting this request.'
     }
+  },
+  'nrf-estimate-4': {
+    name: 'NRF Estimate Journey v4',
+    basePath: '/nrf-estimate-4',
+    pages: [
+      { path: '/start', name: 'start', title: 'Start Page' },
+      {
+        path: '/what-would-you-like-to-do',
+        name: 'what-would-you-like-to-do',
+        title: 'What would you like to do?'
+      },
+      {
+        path: '/do-you-have-a-nrf-ref',
+        name: 'do-you-have-a-nrf-ref',
+        title: 'Do you have an NRF reference?'
+      },
+      {
+        path: '/enter-estimate-ref',
+        name: 'enter-estimate-ref',
+        title: 'Enter your NRF reference'
+      },
+      {
+        path: '/retrieve-estimate-email',
+        name: 'retrieve-estimate-email',
+        title: 'Enter your email address'
+      },
+      {
+        path: '/estimate-email-retrieval-content',
+        name: 'estimate-email-retrieval-content',
+        title: 'Email sent with magic link to estimate'
+      },
+      {
+        path: '/retrieved-estimate-summary',
+        name: 'retrieved-estimate-summary',
+        title: 'Your quote details'
+      },
+      {
+        path: '/commit-how-would-you-like-to-sign-in',
+        name: 'commit-how-would-you-like-to-sign-in',
+        title: 'How would you like to sign in?'
+      },
+      {
+        path: '/commit-sign-in-government-gateway',
+        name: 'commit-sign-in-government-gateway',
+        title: 'Sign in using Government Gateway'
+      },
+      {
+        path: '/company-details',
+        name: 'company-details',
+        title: 'Enter your details'
+      },
+      {
+        path: '/summary-and-declaration',
+        name: 'summary-and-declaration',
+        title: 'Check your answers'
+      },
+      {
+        path: '/commit-confirmation',
+        name: 'commit-confirmation',
+        title: 'Your details have been submitted'
+      },
+      {
+        path: '/commit-email-content',
+        name: 'commit-email-content',
+        title: 'Email sent from the Nature Restoration Fund service (commit)'
+      },
+      {
+        path: '/pay-how-would-you-like-to-sign-in',
+        name: 'pay-how-would-you-like-to-sign-in',
+        title: 'How would you like to sign in? (pay)'
+      },
+      {
+        path: '/pay-sign-in-government-gateway',
+        name: 'pay-sign-in-government-gateway',
+        title: 'Sign in using Government Gateway (pay)'
+      },
+      {
+        path: '/payment-summary',
+        name: 'payment-summary',
+        title: 'Your commitment details'
+      },
+      {
+        path: '/planning-ref',
+        name: 'planning-ref',
+        title: 'Enter your planning application reference'
+      },
+      {
+        path: '/payment-declaration',
+        name: 'payment-declaration',
+        title: 'Check your answers (payment)'
+      },
+      {
+        path: '/payment-confirmation',
+        name: 'payment-confirmation',
+        title: 'Your details have been submitted (payment)'
+      },
+      {
+        path: '/payment-request-email-content',
+        name: 'payment-request-email-content',
+        title: 'Payment request approved email'
+      },
+      {
+        path: '/reject-email-content',
+        name: 'reject-email-content',
+        title: 'Payment request rejected email'
+      },
+      {
+        path: '/pdn-how-would-you-like-to-sign-in',
+        name: 'pdn-how-would-you-like-to-sign-in',
+        title: 'How would you like to sign in? (PDN)'
+      },
+      {
+        path: '/pdn-sign-in-government-gateway',
+        name: 'pdn-sign-in-government-gateway',
+        title: 'Sign in using Government Gateway (PDN)'
+      },
+      {
+        path: '/upload-decision-notice',
+        name: 'upload-decision-notice',
+        title: 'Upload decision notice'
+      },
+      {
+        path: '/decision-notice-confirmation',
+        name: 'decision-notice-confirmation',
+        title: 'Decision notice confirmation'
+      },
+      {
+        path: '/pay-email-content',
+        name: 'pay-email-content',
+        title: 'Pay email content'
+      },
+      { path: '/delete-quote', name: 'delete-quote', title: 'Delete quote' },
+      {
+        path: '/delete-confirmation',
+        name: 'delete-confirmation',
+        title: 'Your details have been deleted'
+      },
+      {
+        path: '/delete-summary',
+        name: 'delete-summary',
+        title: 'Are you sure you want to delete this commitment?'
+      },
+      {
+        path: '/delete-payment-details',
+        name: 'delete-payment-details',
+        title: 'Are you sure you want to delete these details?'
+      },
+      {
+        path: '/wwtw-entry',
+        name: 'wwtw-entry',
+        title: 'Enter which waste water treatment works'
+      },
+      {
+        path: '/estimate-email-content',
+        name: 'estimate-email-content',
+        title: 'Estimate email content'
+      },
+      {
+        path: '/estimate-email-content-range',
+        name: 'estimate-email-content-range',
+        title: 'Estimate email content (range)'
+      },
+      {
+        path: '/commit-email-content-range',
+        name: 'commit-email-content-range',
+        title: 'Commit email content (range)'
+      }
+    ],
+    formData: {
+      'has-nrf-reference': 'yes',
+      'nrf-reference': '123456',
+      email: 'test@example.com',
+      'sign-in-option': 'government-gateway',
+      userId: 'testuser',
+      password: 'testpass',
+      fullName: 'Test User',
+      businessName: 'Test Co',
+      addressLine1: '123 Test Street',
+      townOrCity: 'London',
+      postcode: 'SW1A 1AA',
+      'planning-ref': 'PLAN-REF-001',
+      'waste-water-treatment-works': 'Great Billing WRC',
+      'building-types': ['Housing', 'Other residential'],
+      'confirm-delete-quote': 'No',
+      'confirm-delete-summary': 'No',
+      'confirm-delete-payment-details': 'No'
+    }
   }
   // Add more prototypes here as needed
 }

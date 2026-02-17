@@ -1056,7 +1056,18 @@ router.get(ROUTES.CONFIRMATION, (req, res) => {
 router.get(ROUTES.DELETE_QUOTE, (req, res) => {
   const data = req.session.data || {}
   const from = req.query.from || '' // 'commit' | 'retrieved' | '' (check-your-answers)
-  res.render(TEMPLATES.DELETE_QUOTE, { data: data, deleteFrom: from })
+  const backLink =
+    from === 'commit'
+      ? ROUTES.SUMMARY_AND_DECLARATION
+      : from === 'retrieved'
+        ? ROUTES.RETRIEVED_ESTIMATE_SUMMARY
+        : ROUTES.CHECK_YOUR_ANSWERS
+  res.render(TEMPLATES.DELETE_QUOTE, {
+    data: data,
+    deleteFrom: from,
+    fromCommit: from === 'commit',
+    backLink
+  })
 })
 
 router.post(ROUTES.DELETE_QUOTE, (req, res) => {
