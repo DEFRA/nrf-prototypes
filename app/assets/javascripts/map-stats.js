@@ -270,6 +270,11 @@
       'stat-perimeter-container'
     )
 
+    if (!totalAreaContainer || !currentLineContainer || !perimeterContainer) {
+      console.warn('[MapStats] Stats panel elements not found')
+      return
+    }
+
     // Show/hide containers based on what's available
     // Always show Area when drawing or when area exists
     if (stats.totalArea > THRESHOLD_MIN_AREA_DISPLAY) {

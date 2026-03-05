@@ -8,6 +8,9 @@ const path = require('path')
 const fs = require('fs')
 const multer = require('multer')
 const turf = require('@turf/turf')
+const https = require('https')
+const http = require('http')
+const zlib = require('zlib')
 
 // Import helpers and validators
 const validators = require('../lib/nrf-estimate-3/validators')
@@ -1912,5 +1915,184 @@ function formatBuildingTypeDetails(data) {
 
   return parts.join(' and ')
 }
+
+// ============================================================================
+// OS MAP PROXY - Proxy resources from OS API
+// ============================================================================
+
+/**
+ * GET /api/map-proxy?url={url}
+ * Generic proxy for OS resources (fonts, sprites, etc)
+ */
+// router.get('/api/map-proxy', async (req, res) => {
+//   try {
+//     const { url: targetUrl } = req.query
+
+//     if (!targetUrl) {
+//       return res.status(400).json({ error: 'url parameter required' })
+//     }
+
+//     // Decode the URL
+//     let urlToFetch
+//     try {
+//       urlToFetch = decodeURIComponent(targetUrl)
+//     } catch (error) {
+//       return res.status(400).json({ error: 'Invalid URL encoding' })
+//     }
+
+//     // Validate it's an OS URL
+//     if (!urlToFetch.includes('api.os.uk')) {
+//       return res.status(403).json({ error: 'Only OS URLs allowed' })
+//     }
+
+//     const osApiKey = process.env.OS_API_KEY
+
+//     if (!osApiKey) {
+//       console.warn('[OS Map Proxy] Missing OS_API_KEY')
+//       return res.status(404).end()
+//     }
+
+//     console.log(`[OS Map Proxy] Fetching: ${urlToFetch}`)
+
+//     // Add API key if not already present
+//     const proxyUrl = new URL(urlToFetch)
+//     proxyUrl.searchParams.set('key', osApiKey)
+
+//     // Make request to OS API
+//     https.get(proxyUrl.toString(), { timeout: 10000 }, (osRes) => {
+//       if (osRes.statusCode !== 200) {
+//         console.log(`[OS Map Proxy] OS API returned ${osRes.statusCode}`)
+//         osRes.resume()
+//         return res.status(osRes.statusCode >= 500 ? 502 : 404).end()
+//       }
+
+//       // Set response headers based on content type
+//       const contentType = osRes.headers['content-type']
+//       if (contentType) {
+//         res.set('Content-Type', contentType)
+//       }
+
+//       res.set('Cache-Control', 'public, max-age=86400')
+//       res.set('Access-Control-Allow-Origin', '*')
+
+//       // Check if response is gzipped
+//       const contentEncoding = osRes.headers['content-encoding']
+//       if (contentEncoding === 'gzip') {
+//         osRes.pipe(zlib.createGunzip()).pipe(res)
+//       } else {
+//         osRes.pipe(res)
+//       }
+//     }).on('error', (error) => {
+//       console.error(`[OS Map Proxy] Request failed: ${error.message}`)
+//       res.status(502).end()
+//     })
+//   } catch (error) {
+//     console.error(`[OS Map Proxy] Error: ${error.message}`)
+//     res.status(500).end()
+//   }
+// })
+
+// // ============================================================================
+// // OS TILE PROXY - Proxy tiles from OS API
+// // ============================================================================
+
+// /**
+//  * GET /api/tile/:z/:y/:x.pbf
+//  * Proxy OS Vector Tile Service tiles with Bearer token authentication
+//  * Note: Tile coordinates are in z/y/x order (not z/x/y)
+//  */
+// router.get('/api/tile/:z/:y/:x.pbf', async (req, res) => {
+//   try {
+//     const { z, y, x } = req.params
+//     const zoom = parseInt(z, 10)
+//     const tileY = parseInt(y, 10)
+//     const tileX = parseInt(x, 10)
+
+//     // Validate tile coordinates
+//     if (isNaN(zoom) || isNaN(tileX) || isNaN(tileY)) {
+//       return res.status(400).end()
+//     }
+
+//     if (zoom < 0 || zoom > 28 || tileX < 0 || tileY < 0) {
+//       return res.status(400).end()
+//     }
+
+//     // Get OS API credentials from environment
+//     const osApiKey = process.env.OS_API_KEY
+
+//     if (!osApiKey) {
+//       console.warn('[OS Tile Proxy] Missing OS_API_KEY')
+//       return res.status(404).end()
+//     }
+
+//     // Construct OS VTS API URL with proper format
+//     // Use API key as Bearer token (or include in URL as srs param)
+//     const osUrl = `https://api.os.uk/maps/vector/v1/vts/tile/${zoom}/${tileY}/${tileX}.pbf?key=${osApiKey}&srs=3857`
+
+//     console.log(`[OS Tile Proxy] Fetching: ${zoom}/${tileY}/${tileX}`)
+
+//     // Make request to OS API
+//     https.get(osUrl, { timeout: 10000 }, (osRes) => {
+//       // Handle error status codes
+//       if (osRes.statusCode !== 200) {
+//         console.log(`[OS Tile Proxy] OS API returned ${osRes.statusCode}`)
+//         osRes.resume() // Drain response
+//         return res.status(osRes.statusCode >= 500 ? 502 : 404).end()
+//       }
+
+//       // Set response headers
+//       res.set('Content-Type', 'application/x-protobuf')
+//       res.set('Cache-Control', 'public, max-age=86400')
+//       res.set('Access-Control-Allow-Origin', '*')
+
+//       // Check if response is gzipped and decompress if needed
+//       const contentEncoding = osRes.headers['content-encoding']
+//       if (contentEncoding === 'gzip') {
+//         osRes.pipe(zlib.createGunzip()).pipe(res)
+//       } else {
+//         osRes.pipe(res)
+//       }
+//     }).on('error', (error) => {
+//       console.error(`[OS Tile Proxy] Request failed: ${error.message}`)
+//       res.status(502).end()
+//     })
+//   } catch (error) {
+//     console.error(`[OS Tile Proxy] Error: ${error.message}`)
+//     res.status(500).end()
+//   }
+// })
+
+// // ============================================================================
+// // VTS Maps Routes - Serve OS Vector Tile Service style JSON files
+// // ============================================================================
+
+// /**
+//  * GET /api/maps/vts/:filename
+//  * Serve VTS JSON style files
+//  */
+// router.get('/api/maps/vts/:filename', (req, res) => {
+//   const { filename } = req.params
+  
+//   // Whitelist allowed files for security
+//   const allowedFiles = [
+//     'OS_VTS_3857_Outdoor.json',
+//     'OS_VTS_3857_Dark.json',
+//     'OS_VTS_3857_Black_and_White.json'
+//   ]
+
+//   if (!allowedFiles.includes(filename)) {
+//     return res.status(404).json({ error: 'VTS file not found' })
+//   }
+
+//   try {
+//     const filepath = path.join(__dirname, `../data/vts/${filename}`)
+//     const data = fs.readFileSync(filepath, 'utf8')
+//     const json = JSON.parse(data)
+//     res.json(json)
+//   } catch (error) {
+//     console.error(`Error loading VTS file ${filename}:`, error.message)
+//     return res.status(404).json({ error: 'Failed to load VTS file' })
+//   }
+// })
 
 module.exports = router

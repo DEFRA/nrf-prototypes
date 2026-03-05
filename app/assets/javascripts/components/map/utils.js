@@ -1,0 +1,79 @@
+/**
+ * Utility functions for the interactive map component
+ */
+
+window.MapUtils = (function() {
+  'use strict';
+
+  /**
+   * Determine if a polygon geometry is a square or generic polygon
+   */
+  function getGeometryShape(geometry, tol = 1e-6) {
+    const dist = ([x1, y1], [x2, y2]) => Math.hypot(x2 - x1, y2 - y1);
+    const dot = ([x1, y1], [x2, y2]) => x1 * x2 + y1 * y2;
+
+    // unsupported or invalid input
+    if (geometry?.type !== 'Polygon') {
+      return 'unknown';
+    }
+
+    const ring = geometry.coordinates?.[0];
+    if (!ring || ring.length < 4) {
+      return 'unknown';
+    }
+
+    // closure check if polygon is explicitly closed (first = last)
+    const closed = dist(ring[0], ring[ring.length - 1]) <= tol;
+    const pts = closed ? ring.slice(0, -1) : ring;
+
+    // square detection requires exactly 4 corners
+    if (pts.length === 4) {
+      const side = dist(pts[0], pts[1]);
+      const equalSides = pts.every((p, i) => 
+        Math.abs(dist(p, pts[(i + 1) % 4]) - side) <= tol
+      );
+
+      const rightAngles = pts.every((p, i) => {
+        const prev = pts[(i + 3) % 4];
+        const next = pts[(i + 1) % 4];
+        const v1 = [prev[0] - p[0], prev[1] - p[1]];
+        const v2 = [next[0] - p[0], next[1] - p[1]];
+        return Math.abs(dot(v1, v2)) <= tol;
+      });
+
+      if (equalSides && rightAngles) {
+        return 'square';
+      }
+    }
+
+    // fallback
+    return 'polygon';
+  }
+
+  /**
+   * Toggle button state in the menu
+   */
+  function toggleButtonState(enabledButtons) {
+    const buttons = document.querySelectorAll('#fmp-menu-list .fmp-menu-button');
+    buttons.forEach(button => {
+      const buttonId = button.id.slice(0, -3);
+      button.setAttribute('aria-disabled', !enabledButtons.includes(buttonId));
+    });
+  }
+
+  /**
+   * Hide the menu panel if it's open as a modal
+   */
+  function hideMenu(interactiveMap) {
+    const menu = document.querySelector('#map-panel-menu');
+    if (menu?.getAttribute('aria-modal') === 'true') {
+      interactiveMap.hidePanel('menu');
+    }
+  }
+
+  return {
+    getGeometryShape,
+    toggleButtonState,
+    hideMenu
+  };
+})();
