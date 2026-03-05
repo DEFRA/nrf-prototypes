@@ -19,7 +19,7 @@ window.ZoomAesthetics = (function () {
   'use strict';
 
   // Zoom level at which fills disappear and the border indicator activates.
-  var ZOOM_THRESHOLD = 15;
+  var ZOOM_THRESHOLD = 12;
 
   // Per-dataset configuration — must match the IDs used by the datasetsPlugin.
   // Layer naming convention: `${datasetId}-fill` and `${datasetId}-border` or `-line`.
@@ -27,12 +27,14 @@ window.ZoomAesthetics = (function () {
     {
       id: 'gcn-edp',
       fillLayerId: 'gcn-edp',
+      queryLayerIds: ['gcn-edp', 'gcn-edp-fill', 'gcn-edp-border', 'gcn-edp-line', 'gcn-edp-stroke'],
       color: '#f47738',
       label: 'Nature Restoration Fund great crested newt levy'
     },
     {
       id: 'catchments',
       fillLayerId: 'catchments',
+      queryLayerIds: ['catchments', 'catchments-fill', 'catchments-border', 'catchments-line', 'catchments-stroke'],
       color: '#0000ff',
       label: 'Nature Restoration Fund nutrients levy'
     }
@@ -124,7 +126,10 @@ window.ZoomAesthetics = (function () {
     }
 
     var queryLayerIds = DATASETS.reduce(function (acc, ds) {
-      if (maplibreMap.getLayer(ds.fillLayerId)) acc.push(ds.fillLayerId);
+      var ids = ds.queryLayerIds || [ds.fillLayerId];
+      for (var i = 0; i < ids.length; i++) {
+        if (maplibreMap.getLayer(ids[i])) acc.push(ids[i]);
+      }
       return acc;
     }, []);
 
@@ -149,8 +154,9 @@ window.ZoomAesthetics = (function () {
     // Collect all datasets whose fill layer has a feature at the centre point.
     var matched = [];
     for (var i = 0; i < DATASETS.length; i++) {
+      var ids = DATASETS[i].queryLayerIds || [DATASETS[i].fillLayerId];
       for (var j = 0; j < features.length; j++) {
-        if (features[j].layer.id === DATASETS[i].fillLayerId) {
+        if (ids.indexOf(features[j].layer.id) !== -1) {
           matched.push(DATASETS[i]);
           break;
         }
