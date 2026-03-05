@@ -1,0 +1,570 @@
+{% extends "layouts/map.html" %}
+
+{% set pageName="Draw a red line boundary" %}
+
+{% block pageTitle %}
+Draw a red line boundary - Get a quote for Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block head %}
+{{ super() }}
+<!-- @defra/interactive-map CSS - core and all plugin styles -->
+<link rel="stylesheet" href="/public/stylesheets/vendor/interactive-map/index.css" />
+<link rel="stylesheet" href="/public/stylesheets/vendor/interactive-map/search.css" />
+<link rel="stylesheet" href="/public/stylesheets/vendor/interactive-map/interact.css" />
+<link rel="stylesheet" href="/public/stylesheets/vendor/interactive-map/map-styles-plugin.css" />
+<link rel="stylesheet" href="/public/stylesheets/vendor/interactive-map/scale-bar-plugin.css" />
+<link rel="stylesheet" href="/public/stylesheets/vendor/interactive-map/draw-ml.css" />
+<link rel="stylesheet" href="/public/stylesheets/vendor/interactive-map/datasets-plugin.css" />
+<style>
+    body, html {
+        overflow: hidden !important;
+    }
+
+    /* Map container - must have explicit dimensions for @defra/interactive-map */
+    #map {
+        width: 100%;
+        height: 100%;
+        container-type: inline-size;
+    }
+
+    .map-container {
+        height: 100%;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .map-interface {
+        display: flex;
+        flex-direction: row;
+        height: 100%;
+    }
+
+    .map-controls-panel {
+        flex: 0 0 auto;
+        width: 25%;
+        max-width: 400px;
+        min-width: 300px;
+        overflow-y: auto;
+        border-right: 1px solid #b1b4b6;
+        padding: 20px;
+    }
+
+    .map-container {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .map-controls-panel .govuk-back-link {
+        margin-bottom: 20px;
+    }
+
+    /* Map style switcher button - positioned bottom left */
+    .maplibregl-ctrl-bottom-left {
+        bottom: 20px;
+        left: 10px;
+    }
+
+    .map-style-button {
+        background: white;
+        border: 2px solid rgba(0, 0, 0, 0.3);
+        border-radius: 4px;
+        width: 80px;
+        height: 80px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        padding: 4px;
+        margin: 0 !important;
+    }
+
+    .map-style-button:hover {
+        border-color: rgba(0, 0, 0, 0.5);
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+    }
+
+    .map-style-button:focus {
+        outline: 3px solid #ffdd00;
+        outline-offset: 0;
+    }
+
+    .map-style-button-thumbnail {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 2px;
+    }
+
+    /* Move MapLibre zoom/layer controls to bottom right, above attribution */
+    .maplibregl-ctrl-top-right {
+        top: auto !important;
+        bottom: 30px;
+    }
+
+    /* Keep attribution at the very bottom */
+    .maplibregl-ctrl-attrib {
+        bottom: 0 !important;
+    }
+
+    /* GDS Accordion styles */
+    .govuk-accordion {
+        margin-bottom: 0;
+    }
+
+    .govuk-accordion__section {
+        padding: 0;
+        border-top: 1px solid #b1b4b6;
+    }
+
+    .govuk-accordion__section:last-child {
+        border-bottom: 1px solid #b1b4b6;
+    }
+
+    .govuk-accordion__section-header {
+        padding: 0;
+        margin: 0;
+    }
+
+    .govuk-accordion__section-heading {
+        margin: 0;
+        padding: 0;
+        font-size: inherit;
+    }
+
+    .govuk-accordion__section-button {
+        width: 100%;
+        padding: 10px 0;
+        border: none;
+        background: none;
+        text-align: left;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: "GDS Transport", arial, sans-serif;
+        font-size: 16px;
+        font-weight: 400;
+        color: #0b0c0c;
+    }
+
+    .govuk-accordion__section-button:hover {
+        background-color: #f3f2f1;
+    }
+
+    .govuk-accordion__section-button:focus {
+        outline: 3px solid #ffdd00;
+        outline-offset: 0;
+        background-color: #ffdd00;
+    }
+
+    .govuk-accordion__section-button-icon {
+        flex-shrink: 0;
+    }
+
+    .govuk-accordion__section-heading-text {
+        flex: 1;
+    }
+
+    .govuk-accordion__section-content {
+        padding: 15px 0;
+        border-top: 1px solid #b1b4b6;
+    }
+
+    .govuk-accordion__section-content .govuk-body {
+        margin-bottom: 0;
+    }
+
+    /* Map statistics panel */
+    .map-stats-panel {
+        position: absolute;
+        bottom: 30px;
+        right: 20px;
+        background: white;
+        padding: 15px;
+        border-radius: 0;
+        border: 1px solid #b1b4b6;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        min-width: 300px;
+        max-width: 350px;
+        font-family: "GDS Transport", arial, sans-serif;
+    }
+
+    .map-stats-panel.hidden {
+        display: none;
+    }
+
+    .map-stats-content h2 {
+        margin: 0 0 15px 0;
+    }
+
+    .map-stats-content h3 {
+        margin: 0 0 12px 0;
+    }
+
+    #stat-total-area-container,
+    #stat-perimeter-container {
+        border-bottom: 1px solid #b1b4b6;
+        padding-bottom: 10px;
+        margin-bottom: 2px;
+    }
+
+    .map-stats-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .map-stat-item {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 8px;
+        padding: 6px 0;
+        border-bottom: 1px solid #f3f2f1;
+        align-items: baseline;
+    }
+
+    .map-stat-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .map-stat-label {
+        font-size: 19px;
+        line-height: 1.25;
+        font-weight: 400;
+        color: #0b0c0c;
+        margin: 0;
+        white-space: nowrap;
+    }
+
+    .map-stat-value {
+        font-size: 19px;
+        line-height: 1.25;
+        font-weight: 700;
+        color: #0b0c0c;
+        margin: 0;
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    /* Drawing hints panel - using GDS inset text component */
+    .drawing-hints-panel {
+        position: absolute;
+        bottom: 110px;
+        left: 50%;
+        transform: translateX(-50%);
+        max-width: 350px;
+        z-index: 1000;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    .drawing-hints-panel .govuk-notification-banner {
+        margin-bottom: 0;
+    }
+
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+        to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 640px) {
+        .drawing-hints-panel {
+            top: 70px;
+            bottom: auto;
+            left: 10px;
+            right: 10px;
+            max-width: none;
+        }
+    }
+
+    .drawing-hints-panel .govuk-body {
+        margin-bottom: 0;
+    }
+
+    .drawing-hints-panel .govuk-body:not(:last-child) {
+        margin-bottom: 10px;
+    }
+
+    .fmp-menu {
+        padding: 16px;
+        font-family: "GDS Transport", arial, sans-serif;
+    }
+
+    .fmp-menu-heading {
+        margin: 0 0 12px 0;
+        font-size: 16px;
+    }
+
+    .fmp-menu-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .fmp-menu-item {
+        margin: 0;
+    }
+
+    .fmp-menu-button {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding: 8px 10px;
+        border: none;
+        background: none;
+        cursor: pointer;
+        font-family: "GDS Transport", arial, sans-serif;
+        font-size: 16px;
+        color: #0b0c0c;
+        text-align: left;
+        border-radius: 0;
+    }
+
+    .fmp-menu-button:hover:not([aria-disabled="true"]) {
+        background-color: #f3f2f1;
+    }
+
+    .fmp-menu-button:focus {
+        outline: 3px solid #ffdd00;
+        outline-offset: 0;
+        background-color: #ffdd00;
+    }
+
+    .fmp-menu-button[aria-disabled="true"] {
+        opacity: 0.4;
+        cursor: default;
+        pointer-events: none;
+    }
+
+    .fmp-menu-button svg {
+        flex-shrink: 0;
+        color: #505a5f;
+    }
+
+    .fmp-menu-button:hover:not([aria-disabled="true"]) svg {
+        color: #0b0c0c;
+    }
+
+    /* Stats panel slot — positions the JS-rendered boundary info panel.
+       Desktop: bottom-right corner, auto height up to a max.
+       Mobile: floating overlay with margins. */
+    #stats-panel-slot {
+        position: absolute;
+        right: var(--primary-gap, 15px);
+        bottom: 60px;
+        width: 360px;
+        max-height: 50vh;
+        overflow-y: hidden;
+        z-index: 1000;
+        pointer-events: none;
+    }
+
+    #stats-panel-slot .map-stats-panel {
+        position: static;
+        height: auto;
+        max-height: 50vh;
+        box-sizing: border-box;
+        min-width: 0;
+        max-width: none;
+        overflow-y: auto;
+        border: 1px solid #b1b4b6;
+        box-shadow: 0 2px 6px rgba(0,0,0,.15);
+        border-radius: 0;
+        pointer-events: auto;
+    }
+
+    @media (max-width: 640px) {
+        #stats-panel-slot {
+            top: auto;
+            right: 10px;
+            left: 10px;
+            bottom: 60px;
+            width: auto;
+            max-height: 55vh;
+            overflow-y: auto;
+        }
+
+        #stats-panel-slot .map-stats-panel {
+            height: auto;
+        }
+    }
+
+    /* Drawing menu — desktop/tablet static overlay, bottom-left.
+       Hidden on mobile (≤640px); library addPanel handles that breakpoint. */
+    .map-drawing-menu-desktop {
+        position: absolute;
+        bottom: 60px;
+        left: var(--primary-gap, 15px);
+        z-index: 100;
+    }
+
+    .map-drawing-menu-desktop .fmp-menu {
+        background: white;
+        border: 1px solid #b1b4b6;
+        box-shadow: 0 2px 6px rgba(0,0,0,.15);
+        padding: 12px;
+        min-width: 200px;
+    }
+
+    @media (max-width: 640px) {
+        .map-drawing-menu-desktop {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<div style="height: 100%; display: flex; flex-direction: column;">
+
+    <!-- Map form - fills remaining height -->
+    <form id="map-form" action="/nrf-estimate-5/map" method="post" novalidate style="flex: 1 1 auto; min-height: 0; position: relative; overflow: hidden;">
+        {% if navFromSummary %}
+        <input type="hidden" name="navFromSummary" value="true">
+        {% endif %}
+
+        {% if error %}
+        <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert">
+            <h2 class="govuk-error-summary__title" id="error-summary-title">There is a problem</h2>
+            <div class="govuk-error-summary__body">
+                <ul class="govuk-list govuk-error-summary__list">
+                    <li><a href="#map">{{ error }}</a></li>
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+        <div id="client-error-summary" class="govuk-error-summary govuk-!-margin-top-6 hidden" aria-labelledby="error-summary-title" role="alert">
+            <h2 class="govuk-error-summary__title" id="error-summary-title">There is a problem</h2>
+            <div class="govuk-error-summary__body">
+                <ul class="govuk-list govuk-error-summary__list">
+                    <li><a href="#map" id="client-error-link"></a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Full-width map -->
+        <div id="map-content" style="height: 100%; position: relative;">
+            <div id="map"></div>
+
+
+
+            <!-- Boundary info stats slot (right side on desktop; overlay on mobile) -->
+            <div id="stats-panel-slot"></div>
+
+            <!-- Drawing menu — desktop/tablet static overlay, bottom-left -->
+            {% include "nrf-estimate-5/map/_drawing-menu-desktop.html" %}
+
+            <!-- Contextual drawing hints panel -->
+            <div id="drawing-hints-panel" class="drawing-hints-panel" style="display: none;">
+                <div class="govuk-notification-banner" role="region" aria-labelledby="drawing-hints-title" data-module="govuk-notification-banner">
+                    <div class="govuk-notification-banner__header">
+                        <h2 class="govuk-notification-banner__title" id="drawing-hints-title">Tip</h2>
+                    </div>
+                    <div class="govuk-notification-banner__content">
+                        <p class="govuk-body" id="drawing-hints-message"></p>
+                        <p class="govuk-body" id="drawing-hints-snap" style="display: none;"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- How to use panel content source (rendered via map.addPanel) -->
+            <div id="how-to-use-content-source" hidden>
+                {% include "nrf-estimate-5/map/_instructions.html" %}
+            </div>
+        </div>
+
+        <input type="hidden" id="boundary-data" name="boundary-data" value="{{ existingBoundaryData }}">
+    </form>
+
+</div>
+
+<!-- @defra/interactive-map UMD bundles - load in dependency order -->
+<!-- Core -->
+<script src="/public/javascripts/vendor/interactive-map/im-core.js"></script>
+<script src="/public/javascripts/vendor/interactive-map/interactive-map.umd.js"></script>
+<script>console.log('After core:', Object.keys(window.defra || {}));</script>
+
+<!-- MapLibre provider -->
+<script src="/public/javascripts/vendor/interactive-map/im-maplibre-framework.js"></script>
+<script src="/public/javascripts/vendor/interactive-map/im-maplibre-provider.js"></script>
+<script src="/public/javascripts/vendor/interactive-map/maplibre-provider.umd.js"></script>
+<script>console.log('After maplibre provider:', Object.keys(window.defra || {}));</script>
+
+<!-- Map Styles Plugin -->
+<script src="/public/javascripts/vendor/interactive-map/im-map-styles-plugin.js"></script>
+<script src="/public/javascripts/vendor/interactive-map/map-styles-plugin.umd.js"></script>
+
+<!-- Scale Bar Plugin -->
+<script src="/public/javascripts/vendor/interactive-map/im-scale-bar-plugin.js"></script>
+<script src="/public/javascripts/vendor/interactive-map/scale-bar-plugin.umd.js"></script>
+
+<!-- Interact Plugin -->
+<script src="/public/javascripts/vendor/interactive-map/im-interact-plugin.js"></script>
+<script src="/public/javascripts/vendor/interactive-map/interact-plugin.umd.js"></script>
+
+<!-- Search Plugin -->
+<script src="/public/javascripts/vendor/interactive-map/im-search-plugin.js"></script>
+<script src="/public/javascripts/vendor/interactive-map/search-plugin.umd.js"></script>
+
+<!-- Draw ML Plugin -->
+<script src="/public/javascripts/vendor/interactive-map/im-draw-ml-plugin.js"></script>
+<script src="/public/javascripts/vendor/interactive-map/draw-ml-plugin.umd.js"></script>
+
+<!-- Datasets Plugin -->
+<script src="/public/javascripts/vendor/interactive-map/im-datasets-plugin.js"></script>
+<script src="/public/javascripts/vendor/interactive-map/datasets-plugin.umd.js"></script>
+
+<!-- Open Names Provider (for reverse geocoding) -->
+<script src="/public/javascripts/vendor/interactive-map/im-reverse-geocode.js"></script>
+<script src="/public/javascripts/vendor/interactive-map/open-names-provider.umd.js"></script>
+
+<script>console.log('After all plugins:', Object.keys(window.defra || {}));</script>
+
+<!-- Turf.js + stats panel -->
+<script src="/public/javascripts/vendor/turf.min.js"></script>
+<script src="/public/javascripts/components/map/map-stats.js"></script>
+<script src="/public/javascripts/map-api.js"></script>
+
+<script>
+    // Set the catchment GeoJSON endpoint for this journey
+    window.CATCHMENTS_GEOJSON_URL = '/nrf-estimate-5/catchments.geojson';
+    // Set the API endpoint for EDP intersection checking
+    window.API_CHECK_EDP_INTERSECTION_URL = '/nrf-estimate-5/api/check-edp-intersection';
+    // Set initial boundary feature if exists
+    window.INITIAL_BOUNDARY_FEATURE = null; // TODO: populate from session data
+</script>
+
+<!-- New map component modules -->
+<script src="/public/javascripts/components/map/config.js"></script>
+<script src="/public/javascripts/components/map/utils.js"></script>
+<script src="/public/javascripts/components/map/menu.js"></script>
+<script src="/public/javascripts/components/map/layer-controls.js"></script>
+<script src="/public/javascripts/components/map/zoom-aesthetics.js"></script>
+<script src="/public/javascripts/components/map/init.js"></script>
+
+<script>
+  // Initialize the new interactive map - use window.onload to ensure everything is ready
+  window.addEventListener('load', function() {
+    console.log('Window loaded, checking for map element...');
+    const mapEl = document.getElementById('map');
+    console.log('Map element:', mapEl);
+    if (mapEl) {
+    window.MapInit.initMap();
+    } else {
+      console.error('Map element #map not found in DOM');
+    }
+  });
+</script>
+{% endblock %}

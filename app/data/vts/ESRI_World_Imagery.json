@@ -1,0 +1,21 @@
+{
+  "version": 8,
+  "name": "Esri World Imagery",
+  "sources": {
+    "esri-world-imagery": {
+      "type": "raster",
+      "tiles": [
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+      ],
+      "tileSize": 256,
+      "attribution": "Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, and others"
+    }
+  },
+  "layers": [
+    {
+      "id": "esri-world-imagery",
+      "type": "raster",
+      "source": "esri-world-imagery"
+    }
+  ]
+}

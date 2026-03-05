@@ -17,9 +17,13 @@ const applications2Routes = require('./routes/applications-2.js')
 const caseManagementRoutes = require('./routes/case-management.js')
 const lpaVerifyRoutes = require('./routes/lpa-verify.js')
 const tileserverProxyRoutes = require('./routes/tileserver-proxy.js')
+const vtsMapRoutes = require('./routes/vts-maps.js')
+const mapTilesRoutes = require('./routes/map-tiles.js')
 
 // Use non-journey routes
 router.use('/', tileserverProxyRoutes) // Add tileserver proxy first
+router.use('/', mapTilesRoutes) // Add generic map tiles endpoint
+router.use('/', vtsMapRoutes)
 router.use('/', indexRoutes)
 router.use('/', userJourney1Routes)
 router.use('/', edpSearchRoutes)

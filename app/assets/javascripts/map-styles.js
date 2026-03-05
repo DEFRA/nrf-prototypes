@@ -379,6 +379,11 @@
     if (window.MapDatasets && window.MapDatasets.refreshLayers) {
       window.MapDatasets.refreshLayers()
     }
+
+    // Reapply layer visibility from checkboxes (checkboxes override default visible state)
+    if (window.LayerControls && window.LayerControls.applyStoredVisibility) {
+      window.LayerControls.applyStoredVisibility()
+    }
   }
 
   /**
