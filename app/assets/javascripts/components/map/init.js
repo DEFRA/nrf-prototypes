@@ -19,6 +19,7 @@ window.MapInit = (function() {
   let pointsPlaced = 0;
   let justCompletedDrawing = false; // Track if we just finished drawing (not confirming)
   let latestUpdateFeature = null; // Track the latest feature from draw:update events
+  const INITIAL_IDLE_HINT = 'Select Draw to begin drawing your red line boundary.';
 
   // Drawing hints panel helper functions
   function showDrawingHint(message, snapHint) {
@@ -57,7 +58,7 @@ window.MapInit = (function() {
     switch(state) {
       case 'no-points':
         showDrawingHint(
-          'Click to draw first point.',
+          'Click on map to draw first point.',
           snapHint
         );
         break;
@@ -100,6 +101,12 @@ window.MapInit = (function() {
 
     if (isDrawingMode) {
       updateHintForState(pointsPlaced > 0 ? 'has-points' : 'no-points');
+      return;
+    }
+
+    // Initial idle guidance: only show when no boundary exists yet.
+    if (!feature) {
+      showDrawingHint(INITIAL_IDLE_HINT);
       return;
     }
 
@@ -295,7 +302,8 @@ window.MapInit = (function() {
             transformRequest: transformGeocodeRequest,
             osNamesURL: config.defaultData.OS_NAMES_URL,
             width: '300px',
-            showMarker: false
+            showMarker: false,
+            isExpanded:true
           }),
           defra.datasetsPlugin({
             datasets: config.datasets
@@ -364,9 +372,9 @@ window.MapInit = (function() {
         // on every open (avoids Preact re-render resetting the HTML snapshot).
         map.addPanel('filters', {
           label: 'Environmental Delivery Plan areas',
-          mobile: { slot: 'bottom', modal: true, dismissable: true, initiallyOpen: false },
-          tablet: { slot: 'inset', modal: false, width: '400px', dismissable: true, initiallyOpen: false },
-          desktop: { slot: 'inset', modal: false, width: '400px', dismissable: true, initiallyOpen: false },
+          mobile: { slot: 'bottom', modal: true, dismissable: true, initiallyOpen: true },
+          tablet: { slot: 'inset', modal: false, width: '395px', dismissable: true, initiallyOpen: true },
+          desktop: { slot: 'inset', modal: false, width: '386px', dismissable: true, initiallyOpen: true },
           render: function() {
             var h = window.preactCompat && window.preactCompat.createElement;
             if (!h) return null;
@@ -402,7 +410,7 @@ window.MapInit = (function() {
           }
         });
         map.addButton('filters', {
-          label: 'Filters',
+          label: 'Key',
           panelId: 'filters',
           iconSvgContent: '<path d="M3 4h18v2H3V4zm3 7h12v2H6v-2zm3 7h6v2H9v-2z"/>',
           mobile: { slot: 'top-left', order: 2 },
@@ -476,6 +484,9 @@ window.MapInit = (function() {
           }
           updateIntersectionsForFeature(feature);
         }
+
+        // Show initial non-draw guidance when the page first loads.
+        updateHintForCurrentState();
 
         // Wire up drawing control buttons using event delegation
         document.addEventListener('click', function(e) {

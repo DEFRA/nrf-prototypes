@@ -131,22 +131,20 @@
       <div class="map-stats-content">
         <h2 class="govuk-heading-m">Boundary information</h2>
 
-        <dl class="govuk-summary-list govuk-summary-list--no-border">
-          <div class="govuk-summary-list__row" id="stat-total-area-container" style="display: none;">
-            <dt class="govuk-summary-list__key">Area</dt>
-            <dd class="govuk-summary-list__value" id="stat-total-area">—</dd>
-          </div>
+        <div id="stat-total-area-container" class="map-stats-row" style="display: none;">
+          <p class="govuk-body govuk-!-margin-bottom-0 map-stats-row__label">Area:</p>
+          <p class="govuk-body govuk-!-margin-bottom-0 map-stats-row__value" id="stat-total-area">—</p>
+        </div>
 
-          <div class="govuk-summary-list__row" id="stat-current-line-container" style="display: none;">
-            <dt class="govuk-summary-list__key">Current segment</dt>
-            <dd class="govuk-summary-list__value" id="stat-current-line">—</dd>
-          </div>
+        <div id="stat-current-line-container" class="map-stats-row" style="display: none;">
+          <p class="govuk-body govuk-!-margin-bottom-0">Current segment:</p>
+          <p class="govuk-body govuk-!-margin-bottom-0 map-stats-row__value" id="stat-current-line">—</p>
+        </div>
 
-          <div class="govuk-summary-list__row" id="stat-perimeter-container" style="display: none;">
-            <dt class="govuk-summary-list__key">Perimeter</dt>
-            <dd class="govuk-summary-list__value" id="stat-perimeter">—</dd>
-          </div>
-        </dl>
+        <div id="stat-perimeter-container" class="map-stats-row" style="display: none;">
+          <p class="govuk-body govuk-!-margin-bottom-0 map-stats-row__label">Perimeter:</p>
+          <p class="govuk-body govuk-!-margin-bottom-0 map-stats-row__value" id="stat-perimeter">—</p>
+        </div>
 
         <div id="stat-intersections-container" class="govuk-!-margin-top-4" style="display: none;">
           <h3 class="govuk-heading-s">EDPs in your red line boundary</h3>
@@ -216,32 +214,32 @@
 
     // Nutrient EDPs - always show heading
     html +=
-      '<div class="govuk-!-margin-bottom-3"><p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1"><span style="display:inline-block;width:14px;height:14px;background:#0000ff;border:1px solid #0b0c0c;margin-right:8px;vertical-align:middle;margin-top:-2px"></span>Nature Restoration Fund nutrients levy areas</p>'
+      '<div class="govuk-!-margin-bottom-3"><p class="govuk-body-s govuk-!-font-weight-bold govuk-!-margin-bottom-1"><span style="display:inline-block;width:14px;height:14px;background:#0000ff;border:1px solid #0b0c0c;margin-right:8px;vertical-align:middle;margin-top:-2px"></span>Nature Restoration Fund nutrients levy areas</p>'
     if (nutrientAreas.length > 0) {
       html +=
-        '<ul class="govuk-list govuk-list--bullet" style="margin: 0; font-size: 14px; padding-left: 20px;">'
+        '<ul class="govuk-list govuk-list--bullet govuk-body-s" style="margin: 0; padding-left: 20px;">'
       nutrientAreas.forEach((area) => {
-        html += `<li style="margin-bottom: 5px;">${area.name}</li>`
+        html += `<li class="govuk-body-s" style="margin-bottom: 5px;">${area.name}</li>`
       })
       html += '</ul>'
     } else {
-      html += '<ul class="govuk-list govuk-list--bullet" style="margin: 0; font-size: 14px; padding-left: 20px;"><li style="margin-bottom: 5px;">None</li></ul>'
+      html += '<ul class="govuk-list govuk-list--bullet govuk-body-s" style="margin: 0; padding-left: 20px;"><li class="govuk-body-s" style="margin-bottom: 5px;">None</li></ul>'
     }
     html += '</div>'
 
     // GCN EDPs - always show heading
     html +=
-      '<div><p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1"><span style="display:inline-block;width:14px;height:14px;background:#f47738;border:1px solid #0b0c0c;margin-right:8px;vertical-align:middle;margin-top:-2px"></span>Nature Restoration Fund great crested newt levy areas</p>'
+      '<div><p class="govuk-body-s govuk-!-font-weight-bold govuk-!-margin-bottom-1"><span style="display:inline-block;width:14px;height:14px;background:#f47738;border:1px solid #0b0c0c;margin-right:8px;vertical-align:middle;margin-top:-2px"></span>Nature Restoration Fund great crested newt levy areas</p>'
     if (gcnAreas.length > 0) {
       html +=
-        '<ul class="govuk-list govuk-list--bullet" style="margin: 0; font-size: 14px; padding-left: 20px;">'
+        '<ul class="govuk-list govuk-list--bullet govuk-body-s" style="margin: 0; padding-left: 20px;">'
       gcnAreas.forEach((area) => {
         // Use just the area name (NAME property) without adding generic type
-        html += `<li style="margin-bottom: 5px;">${area.name}</li>`
+        html += `<li class="govuk-body-s" style="margin-bottom: 5px;">${area.name}</li>`
       })
       html += '</ul>'
     } else {
-      html += '<ul class="govuk-list govuk-list--bullet" style="margin: 0; font-size: 14px; padding-left: 20px;"><li style="margin-bottom: 5px;">None</li></ul>'
+      html += '<ul class="govuk-list govuk-list--bullet govuk-body-s" style="margin: 0; padding-left: 20px;"><li class="govuk-body-s" style="margin-bottom: 5px;">None</li></ul>'
     }
     html += '</div>'
 

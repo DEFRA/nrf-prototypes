@@ -172,8 +172,8 @@ window.ZoomAesthetics = (function () {
     // When in multiple areas use GDS blue as a neutral indicator.
     var borderColor = matched.length === 1 ? matched[0].color : '#1d70b8';
     var borderLabel = matched.length === 1
-      ? 'You\u2019re in: ' + matched[0].label
-      : 'You\u2019re in ' + matched.length + ' levy areas';
+      ? 'Area: ' + matched[0].label
+      : 'Area: There are ' + matched.length + ' Nature Restoration Fund levies in this area.';
 
     applyBorder(borderColor, borderLabel);
   }
