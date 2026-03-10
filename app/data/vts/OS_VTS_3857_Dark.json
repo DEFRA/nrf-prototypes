@@ -1,11 +1,11 @@
 {
   "version": 8,
   "sprite": "https://raw.githubusercontent.com/OrdnanceSurvey/OS-Vector-Tile-API-Stylesheets/main/OS_VTS_3857/resources/sprites/dark",
-  "glyphs": "http://localhost:3000/api/map-proxy?url=https%3A%2F%2Fapi.os.uk%2Fmaps%2Fvector%2Fv1%2Fvts%2Fresources%2Ffonts%2F{fontstack}%2F{range}.pbf",
+  "glyphs": "/api/map-proxy?url=https%3A%2F%2Fapi.os.uk%2Fmaps%2Fvector%2Fv1%2Fvts%2Fresources%2Ffonts%2F{fontstack}%2F{range}.pbf",
   "sources": {
     "esri": {
       "type": "vector",
-      "tiles": ["http://localhost:3000/api/tile/{z}/{y}/{x}.pbf"]
+      "tiles": ["/api/tile/{z}/{y}/{x}.pbf"]
     }
   },
   "layers": [

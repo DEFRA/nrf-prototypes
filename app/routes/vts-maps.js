@@ -30,6 +30,54 @@ function loadVtsFile(filename) {
   }
 }
 
+/**
+ * Build a base URL for the current request, honoring proxy headers.
+ */
+function getRequestBaseUrl(req) {
+  const forwardedProto = req.get('x-forwarded-proto')
+  const protocol = forwardedProto ? forwardedProto.split(',')[0].trim() : req.protocol
+  return `${protocol}://${req.get('host')}`
+}
+
+/**
+ * Convert style URLs to absolute URLs for the current host.
+ * This keeps VTS styles working both locally and when deployed.
+ */
+function rewriteStyleUrlsForRequest(vtsData, baseUrl) {
+  // Clone to avoid mutating cached JSON data
+  const style = JSON.parse(JSON.stringify(vtsData))
+
+  const absolutize = (value) => {
+    if (typeof value !== 'string') {
+      return value
+    }
+
+    // Backward compatibility for previously hardcoded local URLs
+    if (value.startsWith('http://localhost:3000/')) {
+      return `${baseUrl}${value.replace('http://localhost:3000', '')}`
+    }
+
+    // Convert root-relative API paths to the current request host
+    if (value.startsWith('/api/')) {
+      return `${baseUrl}${value}`
+    }
+
+    return value
+  }
+
+  style.glyphs = absolutize(style.glyphs)
+
+  if (style.sources && typeof style.sources === 'object') {
+    Object.values(style.sources).forEach((source) => {
+      if (Array.isArray(source.tiles)) {
+        source.tiles = source.tiles.map(absolutize)
+      }
+    })
+  }
+
+  return style
+}
+
 // ============================================================================
 // VTS API ROUTES
 // ============================================================================
@@ -58,7 +106,10 @@ router.get('/api/maps/vts/:filename', (req, res) => {
     return res.status(404).json({ error: 'Failed to load VTS file' })
   }
 
-  res.json(vtsData)
+  const baseUrl = getRequestBaseUrl(req)
+  const responseStyle = rewriteStyleUrlsForRequest(vtsData, baseUrl)
+
+  res.json(responseStyle)
 })
 
 module.exports = router
