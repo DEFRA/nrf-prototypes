@@ -6,7 +6,6 @@
 
 const govukPrototypeKit = require('govuk-prototype-kit')
 const router = govukPrototypeKit.requests.setupRouter()
-const zlib = require('zlib')
 const axios = require('axios')
 
 function getProxyConfig() {
@@ -35,6 +34,38 @@ function getProxyConfig() {
     console.warn(`[OS Proxy] Invalid proxy URL in env: ${error.message}`)
     return null
   }
+}
+
+function getAxiosConfig(overrides = {}) {
+  const proxyConfig = getProxyConfig()
+
+  return {
+    timeout: 10000,
+    validateStatus: () => true,
+    decompress: true,
+    proxy: proxyConfig || false,
+    ...overrides
+  }
+}
+
+async function fetchOsBinary(url, options = {}) {
+  return axios.get(
+    url,
+    getAxiosConfig({
+      responseType: 'arraybuffer',
+      ...options
+    })
+  )
+}
+
+async function fetchOsJson(url, options = {}) {
+  return axios.get(
+    url,
+    getAxiosConfig({
+      responseType: 'json',
+      ...options
+    })
+  )
 }
 
 /**
@@ -76,18 +107,15 @@ router.get('/api/tile/:z/:y/:x.pbf', async (req, res) => {
       console.log(`[OS Tile Proxy] Using outbound proxy ${proxyConfig.host}:${proxyConfig.port}`)
     }
 
-    const osRes = await axios.get(osUrl, {
-      timeout: 10000,
-      responseType: 'stream',
-      decompress: false,
-      validateStatus: () => true,
-      proxy: proxyConfig || false
+    const osRes = await fetchOsBinary(osUrl, {
+      headers: {
+        Accept: 'application/x-protobuf'
+      }
     })
 
     // Handle error status codes
     if (osRes.status !== 200) {
       console.log(`[OS Tile Proxy] OS API returned ${osRes.status}`)
-      osRes.data.resume()
       return res.status(osRes.status >= 500 ? 502 : 404).end()
     }
 
@@ -95,14 +123,7 @@ router.get('/api/tile/:z/:y/:x.pbf', async (req, res) => {
     res.set('Content-Type', 'application/x-protobuf')
     res.set('Cache-Control', 'public, max-age=86400')
     res.set('Access-Control-Allow-Origin', '*')
-
-    // Check if response is gzipped and decompress if needed
-    const contentEncoding = osRes.headers['content-encoding']
-    if (contentEncoding === 'gzip') {
-      osRes.data.pipe(zlib.createGunzip()).pipe(res)
-    } else {
-      osRes.data.pipe(res)
-    }
+    res.send(Buffer.from(osRes.data))
   } catch (error) {
     console.error(`[OS Tile Proxy] Error: ${error.message}`)
     const isTimeout = error.code === 'ECONNABORTED'
@@ -153,17 +174,10 @@ router.get('/api/map-proxy', async (req, res) => {
       console.log(`[OS Map Proxy] Using outbound proxy ${proxyConfig.host}:${proxyConfig.port}`)
     }
 
-    const osRes = await axios.get(proxyUrl.toString(), {
-      timeout: 10000,
-      responseType: 'stream',
-      decompress: false,
-      validateStatus: () => true,
-      proxy: proxyConfig || false
-    })
+    const osRes = await fetchOsBinary(proxyUrl.toString())
 
     if (osRes.status !== 200) {
       console.log(`[OS Map Proxy] OS API returned ${osRes.status}`)
-      osRes.data.resume()
       return res.status(osRes.status >= 500 ? 502 : 404).end()
     }
 
@@ -174,14 +188,7 @@ router.get('/api/map-proxy', async (req, res) => {
     }
     res.set('Cache-Control', 'public, max-age=604800') // Cache for 7 days
     res.set('Access-Control-Allow-Origin', '*')
-
-    // Check if response is gzipped and decompress if needed
-    const contentEncoding = osRes.headers['content-encoding']
-    if (contentEncoding === 'gzip') {
-      osRes.data.pipe(zlib.createGunzip()).pipe(res)
-    } else {
-      osRes.data.pipe(res)
-    }
+    res.send(Buffer.from(osRes.data))
   } catch (error) {
     console.error(`[OS Map Proxy] Error: ${error.message}`)
     const isTimeout = error.code === 'ECONNABORTED'
@@ -225,32 +232,19 @@ router.get('/api/maps/names', async (req, res) => {
       console.log(`[OS Names Proxy] Using outbound proxy ${proxyConfig.host}:${proxyConfig.port}`)
     }
 
-    const osRes = await axios.get(osNamesUrl, {
-      timeout: 10000,
-      responseType: 'stream',
-      decompress: false,
-      validateStatus: () => true,
-      proxy: proxyConfig || false
-    })
+    const osRes = await fetchOsJson(osNamesUrl)
 
     console.log(`[OS Names Proxy] OS API responded with status: ${osRes.status}`)
 
     if (osRes.status !== 200) {
       console.log(`[OS Names Proxy] OS API returned ${osRes.status}`)
-      osRes.data.resume()
       return res.status(osRes.status >= 500 ? 502 : 404).end()
     }
 
     res.set('Content-Type', 'application/json')
     res.set('Cache-Control', 'public, max-age=3600')
     res.set('Access-Control-Allow-Origin', '*')
-
-    const contentEncoding = osRes.headers['content-encoding']
-    if (contentEncoding === 'gzip') {
-      osRes.data.pipe(zlib.createGunzip()).pipe(res)
-    } else {
-      osRes.data.pipe(res)
-    }
+    res.json(osRes.data)
   } catch (error) {
     console.error(`[OS Names Proxy] Error: ${error.message}`)
     const isTimeout = error.code === 'ECONNABORTED'
@@ -292,32 +286,19 @@ router.post('/api/maps/names', async (req, res) => {
       console.log(`[OS Names Proxy] POST - Using outbound proxy ${proxyConfig.host}:${proxyConfig.port}`)
     }
 
-    const osRes = await axios.get(osNamesUrl, {
-      timeout: 10000,
-      responseType: 'stream',
-      decompress: false,
-      validateStatus: () => true,
-      proxy: proxyConfig || false
-    })
+    const osRes = await fetchOsJson(osNamesUrl)
 
     console.log(`[OS Names Proxy] POST - OS API responded with status: ${osRes.status}`)
 
     if (osRes.status !== 200) {
       console.log(`[OS Names Proxy] POST - OS API returned ${osRes.status}`)
-      osRes.data.resume()
       return res.status(osRes.status >= 500 ? 502 : 404).end()
     }
 
     res.set('Content-Type', 'application/json')
     res.set('Cache-Control', 'public, max-age=3600')
     res.set('Access-Control-Allow-Origin', '*')
-
-    const contentEncoding = osRes.headers['content-encoding']
-    if (contentEncoding === 'gzip') {
-      osRes.data.pipe(zlib.createGunzip()).pipe(res)
-    } else {
-      osRes.data.pipe(res)
-    }
+    res.json(osRes.data)
   } catch (error) {
     console.error(`[OS Names Proxy] POST - Error: ${error.message}`)
     const isTimeout = error.code === 'ECONNABORTED'
