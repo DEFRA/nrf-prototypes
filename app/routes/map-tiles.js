@@ -6,9 +6,36 @@
 
 const govukPrototypeKit = require('govuk-prototype-kit')
 const router = govukPrototypeKit.requests.setupRouter()
-const https = require('https')
-const http = require('http')
 const zlib = require('zlib')
+const axios = require('axios')
+
+function getProxyConfig() {
+  const proxyUrl = process.env.HTTP_PROXY || process.env.CDP_HTTPS_PROXY
+  if (!proxyUrl) {
+    return null
+  }
+
+  try {
+    const parsed = new URL(proxyUrl)
+    const config = {
+      protocol: parsed.protocol.replace(':', ''),
+      host: parsed.hostname,
+      port: parsed.port ? parseInt(parsed.port, 10) : parsed.protocol === 'http:' ? 80 : 443
+    }
+
+    if (parsed.username || parsed.password) {
+      config.auth = {
+        username: decodeURIComponent(parsed.username || ''),
+        password: decodeURIComponent(parsed.password || '')
+      }
+    }
+
+    return config
+  } catch (error) {
+    console.warn(`[OS Proxy] Invalid proxy URL in env: ${error.message}`)
+    return null
+  }
+}
 
 /**
  * GET /api/tile/:z/:y/:x.pbf
@@ -42,37 +69,44 @@ router.get('/api/tile/:z/:y/:x.pbf', async (req, res) => {
     // Construct OS VTS API URL with proper format
     // Use API key and srs parameter for spatial reference system
     const osUrl = `https://api.os.uk/maps/vector/v1/vts/tile/${zoom}/${tileY}/${tileX}.pbf?key=${osApiKey}&srs=3857`
+    const proxyConfig = getProxyConfig()
 
     console.log(`[OS Tile Proxy] Fetching: ${zoom}/${tileY}/${tileX}`)
+    if (proxyConfig) {
+      console.log(`[OS Tile Proxy] Using outbound proxy ${proxyConfig.host}:${proxyConfig.port}`)
+    }
 
-    // Make request to OS API
-    https.get(osUrl, { timeout: 10000 }, (osRes) => {
-      // Handle error status codes
-      if (osRes.statusCode !== 200) {
-        console.log(`[OS Tile Proxy] OS API returned ${osRes.statusCode}`)
-        osRes.resume() // Drain response
-        return res.status(osRes.statusCode >= 500 ? 502 : 404).end()
-      }
-
-      // Set response headers
-      res.set('Content-Type', 'application/x-protobuf')
-      res.set('Cache-Control', 'public, max-age=86400')
-      res.set('Access-Control-Allow-Origin', '*')
-
-      // Check if response is gzipped and decompress if needed
-      const contentEncoding = osRes.headers['content-encoding']
-      if (contentEncoding === 'gzip') {
-        osRes.pipe(zlib.createGunzip()).pipe(res)
-      } else {
-        osRes.pipe(res)
-      }
-    }).on('error', (error) => {
-      console.error(`[OS Tile Proxy] Request failed: ${error.message}`)
-      res.status(502).end()
+    const osRes = await axios.get(osUrl, {
+      timeout: 10000,
+      responseType: 'stream',
+      decompress: false,
+      validateStatus: () => true,
+      proxy: proxyConfig || false
     })
+
+    // Handle error status codes
+    if (osRes.status !== 200) {
+      console.log(`[OS Tile Proxy] OS API returned ${osRes.status}`)
+      osRes.data.resume()
+      return res.status(osRes.status >= 500 ? 502 : 404).end()
+    }
+
+    // Set response headers
+    res.set('Content-Type', 'application/x-protobuf')
+    res.set('Cache-Control', 'public, max-age=86400')
+    res.set('Access-Control-Allow-Origin', '*')
+
+    // Check if response is gzipped and decompress if needed
+    const contentEncoding = osRes.headers['content-encoding']
+    if (contentEncoding === 'gzip') {
+      osRes.data.pipe(zlib.createGunzip()).pipe(res)
+    } else {
+      osRes.data.pipe(res)
+    }
   } catch (error) {
     console.error(`[OS Tile Proxy] Error: ${error.message}`)
-    res.status(500).end()
+    const isTimeout = error.code === 'ECONNABORTED'
+    res.status(isTimeout ? 504 : 502).end()
   }
 })
 
@@ -113,108 +147,45 @@ router.get('/api/map-proxy', async (req, res) => {
     // Add API key if not already present
     const proxyUrl = new URL(urlToFetch)
     proxyUrl.searchParams.set('key', osApiKey)
+    const proxyConfig = getProxyConfig()
 
-    // Make request to OS API
-    https.get(proxyUrl.toString(), { timeout: 10000 }, (osRes) => {
-      if (osRes.statusCode !== 200) {
-        console.log(`[OS Map Proxy] OS API returned ${osRes.statusCode}`)
-        osRes.resume()
-        return res.status(osRes.statusCode >= 500 ? 502 : 404).end()
-      }
+    if (proxyConfig) {
+      console.log(`[OS Map Proxy] Using outbound proxy ${proxyConfig.host}:${proxyConfig.port}`)
+    }
 
-      // Set response headers based on content type
-      const contentType = osRes.headers['content-type']
-      if (contentType) {
-        res.set('Content-Type', contentType)
-      }
-      res.set('Cache-Control', 'public, max-age=604800') // Cache for 7 days
-      res.set('Access-Control-Allow-Origin', '*')
-
-      // Check if response is gzipped and decompress if needed
-      const contentEncoding = osRes.headers['content-encoding']
-      if (contentEncoding === 'gzip') {
-        osRes.pipe(zlib.createGunzip()).pipe(res)
-      } else {
-        osRes.pipe(res)
-      }
-    }).on('error', (error) => {
-      console.error(`[OS Map Proxy] Request failed: ${error.message}`)
-      res.status(502).end()
+    const osRes = await axios.get(proxyUrl.toString(), {
+      timeout: 10000,
+      responseType: 'stream',
+      decompress: false,
+      validateStatus: () => true,
+      proxy: proxyConfig || false
     })
+
+    if (osRes.status !== 200) {
+      console.log(`[OS Map Proxy] OS API returned ${osRes.status}`)
+      osRes.data.resume()
+      return res.status(osRes.status >= 500 ? 502 : 404).end()
+    }
+
+    // Set response headers based on content type
+    const contentType = osRes.headers['content-type']
+    if (contentType) {
+      res.set('Content-Type', contentType)
+    }
+    res.set('Cache-Control', 'public, max-age=604800') // Cache for 7 days
+    res.set('Access-Control-Allow-Origin', '*')
+
+    // Check if response is gzipped and decompress if needed
+    const contentEncoding = osRes.headers['content-encoding']
+    if (contentEncoding === 'gzip') {
+      osRes.data.pipe(zlib.createGunzip()).pipe(res)
+    } else {
+      osRes.data.pipe(res)
+    }
   } catch (error) {
     console.error(`[OS Map Proxy] Error: ${error.message}`)
-    res.status(500).end()
-  }
-})
-
-/**
- * GET /api/map-proxy?url={url}
- * Generic proxy for OS resources (fonts, sprites, etc)
- */
-router.get('/api/map-proxy', async (req, res) => {
-  try {
-    const { url: targetUrl } = req.query
-
-    if (!targetUrl) {
-      return res.status(400).json({ error: 'url parameter required' })
-    }
-
-    // Decode the URL
-    let urlToFetch
-    try {
-      urlToFetch = decodeURIComponent(targetUrl)
-    } catch (error) {
-      return res.status(400).json({ error: 'Invalid URL encoding' })
-    }
-
-    // Validate it's an OS URL
-    if (!urlToFetch.includes('api.os.uk')) {
-      return res.status(403).json({ error: 'Only OS URLs allowed' })
-    }
-
-    const osApiKey = process.env.OS_API_KEY
-
-    if (!osApiKey) {
-      console.warn('[OS Map Proxy] Missing OS_API_KEY')
-      return res.status(404).end()
-    }
-
-    console.log(`[OS Map Proxy] Fetching: ${urlToFetch}`)
-
-    // Add API key if not already present
-    const proxyUrl = new URL(urlToFetch)
-    proxyUrl.searchParams.set('key', osApiKey)
-
-    // Make request to OS API
-    https.get(proxyUrl.toString(), { timeout: 10000 }, (osRes) => {
-      if (osRes.statusCode !== 200) {
-        console.log(`[OS Map Proxy] OS API returned ${osRes.statusCode}`)
-        osRes.resume()
-        return res.status(osRes.statusCode >= 500 ? 502 : 404).end()
-      }
-
-      // Set response headers based on content type
-      const contentType = osRes.headers['content-type']
-      if (contentType) {
-        res.set('Content-Type', contentType)
-      }
-      res.set('Cache-Control', 'public, max-age=604800') // Cache for 7 days
-      res.set('Access-Control-Allow-Origin', '*')
-
-      // Check if response is gzipped and decompress if needed
-      const contentEncoding = osRes.headers['content-encoding']
-      if (contentEncoding === 'gzip') {
-        osRes.pipe(zlib.createGunzip()).pipe(res)
-      } else {
-        osRes.pipe(res)
-      }
-    }).on('error', (error) => {
-      console.error(`[OS Map Proxy] Request failed: ${error.message}`)
-      res.status(502).end()
-    })
-  } catch (error) {
-    console.error(`[OS Map Proxy] Error: ${error.message}`)
-    res.status(500).end()
+    const isTimeout = error.code === 'ECONNABORTED'
+    res.status(isTimeout ? 504 : 502).end()
   }
 })
 
@@ -247,36 +218,43 @@ router.get('/api/maps/names', async (req, res) => {
 
     // Build OS Names API URL
     const osNamesUrl = `https://api.os.uk/search/names/v1/find?query=${encodeURIComponent(searchText)}&key=${osApiKey}`
+    const proxyConfig = getProxyConfig()
 
     console.log(`[OS Names Proxy] Proxying to OS API for search: "${searchText}"`)
+    if (proxyConfig) {
+      console.log(`[OS Names Proxy] Using outbound proxy ${proxyConfig.host}:${proxyConfig.port}`)
+    }
 
-    // Make request to OS API
-    https.get(osNamesUrl, { timeout: 10000 }, (osRes) => {
-      console.log(`[OS Names Proxy] OS API responded with status: ${osRes.statusCode}`)
-      
-      if (osRes.statusCode !== 200) {
-        console.log(`[OS Names Proxy] OS API returned ${osRes.statusCode}`)
-        osRes.resume()
-        return res.status(osRes.statusCode >= 500 ? 502 : 404).end()
-      }
-
-      res.set('Content-Type', 'application/json')
-      res.set('Cache-Control', 'public, max-age=3600')
-      res.set('Access-Control-Allow-Origin', '*')
-
-      const contentEncoding = osRes.headers['content-encoding']
-      if (contentEncoding === 'gzip') {
-        osRes.pipe(zlib.createGunzip()).pipe(res)
-      } else {
-        osRes.pipe(res)
-      }
-    }).on('error', (error) => {
-      console.error(`[OS Names Proxy] Request failed: ${error.message}`)
-      res.status(502).end()
+    const osRes = await axios.get(osNamesUrl, {
+      timeout: 10000,
+      responseType: 'stream',
+      decompress: false,
+      validateStatus: () => true,
+      proxy: proxyConfig || false
     })
+
+    console.log(`[OS Names Proxy] OS API responded with status: ${osRes.status}`)
+
+    if (osRes.status !== 200) {
+      console.log(`[OS Names Proxy] OS API returned ${osRes.status}`)
+      osRes.data.resume()
+      return res.status(osRes.status >= 500 ? 502 : 404).end()
+    }
+
+    res.set('Content-Type', 'application/json')
+    res.set('Cache-Control', 'public, max-age=3600')
+    res.set('Access-Control-Allow-Origin', '*')
+
+    const contentEncoding = osRes.headers['content-encoding']
+    if (contentEncoding === 'gzip') {
+      osRes.data.pipe(zlib.createGunzip()).pipe(res)
+    } else {
+      osRes.data.pipe(res)
+    }
   } catch (error) {
     console.error(`[OS Names Proxy] Error: ${error.message}`)
-    res.status(500).end()
+    const isTimeout = error.code === 'ECONNABORTED'
+    res.status(isTimeout ? 504 : 502).end()
   }
 })
 
@@ -307,35 +285,43 @@ router.post('/api/maps/names', async (req, res) => {
     }
 
     const osNamesUrl = `https://api.os.uk/search/names/v1/find?query=${encodeURIComponent(searchText)}&key=${osApiKey}`
+    const proxyConfig = getProxyConfig()
 
     console.log(`[OS Names Proxy] POST - Proxying to OS API for search: "${searchText}"`)
+    if (proxyConfig) {
+      console.log(`[OS Names Proxy] POST - Using outbound proxy ${proxyConfig.host}:${proxyConfig.port}`)
+    }
 
-    https.get(osNamesUrl, { timeout: 10000 }, (osRes) => {
-      console.log(`[OS Names Proxy] POST - OS API responded with status: ${osRes.statusCode}`)
-      
-      if (osRes.statusCode !== 200) {
-        console.log(`[OS Names Proxy] POST - OS API returned ${osRes.statusCode}`)
-        osRes.resume()
-        return res.status(osRes.statusCode >= 500 ? 502 : 404).end()
-      }
-
-      res.set('Content-Type', 'application/json')
-      res.set('Cache-Control', 'public, max-age=3600')
-      res.set('Access-Control-Allow-Origin', '*')
-
-      const contentEncoding = osRes.headers['content-encoding']
-      if (contentEncoding === 'gzip') {
-        osRes.pipe(zlib.createGunzip()).pipe(res)
-      } else {
-        osRes.pipe(res)
-      }
-    }).on('error', (error) => {
-      console.error(`[OS Names Proxy] POST - Request failed: ${error.message}`)
-      res.status(502).end()
+    const osRes = await axios.get(osNamesUrl, {
+      timeout: 10000,
+      responseType: 'stream',
+      decompress: false,
+      validateStatus: () => true,
+      proxy: proxyConfig || false
     })
+
+    console.log(`[OS Names Proxy] POST - OS API responded with status: ${osRes.status}`)
+
+    if (osRes.status !== 200) {
+      console.log(`[OS Names Proxy] POST - OS API returned ${osRes.status}`)
+      osRes.data.resume()
+      return res.status(osRes.status >= 500 ? 502 : 404).end()
+    }
+
+    res.set('Content-Type', 'application/json')
+    res.set('Cache-Control', 'public, max-age=3600')
+    res.set('Access-Control-Allow-Origin', '*')
+
+    const contentEncoding = osRes.headers['content-encoding']
+    if (contentEncoding === 'gzip') {
+      osRes.data.pipe(zlib.createGunzip()).pipe(res)
+    } else {
+      osRes.data.pipe(res)
+    }
   } catch (error) {
     console.error(`[OS Names Proxy] POST - Error: ${error.message}`)
-    res.status(500).end()
+    const isTimeout = error.code === 'ECONNABORTED'
+    res.status(isTimeout ? 504 : 502).end()
   }
 })
 
