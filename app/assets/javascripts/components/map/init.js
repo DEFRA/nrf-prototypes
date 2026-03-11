@@ -19,6 +19,7 @@ window.MapInit = (function() {
   let pointsPlaced = 0;
   let justCompletedDrawing = false; // Track if we just finished drawing (not confirming)
   let latestUpdateFeature = null; // Track the latest feature from draw:update events
+  let drawCancelled = false; // Guard against late draw:create events after cancel
   const INITIAL_IDLE_HINT = 'Select Draw to begin drawing your red line boundary.';
 
   // Drawing hints panel helper functions
@@ -66,7 +67,7 @@ window.MapInit = (function() {
         showDrawingHint(
           pointsPlaced < 3
             ? 'Move cursor and click to add points.'
-            : 'Click on first point to join shape. You can also select join to complete your shape.',
+            : 'Click on first point to join shape. You can also select the tick to complete your shape.',
           snapHint
         );
         break;
@@ -91,6 +92,68 @@ window.MapInit = (function() {
     return document.querySelector(
       'button[id$="draw-snap"], button[id$="drawsnap"], button[aria-label="Snap to line"]'
     );
+  }
+
+  function isDrawCancelButton(target) {
+    if (!target || !target.closest) {
+      return false;
+    }
+
+    const cancelButton = target.closest(
+      'button[id$="draw-cancel"], button[id$="drawcancel"], button[aria-label*="Cancel"], button[title*="Cancel"]'
+    );
+
+    if (cancelButton) {
+      return true;
+    }
+
+    const anyButton = target.closest('button');
+    return !!(anyButton && /cancel/i.test(anyButton.textContent || ''));
+  }
+
+  function resetAfterCancelledDraw() {
+    isDrawingMode = false;
+    isEditingMode = false;
+    editModeEnteredViaButton = false;
+    latestUpdateFeature = null;
+
+    hideDrawingHint();
+
+    const desktopMenu = document.querySelector('.map-drawing-menu-desktop');
+    if (desktopMenu) {
+      desktopMenu.style.display = '';
+    }
+
+    // Ensure mobile users can get back to drawing controls immediately.
+    if (window.interactiveMapInstance && window.interactiveMapInstance.showPanel) {
+      window.interactiveMapInstance.showPanel('drawing-menu');
+    }
+
+    if (window.updateDrawButtonStates) {
+      window.updateDrawButtonStates();
+    }
+  }
+
+  function forceDeleteTransientBoundary() {
+    try {
+      if (drawPlugin && drawPlugin.deleteFeature) {
+        drawPlugin.deleteFeature('boundary');
+      }
+    } catch (error) {
+      console.log('Force delete transient boundary skipped:', error?.message || error);
+    }
+
+    feature = null;
+    updateIntersectionsForFeature(null);
+
+    const statsPanel = document.getElementById('map-stats-panel');
+    if (statsPanel) {
+      statsPanel.classList.add('hidden');
+    }
+
+    if (mapStatsReady && window.MapStats && window.MapStats.handlePolygonDelete) {
+      window.MapStats.handlePolygonDelete();
+    }
   }
 
   function updateHintForCurrentState() {
@@ -346,7 +409,7 @@ window.MapInit = (function() {
         var instructionsHtml = instructionsSource ? instructionsSource.innerHTML : '';
         map.addPanel('how-to-use', {
           label: 'How to use the map',
-          mobile: { slot: 'bottom', modal: true, dismissable: true,initiallyOpen: false },
+          mobile: { slot: 'bottom-left', modal: true, dismissable: true,initiallyOpen: false },
           tablet: { slot: 'inset', modal: false, width: '400px', dismissable: true, initiallyOpen: false },
           desktop: { slot: 'inset', modal: false, width: '400px', dismissable: true, initiallyOpen: false },
           render: function() {
@@ -372,7 +435,7 @@ window.MapInit = (function() {
         // on every open (avoids Preact re-render resetting the HTML snapshot).
         map.addPanel('filters', {
           label: 'Environmental Delivery Plan areas',
-          mobile: { slot: 'bottom', modal: true, dismissable: true, initiallyOpen: true },
+          mobile: { slot: 'bottom-left', modal: true, dismissable: true, initiallyOpen: true },
           tablet: { slot: 'inset', modal: false, width: '395px', dismissable: true, initiallyOpen: true },
           desktop: { slot: 'inset', modal: false, width: '386px', dismissable: true, initiallyOpen: true },
           render: function() {
@@ -422,7 +485,7 @@ window.MapInit = (function() {
         // Rendered once on app:ready; updateMenuState() updates aria-disabled directly in the DOM.
         map.addPanel('drawing-menu', {
           inline:false,
-          mobile: { slot: 'bottom', modal: true, dismissable: true, initiallyOpen: false },
+          mobile: { slot: 'bottom-left', modal: true, dismissable: true, initiallyOpen: false },
           tablet: { slot: 'bottom-left', modal: false, dismissable: false, initiallyOpen: false },
           desktop: { slot: 'inset', modal: false, dismissable: false, initiallyOpen: false },
           render: function() {
@@ -452,6 +515,20 @@ window.MapInit = (function() {
       map.on('draw:ready', function() {
         console.log('Draw ready');
         // updateDrawToolbarLabels();
+
+        // Capture cancel intent before plugin click handlers run.
+        document.addEventListener('click', function(e) {
+          if (isDrawCancelButton(e.target)) {
+            drawCancelled = true;
+          }
+        }, true);
+
+        // Escape key also cancels draw/edit in the library toolbar.
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape') {
+            drawCancelled = true;
+          }
+        }, true);
 
         // Initialize button states
         function updateButtonStates() {
@@ -497,6 +574,7 @@ window.MapInit = (function() {
             const desktopMenu = document.querySelector('.map-drawing-menu-desktop');
             if (desktopMenu) desktopMenu.style.display = 'none';
             console.log('Starting draw mode...');
+            drawCancelled = false;
             isDrawingMode = true;
             isEditingMode = false;
             pointsPlaced = 0;
@@ -683,6 +761,7 @@ window.MapInit = (function() {
       // Handle draw:started - fired when user enters draw mode
       map.on('draw:started', function(e) {
         console.log('\n🎨 EVENT: draw:started (ENTERING DRAW MODE)');
+        drawCancelled = false;
         isDrawingMode = true;
         pointsPlaced = 0;
         console.log('├─ State: isDrawingMode=true');
@@ -697,6 +776,17 @@ window.MapInit = (function() {
         console.log('\n🎯 EVENT: draw:create (DOUBLE-CLICKED - NOW IN EDIT MODE)');
         console.log('├─ Event data:', e);
         console.log('├─ e.feature:', e.feature);
+
+        // Defensive guard: some cancel flows can still emit draw:create afterwards.
+        // Ignore those late events to avoid getting stuck in edit mode with hidden tools.
+        if (drawCancelled || !isDrawingMode) {
+          console.log('├─ Ignoring draw:create because drawing was cancelled or is no longer active');
+          if (drawCancelled) {
+            forceDeleteTransientBoundary();
+            resetAfterCancelledDraw();
+          }
+          return;
+        }
         
         // User has moved into edit mode (double-clicked to finish points)
         isDrawingMode = false;
@@ -724,6 +814,17 @@ window.MapInit = (function() {
       // This confirms the shape (whether initially drawn or edited), process and update UI
       map.on('draw:done', async function(e) {
         console.log('\n✅ draw:done | editing:', isEditingMode);
+
+        // Library can emit draw:done during cancel in some flows.
+        // If cancel intent was set, skip completion and force reset.
+        if (drawCancelled) {
+          console.log('├─ draw:done ignored because cancel intent is active');
+          forceDeleteTransientBoundary();
+          resetAfterCancelledDraw();
+          return;
+        }
+
+        drawCancelled = false;
         
         const wasEditingBeforeClear = isEditingMode;
         isDrawingMode = false;
@@ -769,20 +870,28 @@ window.MapInit = (function() {
         }
       });
 
-      // Handle draw:cancel - fired when user clicks the Cancel button
-      map.on('draw:cancel', async function(e) {
+      async function handleDrawCancel(e) {
         console.log('\n❌ EVENT: draw:cancel (CLICKED CANCEL BUTTON)');
         console.log('├─ Event data:', e);
         console.log('├─ Event originalFeature:', e?.originalFeature);
         console.log('├─ Currently stored feature:', feature?.id);
         console.log('├─ Was editing:', isEditingMode);
+        drawCancelled = true;
         
         // Exit drawing/editing modes
+        const wasDrawing = isDrawingMode;
         const wasEditing = isEditingMode;
         isDrawingMode = false;
         isEditingMode = false;
         editModeEnteredViaButton = false;
         console.log('├─ State: isDrawingMode=false, isEditingMode=false');
+
+        // Workaround for library bug: cancelling an in-progress draw can emit completion events.
+        // Remove transient geometry so the app cannot be left in hidden edit mode.
+        if (wasDrawing && !wasEditing) {
+          console.log('├─ Force deleting transient in-progress boundary');
+          forceDeleteTransientBoundary();
+        }
         
         // Hide hints panel
         console.log('├─ Hiding hints panel');
@@ -820,7 +929,16 @@ window.MapInit = (function() {
           window.updateDrawButtonStates();
           console.log('└─ ✅ Button states updated (UI reflects feature state)');
         }
-      });
+
+        // Run a one-tick hard reset to beat any late plugin state transition.
+        setTimeout(() => {
+          resetAfterCancelledDraw();
+        }, 0);
+      }
+
+      // Some library versions emit draw:cancel, others emit draw:cancelled.
+      map.on('draw:cancel', handleDrawCancel);
+      map.on('draw:cancelled', handleDrawCancel);
 
       // Handle draw:vertexselection - fired when user selects/hovers over a vertex
       // Can be used to show contextual help like "Press Delete to remove this point"
