@@ -339,6 +339,10 @@ window.MapInit = (function() {
 
     console.log('Creating InteractiveMap with map provider');
 
+    const englandCenterLng = window.MapInitialisation?.ENGLAND_CENTER_LNG ?? -1.5;
+    const englandCenterLat = window.MapInitialisation?.ENGLAND_CENTER_LAT ?? 52.5;
+    const englandDefaultZoom = window.MapInitialisation?.ENGLAND_DEFAULT_ZOOM ?? 6;
+
     let map;
     try {
       map = new defra.InteractiveMap('map', {
@@ -346,12 +350,11 @@ window.MapInit = (function() {
         mapLabel: 'Map showing UK',
         containerHeight: '100%',
         mapProvider: defra.maplibreProvider(),
-        // center: [-2.0, 54.0],  // Center of UK
-        // zoom: 6,
+        center: [englandCenterLng, englandCenterLat],
+        zoom: englandDefaultZoom,
         minZoom: 6,
         maxZoom: 20,
         autoColorScheme: true,
-        bounds: [-2.989707, 54.864555, -2.878635, 54.937635],
         enableZoomControls: true,
         plugins: [
           defra.mapStylesPlugin({
