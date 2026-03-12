@@ -94,6 +94,29 @@ window.MapInit = (function() {
     );
   }
 
+  function getDrawDeletePointButton() {
+    return document.querySelector('button[id$="draw-delete-point"]');
+  }
+
+  function triggerDeleteSelectedVertex() {
+    const deleteButton = getDrawDeletePointButton();
+    if (!deleteButton) {
+      return false;
+    }
+
+    const isDisabled =
+      deleteButton.disabled ||
+      deleteButton.getAttribute('aria-disabled') === 'true' ||
+      deleteButton.classList.contains('disabled');
+
+    if (isDisabled) {
+      return false;
+    }
+
+    deleteButton.click();
+    return true;
+  }
+
   function isDrawCancelButton(target) {
     if (!target || !target.closest) {
       return false;
@@ -187,6 +210,48 @@ window.MapInit = (function() {
     if (isDrawingMode || isEditingMode) {
       updateHintForCurrentState();
     }
+  }
+
+  function currentStyleSupportsSnap() {
+    if (!maplibreMap || !maplibreMap.getStyle) {
+      return true;
+    }
+
+    const style = maplibreMap.getStyle();
+    const layerIds = new Set((style?.layers || []).map((layer) => layer?.id).filter(Boolean));
+    const snapLayerList = Array.isArray(window.MapConfig?.snapLayers) ? window.MapConfig.snapLayers : [];
+
+    if (!snapLayerList.length) {
+      return false;
+    }
+
+    return snapLayerList.some((layerId) => layerIds.has(layerId));
+  }
+
+  function syncSnapButtonAvailability() {
+    const button = getDrawSnapButton();
+    if (!button) {
+      return;
+    }
+
+    const canSnap = currentStyleSupportsSnap();
+
+    button.disabled = !canSnap;
+    button.setAttribute('aria-disabled', canSnap ? 'false' : 'true');
+    button.style.pointerEvents = canSnap ? '' : 'none';
+    button.style.opacity = canSnap ? '' : '0.5';
+
+    if (!canSnap) {
+      button.setAttribute('title', 'Snap is unavailable for this map style');
+      if (snapModeActive && button.getAttribute('aria-pressed') === 'true') {
+        button.click();
+      }
+      snapModeActive = false;
+    } else {
+      button.removeAttribute('title');
+    }
+
+    updateHintForCurrentState();
   }
 
   // const DRAW_BUTTON_LABELS = {
@@ -315,10 +380,10 @@ window.MapInit = (function() {
 
     console.log('Snap layers config:', config.snapLayers);
 
-    // Create draw plugin with snap layers
-    drawPlugin = defra.drawMLPlugin({
-      snapLayers: config.snapLayers
-    });
+    // Create draw plugin WITHOUT initializing snapLayers yet
+    // (they're passed dynamically on each newPolygon/editFeature call instead)
+    // This allows snapping to work regardless of initial style
+    drawPlugin = defra.drawMLPlugin({});
 
     // Create interact plugin (for layer interactions)
     interactPlugin = defra.interactPlugin({
@@ -383,6 +448,12 @@ window.MapInit = (function() {
         console.log('Map ready');
         maplibreMap = e?.map || maplibreMap;
 
+        if (maplibreMap && maplibreMap.on) {
+          maplibreMap.on('style.load', function() {
+            setTimeout(syncSnapButtonAvailability, 0);
+          });
+        }
+
         // Initialize layer controls now that map is ready
         if (window.LayerControls && window.LayerControls.init && maplibreMap) {
           window.LayerControls.init(maplibreMap);
@@ -406,32 +477,6 @@ window.MapInit = (function() {
       // App ready event - add buttons and panels
       map.on('app:ready', function(e) {
         console.log('App ready - adding buttons and panels');
-
-        // Add "How to use" panel + button - slot: top-left, same as mapStylesPlugin
-        var instructionsSource = document.getElementById('how-to-use-content-source');
-        var instructionsHtml = instructionsSource ? instructionsSource.innerHTML : '';
-        map.addPanel('how-to-use', {
-          label: 'How to use the map',
-          mobile: { slot: 'bottom-left', modal: true, dismissable: true,initiallyOpen: false },
-          tablet: { slot: 'inset', modal: false, width: '400px', dismissable: true, initiallyOpen: false },
-          desktop: { slot: 'inset', modal: false, width: '400px', dismissable: true, initiallyOpen: false },
-          render: function() {
-            var h = window.preactCompat && window.preactCompat.createElement;
-            if (!h) return null;
-            return h('div', {
-              style: { padding: '16px', maxHeight: '50vh', overflowY: 'auto' },
-              dangerouslySetInnerHTML: { __html: instructionsHtml }
-            });
-          }
-        });
-        map.addButton('how-to-use', {
-          label: 'How to use',
-          panelId: 'how-to-use',
-          iconSvgContent: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/>',
-          mobile: { slot: 'top-left', order: 2 },
-          tablet: { slot: 'top-left', order: 2, showLabel: true },
-          desktop: { slot: 'top-left', order: 2, showLabel: true }
-        });
 
         // Filters panel + button — library panel for all breakpoints.
         // render() reads current LayerControls state so checkboxes reflect the live toggle state
@@ -527,11 +572,30 @@ window.MapInit = (function() {
         }, true);
 
         // Escape key also cancels draw/edit in the library toolbar.
+        // Backspace/Delete both run the same delete-point action as the toolbar button.
         document.addEventListener('keydown', function(e) {
           if (e.key === 'Escape') {
             drawCancelled = true;
+            return;
+          }
+
+          const isTypingTarget = e.target && (
+            e.target.tagName === 'INPUT' ||
+            e.target.tagName === 'TEXTAREA' ||
+            e.target.isContentEditable
+          );
+
+          const isDeleteKey = e.key === 'Delete' || e.key === 'Backspace';
+          if (!isTypingTarget && (isDrawingMode || isEditingMode) && isDeleteKey) {
+            const deleted = triggerDeleteSelectedVertex();
+            if (deleted || e.key === 'Backspace') {
+              e.preventDefault();
+              e.stopPropagation();
+            }
           }
         }, true);
+
+        setTimeout(syncSnapButtonAvailability, 0);
 
         // Initialize button states
         function updateButtonStates() {
@@ -586,6 +650,7 @@ window.MapInit = (function() {
             // Show initial hint
             updateHintForState('no-points');
             syncSnapModeFromButton();
+            syncSnapButtonAvailability();
             
             if (mapStatsReady && window.MapStats && window.MapStats.handleDrawStart) {
               window.MapStats.handleDrawStart();
@@ -630,6 +695,7 @@ window.MapInit = (function() {
               setTimeout(() => {
                 updateHintForState('edit-mode');
                 syncSnapModeFromButton();
+                syncSnapButtonAvailability();
               }, 0);
               // setTimeout(updateDrawToolbarLabels, 0);
             }
