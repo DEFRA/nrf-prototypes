@@ -8,6 +8,32 @@ window.MapConfig = (function() {
   const assetPath = '/public/images/interactive-map';
   const logoAltText = 'Ordnance Survey logo';
   const COMPANY_SYMBOL_CODE = 169;
+  const STYLE_COLOR_THEME = {
+    'esri-tiles': {
+      gcnEdp: '#F47738',
+      catchments: '#FD0',
+      draw: '#FFF',
+      committed: '#FFF'
+    },
+    outdoorOS: {
+      gcnEdp: '#912B88',
+      catchments: '#F47738',
+      draw: '#AA2A16',
+      committed: '#AA2A16'
+    },
+    dark: {
+      gcnEdp: '#F9E1EC',
+      catchments: '#BBD4EA',
+      draw: '#FFDD00',
+      committed: '#FFDD00'
+    },
+    'black-and-white': {
+      gcnEdp: '#912B88',
+      catchments: '#F47738',
+      draw: '#AA2A16',
+      committed: '#AA2A16'
+    }
+  };
 
   // API URLs for VTS data (served via /api/maps/vts/ route)
   const defaultData = {
@@ -81,6 +107,50 @@ window.MapConfig = (function() {
     // }
   ];
 
+  function normaliseHex(hex) {
+    if (typeof hex !== 'string') {
+      return '#000000';
+    }
+
+    let value = hex.trim().replace(/^#/, '');
+
+    if (value.length === 3) {
+      value = value.split('').map((char) => char + char).join('');
+    }
+
+    if (!/^[0-9a-fA-F]{6}$/.test(value)) {
+      return '#000000';
+    }
+
+    return `#${value.toUpperCase()}`;
+  }
+
+  function hexToRgba(hex, opacity) {
+    const normalisedHex = normaliseHex(hex).slice(1);
+    const red = parseInt(normalisedHex.slice(0, 2), 16);
+    const green = parseInt(normalisedHex.slice(2, 4), 16);
+    const blue = parseInt(normalisedHex.slice(4, 6), 16);
+
+    return `rgba(${red}, ${green}, ${blue}, ${opacity})`;
+  }
+
+  function getStyleTheme(styleId) {
+    return STYLE_COLOR_THEME[styleId] || STYLE_COLOR_THEME[mapStyles[0].id];
+  }
+
+  function getStyleLayerColor(styleId, colorKey) {
+    const theme = getStyleTheme(styleId);
+    return theme?.[colorKey] || '#000000';
+  }
+
+  function buildStyleColorMap(colorKey, opacity) {
+    return Object.keys(STYLE_COLOR_THEME).reduce((accumulator, styleId) => {
+      const color = getStyleLayerColor(styleId, colorKey);
+      accumulator[styleId] = typeof opacity === 'number' ? hexToRgba(color, opacity) : color;
+      return accumulator;
+    }, {});
+  }
+
   // Dataset configurations for vector tile layers
   const datasets = [
     {
@@ -88,9 +158,9 @@ window.MapConfig = (function() {
       label: 'Nature Restoration Fund great crested newt levy',
       tiles: [`${window.location.origin}/tiles/data/gcn_edp_all_regions/{z}/{x}/{y}.pbf`],
       sourceLayer: 'gcn_edp_all_regions',
-      stroke: '#f47738',
+      stroke: buildStyleColorMap('gcnEdp'),
       strokeWidth: 2,
-      fill: 'rgba(244, 119, 56, 0.1)',
+      fill: buildStyleColorMap('gcnEdp', 0.15),
       symbolDescription: { outdoor: 'Orange outline' },
       minZoom: 0,
       maxZoom: 12,
@@ -103,9 +173,9 @@ window.MapConfig = (function() {
       label: 'Nature Restoration Fund nutrients levy areas',
       tiles: [`${window.location.origin}/tiles/data/catchments_nn_catchments_03_2024/{z}/{x}/{y}.pbf`],
       sourceLayer: 'catchments_nn_catchments_03_2024',
-      stroke: '#0000ff',
+      stroke: buildStyleColorMap('catchments'),
       strokeWidth: 2,
-      fill: 'rgba(0, 0, 255, 0.1)',
+      fill: buildStyleColorMap('catchments', 0.15),
       symbolDescription: { outdoor: 'Blue outline' },
       minZoom: 0,
       maxZoom: 10,
@@ -161,6 +231,11 @@ window.MapConfig = (function() {
     assetPath,
     logoAltText,
     COMPANY_SYMBOL_CODE,
+    STYLE_COLOR_THEME,
+    hexToRgba,
+    getStyleTheme,
+    getStyleLayerColor,
+    buildStyleColorMap,
     snapLayers,
     mapStyles,
     datasets,
