@@ -20,7 +20,14 @@ window.MapInit = (function() {
   let justCompletedDrawing = false; // Track if we just finished drawing (not confirming)
   let latestUpdateFeature = null; // Track the latest feature from draw:update events
   let drawCancelled = false; // Guard against late draw:create events after cancel
+  let currentMapStyleId = null;
   const INITIAL_IDLE_HINT = 'Select Draw to begin drawing your red line boundary.';
+  const DATASET_COLOR_KEYS = {
+    'gcn-edp': 'gcnEdp',
+    catchments: 'catchments'
+  };
+  const DRAW_FILL_OPACITY = 0.15;
+  const COMMITTED_FILL_OPACITY = 0.15;
 
   // Drawing hints panel helper functions
   function showDrawingHint(message, snapHint) {
@@ -266,6 +273,205 @@ window.MapInit = (function() {
     return request;
   }
 
+  function getCurrentStyleId(config) {
+    return currentMapStyleId || config?.mapStyles?.[0]?.id || 'esri-tiles';
+  }
+
+  function getDrawOptions(config) {
+    return {
+      stroke: config.buildStyleColorMap('draw'),
+      fill: config.buildStyleColorMap('draw', DRAW_FILL_OPACITY),
+      strokeWidth: 2
+    };
+  }
+
+  function getCommittedOptions(config) {
+    return {
+      stroke: config.buildStyleColorMap('committed'),
+      fill: config.buildStyleColorMap('committed', COMMITTED_FILL_OPACITY),
+      strokeWidth: 2
+    };
+  }
+
+  function getDrawInstance() {
+    return window.interactiveMapInstance?.mapProvider?.draw || null;
+  }
+
+  function getStyleVariantSuffix(styleId) {
+    return styleId.charAt(0).toUpperCase() + styleId.slice(1);
+  }
+
+  function setBoundaryFeatureStyle(config, styleId, colorKey, fillOpacity) {
+    const drawInstance = getDrawInstance();
+
+    if (!drawInstance || !feature?.id) {
+      return;
+    }
+
+    const activeStroke = config.getStyleLayerColor(styleId, colorKey);
+    const activeFill = config.hexToRgba(activeStroke, fillOpacity);
+
+    drawInstance.setFeatureProperty(feature.id, 'user_stroke', activeStroke);
+    drawInstance.setFeatureProperty(feature.id, 'user_fill', activeFill);
+    drawInstance.setFeatureProperty(feature.id, 'user_strokeWidth', 2);
+
+    (config.mapStyles || []).forEach(function(styleDefinition) {
+      const mapStyleId = styleDefinition.id;
+      const suffix = getStyleVariantSuffix(mapStyleId);
+      const stroke = config.getStyleLayerColor(mapStyleId, colorKey);
+      const fill = config.hexToRgba(stroke, fillOpacity);
+
+      drawInstance.setFeatureProperty(feature.id, `user_stroke${suffix}`, stroke);
+      drawInstance.setFeatureProperty(feature.id, `user_fill${suffix}`, fill);
+      drawInstance.setFeatureProperty(feature.id, `user_strokeWidth${suffix}`, 2);
+    });
+  }
+
+  function inferStyleIdFromMap(config) {
+    if (!maplibreMap || !maplibreMap.getStyle) {
+      return null;
+    }
+
+    const style = maplibreMap.getStyle();
+    if (!style) {
+      return null;
+    }
+
+    const sourceUrls = Object.values(style.sources || {}).map(function(source) {
+      if (typeof source.url === 'string') {
+        return source.url;
+      }
+      if (Array.isArray(source.tiles)) {
+        return source.tiles.join(' ');
+      }
+      return '';
+    }).join(' ');
+
+    const styleSignature = [style.name || '', style.sprite || '', style.glyphs || '', sourceUrls]
+      .join(' ')
+      .toLowerCase();
+
+    const matchingStyle = (config.mapStyles || []).find(function(styleDefinition) {
+      return styleDefinition.url && styleSignature.includes(styleDefinition.url.toLowerCase());
+    });
+
+    return matchingStyle ? matchingStyle.id : null;
+  }
+
+  function applyActiveDrawTheme(config, styleId) {
+    if (!maplibreMap) {
+      return;
+    }
+
+    const drawColor = config.getStyleLayerColor(styleId, 'draw');
+    const activeFill = config.hexToRgba(drawColor, DRAW_FILL_OPACITY);
+    const paintUpdates = [
+      { layerId: 'fill-active.cold', property: 'fill-color', value: activeFill },
+      { layerId: 'fill-active.hot', property: 'fill-color', value: activeFill },
+      { layerId: 'fill-active.cold', property: 'fill-opacity', value: 1 },
+      { layerId: 'fill-active.hot', property: 'fill-opacity', value: 1 },
+      { layerId: 'stroke-active.cold', property: 'line-color', value: drawColor },
+      { layerId: 'stroke-active.hot', property: 'line-color', value: drawColor },
+      { layerId: 'stroke-preview-line.cold', property: 'line-color', value: drawColor },
+      { layerId: 'stroke-preview-line.hot', property: 'line-color', value: drawColor },
+      { layerId: 'vertex.cold', property: 'circle-color', value: drawColor },
+      { layerId: 'vertex.hot', property: 'circle-color', value: drawColor },
+      { layerId: 'vertex-active.cold', property: 'circle-color', value: drawColor },
+      { layerId: 'vertex-active.hot', property: 'circle-color', value: drawColor },
+      { layerId: 'midpoint.cold', property: 'circle-color', value: drawColor },
+      { layerId: 'midpoint.hot', property: 'circle-color', value: drawColor },
+      { layerId: 'midpoint-active.cold', property: 'circle-color', value: drawColor },
+      { layerId: 'midpoint-active.hot', property: 'circle-color', value: drawColor },
+      { layerId: 'circle.cold', property: 'line-color', value: drawColor },
+      { layerId: 'circle.hot', property: 'line-color', value: drawColor },
+      { layerId: 'stroke-valid-splitter.cold', property: 'line-color', value: drawColor },
+      { layerId: 'stroke-valid-splitter.hot', property: 'line-color', value: drawColor },
+      { layerId: 'stroke-invalid-splitter.cold', property: 'line-color', value: drawColor },
+      { layerId: 'stroke-invalid-splitter.hot', property: 'line-color', value: drawColor }
+    ];
+
+    paintUpdates.forEach(function(update) {
+      if (maplibreMap.getLayer(update.layerId)) {
+        maplibreMap.setPaintProperty(update.layerId, update.property, update.value);
+      }
+    });
+  }
+
+  function applyCommittedLayerTheme(config, styleId) {
+    if (!maplibreMap) {
+      return;
+    }
+
+    const committedColor = config.getStyleLayerColor(styleId, 'committed');
+    const committedFill = config.hexToRgba(committedColor, COMMITTED_FILL_OPACITY);
+    const paintUpdates = [
+      { layerId: 'fill-inactive.cold', property: 'fill-color', value: committedFill },
+      { layerId: 'fill-inactive.hot', property: 'fill-color', value: committedFill },
+      { layerId: 'fill-inactive.cold', property: 'fill-opacity', value: 1 },
+      { layerId: 'fill-inactive.hot', property: 'fill-opacity', value: 1 },
+      { layerId: 'stroke-inactive.cold', property: 'line-color', value: committedColor },
+      { layerId: 'stroke-inactive.hot', property: 'line-color', value: committedColor }
+    ];
+
+    paintUpdates.forEach(function(update) {
+      if (maplibreMap.getLayer(update.layerId)) {
+        maplibreMap.setPaintProperty(update.layerId, update.property, update.value);
+      }
+    });
+  }
+
+  function updateFiltersPanelSwatches(config, styleId) {
+    Object.keys(DATASET_COLOR_KEYS).forEach(function(datasetId) {
+      const swatch = document.getElementById(`layer-key-${datasetId}-swatch`);
+      if (swatch) {
+        swatch.style.backgroundColor = config.getStyleLayerColor(styleId, DATASET_COLOR_KEYS[datasetId]);
+      }
+    });
+  }
+
+  function refreshStyleAwareMapColours(config, styleId) {
+    currentMapStyleId = styleId || getCurrentStyleId(config);
+
+    updateFiltersPanelSwatches(config, currentMapStyleId);
+    applyActiveDrawTheme(config, currentMapStyleId);
+    applyCommittedLayerTheme(config, currentMapStyleId);
+
+    if (!feature) {
+      if (window.ZoomAesthetics && window.ZoomAesthetics.setStyleId) {
+        window.ZoomAesthetics.setStyleId(currentMapStyleId);
+      }
+      return;
+    }
+
+    if (isDrawingMode || isEditingMode) {
+      setBoundaryFeatureStyle(config, currentMapStyleId, 'draw', DRAW_FILL_OPACITY);
+    } else {
+      setBoundaryFeatureStyle(config, currentMapStyleId, 'committed', COMMITTED_FILL_OPACITY);
+    }
+
+    if (window.ZoomAesthetics && window.ZoomAesthetics.setStyleId) {
+      window.ZoomAesthetics.setStyleId(currentMapStyleId);
+    }
+  }
+
+  function refreshStyleAwareMapColoursAfterStyleSwap(config, styleId) {
+    // Apply immediately for visual responsiveness.
+    refreshStyleAwareMapColours(config, styleId);
+
+    // The draw-ml plugin listens on the same map:setstyle event and does
+    // map.once('idle', () => updateDrawStyles(...)) — which resets all draw
+    // layer colours back to defaults when the map goes idle.
+    // By using setTimeout(0) to defer our own once('idle') registration, we
+    // queue behind the plugin's idle listener, so: plugin resets → we re-apply.
+    setTimeout(function() {
+      if (maplibreMap) {
+        maplibreMap.once('idle', function() {
+          refreshStyleAwareMapColours(config, styleId);
+        });
+      }
+    }, 0);
+  }
+
   function getPolygonBounds(coordinates) {
     let minX = Infinity;
     let minY = Infinity;
@@ -377,6 +583,7 @@ window.MapInit = (function() {
     const config = window.MapConfig;
     const utils = window.MapUtils;
     const menuHelper = window.MapMenu;
+    currentMapStyleId = config.mapStyles?.[0]?.id || 'esri-tiles';
 
     console.log('Snap layers config:', config.snapLayers);
 
@@ -447,9 +654,12 @@ window.MapInit = (function() {
       map.on('map:ready', function(e) {
         console.log('Map ready');
         maplibreMap = e?.map || maplibreMap;
+        refreshStyleAwareMapColours(config, currentMapStyleId);
 
         if (maplibreMap && maplibreMap.on) {
           maplibreMap.on('style.load', function() {
+            const inferredStyleId = inferStyleIdFromMap(config);
+            refreshStyleAwareMapColoursAfterStyleSwap(config, inferredStyleId || currentMapStyleId);
             setTimeout(syncSnapButtonAvailability, 0);
           });
         }
@@ -492,6 +702,9 @@ window.MapInit = (function() {
             var lc = window.LayerControls;
             var gcnChecked    = !lc || lc.getLayerVisibility('gcn-edp')    !== 'none';
             var catchChecked  = !lc || lc.getLayerVisibility('catchments') !== 'none';
+            var activeStyleId = getCurrentStyleId(config);
+            var gcnColor = config.getStyleLayerColor(activeStyleId, 'gcnEdp');
+            var catchmentsColor = config.getStyleLayerColor(activeStyleId, 'catchments');
             var html =
               '<style>' +
               '.edp-layer-item{margin-bottom:10px}' +
@@ -503,14 +716,14 @@ window.MapInit = (function() {
               '<input class="govuk-checkboxes__input" id="layer-gcn-edp" name="layer-gcn-edp"' +
               ' type="checkbox" value="gcn-edp"' + (gcnChecked ? ' checked' : '') + '>' +
               '<label class="govuk-label govuk-checkboxes__label" for="layer-gcn-edp">' +
-              '<span class="edp-layer-color" style="background-color:#f47738"></span>' +
+              '<span id="layer-key-gcn-edp-swatch" class="edp-layer-color" style="background-color:' + gcnColor + '"></span>' +
               ' Nature Restoration Fund great crested newt levy' +
               '</label></div>' +
               '<div class="govuk-checkboxes__item edp-layer-item">' +
               '<input class="govuk-checkboxes__input" id="layer-catchments" name="layer-catchments"' +
               ' type="checkbox" value="catchments"' + (catchChecked ? ' checked' : '') + '>' +
               '<label class="govuk-label govuk-checkboxes__label" for="layer-catchments">' +
-              '<span class="edp-layer-color" style="background-color:#0000ff"></span>' +
+              '<span id="layer-key-catchments-swatch" class="edp-layer-color" style="background-color:' + catchmentsColor + '"></span>' +
               ' Nature Restoration Fund nutrients levy areas' +
               '</label></div>' +
               '</div>';
@@ -557,6 +770,17 @@ window.MapInit = (function() {
 
         // Note: Drawing hints panel is now managed via HTML/CSS in the template
         // See drawing-hints-panel element in map.html
+        refreshStyleAwareMapColours(config, currentMapStyleId);
+      });
+
+      map.on('map:stylechange', function(e) {
+        const nextStyleId = e?.mapStyleId || currentMapStyleId;
+        refreshStyleAwareMapColoursAfterStyleSwap(config, nextStyleId);
+      });
+
+      map.on('map:setstyle', function(e) {
+        const nextStyleId = e?.id || currentMapStyleId;
+        refreshStyleAwareMapColoursAfterStyleSwap(config, nextStyleId);
       });
 
       // Draw ready event
@@ -621,12 +845,13 @@ window.MapInit = (function() {
         // Add a feature if provided (from session data)
         if (window.INITIAL_BOUNDARY_FEATURE) {
           feature = window.INITIAL_BOUNDARY_FEATURE;
-          drawPlugin.addFeature(feature);
+          drawPlugin.addFeature(feature, getCommittedOptions(config));
           updateButtonStates();
           if (mapStatsReady && window.MapStats && window.MapStats.handlePolygonComplete) {
             window.MapStats.handlePolygonComplete(feature);
           }
           updateIntersectionsForFeature(feature);
+          refreshStyleAwareMapColours(config, getCurrentStyleId(config));
         }
 
         // Show initial non-draw guidance when the page first loads.
@@ -655,7 +880,8 @@ window.MapInit = (function() {
             if (mapStatsReady && window.MapStats && window.MapStats.handleDrawStart) {
               window.MapStats.handleDrawStart();
             }
-            drawPlugin.newPolygon('boundary', { snapLayers: config.snapLayers });
+            drawPlugin.newPolygon('boundary', Object.assign({ snapLayers: config.snapLayers }, getDrawOptions(config)));
+            refreshStyleAwareMapColours(config, getCurrentStyleId(config));
             
             // Update hint after each point is placed
             if (maplibreMap && maplibreMap.on) {
@@ -690,6 +916,7 @@ window.MapInit = (function() {
               }
               
               drawPlugin.editFeature('boundary', { snapLayers: config.snapLayers });
+              refreshStyleAwareMapColours(config, getCurrentStyleId(config));
               
               // Show edit mode hint after edit starts (ensures intersections are hidden first)
               setTimeout(() => {
@@ -776,6 +1003,8 @@ window.MapInit = (function() {
           console.log('├─ Calling handlePolygonComplete');
           window.MapStats.handlePolygonComplete(feature);
         }
+
+        refreshStyleAwareMapColours(config, getCurrentStyleId(config));
         
         // Show the boundary panel now that drawing/editing is confirmed and data is ready
         const statsPanel = document.getElementById('map-stats-panel');
@@ -923,6 +1152,7 @@ window.MapInit = (function() {
         if (feature) {
           console.log('├─ Final feature coords:', feature?.geometry?.coordinates?.[0]?.length);
           await updateIntersectionsForFeature(feature);
+          refreshStyleAwareMapColours(config, getCurrentStyleId(config));
           
           if (mapStatsReady && window.MapStats && window.MapStats.handlePolygonComplete) {
             window.MapStats.handlePolygonComplete(feature);
@@ -983,6 +1213,7 @@ window.MapInit = (function() {
           console.log('├─ Processing intersections...');
           await updateIntersectionsForFeature(feature);
           console.log('├─ ✅ Intersections processed');
+          refreshStyleAwareMapColours(config, getCurrentStyleId(config));
           
           if (mapStatsReady && window.MapStats && window.MapStats.handlePolygonComplete) {
             console.log('├─ Calling handlePolygonComplete');

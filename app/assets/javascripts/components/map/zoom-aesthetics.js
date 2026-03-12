@@ -28,20 +28,21 @@ window.ZoomAesthetics = (function () {
       id: 'gcn-edp',
       fillLayerId: 'gcn-edp',
       queryLayerIds: ['gcn-edp', 'gcn-edp-fill', 'gcn-edp-border', 'gcn-edp-line', 'gcn-edp-stroke'],
-      color: '#f47738',
+      colorKey: 'gcnEdp',
       label: 'Nature Restoration Fund great crested newt levy'
     },
     {
       id: 'catchments',
       fillLayerId: 'catchments',
       queryLayerIds: ['catchments', 'catchments-fill', 'catchments-border', 'catchments-line', 'catchments-stroke'],
-      color: '#0000ff',
+      colorKey: 'catchments',
       label: 'Nature Restoration Fund nutrients levy'
     }
   ];
 
   var maplibreMap = null;
   var mapEl = null;
+  var currentStyleId = null;
 
   // Stores the original fill-opacity for each dataset, read once at init.
   var originalOpacity = {};
@@ -53,6 +54,7 @@ window.ZoomAesthetics = (function () {
   function init(map, mapElement) {
     maplibreMap = map;
     mapEl = mapElement || document.getElementById('map');
+    currentStyleId = window.MapConfig?.mapStyles?.[0]?.id || 'esri-tiles';
 
     if (!maplibreMap) {
       console.warn('[ZoomAesthetics] No MapLibre map instance provided');
@@ -82,6 +84,15 @@ window.ZoomAesthetics = (function () {
     });
 
     console.log('[ZoomAesthetics] Initialized (fill threshold: zoom ' + ZOOM_THRESHOLD + ')');
+  }
+
+  function getDatasetColor(dataset) {
+    return window.MapConfig?.getStyleLayerColor(currentStyleId, dataset.colorKey) || '#1d70b8';
+  }
+
+  function setStyleId(styleId) {
+    currentStyleId = styleId || currentStyleId;
+    scheduleBorderUpdate();
   }
 
   // ------------------------------------------------------------------
@@ -170,7 +181,7 @@ window.ZoomAesthetics = (function () {
 
     // Border colour: first matched dataset takes priority (gcn-edp listed first).
     // When in multiple areas use GDS blue as a neutral indicator.
-    var borderColor = matched.length === 1 ? matched[0].color : '#1d70b8';
+    var borderColor = matched.length === 1 ? getDatasetColor(matched[0]) : '#1d70b8';
     var borderLabel = matched.length === 1
       ? 'Area: ' + matched[0].label
       : 'Area: There are ' + matched.length + ' Nature Restoration Fund levies in this area.';
@@ -254,6 +265,7 @@ window.ZoomAesthetics = (function () {
   // ------------------------------------------------------------------
 
   return {
-    init: init
+    init: init,
+    setStyleId: setStyleId
   };
 })();
