@@ -357,6 +357,7 @@ window.MapInit = (function() {
   function initMap() {
     // Get the global defra namespace from the UMD bundles
     const defra = window.defra;
+    const basicMode = true;
 
     console.log('Initializing new interactive map');
     console.log('window.defra:', window.defra);
@@ -374,33 +375,14 @@ window.MapInit = (function() {
     }
 
     // Get configuration
-    const config = window.MapConfig;
-    const utils = window.MapUtils;
-    const menuHelper = window.MapMenu;
+    const config = window.MapConfig || {
+      mapStyles: [],
+      defaultData: {},
+      datasets: [],
+      snapLayers: []
+    };
 
-    console.log('Snap layers config:', config.snapLayers);
-
-    // Create draw plugin WITHOUT initializing snapLayers yet
-    // (they're passed dynamically on each newPolygon/editFeature call instead)
-    // This allows snapping to work regardless of initial style
-    drawPlugin = defra.drawMLPlugin({});
-
-    // Create interact plugin (for layer interactions)
-    interactPlugin = defra.interactPlugin({
-      dataLayers: [
-        {
-          layerId: 'fill-inactive.cold',
-          idProperty: 'id'
-        },
-        {
-          layerId: 'stroke-inactive.cold',
-          idProperty: 'id'
-        }
-      ],
-      interactionMode: 'select',
-      multiSelect: true,
-      contiguous: true
-    });
+    console.log('Snap layers config:', config.snapLayers || []);
 
     console.log('Creating InteractiveMap with map provider');
 
@@ -428,18 +410,6 @@ window.MapInit = (function() {
           defra.scaleBarPlugin({
             units: 'metric'
           }),
-          interactPlugin,
-          defra.searchPlugin({
-            transformRequest: transformGeocodeRequest,
-            osNamesURL: config.defaultData.OS_NAMES_URL,
-            width: '300px',
-            showMarker: false,
-            isExpanded:true
-          }),
-          defra.datasetsPlugin({
-            datasets: config.datasets
-          }),
-          drawPlugin
         ]
       });
 
@@ -473,6 +443,14 @@ window.MapInit = (function() {
           mapStatsReady = !!document.querySelector('.map-stats-panel');
         }
       });
+
+      window.interactiveMapInstance = map;
+      window.currentBoundaryFeature = feature;
+
+      if (basicMode) {
+        console.log('Basic map mode enabled - skipping custom panels, datasets and drawing setup');
+        return map;
+      }
 
       // App ready event - add buttons and panels
       map.on('app:ready', function(e) {
@@ -1094,3 +1072,5 @@ window.MapInit = (function() {
     initMap
   };
 })();
+
+export const initMap = window.MapInit.initMap;

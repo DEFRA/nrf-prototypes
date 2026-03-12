@@ -8,14 +8,7 @@ Draw a red line boundary - Get a quote for Nature Restoration Fund levy - GOV.UK
 
 {% block head %}
 {{ super() }}
-<!-- @defra/interactive-map CSS - core and all plugin styles -->
-<link rel="stylesheet" href="/public/stylesheets/vendor/interactive-map/index.css" />
-<link rel="stylesheet" href="/public/stylesheets/vendor/interactive-map/search.css" />
-<link rel="stylesheet" href="/public/stylesheets/vendor/interactive-map/interact.css" />
-<link rel="stylesheet" href="/public/stylesheets/vendor/interactive-map/map-styles-plugin.css" />
-<link rel="stylesheet" href="/public/stylesheets/vendor/interactive-map/scale-bar-plugin.css" />
-<link rel="stylesheet" href="/public/stylesheets/vendor/interactive-map/draw-ml.css" />
-<link rel="stylesheet" href="/public/stylesheets/vendor/interactive-map/datasets-plugin.css" />
+<link rel="stylesheet" href="/public/build/interactive-map.css" />
 <style>
     body, html {
         overflow: hidden !important;
@@ -510,53 +503,6 @@ Draw a red line boundary - Get a quote for Nature Restoration Fund levy - GOV.UK
 
 </div>
 
-<!-- @defra/interactive-map UMD bundles - load in dependency order -->
-<!-- Core -->
-<script src="/public/javascripts/vendor/interactive-map/im-core.js"></script>
-<script src="/public/javascripts/vendor/interactive-map/interactive-map.umd.js"></script>
-<script>console.log('After core:', Object.keys(window.defra || {}));</script>
-
-<!-- MapLibre provider -->
-<script src="/public/javascripts/vendor/interactive-map/im-maplibre-framework.js"></script>
-<script src="/public/javascripts/vendor/interactive-map/im-maplibre-provider.js"></script>
-<script src="/public/javascripts/vendor/interactive-map/maplibre-provider.umd.js"></script>
-<script>console.log('After maplibre provider:', Object.keys(window.defra || {}));</script>
-
-<!-- Map Styles Plugin -->
-<script src="/public/javascripts/vendor/interactive-map/im-map-styles-plugin.js"></script>
-<script src="/public/javascripts/vendor/interactive-map/map-styles-plugin.umd.js"></script>
-
-<!-- Scale Bar Plugin -->
-<script src="/public/javascripts/vendor/interactive-map/im-scale-bar-plugin.js"></script>
-<script src="/public/javascripts/vendor/interactive-map/scale-bar-plugin.umd.js"></script>
-
-<!-- Interact Plugin -->
-<script src="/public/javascripts/vendor/interactive-map/im-interact-plugin.js"></script>
-<script src="/public/javascripts/vendor/interactive-map/interact-plugin.umd.js"></script>
-
-<!-- Search Plugin -->
-<script src="/public/javascripts/vendor/interactive-map/im-search-plugin.js"></script>
-<script src="/public/javascripts/vendor/interactive-map/search-plugin.umd.js"></script>
-
-<!-- Draw ML Plugin -->
-<script src="/public/javascripts/vendor/interactive-map/im-draw-ml-plugin.js"></script>
-<script src="/public/javascripts/vendor/interactive-map/draw-ml-plugin.umd.js"></script>
-
-<!-- Datasets Plugin -->
-<script src="/public/javascripts/vendor/interactive-map/im-datasets-plugin.js"></script>
-<script src="/public/javascripts/vendor/interactive-map/datasets-plugin.umd.js"></script>
-
-<!-- Open Names Provider (for reverse geocoding) -->
-<script src="/public/javascripts/vendor/interactive-map/im-reverse-geocode.js"></script>
-<script src="/public/javascripts/vendor/interactive-map/open-names-provider.umd.js"></script>
-
-<script>console.log('After all plugins:', Object.keys(window.defra || {}));</script>
-
-<!-- Turf.js + stats panel -->
-<script src="/public/javascripts/vendor/turf.min.js"></script>
-<script src="/public/javascripts/components/map/map-stats.js"></script>
-<script src="/public/javascripts/map-api.js"></script>
-
 <script>
     // Set the catchment GeoJSON endpoint for this journey
     window.CATCHMENTS_GEOJSON_URL = '/nrf-estimate-5/catchments.geojson';
@@ -566,25 +512,5 @@ Draw a red line boundary - Get a quote for Nature Restoration Fund levy - GOV.UK
     window.INITIAL_BOUNDARY_FEATURE = null; // TODO: populate from session data
 </script>
 
-<!-- New map component modules -->
-<script src="/public/javascripts/components/map/config.js"></script>
-<script src="/public/javascripts/components/map/utils.js"></script>
-<script src="/public/javascripts/components/map/menu.js"></script>
-<script src="/public/javascripts/components/map/layer-controls.js"></script>
-<script src="/public/javascripts/components/map/zoom-aesthetics.js"></script>
-<script src="/public/javascripts/components/map/init.js"></script>
-
-<script>
-  // Initialize the new interactive map - use window.onload to ensure everything is ready
-  window.addEventListener('load', function() {
-    console.log('Window loaded, checking for map element...');
-    const mapEl = document.getElementById('map');
-    console.log('Map element:', mapEl);
-    if (mapEl) {
-    window.MapInit.initMap();
-    } else {
-      console.error('Map element #map not found in DOM');
-    }
-  });
-</script>
+<script src="/public/build/interactive-map.js"></script>
 {% endblock %}

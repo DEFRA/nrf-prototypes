@@ -5,9 +5,14 @@
   "author": "Defra DDTS",
   "license": "(OGL-UK-3, MIT) see licenses in /LICENSES",
   "scripts": {
-    "dev": "govuk-prototype-kit dev",
-    "serve": "govuk-prototype-kit serve",
-    "start": "govuk-prototype-kit start",
+    "dev": "run-p map:watch prototype:dev",
+    "serve": "run-s map:build prototype:serve",
+    "start": "run-s map:build prototype:start",
+    "prototype:dev": "govuk-prototype-kit dev",
+    "prototype:serve": "govuk-prototype-kit serve",
+    "prototype:start": "govuk-prototype-kit start",
+    "map:build": "esbuild app/assets/javascripts/components/map/entries/map-page.js --bundle --format=iife --platform=browser --target=es2020 --sourcemap --outfile=app/assets/build/interactive-map.js",
+    "map:watch": "esbuild app/assets/javascripts/components/map/entries/map-page.js --bundle --format=iife --platform=browser --target=es2020 --sourcemap --watch --outfile=app/assets/build/interactive-map.js",
     "format": "prettier --write \"**/*.{cjs,js,json,md,scss}\"",
     "format:check": "prettier --check \"**/*.{cjs,js,json,md,scss}\"",
     "screenshot": "node scripts/screenshot-capture.js",
@@ -22,7 +27,7 @@
     "*.{cjs,js,json,md}": "prettier --check"
   },
   "dependencies": {
-    "@defra/interactive-map": "^0.0.10-alpha",
+    "@defra/interactive-map": "0.0.15-alpha",
     "@govuk-prototype-kit/common-templates": "2.0.1",
     "@turf/turf": "7.3.0",
     "axios": "^1.6.0",
@@ -32,14 +37,17 @@
     "dotenv": "17.2.1",
     "govuk-frontend": "5.11.1",
     "govuk-prototype-kit": "13.17.0",
+    "maplibre-gl": "5.20.0",
     "multer": "2.0.2",
     "openai": "5.12.0",
     "undici": "^6.20.0"
   },
   "devDependencies": {
     "@playwright/test": "1.57.0",
+    "esbuild": "0.27.4",
     "husky": "9.1.7",
     "lint-staged": "16.2.5",
+    "npm-run-all": "4.1.5",
     "prettier": "3.6.2",
     "puppeteer": "24.27.0"
   }
