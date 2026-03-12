@@ -26,17 +26,17 @@ window.MapConfig = (function() {
     'OS/GB_land/1'
   ];
 
-  // Map style configurations
+  // Map style configurations (default: Satellite)
   const mapStyles = [
     {
-      id: 'outdoor',
-      label: 'Outdoor (OpenFreeMap)',
-      url: 'https://tiles.openfreemap.org/styles/liberty',
-      thumbnail: assetPath + '/outdoor-map-thumb.jpg',
-      logo: assetPath + '/os-logo.svg',
+      id: 'esri-tiles',
+      label: 'Satellite',
+      url: defaultData.VTS_ESRI_URL,
+      thumbnail: assetPath + '/aerial-map-thumb.jpg',
+      logo: assetPath + '/os-logo-black.svg',
       logoAltText,
-      attribution: `Contains OS data ${String.fromCharCode(COMPANY_SYMBOL_CODE)} Crown copyright and database rights ${new Date().getFullYear()}`,
-      backgroundColor: '#f5f5f0'
+      attribution: 'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, and others',
+      backgroundColor: '#ffffff'
     },
     {
       id: 'outdoorOS',
@@ -68,16 +68,17 @@ window.MapConfig = (function() {
       logoAltText,
       attribution: `Contains OS data ${String.fromCharCode(COMPANY_SYMBOL_CODE)} Crown copyright and database rights ${new Date().getFullYear()}`
     },
-    {
-      id: 'esri-tiles',
-      label: 'Satellite',
-      url: defaultData.VTS_ESRI_URL,
-      thumbnail: assetPath + '/aerial-map-thumb.jpg',
-      logo: assetPath + '/os-logo-black.svg',
-      logoAltText,
-      attribution: 'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, and others',
-      backgroundColor: '#ffffff'
-    }
+    // Temporarily disabled because snapping relies on OS layer IDs.
+    // {
+    //   id: 'outdoor',
+    //   label: 'Outdoor (OpenFreeMap)',
+    //   url: 'https://tiles.openfreemap.org/styles/liberty',
+    //   thumbnail: assetPath + '/outdoor-map-thumb.jpg',
+    //   logo: assetPath + '/os-logo.svg',
+    //   logoAltText,
+    //   attribution: `Contains OS data ${String.fromCharCode(COMPANY_SYMBOL_CODE)} Crown copyright and database rights ${new Date().getFullYear()}`,
+    //   backgroundColor: '#f5f5f0'
+    // }
   ];
 
   // Dataset configurations for vector tile layers
