@@ -435,6 +435,9 @@ window.MapInit = (function() {
     updateFiltersPanelSwatches(config, currentMapStyleId);
     applyActiveDrawTheme(config, currentMapStyleId);
     applyCommittedLayerTheme(config, currentMapStyleId);
+    if (window.MapStats && window.MapStats.setStyleId) {
+      window.MapStats.setStyleId(currentMapStyleId);
+    }
 
     if (!feature) {
       if (window.ZoomAesthetics && window.ZoomAesthetics.setStyleId) {
