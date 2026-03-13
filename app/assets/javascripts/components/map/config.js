@@ -170,7 +170,7 @@ window.MapConfig = (function() {
     },
     {
       id: 'catchments',
-      label: 'Nature Restoration Fund nutrients levy areas',
+      label: 'Nature Restoration Fund nutrients levy',
       tiles: [`${window.location.origin}/tiles/data/catchments_nn_catchments_03_2024/{z}/{x}/{y}.pbf`],
       sourceLayer: 'catchments_nn_catchments_03_2024',
       stroke: buildStyleColorMap('catchments'),

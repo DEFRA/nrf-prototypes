@@ -223,7 +223,7 @@
 
     // GCN EDPs - always show heading (matches key order)
     html +=
-      '<div class="govuk-!-margin-bottom-3"><p class="govuk-body-s govuk-!-font-weight-bold govuk-!-margin-bottom-1"><span style="display:inline-block;width:14px;height:14px;background:' + gcnColor + ';border:1px solid #0b0c0c;margin-right:8px;vertical-align:middle;margin-top:-2px"></span>Nature Restoration Fund great crested newt levy areas</p>'
+      '<div class="govuk-!-margin-bottom-3"><p class="govuk-body-s govuk-!-font-weight-bold govuk-!-margin-bottom-1"><span style="display:inline-block;width:14px;height:14px;background:' + gcnColor + ';border:1px solid #0b0c0c;margin-right:8px;vertical-align:middle;margin-top:-2px"></span>Nature Restoration Fund great crested newt levy</p>'
     if (gcnAreas.length > 0) {
       html +=
         '<ul class="govuk-list govuk-list--bullet govuk-body-s" style="margin: 0; padding-left: 20px;">'
@@ -239,7 +239,7 @@
 
     // Nutrient EDPs - always show heading
     html +=
-      '<div><p class="govuk-body-s govuk-!-font-weight-bold govuk-!-margin-bottom-1"><span style="display:inline-block;width:14px;height:14px;background:' + catchmentsColor + ';border:1px solid #0b0c0c;margin-right:8px;vertical-align:middle;margin-top:-2px"></span>Nature Restoration Fund nutrients levy areas</p>'
+      '<div><p class="govuk-body-s govuk-!-font-weight-bold govuk-!-margin-bottom-1"><span style="display:inline-block;width:14px;height:14px;background:' + catchmentsColor + ';border:1px solid #0b0c0c;margin-right:8px;vertical-align:middle;margin-top:-2px"></span>Nature Restoration Fund nutrients levy</p>'
     if (nutrientAreas.length > 0) {
       html +=
         '<ul class="govuk-list govuk-list--bullet govuk-body-s" style="margin: 0; padding-left: 20px;">'
