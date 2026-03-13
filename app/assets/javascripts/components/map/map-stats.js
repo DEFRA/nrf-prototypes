@@ -42,6 +42,8 @@
   }
   let map = null
   let drawnItems = null
+  let currentStyleId = null
+  let lastIntersections = null
   let isDrawingActive = false
   let isEditingActive = false
   let currentMousePosition = null
@@ -210,15 +212,23 @@
     )
     const gcnAreas = intersections.intersections.filter((i) => i.type === 'gcn')
 
+    lastIntersections = intersections
+
+    const styleId = currentStyleId || 'esri-tiles'
+    const cfg = window.MapConfig
+    const catchmentsColor = cfg ? cfg.getStyleLayerColor(styleId, 'catchments') : '#FD0'
+    const gcnColor = cfg ? cfg.getStyleLayerColor(styleId, 'gcnEdp') : '#F47738'
+
     let html = ''
 
-    // Nutrient EDPs - always show heading
+    // GCN EDPs - always show heading (matches key order)
     html +=
-      '<div class="govuk-!-margin-bottom-3"><p class="govuk-body-s govuk-!-font-weight-bold govuk-!-margin-bottom-1"><span style="display:inline-block;width:14px;height:14px;background:#0000ff;border:1px solid #0b0c0c;margin-right:8px;vertical-align:middle;margin-top:-2px"></span>Nature Restoration Fund nutrients levy areas</p>'
-    if (nutrientAreas.length > 0) {
+      '<div class="govuk-!-margin-bottom-3"><p class="govuk-body-s govuk-!-font-weight-bold govuk-!-margin-bottom-1"><span style="display:inline-block;width:14px;height:14px;background:' + gcnColor + ';border:1px solid #0b0c0c;margin-right:8px;vertical-align:middle;margin-top:-2px"></span>Nature Restoration Fund great crested newt levy</p>'
+    if (gcnAreas.length > 0) {
       html +=
         '<ul class="govuk-list govuk-list--bullet govuk-body-s" style="margin: 0; padding-left: 20px;">'
-      nutrientAreas.forEach((area) => {
+      gcnAreas.forEach((area) => {
+        // Use just the area name (NAME property) without adding generic type
         html += `<li class="govuk-body-s" style="margin-bottom: 5px;">${area.name}</li>`
       })
       html += '</ul>'
@@ -227,14 +237,13 @@
     }
     html += '</div>'
 
-    // GCN EDPs - always show heading
+    // Nutrient EDPs - always show heading
     html +=
-      '<div><p class="govuk-body-s govuk-!-font-weight-bold govuk-!-margin-bottom-1"><span style="display:inline-block;width:14px;height:14px;background:#f47738;border:1px solid #0b0c0c;margin-right:8px;vertical-align:middle;margin-top:-2px"></span>Nature Restoration Fund great crested newt levy areas</p>'
-    if (gcnAreas.length > 0) {
+      '<div><p class="govuk-body-s govuk-!-font-weight-bold govuk-!-margin-bottom-1"><span style="display:inline-block;width:14px;height:14px;background:' + catchmentsColor + ';border:1px solid #0b0c0c;margin-right:8px;vertical-align:middle;margin-top:-2px"></span>Nature Restoration Fund nutrients levy</p>'
+    if (nutrientAreas.length > 0) {
       html +=
         '<ul class="govuk-list govuk-list--bullet govuk-body-s" style="margin: 0; padding-left: 20px;">'
-      gcnAreas.forEach((area) => {
-        // Use just the area name (NAME property) without adding generic type
+      nutrientAreas.forEach((area) => {
         html += `<li class="govuk-body-s" style="margin-bottom: 5px;">${area.name}</li>`
       })
       html += '</ul>'
@@ -881,4 +890,10 @@
   window.MapStats.handlePolygonDelete = handlePolygonDelete
   window.MapStats.updateIntersections = updateIntersectionsDisplay
   window.MapStats.showIntersectionsLoading = showIntersectionsLoading
+  window.MapStats.setStyleId = function(styleId) {
+    currentStyleId = styleId
+    if (lastIntersections) {
+      updateIntersectionsDisplay(lastIntersections)
+    }
+  }
 })()

@@ -297,6 +297,40 @@ window.MapInit = (function() {
     return window.interactiveMapInstance?.mapProvider?.draw || null;
   }
 
+  function extractFeatureFromDrawEvent(e) {
+    const candidates = [
+      e?.newFeature,
+      e?.feature,
+      e?.features?.[0],
+      e
+    ];
+
+    return candidates.find(function(candidate) {
+      return !!candidate?.geometry?.coordinates?.[0]?.length;
+    }) || null;
+  }
+
+  function getLiveBoundaryFeatureFromDrawPlugin() {
+    const drawInstance = getDrawInstance();
+
+    if (!drawInstance) {
+      return null;
+    }
+
+    const candidateIds = [feature?.id, latestUpdateFeature?.id].filter(Boolean);
+
+    for (const candidateId of candidateIds) {
+      const liveById = drawInstance.get?.(candidateId);
+      if (liveById?.geometry?.coordinates?.[0]?.length) {
+        return liveById;
+      }
+    }
+
+    const allFeatures = drawInstance.getAll?.().features || [];
+    const liveFeature = allFeatures[allFeatures.length - 1] || null;
+    return liveFeature?.geometry?.coordinates?.[0]?.length ? liveFeature : null;
+  }
+
   function getStyleVariantSuffix(styleId) {
     return styleId.charAt(0).toUpperCase() + styleId.slice(1);
   }
@@ -435,6 +469,9 @@ window.MapInit = (function() {
     updateFiltersPanelSwatches(config, currentMapStyleId);
     applyActiveDrawTheme(config, currentMapStyleId);
     applyCommittedLayerTheme(config, currentMapStyleId);
+    if (window.MapStats && window.MapStats.setStyleId) {
+      window.MapStats.setStyleId(currentMapStyleId);
+    }
 
     if (!feature) {
       if (window.ZoomAesthetics && window.ZoomAesthetics.setStyleId) {
@@ -494,15 +531,16 @@ window.MapInit = (function() {
   }
 
   function logAllFeatures(label) {
-    const allFeatures = drawPlugin.getAll?.() || { features: [] };
-    console.log(`[${label}] drawPlugin.getAll() returned ${allFeatures.features?.length || 0} feature(s)`);
+    const drawInstance = getDrawInstance();
+    const allFeatures = drawInstance?.getAll?.() || { features: [] };
+    console.log(`[${label}] drawInstance.getAll() returned ${allFeatures.features?.length || 0} feature(s)`);
     if (allFeatures.features?.length) {
       allFeatures.features.forEach((f, idx) => {
         const coords = f?.geometry?.coordinates?.[0];
         console.log(`  Feature ${idx}: ${coords?.length || 0} coordinate points, id=${f.id}`);
       });
     } else {
-      console.log(`[${label}] WARNING: drawPlugin.getAll() returned no features - relying on event data`);
+      console.log(`[${label}] WARNING: drawInstance.getAll() returned no features - relying on event data`);
     }
     return allFeatures;
   }
@@ -724,7 +762,7 @@ window.MapInit = (function() {
               ' type="checkbox" value="catchments"' + (catchChecked ? ' checked' : '') + '>' +
               '<label class="govuk-label govuk-checkboxes__label" for="layer-catchments">' +
               '<span id="layer-key-catchments-swatch" class="edp-layer-color" style="background-color:' + catchmentsColor + '"></span>' +
-              ' Nature Restoration Fund nutrients levy areas' +
+              ' Nature Restoration Fund nutrients levy' +
               '</label></div>' +
               '</div>';
             return h('div', {
@@ -967,7 +1005,7 @@ window.MapInit = (function() {
         console.log('├─ Currently stored feature coords:', feature?.geometry?.coordinates?.[0]?.length || 'NONE');
         logAllFeatures('draw:edited');
         
-        const featureFromEvent = e.feature || e.newFeature || (e.features && e.features[0]);
+        const featureFromEvent = extractFeatureFromDrawEvent(e);
         if (featureFromEvent?.geometry?.coordinates?.[0]) {
           console.log('├─ Event coordinates (first 3 points):');
           console.table(featureFromEvent.geometry.coordinates[0].slice(0, 3));
@@ -986,9 +1024,10 @@ window.MapInit = (function() {
           window.MapStats.handleDrawStop();
         }
         
-        // Get the confirmed feature from the event (new event names should include correct geometry)
-        feature = featureFromEvent || (drawPlugin.getAll?.().features?.[0]);
-        console.log('├─ Feature source:', featureFromEvent ? 'from event' : 'from drawPlugin.getAll()');
+        // Prefer live draw store state first, then event payload.
+        const liveFeature = getLiveBoundaryFeatureFromDrawPlugin();
+        feature = liveFeature || featureFromEvent || latestUpdateFeature || feature;
+        console.log('├─ Feature source:', liveFeature ? 'from drawPlugin.getAll()' : (featureFromEvent ? 'from event' : (latestUpdateFeature ? 'from latestUpdateFeature' : 'existing feature')));
 
         console.log('├─ ✅ Feature STORED with coords:', feature?.geometry?.coordinates?.[0]?.length);
         console.log('├─ Feature ID:', feature?.id);
@@ -1022,7 +1061,7 @@ window.MapInit = (function() {
 
       map.on('draw:updated', function(e) {
         // Capture the latest feature from update events
-        const updatedFeature = e?.feature || e?.newFeature || (e?.features && e.features[0]) || feature;
+        const updatedFeature = extractFeatureFromDrawEvent(e) || feature;
         if (updatedFeature) {
           latestUpdateFeature = updatedFeature;
         }
@@ -1097,7 +1136,7 @@ window.MapInit = (function() {
         updateHintForState('edit-mode');
         
         // Get the feature from the event
-        const featureFromEvent = e.feature || e.newFeature || (e.features && e.features[0]);
+        const featureFromEvent = extractFeatureFromDrawEvent(e);
         console.log('├─ Feature from event:', !!featureFromEvent);
         
         if (featureFromEvent) {
@@ -1135,14 +1174,33 @@ window.MapInit = (function() {
         const desktopMenuDone = document.querySelector('.map-drawing-menu-desktop');
         if (desktopMenuDone) desktopMenuDone.style.display = '';
         
-        // If editing, use the latest feature captured from draw:update events
-        if (wasEditingBeforeClear && latestUpdateFeature) {
-          console.log('├─ Using latestUpdateFeature from edits, coords:', latestUpdateFeature?.geometry?.coordinates?.[0]?.length);
-          feature = latestUpdateFeature;
-          latestUpdateFeature = null; // Clear it
+        if (wasEditingBeforeClear) {
+          // Prefer the completion event payload for the final edited geometry.
+          const featureFromEvent = extractFeatureFromDrawEvent(e);
+          console.log('├─ Edit completion event feature coords:', featureFromEvent?.geometry?.coordinates?.[0]?.length);
+
+          // Wait a tick so draw store has committed the final edited geometry.
+          await new Promise(function(resolve) {
+            setTimeout(resolve, 0);
+          });
+          const liveFeature = getLiveBoundaryFeatureFromDrawPlugin();
+          console.log('├─ Live draw store feature coords:', liveFeature?.geometry?.coordinates?.[0]?.length);
+
+          if (liveFeature) {
+            feature = liveFeature;
+            console.log('├─ Using live draw store feature');
+          } else if (featureFromEvent) {
+            feature = featureFromEvent;
+            console.log('├─ Using edit completion event feature');
+          } else if (latestUpdateFeature) {
+            console.log('├─ Falling back to latestUpdateFeature, coords:', latestUpdateFeature?.geometry?.coordinates?.[0]?.length);
+            feature = latestUpdateFeature;
+          }
+
+          latestUpdateFeature = null;
         } else {
-          // Try event feature for initial draw
-          const featureFromEvent = e.feature || e.newFeature || (e.features && e.features[0]);
+          // Initial draw completion path
+          const featureFromEvent = extractFeatureFromDrawEvent(e);
           console.log('├─ Event feature coords:', featureFromEvent?.geometry?.coordinates?.[0]?.length);
           if (featureFromEvent) {
             feature = featureFromEvent;
