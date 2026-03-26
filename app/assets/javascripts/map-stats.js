@@ -210,7 +210,7 @@
 
     // Nutrient EDPs - always show heading
     html +=
-      '<div style="margin-bottom: 15px;"><h4 style="font-size: 14px; font-weight: 700; margin-bottom: 8px;">Nature Restoration Fund nutrients levy areas</h4>'
+      '<div style="margin-bottom: 15px;"><h4 style="font-size: 14px; font-weight: 700; margin-bottom: 8px;">Nature Restoration Fund nutrients levy</h4>'
     if (nutrientAreas.length > 0) {
       html +=
         '<ul class="govuk-list govuk-list--bullet" style="margin: 0; font-size: 14px; padding-left: 20px;">'
@@ -226,7 +226,7 @@
 
     // GCN EDPs - always show heading
     html +=
-      '<div><h4 style="font-size: 14px; font-weight: 700; margin-bottom: 8px;">Nature Restoration Fund great crested newt levy areas</h4>'
+      '<div><h4 style="font-size: 14px; font-weight: 700; margin-bottom: 8px;">Nature Restoration Fund great crested newt levy</h4>'
     if (gcnAreas.length > 0) {
       html +=
         '<ul class="govuk-list govuk-list--bullet" style="margin: 0; font-size: 14px; padding-left: 20px;">'
@@ -269,6 +269,11 @@
     const perimeterContainer = document.getElementById(
       'stat-perimeter-container'
     )
+
+    if (!totalAreaContainer || !currentLineContainer || !perimeterContainer) {
+      console.warn('[MapStats] Stats panel elements not found')
+      return
+    }
 
     // Show/hide containers based on what's available
     // Always show Area when drawing or when area exists

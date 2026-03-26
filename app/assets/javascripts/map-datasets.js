@@ -164,6 +164,11 @@
         }
       }
 
+      // Check if LayerControls has this layer toggled off
+      const layerVisibility = window.LayerControls && window.LayerControls.getLayerVisibility
+        ? window.LayerControls.getLayerVisibility(dataset.id)
+        : 'visible';
+
       // Add fill layer
       mapInstance.addLayer(
         {
@@ -174,6 +179,9 @@
           paint: {
             'fill-color': style.fillColor || style.color,
             'fill-opacity': style.fillOpacity || 0.3
+          },
+          layout: {
+            'visibility': layerVisibility
           }
         },
         firstDrawingLayer
@@ -190,6 +198,9 @@
             'line-color': style.color,
             'line-width': style.weight || 2,
             'line-opacity': style.opacity || 0.8
+          },
+          layout: {
+            'visibility': layerVisibility
           }
         },
         firstDrawingLayer

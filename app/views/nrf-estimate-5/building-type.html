@@ -1,0 +1,78 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+What type of development is it? - Get a quote for Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: backLink or "/nrf-estimate-5/map"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <form action="/nrf-estimate-5/building-type" method="post" novalidate>
+            {% if isChange %}
+            <input type="hidden" name="isChange" value="true">
+            {% endif %}
+            {% if navFromSummary %}
+            <input type="hidden" name="navFromSummary" value="true">
+            {% endif %}
+
+            {% if error %}
+            {{ govukErrorSummary({
+                titleText: "There is a problem",
+                errorList: [
+                    {
+                        text: error,
+                        href: "#building-types"
+                    }
+                ]
+            }) }}
+            {% endif %}
+
+            {{ govukCheckboxes({
+                name: "building-types",
+                fieldset: {
+                    legend: {
+                        text: "What type of development is it?",
+                        isPageHeading: true,
+                        classes: "govuk-fieldset__legend--l"
+                    }
+                },
+                hint: {
+                    text: "Select all that apply"
+                },
+                errorMessage: { text: error } if error,
+                items: [
+                    {
+                        value: "Housing",
+                        text: "Housing",
+                        hint: {
+                            text: "Dwellings, HMOs of 6 or less residents, static caravans or mobile homes with permanent residents"
+                        },
+                        checked: data.buildingTypes and data.buildingTypes.includes('Housing')
+                    },
+                    {
+                        value: "Other residential",
+                        text: "Other residential",
+                        hint: {
+                            text: "HMOs for 7 or more residents, care homes, retirement homes, student accommodation, prisons and secure institutions, military accommodation, hotels, bed and breakfasts, Holiday lets, caravans and camping"
+                        },
+                        checked: data.buildingTypes and data.buildingTypes.includes('Other residential')
+                    }
+                ]
+            }) }}
+
+            {{ govukButton({
+                text: "Continue"
+            }) }}
+
+        </form>
+    </div>
+</div>
+{% endblock %}

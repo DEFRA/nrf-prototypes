@@ -1,0 +1,71 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+What is the maximum number of people the development will serve? - Get a quote for Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: backLink or "/nrf-estimate-5/building-type"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <form action="/nrf-estimate-5/people-count" method="post" novalidate>
+            {% if isChange %}
+            <input type="hidden" name="isChange" value="true">
+            {% endif %}
+            {% if navFromSummary %}
+            <input type="hidden" name="navFromSummary" value="true">
+            {% endif %}
+            {% if backLink %}
+            <input type="hidden" name="backLink" value="{{ backLink }}">
+            {% endif %}
+
+            {% if error %}
+            {{ govukErrorSummary({
+                titleText: "There is a problem",
+                errorList: [
+                    {
+                        text: error,
+                        href: "#people-count"
+                    }
+                ]
+            }) }}
+            {% endif %}
+
+            {{ govukInput({
+                label: {
+                    text: "What is the maximum number of people the development will serve?",
+                    classes: "govuk-label--l",
+                    isPageHeading: true
+                },
+                hint: {
+                    text: "This should be the maximum capacity allowed for your development."
+                },
+                id: "people-count",
+                name: "people-count",
+                type: "number",
+                classes: "govuk-input--width-5",
+                inputmode: "numeric",
+                pattern: "[0-9]*",
+                value: data.peopleCount,
+                errorMessage: { text: error } if error
+            }) }}
+
+            <p class="govuk-body">
+                <a href="javascript:void(0)" class="govuk-link">Find out how to calculate your maximum capacity for your development</a>
+            </p>
+
+            {{ govukButton({
+                text: "Continue"
+            }) }}
+
+        </form>
+    </div>
+</div>
+{% endblock %}

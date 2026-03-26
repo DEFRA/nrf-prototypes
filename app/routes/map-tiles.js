@@ -1,0 +1,261 @@
+/**
+ * Map Routes - Generic tile and geocoding endpoints
+ * Reusable across all journey routes to avoid duplication
+ * Decouples map API proxying from journey-specific implementations
+ */
+
+const govukPrototypeKit = require('govuk-prototype-kit')
+const router = govukPrototypeKit.requests.setupRouter()
+const { proxyFetch } = require('../lib/proxy-fetch')
+
+/**
+ * GET /api/tile/:z/:y/:x.pbf
+ * Proxy OS Vector Tile Service tiles with API key authentication
+ * Note: Tile coordinates are in z/y/x order (not z/x/y)
+ */
+router.get('/api/tile/:z/:y/:x.pbf', async (req, res) => {
+  try {
+    const { z, y, x } = req.params
+    const zoom = parseInt(z, 10)
+    const tileY = parseInt(y, 10)
+    const tileX = parseInt(x, 10)
+
+    // Validate tile coordinates
+    if (isNaN(zoom) || isNaN(tileX) || isNaN(tileY)) {
+      return res.status(400).end()
+    }
+
+    if (zoom < 0 || zoom > 28 || tileX < 0 || tileY < 0) {
+      return res.status(400).end()
+    }
+
+    // Get OS API credentials from environment
+    const osApiKey = process.env.OS_API_KEY
+
+    if (!osApiKey) {
+      console.warn('[OS Tile Proxy] Missing OS_API_KEY')
+      return res.status(404).end()
+    }
+
+    // Construct OS VTS API URL with proper format
+    // Use API key and srs parameter for spatial reference system
+    const osUrl = `https://api.os.uk/maps/vector/v1/vts/tile/${zoom}/${tileY}/${tileX}.pbf?key=${osApiKey}&srs=3857`
+
+    console.log(`[OS Tile Proxy] Fetching: ${zoom}/${tileY}/${tileX}`)
+
+    const proxyUrlConfig = process.env.HTTP_PROXY
+    if (proxyUrlConfig) {
+      console.log(`[OS Tile Proxy] Using outbound proxy`)
+    }
+
+    const response = await proxyFetch(osUrl, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/x-protobuf'
+      }
+    })
+
+    // Handle error status codes
+    if (!response.ok) {
+      console.log(`[OS Tile Proxy] OS API returned ${response.status}`)
+      return res.status(response.status >= 500 ? 502 : 404).end()
+    }
+
+    // Get the tile data as a buffer
+    // Note: Node.js fetch automatically decompresses gzip content
+    const arrayBuffer = await response.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+
+    // Set response headers
+    res.set('Content-Type', 'application/x-protobuf')
+    res.set('Cache-Control', 'public, max-age=86400')
+    res.set('Access-Control-Allow-Origin', '*')
+    res.send(buffer)
+  } catch (error) {
+    console.error(`[OS Tile Proxy] Error: ${error.message}`)
+    res.status(502).end()
+  }
+})
+
+/**
+ * GET /api/map-proxy?url={url}
+ * Generic proxy for OS resources (fonts, sprites, etc)
+ */
+router.get('/api/map-proxy', async (req, res) => {
+  try {
+    const { url: targetUrl } = req.query
+
+    if (!targetUrl) {
+      return res.status(400).json({ error: 'url parameter required' })
+    }
+
+    // Decode the URL
+    let urlToFetch
+    try {
+      urlToFetch = decodeURIComponent(targetUrl)
+    } catch (error) {
+      return res.status(400).json({ error: 'Invalid URL encoding' })
+    }
+
+    // Validate it's an OS URL
+    if (!urlToFetch.includes('api.os.uk')) {
+      return res.status(403).json({ error: 'Only OS URLs allowed' })
+    }
+
+    const osApiKey = process.env.OS_API_KEY
+
+    if (!osApiKey) {
+      console.warn('[OS Map Proxy] Missing OS_API_KEY')
+      return res.status(404).end()
+    }
+
+    console.log(`[OS Map Proxy] Fetching: ${urlToFetch}`)
+
+    // Add API key if not already present
+    const proxyUrl = new URL(urlToFetch)
+    proxyUrl.searchParams.set('key', osApiKey)
+
+    const proxyUrlConfig = process.env.HTTP_PROXY
+    if (proxyUrlConfig) {
+      console.log(`[OS Map Proxy] Using outbound proxy`)
+    }
+
+    const response = await proxyFetch(proxyUrl.toString())
+
+    if (!response.ok) {
+      console.log(`[OS Map Proxy] OS API returned ${response.status}`)
+      return res.status(response.status >= 500 ? 502 : 404).end()
+    }
+
+    // Get the response data as a buffer
+    // Note: Node.js fetch automatically decompresses gzip content
+    const arrayBuffer = await response.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+
+    // Set response headers based on content type
+    const contentType = response.headers.get('content-type')
+    if (contentType) {
+      res.set('Content-Type', contentType)
+    }
+    res.set('Cache-Control', 'public, max-age=604800') // Cache for 7 days
+    res.set('Access-Control-Allow-Origin', '*')
+    res.send(buffer)
+  } catch (error) {
+    console.error(`[OS Map Proxy] Error: ${error.message}`)
+    res.status(502).end()
+  }
+})
+
+/**
+ * GET /api/maps/names
+ * Proxy for OS Names API - location/place name search
+ */
+router.get('/api/maps/names', async (req, res) => {
+  try {
+    // Try multiple parameter names
+    const { query, q, search, text, term, name } = req.query
+    const searchText = query || q || search || text || term || name
+
+    console.log('[OS Names Proxy] GET Request received')
+    console.log('[OS Names Proxy] Full URL:', req.originalUrl)
+    console.log('[OS Names Proxy] Query params:', JSON.stringify(req.query))
+
+    if (!searchText) {
+      console.error('[OS Names Proxy] No search text provided. Available params:', Object.keys(req.query))
+      return res.status(400).json({ error: 'No search parameter found. Tried: query, q, search, text, term, name' })
+    }
+
+    const osApiKey = process.env.OS_API_KEY
+
+    if (!osApiKey) {
+      console.warn('[OS Names Proxy] Missing OS_API_KEY')
+      return res.status(404).end()
+    }
+
+    // Build OS Names API URL
+    const osNamesUrl = `https://api.os.uk/search/names/v1/find?query=${encodeURIComponent(searchText)}&key=${osApiKey}`
+
+    console.log(`[OS Names Proxy] Proxying to OS API for search: "${searchText}"`)
+
+    const proxyUrlConfig = process.env.HTTP_PROXY
+    if (proxyUrlConfig) {
+      console.log(`[OS Names Proxy] Using outbound proxy`)
+    }
+
+    const response = await proxyFetch(osNamesUrl)
+
+    console.log(`[OS Names Proxy] OS API responded with status: ${response.status}`)
+
+    if (!response.ok) {
+      console.log(`[OS Names Proxy] OS API returned ${response.status}`)
+      return res.status(response.status >= 500 ? 502 : 404).end()
+    }
+
+    const data = await response.json()
+
+    res.set('Content-Type', 'application/json')
+    res.set('Cache-Control', 'public, max-age=3600')
+    res.set('Access-Control-Allow-Origin', '*')
+    res.json(data)
+  } catch (error) {
+    console.error(`[OS Names Proxy] Error: ${error.message}`)
+    res.status(502).end()
+  }
+})
+
+/**
+ * POST /api/maps/names
+ * Alternative POST handler for OS Names API
+ */
+router.post('/api/maps/names', async (req, res) => {
+  try {
+    const { query, q, search, text, term, name } = req.body || {}
+    const searchText = query || q || search || text || term || name
+
+    console.log('[OS Names Proxy] POST Request received')
+    console.log('[OS Names Proxy] Full URL:', req.originalUrl)
+    console.log('[OS Names Proxy] Body:', JSON.stringify(req.body))
+
+    if (!searchText) {
+      console.error('[OS Names Proxy] No search text in POST body. Available params:', Object.keys(req.body || {}))
+      return res.status(400).json({ error: 'No search parameter found in body' })
+    }
+
+    const osApiKey = process.env.OS_API_KEY
+
+    if (!osApiKey) {
+      console.warn('[OS Names Proxy] Missing OS_API_KEY')
+      return res.status(404).end()
+    }
+
+    const osNamesUrl = `https://api.os.uk/search/names/v1/find?query=${encodeURIComponent(searchText)}&key=${osApiKey}`
+
+    console.log(`[OS Names Proxy] POST - Proxying to OS API for search: "${searchText}"`)
+
+    const proxyUrlConfig = process.env.HTTP_PROXY
+    if (proxyUrlConfig) {
+      console.log(`[OS Names Proxy] POST - Using outbound proxy`)
+    }
+
+    const response = await proxyFetch(osNamesUrl)
+
+    console.log(`[OS Names Proxy] POST - OS API responded with status: ${response.status}`)
+
+    if (!response.ok) {
+      console.log(`[OS Names Proxy] POST - OS API returned ${response.status}`)
+      return res.status(response.status >= 500 ? 502 : 404).end()
+    }
+
+    const data = await response.json()
+
+    res.set('Content-Type', 'application/json')
+    res.set('Cache-Control', 'public, max-age=3600')
+    res.set('Access-Control-Allow-Origin', '*')
+    res.json(data)
+  } catch (error) {
+    console.error(`[OS Names Proxy] POST - Error: ${error.message}`)
+    res.status(502).end()
+  }
+})
+
+module.exports = router

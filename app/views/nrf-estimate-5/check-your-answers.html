@@ -1,0 +1,193 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Check your answers - Get a quote for Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+text: "Back",
+href: "/nrf-estimate-5/estimate-email"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <h1 class="govuk-heading-l">Check your answers</h1>
+
+        <dl class="govuk-summary-list govuk-!-margin-bottom-9">
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Red line boundary
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {% if data.redlineBoundaryPolygon %}
+                    Added
+                    {% else %}
+                    Not added
+                    {% endif %}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    {% if data.hasRedlineBoundaryFile %}
+                    <a class="govuk-link" href="/nrf-estimate-5/upload-redline?change=true&amp;nav=check-your-answers">
+                        Change<span class="govuk-visually-hidden"> red line boundary</span>
+                    </a>
+                    {% else %}
+                    <a class="govuk-link" href="/nrf-estimate-5/map?nav=check-your-answers">
+                        Change<span class="govuk-visually-hidden"> red line boundary</span>
+                    </a>
+                    {% endif %}
+                </dd>
+            </div>
+
+            {% if data.buildingTypes and data.buildingTypes.length > 0 %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Development types
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    <ul class="govuk-list">
+                        {% for type in data.buildingTypes %}
+                        {% if type and type !== '_unchecked' %}
+                        <li>{{ buildingTypeLabels[type] or type }}</li>
+                        {% endif %}
+                        {% endfor %}
+                    </ul>
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="/nrf-estimate-5/building-type?change=true&amp;nav=check-your-answers">
+                        Change<span class="govuk-visually-hidden"> building types</span>
+                    </a>
+                </dd>
+            </div>
+            {% endif %}
+
+            {% if data.buildingTypes and data.buildingTypes.includes('Housing') and data.residentialBuildingCount %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Number of residential units
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.residentialBuildingCount }}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="/nrf-estimate-5/residential?change=true&amp;nav=check-your-answers">
+                        Change<span class="govuk-visually-hidden"> number of dwelling buildings</span>
+                    </a>
+                </dd>
+            </div>
+            {% endif %}
+
+            {% if data.buildingTypes and data.buildingTypes.includes('Other residential') and data.peopleCount %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Maximum number of people
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.peopleCount }}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="/nrf-estimate-5/people-count?change=true&amp;nav=check-your-answers">
+                        Change<span class="govuk-visually-hidden"> maximum number of people</span>
+                    </a>
+                </dd>
+            </div>
+            {% endif %}
+
+            {% if data.roomCounts %}
+            {% if data.roomCounts.hmoCount %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Number of multiple occupation rooms
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.roomCounts.hmoCount }}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="/nrf-estimate-5/room-count?change=true&amp;nav=check-your-answers&amp;type=hmo">
+                        Change<span class="govuk-visually-hidden"> number of multiple occupation rooms</span>
+                    </a>
+                </dd>
+            </div>
+            {% endif %}
+
+            {% if data.roomCounts.residentialInstitutionCount %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Number of residential institution rooms
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.roomCounts.residentialInstitutionCount }}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="/nrf-estimate-5/room-count?change=true&amp;nav=check-your-answers&amp;type=residential-institution">
+                        Change<span class="govuk-visually-hidden"> number of residential institution rooms</span>
+                    </a>
+                </dd>
+            </div>
+            {% endif %}
+
+            {% if data.roomCounts.hotelCount %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Number of hotel rooms
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.roomCounts.hotelCount }}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="/nrf-estimate-5/room-count?change=true&amp;nav=check-your-answers&amp;type=hotel">
+                        Change<span class="govuk-visually-hidden"> number of hotel rooms</span>
+                    </a>
+                </dd>
+            </div>
+            {% endif %}
+            {% endif %}
+
+            {% if data.wasteWaterTreatmentWorks %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Waste water treatment works
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.wasteWaterTreatmentWorks }}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="/nrf-estimate-5/waste-water?change=true&amp;nav=check-your-answers">
+                        Change<span class="govuk-visually-hidden"> waste water treatment works</span>
+                    </a>
+                </dd>
+            </div>
+            {% endif %}
+
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Email address
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ data.email or data.estimateEmail }}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="/nrf-estimate-5/estimate-email?change=true&amp;nav=check-your-answers">
+                        Change<span class="govuk-visually-hidden"> email address</span>
+                    </a>
+                </dd>
+            </div>
+        </dl>
+
+        {% from "govuk/components/button/macro.njk" import govukButton %}
+
+        <form action="/nrf-estimate-5/check-your-answers" method="post" novalidate class="govuk-!-display-inline-block">
+            <div class="govuk-button-group">
+                {{ govukButton({
+                    text: "Submit"
+                }) }}
+                <a class="govuk-link govuk-button govuk-button--warning" href="/nrf-estimate-5/delete-quote">Delete</a>
+            </div>
+        </form>
+
+    </div>
+</div>
+{% endblock %}
