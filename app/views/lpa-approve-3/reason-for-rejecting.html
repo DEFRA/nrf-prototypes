@@ -38,8 +38,8 @@ href: "/lpa-approve-3/lpa-details-2"
             {% from "govuk/components/textarea/macro.njk" import govukTextarea %}
 
 {{ govukTextarea({
-  name: "moreDetail",
-  id: "more-detail",
+  name: "rejection-reason",
+  id: "rejection-reason",
   label: {
     text: "Tell the developer why you have rejected the details",
     classes: "govuk-label--l",
@@ -47,7 +47,9 @@ href: "/lpa-approve-3/lpa-details-2"
   },
   hint: {
     text: "Send the reason for your rejection to the developer"
-  }
+  },
+  errorMessage: errorsByField.rejectionReason,
+  value: data.lpaRejectionReason
 }) }}
 
            {{ govukButton({

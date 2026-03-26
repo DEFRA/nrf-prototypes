@@ -35,6 +35,8 @@
 }
 ```
 
+Note: Implementation stores slug values `one-login` and `government-gateway` in `paySignInOption`. Labels shown to user are as above.
+
 #### Content
 
 ```
@@ -132,7 +134,7 @@ Link
 | ---------------------- | ------------------------------- |
 | Order number:          | 5                               |
 | Path:                  | /nrf-estimate-4/payment-summary |
-| Title:                 | Check your answers              |
+| Title:                 | Your commitment details (H1; page title "Check your answers")            |
 | Conditional page flow: | None                            |
 
 #### Data points
@@ -152,10 +154,10 @@ None
 | Email address | [show data.email] | [Change](/nrf-estimate-4/estimate-email?change=true&nav=check-your-answers) |
 | Your details | [show full name, business name if provided, address, Company Registration Number and VAT registration number] | [Change](/nrf-estimate-4/company-details?change=true&nav=check-your-answers) |
 
-Primary button: Continue
+Primary button: Continue (form POST to /nrf-estimate-4/payment-summary)
 Secondary button (red): Delete (link to /nrf-estimate-4/delete-summary)
 
-Note: This page uses the GOV.UK summary list component with H1 "Your commitment details". Change links are disabled (javascript:void(0)) as this is a read-only summary of retrieved commitment data.
+Note: This page uses the GOV.UK summary list component with H1 "Your commitment details". Change links are disabled (javascript:void(0)).
 ```
 
 #### Errors
@@ -188,11 +190,13 @@ None
 }
 ```
 
+Note: Implementation uses primary "Yes" button with hidden input and secondary "No" link (no radio group).
+
 #### Content
 
 ```
 # Are you sure you want to delete this commitment?
-This will permanently delete your commitment. You can create a new quote. 
+This will permanently delete your commitment. You can create a new quote.
 
 Button: Yes
 Secondary button: No
@@ -372,10 +376,10 @@ Once you have paid, you will then receive a receipt and you can use it to discha
 
 Your Nature Restoration Fund nutrient levy amount is £{{ data.levyAmount or '2,500' }}.
 
-Primary button: Confirm and submit
+Primary button: Confirm and submit (form POST to /nrf-estimate-4/payment-declaration)
 Secondary button (red): Delete (link to /nrf-estimate-4/delete-payment-details)
 
-Note: This page uses the GOV.UK summary list component (payment-declaration). Change links are disabled. The declaration text is displayed as separate paragraphs before the submit button. Implementation includes a "Cancel action" secondary button.
+Note: This page uses the GOV.UK summary list component (payment-declaration). Change links are disabled (javascript:void(0), aria-disabled="true"). The declaration text is displayed as separate paragraphs before the submit button.
 ```
 
 #### Errors
@@ -403,17 +407,19 @@ None
             type: radios,
             required: conditional - required if user clicked delete on payment-declaration,
             values: "Yes" | "No",
-            fieldName: "confirm-delete-payment-declaration"
+            fieldName: "confirm-delete-payment-details"
         }
     }
 }
 ```
 
+Note: Implementation uses primary "Yes" button with hidden input and secondary "No" link (no radio group).
+
 #### Content
 
 ```
 # Are you sure you want to delete these details?
-This will permanently delete your details. You can create a new quote. 
+This will permanently delete your details. You can create a new quote.
 
 Button: Yes
 Secondary button: No
@@ -662,6 +668,8 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 }
 ```
 
+Note: Implementation stores slug values `one-login` and `government-gateway` in `pdnSignInOption`. Labels shown to user are as above.
+
 #### Content
 
 ```
@@ -775,6 +783,8 @@ Link
     }
 }
 ```
+
+Note: Implementation uses field name `decision-file`, label "Upload a file (optional)" and hint "For prototype purposes, you can continue without uploading a file." Accepts .pdf, .jpg, .jpeg, .png.
 
 #### Content
 

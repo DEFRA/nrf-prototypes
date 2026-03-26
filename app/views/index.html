@@ -5,9 +5,11 @@
 {% block content %}
 
 <div class="govuk-grid-row">
-  <div class="govuk-grid-column-two-thirds">
+   <div class="govuk-grid-row">
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
 
-    <h1 class="govuk-heading-l">
+          <h1 class="govuk-heading-xl">
       User Journey Experiments
     </h1>
 
@@ -16,42 +18,248 @@
       Select a journey below to access the journey.
     </p>
 
-    <div class="govuk-table__container">
-      <table class="govuk-table">
-        <thead class="govuk-table__head">
-          <tr class="govuk-table__row">
-            <th scope="col" class="govuk-table__header">User Journey</th>
-            <th scope="col" class="govuk-table__header">Description</th>
-          </tr>
-        </thead>
-        <tbody class="govuk-table__body">
-          {% for journey in journeys %}
-          <tr class="govuk-table__row">
-            <td class="govuk-table__cell">
-              {% if journey.hasStartPage %}
-                <a href="{{ journey.basePath }}/start" class="govuk-link">
-                  {{ journey.displayName }}
-                </a>
-              {% elif journey.entryPath %}
-                <a href="{{ journey.basePath }}{{ journey.entryPath }}" class="govuk-link">
-                  {{ journey.displayName }}
-                </a>
-              {% else %}
-                <span class="govuk-body">{{ journey.displayName }}</span>
-                <br>
-                <span class="govuk-body-s" style="color: #505a5f;">(No entry point defined)</span>
-              {% endif %}
-            </td>
-            <td class="govuk-table__cell">
-              {{ journey.description }}
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+    <div class="govuk-!-padding-bottom-5"></div>
+    <hr class="govuk-section-break govuk-section-break--visible">
+    <div class="govuk-!-padding-bottom-5"></div>
+                <h1 class="govuk-heading-l">
+      NRF journeys
+    </h1>
+    <hr class="govuk-section-break govuk-section-break--visible">
+    <div class="govuk-!-padding-bottom-5"></div>
 
+
+
+
+    <strong class="govuk-tag govuk-tag--green">Tested</strong>
+    <div class="govuk-!-padding-bottom-5"></div>
+    <h1 class="govuk-heading-m">Get an estimate for Nature Restoration <br> Fund Levy (V1)</h1>
+
+    <p class="govuk-body">
+      A user journey for developers to obtain a quote for the Nature Restoration Fund levy required when submitting planning permission. Includes map-based boundary drawing and EDP area validation.
+    </p>
+
+    <p class="govuk-body"><a href="/nrf-estimate-1/start.html" class="govuk-link">Start prototype</a></p>
+
+    <div class="govuk-!-padding-bottom-5"></div>
+    <hr class="govuk-section-break govuk-section-break--visible">
+    <div class="govuk-!-padding-bottom-5"></div>
+
+    <strong class="govuk-tag govuk-tag--green">Tested</strong>
+    <div class="govuk-!-padding-bottom-5"></div>
+    <h1 class="govuk-heading-m">Estimate, Commit and Pay Nature Restoration <br>Fund Levy (V2)</h1>
+
+    <p class="govuk-body">
+      A user journey for developers to estimate, commit and pay for the Nature Restoration Fund levy required when submitting planning permission. This journey allows users to commit to using the levy and complete payment.
+    </p>
+
+    <details class="govuk-details">
+  <summary class="govuk-details__summary">
+    <span class="govuk-details__summary-text">
+      Design changes
+    </span>
+  </summary>
+  <div class="govuk-details__text">
+<ul class="govuk-list govuk-list--bullet">
+  <li>Enhanced start page</li>
+  <li>New branching page with commit added</li>
+  <li>New upload or draw page with file types</li>
+  <li>Search on map, full size map, key, instructions, satellite layer</li>
+  <li>Development types refined</li>
+  <li>Email address hint text added, to explain why we email the quote</li>
+</ul>
   </div>
+</details>
+
+    <p class="govuk-body"><a href="/nrf-estimate-3/start.html" class="govuk-link">Start prototype</a></p>
+
+<div class="govuk-!-padding-bottom-5"></div>
+    <hr class="govuk-section-break govuk-section-break--visible">
+    <div class="govuk-!-padding-bottom-5"></div>
+
+    <strong class="govuk-tag govuk-tag--green">Tested</strong>
+    <div class="govuk-!-padding-bottom-5"></div>
+    <h1 class="govuk-heading-m">Get a quote for Nature Restoration Fund Levy (V3)</h1>
+
+    <p class="govuk-body">
+      A user journey for developers to obtain a quote for the Nature Restoration Fund levy required when submitting planning permission. Includes map-based boundary drawing and EDP area validation.
+    </p>
+
+    <details class="govuk-details">
+  <summary class="govuk-details__summary">
+    <span class="govuk-details__summary-text">
+      Design changes
+    </span>
+  </summary>
+  <div class="govuk-details__text">
+<ul class="govuk-list govuk-list--bullet">
+  <li>Changed language from estimate to quote</li>
+  <li>Refined language to ‘Discharge planning conditions’</li>
+  <li>Amended hint text on branching page to be aligned with where the user is in the planning process</li>
+  <div class="govuk-!-padding-bottom-5"></div>
+
+
+<h1 class="govuk-heading-s">Map updates</h1>
+
+  <li>Satallite layer as default</li>
+  <li>Stats panel added</li>
+  <li>Changed to a single reference number throughout the 3 journeys</li>
+  <li>Added in Defra ID sign in screens only</li>
+  <li>Added prompt to create account to the quote email</li>
+  <li>CUpload Planning Decision Notice to the pay journey</li>
+</ul>
+  </div>
+</details>
+
+    <p class="govuk-body"><a href="/nrf-quote-4/start.html" class="govuk-link">Start prototype</a></p>
+
+    <div class="govuk-!-padding-bottom-5"></div>
+    <hr class="govuk-section-break govuk-section-break--visible">
+    <div class="govuk-!-padding-bottom-5"></div>
+
+    <strong class="govuk-tag govuk-tag--green">Tested</strong>
+    <div class="govuk-!-padding-bottom-5"></div>
+    <h1 class="govuk-heading-m">Get a quote for Nature Restoration Fund Levy (V4)</h1>
+
+    <p class="govuk-body">
+      A user journey for developers to obtain a quote for the Nature Restoration Fund levy (v4). Quote journey with check your answers, confirmation and estimate email content.
+    </p>
+
+    <details class="govuk-details">
+  <summary class="govuk-details__summary">
+    <span class="govuk-details__summary-text">
+      Design changes
+    </span>
+  </summary>
+  <div class="govuk-details__text">
+<ul class="govuk-list govuk-list--bullet">
+  <li>Added unhappy paths</li>
+  <li>Added back links</li>
+  <li>Added delete options</li>
+  <li>Development types questions updated</li>
+  <li>WWTW question added</li>
+  <li>Email for LPA rejection added</li>
+</ul>
+  </div>
+</details>
+
+    <p class="govuk-body"><a href="/nrf-estimate-4/start.html" class="govuk-link">Start prototype</a></p>
+
+     <div class="govuk-!-padding-bottom-5"></div>
+    <hr class="govuk-section-break govuk-section-break--visible">
+    <div class="govuk-!-padding-bottom-5"></div>
+
+    <strong class="govuk-tag govuk-tag--green">Tested</strong>
+    <div class="govuk-!-padding-bottom-5"></div>
+    <h1 class="govuk-heading-m">Get a quote for Nature Restoration Fund Levy (V5)</h1>
+
+    <p class="govuk-body">
+      A user journey for developers to obtain a quote for the Nature Restoration Fund levy (v5).
+    </p>
+
+    <details class="govuk-details">
+  <summary class="govuk-details__summary">
+    <span class="govuk-details__summary-text">
+      Design changes
+    </span>
+  </summary>
+  <div class="govuk-details__text">
+
+    <h1 class="govuk-heading-s">Map update only</h1>
+<ul class="govuk-list govuk-list--bullet">
+  <li>Different content hierarchy new panels</li>
+  <li>Enhanced drawing tools</li>
+  <li>Snap feature</li>
+  <li>Accessibility enhancements</li>
+  <li>Colours in key</li>
+  <li>On screen tool tips</li>
+  <li>Different styles - B&W, outline</li>
+  <li>New colours for EDPs for colour blindness</li>
+</ul>
+  </div>
+</details>
+
+    <p class="govuk-body"><a href="/nrf-estimate-4/start.html" class="govuk-link">Start prototype</a></p>
+
+
+    <div class="govuk-!-padding-bottom-5"></div>
+    <hr class="govuk-section-break govuk-section-break--visible">
+    <div class="govuk-!-padding-bottom-5"></div>
+                <h1 class="govuk-heading-l">
+      LPA journeys
+    </h1>
+    <hr class="govuk-section-break govuk-section-break--visible">
+    <div class="govuk-!-padding-bottom-5"></div>
+
+
+
+
+    <strong class="govuk-tag govuk-tag--green">Tested</strong>
+    <div class="govuk-!-padding-bottom-5"></div>
+    <h1 class="govuk-heading-m">LPA Approval</h1>
+
+    <p class="govuk-body">
+      A user journey for the LPA to check and approve the details sent from the developer.
+    </p>
+
+    <p class="govuk-body"><a href="/lpa-approve-1/lpa-approval-email-content.html" class="govuk-link">Start prototype</a></p>
+
+    <div class="govuk-!-padding-bottom-5"></div>
+    <hr class="govuk-section-break govuk-section-break--visible">
+    <div class="govuk-!-padding-bottom-5"></div>
+
+    <strong class="govuk-tag govuk-tag--green">Tested</strong>
+    <div class="govuk-!-padding-bottom-5"></div>
+    <h1 class="govuk-heading-m">LPA approve developer request to pay NRF (V2)</h1>
+
+    <p class="govuk-body">
+      A user journey for the LPA to check and approve the details sent from the developer.
+    </p>
+
+    <details class="govuk-details">
+  <summary class="govuk-details__summary">
+    <span class="govuk-details__summary-text">
+      Design changes
+    </span>
+  </summary>
+  <div class="govuk-details__text">
+<ul class="govuk-list govuk-list--bullet">
+  <li>Added H2 to explain what map pic is for</li>
+  <li>Added page to add name and email of approver</li>
+</ul>
+  </div>
+</details>
+
+    <p class="govuk-body"><a href="/lpa-approve-2/lpa-approval-email-content.html" class="govuk-link">Start prototype</a></p>
+
+<div class="govuk-!-padding-bottom-5"></div>
+    <hr class="govuk-section-break govuk-section-break--visible">
+    <div class="govuk-!-padding-bottom-5"></div>
+
+    <strong class="govuk-tag govuk-tag--green">Tested</strong>
+    <div class="govuk-!-padding-bottom-5"></div>
+    <h1 class="govuk-heading-m">LPA approve developer request to pay NRF (V3)</h1>
+
+    <p class="govuk-body">
+      A user journey for the LPA to check and approve the details sent from the developer
+    </p>
+
+    <details class="govuk-details">
+  <summary class="govuk-details__summary">
+    <span class="govuk-details__summary-text">
+      Design changes
+    </span>
+  </summary>
+  <div class="govuk-details__text">
+<ul class="govuk-list govuk-list--bullet">
+  <li>Added WWTW as a field</li>
+  <li>Added reject option</li>
+  </div>
+</details>
+
+    <p class="govuk-body"><a href="/lpa-approve-3/lpa-approval-email-content.html" class="govuk-link">Start prototype</a></p>
+
+    
+  
 </div>
 
 {% endblock %}

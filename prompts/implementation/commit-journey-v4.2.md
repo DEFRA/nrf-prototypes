@@ -191,7 +191,7 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 | ---------------------- | ------------------------------------------ |
 | Order number:          | 5                                          |
 | Path:                  | /nrf-estimate-4/retrieved-estimate-summary |
-| Title:                 | Check your answers                         |
+| Title:                 | Your quote details                         |
 | Conditional page flow: | None                                       |
 
 #### Data points
@@ -211,11 +211,10 @@ None
 | Email address | [show data.email] | [Change](/nrf-estimate-4/estimate-email?change=true&nav=check-your-answers) |
 
 Amend the above information or continue. You will be asked to create or sign in to an account.
-Primary button: Submit (form POST to /nrf-estimate-4/check-your-answers)
-Secondary button (red): Delete (link to /nrf-estimate-4/delete-quote)
+Primary button: Continue (form POST to /nrf-estimate-4/retrieved-estimate-summary)
+Secondary button (red): Delete (link to /nrf-estimate-4/delete-quote?from=retrieved)
 
 Note: This page uses the GOV.UK summary list component.
-Change links are disabled (javascript:void(0)) as this is a read-only summary of retrieved commitment data.
 ```
 
 #### Errors
@@ -230,7 +229,7 @@ None
 | ---------------------- | -------------------------------------------------------------------------------------- |
 | Order number:          | 5.1                                                                                    |
 | Path:                  | /nrf-estimate-4/delete-quote                                                           |
-| Title:                 | Are you sure you want to delete this quote?                                            |
+| Title:                 | Are you sure you want to delete this quote? (or "Are you sure you want to delete this commitment?" when from commit summary) |
 | Conditional page flow: | display if user clicks the delete button on /nrf-estimate-4/retrieved-estimate-summary |
 
 #### Data points
@@ -248,11 +247,15 @@ None
 }
 ```
 
+Note: Implementation uses primary "Yes" button with hidden input and secondary "No" link (no radio group).
+
 #### Content
 
 ```
 # Are you sure you want to delete this quote?
-This will permanently delete your quote. You can create a new quote. 
+(or when from commit: # Are you sure you want to delete this commitment?)
+This will permanently delete your quote. You can create a new quote.
+(or when from commit: This will permanently delete your commitment. You can create a new quote.)
 
 Button: Yes
 Secondary button: No
@@ -327,6 +330,8 @@ None
     }
 }
 ```
+
+Note: Implementation stores slug values `one-login` and `government-gateway` (labels shown to user are as above).
 
 #### Content
 
@@ -495,7 +500,7 @@ Link
 
 Hint text: Enter the details for the individual or company who will be paying the Nature Restoration Fund levy.
 
-## Full Name
+## Full name
 Field name: fullName
 
 ## Business name (optional)
@@ -615,11 +620,13 @@ None
 }
 ```
 
+Note: Implementation uses primary "Yes" button with hidden input and secondary "No" link (no radio group).
+
 #### Content
 
 ```
 # Are you sure you want to delete this commitment?
-This will permanently delete your commitment. You can create a new quote. 
+This will permanently delete your commitment. You can create a new quote.
 
 Button: Yes
 Secondary button: No

@@ -596,11 +596,13 @@ None
 }
 ```
 
+Note: Implementation uses primary "Yes" button with hidden input and secondary "No" link (no radio group).
+
 #### Content
 
 ```
 # Are you sure you want to delete this quote?
-This will permanently delete your quote. You can create a new quote. 
+This will permanently delete your quote. You can create a new quote.
 
 Button: Yes
 Secondary button: No
