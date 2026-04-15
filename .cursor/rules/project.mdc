@@ -1,0 +1,60 @@
+---
+description: Project overview – GOV.UK Prototype Kit, NRF prototypes, directory structure
+globs: "*.*"
+alwaysApply: true
+---
+
+# Project Overview
+
+## Stack
+- **GOV.UK Prototype Kit** (Node.js, Express)
+- **Nunjucks** for server-rendered templates
+- **GOV.UK Frontend** components and design system
+- **Custom mapping** (Leaflet, GeoJSON, turf.js) for red line boundary and EDP layers
+
+## Purpose
+Rapid prototyping of user journeys for the Nature Restoration Fund (NRF) levy service. Prototypes demonstrate user flows, form patterns, and map-based boundary capture; focus is on UX and flow over production security.
+
+## Directory Structure
+
+```
+app/
+├── config/
+│   ├── shared/
+│   │   ├── journeys.js          # JOURNEYS list; used by app and tests
+│   │   └── building-types.js     # Shared building type config
+│   └── {journey-name}/          # Per-journey route constants
+│       └── routes.js            # ROUTES and TEMPLATES
+├── routes/
+│   ├── routes.js                # Main router; mounts journey routes from JOURNEYS
+│   ├── index.js
+│   ├── nrf-estimate-4.js        # One route file per journey (by base path)
+│   ├── lpa-approve-2.js
+│   └── ...
+├── views/
+│   ├── layouts/
+│   │   └── main.html
+│   └── {journey-name}/          # One folder per journey; one HTML per page
+│       ├── start.html
+│       ├── what-would-you-like-to-do.html
+│       └── ...
+├── lib/                         # Shared validators, helpers (e.g. nrf-estimate-3)
+├── assets/
+│   └── map-layers/              # GeoJSON for EDP boundaries, catchments
+└── data/                        # Optional journey-specific data modules
+```
+
+## Journey Configuration
+- Journeys are defined in `app/config/shared/journeys.js` as `JOURNEYS`.
+- Each entry has `name`, `displayName`, `basePath` (e.g. `/nrf-estimate-4`), optional `hasStartPage`, `entryPath`, `description`.
+- Add a new journey by adding an entry to `JOURNEYS` and creating `app/routes/{basePathWithoutSlash}.js` (e.g. `nrf-estimate-4.js`). `app/routes.js` loads route modules dynamically from `JOURNEYS`, so no change to `routes.js` is needed for new journeys.
+- **Completeness**: For every journey, ensure (1) an entry exists in `JOURNEYS`, (2) `app/config/{journey}/routes.js` exists on disk if `app/routes/{journey}.js` requires it, and (3) `node -e "require('./app/routes/{journey}.js')"` succeeds from the repo root. Omitting (1) or (2) typically causes **404** for the whole journey (router never mounts).
+
+## Key Principles
+- **User journey first**: Implement flows from prompts (page flow, data points, content, errors).
+- **Session for prototype data**: Use `req.session.data` for form and journey state; no production persistence.
+- **GOV.UK Design System**: Use GOV.UK Frontend components and content guidelines; British English.
+
+## Git and Conventions
+- Use conventional commit prefixes (`feat:`, `fix:`, etc.).
+- Keep messages concise; reference issues where relevant.

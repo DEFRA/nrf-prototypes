@@ -3,7 +3,7 @@ name: fix-journey-prompt
 description: Identify and fix any issue with a journey prompt, in order to give the /journey-updates command the best chance at successfully integrating the journey updates
 parameters:
   - name: journey
-    description: The type of journey to update (e.g., 'nrf-estimate-1', 'lpa-verify', 'edp-search')
+    description: Canonical journey slug used as the first URL segment and usual on-disk folder name (e.g. 'nrf-estimate-4-2', 'lpa-verify'). Paths in the spec should be `/{journey}/...`; do not silently rewrite them to a legacy repo prefix.
     required: true
   - name: spec-file
     description: Path to the specification markdown file (e.g., prompts/implementation/payment-journey-with-ref-v1.md)
@@ -45,6 +45,13 @@ Take the instructions and parameters provided, then:
   - Form field names
   - Route names
   - Template names
+
+## 1a. Journey id as canonical URL prefix
+
+- Treat the `{journey}` parameter as the **canonical first path segment** for this run (URLs are `/{journey}/...`).
+- When normalising or fixing paths and markdown links in the specification, **align them with `{journey}`**. Do not replace that prefix with a different `basePath` found in the repo unless the specification itself documents an intentional alias.
+- If the repo uses another slug (e.g. an older journey folder), list that under **Potential conflicts** / **Manual review** — e.g. register `basePath: '/{journey}'` in `app/config/shared/journeys.js`, add `app/routes/{journey}.js`, or map URLs deliberately — rather than reverting the spec to the legacy prefix without user intent.
+- On-disk layout is usually `app/routes/{journey}.js`, `app/views/{journey}/`, `app/config/{journey}/routes.js` using the same slug as `{journey}`.
 
 ## 2. Scan Existing Journey Code for Conflicts
 
@@ -125,7 +132,7 @@ For each page in the specification:
 2. Convert to lowercase
 3. Replace spaces and underscores with hyphens
 4. Remove special characters except hyphens and slashes
-5. Ensure base path matches journey name (e.g., `/nrf-estimate-2/`)
+5. Ensure the base path matches the **`{journey}` parameter** from the command (e.g. `/nrf-estimate-4-2/` when `journey` is `nrf-estimate-4-2`). Do not substitute a different prefix from the codebase unless the spec explicitly states a mapping.
 6. Update the specification with corrected path
 
 **Example transformations:**
@@ -311,7 +318,18 @@ Ensure dynamic text correctly reflects user selections:
 3. **Incorrect grammar**: "newts nutrients" instead of "newts and nutrients"
 4. **Hard-coded values**: Not extracting from user selections
 
-## 10. Email Content Page Structure
+
+## 10. Static page content
+
+Do not change the page content itself unless it's to make any of the largely structural and functional fixes outlined in other sections. The content should be honoured and remain intact.
+
+### User-facing `Content` vs implementation notes
+
+- **`#### Content`** (including fenced blocks) must hold only **user-visible copy** and minimal structural hints that belong on the page (headings, hint text, button labels).
+- **Do not** put router/session implementation details in `#### Content` — for example: dual-read session keys (`estimateEmail` vs `email`), compatibility with other journey branches, or “implementation may…” sentences. Those belong in **`#### Implementation notes (not page copy)`** immediately under the same page section, or under **Technical Requirements** / **Session data** — not inside the content designers’ page copy block. 
+
+
+## 11. Email Content Page Structure
 
 Email preview pages must follow consistent structure:
 
@@ -334,7 +352,7 @@ Email preview pages must follow consistent structure:
 - **Dynamic content**: Include user selections in email body
 - **Call to action**: Appropriate links or instructions using markdown link syntax `[label](URL)`
 
-## 11. Summary Page Patterns
+## 12. Summary Page Patterns
 
 Check Your Answers pages must follow GOV.UK patterns:
 
@@ -356,7 +374,7 @@ Check Your Answers pages must follow GOV.UK patterns:
 - **Filter display values**: Don't show `_unchecked` or empty values
 - **Format appropriately**: Remove bullets if not appropriate for display
 
-## 12. Known Issues and Auto-fixes
+## 13. Known Issues and Auto-fixes
 
 Based on previous implementations, automatically check and fix these issues:
 
@@ -419,7 +437,7 @@ Based on previous implementations, automatically check and fix these issues:
 - **Why critical**: `/confirm` easily confused with `/confirmation`, leading to wrong links and redirects
 - **Applies to**: Route constants, view file names, and data property names
 
-## 13. Markdown Formatting Standards
+## 14. Markdown Formatting Standards
 
 Ensure all specifications use markdown syntax consistently:
 
@@ -450,7 +468,7 @@ For each page in the specification:
 3. Replace unnecessary HTML with markdown equivalents
 4. Keep only approved pseudo-HTML tags (`<green-banner>`, `<inset-text>`)
 
-## 14. Update Specification File In Place
+## 15. Update Specification File In Place
 
 After all validations and fixes:
 
@@ -500,7 +518,7 @@ Updated file: {spec-file}
 3. Run `/journey-updates journey:{journey} changes:{spec-file}`
 ```
 
-## 15. Integration with journey-updates Command
+## 16. Integration with journey-updates Command
 
 This command prepares specifications for seamless processing by `/journey-updates`:
 

@@ -1,0 +1,74 @@
+---
+description: Journey and route structure – route files, config, conditional flow, registration
+globs: ["app/routes/**/*.js", "app/config/**/*.js"]
+alwaysApply: false
+---
+
+# Journeys and Routes
+
+## Context
+Each user journey has a dedicated route module and config. Routes are registered via `app/config/shared/journeys.js` and `app/routes.js`.
+
+## File Structure
+
+### 1. Route config – `app/config/{journey}/routes.js`
+- **BASE_PATH**: Journey prefix (e.g. `/nrf-estimate-4`, `/lpa-approve-2`).
+- **ROUTES**: Every path as a constant, e.g. `START: \`${BASE_PATH}/start\``, `MAP: \`${BASE_PATH}/map\``.
+- **TEMPLATES**: View names without `.html`, e.g. `START: 'nrf-estimate-4/start'`.
+- Export: `module.exports = { ROUTES, TEMPLATES }`.
+
+### 2. Route module – `app/routes/{journey}.js`
+- `const govukPrototypeKit = require('govuk-prototype-kit')` and `const router = govukPrototypeKit.requests.setupRouter()`.
+- `const { ROUTES, TEMPLATES } = require('../config/{journey}/routes')`.
+- Implement GET for each page (render with `data`, `backLink`, `error` as needed).
+- Implement POST for forms: validate, set `req.session.data`, redirect or re-render with errors.
+- Export: `module.exports = router`.
+
+### 3. Registration
+- Add the journey to `JOURNEYS` in `app/config/shared/journeys.js` with `name`, `displayName`, `basePath`, `hasStartPage`, optional `entryPath`, `description`.
+- `app/routes.js` loads routes by `basePath` (e.g. `nrf-estimate-4` → `./routes/nrf-estimate-4.js`). No need to add a new `require` for journey routes that follow this naming.
+
+## Conditional Page Flow
+- **Branching**: Use `req.session.data` (e.g. `journeyType`, `hasRedlineBoundaryFile`, `buildingTypes`) to decide next path in POST handlers.
+- **Redirects**: After a successful POST, compute next route from data (e.g. if no EDP → `ROUTES.NO_EDP`, if non-residential → `ROUTES.NON_RESIDENTIAL`) then `res.redirect(nextRoute)`.
+- **Back links**: Set `backLink` per page from the logical previous step; for change links from summary use query params (e.g. `?change=true&nav=summary`) and preserve return-to-summary behaviour.
+
+## Linear vs Multi-Step Journeys
+- **Quote/commit/payment**: Multi-step with forms and conditional branches; use session and validation.
+- **LPA approval (click-through)**: Linear; mostly GETs and button links, no form posts; optional static content and back links only.
+
+## Examples
+
+### ✅ Good – Conditional redirect after POST
+```javascript
+router.post(ROUTES.REDLINE_MAP, (req, res) => {
+  const hasFile = req.body['has-redline-boundary-file'] === 'Upload a file'
+  req.session.data = req.session.data || {}
+  req.session.data.hasRedlineBoundaryFile = hasFile
+  if (hasFile) {
+    return res.redirect(ROUTES.UPLOAD_REDLINE)
+  }
+  req.session.data.mapReferrer = 'redline-map'
+  res.redirect(ROUTES.MAP)
+})
+```
+
+### ✅ Good – Back link from context
+```javascript
+router.get(ROUTES.CHECK_YOUR_ANSWERS, (req, res) => {
+  const data = req.session.data || {}
+  const backLink = ROUTES.ESTIMATE_EMAIL
+  res.render(TEMPLATES.CHECK_YOUR_ANSWERS, { data, backLink })
+})
+```
+
+### ✅ Good – Journey entry in journeys.js
+```javascript
+{
+  name: 'NRF Estimate 4',
+  displayName: 'Get a quote for Nature Restoration Fund Levy (V4)',
+  basePath: '/nrf-estimate-4',
+  hasStartPage: true,
+  description: '...'
+}
+```

@@ -1,0 +1,37 @@
+---
+description: Security for prototypes – no secrets in code, session usage, basic validation
+globs: ["app/**/*.js", "app/**/*.html"]
+alwaysApply: false
+---
+
+# Security (Prototype Context)
+
+## Context
+These are **rapid prototypes** for user testing and design validation. Prioritise user experience and flow; do not implement production-grade security. The prompts state: “focus on user experience over security”, “implement basic validation without complex security measures”.
+
+## Do
+
+### No Secrets in Code
+- Do not commit API keys, passwords, or tokens. Use placeholders (e.g. `xxxxx@defra.gov.uk`, “00000000000”) in copy and mock data.
+- If environment variables are used later, document in README or .env.example; do not hardcode real values.
+
+### Session and Data
+- Use `req.session.data` only for prototype state (form answers, journey progress). Session is in-memory or cookie-based in the kit; not suitable for real PII in production.
+- Do not log full session or request bodies that could contain user-typed content in production; for prototypes, minimal logging is fine.
+
+### Basic Validation
+- Validate required fields and formats (email, number, file type/size) so the flow is testable and errors match the design.
+- Reject invalid input with clear error messages; no need for allowlists/denylists or encoding beyond what the kit provides.
+
+### Safe Redirects
+- Redirect only to paths within the app (use route constants). Avoid redirecting to `req.query.next` or user-controlled URLs.
+
+## Do Not (for this prototype)
+
+- **Authentication**: Mock sign-in (e.g. Government Gateway, One Login) with stub pages only; no real auth or password handling.
+- **CSRF**: The kit may add CSRF for forms; do not remove it. No need to add extra CSRF for prototype-only endpoints.
+- **Encryption**: No need to encrypt session or stored data for prototype; no real payment or PII persistence.
+- **Rate limiting / brute force**: Not required for local or internal prototype use.
+
+## If You Add Real Back-End Later
+- Treat these rules as a baseline. Add proper auth, input sanitisation, secrets management, and HTTPS as required by your security policy.

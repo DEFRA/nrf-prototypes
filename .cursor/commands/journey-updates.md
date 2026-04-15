@@ -1,6 +1,6 @@
 ---
 name: journey-updates
-description: Merge new changes to a prototype user journey
+description: Merge new changes to a prototype user journey (routes, config, and on-disk Nunjucks templates under app/views/{journey}/)
 parameters:
   - name: journey
     description: The type of journey to update (e.g., 'nrf-estimate-1', 'lpa-verify', 'edp-search')
@@ -56,7 +56,11 @@ When implementing or updating journeys, ensure consistent styling across all pag
   - **Payment/Reference numbers**: When displaying "Payment reference:" or similar labels, make the label bold using `<strong>Payment reference:</strong>` followed by the value
   - **Structured data**: Use `govuk-summary-list` component for displaying key-value pairs (e.g., payment reference and business name together)
 
-- **Consistency**: Ensure all pages in a journey follow the same styling patterns as existing journeys (nrf-estimate-1, nrf-estimate-2)
+- **Buttons** ([GOV.UK Button component](https://design-system.service.gov.uk/components/button/)):
+  - **Check your answers / multi-action footers**: Put the primary submit button and any secondary control (secondary button, cancel link, or `govuk-link--destructive` “Delete”) inside one `<div class="govuk-button-group">`—not in separate block elements that stack vertically. **Structure**: the `<form method="post">` must wrap the `govuk-button-group`, not the other way around. Correct: `<form>…<div class="govuk-button-group">` submit button + links `</div></form>`. Wrong: `<div class="govuk-button-group"><form>…only submit…</form><a>Delete</a></div>` (avoids form/group nesting issues and matches `.cursor/rules/views-and-templates.mdc`).
+  - **Destructive flows**: Use a destructive **link** from the summary page; reserve `govuk-button--warning` for the final confirmation step where the Design System recommends it.
+
+- **Consistency**: Ensure all pages in a journey follow the same styling patterns as existing journeys (nrf-estimate-1, nrf-estimate-2). For view-level conventions, follow `.cursor/rules/views-and-templates.mdc`.
 
 ### Structural Change Examples
 
@@ -64,6 +68,43 @@ When implementing or updating journeys, ensure consistent styling across all pag
 - **Page order changes**: Reordering of steps in the journey flow
 - **Path changes**: `/old-path` → `/new-path`
 - **Deleted pages**: Removing steps that are no longer needed
+
+## Mandatory: prototype wiring (always verify)
+
+Content-only merges are not enough: if the journey is not wired into the kit, users get **404** on every path. **Treat the following as part of every `/journey-updates` run**—not optional follow-up.
+
+1. **`app/config/shared/journeys.js`**
+   - The `{journey}` must appear in `JOURNEYS` with the correct `basePath` (e.g. `/nrf-estimate-4`).
+   - This drives both the **home page index** (`app/routes/index.js`) and **dynamic loading** of `app/routes/{journey}.js` in `app/routes.js`.
+   - If the journey is missing here, the route file is never mounted and **all URLs under that base path return 404**.
+
+2. **`app/config/{journey}/routes.js` (on disk)**
+   - If `app/routes/{journey}.js` does `require('../config/{journey}/routes')` (or similar), the folder and file **must exist in the workspace**.
+   - A missing file causes `require` to throw; the kit catches it and **skips loading the whole journey** (often only a console warning).
+
+3. **Templates on disk: canonical path and `res.render` alignment (non-negotiable)**
+   - **Canonical folder**: Every Nunjucks page for the journey lives under **`app/views/{journey}/`**, where `{journey}` is the **route module basename** (the `{journey}` parameter to this command—e.g. `nrf-quote-4-2`), **not** whatever URL prefix the markdown spec uses. If the spec says `/nrf-estimate-4/start` but you are implementing `journey:nrf-quote-4-2`, files belong at `app/views/nrf-quote-4-2/start.html` and URLs use that journey’s `basePath`.
+   - **One file per step**: For each route that calls `res.render(...)`, there must be a matching **`app/views/{journey}/<name>.html`**. The render string is **`{journey}/<name>`** (no `.html`). Example: `res.render('nrf-quote-4-2/start')` requires **`app/views/nrf-quote-4-2/start.html`** on disk.
+   - **`TEMPLATES` in `app/config/{journey}/routes.js`**: Every `TEMPLATES.*` value must resolve to an existing file under `app/views/{journey}/`. After edits, **enumerate** `TEMPLATES` (and any literal `res.render('…')` strings in the route file) and confirm each maps to `app/views/.../<slug>.html`.
+   - **Do not finish the merge with missing templates**: If the router or `TEMPLATES` references a page that has no `.html` file yet, **create the file in the same run** (copy structure from a similar journey, then swap copy and paths). An empty stub is unacceptable for user-facing steps—use minimal valid GOV.UK layout + correct `form action`/`href` for that `basePath`.
+   - **Verification before closing**: List `app/views/{journey}/` (e.g. `ls app/views/{journey}`) and compare to the set of pages implied by the spec **and** by `TEMPLATES` / `res.render`. Any gap is a **blocking** defect (runtime error: `template not found: {journey}/…`).
+
+4. **Views for every spec path**
+   - After mapping spec `Path:` entries to templates, confirm `app/views/{journey}/` has a matching `.html` for each (and map layouts if used).
+   - Partial views + a loaded router still produce **404** or template errors for missing steps.
+
+5. **Smoke check (run before finishing)**
+   - From the repo root:
+
+   ```bash
+   node -e "require('./app/routes/{journey}.js'); console.log('OK');"
+   ```
+
+   Replace `{journey}` with the route module name (e.g. `nrf-estimate-4`). It must exit **0**. Any `Cannot find module` error means wiring or config is incomplete.
+   - **Note**: This check does **not** load Nunjucks templates. Missing `app/views/{journey}/*.html` files still cause **`template not found: {journey}/…`** at runtime when a page is requested—hence item 3 above is mandatory.
+
+6. **Optional HTTP check** (if a dev server is available)
+   - `GET /{basePath}/start` (or the journey’s real entry URL) should return **200**, not 404.
 
 # Instructions
 
@@ -107,10 +148,11 @@ Take the instructions and parameters provided, then:
 3. **Implementation Steps**:
    - **Structural Analysis First**:
      - Extract all page paths from the specification using grep for "Path:"
-     - List all existing view files in the journey directory
-     - Identify new pages that need to be created
+     - List all existing view files in **`app/views/{journey}/`** (not another folder, even if the spec uses a different route prefix)
+     - Identify new pages that need to be created **as new `.html` files under `app/views/{journey}/`**
      - Identify deleted pages that need to be removed
      - Check for page order changes and flow modifications
+     - **Template path rule**: When adding a page, add **`app/views/{journey}/<slug>.html`** and wire `TEMPLATES` / `res.render('{journey}/<slug>')` in the same change set—never leave render targets without files
    - **Content Replacement Strategy** (Primary Approach):
      - **Extract Content Blocks**: Parse the specification markdown to extract complete content blocks for each page
      - **Direct Content Replacement**: Replace entire content sections in view files with the exact content from the specification
@@ -144,13 +186,20 @@ Take the instructions and parameters provided, then:
 
 4. **Files to Update**:
    - Routes: `app/routes/{journey}.js`
-   - Views: `app/views/{journey}/`
+   - Views: **`app/views/{journey}/`** — one `.html` file per rendered template name; folder name **must** match `{journey}`
+   - **Registry**: `app/config/shared/journeys.js` (must list the journey whenever the journey is new or the base path changes)
+   - **Route constants**: `app/config/{journey}/routes.js` whenever the route module depends on it
    - Any additional files mentioned in the changes
 
 5. **Validation**:
+   - **Prototype wiring (do first)**:
+     - Confirm `JOURNEYS` includes this journey and `basePath` matches `app/routes/{journey}.js`
+     - Confirm `app/config/{journey}/routes.js` exists if required by the route module
+     - Run `node -e "require('./app/routes/{journey}.js'); console.log('OK');"` from repo root
    - **Structural Verification**:
-     - Verify all pages from the specification exist as view files
-     - Check that all page paths match the specification exactly
+     - Verify all pages from the specification exist as view files under **`app/views/{journey}/`**
+     - **Cross-check renders**: Grep `app/routes/{journey}.js` (and `app/config/{journey}/routes.js` for `TEMPLATES`) for template names; for each, assert `app/views/{journey}/<slug>.html` exists
+     - Check that implemented URL paths match the journey’s `basePath` (spec markdown may use a different prefix—implementation paths follow `ROUTES` / `BASE_PATH`, but **files** always live under `app/views/{journey}/`)
      - Confirm page order and flow matches the specification
      - Ensure no orphaned pages exist that aren't in the specification
    - **Content Verification**:
@@ -163,6 +212,7 @@ Take the instructions and parameters provided, then:
      - Check email pages use `govuk-link` for links, not `govuk-button` styles
      - Verify payment/reference labels are bold (`<strong>Payment reference:</strong>`)
      - Check structured data uses `govuk-summary-list` where appropriate
+     - On “check your answers” (or any page with submit + delete/cancel), confirm related actions use `govuk-button-group` per the Design System Button component, with **`<form>` outside** `govuk-button-group` when posting (see views-and-templates rule for the exact HTML order)
      - Ensure styling consistency with existing journeys (nrf-estimate-1, nrf-estimate-2)
    - **Functional Testing**:
      - Ensure all form submissions work correctly

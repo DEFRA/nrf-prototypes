@@ -1,0 +1,60 @@
+---
+description: Testing prototype journeys – structure, journey config, manual and automated checks
+globs: ["**/test*.js", "**/*.test.js", "**/tests/**", "**/spec/**", "**/e2e/**"]
+alwaysApply: false
+---
+
+# Testing – Prototype Journeys
+
+## Context
+Testing supports consistent journey configuration and, where present, automated checks that routes and flows behave as specified in the implementation prompts.
+
+## Journey Configuration as Single Source of Truth
+- **app/config/shared/journeys.js** defines `JOURNEYS`. Use it from the app and from tests so that adding a journey or changing a base path is done in one place.
+- Tests can use `getJourneysWithStartPage()`, `getAllJourneyPaths()`, `getJourneyByPath()` to drive navigation or assertions.
+
+## What to Test (when tests exist)
+- **Route registration**: Journeys in `JOURNEYS` have a corresponding route file (e.g. `app/routes/nrf-estimate-4.js` for `basePath: '/nrf-estimate-4'`).
+- **Start pages**: GET `{basePath}/start` returns 200 for journeys with `hasStartPage: true`.
+- **Key steps**: Critical GET and POST paths (e.g. what-would-you-like-to-do, map, summary) return expected status and, if applicable, redirect to the next step.
+- **Validation**: POST with missing required field returns 200 and response body contains the configured error message (e.g. “There is a problem”, “Select what you would like to do”).
+- **Conditional flow**: With session data set (e.g. “no EDP”), POST or GET leads to the correct exit or next page.
+
+## Test Structure (if added)
+- Prefer a single test directory (e.g. `tests/` or `e2e/`) rather than scattering test files.
+- Use descriptive names: e.g. `journey nrf-estimate-4 start page loads`, `quote journey validates email`.
+- Use the same route constants or journey config in tests to avoid drift (e.g. require `app/config/shared/journeys.js` and `app/config/nrf-estimate-4/routes.js` if testing route paths).
+
+## Manual Testing
+- Walk through each journey from the prompt (quote, commit, LPA approve, etc.) and confirm:
+  - All pages render with correct titles and back links.
+  - Required validation shows “There is a problem” and the specified message.
+  - Conditional branches (e.g. no EDP, non-residential) go to the right page.
+  - Summary and confirmation pages show the right data from session.
+- Test map flow: draw boundary, submit; confirm redirect to next step or no-edp.
+
+## Examples (conceptual)
+
+### ✅ Good – Using journey config in test
+```javascript
+const { JOURNEYS, getJourneysWithStartPage } = require('../app/config/shared/journeys')
+
+describe('Journey registration', () => {
+  getJourneysWithStartPage().forEach(({ name, path }) => {
+    it(`${name} start page is reachable`, async () => {
+      const res = await request(app).get(path)
+      expect(res.status).toBe(200)
+    })
+  })
+})
+```
+
+### ✅ Good – Validation assertion
+```javascript
+const res = await request(app)
+  .post('/nrf-estimate-4/what-would-you-like-to-do')
+  .send({})
+expect(res.status).toBe(200)
+expect(res.text).toContain('There is a problem')
+expect(res.text).toContain('Select what you would like to do')
+```

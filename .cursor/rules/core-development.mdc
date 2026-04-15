@@ -1,0 +1,76 @@
+---
+description: Core development principles for routes, session, and naming
+globs: ["app/**/*.js", "app/**/*.html"]
+alwaysApply: false
+---
+
+# Core Development – GOV.UK Prototype Kit
+
+## Context
+Standards for route handlers, session data, naming, and structure so journeys stay consistent and maintainable.
+
+## Guidelines
+
+### Route and Template Naming
+- **Paths**: lowercase with hyphens (e.g. `/nrf-estimate-4/redline-map`, `/lpa-approve-2/approve-details`).
+- **Route constants**: `ROUTES` and `TEMPLATES` in `app/config/{journey}/routes.js`; use these in the route file instead of string literals.
+- **View files**: One HTML file per page; filename matches path segment (e.g. `what-would-you-like-to-do.html`, `check-your-answers.html`).
+
+### Session Data
+- Use `req.session.data` for all journey and form state; initialise with `req.session.data = req.session.data || {}`.
+- Store field values under clear keys matching the spec (e.g. `journeyType`, `hasRedlineBoundaryFile`, `buildingTypes`, `email`).
+- Use `req.session.data` when rendering: pass `data: req.session.data` (or `data`) into templates.
+
+### Route Handler Pattern
+- **GET**: Load `data` from session, resolve back link, `res.render(template, { data, backLink, error, ... })`.
+- **POST**: Validate; on error re-render with `error` (and optional `errors` object). On success update `req.session.data`, then `res.redirect(nextPath)`.
+- Keep handlers focused: validate, update session, redirect or re-render. Delegate complex logic to `lib/` (validators, helpers).
+
+### Naming Conventions
+- **Variables**: `camelCase` in JS.
+- **Template vars**: `camelCase` or `kebab-case` as in the spec (e.g. `journey-type` for form field name, `journeyType` for data key).
+- **Constants**: `UPPER_SNAKE_CASE` for route and template names in config.
+
+### File Structure per Journey
+1. **Route file**: `app/routes/{basePathWithoutSlash}.js` (e.g. `nrf-estimate-4.js`).
+2. **Config**: `app/config/{basePathWithoutSlash}/routes.js` exporting `ROUTES` and `TEMPLATES`.
+3. **Views**: `app/views/{basePathWithoutSlash}/*.html`.
+4. **Shared lib**: Reuse from `app/lib/` (e.g. validators, building-type helpers).
+
+### British English
+- Use British spelling in copy and comments: colour, behaviour, centre, realise, optimise.
+- Match wording from the implementation prompts (e.g. “Check your answers”, “There is a problem”).
+
+## Examples
+
+### ✅ Good – GET with back link and data
+```javascript
+router.get(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO, (req, res) => {
+  const data = req.session.data || {}
+  const backLink = ROUTES.START
+  res.render(TEMPLATES.WHAT_WOULD_YOU_LIKE_TO_DO, { data, backLink })
+})
+```
+
+### ✅ Good – POST with validation and re-render
+```javascript
+router.post(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO, (req, res) => {
+  const journeyType = req.body['journey-type']
+  if (!journeyType) {
+    return res.render(TEMPLATES.WHAT_WOULD_YOU_LIKE_TO_DO, {
+      data: req.session.data || {},
+      error: 'Select what you would like to do'
+    })
+  }
+  req.session.data = req.session.data || {}
+  req.session.data.journeyType = journeyType
+  res.redirect(ROUTES.REDLINE_MAP)
+})
+```
+
+### ❌ Poor – Magic strings and no config
+```javascript
+router.get('/nrf-estimate-4/what-would-you-like-to-do', (req, res) => {
+  res.render('nrf-estimate-4/what-would-you-like-to-do', { data: req.session.data })
+})
+```

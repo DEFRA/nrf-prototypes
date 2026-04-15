@@ -4,8 +4,8 @@
 
 - **Journey Name**: Get a quote for Nature Restoration Fund Levy
 - **Journey Description**:  
-  A user journey for a developer to obtain a quote for the Nature Restoration Fund levy required when submitting planning permission to build a development of some sort. A significant page in the journey is /nrf-estimate-4/map where the user will be able to plot a polygon on a map to define the development site boundary. There will also be 5 polygon areas over England that are known as EDP boundaries. If the development site boundary does not fall within an EDP area then the user will be navigated to the exit page /nrf-estimate-4/no-edp.
-- **Journey Route Prefix**: nrf-estimate-4
+  A user journey for a developer to obtain a quote for the Nature Restoration Fund levy required when submitting planning permission to build a development of some sort. A significant page in the journey is `/nrf-quote-4-2/map` where the user will be able to plot a polygon on a map to define the development site boundary. There will also be 5 polygon areas over England that are known as EDP boundaries. If the development site boundary does not fall within an EDP area then the user will be navigated to the exit page `/nrf-quote-4-2/no-edp`.
+- **Journey Route Prefix**: nrf-quote-4-2 (canonical URL first segment: `/nrf-quote-4-2/...`)
 - **Start Page Title**: Get a quote for Nature Restoration Fund Levy
 
 ## Page Flow and Conditional Logic
@@ -15,7 +15,7 @@
 | **Field**                  | **Value**                                    |
 | -------------------------- | -------------------------------------------- |
 | **Order number:**          | 1                                            |
-| **Path:**                  | /nrf-estimate-4/start                        |
+| **Path:**                  | /nrf-quote-4-2/start                        |
 | **Title:**                 | Get a quote for Nature Restoration Fund Levy |
 | **Conditional page flow:** | none                                         |
 
@@ -32,8 +32,8 @@ None
 
 Use this service to find out if your development is in an area with an EDP, get a quote for the cost of the levy, commit to using the levy and pay the levy.
 
-If a development falls into an area with an [Environmental Delivery Plan (EDP)](javascript:void(0)), you can use [Nature Restoration Fund (NRF)](javascript:void(0)) levies to discharge environmental obligations.
-If you choose not to use the NRF levy, you will still need to [discharge your obligations in other ways](javascript:void(0)).
+If a development falls into an area with an [Environmental Delivery Plan (EDP)](#), you can use [Nature Restoration Fund (NRF)](#) levies to discharge environmental obligations.
+If you choose not to use the NRF levy, you will still need to [discharge your obligations in other ways](#).
 
 CTA: Start now
 
@@ -96,7 +96,7 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 | **Field**              | **Value**                                 |
 | ---------------------- | ----------------------------------------- |
 | Order number:          | 2                                         |
-| Path:                  | /nrf-estimate-4/what-would-you-like-to-do |
+| Path:                  | /nrf-quote-4-2/what-would-you-like-to-do |
 | Title:                 | What would you like to do?                |
 | Conditional page flow: | none                                      |
 
@@ -142,7 +142,7 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 | **Field**              | **Value**                                                             |
 | ---------------------- | --------------------------------------------------------------------- |
 | Order number:          | 3                                                                     |
-| Path:                  | /nrf-estimate-4/redline-map                                           |
+| Path:                  | /nrf-quote-4-2/redline-map                                           |
 | Title:                 | Choose how you would like to show us the boundary of your development |
 | Conditional page flow: | none                                                                  |
 
@@ -151,11 +151,11 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 ```
 {
      data: {
-        hasRedlineBoundaryFile: {
+        redlineBoundaryChoice: {
             type: radios
             required: true
             values: "Draw on a map" | "Upload a file"
-            fieldName: "has-redline-boundary-file"
+            fieldName: "redline-boundary-choice"
         }
     }
 }
@@ -185,9 +185,9 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 | **Field**               | **Value**                                       |
 | ----------------------- | ----------------------------------------------- |
 | Order number:           | 3.1                                             |
-| Path:                   | /nrf-estimate-4/upload-redline                  |
+| Path:                   | /nrf-quote-4-2/upload-redline                  |
 | Title:                  | Upload a red line boundary file                 |
-| Conditional page flow:  | display if data.hasRedlineBoundaryFile === true (user chose "Upload a file") |
+| Conditional page flow:  | display if `data.redlineBoundaryChoice` is `"Upload a file"` |
 
 #### Data points
 
@@ -196,7 +196,7 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
     data: {
         redlineFile: {
             type: file,
-            conditional: required if data.hasRedlineBoundaryFile === true
+            conditional: required if data.redlineBoundaryChoice === "Upload a file"
             fieldName: "redline-file"
         }
     }
@@ -234,18 +234,18 @@ Hint text: Upload a shapefile (.shp) or GeoJSON file (.geojson). The file must b
 | **Field**               | **Value**                                        |
 | ----------------------- | ------------------------------------------------ |
 | Order number:           | 3.2                                              |
-| Path:                   | /nrf-estimate-4/map                              |
+| Path:                   | /nrf-quote-4-2/map                              |
 | Title:                  | Draw a red line boundary                         |
-| Conditional page flow:  | display if data.hasRedlineBoundaryFile === false (user chose "Draw on a map") |
+| Conditional page flow:  | display if `data.redlineBoundaryChoice` is `"Draw on a map"` |
 
-#### Data points
+#### Data points
 
 ```
 {
     data: {
         redlineBoundaryPolygon: {
             type: array,
-            conditional: required if data.hasRedlineBoundaryFile === false
+            conditional: required if data.redlineBoundaryChoice === "Draw on a map"
         }
     }
 }
@@ -256,14 +256,12 @@ Hint text: Upload a shapefile (.shp) or GeoJSON file (.geojson). The file must b
 ```
 # Draw a red line boundary
 Hint text: Use the map to draw a red line boundary for where the development might be.
-
-Note: The implementation includes a complex map interface with:
-- Location search functionality
-- Drawing tools (Start drawing boundary, Edit boundary, Delete boundary)
-- Map view controls (Show all England, Zoom to boundary, Toggle catchments)
-- Delete confirmation panel
-- Client-side validation
 ```
+
+#### Implementation notes (not page copy)
+
+- Map UI: location search; drawing tools (start / edit / delete boundary); view controls (show all England, zoom to boundary, toggle catchments where used); delete confirmation; client-side validation before save.
+- Primary control label: **Save and continue** (not “Continue” alone). Show this action only when a boundary has been drawn.
 
 #### Errors
 
@@ -273,8 +271,6 @@ Note: The implementation includes a complex map interface with:
 | Error summary: | There is a problem                                                 |
 | Error message: | Draw a red line boundary to continue                               |
 
-Note: The button text on this page is "Save and continue" (not just "Continue"). The button only appears when a boundary has been drawn. The page uses a full-screen map interface with drawing tools, location search, and map controls. The implementation includes a complex map interface with location search functionality, drawing tools (Add, Edit, Delete boundary), map view controls (Show all England, Zoom to boundary), and client-side validation.
-
 ---
 
 ### Exit page if the development site is not within an EDP area (conditional)
@@ -282,12 +278,12 @@ Note: The button text on this page is "Save and continue" (not just "Continue").
 | **Field**               | **Value**                                                  |
 | ----------------------- | ---------------------------------------------------------- |
 | Order number:           | 3.3                                                        |
-| Path:                   | /nrf-estimate-4/no-edp                                     |
+| Path:                   | /nrf-quote-4-2/no-edp                                     |
 | Title:                  | Nature Restoration Fund levy is not available in this area |
 | Data points:            | None                                                       |
 | Conditional page flow:   | display if development site is not within an EDP area      |
 
-#### Content
+#### Content
 
 ```
 # Nature Restoration Fund levy is not available in this area
@@ -297,7 +293,7 @@ Other ways to mitigate environmental impact are:
 - Marine impact assessments for marine conservation zones
 - Species licensing applications for protected species
 
-[Find out about mitigating environmental impact](javascript:void(0))
+[Find out about mitigating environmental impact](#)
 ```
 
 #### Errors
@@ -311,7 +307,7 @@ None
 | **Field**               | **Value**                                                   |
 | ----------------------- | ----------------------------------------------------------- |
 | Order number:           | 4                                                           |
-| Path:                   | /nrf-estimate-4/building-type                               |
+| Path:                   | /nrf-quote-4-2/building-type                               |
 | Title:                  | What type of development is it?                             |
 | Conditional page flow:  | display if red line boundary falls within EDP boundary area |
 
@@ -359,7 +355,7 @@ Button: Continue
 | **Field**              | **Value**                                                          |
 | ---------------------- | ------------------------------------------------------------------ |
 | Order number:          | 4.1                                                                |
-| Path:                  | /nrf-estimate-4/residential                                        |
+| Path:                  | /nrf-quote-4-2/residential                                        |
 | Title:                 | How many residential units in this development?                    |
 | Conditional page flow: | display if data.buildingTypes includes Housing                     |
 
@@ -401,7 +397,7 @@ Button: Continue
 | **Field**              | **Value**                                                                       |
 | ---------------------- | ------------------------------------------------------------------------------- |
 | Order number:          | 4.2                                                                             |
-| Path:                  | /nrf-estimate-4/people-count                                                    |
+| Path:                  | /nrf-quote-4-2/people-count                                                    |
 | Title:                 | What is the maximum number of people the development will serve?                |
 | Conditional page flow: | display if data.buildingTypes includes "Other residential"                      |
 
@@ -425,7 +421,7 @@ Button: Continue
 # What is the maximum number of people the development will serve?
 Hint text: This should be the maximum capacity allowed for your development.
 
-Link (separate line below input): [Find out how to calculate your maximum capacity for your development](javascript:void(0))
+Link (separate line below input): [Find out how to calculate your maximum capacity for your development](#)
 
 Button: Continue
 ```
@@ -445,7 +441,7 @@ Button: Continue
 | **Field**              | **Value**                                                                   |
 | ---------------------- | --------------------------------------------------------------------------- |
 | Order number:          | 5                                                                           |
-| Path:                  | /nrf-estimate-4/waste-water                                                 |
+| Path:                  | /nrf-quote-4-2/waste-water                                                 |
 | Title:                 | Confirm which waste water treatment works will be used for this development |
 | Conditional page flow: | none                                                                        |
 
@@ -493,7 +489,7 @@ Button: Continue
 | **Field**              | **Value**                      |
 | ---------------------- | ------------------------------ |
 | Order number:          | 6                              |
-| Path:                  | /nrf-estimate-4/estimate-email |
+| Path:                  | /nrf-quote-4-2/estimate-email |
 | Title:                 | Enter your email address       |
 | Conditional page flow: | None                           |
 
@@ -502,10 +498,10 @@ Button: Continue
 ```
 {
     data: {
-        email: {
+        estimateEmail: {
             type: email,
             required: true,
-            fieldName: "email"
+            fieldName: "estimate-email"
         }
     }
 }
@@ -516,9 +512,11 @@ Button: Continue
 ```
 # Enter your email address
 Hint text: Once your Nature Restoration Fund levy amount is calculated, the quote will be emailed to you. This could take up to 00 minutes.
-
-Note: For the commitment journey with NRF reference retrieval, there is a separate email entry page at /nrf-estimate-4/retrieve-estimate-email with hint text: "We will send you a link so you can retrieve the details from your quote."
 ```
+
+#### Implementation notes (not page copy)
+
+- For the commitment journey (NRF reference retrieval), use a separate email entry page at `/nrf-quote-4-2/retrieve-estimate-email` with hint text: “We will send you a link so you can retrieve the details from your quote.” That page is not part of the linear quote-only path described in this document.
 
 #### Errors
 
@@ -538,7 +536,7 @@ Note: For the commitment journey with NRF reference retrieval, there is a separa
 | **Field**              | **Value**                          |
 | ---------------------- | ---------------------------------- |
 | Order number:          | 7                                  |
-| Path:                  | /nrf-estimate-4/check-your-answers |
+| Path:                  | /nrf-quote-4-2/check-your-answers |
 | Title:                 | Check your answers                 |
 | Conditional page flow: | None                               |
 
@@ -548,26 +546,28 @@ None
 
 #### Content
 
-```
 # Check your answers
 
-| Red line boundary | [Show Added or Not added] | [Change](/nrf-estimate-4/map?nav=check-your-answers) or [Change](/nrf-estimate-4/upload-redline?change=true&nav=check-your-answers) as appropriate |
-| Development types | [List selected types, e.g. Housing, Other residential] | [Change](/nrf-estimate-4/building-type?change=true&nav=check-your-answers) |
-| [IF user selected "Housing" THEN show] Number of residential units | [show data.residentialBuildingCount] | [Change](/nrf-estimate-4/residential?change=true&nav=check-your-answers) |
-| [IF user selected "Other residential" THEN show] Maximum number of people | [show data.peopleCount] | [Change](/nrf-estimate-4/people-count?change=true&nav=check-your-answers) |
-| Waste water treatment works | [show data.wasteWaterTreatmentWorks] | [Change](/nrf-estimate-4/waste-water?change=true&nav=check-your-answers) |
-| Email address | [show data.email] | [Change](/nrf-estimate-4/estimate-email?change=true&nav=check-your-answers) |
-
-Primary button: Submit (form POST to /nrf-estimate-4/check-your-answers)
-Secondary button (red): Delete (link to /nrf-estimate-4/delete-quote)
-
-Note: Implementation uses the check-your-answers view; back link from estimate-email. Change links use nav=check-your-answers. The summary list may also include rows for room counts (e.g. Number of multiple occupation rooms, Number of hotel rooms) when those building types are present.
+| Question | Answer | Action |
+| -------- | ------ | ------ |
+| Red line boundary | Show **Added** or **Not added** (reflect upload or map flow) | [Change](/nrf-quote-4-2/map?nav=check-your-answers) or [Change](/nrf-quote-4-2/upload-redline?change=true&nav=check-your-answers) as appropriate |
+| Development types | List selected types (for example Housing, Other residential) | [Change](/nrf-quote-4-2/building-type?change=true&nav=check-your-answers) |
+| Number of residential units (if Housing selected) | `data.residentialBuildingCount` | [Change](/nrf-quote-4-2/residential?change=true&nav=check-your-answers) |
+| Maximum number of people (if Other residential selected) | `data.peopleCount` | [Change](/nrf-quote-4-2/people-count?change=true&nav=check-your-answers) |
+| Waste water treatment works | `data.wasteWaterTreatmentWorks` | [Change](/nrf-quote-4-2/waste-water?change=true&nav=check-your-answers) |
+| Email address | `data.estimateEmail` | [Change](/nrf-quote-4-2/estimate-email?change=true&nav=check-your-answers) |
 
 #### Errors
 
 None
 
-```
+#### Implementation notes (not page copy)
+
+- Primary button: **Submit** — form POST to `/nrf-quote-4-2/check-your-answers`.
+- Secondary control: **Delete** — links to `/nrf-quote-4-2/delete-quote`.
+- Back link: from `/nrf-quote-4-2/estimate-email` (or the previous step in the quote branch).
+- **Change** links use `?change=true&nav=check-your-answers` (or equivalent) so return navigation returns to check your answers.
+- The summary list may include additional rows (for example room counts) when extended building-type options are present in the implementation.
 
 ---
 
@@ -577,9 +577,9 @@ None
 | **Field**              | **Value**                                                                      |
 | ---------------------- | ------------------------------------------------------------------------------ |
 | Order number:          | 7.1                                                                            |
-| Path:                  | /nrf-estimate-4/delete-quote                                                   |
+| Path:                  | /nrf-quote-4-2/delete-quote                                                   |
 | Title:                 | Are you sure you want to delete this quote?                                    |
-| Conditional page flow: | display if user clicks the delete button on /nrf-estimate-4/check-your-answers |
+| Conditional page flow: | display if user clicks the delete button on /nrf-quote-4-2/check-your-answers |
 
 #### Data points
 
@@ -596,13 +596,11 @@ None
 }
 ```
 
-Note: Implementation uses primary "Yes" button with hidden input and secondary "No" link (no radio group).
-
 #### Content
 
 ```
 # Are you sure you want to delete this quote?
-This will permanently delete your quote. You can create a new quote.
+This will permanently delete your quote. You can create a new quote. 
 
 Button: Yes
 Secondary button: No
@@ -616,7 +614,7 @@ Secondary button: No
 | **Field**             | **Value**                           |
 | --------------------- | ----------------------------------- |
 | Order number:         | 7.2                                 |
-| Path:                 | /nrf-estimate-4/delete-confirmation |
+| Path:                 | /nrf-quote-4-2/delete-confirmation |
 | Title:                | Your details have been deleted      |
 | Data points:           | None                                |
 | Conditional page flow: | None                                |
@@ -629,12 +627,11 @@ Secondary button: No
 # Your details have been deleted
 </green-banner>
 
-Note: This page uses the GOV.UK panel component (govuk-panel--confirmation) to display the green banner. The page conditionally displays different content based on journey type (estimate, commit, or payment). For the estimate journey, it shows:
-
 ## What happens next
 
 Your quote details have been removed and deleted.
-[Get another quote](/nrf-estimate-4/start)
+
+[Get another quote](/nrf-quote-4-2/start)
 
 ## Get help with Nature Restoration Fund
 
@@ -648,6 +645,11 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 
 ```
 
+#### Implementation notes (not page copy)
+
+- Use the GOV.UK panel component (`govuk-panel--confirmation`) for the green banner.
+- If this template is shared across journey types (quote, commit, payment), branch copy with `data.journeyType` (or equivalent) in the template — the block above is the **quote / estimate** variant after delete.
+
 #### Errors
 
 None
@@ -659,7 +661,7 @@ None
 | **Field**             | **Value**                        |
 | --------------------- | -------------------------------- |
 | Order number:         | 8                                |
-| Path:                 | /nrf-estimate-4/confirmation     |
+| Path:                 | /nrf-quote-4-2/confirmation     |
 | Title:                | Your details have been submitted |
 | Data points:           | None                             |
 | Conditional page flow: | None                             |
@@ -673,8 +675,6 @@ None
 
 NRF reference: {{ data.nrfReference }}
 </green-banner>
-
-Note: This page uses the GOV.UK panel component (govuk-panel--confirmation) to display the green banner. The page conditionally displays different content based on journey type (estimate, commit, or payment). For the estimate journey, it shows:
 
 ## What happens next
 
@@ -696,11 +696,15 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 
 [Find out about call charges](https://www.gov.uk/call-charges)
 
-[View the email content](/nrf-estimate-4/estimate-email-content)
-
-Note: When the user chose "I don't know the waste water treatment works yet" on waste-water, the confirmation page should link to [estimate-email-content-range](/nrf-estimate-4/estimate-email-content-range) instead of estimate-email-content.
+[View the email content](/nrf-quote-4-2/estimate-email-content)
 
 ```
+
+#### Implementation notes (not page copy)
+
+- Use the GOV.UK panel component (`govuk-panel--confirmation`) for the green banner.
+- Shared template across journey types: branch “What happens next” (and primary next link) by `data.journeyType` where needed — the fenced block above is the **quote** submission variant.
+- **View the email content** link: use [`/nrf-quote-4-2/estimate-email-content`](/nrf-quote-4-2/estimate-email-content) when `data.wasteWaterTreatmentWorks` is any specific works; use [`/nrf-quote-4-2/estimate-email-content-range`](/nrf-quote-4-2/estimate-email-content-range) when the user chose **I don't know the waste water treatment works yet**.
 
 #### Errors
 
@@ -713,7 +717,7 @@ None
 | **Field**             | **Value**                                           |
 | --------------------- | --------------------------------------------------- |
 | Order number:         | 9                                                   |
-| Path:                 | /nrf-estimate-4/estimate-email-content              |
+| Path:                 | /nrf-quote-4-2/estimate-email-content              |
 | Title:                | Email sent from the Nature Restoration Fund service |
 | Data points:           | None                                                |
 | Conditional page flow: | None                                                |
@@ -723,11 +727,10 @@ None
 ```
 
 <inset-text>
-**To:** {{ data.email or 'user@example.com' }}
+**To:** {{ data.estimateEmail or 'user@example.com' }}
+
 **Subject:** Nature Restoration Fund – quote for the Nature Restoration Fund levy
 </inset-text>
-
-Note: This page uses the GOV.UK inset text component (govuk-inset-text) to display the email header information.
 
 # Nature Restoration Fund – quote for the Nature Restoration Fund levy
 
@@ -739,7 +742,7 @@ You told us the development:
 
 - is planned in {{ data.redlineBoundaryPolygon.intersectingCatchment or data.intersectingCatchment or 'Thames Valley EDP' }}
 - has [dynamically constructed list based on building types selected, e.g., "Housing with 6 residential units and a development with a maximum number of 80 people" or "Housing with a total of 5 residential units"]
-- has waste water works in {{'Great Billing WRC' }}
+- has waste water works in {{ data.wasteWaterTreatmentWorks }}
 
 ## What you might need to pay
 
@@ -747,14 +750,14 @@ Based on the information you have provided, the development falls into an area w
 
 The quote for the total amount you may need to pay if you develop in this area is: **£{{ data.levyAmount or '2,500' }}**
 
-You do not need to pay anything at this point, this service is designed to help you plan how to mitigate your environmental obligations. [Get another quote](<javascript:void(0)>)
+You do not need to pay anything at this point, this service is designed to help you plan how to mitigate your environmental obligations. [Get another quote](/nrf-quote-4-2/start)
 
 If you do decide to mitigate using Nature Restoration Fund levy, you can commit and include the commitment when applying for planning permission.
 
-[Commit to using Nature Restoration Fund](/nrf-estimate-4/do-you-have-a-nrf-ref)
+[Commit to using Nature Restoration Fund](/nrf-quote-4-2/do-you-have-a-nrf-ref)
 
 Keep this email as a record of your quote and NRF reference number, you can use it to retrieve this quote when you are ready to commit.
-You can also [create an account now](<javascript:void(0)>)
+You can also [create an account now](#)
 
 ## What your levy will pay for
 
@@ -772,13 +775,17 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 
 ```
 
+#### Implementation notes (not page copy)
+
+- Use the GOV.UK inset text component (`govuk-inset-text`) for the To/Subject block.
+
 ---
 ### Email sent from the Nature Restoration Fund service
 
 | **Field**             | **Value**                                                                                                        |
 | --------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | Order number:         | 9.1                                                                                                              |
-| Path:                 | /nrf-estimate-4/estimate-email-content-range                                                                     |
+| Path:                 | /nrf-quote-4-2/estimate-email-content-range                                                                     |
 | Title:                | Email sent from the Nature Restoration Fund service                                                              |
 | Data points:          | None                                                                                                             |
 | Conditional page flow: | display when data.wasteWaterTreatmentWorks === "I don't know the waste water treatment works yet"                |
@@ -788,11 +795,10 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 ```
 
 <inset-text>
-**To:** {{ data.email or 'user@example.com' }}
+**To:** {{ data.estimateEmail or 'user@example.com' }}
+
 **Subject:** Nature Restoration Fund – quote for the Nature Restoration Fund levy
 </inset-text>
-
-Note: This page uses the GOV.UK inset text component (govuk-inset-text) to display the email header information.
 
 # Nature Restoration Fund – quote for the Nature Restoration Fund levy
 
@@ -811,14 +817,14 @@ Based on the information you have provided, the development falls into an area w
 
 The quote for the total amount you may need to pay if you develop in this area will be in the range of: **£{{ data.levyAmount or '1,500 to 2,500' }}**
 
-You do not need to pay anything at this point, this service is designed to help you plan how to mitigate your environmental obligations. [Get another quote](<javascript:void(0)>)
+You do not need to pay anything at this point, this service is designed to help you plan how to mitigate your environmental obligations. [Get another quote](/nrf-quote-4-2/start)
 
 If you do decide to mitigate using Nature Restoration Fund levy, you can commit and include the commitment when applying for planning permission.
 
-[Commit to using Nature Restoration Fund](/nrf-estimate-4/do-you-have-a-nrf-ref)
+[Commit to using Nature Restoration Fund](/nrf-quote-4-2/do-you-have-a-nrf-ref)
 
 Keep this email as a record of your quote and NRF reference number, you can use it to retrieve this quote when you are ready to commit.
-You can also [create an account now](<javascript:void(0)>)
+You can also [create an account now](#)
 
 ## What your levy will pay for
 
@@ -836,9 +842,12 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 
 ```
 
+#### Implementation notes (not page copy)
+
+- Use the GOV.UK inset text component (`govuk-inset-text`) for the To/Subject block.
+- Omit the “waste water works” bullet from the email body when the user did not select a specific works (aligned with this range quote variant).
 
 ---
-
 
 ## Technical Requirements
 
@@ -846,10 +855,11 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 
 Create the following files in the GOV.UK Prototype Kit structure:
 
-1. **Route File**: `app/routes/nrf-estimate-4.js`
-2. **View Directory**: `app/views/nrf-estimate-4/`
-3. **View Files**: One HTML file per page in the journey
-4. **Data File**: `app/data/nrf-estimate-4-data.js` (if needed)
+1. **Route File**: `app/routes/nrf-quote-4-2.js`
+2. **Config File**: `app/config/nrf-quote-4-2/routes.js` (route path constants and template names)
+3. **View Directory**: `app/views/nrf-quote-4-2/`
+4. **View Files**: One HTML file per page in the journey
+5. **Data File**: `app/data/nrf-quote-4-2-data.js` (if needed)
 
 ### Route Implementation
 
@@ -859,7 +869,7 @@ Create the following files in the GOV.UK Prototype Kit structure:
 - Handle conditional routing based on form data
 - Store form data in session using `req.session.data`
 - Implement validation logic with appropriate error handling
-- Include back links on each page
+- Include back links on each page using **hardcoded paths** to the previous step in this journey (do not use `javascript:history.back()`).
 
 ### View Implementation
 
@@ -876,6 +886,22 @@ Create the following files in the GOV.UK Prototype Kit structure:
 - Implement data validation with appropriate error messages
 - Handle conditional logic for multi-step forms
 - Clear session data on journey completion or restart
+
+### Session data (key names used in this spec)
+
+| Key | Purpose |
+| --- | --- |
+| `journeyType` | Branch for combined journey entry (`quote` \| `commit` \| `payment`) |
+| `redlineBoundaryChoice` | How the user provides the red line (`Draw on a map` \| `Upload a file`) |
+| `redlineFile` | Uploaded boundary file (when upload path) |
+| `redlineBoundaryPolygon` | Drawn boundary / map state (when map path) |
+| `buildingTypes` | Selected development types (checkboxes) |
+| `residentialBuildingCount` | Dwelling count when Housing selected |
+| `peopleCount` | Capacity when Other residential selected |
+| `wasteWaterTreatmentWorks` | Selected WwTW or “don’t know yet” |
+| `estimateEmail` | Email for the quote (avoid generic `data.email`) |
+| `confirmDeleteQuote` | Delete confirmation on check your answers |
+| `nrfReference`, `levyAmount`, `intersectingCatchment` | Set on submit / for confirmation and email previews |
 
 ### GOV.UK Design System Compliance
 
@@ -895,11 +921,11 @@ Create the following files in the GOV.UK Prototype Kit structure:
 
 ## Implementation Instructions
 
-1. **Create the route file** with all GET and POST routes for the journey
-2. **Create the view directory** and all HTML template files
+1. **Create** `app/config/nrf-quote-4-2/routes.js` and **`app/routes/nrf-quote-4-2.js`** with all GET and POST routes for the journey
+2. **Create the view directory** `app/views/nrf-quote-4-2/` and all HTML template files
 3. **Implement form validation** with proper error handling
 4. **Add conditional routing** based on user selections
-5. **Update the main routes.js** to include the new journey routes
+5. **Register the journey** in `app/config/shared/journeys.js` with `basePath: '/nrf-quote-4-2'` (the app mounts route modules from `JOURNEYS`; do not edit `app/routes/routes.js` unless the project pattern requires it)
 6. **Test the complete journey** to ensure all paths work correctly
 
 ## Expected Output

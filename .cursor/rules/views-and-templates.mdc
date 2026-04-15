@@ -1,0 +1,129 @@
+---
+description: Views and templates – Nunjucks, GOV.UK components, forms, back links
+globs: ["app/views/**/*.html", "app/views/**/*.njk"]
+alwaysApply: false
+---
+
+# Views and Templates
+
+## Context
+Templates use Nunjucks and GOV.UK Frontend. Each page extends the layout and uses components that match the implementation prompts (content, fields, errors).
+
+## Layout and Blocks
+- **Standard pages**: `{% extends "layouts/main.html" %}`.
+- **Full-screen map pages**: `{% extends "layouts/map.html" %}`.
+- **Blocks**: `pageTitle`, `beforeContent` (back link), `content`. Set `pageTitle` to “{Page title} – {Journey/service} – GOV.UK”.
+
+## Back Links
+- In `beforeContent`: `{{ govukBackLink({ text: "Back", href: backLink }) }}`.
+- Pass `backLink` from the route (e.g. previous step or start).
+
+## Forms
+- **Action**: Post to the same path as the page (e.g. `action="/nrf-estimate-4/what-would-you-like-to-do" method="post"`).
+- **novalidate**: Use `novalidate` on the form so server-side validation controls the UX.
+- **Field names**: Use kebab-case and match the spec (e.g. `journey-type`, `has-redline-boundary-file`, `building-types`). Bind to `data` in the route.
+
+## Error Handling in Templates
+- **Error summary**: When `error` (or `errors`) is set, show `govuk-error-summary` with title “There is a problem” and a list linking to the first field (`#field-id`).
+- **Field-level**: Add `govuk-form-group--error` to the form group and a `govuk-error-message` with the same id as the summary link.
+- **Accessibility**: Use `aria-describedby` for hint and error (e.g. `id="field-hint"`, `id="field-error"`).
+
+## GOV.UK Components
+- **Radios**: `govuk-radios`, `govuk-radios__item`, `govuk-label`, `govuk-hint` for hint text.
+- **Checkboxes**: `govuk-checkboxes` for multi-select (e.g. building types).
+- **Inputs**: `govuk-input`, `govuk-input--width-*` for width.
+- **Summary list**: `govuk-summary-list` for “Check your answers” (rows: key, value, action “Change” link).
+- **Panel**: `govuk-panel govuk-panel--confirmation` for confirmation pages (green banner).
+- **Inset text**: `govuk-inset-text` for email headers (To:, Subject:).
+
+## Buttons (GOV.UK Design System)
+
+Follow the [Button component](https://design-system.service.gov.uk/components/button/): sentence-case labels, primary action aligned to the left edge of the form, and **no ad-hoc vertical stacking** of related actions.
+
+### Grouping (`govuk-button-group`)
+
+When a page has **more than one related action** (e.g. “Check your answers”: submit + delete; confirm screens: primary + cancel link), wrap them in **one** `<div class="govuk-button-group">`. The Design System aligns buttons and links in that group horizontally.
+
+- **Do**: put the primary `govuk-button` (submit) and secondary actions (secondary button, `govuk-link`, or `govuk-link--destructive`) **inside the same** `govuk-button-group`. When the primary action is a **POST**, use **one** `<form>` that **wraps** the `govuk-button-group`; put the submit button and any sibling links (e.g. destructive “Delete”) **inside** that inner `govuk-button-group`. An `<a href="…">` next to the submit button does not submit the form.
+- **Do not**: place the primary button in a form and the secondary action in a separate `<p class="govuk-body">` or sibling block—that **stacks vertically** and does not match the component guidance.
+- **Do not**: wrap only the submit button in a `<form>` and put that `<form>` **inside** `govuk-button-group` with the delete link **outside** the form. That produces invalid/nested layout issues (e.g. GOV.UK Frontend treating the group as a form group). The `<form>` must be the **outer** wrapper; `govuk-button-group` must be **inside** the form.
+
+Example (check answers: submit + delete link):
+
+```html
+<form action="/journey/check-your-answers" method="post" novalidate class="govuk-!-display-inline">
+  <div class="govuk-button-group">
+    <button type="submit" class="govuk-button" data-module="govuk-button">Submit</button>
+    <a class="govuk-link govuk-link--destructive" href="/journey/delete-quote">Delete<span class="govuk-visually-hidden"> quote</span></a>
+  </div>
+</form>
+```
+
+### Variants
+
+- **Default**: primary CTA — `govuk-button` (or `{{ govukButton({ text: "…" }) }}`).
+- **Secondary**: `govuk-button govuk-button--secondary` — sparingly; see Design System.
+- **Warning**: `govuk-button govuk-button--warning` — only for serious destructive **confirmation** steps (e.g. final “Yes, delete” after an interstitial). Prefer **`govuk-link--destructive`** for the **initial** “Delete” from a check-answers page (link to a confirm screen), then warning button on the confirm page.
+- **Start page**: use the start button pattern (`govuk-button govuk-button--start` with icon, or `govukButton` with `isStartButton: true` and `href` if not submitting a form)—see Design System.
+- **Email-style pages**: use `govuk-link` only for actions; do not use `govuk-button` on mock email content pages.
+
+### Macros
+
+Where convenient, use `{% from "govuk/components/button/macro.njk" import govukButton %}` and pass `classes: "govuk-button--secondary"` / `govuk-button--warning` as needed; still wrap multiple actions in `govuk-button-group`.
+
+## Content and Copy
+- Use the exact headings and labels from the implementation prompts.
+- Hint text: Use `govuk-hint` with the text specified (e.g. “Do this as part of your planning application”).
+- Error messages: Use the exact error message from the prompt (e.g. “Select what you would like to do”, “Enter your email address to continue”).
+
+## Data Binding
+- Use `data` passed from the route: `{{ data.journeyType }}`, `{{ data.email }}`.
+- For radios/checkboxes: `{% if data.journeyType == 'quote' %}checked{% endif %}`.
+- For conditional rows on summary: `{% if data.buildingTypes and 'Dwellinghouse' in data.buildingTypes %}...{% endif %}`.
+
+## Examples
+
+### ✅ Good – Radio page with error
+```html
+{% extends "layouts/main.html" %}
+{% block pageTitle %}What would you like to do? – ... – GOV.UK{% endblock %}
+{% block beforeContent %}{{ govukBackLink({ text: "Back", href: backLink }) }}{% endblock %}
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <form action="/nrf-estimate-4/what-would-you-like-to-do" method="post" novalidate>
+      {% if error %}
+      <div class="govuk-error-summary" ...>
+        <h2 class="govuk-error-summary__title">There is a problem</h2>
+        <div class="govuk-error-summary__body">
+          <ul class="govuk-list govuk-error-summary__list">
+            <li><a href="#journey-type">{{ error }}</a></li>
+          </ul>
+        </div>
+      </div>
+      {% endif %}
+      <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
+        <fieldset class="govuk-fieldset">
+          <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
+            <h1 class="govuk-fieldset__heading">What would you like to do?</h1>
+          </legend>
+          {% if error %}<p id="journey-type-error" class="govuk-error-message">...</p>{% endif %}
+          <div class="govuk-radios" data-module="govuk-radios">
+            ...
+          </div>
+        </fieldset>
+      </div>
+      <button class="govuk-button">Continue</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+```
+
+### ✅ Good – Confirmation panel
+```html
+<div class="govuk-panel govuk-panel--confirmation">
+  <h1 class="govuk-panel__title">Your details have been submitted</h1>
+  <div class="govuk-panel__body">NRF reference: {{ data.nrfReference }}</div>
+</div>
+```

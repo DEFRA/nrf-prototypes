@@ -1,0 +1,95 @@
+---
+description: Form validation and error handling – server-side validation, error messages, re-render
+globs: ["app/routes/**/*.js", "app/lib/**/*.js"]
+alwaysApply: false
+---
+
+# Validation and Errors
+
+## Context
+Form validation is done server-side. Use error messages from the implementation prompts and re-render the page with an error summary and field-level errors.
+
+## Validation Flow
+1. **POST handler**: Read `req.body` (field names match form `name` attributes).
+2. **Validate**: Required fields, format (email, number), business rules (e.g. file type/size for uploads).
+3. **On failure**: Re-render the same template with `error` (single message) or `errors` (object keyed by field), and `data: req.session.data || {}` so the form retains values. Do not redirect.
+4. **On success**: Update `req.session.data`, then `res.redirect(nextPath)`.
+
+## Error Messages
+- Use the **exact** error message from the prompt (e.g. “Select what you would like to do”, “Enter your email address to continue”, “Enter an email address in the correct format, like name@example.com”).
+- Error summary title: **“There is a problem”** (GOV.UK pattern).
+- Link the summary list item to the field id (`#field-id`) so the focus moves to the field when the link is clicked.
+
+## Common Validations (from prompts)
+- **Radios**: Required choice → “Select …” message.
+- **Checkboxes**: At least one (e.g. building type) → “Select a building type to continue”.
+- **Email**: Required; format (e.g. `name@example.com`).
+- **Number**: Required; optional format (e.g. NRF reference numeric).
+- **File upload**: Required; type (.shp or .geojson); size (e.g. &lt; 2MB); not empty.
+- **Map boundary**: Polygon required before “Save and continue” (can be client-side + server check).
+
+## Shared Validators
+- Use `app/lib/` for reusable validation (e.g. `app/lib/nrf-estimate-3/validators.js`) and call from route handlers.
+- Validators can return `{ valid: false, message: '...' }` or throw; routes map to template `error` or `errors`.
+
+## Examples
+
+### ✅ Good – Required radio validation
+```javascript
+router.post(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO, (req, res) => {
+  const journeyType = req.body['journey-type']
+  if (!journeyType) {
+    return res.render(TEMPLATES.WHAT_WOULD_YOU_LIKE_TO_DO, {
+      data: req.session.data || {},
+      error: 'Select what you would like to do'
+    })
+  }
+  req.session.data = req.session.data || {}
+  req.session.data.journeyType = journeyType
+  res.redirect(ROUTES.REDLINE_MAP)
+})
+```
+
+### ✅ Good – Email validation with two messages
+```javascript
+const email = (req.body.email || '').trim()
+if (!email) {
+  return res.render(TEMPLATES.ESTIMATE_EMAIL, {
+    data: req.session.data || {},
+    error: 'Enter your email address to continue'
+  })
+}
+if (!/^[^@]+@[^@]+\.[^@]+$/.test(email)) {
+  return res.render(TEMPLATES.ESTIMATE_EMAIL, {
+    data: req.session.data || {},
+    error: 'Enter an email address in the correct format, like name@example.com'
+  })
+}
+```
+
+### ✅ Good – File type and size (conceptual)
+```javascript
+if (!req.file) {
+  return res.render(TEMPLATES.UPLOAD_REDLINE, { data: req.session.data || {}, error: 'Select a file' })
+}
+const ext = path.extname(req.file.originalname).toLowerCase()
+if (!['.shp', '.geojson'].includes(ext)) {
+  return res.render(TEMPLATES.UPLOAD_REDLINE, {
+    data: req.session.data || {},
+    error: 'The selected file must be a .shp or .geojson file'
+  })
+}
+if (req.file.size > 2 * 1024 * 1024) {
+  return res.render(TEMPLATES.UPLOAD_REDLINE, {
+    data: req.session.data || {},
+    error: 'The file must be smaller than 2MB'
+  })
+}
+```
+
+### ❌ Poor – Redirect on error (loses context)
+```javascript
+if (!journeyType) {
+  return res.redirect(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO)  // User sees no error message
+}
+```

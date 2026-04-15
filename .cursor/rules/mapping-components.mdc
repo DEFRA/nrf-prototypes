@@ -1,0 +1,71 @@
+---
+description: Map pages and mapping – red line boundary, EDP layers, GeoJSON, Leaflet/MapLibre
+globs: ["app/views/**/map.html", "app/routes/**/*.js", "app/assets/**/*", "app/**/map*.js"]
+alwaysApply: false
+---
+
+# Mapping Components
+
+## Context
+Prototypes include custom map pages for drawing a red line boundary and checking overlap with EDP (Environmental Delivery Plan) areas. Map pages are full-screen and use GeoJSON and turf for geometry.
+
+## Map Pages in Journeys
+- **Red line boundary**: User draws a polygon for the development site (e.g. `/nrf-estimate-4/map`). Optional: upload shapefile/GeoJSON instead (separate upload page).
+- **EDP check**: Boundary is checked against EDP GeoJSON; if no intersection, user is sent to an exit page (e.g. `/nrf-estimate-4/no-edp`).
+- **LPA / approval**: Some journeys show a read-only map with the development boundary (e.g. approve-details page).
+
+## Layout and Assets
+- **Layout**: Map pages extend `layouts/map.html` (not `main.html`) for full-screen map UX.
+- **Libraries**: MapLibre GL (or Leaflet), Mapbox GL Draw (or equivalent) for drawing; turf.js for intersection/geometry.
+- **Layers**: GeoJSON in `app/assets/map-layers/` (e.g. catchments, GCN EDP). Routes may load these once at startup and cache in memory.
+
+## Route Responsibilities
+- **GET map page**: Pass `data` and any config (e.g. catchments URL, initial centre). Ensure session has `mapReferrer` or similar for back link.
+- **POST map page**: Receive boundary (e.g. JSON body or hidden form field). Validate polygon; run EDP intersection (e.g. turf.booleanIntersects); set `req.session.data.redlineBoundaryPolygon` and intersection result; redirect to next step or to no-edp.
+- **API for EDP check**: Optional GET/POST endpoint (e.g. `/nrf-estimate-4/api/check-edp-intersection`) that accepts coordinates and returns intersection result for client-side use before submit.
+
+## Data Stored for Boundary
+- **redlineBoundaryPolygon**: Coordinates array or GeoJSON; optionally `intersectingCatchment` (or similar) from EDP intersection for display in summary and emails.
+- **hasRedlineBoundaryFile**: Whether user chose “Upload a file”; if false, they used the map.
+
+## Client-Side Behaviour (when implementing)
+- **Drawing**: Draw polygon; “Save and continue” sends coordinates to server (or form submit). Button can be enabled only when a valid polygon exists (client-side validation).
+- **Validation message**: If user submits without drawing: “Draw a red line boundary to continue” (match prompt).
+- **Controls**: “Show all England”, “Zoom to boundary”, “Toggle catchments” (if applicable) for UX only; no need to persist in session.
+
+## EDP Data and Performance
+- Load GeoJSON once in the route module (or a shared lib) at startup; avoid reading from disk on every request.
+- Use turf for intersection: `turf.booleanIntersects(boundaryPolygon, edpFeature)`; collect intersecting EDP names for redirect logic and display.
+
+## Examples
+
+### ✅ Good – EDP check in route (conceptual)
+```javascript
+const { ROUTES, TEMPLATES } = require('../config/nrf-estimate-4/routes')
+const turf = require('@turf/turf')
+
+function checkEDPIntersections(coordinates) {
+  if (!coordinates || coordinates.length < 3) return { nutrient: null, intersections: [] }
+  const boundaryPolygon = turf.polygon([coordinates])
+  const intersections = []
+  for (const feature of nutrientEdpData.features) {
+    if (turf.booleanIntersects(boundaryPolygon, feature)) {
+      intersections.push({ type: 'nutrient', name: feature.properties.Label || 'EDP Area' })
+    }
+  }
+  return { nutrient: intersections[0]?.name || null, intersections }
+}
+```
+
+### ✅ Good – Map page title and back link
+- Page title: “Draw a red line boundary – Get a quote for Nature Restoration Fund levy – GOV.UK”.
+- Back link: Previous step (e.g. redline-map or start) from `req.session.data.mapReferrer` or route constant.
+
+### ❌ Poor – Reading GeoJSON on every request
+```javascript
+router.get(ROUTES.MAP, (req, res) => {
+  const geojson = JSON.parse(fs.readFileSync(path.join(__dirname, '../assets/map-layers/catchments.geojson'), 'utf8'))
+  res.render(TEMPLATES.MAP, { data: req.session.data, catchments: geojson })
+})
+```
+Prefer loading at module load and reusing a cached variable.
