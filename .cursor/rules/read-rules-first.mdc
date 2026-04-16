@@ -1,0 +1,17 @@
+---
+description: Always read local Cursor rules before work
+alwaysApply: true
+---
+
+# Read Rules First
+
+Before any operation (analysis, file reads/edits, commands, or implementation), read relevant files in `.cursor/rules/` so current project guidance is applied.
+
+## Required workflow
+- Start each new task by listing `.cursor/rules/*.mdc`.
+- Read all always-applied rules first.
+- Read any scope-specific rules relevant to files or areas you will touch.
+- If a new rule file appears during work, read it before continuing.
+
+## Priority
+- Follow `.cursor/rules` guidance unless it conflicts with higher-priority system/developer instructions.
