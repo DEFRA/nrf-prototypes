@@ -69,6 +69,16 @@ When implementing or updating journeys, ensure consistent styling across all pag
 - **Path changes**: `/old-path` → `/new-path`
 - **Deleted pages**: Removing steps that are no longer needed
 
+## Mandatory: no cross-journey linking
+
+All URLs, redirects, form actions, `Change` links, and `govukBackLink` targets implemented for this run must stay within the active journey namespace:
+
+- If `journey:nrf-estimate-6`, use only `/nrf-estimate-6/...` for journey navigation.
+- Do **not** link or redirect to other journeys (for example `/nrf-estimate-5/...`, `/nrf-quote-4/...`) unless the spec explicitly requires a cross-journey handoff.
+- If the spec implies a page outside `{journey}` but does not explicitly define a cross-journey handoff, treat this as a blocker and either:
+  1. create the missing page(s) under `app/views/{journey}/` and route(s) under `app/routes/{journey}.js`, or
+  2. flag it in the output as **Manual review needed** rather than silently cross-linking.
+
 ## Mandatory: prototype wiring (always verify)
 
 Content-only merges are not enough: if the journey is not wired into the kit, users get **404** on every path. **Treat the following as part of every `/journey-updates` run**—not optional follow-up.

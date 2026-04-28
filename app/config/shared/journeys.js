@@ -58,6 +58,14 @@ const JOURNEYS = [
       'A user journey for developers to obtain a quote for the Nature Restoration Fund levy (v5).'
   },
   {
+    name: 'NRF Estimate 6',
+    displayName: 'Get a quote for Nature Restoration Fund Levy (V6)',
+    basePath: '/nrf-estimate-6',
+    hasStartPage: true,
+    description:
+      'A user journey for developers to obtain a quote for the Nature Restoration Fund levy (v6).'
+  },
+  {
     name: 'LPA Approve 2',
     displayName: 'LPA approve developer request to pay NRF (V2)',
     basePath: '/lpa-approve-2',

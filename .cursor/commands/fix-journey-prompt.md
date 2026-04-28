@@ -53,6 +53,12 @@ Take the instructions and parameters provided, then:
 - If the repo uses another slug (e.g. an older journey folder), list that under **Potential conflicts** / **Manual review** — e.g. register `basePath: '/{journey}'` in `app/config/shared/journeys.js`, add `app/routes/{journey}.js`, or map URLs deliberately — rather than reverting the spec to the legacy prefix without user intent.
 - On-disk layout is usually `app/routes/{journey}.js`, `app/views/{journey}/`, `app/config/{journey}/routes.js` using the same slug as `{journey}`.
 
+## 1b. No cross-journey URLs in spec
+
+- Treat `/{journey}/...` as the required namespace for implementation links in this run.
+- Rewrite any unintended links or route references to other journeys (for example `/nrf-estimate-5/...`) so they point to `/{journey}/...`, unless the spec explicitly states an intentional cross-journey handoff.
+- If a link target does not exist yet under `/{journey}/...`, flag it under **Manual review needed** and recommend creating the missing route/view under `app/routes/{journey}.js` and `app/views/{journey}/`.
+
 ## 2. Scan Existing Journey Code for Conflicts
 
 Before applying any changes, scan the existing `{journey}` implementation to identify potential conflicts:
