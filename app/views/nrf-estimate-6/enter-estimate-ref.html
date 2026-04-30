@@ -1,13 +1,13 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-Enter your email address - Get a quote for Nature Restoration Fund levy - GOV.UK
+Enter your NRF reference - Get a quote for Nature Restoration Fund levy - GOV.UK
 {% endblock %}
 
 {% block beforeContent %}
 {{ govukBackLink({
 text: "Back",
-href: backLink
+href: "/nrf-estimate-6/do-you-have-a-nrf-ref"
 }) }}
 {% endblock %}
 
@@ -15,13 +15,7 @@ href: backLink
 <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
 
-        <form action="/nrf-estimate-6/estimate-email" method="post" novalidate>
-            {% if isChange %}
-            <input type="hidden" name="isChange" value="true">
-            {% endif %}
-            {% if navFromSummary %}
-            <input type="hidden" name="navFromSummary" value="true">
-            {% endif %}
+        <form action="/nrf-estimate-6/enter-estimate-ref" method="post" novalidate>
 
             {% if error %}
             {{ govukErrorSummary({
@@ -29,7 +23,7 @@ href: backLink
                 errorList: [
                     {
                         text: error,
-                        href: "#email"
+                        href: "#nrf-reference"
                     }
                 ]
             }) }}
@@ -37,19 +31,17 @@ href: backLink
 
             {{ govukInput({
                 label: {
-                    text: "Enter your email address",
+                    text: "Enter your NRF reference",
                     classes: "govuk-label--l",
                     isPageHeading: true
                 },
                 hint: {
-                    text: "Once your Nature Restoration Fund levy amount is calculated, the quote will be emailed to you. This could take up to 00 minutes."
+                    text: "Enter this reference to retrieve the details entered during the quote."
                 },
-                id: "email",
-                name: "email",
-                type: "email",
-                autocomplete: "email",
-                spellcheck: false,
-                value: data.estimateEmail or data.email,
+                id: "nrf-reference",
+                name: "nrf-reference",
+                type: "text",
+                value: data.nrfReference,
                 errorMessage: { text: error } if error
             }) }}
 

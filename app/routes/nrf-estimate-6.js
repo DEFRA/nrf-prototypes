@@ -1,11 +1,27 @@
+//
+// NRF Estimate Journey Routes - Nature Restoration Fund Levy Estimate (v4)
+//
+
 const govukPrototypeKit = require('govuk-prototype-kit')
 const router = govukPrototypeKit.requests.setupRouter()
 const path = require('path')
 const fs = require('fs')
 const multer = require('multer')
 const turf = require('@turf/turf')
+const https = require('https')
+const http = require('http')
+const zlib = require('zlib')
+
+// Import helpers and validators
 const validators = require('../lib/nrf-estimate-3/validators')
+const buildingTypeHelpers = require('../lib/nrf-estimate-3/building-type-helpers')
 const { ROUTES, TEMPLATES } = require('../config/nrf-estimate-6/routes')
+const {
+  BUILDING_TYPES,
+  BUILDING_TYPE_LABELS,
+  BUILDING_TYPE_DATA_KEYS,
+  BUILDING_TYPES_REQUIRING_ROOM_COUNT
+} = require('../config/shared/building-types')
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -14,9 +30,17 @@ const upload = multer({
   }
 })
 
+// ============================================================================
+// EDP DATA LOADING - Load and cache GeoJSON files
+// ============================================================================
+
 let nutrientEdpData = null
 let gcnEdpData = null
 
+/**
+ * Load EDP GeoJSON data into memory
+ * Called once at startup for performance
+ */
 function loadEdpData() {
   try {
     const nutrientPath = path.join(
@@ -31,19 +55,30 @@ function loadEdpData() {
     nutrientEdpData = JSON.parse(fs.readFileSync(nutrientPath, 'utf8'))
     gcnEdpData = JSON.parse(fs.readFileSync(gcnPath, 'utf8'))
 
+    console.log(
+      `Loaded ${nutrientEdpData.features.length} nutrient EDP areas and ${gcnEdpData.features.length} GCN EDP areas`
+    )
   } catch (error) {
     console.error('Error loading EDP data:', error)
   }
 }
 
+// Load data at startup
 loadEdpData()
 
+/**
+ * Check if a boundary intersects with EDP areas using turf.js
+ * @param {Array} coordinates - Polygon coordinates [[lng, lat], ...]
+ * @returns {Object} Intersection results with nutrient and GCN data
+ */
 function checkEDPIntersections(coordinates) {
   if (!coordinates || coordinates.length < 3) {
     return { nutrient: null, gcn: null, intersections: [] }
   }
 
   try {
+    // Create polygon from boundary coordinates
+    // Ensure polygon is closed
     const closedCoords = [...coordinates]
     if (
       closedCoords[0][0] !== closedCoords[closedCoords.length - 1][0] ||
@@ -57,6 +92,7 @@ function checkEDPIntersections(coordinates) {
     let nutrientIntersection = null
     let gcnIntersection = null
 
+    // Check nutrient EDPs
     if (nutrientEdpData && nutrientEdpData.features) {
       for (const feature of nutrientEdpData.features) {
         if (turf.booleanIntersects(boundaryPolygon, feature)) {
@@ -69,6 +105,7 @@ function checkEDPIntersections(coordinates) {
             name: name,
             properties: feature.properties
           })
+          // Store first nutrient intersection for legacy compatibility
           if (!nutrientIntersection) {
             nutrientIntersection = name
           }
@@ -76,15 +113,24 @@ function checkEDPIntersections(coordinates) {
       }
     }
 
+    // Check GCN EDPs
     if (gcnEdpData && gcnEdpData.features) {
       for (const feature of gcnEdpData.features) {
         if (turf.booleanIntersects(boundaryPolygon, feature)) {
+          // Debug logging
+          if (!feature.properties.NAME) {
+            console.log(
+              'WARNING: GCN feature missing NAME property:',
+              feature.properties
+            )
+          }
           const name = feature.properties.NAME || 'GCN EDP Area'
           intersections.push({
             type: 'gcn',
             name: name,
             properties: feature.properties
           })
+          // Store first GCN intersection
           if (!gcnIntersection) {
             gcnIntersection = name
           }
@@ -103,10 +149,21 @@ function checkEDPIntersections(coordinates) {
   }
 }
 
+// ============================================================================
+// API ENDPOINT - Check EDP Intersection
+// ============================================================================
+
+/**
+ * API endpoint to check if a boundary intersects with EDP areas
+ * POST /nrf-estimate-6/api/check-edp-intersection
+ * Body: { coordinates: [[lng, lat], ...] }
+ * Returns: { success: true, intersections: { nutrient, gcn, intersections: [...] } }
+ */
 router.post(ROUTES.API_CHECK_EDP_INTERSECTION, (req, res) => {
   try {
     const { coordinates } = req.body
 
+    // Validate input
     if (!coordinates || !Array.isArray(coordinates) || coordinates.length < 3) {
       return res.status(400).json({
         success: false,
@@ -115,6 +172,7 @@ router.post(ROUTES.API_CHECK_EDP_INTERSECTION, (req, res) => {
       })
     }
 
+    // Limit maximum number of coordinates to prevent DoS
     const MAX_COORDINATES = 10000
     if (coordinates.length > MAX_COORDINATES) {
       return res.status(400).json({
@@ -123,6 +181,7 @@ router.post(ROUTES.API_CHECK_EDP_INTERSECTION, (req, res) => {
       })
     }
 
+    // Validate coordinate format
     const validCoordinates = coordinates.every(
       (coord) =>
         Array.isArray(coord) &&
@@ -139,8 +198,10 @@ router.post(ROUTES.API_CHECK_EDP_INTERSECTION, (req, res) => {
       })
     }
 
+    // Check intersections using turf.js
     const result = checkEDPIntersections(coordinates)
 
+    // Return results
     return res.json({
       success: true,
       intersections: result
@@ -154,20 +215,28 @@ router.post(ROUTES.API_CHECK_EDP_INTERSECTION, (req, res) => {
   }
 })
 
+// ============================================================================
+// PAGE ROUTES
+// ============================================================================
+
+// Start page
 router.get(ROUTES.START, (req, res) => {
   const data = req.session.data || {}
   res.render(TEMPLATES.START, { data: data })
 })
 
+// Handle start page submission
 router.post(ROUTES.START, (req, res) => {
   res.redirect(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO)
 })
 
+// What would you like to do page
 router.get(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO, (req, res) => {
   const data = req.session.data || {}
   res.render(TEMPLATES.WHAT_WOULD_YOU_LIKE_TO_DO, { data: data })
 })
 
+// Handle what would you like to do
 router.post(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO, (req, res) => {
   const journeyType = req.body['journey-type']
 
@@ -178,30 +247,38 @@ router.post(ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO, (req, res) => {
     })
   }
 
+  // Store in session
   req.session.data = req.session.data || {}
   req.session.data.journeyType = journeyType
 
+  // Route to the commit flow when the user selects that option
   if (journeyType === 'commit') {
-    return res.redirect(ROUTES.DO_YOU_HAVE_A_NRF_REF)
+    res.redirect(ROUTES.DO_YOU_HAVE_A_NRF_REF)
+    return
   }
 
+  // Route to the pay flow when the user selects the payment option
   if (journeyType === 'payment') {
-    return res.redirect(ROUTES.PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN)
+    res.redirect(ROUTES.PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN)
+    return
   }
 
+  // Otherwise continue with the estimate map flow
   res.redirect(ROUTES.REDLINE_MAP)
 })
 
+// Redline boundary file question
 router.get(ROUTES.REDLINE_MAP, (req, res) => {
   const data = req.session.data || {}
   const backLink = ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO
   res.render(TEMPLATES.REDLINE_MAP, { data: data, backLink: backLink })
 })
 
+// Handle redline boundary file question
 router.post(ROUTES.REDLINE_MAP, (req, res) => {
-  const redlineBoundaryChoice = req.body['redline-boundary-choice']
+  const hasRedlineBoundaryFile = req.body['has-redline-boundary-file']
 
-  if (!redlineBoundaryChoice) {
+  if (!hasRedlineBoundaryFile) {
     return res.render(TEMPLATES.REDLINE_MAP, {
       error: 'Select if you would like to draw a map or upload a file',
       data: req.session.data || {},
@@ -209,11 +286,12 @@ router.post(ROUTES.REDLINE_MAP, (req, res) => {
     })
   }
 
+  // Store in session
   req.session.data = req.session.data || {}
-  req.session.data.redlineBoundaryChoice = redlineBoundaryChoice
-  req.session.data.hasRedlineBoundaryFile = redlineBoundaryChoice === 'Upload a file'
+  req.session.data.hasRedlineBoundaryFile =
+    hasRedlineBoundaryFile === 'Upload a file'
 
-  if (redlineBoundaryChoice === 'Upload a file') {
+  if (hasRedlineBoundaryFile === 'Upload a file') {
     res.redirect(ROUTES.UPLOAD_REDLINE)
   } else {
     req.session.data.mapReferrer = 'redline-map'
@@ -222,11 +300,13 @@ router.post(ROUTES.REDLINE_MAP, (req, res) => {
   }
 })
 
+// Upload redline boundary file
 router.get(ROUTES.UPLOAD_REDLINE, (req, res) => {
   const data = req.session.data || {}
-  res.render(TEMPLATES.UPLOAD_REDLINE, { data: data, backLink: ROUTES.REDLINE_MAP })
+  res.render(TEMPLATES.UPLOAD_REDLINE, { data: data })
 })
 
+// Handle redline file upload
 router.post(
   ROUTES.UPLOAD_REDLINE,
   (req, res, next) => {
@@ -336,6 +416,12 @@ router.post(
           data: req.session.data || {}
         })
       }
+    } else if (fileExtension === '.shp') {
+      return res.render(TEMPLATES.UPLOAD_REDLINE, {
+        error:
+          'Shapefile parsing is not yet supported. Please use GeoJSON format.',
+        data: req.session.data || {}
+      })
     }
 
     req.session.data = req.session.data || {}
@@ -357,6 +443,7 @@ router.post(
   }
 )
 
+// Draw polygon on map
 router.get(ROUTES.MAP, (req, res) => {
   const data = req.session.data || {}
   const navFromSummary = (req.query.nav === 'summary' || req.query.nav === 'check-your-answers')
@@ -378,6 +465,7 @@ router.get(ROUTES.MAP, (req, res) => {
   })
 })
 
+// Handle map polygon submission
 router.post(ROUTES.MAP, (req, res) => {
   const boundaryData = req.body['boundary-data']
   const navFromSummary = req.body.navFromSummary === 'true'
@@ -398,6 +486,7 @@ router.post(ROUTES.MAP, (req, res) => {
   try {
     const parsedData = JSON.parse(boundaryData)
 
+    // Validate coordinates to prevent client-side tampering
     if (
       !parsedData.coordinates ||
       !Array.isArray(parsedData.coordinates) ||
@@ -415,6 +504,7 @@ router.post(ROUTES.MAP, (req, res) => {
       })
     }
 
+    // Limit maximum number of coordinates
     const MAX_COORDINATES = 10000
     if (parsedData.coordinates.length > MAX_COORDINATES) {
       return res.render(TEMPLATES.MAP, {
@@ -429,24 +519,24 @@ router.post(ROUTES.MAP, (req, res) => {
       })
     }
 
+    // Check EDP intersections using turf.js
     const intersectionResults = checkEDPIntersections(parsedData.coordinates)
 
     req.session.data = req.session.data || {}
     req.session.data.redlineBoundaryPolygon = {
       center: parsedData.center,
       coordinates: parsedData.coordinates,
+      // Store new intersection structure
       intersections: {
         nutrient: intersectionResults.nutrient,
         gcn: intersectionResults.gcn
       },
+      // Keep legacy field for backward compatibility
       intersectingCatchment: intersectionResults.nutrient
     }
 
-    const hasAnyEdpIntersection = Boolean(
-      intersectionResults.nutrient || intersectionResults.gcn
-    )
-
-    if (!hasAnyEdpIntersection) {
+    // Current behavior: redirect to NO_EDP if no nutrient intersection
+    if (!intersectionResults.nutrient) {
       res.redirect(ROUTES.NO_EDP)
     } else if (navFromSummary) {
       res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
@@ -468,11 +558,13 @@ router.post(ROUTES.MAP, (req, res) => {
   }
 })
 
+// No EDP area page
 router.get(ROUTES.NO_EDP, (req, res) => {
   const data = req.session.data || {}
-  res.render(TEMPLATES.NO_EDP, { data: data, backLink: ROUTES.MAP })
+  res.render(TEMPLATES.NO_EDP, { data: data })
 })
 
+// Building type selection
 router.get(ROUTES.BUILDING_TYPE, (req, res) => {
   const data = req.session.data || {}
   const isChange = req.query.change === 'true'
@@ -487,11 +579,13 @@ router.get(ROUTES.BUILDING_TYPE, (req, res) => {
   })
 })
 
+// Handle building type selection
 router.post(ROUTES.BUILDING_TYPE, (req, res) => {
   const buildingTypes = req.body['building-types']
   const isChange = req.body.isChange === 'true'
   const navFromSummary = req.body.navFromSummary === 'true'
 
+  // Quote journey: Housing | Other residential
   const raw = buildingTypes
   let buildingTypesArray = []
   if (Array.isArray(raw)) {
@@ -510,16 +604,25 @@ router.post(ROUTES.BUILDING_TYPE, (req, res) => {
   }
 
   req.session.data = req.session.data || {}
+  const previousBuildingTypes = req.session.data.buildingTypes || []
   req.session.data.buildingTypes = buildingTypesArray
+
   const hasHousing = buildingTypesArray.includes('Housing')
   const hasOtherResidential = buildingTypesArray.includes('Other residential')
 
   if (isChange && navFromSummary) {
-    if (!hasOtherResidential) {
+    if (!previousBuildingTypes.includes('Other residential') && !hasOtherResidential) {
       delete req.session.data.peopleCount
     }
-    if (!hasHousing) {
+    if (!previousBuildingTypes.includes('Housing') && !hasHousing) {
       delete req.session.data.residentialBuildingCount
+    }
+    const hasChanges =
+      JSON.stringify([...previousBuildingTypes].sort()) !==
+      JSON.stringify([...buildingTypesArray].sort())
+    if (!hasChanges) {
+      res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
+      return
     }
     if (hasHousing && !req.session.data.residentialBuildingCount) {
       res.redirect(`${ROUTES.RESIDENTIAL}?change=true&nav=summary`)
@@ -549,6 +652,7 @@ router.post(ROUTES.BUILDING_TYPE, (req, res) => {
   res.redirect(ROUTES.ESTIMATE_EMAIL)
 })
 
+// People count (Other residential) - quote journey
 router.get(ROUTES.PEOPLE_COUNT, (req, res) => {
   const data = req.session.data || {}
   const isChange = req.query.change === 'true'
@@ -595,6 +699,7 @@ router.post(ROUTES.PEOPLE_COUNT, (req, res) => {
   res.redirect(ROUTES.WASTE_WATER)
 })
 
+// Waste water treatment works - quote journey
 router.get(ROUTES.WASTE_WATER, (req, res) => {
   const data = req.session.data || {}
   const isChange = req.query.change === 'true'
@@ -651,6 +756,143 @@ router.post(ROUTES.WASTE_WATER, (req, res) => {
   res.redirect(ROUTES.ESTIMATE_EMAIL)
 })
 
+// Non-residential development page
+router.get(ROUTES.NON_RESIDENTIAL, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.NON_RESIDENTIAL, { data: data })
+})
+
+// Room count page (for Hotel, HMO, Residential institution)
+router.get(ROUTES.ROOM_COUNT, (req, res) => {
+  const data = req.session.data || {}
+  const isChange = req.query.change === 'true'
+  const navFromSummary = (req.query.nav === 'summary' || req.query.nav === 'check-your-answers')
+  const error = req.query.error
+  const buildingType = req.query.type
+
+  if (isChange && navFromSummary && buildingType) {
+    const displayName = BUILDING_TYPE_LABELS[buildingType] || null
+
+    if (displayName) {
+      return res.render(TEMPLATES.ROOM_COUNT, {
+        buildingType: displayName,
+        currentIndex: 0,
+        totalCount: 1,
+        data: data,
+        isChange: isChange,
+        navFromSummary: navFromSummary,
+        error: error,
+        buildingTypeKey: buildingType
+      })
+    }
+  }
+
+  const roomCountTypes = data.roomCountTypes || []
+  const currentIndex = data.currentRoomCountIndex || 0
+
+  if (currentIndex >= roomCountTypes.length) {
+    if (isChange && navFromSummary) {
+      res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
+    } else if (isChange) {
+      res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
+    } else if (
+      data.buildingTypes &&
+      data.buildingTypes.includes('Dwellinghouse')
+    ) {
+      res.redirect(ROUTES.RESIDENTIAL)
+    } else {
+      res.redirect(ROUTES.ESTIMATE_EMAIL)
+    }
+    return
+  }
+
+  const currentBuildingType = roomCountTypes[currentIndex]
+  res.render(TEMPLATES.ROOM_COUNT, {
+    buildingType: currentBuildingType,
+    currentIndex: currentIndex,
+    totalCount: roomCountTypes.length,
+    data: data,
+    isChange: isChange,
+    navFromSummary: navFromSummary,
+    error: error
+  })
+})
+
+// Handle room count submission
+router.post(ROUTES.ROOM_COUNT, (req, res) => {
+  const data = req.session.data || {}
+  const isChange = req.body.isChange === 'true'
+  const navFromSummary = req.body.navFromSummary === 'true'
+  const buildingType = req.body.buildingType
+
+  let roomCount = req.body['room-count']
+
+  if (!roomCount || isNaN(roomCount) || roomCount < 1) {
+    let redirectUrl = ROUTES.ROOM_COUNT + '?'
+    if (isChange) redirectUrl += 'change=true&'
+    if (navFromSummary) redirectUrl += 'nav=check-your-answers&'
+    if (buildingType) redirectUrl += `type=${buildingType}&`
+    redirectUrl = redirectUrl.replace(/&$/, '')
+
+    return res.redirect(
+      redirectUrl + '&error=Enter the number of rooms to continue'
+    )
+  }
+
+  req.session.data = req.session.data || {}
+  if (!req.session.data.roomCounts) {
+    req.session.data.roomCounts = {}
+  }
+
+  if (isChange && navFromSummary && buildingType) {
+    const dataKey = BUILDING_TYPE_DATA_KEYS[buildingType] || null
+
+    if (dataKey) {
+      req.session.data.roomCounts[dataKey] = parseInt(roomCount)
+    }
+
+    return res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
+  }
+
+  const roomCountTypes = data.roomCountTypes || []
+  const currentIndex = data.currentRoomCountIndex || 0
+  const currentBuildingType = roomCountTypes[currentIndex]
+
+  const typeMapping = {
+    Hotel: 'hotelCount',
+    'House in multiple occupation (HMO)': 'hmoCount',
+    'Residential institution': 'residentialInstitutionCount'
+  }
+
+  const dataKey = typeMapping[currentBuildingType]
+  if (dataKey) {
+    req.session.data.roomCounts[dataKey] = parseInt(roomCount)
+  }
+
+  req.session.data.currentRoomCountIndex = currentIndex + 1
+
+  if (isChange && navFromSummary && currentIndex + 1 >= roomCountTypes.length) {
+    res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
+    return
+  }
+
+  if (currentIndex + 1 >= roomCountTypes.length) {
+    if (isChange) {
+      res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
+    } else if (
+      data.buildingTypes &&
+      data.buildingTypes.includes('Dwellinghouse')
+    ) {
+      res.redirect(ROUTES.RESIDENTIAL)
+    } else {
+      res.redirect(ROUTES.ESTIMATE_EMAIL)
+    }
+  } else {
+    res.redirect(ROUTES.ROOM_COUNT)
+  }
+})
+
+// Residential building count
 router.get(ROUTES.RESIDENTIAL, (req, res) => {
   const data = req.session.data || {}
   const isChange = req.query.change === 'true'
@@ -665,6 +907,7 @@ router.get(ROUTES.RESIDENTIAL, (req, res) => {
   })
 })
 
+// Handle residential building count
 router.post(ROUTES.RESIDENTIAL, (req, res) => {
   const residentialBuildingCount = req.body['residential-building-count']
   const isChange = req.body.isChange === 'true'
@@ -694,6 +937,7 @@ router.post(ROUTES.RESIDENTIAL, (req, res) => {
     return
   }
 
+  // If Other residential selected, collect people count next
   if (req.session.data.buildingTypes && req.session.data.buildingTypes.includes('Other residential')) {
     res.redirect(ROUTES.PEOPLE_COUNT)
     return
@@ -701,6 +945,7 @@ router.post(ROUTES.RESIDENTIAL, (req, res) => {
   res.redirect(ROUTES.WASTE_WATER)
 })
 
+// Email entry
 router.get(ROUTES.ESTIMATE_EMAIL, (req, res) => {
   const data = req.session.data || {}
   const isChange = req.query.change === 'true'
@@ -714,6 +959,8 @@ router.get(ROUTES.ESTIMATE_EMAIL, (req, res) => {
       backLink = ROUTES.RESIDENTIAL
     } else if (data.buildingTypes.includes('Other residential')) {
       backLink = ROUTES.PEOPLE_COUNT
+    } else if (data.roomCountTypes && data.roomCountTypes.length > 0) {
+      backLink = ROUTES.ROOM_COUNT
     } else {
       backLink = ROUTES.BUILDING_TYPE
     }
@@ -727,8 +974,9 @@ router.get(ROUTES.ESTIMATE_EMAIL, (req, res) => {
   })
 })
 
+// Handle email submission
 router.post(ROUTES.ESTIMATE_EMAIL, (req, res) => {
-  const email = req.body['estimate-email']
+  const email = req.body['email']
   const isChange = req.body.isChange === 'true'
   const navFromSummary = req.body.navFromSummary === 'true'
   const data = req.session.data || {}
@@ -741,6 +989,8 @@ router.post(ROUTES.ESTIMATE_EMAIL, (req, res) => {
       backLink = ROUTES.RESIDENTIAL
     } else if (data.buildingTypes.includes('Other residential')) {
       backLink = ROUTES.PEOPLE_COUNT
+    } else if (data.roomCountTypes && data.roomCountTypes.length > 0) {
+      backLink = ROUTES.ROOM_COUNT
     } else {
       backLink = ROUTES.BUILDING_TYPE
     }
@@ -759,6 +1009,8 @@ router.post(ROUTES.ESTIMATE_EMAIL, (req, res) => {
 
   req.session.data = req.session.data || {}
   req.session.data.estimateEmail = email
+  // Keep legacy key for compatibility with existing templates/routes.
+  req.session.data.email = email
 
   req.session.save((err) => {
     if (err) {
@@ -768,29 +1020,35 @@ router.post(ROUTES.ESTIMATE_EMAIL, (req, res) => {
   })
 })
 
+// Summary page
 router.get(ROUTES.CHECK_YOUR_ANSWERS, (req, res) => {
   const data = req.session.data || {}
 
-  if (!data.estimateEmail) {
+  if (!data.estimateEmail && !data.email) {
     return res.redirect(ROUTES.ESTIMATE_EMAIL)
   }
 
   res.render(TEMPLATES.CHECK_YOUR_ANSWERS, {
-    data: data
+    data: data,
+    buildingTypeLabels: BUILDING_TYPE_LABELS
   })
 })
 
+// Handle summary submission
 router.post(ROUTES.CHECK_YOUR_ANSWERS, (req, res) => {
   const timestampSuffix = Date.now().toString().slice(-6)
+  const estimateReference = 'EST-' + timestampSuffix
   const nrfReference = 'NRF-' + timestampSuffix
 
   req.session.data = req.session.data || {}
+  req.session.data.estimateReference = estimateReference
   req.session.data.nrfReference = nrfReference
   req.session.data.levyAmount = req.session.data.levyAmount || '2,500'
 
   res.redirect(ROUTES.CONFIRMATION)
 })
 
+// Confirmation page
 router.get(ROUTES.CONFIRMATION, (req, res) => {
   const data = req.session.data || {}
 
@@ -799,32 +1057,103 @@ router.get(ROUTES.CONFIRMATION, (req, res) => {
   })
 })
 
+// Delete quote or commitment - confirm then redirect to delete confirmation
 router.get(ROUTES.DELETE_QUOTE, (req, res) => {
   const data = req.session.data || {}
-  res.render(TEMPLATES.DELETE_QUOTE, { data: data, backLink: ROUTES.CHECK_YOUR_ANSWERS })
+  const from = req.query.from || '' // 'commit' | 'retrieved' | '' (check-your-answers)
+  const backLink =
+    from === 'commit'
+      ? ROUTES.SUMMARY_AND_DECLARATION
+      : from === 'retrieved'
+        ? ROUTES.RETRIEVED_ESTIMATE_SUMMARY
+        : ROUTES.CHECK_YOUR_ANSWERS
+  res.render(TEMPLATES.DELETE_QUOTE, {
+    data: data,
+    deleteFrom: from,
+    fromCommit: from === 'commit',
+    backLink
+  })
 })
 
 router.post(ROUTES.DELETE_QUOTE, (req, res) => {
   const confirmDelete = req.body['confirm-delete-quote']
+  const from = req.body.from || ''
   if (confirmDelete === 'Yes') {
+    req.session.data = req.session.data || {}
+    req.session.data.deleteContext = from === 'commit' ? 'commit' : 'quote'
+    // Clear quote journey data
     const keysToRemove = [
       'redlineBoundaryPolygon', 'redlineFile', 'hasRedlineBoundaryFile', 'mapReferrer',
-      'buildingTypes', 'residentialBuildingCount', 'peopleCount', 'wasteWaterTreatmentWorks',
-      'estimateEmail', 'nrfReference', 'levyAmount'
+      'buildingTypes', 'residentialBuildingCount', 'peopleCount', 'roomCounts', 'roomCountTypes', 'currentRoomCountIndex',
+      'wasteWaterTreatmentWorks', 'email', 'estimateReference', 'nrfReference', 'levyAmount'
     ]
-    req.session.data = req.session.data || {}
     keysToRemove.forEach((k) => delete req.session.data[k])
     res.redirect(ROUTES.DELETE_CONFIRMATION)
   } else {
-    res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
+    if (from === 'commit') {
+      res.redirect(ROUTES.SUMMARY_AND_DECLARATION)
+    } else if (from === 'retrieved') {
+      res.redirect(ROUTES.RETRIEVED_ESTIMATE_SUMMARY)
+    } else {
+      res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
+    }
   }
 })
 
 router.get(ROUTES.DELETE_CONFIRMATION, (req, res) => {
   const data = req.session.data || {}
-  res.render(TEMPLATES.DELETE_CONFIRMATION, { data: data, deleteContext: 'quote' })
+  const deleteContext = data.deleteContext || 'quote'
+  if (req.session.data && req.session.data.deleteContext) {
+    delete req.session.data.deleteContext
+  }
+  res.render(TEMPLATES.DELETE_CONFIRMATION, { data: data, deleteContext: deleteContext })
 })
 
+// Delete commitment (from payment-summary)
+router.get(ROUTES.DELETE_SUMMARY, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.DELETE_SUMMARY, { data: data })
+})
+
+router.post(ROUTES.DELETE_SUMMARY, (req, res) => {
+  const confirmDelete = req.body['confirm-delete-summary']
+  if (confirmDelete === 'Yes') {
+    const keysToRemove = [
+      'redlineBoundaryPolygon', 'redlineFile', 'hasRedlineBoundaryFile', 'mapReferrer',
+      'buildingTypes', 'residentialBuildingCount', 'peopleCount', 'roomCounts', 'roomCountTypes', 'currentRoomCountIndex',
+      'wasteWaterTreatmentWorks', 'email', 'commitmentRetrievalEmail', 'estimateReference', 'nrfReference', 'paymentReference', 'levyAmount', 'planningRef', 'fromWwtwEntry'
+    ]
+    req.session.data = req.session.data || {}
+    keysToRemove.forEach((k) => delete req.session.data[k])
+    res.redirect(ROUTES.DELETE_CONFIRMATION)
+  } else {
+    res.redirect(ROUTES.PAYMENT_SUMMARY)
+  }
+})
+
+// Delete payment details (from payment-declaration)
+router.get(ROUTES.DELETE_PAYMENT_DETAILS, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.DELETE_PAYMENT_DETAILS, { data: data })
+})
+
+router.post(ROUTES.DELETE_PAYMENT_DETAILS, (req, res) => {
+  const confirmDelete = req.body['confirm-delete-payment-details']
+  if (confirmDelete === 'Yes') {
+    const keysToRemove = [
+      'redlineBoundaryPolygon', 'redlineFile', 'hasRedlineBoundaryFile', 'mapReferrer',
+      'buildingTypes', 'residentialBuildingCount', 'peopleCount', 'roomCounts', 'roomCountTypes', 'currentRoomCountIndex',
+      'wasteWaterTreatmentWorks', 'email', 'commitmentRetrievalEmail', 'estimateReference', 'nrfReference', 'paymentReference', 'levyAmount', 'planningRef', 'fromWwtwEntry'
+    ]
+    req.session.data = req.session.data || {}
+    keysToRemove.forEach((k) => delete req.session.data[k])
+    res.redirect(ROUTES.DELETE_CONFIRMATION)
+  } else {
+    res.redirect(ROUTES.PAYMENT_DECLARATION)
+  }
+})
+
+// Serve GeoJSON catchment data
 router.get(ROUTES.CATCHMENTS_GEOJSON, (req, res) => {
   try {
     const geojsonPath = path.join(
@@ -848,74 +1177,924 @@ router.get(ROUTES.CATCHMENTS_GEOJSON, (req, res) => {
   }
 })
 
+// Estimate email content page
 router.get(ROUTES.ESTIMATE_EMAIL_CONTENT, (req, res) => {
   const data = req.session.data || {}
-  if (!data.nrfReference) {
+
+  if (!data.estimateReference && !data.nrfReference) {
     return res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
   }
 
   res.render(TEMPLATES.ESTIMATE_EMAIL_CONTENT, {
     data: data,
-    backLink: ROUTES.CONFIRMATION
+    buildingTypeDetails: formatBuildingTypeDetails(data)
   })
 })
 
+// Estimate email content (quote range) - when user chose "I don't know" waste water works
 router.get(ROUTES.ESTIMATE_EMAIL_CONTENT_RANGE, (req, res) => {
   const data = req.session.data || {}
-  if (!data.nrfReference) {
+
+  if (!data.estimateReference && !data.nrfReference) {
     return res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
   }
 
   res.render(TEMPLATES.ESTIMATE_EMAIL_CONTENT_RANGE, {
     data: data,
-    backLink: ROUTES.CONFIRMATION
+    buildingTypeDetails: formatBuildingTypeDetails(data)
   })
 })
+
+const NRF_REFERENCE_REGEX = /^\d+$/
+
+// ============================================================================
+// Commit journey routes (estimate retrieval → commit)
+// ============================================================================
 
 router.get(ROUTES.DO_YOU_HAVE_A_NRF_REF, (req, res) => {
   const data = req.session.data || {}
   res.render(TEMPLATES.DO_YOU_HAVE_A_NRF_REF, {
-    data,
-    backLink: ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO
+    data: data
   })
 })
 
 router.post(ROUTES.DO_YOU_HAVE_A_NRF_REF, (req, res) => {
   const hasNrfReference = req.body['has-nrf-reference']
+
   if (!hasNrfReference) {
     return res.render(TEMPLATES.DO_YOU_HAVE_A_NRF_REF, {
       error: 'Select yes if you have an NRF reference',
-      data: req.session.data || {},
-      backLink: ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO
+      data: req.session.data || {}
     })
   }
 
   req.session.data = req.session.data || {}
   req.session.data.hasNrfReference = hasNrfReference
-  res.redirect(ROUTES.START)
+
+  if (hasNrfReference === 'yes') {
+    res.redirect(ROUTES.ENTER_ESTIMATE_REF)
+  } else {
+    res.redirect(ROUTES.START)
+  }
+})
+
+router.get(ROUTES.ENTER_ESTIMATE_REF, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.ENTER_ESTIMATE_REF, {
+    data: data,
+    backLink: ROUTES.DO_YOU_HAVE_A_NRF_REF
+  })
+})
+
+router.post(ROUTES.ENTER_ESTIMATE_REF, (req, res) => {
+  const nrfReference = req.body['nrf-reference']?.trim()
+  const data = req.session.data || {}
+
+  if (!nrfReference) {
+    return res.render(TEMPLATES.ENTER_ESTIMATE_REF, {
+      error: 'Enter your NRF reference to continue',
+      data: data,
+      backLink: ROUTES.DO_YOU_HAVE_A_NRF_REF
+    })
+  }
+
+  const isAcceptedSessionRef = data.nrfReference && nrfReference === data.nrfReference
+  if (!isAcceptedSessionRef && !NRF_REFERENCE_REGEX.test(nrfReference)) {
+    return res.render(TEMPLATES.ENTER_ESTIMATE_REF, {
+      error: 'Enter a valid NRF reference number',
+      data: data,
+      backLink: ROUTES.DO_YOU_HAVE_A_NRF_REF
+    })
+  }
+
+  req.session.data = req.session.data || {}
+  req.session.data.nrfReference = nrfReference
+
+  res.redirect(ROUTES.RETRIEVE_ESTIMATE_EMAIL)
+})
+
+router.get(ROUTES.RETRIEVE_ESTIMATE_EMAIL, (req, res) => {
+  const data = req.session.data || {}
+
+  let backLink = ROUTES.DO_YOU_HAVE_A_NRF_REF
+  if (data.hasNrfReference === 'yes' && data.nrfReference) {
+    backLink = ROUTES.ENTER_ESTIMATE_REF
+  }
+
+  res.render(TEMPLATES.RETRIEVE_ESTIMATE_EMAIL, {
+    data: data,
+    backLink: backLink
+  })
+})
+
+router.post(ROUTES.RETRIEVE_ESTIMATE_EMAIL, (req, res) => {
+  const email = req.body['email']
+  const data = req.session.data || {}
+
+  let backLink = ROUTES.DO_YOU_HAVE_A_NRF_REF
+  if (data.hasNrfReference === 'yes' && data.nrfReference) {
+    backLink = ROUTES.ENTER_ESTIMATE_REF
+  }
+
+  const validation = validators.validateEmail(email)
+  if (!validation.valid) {
+    return res.render(TEMPLATES.RETRIEVE_ESTIMATE_EMAIL, {
+      error: validation.error,
+      data: data,
+      backLink: backLink
+    })
+  }
+
+  req.session.data = req.session.data || {}
+  req.session.data.email = email
+
+  res.redirect(ROUTES.ESTIMATE_EMAIL_RETRIEVAL_CONTENT)
+})
+
+router.get(ROUTES.ESTIMATE_EMAIL_RETRIEVAL_CONTENT, (req, res) => {
+  const data = req.session.data || {}
+
+  let backLink = ROUTES.DO_YOU_HAVE_A_NRF_REF
+  if (data.hasNrfReference === 'yes' && data.nrfReference) {
+    backLink = ROUTES.ENTER_ESTIMATE_REF
+  } else {
+    backLink = ROUTES.RETRIEVE_ESTIMATE_EMAIL
+  }
+
+  res.render(TEMPLATES.ESTIMATE_EMAIL_RETRIEVAL_CONTENT, {
+    data: data,
+    backLink: backLink
+  })
+})
+
+router.get(ROUTES.RETRIEVED_ESTIMATE_SUMMARY, (req, res) => {
+  const data = req.session.data || {}
+
+  if (!data.email) {
+    return res.redirect(ROUTES.RETRIEVE_ESTIMATE_EMAIL)
+  }
+
+  res.render(TEMPLATES.RETRIEVED_ESTIMATE_SUMMARY, {
+    data: data,
+    buildingTypeLabels: BUILDING_TYPE_LABELS
+  })
+})
+
+router.post(ROUTES.RETRIEVED_ESTIMATE_SUMMARY, (req, res) => {
+  res.redirect(ROUTES.COMMIT_HOW_WOULD_YOU_LIKE_TO_SIGN_IN)
+})
+
+router.get(ROUTES.COMMIT_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.COMMIT_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, {
+    data: data
+  })
+})
+
+router.post(ROUTES.COMMIT_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, (req, res) => {
+  const option = req.body['sign-in-option']
+
+  if (!option) {
+    return res.render(TEMPLATES.COMMIT_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, {
+      error:
+        'Select if you want to log in with One Login or Government Gateway',
+      data: req.session.data || {}
+    })
+  }
+
+  req.session.data = req.session.data || {}
+  req.session.data.signInOption = option
+
+  if (option === 'government-gateway') {
+    res.redirect(ROUTES.COMMIT_SIGN_IN_GOVERNMENT_GATEWAY)
+    return
+  }
+
+  res.redirect(ROUTES.COMPANY_DETAILS)
 })
 
 router.get(ROUTES.PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, (req, res) => {
   const data = req.session.data || {}
   res.render(TEMPLATES.PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, {
-    data,
-    backLink: ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO
+    data: data
   })
 })
 
 router.post(ROUTES.PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, (req, res) => {
   const option = req.body['sign-in-option']
+
   if (!option) {
     return res.render(TEMPLATES.PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, {
-      error: 'Select if you want to log in with One Login or Government Gateway',
-      data: req.session.data || {},
-      backLink: ROUTES.WHAT_WOULD_YOU_LIKE_TO_DO
+      error:
+        'Select if you want to log in with One Login or Government Gateway',
+      data: req.session.data || {}
     })
   }
 
   req.session.data = req.session.data || {}
   req.session.data.paySignInOption = option
-  res.redirect(ROUTES.START)
+
+  if (option === 'government-gateway') {
+    res.redirect(ROUTES.PAY_SIGN_IN_GOVERNMENT_GATEWAY)
+    return
+  }
+
+  res.redirect(ROUTES.PAYMENT_SUMMARY)
 })
+
+router.get(ROUTES.PAY_SIGN_IN_GOVERNMENT_GATEWAY, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.PAY_SIGN_IN_GOVERNMENT_GATEWAY, {
+    data: data,
+    errors: [],
+    errorsByField: {},
+    backLink: ROUTES.PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN
+  })
+})
+
+router.post(ROUTES.PAY_SIGN_IN_GOVERNMENT_GATEWAY, (req, res) => {
+  const userId = req.body.userId
+  const password = req.body.password
+  const data = req.session.data || {}
+
+  const errors = []
+  const errorsByField = {}
+
+  if (!userId || userId.trim() === '') {
+    const message = 'Enter your Government Gateway user ID'
+    errors.push({ text: message, href: '#user-id' })
+    errorsByField.userId = { text: message }
+  }
+
+  if (!password || password.trim() === '') {
+    const message = 'Enter your password'
+    errors.push({ text: message, href: '#password' })
+    errorsByField.password = { text: message }
+  }
+
+  if (errors.length > 0) {
+    return res.render(TEMPLATES.PAY_SIGN_IN_GOVERNMENT_GATEWAY, {
+      data: data,
+      errors: errors,
+      errorsByField: errorsByField,
+      backLink: ROUTES.PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN
+    })
+  }
+
+  req.session.data = req.session.data || {}
+  req.session.data.payGovernmentGatewayUserId = userId
+
+  res.redirect(ROUTES.PAYMENT_SUMMARY)
+})
+
+router.get(ROUTES.COMMIT_SIGN_IN_GOVERNMENT_GATEWAY, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.COMMIT_SIGN_IN_GOVERNMENT_GATEWAY, {
+    data: data,
+    errors: [],
+    errorsByField: {}
+  })
+})
+
+router.post(ROUTES.COMMIT_SIGN_IN_GOVERNMENT_GATEWAY, (req, res) => {
+  const userId = req.body.userId
+  const password = req.body.password
+  const data = req.session.data || {}
+
+  const errors = []
+  const errorsByField = {}
+
+  if (!userId || userId.trim() === '') {
+    const message = 'Enter your Government Gateway user ID'
+    errors.push({ text: message, href: '#user-id' })
+    errorsByField.userId = { text: message }
+  }
+
+  if (!password || password.trim() === '') {
+    const message = 'Enter your password'
+    errors.push({ text: message, href: '#password' })
+    errorsByField.password = { text: message }
+  }
+
+  if (errors.length > 0) {
+    return res.render(TEMPLATES.COMMIT_SIGN_IN_GOVERNMENT_GATEWAY, {
+      data: data,
+      errors: errors,
+      errorsByField: errorsByField
+    })
+  }
+
+  req.session.data = req.session.data || {}
+  req.session.data.governmentGatewayUserId = userId
+
+  res.redirect(ROUTES.COMPANY_DETAILS)
+})
+
+router.get(ROUTES.COMPANY_DETAILS, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.COMPANY_DETAILS, {
+    data: data,
+    errors: [],
+    errorsByField: {}
+  })
+})
+
+router.post(ROUTES.COMPANY_DETAILS, (req, res) => {
+  const fullName = req.body.fullName
+  const businessName = req.body.businessName
+  const addressLine1 = req.body.addressLine1
+  const addressLine2 = req.body.addressLine2
+  const townOrCity = req.body.townOrCity
+  const county = req.body.county
+  const postcode = req.body.postcode
+  const companyRegistrationNumber = req.body.companyRegistrationNumber
+  const vatRegistrationNumber = req.body.vatRegistrationNumber
+  const purchaseOrderNumber = req.body.purchaseOrderNumber
+
+  const sessionData = req.session.data || {}
+  const formData = {
+    ...sessionData,
+    fullName,
+    businessName,
+    addressLine1,
+    addressLine2,
+    townOrCity,
+    county,
+    postcode,
+    companyRegistrationNumber,
+    vatRegistrationNumber,
+    purchaseOrderNumber
+  }
+
+  const errors = []
+
+  if (!fullName || fullName.trim() === '') {
+    errors.push({ field: 'fullName', message: 'Enter your full name' })
+  }
+
+  if (!addressLine1 || addressLine1.trim() === '') {
+    errors.push({ field: 'addressLine1', message: 'Enter address line 1' })
+  }
+
+  if (!townOrCity || townOrCity.trim() === '') {
+    errors.push({ field: 'townOrCity', message: 'Enter a town or city' })
+  }
+
+  if (!postcode || postcode.trim() === '') {
+    errors.push({ field: 'postcode', message: 'Enter a postcode' })
+  }
+
+  if (errors.length > 0) {
+    const errorsByField = {}
+    errors.forEach((error) => {
+      errorsByField[error.field] = { text: error.message }
+    })
+    return res.render(TEMPLATES.COMPANY_DETAILS, {
+      errors: errors,
+      errorsByField: errorsByField,
+      data: formData
+    })
+  }
+
+  req.session.data = formData
+  req.session.data.fullName = fullName
+  req.session.data.businessName = businessName || ''
+  req.session.data.addressLine1 = addressLine1
+  req.session.data.addressLine2 = addressLine2 || ''
+  req.session.data.townOrCity = townOrCity
+  req.session.data.county = county || ''
+  req.session.data.postcode = postcode
+  req.session.data.companyRegistrationNumber = companyRegistrationNumber || ''
+  req.session.data.vatRegistrationNumber = vatRegistrationNumber || ''
+  req.session.data.purchaseOrderNumber = purchaseOrderNumber || ''
+  req.session.data.lpaName = req.session.data.lpaName || 'Stockton-on-Tees Borough Council'
+
+  res.redirect(ROUTES.SUMMARY_AND_DECLARATION)
+})
+
+router.get(ROUTES.LPA_CONFIRM, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.LPA_CONFIRM, {
+    data: data
+  })
+})
+
+router.post(ROUTES.LPA_CONFIRM, (req, res) => {
+  req.session.data = req.session.data || {}
+  req.session.data.lpaName = 'Stockton-on-Tees Borough Council'
+  res.redirect(ROUTES.SUMMARY_AND_DECLARATION)
+})
+
+router.get(ROUTES.SUMMARY_AND_DECLARATION, (req, res) => {
+  const data = req.session.data || {}
+
+  if (!data.fullName) {
+    return res.redirect(ROUTES.COMPANY_DETAILS)
+  }
+
+  res.render(TEMPLATES.SUMMARY_AND_DECLARATION, {
+    data: data,
+    buildingTypeLabels: BUILDING_TYPE_LABELS
+  })
+})
+
+router.post(ROUTES.SUMMARY_AND_DECLARATION, (req, res) => {
+  const commitmentReference = 'COM-' + Date.now().toString().slice(-6)
+
+  req.session.data = req.session.data || {}
+  req.session.data.commitmentReference = commitmentReference
+  req.session.data.levyAmount = req.session.data.levyAmount || '2,500'
+  req.session.data.lpaEmail = req.session.data.lpaEmail || 'lpa@example.com'
+
+  res.redirect(ROUTES.COMMIT_CONFIRMATION)
+})
+
+router.get(ROUTES.COMMIT_CONFIRMATION, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.COMMIT_CONFIRMATION, {
+    data: data
+  })
+})
+
+router.get(ROUTES.COMMIT_EMAIL_CONTENT, (req, res) => {
+  const data = req.session.data || {}
+
+  if (!data.commitmentReference) {
+    return res.redirect(ROUTES.SUMMARY_AND_DECLARATION)
+  }
+
+  res.render(TEMPLATES.COMMIT_EMAIL_CONTENT, {
+    data: data,
+    buildingTypeLabels: BUILDING_TYPE_LABELS
+  })
+})
+
+router.get(ROUTES.COMMIT_EMAIL_CONTENT_RANGE, (req, res) => {
+  const data = req.session.data || {}
+
+  if (!data.commitmentReference) {
+    return res.redirect(ROUTES.SUMMARY_AND_DECLARATION)
+  }
+
+  res.render(TEMPLATES.COMMIT_EMAIL_CONTENT_RANGE, {
+    data: data,
+    buildingTypeLabels: BUILDING_TYPE_LABELS
+  })
+})
+
+// ============================================================================
+// Payment journey routes
+// ============================================================================
+
+router.get(ROUTES.PAYMENT_SUMMARY, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.PAYMENT_SUMMARY, {
+    data: data,
+    buildingTypeLabels: BUILDING_TYPE_LABELS,
+    backLink: ROUTES.PAY_SIGN_IN_GOVERNMENT_GATEWAY
+  })
+})
+
+router.post(ROUTES.PAYMENT_SUMMARY, (req, res) => {
+  req.session.save((err) => {
+    if (err) console.error('Session save error:', err)
+    res.redirect(ROUTES.PLANNING_REF)
+  })
+})
+
+router.get(ROUTES.PLANNING_REF, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.PLANNING_REF, {
+    data: data,
+    backLink: ROUTES.PAYMENT_SUMMARY
+  })
+})
+
+router.post(ROUTES.PLANNING_REF, (req, res) => {
+  const planningRef = req.body['planning-ref']?.trim()
+  if (!planningRef) {
+    return res.render(TEMPLATES.PLANNING_REF, {
+      error: 'Enter the planning application reference',
+      data: req.session.data || {},
+      backLink: ROUTES.PAYMENT_SUMMARY
+    })
+  }
+  req.session.data = req.session.data || {}
+  req.session.data.planningRef = planningRef
+  req.session.save((err) => {
+    if (err) console.error('Session save error:', err)
+    const data = req.session.data || {}
+    const needsWwtwEntry = data.wasteWaterTreatmentWorks === "I don't know the waste water treatment works yet"
+    res.redirect(needsWwtwEntry ? ROUTES.WWTW_ENTRY : ROUTES.PAYMENT_DECLARATION)
+  })
+})
+
+router.get(ROUTES.WWTW_ENTRY, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.WWTW_ENTRY, {
+    data: data,
+    backLink: ROUTES.PLANNING_REF
+  })
+})
+
+router.post(ROUTES.WWTW_ENTRY, (req, res) => {
+  const wwtw = req.body['waste-water-treatment-works']?.trim()
+  const data = req.session.data || {}
+  if (!wwtw) {
+    return res.render(TEMPLATES.WWTW_ENTRY, {
+      data: data,
+      error: 'Enter the waste water treatment works for this development',
+      backLink: ROUTES.PLANNING_REF
+    })
+  }
+  req.session.data = req.session.data || {}
+  req.session.data.wasteWaterTreatmentWorks = wwtw
+  req.session.data.fromWwtwEntry = true
+  req.session.save((err) => {
+    if (err) console.error('Session save error:', err)
+    res.redirect(ROUTES.PAYMENT_DECLARATION)
+  })
+})
+
+router.get(ROUTES.PAYMENT_DECLARATION, (req, res) => {
+  const data = req.session.data || {}
+  const backLink = data.fromWwtwEntry ? ROUTES.WWTW_ENTRY : ROUTES.PLANNING_REF
+  res.render(TEMPLATES.PAYMENT_DECLARATION, {
+    data: data,
+    buildingTypeLabels: BUILDING_TYPE_LABELS,
+    backLink: backLink
+  })
+})
+
+router.post(ROUTES.PAYMENT_DECLARATION, (req, res) => {
+  const paymentReference = 'NRF-' + Date.now().toString().slice(-6)
+  req.session.data = req.session.data || {}
+  req.session.data.paymentReference = paymentReference
+  req.session.data.levyAmount = req.session.data.levyAmount || '2,500'
+  req.session.save((err) => {
+    if (err) console.error('Session save error:', err)
+    res.redirect(ROUTES.PAYMENT_CONFIRMATION)
+  })
+})
+
+router.get(ROUTES.PAYMENT_CONFIRMATION, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.PAYMENT_CONFIRMATION, {
+    data: data
+  })
+})
+
+router.get(ROUTES.PAYMENT_REQUEST_EMAIL_CONTENT, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.PAYMENT_REQUEST_EMAIL_CONTENT, {
+    data: data,
+    backLink: ROUTES.PAYMENT_CONFIRMATION
+  })
+})
+
+router.get(ROUTES.REJECT_EMAIL_CONTENT, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.REJECT_EMAIL_CONTENT, {
+    data: data,
+    backLink: ROUTES.PAYMENT_CONFIRMATION
+  })
+})
+
+router.get(ROUTES.PDN_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.PDN_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, {
+    data: data,
+    backLink: ROUTES.PAYMENT_REQUEST_EMAIL_CONTENT
+  })
+})
+
+router.post(ROUTES.PDN_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, (req, res) => {
+  const signInOption = req.body['sign-in-option']
+  if (!signInOption) {
+    return res.render(TEMPLATES.PDN_HOW_WOULD_YOU_LIKE_TO_SIGN_IN, {
+      error: 'Select if you want to log in with One Login or Government Gateway',
+      data: req.session.data || {},
+      backLink: ROUTES.PAYMENT_REQUEST_EMAIL_CONTENT
+    })
+  }
+  req.session.data = req.session.data || {}
+  req.session.data.pdnSignInOption = signInOption
+  if (signInOption === 'government-gateway') {
+    res.redirect(ROUTES.PDN_SIGN_IN_GOVERNMENT_GATEWAY)
+  } else {
+    res.redirect(ROUTES.PDN_SIGN_IN_GOVERNMENT_GATEWAY)
+  }
+})
+
+router.get(ROUTES.PDN_SIGN_IN_GOVERNMENT_GATEWAY, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.PDN_SIGN_IN_GOVERNMENT_GATEWAY, {
+    data: data,
+    errors: [],
+    errorsByField: {},
+    backLink: ROUTES.PDN_HOW_WOULD_YOU_LIKE_TO_SIGN_IN
+  })
+})
+
+router.post(ROUTES.PDN_SIGN_IN_GOVERNMENT_GATEWAY, (req, res) => {
+  const userId = req.body.userId?.trim()
+  const password = req.body.password?.trim()
+  const data = req.session.data || {}
+  const errors = []
+  const errorsByField = {}
+  if (!userId) {
+    errors.push({ text: 'Enter your Government Gateway user ID', href: '#user-id' })
+    errorsByField.userId = { text: 'Enter your Government Gateway user ID' }
+  }
+  if (!password) {
+    errors.push({ text: 'Enter your password', href: '#password' })
+    errorsByField.password = { text: 'Enter your password' }
+  }
+  if (errors.length > 0) {
+    return res.render(TEMPLATES.PDN_SIGN_IN_GOVERNMENT_GATEWAY, {
+      data: data,
+      errors,
+      errorsByField,
+      backLink: ROUTES.PDN_HOW_WOULD_YOU_LIKE_TO_SIGN_IN
+    })
+  }
+  req.session.data = req.session.data || {}
+  req.session.data.pdnGovernmentGatewayUserId = userId
+  req.session.save((err) => {
+    if (err) console.error('Session save error:', err)
+    res.redirect(ROUTES.UPLOAD_DECISION_NOTICE)
+  })
+})
+
+router.get(ROUTES.UPLOAD_DECISION_NOTICE, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.UPLOAD_DECISION_NOTICE, {
+    data: data,
+    backLink: ROUTES.PDN_SIGN_IN_GOVERNMENT_GATEWAY
+  })
+})
+
+router.post(ROUTES.UPLOAD_DECISION_NOTICE, (req, res) => {
+  req.session.data = req.session.data || {}
+  req.session.data.decisionNoticeUploaded = true
+  req.session.data.decisionNoticeFileName = 'Planning Decision Notice.pdf'
+  req.session.save((err) => {
+    if (err) console.error('Session save error:', err)
+    res.redirect(ROUTES.PAYMENT_SUMMARY_SUBMIT)
+  })
+})
+
+router.get(ROUTES.PAYMENT_SUMMARY_SUBMIT, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.PAYMENT_SUMMARY_SUBMIT, {
+    data: data,
+    buildingTypeLabels: BUILDING_TYPE_LABELS,
+    backLink: ROUTES.UPLOAD_DECISION_NOTICE
+  })
+})
+
+router.post(ROUTES.PAYMENT_SUMMARY_SUBMIT, (req, res) => {
+  req.session.data = req.session.data || {}
+  req.session.save((err) => {
+    if (err) console.error('Session save error:', err)
+    res.redirect(ROUTES.DECISION_NOTICE_CONFIRMATION)
+  })
+})
+
+router.get(ROUTES.DECISION_NOTICE_CONFIRMATION, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.DECISION_NOTICE_CONFIRMATION, {
+    data: data,
+    formatBuildingDetails: formatBuildingTypeDetails
+  })
+})
+
+router.get(ROUTES.PAY_EMAIL_CONTENT, (req, res) => {
+  const data = req.session.data || {}
+  res.render(TEMPLATES.PAY_EMAIL_CONTENT, {
+    data: data,
+    backLink: ROUTES.DECISION_NOTICE_CONFIRMATION
+  })
+})
+
+function formatBuildingTypeDetails(data) {
+  const parts = []
+  const residentialCount = Number(data.residentialBuildingCount)
+  if (!Number.isNaN(residentialCount) && residentialCount > 0) {
+    parts.push(`${residentialCount} dwelling buildings`)
+  }
+
+  const roomCounts = data.roomCounts || {}
+  const hotelCount = Number(roomCounts.hotelCount)
+  if (!Number.isNaN(hotelCount) && hotelCount > 0) {
+    parts.push(`${hotelCount} hotel rooms`)
+  }
+
+  const hmoCount = Number(roomCounts.hmoCount)
+  if (!Number.isNaN(hmoCount) && hmoCount > 0) {
+    parts.push(`${hmoCount} House in multiple occupation rooms`)
+  }
+
+  const residentialInstitutionCount = Number(
+    roomCounts.residentialInstitutionCount
+  )
+  if (
+    !Number.isNaN(residentialInstitutionCount) &&
+    residentialInstitutionCount > 0
+  ) {
+    parts.push(`${residentialInstitutionCount} residential institution rooms`)
+  }
+
+  if (parts.length === 0 && Array.isArray(data.buildingTypes)) {
+    const labels = data.buildingTypes
+      .filter((type) => type && type !== '_unchecked')
+      .map((type) => BUILDING_TYPE_LABELS[type] || type)
+
+    if (labels.length > 0) {
+      parts.push(labels.join(', '))
+    }
+  }
+
+  return parts.join(' and ')
+}
+
+// ============================================================================
+// OS MAP PROXY - Proxy resources from OS API
+// ============================================================================
+
+/**
+ * GET /api/map-proxy?url={url}
+ * Generic proxy for OS resources (fonts, sprites, etc)
+ */
+// router.get('/api/map-proxy', async (req, res) => {
+//   try {
+//     const { url: targetUrl } = req.query
+
+//     if (!targetUrl) {
+//       return res.status(400).json({ error: 'url parameter required' })
+//     }
+
+//     // Decode the URL
+//     let urlToFetch
+//     try {
+//       urlToFetch = decodeURIComponent(targetUrl)
+//     } catch (error) {
+//       return res.status(400).json({ error: 'Invalid URL encoding' })
+//     }
+
+//     // Validate it's an OS URL
+//     if (!urlToFetch.includes('api.os.uk')) {
+//       return res.status(403).json({ error: 'Only OS URLs allowed' })
+//     }
+
+//     const osApiKey = process.env.OS_API_KEY
+
+//     if (!osApiKey) {
+//       console.warn('[OS Map Proxy] Missing OS_API_KEY')
+//       return res.status(404).end()
+//     }
+
+//     console.log(`[OS Map Proxy] Fetching: ${urlToFetch}`)
+
+//     // Add API key if not already present
+//     const proxyUrl = new URL(urlToFetch)
+//     proxyUrl.searchParams.set('key', osApiKey)
+
+//     // Make request to OS API
+//     https.get(proxyUrl.toString(), { timeout: 10000 }, (osRes) => {
+//       if (osRes.statusCode !== 200) {
+//         console.log(`[OS Map Proxy] OS API returned ${osRes.statusCode}`)
+//         osRes.resume()
+//         return res.status(osRes.statusCode >= 500 ? 502 : 404).end()
+//       }
+
+//       // Set response headers based on content type
+//       const contentType = osRes.headers['content-type']
+//       if (contentType) {
+//         res.set('Content-Type', contentType)
+//       }
+
+//       res.set('Cache-Control', 'public, max-age=86400')
+//       res.set('Access-Control-Allow-Origin', '*')
+
+//       // Check if response is gzipped
+//       const contentEncoding = osRes.headers['content-encoding']
+//       if (contentEncoding === 'gzip') {
+//         osRes.pipe(zlib.createGunzip()).pipe(res)
+//       } else {
+//         osRes.pipe(res)
+//       }
+//     }).on('error', (error) => {
+//       console.error(`[OS Map Proxy] Request failed: ${error.message}`)
+//       res.status(502).end()
+//     })
+//   } catch (error) {
+//     console.error(`[OS Map Proxy] Error: ${error.message}`)
+//     res.status(500).end()
+//   }
+// })
+
+// // ============================================================================
+// // OS TILE PROXY - Proxy tiles from OS API
+// // ============================================================================
+
+// /**
+//  * GET /api/tile/:z/:y/:x.pbf
+//  * Proxy OS Vector Tile Service tiles with Bearer token authentication
+//  * Note: Tile coordinates are in z/y/x order (not z/x/y)
+//  */
+// router.get('/api/tile/:z/:y/:x.pbf', async (req, res) => {
+//   try {
+//     const { z, y, x } = req.params
+//     const zoom = parseInt(z, 10)
+//     const tileY = parseInt(y, 10)
+//     const tileX = parseInt(x, 10)
+
+//     // Validate tile coordinates
+//     if (isNaN(zoom) || isNaN(tileX) || isNaN(tileY)) {
+//       return res.status(400).end()
+//     }
+
+//     if (zoom < 0 || zoom > 28 || tileX < 0 || tileY < 0) {
+//       return res.status(400).end()
+//     }
+
+//     // Get OS API credentials from environment
+//     const osApiKey = process.env.OS_API_KEY
+
+//     if (!osApiKey) {
+//       console.warn('[OS Tile Proxy] Missing OS_API_KEY')
+//       return res.status(404).end()
+//     }
+
+//     // Construct OS VTS API URL with proper format
+//     // Use API key as Bearer token (or include in URL as srs param)
+//     const osUrl = `https://api.os.uk/maps/vector/v1/vts/tile/${zoom}/${tileY}/${tileX}.pbf?key=${osApiKey}&srs=3857`
+
+//     console.log(`[OS Tile Proxy] Fetching: ${zoom}/${tileY}/${tileX}`)
+
+//     // Make request to OS API
+//     https.get(osUrl, { timeout: 10000 }, (osRes) => {
+//       // Handle error status codes
+//       if (osRes.statusCode !== 200) {
+//         console.log(`[OS Tile Proxy] OS API returned ${osRes.statusCode}`)
+//         osRes.resume() // Drain response
+//         return res.status(osRes.statusCode >= 500 ? 502 : 404).end()
+//       }
+
+//       // Set response headers
+//       res.set('Content-Type', 'application/x-protobuf')
+//       res.set('Cache-Control', 'public, max-age=86400')
+//       res.set('Access-Control-Allow-Origin', '*')
+
+//       // Check if response is gzipped and decompress if needed
+//       const contentEncoding = osRes.headers['content-encoding']
+//       if (contentEncoding === 'gzip') {
+//         osRes.pipe(zlib.createGunzip()).pipe(res)
+//       } else {
+//         osRes.pipe(res)
+//       }
+//     }).on('error', (error) => {
+//       console.error(`[OS Tile Proxy] Request failed: ${error.message}`)
+//       res.status(502).end()
+//     })
+//   } catch (error) {
+//     console.error(`[OS Tile Proxy] Error: ${error.message}`)
+//     res.status(500).end()
+//   }
+// })
+
+// // ============================================================================
+// // VTS Maps Routes - Serve OS Vector Tile Service style JSON files
+// // ============================================================================
+
+// /**
+//  * GET /api/maps/vts/:filename
+//  * Serve VTS JSON style files
+//  */
+// router.get('/api/maps/vts/:filename', (req, res) => {
+//   const { filename } = req.params
+  
+//   // Whitelist allowed files for security
+//   const allowedFiles = [
+//     'OS_VTS_3857_Outdoor.json',
+//     'OS_VTS_3857_Dark.json',
+//     'OS_VTS_3857_Black_and_White.json'
+//   ]
+
+//   if (!allowedFiles.includes(filename)) {
+//     return res.status(404).json({ error: 'VTS file not found' })
+//   }
+
+//   try {
+//     const filepath = path.join(__dirname, `../data/vts/${filename}`)
+//     const data = fs.readFileSync(filepath, 'utf8')
+//     const json = JSON.parse(data)
+//     res.json(json)
+//   } catch (error) {
+//     console.error(`Error loading VTS file ${filename}:`, error.message)
+//     return res.status(404).json({ error: 'Failed to load VTS file' })
+//   }
+// })
 
 module.exports = router

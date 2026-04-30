@@ -5,7 +5,7 @@
 - **Journey Name**: LPA approve developer request to pay NRF
 - **Journey Description**:  
   A user journey for the LPA to check and approve or reject the details sent from the developer. This version adds a rejection flow alongside the existing approval flow.
-- **Journey Route Prefix**: lpa-approve-4
+- **Journey Route Prefix**: lpa-approve-4 (canonical URL first segment: `/lpa-approve-4/...`)
 
 ## Page Flow and Conditional Logic
 
@@ -150,8 +150,6 @@ None
 
 #### Content
 
-Note: Use a table or list pattern with no change links for displaying the details. Includes an interactive MapLibre map showing the red line boundary of the development.
-
 ```
 
 # Approve these details
@@ -178,6 +176,11 @@ Approving these details will enable Acme Developments to pay the Nature Restorat
 **Button (secondary):** Reject (links to `/lpa-approve-4/lpa-details-2`)
 
 ```
+
+#### Implementation notes (not page copy)
+
+- Use a summary list/table pattern with no change links for the detail rows.
+- Include an interactive MapLibre map showing the red line boundary polygon.
 
 #### Errors
 
@@ -258,10 +261,10 @@ CTA: Continue
 #### Content
 
 ```
-<green-panel>
+<green-banner>
 Title: The details have been approved
 Approval reference: **APPROVAL-001**
-</green-panel>
+</green-banner>
 
 You have approved the Nature Restoration Fund levy for Bob Acme at Acme Developments.
 
@@ -461,10 +464,10 @@ CTA: Continue (links to `/lpa-approve-4/reject-confirmation`)
 #### Content
 
 ```
-<green-panel>
+<green-banner>
 Title: The details have been rejected
 Rejection reference: **REJECTION-001**
-</green-panel>
+</green-banner>
 
 You have rejected the request to pay the Nature Restoration Fund levy for Bob Acme at Acme Developments.
 
@@ -552,9 +555,9 @@ None
 ### File Structure
 
 1. **Route File**: `app/routes/lpa-approve-4.js`
-2. **View Directory**: `app/views/lpa-approve-4/`
-3. **View Files**: One HTML file per page in the journey
-4. **Route Config File**: `app/config/lpa-approve-4/routes.js`
+2. **Route Config File**: `app/config/lpa-approve-4/routes.js` (route path constants and template names)
+3. **View Directory**: `app/views/lpa-approve-4/`
+4. **View Files**: One HTML file per page in the journey
 5. **Data File**: Uses existing session data structure
 
 ### Route Implementation
@@ -562,7 +565,7 @@ None
 - Use GOV.UK Prototype Kit router setup
 - Implement GET routes for displaying pages
 - Implement POST routes for form submissions on `lpa-details`, `lpa-details-2`, and `reason-for-rejecting`
-- Include back links on each page
+- Include back links on each page using **hardcoded paths** to the previous step in this journey (do not use `javascript:history.back()`).
 
 ### View Implementation
 
@@ -575,6 +578,16 @@ None
 
 - Store `lpaFullName`, `lpaEmail`, and `lpaRejectionReason` in session data
 - Validate form inputs on `lpa-details`, `lpa-details-2`, and `reason-for-rejecting`
+
+### Session data (key names used in this spec)
+
+| Key | Purpose |
+| --- | --- |
+| `lpaFullName` | Full name entered by the LPA officer (approve/reject paths) |
+| `lpaEmail` | Email entered by the LPA officer (approve/reject paths) |
+| `lpaRejectionReason` | Reason entered when the LPA rejects details |
+| `lpaDecision` | Branch state for approve vs reject decision |
+| `full-name`, `email`, `rejection-reason` | Form field names posted from the details/reason pages |
 
 ### GOV.UK Design System Compliance
 
@@ -592,7 +605,7 @@ None
 
 ## Implementation Instructions
 
-1. **Routes are in** `app/routes/lpa-approve-4.js`
+1. **Create or update** `app/config/lpa-approve-4/routes.js` and `app/routes/lpa-approve-4.js`
 2. **Views are in** `app/views/lpa-approve-4/` directory
 3. **Form validation** required on `lpa-details`, `lpa-details-2`, and `reason-for-rejecting`
 4. **Two branching paths** from `approve-details`: approve flow and reject flow

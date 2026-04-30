@@ -5,7 +5,7 @@
 - **Journey Name**: Commit to use the Nature Restoration Fund Levy
 - **Journey Description**:  
   A user journey for a developer to commit to use the Nature Restoration Fund levy. This journey starts when the link 'Commit to using Nature Restoration Fund' is clicked in the email.
-- **Journey Route Prefix**: nrf-estimate-4
+- **Journey Route Prefix**: nrf-estimate-6
 - **Start Page Title**: Get an estimate for Nature Restoration Fund Levy
 
 ## Page Flow and Conditional Logic
@@ -15,7 +15,7 @@
 | **Field**              | **Value**                             |
 | ---------------------- | ------------------------------------- |
 | Order number:          | 1                                     |
-| Path:                  | /nrf-estimate-4/do-you-have-a-nrf-ref |
+| Path:                  | /nrf-estimate-6/do-you-have-a-nrf-ref |
 | Title:                 | Do you have an NRF reference?         |
 | Conditional page flow: | none                                  |
 
@@ -59,7 +59,7 @@ CTA: Continue
 | **Field**              | **Value**                          |
 | ---------------------- | ---------------------------------- |
 | Order number:          | 2                                  |
-| Path:                  | /nrf-estimate-4/enter-estimate-ref |
+| Path:                  | /nrf-estimate-6/enter-estimate-ref |
 | Title:                 | Enter your NRF reference      |
 | Conditional page flow: | none                               |
 
@@ -106,7 +106,7 @@ CTA: Continue
 | **Field**              | **Value**                               |     |
 | ---------------------- | --------------------------------------- | --- |
 | Order number:          | 3                                       |     |
-| Path:                  | /nrf-estimate-4/retrieve-estimate-email |     |
+| Path:                  | /nrf-estimate-6/retrieve-estimate-email |     |
 | Title:                 | Enter your email address                |     |
 | Conditional page flow: | None                                    |     |
 
@@ -151,7 +151,7 @@ CTA: Continue
 | **Field**             | **Value**                                        |
 | --------------------- | ------------------------------------------------ |
 | Order number:         | 4                                                |
-| Path:                 | /nrf-estimate-4/estimate-email-retrieval-content |
+| Path:                 | /nrf-estimate-6/estimate-email-retrieval-content |
 | Title:                | Email sent to get magic link to access estimate  |
 | Data points:          | None                                             |
 | Conditional page flow: | None                                             |
@@ -164,13 +164,15 @@ CTA: Continue
 **Subject:** Nature Restoration Fund - retrieve your estimate details for the Nature Restoration Fund levy
 </inset-text>
 
-Note: This page uses the GOV.UK inset text component (govuk-inset-text) to display the email header information.
+#### Implementation notes (not page copy)
+
+- Use the GOV.UK inset text component (`govuk-inset-text`) for the To/Subject block.
 
 # Nature Restoration Fund – retrieve your quote details for the Nature Restoration Fund levy
 
 You can use the details you previously gave us for your quote to fill in the information needed to commit to using Nature Restoration Fund levy.
 
-[Retrieve the quote details](/nrf-estimate-4/retrieved-estimate-summary)
+[Retrieve the quote details](/nrf-estimate-6/retrieved-estimate-summary)
 
 ## Get help with Nature Restoration Fund
 
@@ -190,7 +192,7 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 | **Field**              | **Value**                                  |
 | ---------------------- | ------------------------------------------ |
 | Order number:          | 5                                          |
-| Path:                  | /nrf-estimate-4/retrieved-estimate-summary |
+| Path:                  | /nrf-estimate-6/retrieved-estimate-summary |
 | Title:                 | Your quote details                         |
 | Conditional page flow: | None                                       |
 
@@ -203,16 +205,16 @@ None
 ```
 # Your quote details
 
-| Red line boundary | [Show Added or Not added] | [Change](/nrf-estimate-4/map?nav=check-your-answers) or [Change](/nrf-estimate-4/upload-redline?change=true&nav=check-your-answers) as appropriate |
-| Development types | [List selected types, e.g. Housing, Other residential] | [Change](/nrf-estimate-4/building-type?change=true&nav=check-your-answers) |
-| [IF user selected "Housing" THEN show] Number of residential units | [show data.residentialBuildingCount] | [Change](/nrf-estimate-4/residential?change=true&nav=check-your-answers) |
-| [IF user selected "Other residential" THEN show] Maximum number of people | [show data.peopleCount] | [Change](/nrf-estimate-4/people-count?change=true&nav=check-your-answers) |
-| Waste water treatment works | [show data.wasteWaterTreatmentWorks] | [Change](/nrf-estimate-4/waste-water?change=true&nav=check-your-answers) |
-| Email address | [show data.email] | [Change](/nrf-estimate-4/estimate-email?change=true&nav=check-your-answers) |
+| Red line boundary | [Show Added or Not added] | [Change](/nrf-estimate-6/map?nav=check-your-answers) or [Change](/nrf-estimate-6/upload-redline?change=true&nav=check-your-answers) as appropriate |
+| Development types | [List selected types, e.g. Housing, Other residential] | [Change](/nrf-estimate-6/building-type?change=true&nav=check-your-answers) |
+| [IF user selected "Housing" THEN show] Number of residential units | [show data.residentialBuildingCount] | [Change](/nrf-estimate-6/residential?change=true&nav=check-your-answers) |
+| [IF user selected "Other residential" THEN show] Maximum number of people | [show data.peopleCount] | [Change](/nrf-estimate-6/people-count?change=true&nav=check-your-answers) |
+| Waste water treatment works | [show data.wasteWaterTreatmentWorks] | [Change](/nrf-estimate-6/waste-water?change=true&nav=check-your-answers) |
+| Email address | [show data.email] | [Change](/nrf-estimate-6/estimate-email?change=true&nav=check-your-answers) |
 
 Amend the above information or continue. You will be asked to create or sign in to an account.
-Primary button: Continue (form POST to /nrf-estimate-4/retrieved-estimate-summary)
-Secondary button (red): Delete (link to /nrf-estimate-4/delete-quote?from=retrieved)
+Primary button: Continue (form POST to /nrf-estimate-6/retrieved-estimate-summary)
+Secondary button (red): Delete (link to /nrf-estimate-6/delete-quote?from=retrieved)
 
 Note: This page uses the GOV.UK summary list component.
 ```
@@ -228,9 +230,9 @@ None
 | **Field**              | **Value**                                                                              |
 | ---------------------- | -------------------------------------------------------------------------------------- |
 | Order number:          | 5.1                                                                                    |
-| Path:                  | /nrf-estimate-4/delete-quote                                                           |
+| Path:                  | /nrf-estimate-6/delete-quote                                                           |
 | Title:                 | Are you sure you want to delete this quote? (or "Are you sure you want to delete this commitment?" when from commit summary) |
-| Conditional page flow: | display if user clicks the delete button on /nrf-estimate-4/retrieved-estimate-summary |
+| Conditional page flow: | display if user clicks the delete button on /nrf-estimate-6/retrieved-estimate-summary |
 
 #### Data points
 
@@ -239,7 +241,7 @@ None
     data: {
         confirmDeleteQuote: {
             type: radios,
-            required: conditional - required if user clicked delete on /nrf-estimate-4/retrieved-estimate-summary,
+            required: conditional - required if user clicked delete on /nrf-estimate-6/retrieved-estimate-summary,
             values: "Yes" | "No",
             fieldName: "confirm-delete-quote"
         }
@@ -269,7 +271,7 @@ Secondary button: No
 | **Field**              | **Value**                                  |
 | ---------------------- | ------------------------------------------ |
 | Order number:          | 5.2                                        |
-| Path:                  | /nrf-estimate-4/delete-confirmation        |
+| Path:                  | /nrf-estimate-6/delete-confirmation        |
 | Title:                 | Your details have been deleted             |
 | Data points:           | None                                       |
 | Conditional page flow: | None                                       |
@@ -282,12 +284,15 @@ Secondary button: No
 # Your details have been deleted
 </green-banner>
 
-Note: This page uses the GOV.UK panel component (govuk-panel--confirmation) to display the green banner. The page conditionally displays different content based on journey type (estimate, commit, or payment). For the estimate journey, it shows:
+#### Implementation notes (not page copy)
+
+- Use the GOV.UK panel component (`govuk-panel--confirmation`) to display the green banner.
+- This page conditionally displays different content based on journey type (estimate, commit, or payment). For the commit journey, render commitment deletion copy.
 
 ## What happens next
 
 Your quote details have been removed and deleted.
-[Get another quote](/nrf-estimate-4/start)
+[Get another quote](/nrf-estimate-6/start)
 
 ## Get help with Nature Restoration Fund
 
@@ -312,7 +317,7 @@ None
 | **Field**              | **Value**                                            |
 | ---------------------- | ---------------------------------------------------- |
 | Order number:          | 6                                                    |
-| Path:                  | /nrf-estimate-4/commit-how-would-you-like-to-sign-in |
+| Path:                  | /nrf-estimate-6/commit-how-would-you-like-to-sign-in |
 | Title:                 | How would you like to sign in?                       |
 | Conditional page flow: | none                                                 |
 
@@ -359,7 +364,7 @@ Hint text: Use your email address and password. If you don't have a GOV.UK One L
 | **Field**              | **Value**                                         |
 | ---------------------- | ------------------------------------------------- |
 | Order number:          | 7                                                 |
-| Path:                  | /nrf-estimate-4/commit-sign-in-government-gateway |
+| Path:                  | /nrf-estimate-6/commit-sign-in-government-gateway |
 | Title:                 | Sign in using Government Gateway                  |
 | H1 heading:            | Sign in using Government Gateway                  |
 | Conditional page flow: | None                                              |
@@ -369,7 +374,7 @@ Hint text: Use your email address and password. If you don't have a GOV.UK One L
 ```
 {
     data: {
-        commitGovernmentGatewayUserId: {
+        governmentGatewayUserId: {
             type: text,
             required: true,
             fieldName: "userId"
@@ -403,11 +408,11 @@ Link
 
 ## Problems signing in
 
-[I have forgotten my password](javascript:void(0))
-[I have forgotten my Government Gateway user ID](javascript:void(0))
-[I have forgotten my Government Gateway user ID and password](javascript:void(0))
+[I have forgotten my password](#)
+[I have forgotten my Government Gateway user ID](#)
+[I have forgotten my Government Gateway user ID and password](#)
 
-[Get help with this page](javascript:void(0))
+[Get help with this page](#)
 
 ```
 
@@ -429,7 +434,7 @@ Link
 | **Field**              | **Value**                       |
 | ---------------------- | ------------------------------- |
 | Order number:          | 8                               |
-| Path:                  | /nrf-estimate-4/company-details |
+| Path:                  | /nrf-estimate-6/company-details |
 | Title:                 | Enter the company details       |
 | H1 heading:            | Enter your details              |
 | Conditional page flow: | None                            |
@@ -556,7 +561,7 @@ CTA: Continue
 | **Field**              | **Value**                               |
 | ---------------------- | --------------------------------------- |
 | Order number:          | 9                                       |
-| Path:                  | /nrf-estimate-4/summary-and-declaration |
+| Path:                  | /nrf-estimate-6/summary-and-declaration |
 | Title:                 | Check your answers                      |
 | Conditional page flow: | None                                    |
 
@@ -569,13 +574,13 @@ None
 ```
 # Check your answers
 
-| Red line boundary | [Show Added or Not added] | [Change](/nrf-estimate-4/map?nav=check-your-answers) or [Change](/nrf-estimate-4/upload-redline?change=true&nav=check-your-answers) as appropriate |
-| Development types | [List selected types, e.g. Housing, Other residential] | [Change](/nrf-estimate-4/building-type?change=true&nav=check-your-answers) |
-| [IF user selected "Housing" THEN show] Number of residential units | [show data.residentialBuildingCount] | [Change](/nrf-estimate-4/residential?change=true&nav=check-your-answers) |
-| [IF user selected "Other residential" THEN show] Maximum number of people | [show data.peopleCount] | [Change](/nrf-estimate-4/people-count?change=true&nav=check-your-answers) |
-| Waste water treatment works | [show data.wasteWaterTreatmentWorks] | [Change](/nrf-estimate-4/waste-water?change=true&nav=check-your-answers) |
-| Email address | [show data.email] | [Change](/nrf-estimate-4/estimate-email?change=true&nav=check-your-answers) |
-| Your details | [show full name, business name if provided, address, Company Registration Number and VAT registration number] | [Change](/nrf-estimate-4/company-details?change=true&nav=check-your-answers) |
+| Red line boundary | [Show Added or Not added] | [Change](/nrf-estimate-6/map?nav=check-your-answers) or [Change](/nrf-estimate-6/upload-redline?change=true&nav=check-your-answers) as appropriate |
+| Development types | [List selected types, e.g. Housing, Other residential] | [Change](/nrf-estimate-6/building-type?change=true&nav=check-your-answers) |
+| [IF user selected "Housing" THEN show] Number of residential units | [show data.residentialBuildingCount] | [Change](/nrf-estimate-6/residential?change=true&nav=check-your-answers) |
+| [IF user selected "Other residential" THEN show] Maximum number of people | [show data.peopleCount] | [Change](/nrf-estimate-6/people-count?change=true&nav=check-your-answers) |
+| Waste water treatment works | [show data.wasteWaterTreatmentWorks] | [Change](/nrf-estimate-6/waste-water?change=true&nav=check-your-answers) |
+| Email address | [show data.email] | [Change](/nrf-estimate-6/estimate-email?change=true&nav=check-your-answers) |
+| Your details | [show full name, business name if provided, address, Company Registration Number and VAT registration number] | [Change](/nrf-estimate-6/company-details?change=true&nav=check-your-answers) |
 
 By confirming and submitting these details, you are committing to using the Nature Restoration Fund levy.
 
@@ -584,10 +589,10 @@ The details you are submitting must be accurate and correct.
 By committing to use this levy, you will be emailed a document that you can use in your planning application. The commitment is proof of how you intend to mitigate your environmental impact for nutrients.
 
 Primary button: Confirm and submit
-Secondary button (red): Delete (link to /nrf-estimate-4/delete-quote)
+Secondary button (red): Delete (link to /nrf-estimate-6/delete-quote)
 
 Note: This page uses the GOV.UK summary list component. The declaration text is displayed as separate paragraphs before the submit button.
-Change links are disabled (javascript:void(0)) as this is a read-only summary of retrieved commitment data.
+Change links are disabled (non-navigating placeholders) as this is a read-only summary of retrieved commitment data.
 ```
 
 #### Errors
@@ -601,9 +606,9 @@ None
 | **Field**              | **Value**                                                                           |
 | ---------------------- | ----------------------------------------------------------------------------------- |
 | Order number:          | 9.1                                                                                 |
-| Path:                  | /nrf-estimate-4/delete-quote                                                        |
+| Path:                  | /nrf-estimate-6/delete-quote                                                        |
 | Title:                 | Are you sure you want to delete this commitment?                                     |
-| Conditional page flow: | display if user clicks the delete button on /nrf-estimate-4/summary-and-declaration |
+| Conditional page flow: | display if user clicks the delete button on /nrf-estimate-6/summary-and-declaration |
 
 #### Data points
 
@@ -612,7 +617,7 @@ None
     data: {
         confirmDeleteQuote: {
             type: radios,
-            required: conditional - required if user clicked delete on /nrf-estimate-4/summary-and-declaration,
+            required: conditional - required if user clicked delete on /nrf-estimate-6/summary-and-declaration,
             values: "Yes" | "No",
             fieldName: "confirm-delete-quote"
         }
@@ -640,7 +645,7 @@ Secondary button: No
 | **Field**              | **Value**                           |
 | ---------------------- | ----------------------------------- |
 | Order number:          | 9.2                                 |
-| Path:                  | /nrf-estimate-4/delete-confirmation  |
+| Path:                  | /nrf-estimate-6/delete-confirmation  |
 | Title:                 | Your details have been deleted      |
 | Data points:           | None                                |
 | Conditional page flow: | None                                |
@@ -653,12 +658,15 @@ Secondary button: No
 # Your details have been deleted
 </green-banner>
 
-Note: This page uses the GOV.UK panel component (govuk-panel--confirmation) to display the green banner. The page conditionally displays different content based on journey type (estimate, commit, or payment). For the estimate journey, it shows:
+#### Implementation notes (not page copy)
+
+- Use the GOV.UK panel component (`govuk-panel--confirmation`) to display the green banner.
+- This page conditionally displays different content based on journey type (estimate, commit, or payment). For the commit journey, render commitment deletion copy.
 
 ## What happens next
 
 Your commitment details have been removed and deleted.
-[Get another quote](/nrf-estimate-4/start)
+[Get another quote](/nrf-estimate-6/start)
 
 ## Get help with Nature Restoration Fund
 
@@ -683,7 +691,7 @@ None
 | **Field**             | **Value**                           |
 | --------------------- | ----------------------------------- |
 | Order number:         | 10                                  |
-| Path:                 | /nrf-estimate-4/commit-confirmation |
+| Path:                 | /nrf-estimate-6/commit-confirmation |
 | Title:                | Your details have been submitted    |
 | Data points:          | None                                |
 | Conditional page flow: | None                                |
@@ -712,7 +720,7 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 
 [Find out about call charges](https://www.gov.uk/call-charges)
 
-[View the email content](/nrf-estimate-4/commit-email-content)
+[View the email content](/nrf-estimate-6/commit-email-content)
 ```
 
 **Note:** The commit journey uses the commit-confirmation page (path `/commit-confirmation`). The page uses the GOV.UK panel component (govuk-panel--confirmation) to display the green banner with Commitment reference.
@@ -728,7 +736,7 @@ None
 | **Field**             | **Value**                                           |
 | --------------------- | --------------------------------------------------- |
 | Order number:         | 11                                                  |
-| Path:                 | /nrf-estimate-4/commit-email-content                |
+| Path:                 | /nrf-estimate-6/commit-email-content                |
 | Title:                | Email sent from the Nature Restoration Fund service |
 | Data points:          | None                                                |
 | Conditional page flow: | None                                                |
@@ -741,7 +749,9 @@ None
 **Subject:** Nature Restoration Fund – commitment to use the Nature Restoration Fund levy
 </inset-text>
 
-Note: This page uses the GOV.UK inset text component (govuk-inset-text) to display the email header information.
+#### Implementation notes (not page copy)
+
+- Use the GOV.UK inset text component (`govuk-inset-text`) for the To/Subject block.
 
 # Nature Restoration Fund – commitment to use the Nature Restoration Fund levy
 
@@ -773,7 +783,7 @@ You do not need to pay anything at this point, you can send the attached documen
 
 Keep this email as a record of your commitment to use the Nature Restoration Fund. You can sign in to your account when you are ready to pay.
 
-[Pay your Nature Restoration Fund levy](/nrf-estimate-4/pay-how-would-you-like-to-sign-in)
+[Pay your Nature Restoration Fund levy](/nrf-estimate-6/pay-how-would-you-like-to-sign-in)
 
 ## What your levy will pay for
 
@@ -797,7 +807,7 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 | **Field**             | **Value**                                                                                         |
 | --------------------- | ------------------------------------------------------------------------------------------------- |
 | Order number:         | 11.1                                                                                              |
-| Path:                 | /nrf-estimate-4/commit-email-content-range                                                        |
+| Path:                 | /nrf-estimate-6/commit-email-content-range                                                        |
 | Title:                | Email sent from the Nature Restoration Fund service                                               |
 | Data points:          | None                                                                                              |
 | Conditional page flow: | display when data.wasteWaterTreatmentWorks === "I don't know the waste water treatment works yet" |
@@ -810,7 +820,9 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 **Subject:** Nature Restoration Fund – commitment to use the Nature Restoration Fund levy
 </inset-text>
 
-Note: This page uses the GOV.UK inset text component (govuk-inset-text) to display the email header information.
+#### Implementation notes (not page copy)
+
+- Use the GOV.UK inset text component (`govuk-inset-text`) for the To/Subject block.
 
 # Nature Restoration Fund – commitment to use the Nature Restoration Fund levy
 
@@ -839,7 +851,7 @@ You do not need to pay anything at this point, you can send the attached documen
 
 Keep this email as a record of your commitment to use the Nature Restoration Fund. You can sign in to your account when you are ready to pay.
 
-[Pay your Nature Restoration Fund levy](/nrf-estimate-4/pay-how-would-you-like-to-sign-in)
+[Pay your Nature Restoration Fund levy](/nrf-estimate-6/pay-how-would-you-like-to-sign-in)
 
 ## What your levy will pay for
 
@@ -865,10 +877,10 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 
 Create the following files in the GOV.UK Prototype Kit structure:
 
-1. **Route File**: `app/routes/nrf-estimate-4.js`
-2. **View Directory**: `app/views/nrf-estimate-4/`
+1. **Route File**: `app/routes/nrf-estimate-6.js`
+2. **View Directory**: `app/views/nrf-estimate-6/`
 3. **View Files**: One HTML file per page in the journey
-4. **Data File**: `app/data/nrf-estimate-4-data.js` (if needed)
+4. **Data File**: `app/data/nrf-estimate-6-data.js` (if needed)
 
 ### Route Implementation
 
@@ -878,7 +890,7 @@ Create the following files in the GOV.UK Prototype Kit structure:
 - Handle conditional routing based on form data
 - Store form data in session using `req.session.data`
 - Implement validation logic with appropriate error handling
-- Include back links on each page
+- Include back links on each page using **hardcoded paths** to the previous step in this journey (do not use `javascript:history.back()`).
 
 ### View Implementation
 
@@ -895,6 +907,21 @@ Create the following files in the GOV.UK Prototype Kit structure:
 - Implement data validation with appropriate error messages
 - Handle conditional logic for multi-step forms
 - Clear session data on journey completion or restart
+
+### Session data (key names used in this spec)
+
+| Key | Purpose |
+| --- | --- |
+| `hasNrfReference` | Branch for known vs unknown NRF reference |
+| `nrfReference` | Entered NRF reference |
+| `email` | Retrieval email and recipient shown in commit email previews |
+| `confirmDeleteQuote` | Delete confirmation state |
+| `signInOption` | Chosen auth path (`one-login` or `government-gateway`) |
+| `governmentGatewayUserId`, `governmentGatewayPassword` | Government Gateway sign-in fields |
+| `fullName`, `businessName`, `addressLine1`, `addressLine2`, `townOrCity`, `county`, `postcode` | Developer details for commitment record |
+| `companyRegistrationNumber`, `vatRegistrationNumber`, `purchaseOrderNumber` | Optional organisation details |
+| `wasteWaterTreatmentWorks`, `levyAmount`, `intersectingCatchment` | Retrieved quote values displayed in summaries/emails |
+| `commitmentReference` | Set on successful commit submission |
 
 ### GOV.UK Design System Compliance
 
@@ -914,12 +941,13 @@ Create the following files in the GOV.UK Prototype Kit structure:
 
 ## Implementation Instructions
 
-1. **Routes are integrated** into `app/routes/nrf-estimate-4.js` (or the new commit journey file)
-2. **Views are in** `app/views/nrf-estimate-4/` directory
+1. **Create or update** `app/config/nrf-estimate-6/routes.js` and `app/routes/nrf-estimate-6.js` for this commit journey flow
+2. **Views are in** `app/views/nrf-estimate-6/` directory
 3. **Form validation** is implemented with proper error handling
 4. **Conditional routing** based on journey type
-5. **Routes use** centralized route constants from `app/config/nrf-estimate-4/routes.js`
-6. **Journey can be accessed** via payment-email page link or directly
+5. **Routes use** centralized route constants from `app/config/nrf-estimate-6/routes.js`
+6. **Register or confirm journey entry** in `app/config/shared/journeys.js` with the correct `basePath`
+7. **Journey can be accessed** via payment-email page link or directly
 
 ## Expected Output
 
@@ -940,14 +968,14 @@ Create the following files in the GOV.UK Prototype Kit structure:
 
 ## Implementation Details
 
-- **Journey entry point**: Accessed from `/nrf-estimate-4/what-would-you-like-to-do` when the user selects "I am ready to commit to using the Nature Restoration Fund levy", or from the estimate email link "Commit to using Nature Restoration Fund"
-- **Shared confirmation page**: The confirmation.html page is shared between estimate and payment journeys with conditional content display
+- **Journey entry point**: Accessed from `/nrf-estimate-6/what-would-you-like-to-do` when the user selects "I am ready to commit to using the Nature Restoration Fund levy", or from the estimate email link "Commit to using Nature Restoration Fund"
+- **Shared route module**: Quote, commit, and payment flows are implemented in the same route module (`app/routes/nrf-estimate-6.js`) with branch-specific pages.
 - **Dynamic content**: Levies and their impacts are displayed dynamically based on user selections
 - **Levy naming**: Uses "greater crested newts" terminology instead of just "newts"
-- **Data structure**: Uses `leviesSelected` array and `lpaEmail` field for data storage. Company details stored in `fullName`, `businessName`, `addressLine1`, `addressLine2`, `townOrCity`, `county`, `postcode`
-- **Route organization**: All routes integrated into the new `nrf-estimate-4.js` file with proper separation of concerns
-- **Email template**: Invoice email content is available as a separate viewable page for reference
-- **Path naming**: All paths use lowercase with hyphens (e.g., `/company-details`, `/lpa-email`, `/summary-and-declaration`)
-- **Company details page**: New page in the invoice journey flow between confirm and LPA email entry
-- **Route conflict resolution**: The retrieved estimate summary page uses `/nrf-estimate-4/retrieved-estimate-summary` instead of `/nrf-estimate-3/commit-summary` to avoid conflict with the existing payment journey route
+- **Data structure**: Retrieval + commit flow uses `hasNrfReference`, `nrfReference`, `email`, `signInOption`, and `commitmentReference`, plus company detail fields (`fullName`, `businessName`, `addressLine1`, `addressLine2`, `townOrCity`, `county`, `postcode`).
+- **Route organization**: All routes integrated into the new `nrf-estimate-6.js` file with proper separation of concerns
+- **Email templates**: Commit email previews are available as separate pages (`/commit-email-content` and `/commit-email-content-range`).
+- **Path naming**: All paths use lowercase with hyphens (e.g., `/company-details`, `/summary-and-declaration`, `/commit-email-content`).
+- **Company details page**: Captured in the commit flow before declaration and submit.
+- **Route conflict resolution**: The retrieved estimate summary page uses `/nrf-estimate-6/retrieved-estimate-summary` instead of `/nrf-estimate-3/commit-summary` to avoid conflict with the existing payment journey route
 - **Data Property Note**: The implementation uses `email` for the estimate retrieval email field, not `estimateRetrievalEmail`

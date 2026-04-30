@@ -1,5 +1,5 @@
 /**
- * Route path constants for the NRF Estimate v6 journey
+ * Route path constants for the NRF Estimate v4 journey
  */
 
 const BASE_PATH = '/nrf-estimate-6'
@@ -16,15 +16,46 @@ const ROUTES = {
   RESIDENTIAL: `${BASE_PATH}/residential`,
   PEOPLE_COUNT: `${BASE_PATH}/people-count`,
   WASTE_WATER: `${BASE_PATH}/waste-water`,
+  NON_RESIDENTIAL: `${BASE_PATH}/non-residential`,
+  ROOM_COUNT: `${BASE_PATH}/room-count`,
   ESTIMATE_EMAIL: `${BASE_PATH}/estimate-email`,
   CHECK_YOUR_ANSWERS: `${BASE_PATH}/check-your-answers`,
   DELETE_QUOTE: `${BASE_PATH}/delete-quote`,
   DELETE_CONFIRMATION: `${BASE_PATH}/delete-confirmation`,
+  DELETE_SUMMARY: `${BASE_PATH}/delete-summary`,
+  DELETE_PAYMENT_DETAILS: `${BASE_PATH}/delete-payment-details`,
   ESTIMATE_EMAIL_CONTENT_RANGE: `${BASE_PATH}/estimate-email-content-range`,
-  DO_YOU_HAVE_A_NRF_REF: `${BASE_PATH}/do-you-have-a-nrf-ref`,
-  PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN: `${BASE_PATH}/pay-how-would-you-like-to-sign-in`,
+  SUMMARY: `${BASE_PATH}/summary`,
   CONFIRMATION: `${BASE_PATH}/confirmation`,
   ESTIMATE_EMAIL_CONTENT: `${BASE_PATH}/estimate-email-content`,
+  DO_YOU_HAVE_A_NRF_REF: `${BASE_PATH}/do-you-have-a-nrf-ref`,
+  ENTER_ESTIMATE_REF: `${BASE_PATH}/enter-estimate-ref`,
+  RETRIEVE_ESTIMATE_EMAIL: `${BASE_PATH}/retrieve-estimate-email`,
+  ESTIMATE_EMAIL_RETRIEVAL_CONTENT: `${BASE_PATH}/estimate-email-retrieval-content`,
+  RETRIEVED_ESTIMATE_SUMMARY: `${BASE_PATH}/retrieved-estimate-summary`,
+  COMMIT_HOW_WOULD_YOU_LIKE_TO_SIGN_IN: `${BASE_PATH}/commit-how-would-you-like-to-sign-in`,
+  COMMIT_SIGN_IN_GOVERNMENT_GATEWAY: `${BASE_PATH}/commit-sign-in-government-gateway`,
+  PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN: `${BASE_PATH}/pay-how-would-you-like-to-sign-in`,
+  PAY_SIGN_IN_GOVERNMENT_GATEWAY: `${BASE_PATH}/pay-sign-in-government-gateway`,
+  PAYMENT_SUMMARY: `${BASE_PATH}/payment-summary`,
+  PLANNING_REF: `${BASE_PATH}/planning-ref`,
+  WWTW_ENTRY: `${BASE_PATH}/wwtw-entry`,
+  PAYMENT_DECLARATION: `${BASE_PATH}/payment-declaration`,
+  PAYMENT_CONFIRMATION: `${BASE_PATH}/payment-confirmation`,
+  PAYMENT_REQUEST_EMAIL_CONTENT: `${BASE_PATH}/payment-request-email-content`,
+  REJECT_EMAIL_CONTENT: `${BASE_PATH}/reject-email-content`,
+  PDN_HOW_WOULD_YOU_LIKE_TO_SIGN_IN: `${BASE_PATH}/pdn-how-would-you-like-to-sign-in`,
+  PDN_SIGN_IN_GOVERNMENT_GATEWAY: `${BASE_PATH}/pdn-sign-in-government-gateway`,
+  UPLOAD_DECISION_NOTICE: `${BASE_PATH}/upload-decision-notice`,
+  PAYMENT_SUMMARY_SUBMIT: `${BASE_PATH}/payment-summary-submit`,
+  DECISION_NOTICE_CONFIRMATION: `${BASE_PATH}/decision-notice-confirmation`,
+  PAY_EMAIL_CONTENT: `${BASE_PATH}/pay-email-content`,
+  COMPANY_DETAILS: `${BASE_PATH}/company-details`,
+  LPA_CONFIRM: `${BASE_PATH}/lpa-confirm`,
+  SUMMARY_AND_DECLARATION: `${BASE_PATH}/summary-and-declaration`,
+  COMMIT_CONFIRMATION: `${BASE_PATH}/commit-confirmation`,
+  COMMIT_EMAIL_CONTENT: `${BASE_PATH}/commit-email-content`,
+  COMMIT_EMAIL_CONTENT_RANGE: `${BASE_PATH}/commit-email-content-range`,
   CATCHMENTS_GEOJSON: `${BASE_PATH}/catchments.geojson`,
   API_CHECK_EDP_INTERSECTION: `${BASE_PATH}/api/check-edp-intersection`
 }
@@ -40,16 +71,53 @@ const TEMPLATES = {
   RESIDENTIAL: 'nrf-estimate-6/residential',
   PEOPLE_COUNT: 'nrf-estimate-6/people-count',
   WASTE_WATER: 'nrf-estimate-6/waste-water',
+  NON_RESIDENTIAL: 'nrf-estimate-6/non-residential',
+  ROOM_COUNT: 'nrf-estimate-6/room-count',
   ESTIMATE_EMAIL: 'nrf-estimate-6/estimate-email',
   CHECK_YOUR_ANSWERS: 'nrf-estimate-6/check-your-answers',
   DELETE_QUOTE: 'nrf-estimate-6/delete-quote',
   DELETE_CONFIRMATION: 'nrf-estimate-6/delete-confirmation',
-  CONFIRMATION: 'nrf-estimate-6/confirmation',
+  DELETE_SUMMARY: 'nrf-estimate-6/delete-summary',
+  DELETE_PAYMENT_DETAILS: 'nrf-estimate-6/delete-payment-details',
   ESTIMATE_EMAIL_CONTENT: 'nrf-estimate-6/estimate-email-content',
   ESTIMATE_EMAIL_CONTENT_RANGE: 'nrf-estimate-6/estimate-email-content-range',
+  SUMMARY: 'nrf-estimate-6/summary',
+  CONFIRMATION: 'nrf-estimate-6/confirmation',
   DO_YOU_HAVE_A_NRF_REF: 'nrf-estimate-6/do-you-have-a-nrf-ref',
+  ENTER_ESTIMATE_REF: 'nrf-estimate-6/enter-estimate-ref',
+  RETRIEVE_ESTIMATE_EMAIL: 'nrf-estimate-6/retrieve-estimate-email',
+  ESTIMATE_EMAIL_RETRIEVAL_CONTENT:
+    'nrf-estimate-6/estimate-email-retrieval-content',
+  RETRIEVED_ESTIMATE_SUMMARY: 'nrf-estimate-6/retrieved-estimate-summary',
+  COMMIT_HOW_WOULD_YOU_LIKE_TO_SIGN_IN:
+    'nrf-estimate-6/commit-how-would-you-like-to-sign-in',
+  COMMIT_SIGN_IN_GOVERNMENT_GATEWAY:
+    'nrf-estimate-6/commit-sign-in-government-gateway',
+  COMPANY_DETAILS: 'nrf-estimate-6/company-details',
+  LPA_CONFIRM: 'nrf-estimate-6/lpa-confirm',
+  SUMMARY_AND_DECLARATION: 'nrf-estimate-6/summary-and-declaration',
+  COMMIT_CONFIRMATION: 'nrf-estimate-6/commit-confirmation',
+  COMMIT_EMAIL_CONTENT: 'nrf-estimate-6/commit-email-content',
+  COMMIT_EMAIL_CONTENT_RANGE: 'nrf-estimate-6/commit-email-content-range',
   PAY_HOW_WOULD_YOU_LIKE_TO_SIGN_IN:
-    'nrf-estimate-6/pay-how-would-you-like-to-sign-in'
+    'nrf-estimate-6/pay-how-would-you-like-to-sign-in',
+  PAY_SIGN_IN_GOVERNMENT_GATEWAY:
+    'nrf-estimate-6/pay-sign-in-government-gateway',
+  PAYMENT_SUMMARY: 'nrf-estimate-6/payment-summary',
+  PLANNING_REF: 'nrf-estimate-6/planning-ref',
+  WWTW_ENTRY: 'nrf-estimate-6/wwtw-entry',
+  PAYMENT_DECLARATION: 'nrf-estimate-6/payment-declaration',
+  PAYMENT_CONFIRMATION: 'nrf-estimate-6/payment-confirmation',
+  PAYMENT_REQUEST_EMAIL_CONTENT: 'nrf-estimate-6/payment-request-email-content',
+  REJECT_EMAIL_CONTENT: 'nrf-estimate-6/reject-email-content',
+  PDN_HOW_WOULD_YOU_LIKE_TO_SIGN_IN:
+    'nrf-estimate-6/pdn-how-would-you-like-to-sign-in',
+  PDN_SIGN_IN_GOVERNMENT_GATEWAY:
+    'nrf-estimate-6/pdn-sign-in-government-gateway',
+  UPLOAD_DECISION_NOTICE: 'nrf-estimate-6/upload-decision-notice',
+  PAYMENT_SUMMARY_SUBMIT: 'nrf-estimate-6/payment-summary-submit',
+  DECISION_NOTICE_CONFIRMATION: 'nrf-estimate-6/decision-notice-confirmation',
+  PAY_EMAIL_CONTENT: 'nrf-estimate-6/pay-email-content'
 }
 
 module.exports = { ROUTES, TEMPLATES }
