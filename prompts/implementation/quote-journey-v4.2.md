@@ -3,7 +3,7 @@
 ## Journey Information
 
 - **Journey Name**: Get a quote for Nature Restoration Fund Levy
-- **Journey Description**:  
+- **Journey Description**:
   A user journey for a developer to obtain a quote for the Nature Restoration Fund levy required when submitting planning permission to build a development of some sort. A significant page in the journey is `/nrf-quote-4-2/map` where the user will be able to plot a polygon on a map to define the development site boundary. There will also be 5 polygon areas over England that are known as EDP boundaries. If the development site boundary does not fall within an EDP area then the user will be navigated to the exit page `/nrf-quote-4-2/no-edp`.
 - **Journey Route Prefix**: nrf-quote-4-2 (canonical URL first segment: `/nrf-quote-4-2/...`)
 - **Start Page Title**: Get a quote for Nature Restoration Fund Levy
@@ -257,11 +257,23 @@ Hint text: Upload a shapefile (.shp) or GeoJSON file (.geojson). The file must b
 # Draw a red line boundary
 Hint text: Use the map to draw a red line boundary for where the development might be.
 ```
-
 #### Implementation notes (not page copy)
 
-- Map UI: location search; drawing tools (start / edit / delete boundary); view controls (show all England, zoom to boundary, toggle catchments where used); delete confirmation; client-side validation before save.
-- Primary control label: **Save and continue** (not “Continue” alone). Show this action only when a boundary has been drawn.
+- Use the **same map architecture and structure as** `app/views/nrf-estimate-5/map.html` (do not generate the older custom map stack used in some journeys).
+- The map page must use the `@defra/interactive-map` vendor bundle pattern (CSS + UMD scripts) and the component modules under `/public/javascripts/components/map/`.
+- Keep the same structural pattern used by `nrf-estimate-5`:
+  - map container with `id="map"`
+  - stats slot with `id="stats-panel-slot"`
+  - desktop drawing menu include (`map/_drawing-menu-desktop.html`)
+  - instructions include (`map/_instructions.html`)
+  - hidden input `id="boundary-data"` with form POST to `{basePath}/map`
+- Keep the same UX capabilities and control set as `nrf-estimate-5`:
+  - location search
+  - drawing controls (add/edit/delete)
+  - map view controls (show all England, zoom to boundary)
+  - datasets/catchments toggle panel
+  - contextual hints + client-side validation + save/continue flow
+- Do **not** use the legacy map implementation pattern that relies on `mapbox-gl-draw` + custom scripts like `map-drawing-layers-spike.js`.
 
 #### Errors
 
@@ -600,7 +612,7 @@ None
 
 ```
 # Are you sure you want to delete this quote?
-This will permanently delete your quote. You can create a new quote. 
+This will permanently delete your quote. You can create a new quote.
 
 Button: Yes
 Secondary button: No
