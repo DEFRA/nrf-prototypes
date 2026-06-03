@@ -1,0 +1,1 @@
+../../.ai/commands/fix-journey-prompt.md

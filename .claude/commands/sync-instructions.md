@@ -1,0 +1,1 @@
+../../.ai/commands/sync-instructions.md

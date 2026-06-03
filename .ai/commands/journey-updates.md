@@ -37,7 +37,7 @@ Type `/journey-updates` in the chat to trigger a merge of changes to the user jo
 - **Page titles**: "Upload redline file" → "Upload a red line boundary file"
 - **Pronoun changes**: "your development" → "the development"
 - **Grammar fixes**: "If you need to help" → "If you need help"
-- **Alphabetical ordering**: Form options (checkboxes, radio buttons, select options) must be in alphabetical order
+- **Option ordering**: Form options (radio buttons, checkboxes, select options) must appear in the **same order as they are listed in the spec's `#### Content` block**. Do not reorder them alphabetically or by any other logic — the content markdown is the authoritative source for option order.
 
 ### Styling Requirements
 
@@ -115,6 +115,13 @@ Content-only merges are not enough: if the journey is not wired into the kit, us
 
 6. **Optional HTTP check** (if a dev server is available)
    - `GET /{basePath}/start` (or the journey’s real entry URL) should return **200**, not 404.
+
+7. **`app/views/index.html` (new journeys only)**
+   - If this run registers a brand new journey in `app/config/shared/journeys.js`, add a corresponding entry to `app/views/index.html` in the appropriate section (NRF journeys or LPA journeys).
+   - Use `<strong class="govuk-tag govuk-tag--blue">In progress</strong>` for new journeys not yet tested.
+   - Include a `<details>` block listing the key design changes for this version.
+   - Link to `/{basePath}/start` (no `.html` suffix — routes handle this).
+   - The index is hand-maintained; do not auto-generate or overwrite existing entries.
 
 # Instructions
 
@@ -216,7 +223,7 @@ Take the instructions and parameters provided, then:
      - Compare ALL user-facing text with the specification (page titles, headings, labels, buttons, error messages)
      - Verify terminology consistency throughout the journey
      - Check spacing, punctuation, and capitalization match exactly
-     - Verify all form options (checkboxes, radio buttons, select options) are in alphabetical order by display text
+     - Verify all form options (radio buttons, checkboxes, select options) appear in the **same order as the spec's `#### Content` block** — do not reorder alphabetically
    - **Styling Verification**:
      - Verify heading styles: all pages use `govuk-heading-l`, confirmation pages use `govukPanel`
      - Check email pages use `govuk-link` for links, not `govuk-button` styles

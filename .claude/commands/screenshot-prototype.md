@@ -1,0 +1,1 @@
+../../.ai/commands/screenshot-prototype.md

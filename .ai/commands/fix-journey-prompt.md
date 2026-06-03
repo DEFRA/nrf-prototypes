@@ -156,9 +156,10 @@ All data property names must be unique and descriptive to prevent conflicts:
 
 ### Data Property Requirements
 
-- **camelCase**: Use camelCase for data properties
-  - ✅ Correct: `leviesSelected`, `estimateReference`, `lpaEmail`
-  - ❌ Wrong: `levies_selected`, `EstimateReference`, `LPAEmail`
+- **camelCase**: Use camelCase for data property keys (the `data.xxx` session keys)
+  - ✅ Correct: `leviesSelected`, `estimateReference`, `lpaEmail`, `planningType`
+  - ❌ Wrong: `levies_selected`, `EstimateReference`, `LPAEmail`, `planning-type`
+  - **Note**: `fieldName` is the HTML form input `name` attribute and uses kebab-case (e.g., `"planning-type"`, `"has-redline-boundary-file"`). This is separate from the data property key and does not need to be camelCase.
 
 - **Descriptive and Unique**: Avoid generic names that might conflict
   - ❌ Generic: `data.email`, `data.reference`, `data.items`
@@ -168,6 +169,7 @@ All data property names must be unique and descriptive to prevent conflicts:
   - For checkbox arrays: use plural nouns (e.g., `leviesSelected`, `buildingTypesChosen`)
   - For references: include type (e.g., `estimateReference`, `paymentReference`)
   - For emails: include recipient (e.g., `lpaEmail`, `userEmail`)
+  - For radio yes/no questions: use a descriptive boolean-style name (e.g., `isHousing`, `hasRedlineBoundaryFile`)
 
 ### Conflict Detection
 
