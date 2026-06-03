@@ -454,18 +454,19 @@ None
 
 ### Exit page if over capacity
 
-| **Field**              | **Value**                                                                      |
-| ---------------------- | ------------------------------------------------------------------------------ |
-| Order number:          | 5.4                                                                            |
-| Path:                  | /nrf-quote-6/no-capacity                                                       |
-| Title:                 | This Environmental Delivery Plan (EDP) does not have enough capacity remaining |
-| Data points:           | None                                                                           |
-| Conditional page flow: | display if housing units are greater than 15000                                |
+| **Field**              | **Value**                                       |
+|------------------------|-------------------------------------------------|
+| Order number:          | 5.4                                             |
+| Path:                  | /nrf-quote-6/no-capacity                        |
+| Title:                 | Not enough capacity remaining                   |
+| Data points:           | None                                            |
+| Conditional page flow: | display if housing units are greater than 15000 |
 
 #### Content
 
 ```
-# This Environmental Delivery Plan (EDP) for the Nature Restoration Fund levy does not have enough capacity remaining for this number of houses.
+#Not enough capacity remaining
+This Environmental Delivery Plan (EDP) for the Nature Restoration Fund levy does not have enough capacity remaining for this number of houses.
 
 [Check the capacity for EDPs](#)
 ```
