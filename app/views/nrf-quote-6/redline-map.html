@@ -1,0 +1,73 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Choose how you would like to show us the boundary of your development - Get a quote for Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+  text: "Back",
+  href: backLink or "/nrf-quote-6/units"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    <form action="/nrf-quote-6/redline-map" method="post" novalidate>
+
+      {% if error %}
+      {{ govukErrorSummary({
+        titleText: "There is a problem",
+        errorList: [{ text: error, href: "#has-redline-boundary-file-draw" }]
+      }) }}
+      {% endif %}
+
+      <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
+        <fieldset class="govuk-fieldset">
+          <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
+            <h1 class="govuk-fieldset__heading">
+              Choose how you would like to show us the boundary of your development
+            </h1>
+          </legend>
+
+          {% if error %}
+          <p id="has-redline-boundary-file-error" class="govuk-error-message">
+            <span class="govuk-visually-hidden">Error:</span> {{ error }}
+          </p>
+          {% endif %}
+
+          <div class="govuk-radios" data-module="govuk-radios">
+            <div class="govuk-radios__item">
+              <input class="govuk-radios__input" id="has-redline-boundary-file-draw"
+                name="has-redline-boundary-file" type="radio" value="Draw on a map"
+                {% if data.hasRedlineBoundaryFile === false %}checked{% endif %}>
+              <label class="govuk-label govuk-radios__label" for="has-redline-boundary-file-draw">
+                Draw on a map
+              </label>
+              <div class="govuk-hint govuk-radios__hint">
+                If you have more than one polygon in your red line boundary you must upload a file instead
+              </div>
+            </div>
+            <div class="govuk-radios__item">
+              <input class="govuk-radios__input" id="has-redline-boundary-file-upload"
+                name="has-redline-boundary-file" type="radio" value="Upload a file"
+                {% if data.hasRedlineBoundaryFile === true %}checked{% endif %}>
+              <label class="govuk-label govuk-radios__label" for="has-redline-boundary-file-upload">
+                Upload a file
+              </label>
+              <div class="govuk-hint govuk-radios__hint">
+                Upload a GeoJSON file (.geojson), keyhole markup language file (.kml), or a shapefile (.shp). The file must be smaller than 2MB.
+              </div>
+            </div>
+          </div>
+        </fieldset>
+      </div>
+
+      {{ govukButton({ text: "Continue" }) }}
+
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Upload a red line boundary file - Get a quote for Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+  text: "Back",
+  href: "/nrf-quote-6/redline-map"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    <form action="/nrf-quote-6/upload-redline" method="post" enctype="multipart/form-data" novalidate>
+
+      {% if error %}
+      {{ govukErrorSummary({
+        titleText: "There is a problem",
+        errorList: [{ text: error, href: "#redline-file" }]
+      }) }}
+      {% endif %}
+
+      <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
+        <h1 class="govuk-label-wrapper">
+          <label class="govuk-label govuk-label--l" for="redline-file">
+            Upload a red line boundary file
+          </label>
+        </h1>
+
+        <div id="redline-file-hint" class="govuk-hint">
+          Upload a GeoJSON file (.geojson), keyhole markup language file (.kml), or a shapefile (.shp). The file must be smaller than 2MB.
+        </div>
+
+        {% if error %}
+        <p id="redline-file-error" class="govuk-error-message">
+          <span class="govuk-visually-hidden">Error:</span> {{ error }}
+        </p>
+        {% endif %}
+
+        <input class="govuk-file-upload {% if error %}govuk-file-upload--error{% endif %}" id="redline-file"
+          name="redline-file" type="file" accept=".shp,.geojson,.kml" aria-describedby="redline-file-hint">
+      </div>
+
+      {{ govukButton({ text: "Continue" }) }}
+
+    </form>
+  </div>
+</div>
+{% endblock %}

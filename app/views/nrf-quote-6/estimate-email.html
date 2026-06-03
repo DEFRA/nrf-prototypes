@@ -1,0 +1,52 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Enter your email address - Get a quote for Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+  text: "Back",
+  href: backLink or "/nrf-quote-6/redline-map"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    <form action="/nrf-quote-6/estimate-email" method="post" novalidate>
+      {% if isChange %}<input type="hidden" name="isChange" value="true">{% endif %}
+      {% if navFromSummary %}<input type="hidden" name="navFromSummary" value="true">{% endif %}
+
+      {% if error %}
+      {{ govukErrorSummary({
+        titleText: "There is a problem",
+        errorList: [{ text: error, href: "#email" }]
+      }) }}
+      {% endif %}
+
+      {{ govukInput({
+        label: {
+          text: "Enter your email address",
+          classes: "govuk-label--l",
+          isPageHeading: true
+        },
+        hint: {
+          text: "A copy of the quote will be emailed to you."
+        },
+        id: "email",
+        name: "email",
+        type: "email",
+        autocomplete: "email",
+        spellcheck: false,
+        value: data.estimateEmail,
+        errorMessage: { text: error } if error
+      }) }}
+
+      {{ govukButton({ text: "Continue" }) }}
+
+    </form>
+  </div>
+</div>
+{% endblock %}

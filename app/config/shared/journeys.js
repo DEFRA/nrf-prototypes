@@ -84,6 +84,14 @@ const JOURNEYS = [
       'A user journey for the LPA to check and approve the details sent from the developer.'
   },
   {
+    name: 'NRF Quote 6',
+    displayName: 'Get a quote for Nature Restoration Fund levy (V6)',
+    basePath: '/nrf-quote-6',
+    hasStartPage: true,
+    description:
+      'A simplified quote-only journey for developers to obtain a quote for the Nature Restoration Fund levy. Covers planning permission type, housing units, red line boundary, and email entry.'
+  },
+  {
     name: 'LPA Approve 4',
     displayName: 'LPA approve developer request to pay NRF (V4)',
     basePath: '/lpa-approve-4',

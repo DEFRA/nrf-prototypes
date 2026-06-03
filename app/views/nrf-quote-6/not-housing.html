@@ -1,0 +1,35 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Only housing is currently included in Nature Restoration Fund - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+  text: "Back",
+  href: "/nrf-quote-6/housing"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    <h1 class="govuk-heading-l">If you are developing anything other than housing you will need to mitigate in another way.</h1>
+
+    <p class="govuk-body">Other ways to mitigate environmental impact are:</p>
+
+    <ul class="govuk-list govuk-list--bullet">
+      <li>Habitat Regulations Assessment (HRA) for European sites or Ramsar sites</li>
+      <li>Consent from Natural England for works affecting SSSIs</li>
+      <li>Marine impact assessments for marine conservation zones</li>
+      <li>Species licensing applications for protected species</li>
+    </ul>
+
+    <p class="govuk-body">
+      <a href="#" class="govuk-link">Find out about mitigating environmental impact</a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}

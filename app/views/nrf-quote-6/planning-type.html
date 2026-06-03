@@ -1,0 +1,82 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+What type of planning permission are you applying for? - Get a quote for Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+  text: "Back",
+  href: "/nrf-quote-6/start"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    <form action="/nrf-quote-6/planning-type" method="post" novalidate>
+
+      {% if error %}
+      {{ govukErrorSummary({
+        titleText: "There is a problem",
+        errorList: [{ text: error, href: "#planning-type-full" }]
+      }) }}
+      {% endif %}
+
+      <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
+        <fieldset class="govuk-fieldset">
+          <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
+            <h1 class="govuk-fieldset__heading">
+              What type of planning permission are you applying for?
+            </h1>
+          </legend>
+          <div class="govuk-hint">Select one</div>
+
+          {% if error %}
+          <p id="planning-type-error" class="govuk-error-message">
+            <span class="govuk-visually-hidden">Error:</span> {{ error }}
+          </p>
+          {% endif %}
+
+          <div class="govuk-radios" data-module="govuk-radios">
+            <div class="govuk-radios__item">
+              <input class="govuk-radios__input" id="planning-type-full" name="planning-type" type="radio"
+                value="Full" {% if data.planningType === 'Full' %}checked{% endif %}>
+              <label class="govuk-label govuk-radios__label" for="planning-type-full">Full</label>
+            </div>
+            <div class="govuk-radios__item">
+              <input class="govuk-radios__input" id="planning-type-outline" name="planning-type" type="radio"
+                value="Outline" {% if data.planningType === 'Outline' %}checked{% endif %}>
+              <label class="govuk-label govuk-radios__label" for="planning-type-outline">Outline</label>
+            </div>
+            <div class="govuk-radios__item">
+              <input class="govuk-radios__input" id="planning-type-hybrid" name="planning-type" type="radio"
+                value="Hybrid" {% if data.planningType === 'Hybrid' %}checked{% endif %}>
+              <label class="govuk-label govuk-radios__label" for="planning-type-hybrid">Hybrid</label>
+            </div>
+            <div class="govuk-radios__item">
+              <input class="govuk-radios__input" id="planning-type-reserved" name="planning-type" type="radio"
+                value="Reserved matters" {% if data.planningType === 'Reserved matters' %}checked{% endif %}>
+              <label class="govuk-label govuk-radios__label" for="planning-type-reserved">Reserved matters</label>
+            </div>
+            <div class="govuk-radios__item">
+              <input class="govuk-radios__input" id="planning-type-prior" name="planning-type" type="radio"
+                value="Prior approval" {% if data.planningType === 'Prior approval' %}checked{% endif %}>
+              <label class="govuk-label govuk-radios__label" for="planning-type-prior">Prior approval</label>
+            </div>
+            <div class="govuk-radios__item">
+              <input class="govuk-radios__input" id="planning-type-listed" name="planning-type" type="radio"
+                value="Listed building consent" {% if data.planningType === 'Listed building consent' %}checked{% endif %}>
+              <label class="govuk-label govuk-radios__label" for="planning-type-listed">Listed building consent</label>
+            </div>
+          </div>
+        </fieldset>
+      </div>
+
+      {{ govukButton({ text: "Continue" }) }}
+
+    </form>
+  </div>
+</div>
+{% endblock %}

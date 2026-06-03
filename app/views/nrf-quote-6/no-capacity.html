@@ -1,0 +1,26 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+This Environmental Delivery Plan does not have enough capacity remaining - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+  text: "Back",
+  href: "/nrf-quote-6/units"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    <h1 class="govuk-heading-l">This Environmental Delivery Plan (EDP) for the Nature Restoration Fund levy does not have enough capacity remaining for this number of houses.</h1>
+
+    <p class="govuk-body">
+      <a href="#" class="govuk-link">Check the capacity for EDPs</a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Check your answers - Get a quote for Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({
+  text: "Back",
+  href: "/nrf-quote-6/estimate-email"
+}) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    <h1 class="govuk-heading-l">Check your answers</h1>
+
+    <dl class="govuk-summary-list govuk-!-margin-bottom-9">
+
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Planning permission type</dt>
+        <dd class="govuk-summary-list__value">{{ data.planningType }}</dd>
+        <dd class="govuk-summary-list__actions">
+          <a class="govuk-link" href="/nrf-quote-6/planning-type?change=true&amp;nav=check-your-answers">
+            Change<span class="govuk-visually-hidden"> planning permission type</span>
+          </a>
+        </dd>
+      </div>
+
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Housing</dt>
+        <dd class="govuk-summary-list__value">{{ data.isHousing }}</dd>
+        <dd class="govuk-summary-list__actions"></dd>
+      </div>
+
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Number of housing units</dt>
+        <dd class="govuk-summary-list__value">{{ data.residentialBuildingCount }}</dd>
+        <dd class="govuk-summary-list__actions">
+          <a class="govuk-link" href="/nrf-quote-6/units?change=true&amp;nav=check-your-answers">
+            Change<span class="govuk-visually-hidden"> number of housing units</span>
+          </a>
+        </dd>
+      </div>
+
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Red line boundary</dt>
+        <dd class="govuk-summary-list__value">
+          {% if data.redlineBoundaryPolygon %}Added{% else %}Not added{% endif %}
+        </dd>
+        <dd class="govuk-summary-list__actions">
+          {% if data.hasRedlineBoundaryFile %}
+          <a class="govuk-link" href="/nrf-quote-6/upload-redline?change=true&amp;nav=check-your-answers">
+            Change<span class="govuk-visually-hidden"> red line boundary</span>
+          </a>
+          {% else %}
+          <a class="govuk-link" href="/nrf-quote-6/map?nav=check-your-answers">
+            Change<span class="govuk-visually-hidden"> red line boundary</span>
+          </a>
+          {% endif %}
+        </dd>
+      </div>
+
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Email address</dt>
+        <dd class="govuk-summary-list__value">{{ data.estimateEmail }}</dd>
+        <dd class="govuk-summary-list__actions">
+          <a class="govuk-link" href="/nrf-quote-6/estimate-email?change=true&amp;nav=check-your-answers">
+            Change<span class="govuk-visually-hidden"> email address</span>
+          </a>
+        </dd>
+      </div>
+
+    </dl>
+
+    <form action="/nrf-quote-6/check-your-answers" method="post" novalidate>
+      <div class="govuk-button-group">
+        {{ govukButton({ text: "Submit" }) }}
+        <a class="govuk-link govuk-link--destructive" href="/nrf-quote-6/delete-quote">Delete<span class="govuk-visually-hidden"> quote</span></a>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

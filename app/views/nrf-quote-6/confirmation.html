@@ -1,0 +1,56 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Your details have been submitted - Get a quote for Nature Restoration Fund levy - GOV.UK
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    <div class="govuk-panel govuk-panel--confirmation">
+      <h1 class="govuk-panel__title">Your details have been submitted</h1>
+      <div class="govuk-panel__body">NRF reference: {{ data.nrfReference }}</div>
+    </div>
+
+    <h2 class="govuk-heading-m">What happens next</h2>
+
+    <p class="govuk-body">You told us the development:</p>
+
+    <ul class="govuk-list govuk-list--bullet">
+      <li>has {{ data.planningType }} planning permission</li>
+      {%- if data.residentialBuildingCount -%}
+      <li>has Housing with a total of {{ data.residentialBuildingCount }} housing unit{% if data.residentialBuildingCount != 1 %}s{% endif %}</li>
+      {%- endif -%}
+      <li>is planned in {{ data.redlineBoundaryPolygon.intersectingCatchment or data.intersectingCatchment or 'Thames Valley EDP' }}</li>
+    </ul>
+
+    <h2 class="govuk-heading-m">What you might need to pay</h2>
+
+    <p class="govuk-body">Based on the information you have provided, the development falls into an area with an Environmental Delivery Plan (EDP), so you can use the Nature Restoration Fund Nutrients levy.</p>
+
+    <p class="govuk-body">The quote for the total amount you may need to pay if you develop in this area is: <strong>£{{ data.levyAmount or '2,500' }}</strong></p>
+
+    <p class="govuk-body">You do not need to pay anything at this point, this service is designed to help you plan how to mitigate your environmental obligations. <a href="/nrf-quote-6/start" class="govuk-link">Get another quote</a></p>
+
+    <p class="govuk-body">If you decide to mitigate environmental impact using Nature Restoration Fund levy, contact Natural England to request to use NRF.</p>
+
+    <p class="govuk-body">Keep the email we send you as a record of the quote and NRF reference number.</p>
+
+    <h2 class="govuk-heading-m">Get help with Nature Restoration Fund</h2>
+    <p class="govuk-body">If you need help with Nature Restoration Fund, contact XXXX and give the NRF reference number.</p>
+    <p class="govuk-body">
+      Email: <a href="mailto:xxxxx@defra.gov.uk" class="govuk-link">xxxxx@defra.gov.uk</a><br>
+      Telephone: 00000000000<br>
+      Monday to Friday, 8:30am to 5pm, except bank holidays
+    </p>
+    <p class="govuk-body">
+      <a href="https://www.gov.uk/call-charges" class="govuk-link">Find out about call charges</a>
+    </p>
+    <p class="govuk-body">
+      <a href="/nrf-quote-6/estimate-email-content" class="govuk-link">View the email content</a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}
