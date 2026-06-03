@@ -300,7 +300,7 @@ Button: Continue
 ```
 # Choose how you would like to show us the boundary of your development
 - Draw on a map
-  Hint text: If you have more than one polygon in your red line boundary you must upload a file instead
+  Hint text: If you have more than one polygon in your red line boundary you must upload a file instead.
 - Upload a file
   Hint text: Upload a GeoJSON file (.geojson), keyhole markup language file (.kml), or a shapefile (.shp). The file must be smaller than 2MB.
 ```
@@ -667,7 +667,7 @@ NRF reference: {{ data.nrfReference }}
 
 You told us the development:
 - has {{ data.planningType }} planning permission
-- has Housing with a total of {{ data.residentialBuildingCount }} housing unit(s) *(conditional: only shown if residentialBuildingCount is set)*
+- has housing with a total of {{ data.residentialBuildingCount }} housing unit(s) *(conditional: only shown if residentialBuildingCount is set)*
 - is planned in {{ data.redlineBoundaryPolygon.intersectingCatchment or data.intersectingCatchment or 'Thames Valley EDP' }}
 
 ## What you might need to pay
@@ -735,7 +735,7 @@ Thank you for submitting details of the development on the Get a quote for the N
 
 You told us the development:
 - has {{ data.planningType }} planning permission
-- has Housing with a total of {{ data.residentialBuildingCount }} housing unit(s) *(conditional: only shown if residentialBuildingCount is set)*
+- has housing with a total of {{ data.residentialBuildingCount }} housing unit(s) *(conditional: only shown if residentialBuildingCount is set)*
 - is planned in {{ data.redlineBoundaryPolygon.intersectingCatchment or data.intersectingCatchment or 'Thames Valley EDP' }}
 
 ## What you might need to pay

@@ -29,9 +29,9 @@ Email sent from the Nature Restoration Fund service - Get a quote for Nature Res
     <p class="govuk-body">You told us the development:</p>
 
     <ul class="govuk-list govuk-list--bullet">
-      <li>has {{ data.planningType }} planning permission</li>
+      <li>has {{ data.planningType | lower }} planning permission</li>
       {%- if data.residentialBuildingCount -%}
-      <li>has Housing with a total of {{ data.residentialBuildingCount }} housing unit{% if data.residentialBuildingCount != 1 %}s{% endif %}</li>
+      <li>has housing with a total of {{ data.residentialBuildingCount }} housing unit{% if data.residentialBuildingCount != 1 %}s{% endif %}</li>
       {%- endif -%}
       <li>is planned in {{ data.redlineBoundaryPolygon.intersectingCatchment or data.intersectingCatchment or 'Thames Valley EDP' }}</li>
     </ul>
