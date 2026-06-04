@@ -4,17 +4,16 @@
  * Prototype Screenshot Capture Script
  *
  * This script walks through a prototype journey and captures screenshots of each page.
- * It uses Puppeteer to automate browser interactions and capture screenshots.
+ * It uses Playwright to automate browser interactions and capture screenshots.
  *
  * Usage: node screenshot-capture.js <prototype-path> [options]
  *
  * Example: node screenshot-capture.js nrf-estimate-1
  */
 
-const puppeteer = require('puppeteer')
+const { chromium } = require('@playwright/test')
 const fs = require('fs')
 const path = require('path')
-const { URL } = require('url')
 
 // Configuration
 const DEFAULT_BASE_URL = 'http://localhost:3000'
@@ -562,6 +561,37 @@ const PROTOTYPE_JOURNEYS = {
       'confirm-delete-summary': 'No',
       'confirm-delete-payment-details': 'No'
     }
+  },
+  'nrf-quote-6': {
+    name: 'NRF Quote Journey v6',
+    basePath: '/nrf-quote-6',
+    pages: [
+      { path: '/start', name: 'start', title: 'Start Page' },
+      { path: '/planning-type', name: 'planning-type', title: 'What type of planning permission?' },
+      { path: '/wrong-permission', name: 'wrong-permission', title: 'Wrong permission exit' },
+      { path: '/housing', name: 'housing', title: 'Are you developing housing?' },
+      { path: '/not-housing', name: 'not-housing', title: 'Not housing exit' },
+      { path: '/units', name: 'units', title: 'How many housing units?' },
+      { path: '/redline-map', name: 'redline-map', title: 'Choose how to show boundary' },
+      { path: '/upload-redline', name: 'upload-redline', title: 'Upload a red line boundary file' },
+      { path: '/map', name: 'map', title: 'Draw a red line boundary', waitMs: 2000, fullPage: false },
+      { path: '/no-edp', name: 'no-edp', title: 'No EDP area exit' },
+      { path: '/no-capacity', name: 'no-capacity', title: 'No capacity exit' },
+      { path: '/estimate-email', name: 'estimate-email', title: 'Enter your email address' },
+      { path: '/check-your-answers', name: 'check-your-answers', title: 'Check your answers' },
+      { path: '/delete-quote', name: 'delete-quote', title: 'Delete quote?' },
+      { path: '/delete-confirmation', name: 'delete-confirmation', title: 'Details deleted confirmation' },
+      { path: '/confirmation', name: 'confirmation', title: 'Details submitted confirmation' },
+      { path: '/estimate-email-content', name: 'estimate-email-content', title: 'Email content' }
+    ],
+    formData: {
+      'planning-type': 'Full',
+      housing: 'Yes',
+      'unit-count': '10',
+      'has-redline-boundary-file': 'Draw on a map',
+      email: 'test@example.com',
+      'confirm-delete-quote': 'No'
+    }
   }
   // Add more prototypes here as needed
 }
@@ -588,14 +618,15 @@ class ScreenshotCapture {
     }
 
     // Launch browser
-    this.browser = await puppeteer.launch({
+    this.browser = await chromium.launch({
       headless: this.headless,
-      defaultViewport: this.viewport,
       args: ['--no-sandbox', '--disable-setuid-sandbox']
     })
 
-    this.page = await this.browser.newPage()
-    await this.page.setViewport(this.viewport)
+    const context = await this.browser.newContext({
+      viewport: this.viewport
+    })
+    this.page = await context.newPage()
 
     console.log('🌐 Browser launched successfully')
   }
@@ -647,12 +678,13 @@ class ScreenshotCapture {
     try {
       // Navigate to the page
       await this.page.goto(fullUrl, {
-        waitUntil: 'networkidle2',
+        waitUntil: 'networkidle',
         timeout: 30000
       })
 
-      // Wait for page to load
-      await new Promise((resolve) => setTimeout(resolve, this.delay))
+      // Wait for page to load (use per-page waitMs if set, otherwise global delay)
+      const waitMs = pageInfo.waitMs !== undefined ? pageInfo.waitMs : this.delay
+      await new Promise((resolve) => setTimeout(resolve, waitMs))
 
       // Fill out forms if this is a form page
       await this.fillForm(pageInfo, prototypePath)
@@ -664,16 +696,16 @@ class ScreenshotCapture {
       )
       await this.page.screenshot({
         path: screenshotPath,
-        fullPage: true
+        fullPage: pageInfo.fullPage !== false
       })
 
       console.log(`✅ Captured: ${indexNumber}-${pageInfo.name}.png`)
 
       // Submit form if there's a submit button (to save data for next page)
-      const submitButton = await this.page.$(
+      const submitButton = this.page.locator(
         'button[type="submit"], input[type="submit"], button.govuk-button'
-      )
-      if (submitButton) {
+      ).first()
+      if (await submitButton.count() > 0) {
         await submitButton.click()
         await new Promise((resolve) => setTimeout(resolve, 500))
       }
@@ -693,53 +725,35 @@ class ScreenshotCapture {
 
       // Try to fill any text/number/email inputs based on formData
       for (const [fieldName, value] of Object.entries(formData)) {
-        // Handle checkboxes (arrays) - check this first before string check
+        // Handle checkboxes (arrays)
         if (Array.isArray(value)) {
           for (const val of value) {
-            const checkbox = await this.page.$(
+            const checkbox = this.page.locator(
               `input[type="checkbox"][name="${fieldName}"][value="${val}"]`
             )
-            if (checkbox) {
+            if (await checkbox.count() > 0) {
               await checkbox.click()
               await new Promise((resolve) => setTimeout(resolve, 100))
             }
           }
-          continue // Skip to next field
+          continue
         }
 
-        // Handle text/email/number inputs
         if (typeof value === 'string' || typeof value === 'number') {
-          // Try to find the input - check multiple possible selectors
-          let input = await this.page.$(
-            `input[name="${fieldName}"][type="text"]`
+          // Text/email/number inputs
+          const textInput = this.page.locator(
+            `input[name="${fieldName}"]:not([type="radio"]):not([type="checkbox"])`
           )
-          if (!input) {
-            input = await this.page.$(
-              `input[name="${fieldName}"][type="email"]`
-            )
-          }
-          if (!input) {
-            input = await this.page.$(
-              `input[name="${fieldName}"][type="number"]`
-            )
-          }
-          if (!input) {
-            // Try without type attribute
-            input = await this.page.$(
-              `input[name="${fieldName}"]:not([type="radio"]):not([type="checkbox"])`
-            )
+          if (await textInput.count() > 0) {
+            await textInput.fill(String(value))
+            continue
           }
 
-          if (input) {
-            await input.type(String(value))
-            continue // Skip to next field
-          }
-
-          // Handle radio buttons
-          const radio = await this.page.$(
+          // Radio buttons
+          const radio = this.page.locator(
             `input[type="radio"][name="${fieldName}"][value="${value}"]`
           )
-          if (radio) {
+          if (await radio.count() > 0) {
             await radio.click()
           }
         }
@@ -752,7 +766,6 @@ class ScreenshotCapture {
         `⚠️  Could not fill form for ${pageInfo.name}:`,
         error.message
       )
-      // Don't throw error, just continue
     }
   }
 

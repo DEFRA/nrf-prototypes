@@ -34,6 +34,11 @@ parameters:
 
 This slash command captures screenshots of all pages in a prototype journey by automatically walking through the user flow and taking screenshots of each page.
 
+## Implementation approach (preferred order)
+
+1. **Playwright MCP tools** (`mcp__playwright__*`) — use these first if available in the session. They drive a real browser directly with no subprocess or binary path issues. Use `browser_navigate`, `browser_fill_form`, `browser_click`, and `browser_take_screenshot` to walk each page and save screenshots to `{screenshot-dir}/{prototype-path}/`. Always use `{prototype-path}` as the folder name regardless of which `base-url` is used — do not create environment-specific subdirectories.
+2. **`scripts/screenshot-capture.js`** — fall back to this only if the Playwright MCP tools are not available. The script uses Playwright (Chromium) and requires the prototype journey to be registered in `PROTOTYPE_JOURNEYS` before running.
+
 ## Usage
 
 ```
@@ -70,13 +75,13 @@ This slash command captures screenshots of all pages in a prototype journey by a
 
 ## What it does
 
-1. **Launches a browser** using Puppeteer
+1. **Launches a browser** using Playwright (Chromium)
 2. **Navigates through each page** in the `prototype-path` journey
 3. **Fills out forms** with test data from formData configuration
 4. **Captures screenshots** of each page in full-page mode
 5. **Saves screenshots** to `screenshot-dir/<prototype-path>/` directory
 6. **Uses the specified `base-url`** to access the prototype
-7. **Waits `delay` milliseconds** between page captures
+7. **Waits `delay` milliseconds** between page captures (overridable per-page with `waitMs`)
 8. **Runs in headless mode** if `headless` is set to true
 
 ## Screenshot Organization
@@ -114,15 +119,16 @@ Screenshots are saved with the following structure, with index numbers to mainta
 ## Prerequisites
 
 1. **Node.js** installed on the system
-2. **Puppeteer** package installed (`npm install puppeteer`)
+2. **Playwright** package installed (`npm install @playwright/test` + `npx playwright install chromium`)
 3. **Prototype server running** on the specified base URL
 4. **Write permissions** to the screenshot directory
 
 ## Installation
 
 ```bash
-# Install Puppeteer if not already installed
-npm install puppeteer
+# Install Playwright if not already installed
+npm install @playwright/test
+npx playwright install chromium
 
 # Make the script executable
 chmod +x scripts/screenshot-capture.js
@@ -224,6 +230,7 @@ The script provides real-time feedback:
 - Screenshots are taken in full-page mode to capture the entire page
 - The script handles both GET and POST routes automatically
 - Form submissions are handled to progress through multi-step journeys
+- The script uses Playwright (Chromium) — no Puppeteer dependency needed
 - The browser runs in non-headless mode by default (`headless: false`) for better debugging
 - All screenshots are saved as PNG files with descriptive names in `screenshot-dir/{prototype-path}/`
 - The script uses the specified `base-url` to access the prototype
