@@ -215,6 +215,15 @@ const PROTOTYPE_JOURNEYS = {
 }
 ```
 
+### Page config rules
+
+When adding pages to a journey config, always apply these rules:
+
+- Any page with `name: 'map'` **must** include `waitMs: 5000, fullPage: false`. The map component loads tiles asynchronously and the canvas prevents full-page capture. Example:
+  ```javascript
+  { path: '/map', name: 'map', title: 'Draw a red line boundary', waitMs: 5000, fullPage: false }
+  ```
+
 ## Output
 
 The script provides real-time feedback:

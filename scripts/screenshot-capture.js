@@ -574,7 +574,7 @@ const PROTOTYPE_JOURNEYS = {
       { path: '/units', name: 'units', title: 'How many housing units?' },
       { path: '/redline-map', name: 'redline-map', title: 'Choose how to show boundary' },
       { path: '/upload-redline', name: 'upload-redline', title: 'Upload a red line boundary file' },
-      { path: '/map', name: 'map', title: 'Draw a red line boundary', waitMs: 2000, fullPage: false },
+      { path: '/map', name: 'map', title: 'Draw a red line boundary', waitMs: 5000, fullPage: false },
       { path: '/no-edp', name: 'no-edp', title: 'No EDP area exit' },
       { path: '/no-capacity', name: 'no-capacity', title: 'No capacity exit' },
       { path: '/estimate-email', name: 'estimate-email', title: 'Enter your email address' },
