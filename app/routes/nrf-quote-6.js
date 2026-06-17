@@ -1,5 +1,5 @@
 //
-// NRF Quote Journey Routes - Get a quote for Nature Restoration Fund levy
+// NRF Quote Journey Routes - Get a quote for Nature Restoration levy
 //
 
 const govukPrototypeKit = require('govuk-prototype-kit')

@@ -58,9 +58,9 @@ Once you have a quote, you will be able to contact Natural England and request t
 The quote is not a commitment to use the nature restoration fund levy to discharge relevant environmental obligations. A Local Planning Authority must not accept the quote as part of any planning and decision-making processes.
 
 
-## Get help with the nature restoration fund levy
+## Get help with the nature restoration levy
 
-If you need help with the nature restoration fund levy, contact XXXX.
+If you need help with the nature restoration levy, contact XXXX.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 
@@ -624,9 +624,9 @@ Your quote details have been removed and deleted.
 [Get another quote](/nrf-quote-6/start)
 
 
-## Get help with the nature restoration fund levy
+## Get help with the nature restoration levy
 
-If you need help with the nature restoration fund levy, contact XXXX.
+If you need help with the nature restoration levy, contact XXXX.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 
@@ -679,9 +679,9 @@ If you decide to meet environmental obligations using nature restoration levy, y
 
 Keep the email as a record of the quote and NRF reference number. You can use the reference number to retrieve this quote when you are ready to request to use nature restoration levy.
 
-## Get help with the nature restoration fund levy
+## Get help with the nature restoration levy
 
-If you need help with the nature restoration fund levy, contact XXXX.
+If you need help with the nature restoration levy, contact XXXX.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 
@@ -768,9 +768,9 @@ Your levy has been calculated from the details you submitted and the charging sc
 
 Your levy will fund conservation measures delivered under the relevant EDPs, including their long-term management and monitoring, as well as administration costs. EDP’s set out measures needed to address the environmental impacts of development in an area and deliver an overall improvement in the conservation status of the environmental features set out in the EDP.
 
-## Get help with the nature restoration fund levy
+## Get help with the nature restoration levy
 
-If you need help with the nature restoration fund levy, contact XXXX.
+If you need help with the nature restoration levy, contact XXXX.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 
