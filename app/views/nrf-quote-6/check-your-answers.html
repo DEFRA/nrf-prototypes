@@ -20,7 +20,7 @@ Check your answers - Get a quote for Nature Restoration Fund levy - GOV.UK
     <dl class="govuk-summary-list govuk-!-margin-bottom-9">
 
       <div class="govuk-summary-list__row">
-        <dt class="govuk-summary-list__key">Planning permission type</dt>
+        <dt class="govuk-summary-list__key">Planning application type</dt>
         <dd class="govuk-summary-list__value">{{ data.planningType }}</dd>
         <dd class="govuk-summary-list__actions">
           <a class="govuk-link" href="/nrf-quote-6/planning-type?change=true&amp;nav=check-your-answers">
@@ -75,9 +75,12 @@ Check your answers - Get a quote for Nature Restoration Fund levy - GOV.UK
 
     </dl>
 
+    <p class="govuk-body">You will receive an indicative nature restoration levy quote, based on the details you provide. For the purposes of section 72 of the Planning and Infrastructure Act 2025, the quote is not a commitment to use the nature restoration fund levy to discharge relevant environmental obligations.</p>
+    <p class="govuk-body">A Local Planning Authority must not accept the quote as part of any planning and decision making processes.</p>
+
     <form action="/nrf-quote-6/check-your-answers" method="post" novalidate>
       <div class="govuk-button-group">
-        {{ govukButton({ text: "Submit" }) }}
+        {{ govukButton({ text: "Confirm and submit" }) }}
         <a class="govuk-link govuk-link--destructive" href="/nrf-quote-6/delete-quote">Delete<span class="govuk-visually-hidden"> quote</span></a>
       </div>
     </form>

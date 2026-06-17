@@ -6,19 +6,19 @@
 - **Journey Description**:
   A user journey for a developer to obtain a quote for the Nature Restoration Fund levy required when submitting planning permission to build a development of some sort. A significant page in the journey is `/nrf-quote-6/map` where the user will be able to plot a polygon on a map to define the development site boundary. There will also be 5 polygon areas over England that are known as EDP boundaries. If the development site boundary does not fall within an EDP area then the user will be navigated to the exit page `/nrf-quote-6/no-edp`.
 - **Journey Route Prefix**: nrf-quote-6 (canonical URL first segment: `/nrf-quote-6/...`)
-- **Start Page Title**: Get a quote for Nature Restoration Fund levy
+- **Start Page Title**: Get a quote for the nature restoration levy
 
 ## Page Flow and Conditional Logic
 
 
 ### Landing page
 
-| **Field**                  | **Value**                                    |
-| -------------------------- | -------------------------------------------- |
-| **Order number:**          | 1                                            |
-| **Path:**                  | /nrf-quote-6/start                           |
-| **Title:**                 | Get a quote for Nature Restoration Fund levy |
-| **Conditional page flow:** | none                                         |
+| **Field**                  | **Value**                                   |
+| -------------------------- | ------------------------------------------- |
+| **Order number:**          | 1                                           |
+| **Path:**                  | /nrf-quote-6/start                          |
+| **Title:**                 | Get a quote for the nature restoration levy |
+| **Conditional page flow:** | none                                        |
 
 #### Data points
 
@@ -27,17 +27,17 @@ None
 #### Content
 
 ```
-# Nature Restoration Fund
+# Nature restoration levy
 
-## Using Nature Restoration Fund (NRF) to discharge your environmental obligations
+## Using the nature restoration levy to meet your environmental obligations
 
-Use this service to find out if your development is in an area with an [Environmental Delivery Plan (EDP)](#) and get a quote for the cost of the levy.
+Use this service to find out if your relevant development is in an area with an [Environmental Delivery Plan (EDP)](#).
 
-If a development falls into an area with an Environmental Delivery Plan, you can use [Nature Restoration Fund (NRF)](#) levies to discharge environmental obligations.
+If your development falls into an area with an EDP, you can get a quote and then request to use the nature restoration fund levy to meet your environmental obligations.
 
-If you choose not to use the NRF levy, you will still need to [discharge your obligations in other ways](#).
+If you choose not to use the nature restoration fund levy, you will still need to [meet your environmental obligations in other ways](#).
 
-CTA: Start now
+CTA: Start now 
 
 ## What you need to do
 
@@ -45,23 +45,22 @@ CTA: Start now
 
 To get a quote you will need to tell us:
 
-* the type of planning permission you plan to apply for
-* that you are building houses
-* the amount of houses
+* the type of planning application you are submitting
+* that you are building units of housing (this includes houses and flats)
+* the number of units of housing
 * where the development is planned – you can use a red line boundary file or draw a red line boundary
 
-
-You will be sent a quote email with an NRF reference and the amount of the levy. You can get as many quotes as you like.
-
+You will be sent a quote email with a NRF reference and the amount of the levy. You can get as many quotes as you like.
 
 ### What to do with your quote
 
-Once you have a quote, you will be able to contact Natural England and request to use NRF.
+Once you have a quote, you will be able to contact Natural England and request to use the nature restoration fund levy. 
+The quote is not a commitment to use the nature restoration fund levy to discharge relevant environmental obligations. A Local Planning Authority must not accept the quote as part of any planning and decision-making processes.
 
 
-## Get help with Nature Restoration Fund
+## Get help with the nature restoration fund levy
 
-If you need help with Nature Restoration Fund, contact XXXX.
+If you need help with the nature restoration fund levy, contact XXXX.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
 
@@ -77,12 +76,12 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 
 ### What type of planning permission
 
-| **Field**              | **Value**                                              |
-| ---------------------- | ------------------------------------------------------ |
-| Order number:          | 2                                                      |
-| Path:                  | /nrf-quote-6/planning-type                             |
-| Title:                 | What type of planning permission are you applying for? |
-| Conditional page flow: | none                                                   |
+| **Field**              | **Value**                                                     |
+| ---------------------- | ------------------------------------------------------------- |
+| Order number:          | 2                                                             |
+| Path:                  | /nrf-quote-6/planning-type                                    |
+| Title:                 | What type of planning application are you planning to submit? |
+| Conditional page flow: | none                                                          |
 
 #### Data points
 
@@ -91,7 +90,7 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
     data: {
         planningType: {
             type: radios,
-            values: "Full" | "Outline" | "Hybrid" | "Reserved matters" | "Prior approval" | "Listed building consent",
+            values: "Full (including any variations)" | "Outline (including any variations)" | "Hybrid (including any variations)" | Other,
             fieldName: "planning-type"
         }
     }
@@ -101,14 +100,12 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 #### Content
 
 ```
-# What type of planning permission are you applying for?
+# What type of planning application are you planning to submit?
 Select one
-- Full
-- Outline
-- Hybrid
-- Reserved matters
-- Prior approval
-- Listed building consent
+- Full (including any variations)
+- Outline (including any variations)
+- Hybrid (including any variations)
+- Other
 
 Button: Continue
 ```
@@ -119,32 +116,29 @@ Button: Continue
 | -------------- | --------------------------------------------------------- |
 | Description:   | User has selected 'Continue' without choosing any options |
 | Error summary: | There is a problem                                        |
-| Error message: | Select a planning permission type to continue             |
+| Error message: | Select a planning application type to continue            |
 
 
 ---
 
 ### Exit page if the planning permission is not full, outline or hybrid
 
-| **Field**              | **Value**                                                          |
-| ---------------------- | ------------------------------------------------------------------ |
-| Order number:          | 2.1                                                                |
-| Path:                  | /nrf-quote-6/wrong-permission                                      |
-| Title:                 | This type of planning permission is not currently included         |
-| Data points:           | None                                                               |
-| Conditional page flow: | display if planning permission type is not full, outline or hybrid |
+| **Field**              | **Value**                                                   |
+| ---------------------- | ----------------------------------------------------------- |
+| Order number:          | 2.1                                                         |
+| Path:                  | /nrf-quote-6/wrong-permission                               |
+| Title:                 | This type of planning application is not currently included |
+| Data points:           | None                                                        |
+| Conditional page flow: | display if planning application type is Other               |
 
 #### Content
 
 ```
-# Nature Restoration Fund levy is not available for this planning permission type
-Other ways to mitigate environmental impact are:
-- Habitat Regulations Assessment (HRA) for European sites or Ramsar sites
-- Consent from Natural England for works affecting SSSIs
-- Marine impact assessments for marine conservation zones
-- Species licensing applications for protected species
+# Nature restoration levy is not currently available for this planning application type
 
-[Find out about mitigating environmental impact](#)
+Please use the existing Habitat Regulations to meet your environmental obligations.
+
+[Find out about Habitat Regulations](#)
 ```
 
 #### Errors
@@ -181,8 +175,8 @@ None
 #### Content
 
 ```
-# Are you developing housing?
-Hint text: Housing is dwellings, this includes houses and flats.
+# Are you developing housing units?
+Hint text: Housing units are dwellings, this includes houses and flats.
 - Yes
 - No
 Button: Continue
@@ -201,26 +195,23 @@ Button: Continue
 
 ### Exit page if the development is not housing
 
-| **Field**              | **Value**                                                     |
-| ---------------------- | ------------------------------------------------------------- |
-| Order number:          | 3.1                                                           |
-| Path:                  | /nrf-quote-6/not-housing                                      |
-| Title:                 | Only housing is currently included in Nature Restoration Fund |
-| Data points:           | None                                                          |
-| Conditional page flow: | display if no is selected                                     |
+| **Field**              | **Value**                                             |
+| ---------------------- | ----------------------------------------------------- |
+| Order number:          | 3.1                                                   |
+| Path:                  | /nrf-quote-6/not-housing                              |
+| Title:                 | Nature restoration levy is only available for housing |
+| Data points:           | None                                                  |
+| Conditional page flow: | display if no is selected                             |
 
 #### Content
 
 ```
-# If you are developing anything other than housing you will need to mitigate in another way.
+#  Nature restoration levy is only available for housing units
 
-Other ways to mitigate environmental impact are:
-- Habitat Regulations Assessment (HRA) for European sites or Ramsar sites
-- Consent from Natural England for works affecting SSSIs
-- Marine impact assessments for marine conservation zones
-- Species licensing applications for protected species
+Please use the existing Habitat Regulations to meet your environmental obligations.
 
-[Find out about mitigating environmental impact](#)
+[Find out about Habitat Regulations](#)
+
 ```
 
 #### Errors
@@ -255,8 +246,8 @@ None
 #### Content
 
 ```
-# Enter the maximum number of units of housing you are developing
-Hint text: A unit is a house, a HMO with 6 or less residents or a flat within a block of flats.
+# Enter the maximum number of units you are developing
+Hint text: A housing unit is a house, a HMO with 6 or less residents or a flat within a block of flats.
 
 Button: Continue
 ```
@@ -434,14 +425,11 @@ Hint text: Use the map to draw a red line boundary for where the development mig
 #### Content
 
 ```
-# Nature Restoration Fund levy is not available in this area
-Other ways to mitigate environmental impact are:
-- Habitat Regulations Assessment (HRA) for European sites or Ramsar sites
-- Consent from Natural England for works affecting SSSIs
-- Marine impact assessments for marine conservation zones
-- Species licensing applications for protected species
+#  Nature restoration levy is not available in this area
 
-[Find out about mitigating environmental impact](#)
+Please use the existing Habitat Regulations to meet your environmental obligations.
+
+[Find out about Habitat Regulations](#)
 ```
 
 #### Errors
@@ -465,10 +453,8 @@ None
 #### Content
 
 ```
-#Not enough capacity remaining
-This Environmental Delivery Plan (EDP) for the Nature Restoration Fund levy does not have enough capacity remaining for this number of houses.
-
-[Check the capacity for EDPs](#)
+# Not enough capacity remaining
+The Environmental Delivery Plan (EDP) in this area does not have enough remaining capacity for this number of houses.
 ```
 
 #### Errors
@@ -505,7 +491,7 @@ None
 
 ```
 # Enter your email address
-Hint text: A copy of the quote will be emailed to you.
+Hint text: Once your quote is calculated, a copy of the quote will be emailed to you. This could take up to 00 minutes.
 ```
 
 #### Errors
@@ -518,6 +504,12 @@ Hint text: A copy of the quote will be emailed to you.
 | Description:   | Incorrect email format                                              |
 | Error summary: | There is a problem                                                  |
 | Error message: | Enter an email address in the correct format, like name@example.com |
+
+#### Implementation notes (not page copy)
+
+- Back link: `/nrf-quote-6/map` (draw path) or `/nrf-quote-6/upload-redline` (upload path) — derive from `data.mapReferrer` or `data.hasRedlineBoundaryFile`.
+- When navigating back from check-your-answers (change mode), back link should point to `/nrf-quote-6/check-your-answers`.
+- On successful POST, redirect to `/nrf-quote-6/check-your-answers`.
 
 ---
 
@@ -538,13 +530,22 @@ None
 
 # Check your answers
 
-| Question                 | Answer                                                       | Action                                                                                                                                       |
-| ------------------------ | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Planning permission type | `data.planningType`                                          | [Change](/nrf-quote-6/planning-type?change=true&nav=check-your-answers)                                                                      |
-| Housing                  | `data.isHousing`                                             |                                                                                                                                              |
-| Number of housing units  | `data.residentialBuildingCount`                              | [Change](/nrf-quote-6/units?change=true&nav=check-your-answers)                                                                              |
-| Red line boundary        | Show **Added** or **Not added** (reflect upload or map flow) | [Change](/nrf-quote-6/map?nav=check-your-answers) or [Change](/nrf-quote-6/upload-redline?change=true&nav=check-your-answers) as appropriate |
-| Email address            | `data.estimateEmail` or `data.email`                         | [Change](/nrf-quote-6/estimate-email?change=true&nav=check-your-answers)                                                                     |
+| Question                  | Answer                                                       | Action                                                                                                                                       |
+| ------------------------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Planning application type | `data.planningType`                                          | [Change](/nrf-quote-6/planning-type?change=true&nav=check-your-answers)                                                                      |
+| Housing                   | `data.isHousing`                                             |                                                                                                                                              |
+| Number of units           | `data.residentialBuildingCount`                              | [Change](/nrf-quote-6/units?change=true&nav=check-your-answers)                                                                              |
+| Red line boundary         | Show **Added** or **Not added** (reflect upload or map flow) | [Change](/nrf-quote-6/map?nav=check-your-answers) or [Change](/nrf-quote-6/upload-redline?change=true&nav=check-your-answers) as appropriate |
+| Email address             | `data.estimateEmail`                                         | [Change](/nrf-quote-6/estimate-email?change=true&nav=check-your-answers)                                                                     |
+
+```
+# Check your answers
+
+You will receive an indicative nature restoration levy quote, based on the details you provide. For the purposes of section 72 of the Planning and Infrastructure Act 2025, the quote is not a commitment to use the nature restoration fund levy to discharge relevant environmental obligations. 
+A Local Planning Authority must not accept the quote as part of any planning and decision making processes.
+
+Button: Confirm and submit
+```
 
 #### Errors
 
@@ -552,10 +553,11 @@ None
 
 #### Implementation notes (not page copy)
 
-- Primary button: **Submit** — form POST to `/nrf-quote-6/check-your-answers`.
-- Secondary control: **Delete** — links to `/nrf-quote-6/delete-quote`.
-- Back link: from `/nrf-quote-6/estimate-email` (or the previous step in the quote branch).
+- Primary button: **Confirm and submit** — form POST to `/nrf-quote-6/check-your-answers`.
+- Secondary control: **Delete** — rendered as a destructive link (`govuk-link--destructive`) to `/nrf-quote-6/delete-quote`.
+- Back link: `/nrf-quote-6/estimate-email`.
 - **Change** links use `?change=true&nav=check-your-answers` (or equivalent) so return navigation returns to check your answers.
+- Red line boundary Change link is conditional: `/nrf-quote-6/upload-redline?change=true&nav=check-your-answers` if `data.hasRedlineBoundaryFile` is true, otherwise `/nrf-quote-6/map?nav=check-your-answers`.
 
 ---
 
@@ -621,12 +623,15 @@ Your quote details have been removed and deleted.
 
 [Get another quote](/nrf-quote-6/start)
 
-## Get help with Nature Restoration Fund
 
-If you need help with Nature Restoration Fund, contact XXXX and give the NRF reference number.
+## Get help with the nature restoration fund levy
+
+If you need help with the nature restoration fund levy, contact XXXX.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
+
 Telephone: 00000000000
+
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
 [Find out about call charges](https://www.gov.uk/call-charges)
@@ -666,29 +671,22 @@ NRF reference: {{ data.nrfReference }}
 
 ## What happens next
 
-You told us the development:
-- has {{ data.planningType }} planning permission
-- has housing with a total of {{ data.residentialBuildingCount }} housing unit(s) *(conditional: only shown if residentialBuildingCount is set)*
-- is planned in {{ data.redlineBoundaryPolygon.intersectingCatchment or data.intersectingCatchment or 'Thames Valley EDP' }}
+You will receive an email with details of the quote.
 
-## What you might need to pay
+You do not need to pay anything at this point, this service is designed to help you plan how to meet your environmental obligations for your relevant development.
 
-Based on the information you have provided, the development falls into an area with an Environmental Delivery Plan (EDP), so you can use the Nature Restoration Fund Nutrients levy.
+If you decide to meet environmental obligations using nature restoration levy, you can request to use it.
 
-The quote for the total amount you may need to pay if you develop in this area is: **£{{ data.levyAmount or '2,500' }}**
+Keep the email as a record of the quote and NRF reference number. You can use the reference number to retrieve this quote when you are ready to request to use nature restoration levy.
 
-You do not need to pay anything at this point, this service is designed to help you plan how to mitigate your environmental obligations. [Get another quote](/nrf-quote-6/start)
+## Get help with the nature restoration fund levy
 
-If you decide to mitigate environmental impact using Nature Restoration Fund levy, contact Natural England to request to use NRF.
-
-Keep the email we send you as a record of the quote and NRF reference number.
-
-## Get help with Nature Restoration Fund
-
-If you need help with Nature Restoration Fund, contact XXXX and give the NRF reference number.
+If you need help with the nature restoration fund levy, contact XXXX.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
+
 Telephone: 00000000000
+
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
 [Find out about call charges](https://www.gov.uk/call-charges)
@@ -725,38 +723,59 @@ None
 <inset-text>
 **To:** {{ data.estimateEmail or 'user@example.com' }}
 
-**Subject:** Nature Restoration Fund – quote for the Nature Restoration Fund levy
+**Subject:** Nature restoration levy – quote
 </inset-text>
 
-# Nature Restoration Fund – quote for the Nature Restoration Fund levy
+# Nature restoration levy – quote
 
 ## NRF reference: {{ data.nrfReference }}
 
-Thank you for submitting details of the development on the Get a quote for the Nature Restoration Fund levy service.
+Thank you for submitting details of the relevant development on the Get a quote for the nature restoration levy service.
 
-You told us the development:
-- has {{ data.planningType }} planning permission
-- has housing with a total of {{ data.residentialBuildingCount }} housing unit(s) *(conditional: only shown if residentialBuildingCount is set)*
-- is planned in {{ data.redlineBoundaryPolygon.intersectingCatchment or data.intersectingCatchment or 'Thames Valley EDP' }}
+This is an indicative nature restoration levy quote, based on the details you provided. For the purposes of section 72 of the Planning and Infrastructure Act 2025, this quote is not a commitment to use the nature restoration fund levy to discharge relevant environmental obligations. A Local Planning Authority must not accept this quote as part of any planning and decision-making processes.
+
+## Details of your relevant development
+
+You told us the relevant development:
+- will have {{ data.planningType | lower }} planning permission
+- has housing with a total of {{ data.residentialBuildingCount }} housing unit(s)
 
 ## What you might need to pay
 
-Based on the information you have provided, the development falls into an area with an Environmental Delivery Plan (EDP), so you can use the Nature Restoration Fund Nutrients levy.
+Your relevant development is planned in {{ data.redlineBoundaryPolygon.intersectingCatchment or data.intersectingCatchment }} Environmental Delivery Plan (EDP) addressing nutrient pollution.
 
-The quote for the total amount you may need to pay if you develop in this area is: **£{{ data.levyAmount or '2,500' }}**
+### Provisional nature restoration levy quote £X,XXX
 
-You do not need to pay anything at this point, this service is designed to help you plan how to mitigate your environmental obligations. [Get another quote](/nrf-quote-6/start)
+The amount is calculated from the charging schedule(s) in the relevant EDP(s).
 
-If you decide to mitigate environmental impact using Nature Restoration Fund levy, contact [Natural England](#) to request to use NRF.
+### Inflation-adjusted nature restoration levy quote: £X,XXX
 
-Keep this email as a record of the quote and NRF reference number.
+This shows the estimated levy for the year this quote was issued. The amount includes annual inflation in line with the RICS Community Infrastructure Levy (CIL) Index, published on 1 November for the following calendar year. This quote is indicative and subject to annual inflation. It shows the amount you may need to pay if you request to use the nature restoration levy.
 
-## Get help with Nature Restoration Fund
+## Next steps
 
-If you need help with Nature Restoration Fund, contact XXXX and give the NRF reference number.
+You do not need to pay anything now, this service is designed to help you plan how to meet your environmental obligations. You can [get another quote](/nrf-quote-6/start) at any time. 
+
+Keep this email for your records.
+
+When you are ready to start the planning and development process, you can [request to use the nature restoration levy](#). Once your request is accepted, you will receive a commitment certificate. You can submit this alongside your planning application.
+
+## How your nature restoration levy was calculated
+
+Your levy has been calculated from the details you submitted and the charging schedule for the EDP. [Read about the charging schedule for the EDP](#).
+
+## What your levy will pay for
+
+Your levy will fund conservation measures delivered under the relevant EDPs, including their long-term management and monitoring, as well as administration costs. EDP’s set out measures needed to address the environmental impacts of development in an area and deliver an overall improvement in the conservation status of the environmental features set out in the EDP.
+
+## Get help with the nature restoration fund levy
+
+If you need help with the nature restoration fund levy, contact XXXX.
 
 Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)
+
 Telephone: 00000000000
+
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
 [Find out about call charges](https://www.gov.uk/call-charges)
@@ -767,6 +786,8 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 #### Implementation notes (not page copy)
 
 - Use the GOV.UK inset text component (`govuk-inset-text`) for the To/Subject block.
+- The housing unit bullet (`has housing with a total of…`) is conditional — only render if `data.residentialBuildingCount` is set.
+- Apply `| lower` filter to `data.planningType` when used in running sentence text (e.g. "will have full planning permission"), but not in standalone summary-list values.
 
 ---
 

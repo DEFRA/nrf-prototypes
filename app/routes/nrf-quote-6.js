@@ -148,14 +148,14 @@ router.post(ROUTES.PLANNING_TYPE, (req, res) => {
   const planningType = req.body['planning-type']
   if (!planningType) {
     return res.render(TEMPLATES.PLANNING_TYPE, {
-      error: 'Select a planning permission type to continue',
+      error: 'Select a planning application type to continue',
       data: req.session.data || {}
     })
   }
   req.session.data = req.session.data || {}
   req.session.data.planningType = planningType
 
-  const allowedTypes = ['Full', 'Outline', 'Hybrid']
+  const allowedTypes = ['Full (including any variations)', 'Outline (including any variations)', 'Hybrid (including any variations)']
   if (!allowedTypes.includes(planningType)) {
     return res.redirect(ROUTES.WRONG_PERMISSION)
   }
@@ -451,7 +451,8 @@ router.get(ROUTES.ESTIMATE_EMAIL, (req, res) => {
   const data = req.session.data || {}
   const isChange = req.query.change === 'true'
   const navFromSummary = req.query.nav === 'check-your-answers'
-  const backLink = (isChange && navFromSummary) ? ROUTES.CHECK_YOUR_ANSWERS : ROUTES.REDLINE_MAP
+  const defaultBack = data.mapReferrer === 'upload-redline' ? ROUTES.UPLOAD_REDLINE : ROUTES.MAP
+  const backLink = (isChange && navFromSummary) ? ROUTES.CHECK_YOUR_ANSWERS : defaultBack
   res.render(TEMPLATES.ESTIMATE_EMAIL, { data, isChange, navFromSummary, backLink })
 })
 router.post(ROUTES.ESTIMATE_EMAIL, (req, res) => {
@@ -459,7 +460,8 @@ router.post(ROUTES.ESTIMATE_EMAIL, (req, res) => {
   const isChange = req.body.isChange === 'true'
   const navFromSummary = req.body.navFromSummary === 'true'
   const data = req.session.data || {}
-  const backLink = (isChange && navFromSummary) ? ROUTES.CHECK_YOUR_ANSWERS : ROUTES.REDLINE_MAP
+  const defaultBack = data.mapReferrer === 'upload-redline' ? ROUTES.UPLOAD_REDLINE : ROUTES.MAP
+  const backLink = (isChange && navFromSummary) ? ROUTES.CHECK_YOUR_ANSWERS : defaultBack
 
   const validation = validators.validateEmail(email)
   if (!validation.valid) {

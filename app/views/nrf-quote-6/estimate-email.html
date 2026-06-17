@@ -1,13 +1,13 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-Enter your email address - Get a quote for Nature Restoration Fund levy - GOV.UK
+Enter your email address - Get a quote for the nature restoration levy - GOV.UK
 {% endblock %}
 
 {% block beforeContent %}
 {{ govukBackLink({
   text: "Back",
-  href: backLink or "/nrf-quote-6/redline-map"
+  href: backLink or "/nrf-quote-6/map"
 }) }}
 {% endblock %}
 
@@ -33,7 +33,7 @@ Enter your email address - Get a quote for Nature Restoration Fund levy - GOV.UK
           isPageHeading: true
         },
         hint: {
-          text: "A copy of the quote will be emailed to you."
+          text: "Once your quote is calculated, a copy of the quote will be emailed to you. This could take up to 00 minutes."
         },
         id: "email",
         name: "email",

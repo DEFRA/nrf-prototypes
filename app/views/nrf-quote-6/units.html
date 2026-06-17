@@ -1,7 +1,7 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-How many housing units in this development? - Get a quote for Nature Restoration Fund levy - GOV.UK
+Enter the maximum number of units you are developing - Get a quote for the nature restoration levy - GOV.UK
 {% endblock %}
 
 {% block beforeContent %}
@@ -21,12 +21,12 @@ How many housing units in this development? - Get a quote for Nature Restoration
 
       {{ govukInput({
         label: {
-          text: "Enter the maximum number of units of housing you are developing",
+          text: "Enter the maximum number of units you are developing",
           classes: "govuk-label--l",
           isPageHeading: true
         },
         hint: {
-          text: "A unit is a house, a HMO with 6 or less residents or a flat within a block of flats."
+          text: "A housing unit is a house, a HMO with 6 or less residents or a flat within a block of flats."
         },
         id: "unit-count",
         name: "unit-count",
