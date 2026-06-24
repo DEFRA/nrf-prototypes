@@ -577,6 +577,7 @@ const PROTOTYPE_JOURNEYS = {
       { path: '/map', name: 'map', title: 'Draw a red line boundary', waitMs: 5000, fullPage: false },
       { path: '/no-edp', name: 'no-edp', title: 'No EDP area exit' },
       { path: '/no-capacity', name: 'no-capacity', title: 'No capacity exit' },
+      { path: '/exclusion', name: 'exclusion', title: 'Exclusion area exit' },
       { path: '/estimate-email', name: 'estimate-email', title: 'Enter your email address' },
       { path: '/check-your-answers', name: 'check-your-answers', title: 'Check your answers' },
       { path: '/delete-quote', name: 'delete-quote', title: 'Delete quote?' },
@@ -585,7 +586,7 @@ const PROTOTYPE_JOURNEYS = {
       { path: '/estimate-email-content', name: 'estimate-email-content', title: 'Email content' }
     ],
     formData: {
-      'planning-type': 'Full',
+      'planning-type': 'Full planning permission',
       housing: 'Yes',
       'unit-count': '10',
       'has-redline-boundary-file': 'Draw on a map',

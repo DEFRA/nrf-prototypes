@@ -54,8 +54,7 @@ You will be sent a quote email with a NRF reference and the amount of the levy. 
 
 ### What to do with your quote
 
-Once you have a quote, you will be able to contact Natural England and request to use the nature restoration fund levy. 
-The quote is not a commitment to use the nature restoration fund levy to discharge relevant environmental obligations. A Local Planning Authority must not accept the quote as part of any planning and decision-making processes.
+You will receive an indicative nature restoration levy quote, based on the details you provided. For the purposes of section 72 of the Planning and Infrastructure Act 2025, this quote will not commit you to pay the nature restoration levy and will not disapply any relevant environmental obligations. A Local Planning Authority must not accept this quote as part of any planning and decision-making processes.
 
 
 ## Get help with the nature restoration levy
@@ -90,7 +89,7 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
     data: {
         planningType: {
             type: radios,
-            values: "Full (including any variations)" | "Outline (including any variations)" | "Hybrid (including any variations)" | Other,
+            values: "Full planning permission" | "Outline planning permission" | "Hybrid planning permission" | Other,
             fieldName: "planning-type"
         }
     }
@@ -101,10 +100,11 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 
 ```
 # What type of planning application are you planning to submit?
+Hint text: Options below include any variations to an existing permission.
 Select one
-- Full (including any variations)
-- Outline (including any variations)
-- Hybrid (including any variations)
+- Full planning permission
+- Outline planning permission
+- Hybrid planning permission
 - Other
 
 Button: Continue
@@ -116,7 +116,7 @@ Button: Continue
 | -------------- | --------------------------------------------------------- |
 | Description:   | User has selected 'Continue' without choosing any options |
 | Error summary: | There is a problem                                        |
-| Error message: | Select a planning application type to continue            |
+| Error message: | Select a planning application type                        |
 
 
 ---
@@ -127,7 +127,7 @@ Button: Continue
 | ---------------------- | ----------------------------------------------------------- |
 | Order number:          | 2.1                                                         |
 | Path:                  | /nrf-quote-6/wrong-permission                               |
-| Title:                 | This type of planning application is not currently included |
+| Title:                 | Nature restoration levy is not currently available for this planning application type |
 | Data points:           | None                                                        |
 | Conditional page flow: | display if planning application type is Other               |
 
@@ -154,7 +154,7 @@ None
 | ---------------------- | --------------------------- |
 | Order number:          | 3                           |
 | Path:                  | /nrf-quote-6/housing        |
-| Title:                 | Are you developing housing? |
+| Title:                 | Are you developing housing units? |
 | Conditional page flow: | None                        |
 
 #### Data points
@@ -199,7 +199,7 @@ Button: Continue
 | ---------------------- | ----------------------------------------------------- |
 | Order number:          | 3.1                                                   |
 | Path:                  | /nrf-quote-6/not-housing                              |
-| Title:                 | Nature restoration levy is only available for housing |
+| Title:                 | Nature restoration levy is only available for housing units |
 | Data points:           | None                                                  |
 | Conditional page flow: | display if no is selected                             |
 
@@ -223,12 +223,12 @@ None
 
 ### How many housing units
 
-| **Field**              | **Value**                                   |
-| ---------------------- | ------------------------------------------- |
-| Order number:          | 4                                           |
-| Path:                  | /nrf-quote-6/units                          |
-| Title:                 | How many housing units in this development? |
-| Conditional page flow: | none                                        |
+| **Field**              | **Value**                                            |
+| ---------------------- | ---------------------------------------------------- |
+| Order number:          | 4                                                    |
+| Path:                  | /nrf-quote-6/units                                   |
+| Title:                 | Enter the maximum number of units you are developing |
+| Conditional page flow: | none                                                 |
 
 #### Data points
 
@@ -247,7 +247,7 @@ None
 
 ```
 # Enter the maximum number of units you are developing
-Hint text: A housing unit is a house, a HMO with 6 or less residents or a flat within a block of flats.
+Hint text: A housing unit is a house or a flat.
 
 Button: Continue
 ```
@@ -258,7 +258,8 @@ Button: Continue
 | -------------- | ------------------------------------------------------ |
 | Description:   | User has selected ‘Continue’ without entering a number |
 | Error summary: | There is a problem                                     |
-| Error message: | Enter the number of housing units to continue          |
+| Error message: | Enter the number of housing units                      |
+
 
 ---
 
@@ -298,11 +299,11 @@ Button: Continue
 
 #### Errors
 
-| **Field**      | **Value**                                               |
-| -------------- | ------------------------------------------------------- |
-| Description:   | User has selected ‘Continue’ without choosing an option |
-| Error summary: | There is a problem                                      |
-| Error message: | Select if you would like to draw a map or upload a file |
+| **Field**      | **Value**                                                |
+| -------------- | -------------------------------------------------------- |
+| Description:   | User has selected ‘Continue’ without choosing an option  |
+| Error summary: | There is a problem                                       |
+| Error message: | Select how you would like to show your red line boundary |
 
 
 ---
@@ -448,7 +449,7 @@ None
 | Path:                  | /nrf-quote-6/no-capacity                        |
 | Title:                 | Not enough capacity remaining                   |
 | Data points:           | None                                            |
-| Conditional page flow: | display if housing units are greater than 15000 |
+| Conditional page flow: | display if housing units are 20000 or more |
 
 #### Content
 
@@ -460,6 +461,34 @@ The Environmental Delivery Plan (EDP) in this area does not have enough remainin
 #### Errors
 
 None
+
+
+---
+
+### Exit page if within the exclusion area
+
+| **Field**              | **Value**                                                                          |
+| ---------------------- | ---------------------------------------------------------------------------------- |
+| Order number:          | 5.5                                                                                |
+| Path:                  | /nrf-quote-6/exclusion                                                             |
+| Title:                 | Development is within the exclusion area of this Environmental Delivery Plan (EDP) |
+| Data points:           | None                                                                               |
+| Conditional page flow: | display if housing units are greater than 15000 and less than 20000                |
+
+#### Content
+
+```
+# Development is within the exclusion area of this Environmental Delivery Plan (EDP)
+
+Please use the existing Habitat Regulations to meet your environmental obligations.
+
+[Find out about Habitat Regulations](#)
+```
+
+#### Errors
+
+None
+
 
 
 ---
@@ -491,7 +520,7 @@ None
 
 ```
 # Enter your email address
-Hint text: Once your quote is calculated, a copy of the quote will be emailed to you. This could take up to 00 minutes.
+Hint text: Once your quote is calculated, a copy of the quote will be emailed to you. This could take up to 5 minutes.
 ```
 
 #### Errors
@@ -541,8 +570,7 @@ None
 ```
 # Check your answers
 
-You will receive an indicative nature restoration levy quote, based on the details you provide. For the purposes of section 72 of the Planning and Infrastructure Act 2025, the quote is not a commitment to use the nature restoration fund levy to discharge relevant environmental obligations. 
-A Local Planning Authority must not accept the quote as part of any planning and decision making processes.
+You will receive an indicative nature restoration levy quote, based on the details you provided. For the purposes of section 72 of the Planning and Infrastructure Act 2025, this quote will not commit you to pay the nature restoration levy and will not disapply any relevant environmental obligations. A Local Planning Authority must not accept this quote as part of any planning and decision-making processes.
 
 Button: Confirm and submit
 ```
@@ -579,7 +607,7 @@ None
         confirmDeleteQuote: {
             type: radios,
             required: conditional - required if user clicked delete on check-your-answers,
-            values: "Yes" | "No",
+            values: "Delete" | "Cancel",
             fieldName: "confirm-delete-quote"
         }
     }
@@ -592,8 +620,8 @@ None
 # Are you sure you want to delete this quote?
 This will permanently delete your quote. You can create a new quote.
 
-Button: Yes
-Secondary button: No
+Button: Delete
+Secondary button: Cancel
 ```
 
 
@@ -619,7 +647,7 @@ Secondary button: No
 
 ## What happens next
 
-Your quote details have been removed and deleted.
+Your quote details have been deleted.
 
 [Get another quote](/nrf-quote-6/start)
 
@@ -730,31 +758,31 @@ None
 
 ## NRF reference: {{ data.nrfReference }}
 
-Thank you for submitting details of the relevant development on the Get a quote for the nature restoration levy service.
+Thank you for submitting details of the relevant development on [Get a quote for the nature restoration levy](#).
 
-This is an indicative nature restoration levy quote, based on the details you provided. For the purposes of section 72 of the Planning and Infrastructure Act 2025, this quote is not a commitment to use the nature restoration fund levy to discharge relevant environmental obligations. A Local Planning Authority must not accept this quote as part of any planning and decision-making processes.
+This is an indicative nature restoration levy quote, based on the details you provided. For the purposes of section 72 of the Planning and Infrastructure Act 2025, this quote does not commit you to pay the nature restoration levy and does not disapply any relevant environmental obligations. A Local Planning Authority must not accept this quote as part of any planning and decision-making processes.
 
 ## Details of your relevant development
 
-You told us the relevant development:
-- will have {{ data.planningType | lower }} planning permission
-- has housing with a total of {{ data.residentialBuildingCount }} housing unit(s)
+You told us the relevant development is planned to have:
+- {{ data.planningType | lower }}
+- housing with a total of {{ data.residentialBuildingCount }} unit(s)
 
 ## What you might need to pay
 
 Your relevant development is planned in {{ data.redlineBoundaryPolygon.intersectingCatchment or data.intersectingCatchment }} Environmental Delivery Plan (EDP) addressing nutrient pollution.
 
-### Provisional nature restoration levy quote £X,XXX
+### Provisional nature restoration levy amount £X,XXX (plus VAT charged at 20%)
 
-The amount is calculated from the charging schedule(s) in the relevant EDP(s).
+The amount is calculated from the charging schedule in the relevant EDP.
 
-### Inflation-adjusted nature restoration levy quote: £X,XXX
+### Inflation-adjusted nature restoration levy amount: £X,XXX (plus VAT charged at 20%)
 
-This shows the estimated levy for the year this quote was issued. The amount includes annual inflation in line with the RICS Community Infrastructure Levy (CIL) Index, published on 1 November for the following calendar year. This quote is indicative and subject to annual inflation. It shows the amount you may need to pay if you request to use the nature restoration levy.
+This shows the indicative levy amount for the year the quote was issued. The amount includes annual inflation in line with the Royal Institute of Chartered Surveyors (RICS) Community Infrastructure Levy (CIL) Index, published on 1 November and applied on 1 January for the following calendar year. This quote is indicative and subject to annual inflation. It shows the amount you may need to pay if you request to use the nature restoration levy.
 
 ## Next steps
 
-You do not need to pay anything now, this service is designed to help you plan how to meet your environmental obligations. You can [get another quote](/nrf-quote-6/start) at any time. 
+You do not need to pay anything now, this service is designed to help you plan how to meet your environmental obligations. You can [get another quote](/nrf-quote-6/start) at any time.
 
 Keep this email for your records.
 
@@ -766,7 +794,7 @@ Your levy has been calculated from the details you submitted and the charging sc
 
 ## What your levy will pay for
 
-Your levy will fund conservation measures delivered under the relevant EDPs, including their long-term management and monitoring, as well as administration costs. EDP’s set out measures needed to address the environmental impacts of development in an area and deliver an overall improvement in the conservation status of the environmental features set out in the EDP.
+Your levy will fund conservation measures delivered under the relevant EDPs, including their long-term management, monitoring and maintenance as well as administration costs. EDPs set out measures needed to address the environmental impacts of development in an area and deliver an overall improvement in the conservation status of the environmental feature set out in the EDP.
 
 ## Get help with the nature restoration levy
 

@@ -24,18 +24,18 @@ Email sent from the Nature Restoration Fund service - Get a quote for the nature
 
     <h2 class="govuk-heading-m">NRF reference: {{ data.nrfReference }}</h2>
 
-    <p class="govuk-body">Thank you for submitting details of the relevant development on the Get a quote for the nature restoration levy service.</p>
+    <p class="govuk-body">Thank you for submitting details of the relevant development on <a href="#" class="govuk-link">Get a quote for the nature restoration levy</a>.</p>
 
-    <p class="govuk-body">This is an indicative nature restoration levy quote, based on the details you provided. For the purposes of section 72 of the Planning and Infrastructure Act 2025, this quote is not a commitment to use the nature restoration levy to discharge relevant environmental obligations. A Local Planning Authority must not accept this quote as part of any planning and decision-making processes.</p>
+    <p class="govuk-body">This is an indicative nature restoration levy quote, based on the details you provided. For the purposes of section 72 of the Planning and Infrastructure Act 2025, this quote does not commit you to pay the nature restoration levy and does not disapply any relevant environmental obligations. A Local Planning Authority must not accept this quote as part of any planning and decision-making processes.</p>
 
     <h2 class="govuk-heading-m">Details of your relevant development</h2>
 
-    <p class="govuk-body">You told us the relevant development:</p>
+    <p class="govuk-body">You told us the relevant development is planned to have:</p>
 
     <ul class="govuk-list govuk-list--bullet">
-      <li>will have {{ data.planningType | lower }} planning permission</li>
+      <li>{{ data.planningType | lower }}</li>
       {%- if data.residentialBuildingCount -%}
-      <li>has housing with a total of {{ data.residentialBuildingCount }} housing unit(s)</li>
+      <li>housing with a total of {{ data.residentialBuildingCount }} unit(s)</li>
       {%- endif -%}
     </ul>
 
@@ -43,13 +43,13 @@ Email sent from the Nature Restoration Fund service - Get a quote for the nature
 
     <p class="govuk-body">Your relevant development is planned in {{ data.redlineBoundaryPolygon.intersectingCatchment or data.intersectingCatchment }} Environmental Delivery Plan (EDP) addressing nutrient pollution.</p>
 
-    <h3 class="govuk-heading-s">Provisional nature restoration levy quote £X,XXX</h3>
+    <h3 class="govuk-heading-s">Provisional nature restoration levy amount £X,XXX (plus VAT charged at 20%)</h3>
 
-    <p class="govuk-body">The amount is calculated from the charging schedule(s) in the relevant EDP(s).</p>
+    <p class="govuk-body">The amount is calculated from the charging schedule in the relevant EDP.</p>
 
-    <h3 class="govuk-heading-s">Inflation-adjusted nature restoration levy quote: £X,XXX</h3>
+    <h3 class="govuk-heading-s">Inflation-adjusted nature restoration levy amount: £X,XXX (plus VAT charged at 20%)</h3>
 
-    <p class="govuk-body">This shows the estimated levy for the year this quote was issued. The amount includes annual inflation in line with the RICS Community Infrastructure Levy (CIL) Index, published on 1 November for the following calendar year. This quote is indicative and subject to annual inflation. It shows the amount you may need to pay if you request to use the nature restoration levy.</p>
+    <p class="govuk-body">This shows the indicative levy amount for the year the quote was issued. The amount includes annual inflation in line with the Royal Institute of Chartered Surveyors (RICS) Community Infrastructure Levy (CIL) Index, published on 1 November and applied on 1 January for the following calendar year. This quote is indicative and subject to annual inflation. It shows the amount you may need to pay if you request to use the nature restoration levy.</p>
 
     <h2 class="govuk-heading-m">Next steps</h2>
 
@@ -65,7 +65,7 @@ Email sent from the Nature Restoration Fund service - Get a quote for the nature
 
     <h2 class="govuk-heading-m">What your levy will pay for</h2>
 
-    <p class="govuk-body">Your levy will fund conservation measures delivered under the relevant EDPs, including their long-term management and monitoring, as well as administration costs. EDP's set out measures needed to address the environmental impacts of development in an area and deliver an overall improvement in the conservation status of the environmental features set out in the EDP.</p>
+    <p class="govuk-body">Your levy will fund conservation measures delivered under the relevant EDPs, including their long-term management, monitoring and maintenance as well as administration costs. EDPs set out measures needed to address the environmental impacts of development in an area and deliver an overall improvement in the conservation status of the environmental feature set out in the EDP.</p>
 
     <h2 class="govuk-heading-m">Get help with the nature restoration levy</h2>
     <p class="govuk-body">If you need help with the nature restoration levy, contact XXXX.</p>

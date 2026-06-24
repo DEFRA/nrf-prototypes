@@ -31,6 +31,7 @@ What type of planning application are you planning to submit? - Get a quote for 
               What type of planning application are you planning to submit?
             </h1>
           </legend>
+          <div class="govuk-hint">Options below include any variations to an existing permission.</div>
           <div class="govuk-hint">Select one</div>
 
           {% if error %}
@@ -42,18 +43,18 @@ What type of planning application are you planning to submit? - Get a quote for 
           <div class="govuk-radios" data-module="govuk-radios">
             <div class="govuk-radios__item">
               <input class="govuk-radios__input" id="planning-type-full" name="planning-type" type="radio"
-                value="Full (including any variations)" {% if data.planningType === 'Full (including any variations)' %}checked{% endif %}>
-              <label class="govuk-label govuk-radios__label" for="planning-type-full">Full (including any variations)</label>
+                value="Full planning permission" {% if data.planningType === 'Full planning permission' %}checked{% endif %}>
+              <label class="govuk-label govuk-radios__label" for="planning-type-full">Full planning permission</label>
             </div>
             <div class="govuk-radios__item">
               <input class="govuk-radios__input" id="planning-type-outline" name="planning-type" type="radio"
-                value="Outline (including any variations)" {% if data.planningType === 'Outline (including any variations)' %}checked{% endif %}>
-              <label class="govuk-label govuk-radios__label" for="planning-type-outline">Outline (including any variations)</label>
+                value="Outline planning permission" {% if data.planningType === 'Outline planning permission' %}checked{% endif %}>
+              <label class="govuk-label govuk-radios__label" for="planning-type-outline">Outline planning permission</label>
             </div>
             <div class="govuk-radios__item">
               <input class="govuk-radios__input" id="planning-type-hybrid" name="planning-type" type="radio"
-                value="Hybrid (including any variations)" {% if data.planningType === 'Hybrid (including any variations)' %}checked{% endif %}>
-              <label class="govuk-label govuk-radios__label" for="planning-type-hybrid">Hybrid (including any variations)</label>
+                value="Hybrid planning permission" {% if data.planningType === 'Hybrid planning permission' %}checked{% endif %}>
+              <label class="govuk-label govuk-radios__label" for="planning-type-hybrid">Hybrid planning permission</label>
             </div>
             <div class="govuk-radios__item">
               <input class="govuk-radios__input" id="planning-type-other" name="planning-type" type="radio"

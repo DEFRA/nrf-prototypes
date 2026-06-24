@@ -148,14 +148,14 @@ router.post(ROUTES.PLANNING_TYPE, (req, res) => {
   const planningType = req.body['planning-type']
   if (!planningType) {
     return res.render(TEMPLATES.PLANNING_TYPE, {
-      error: 'Select a planning application type to continue',
+      error: 'Select a planning application type',
       data: req.session.data || {}
     })
   }
   req.session.data = req.session.data || {}
   req.session.data.planningType = planningType
 
-  const allowedTypes = ['Full (including any variations)', 'Outline (including any variations)', 'Hybrid (including any variations)']
+  const allowedTypes = ['Full planning permission', 'Outline planning permission', 'Hybrid planning permission']
   if (!allowedTypes.includes(planningType)) {
     return res.redirect(ROUTES.WRONG_PERMISSION)
   }
@@ -212,7 +212,7 @@ router.post(ROUTES.UNITS, (req, res) => {
 
   if (!unitCount || isNaN(unitCount) || parseInt(unitCount, 10) < 1) {
     return res.render(TEMPLATES.UNITS, {
-      error: 'Enter the number of housing units to continue',
+      error: 'Enter the number of housing units',
       data: req.session.data || {},
       isChange,
       navFromSummary,
@@ -237,7 +237,7 @@ router.post(ROUTES.REDLINE_MAP, (req, res) => {
   const choice = req.body['has-redline-boundary-file']
   if (!choice) {
     return res.render(TEMPLATES.REDLINE_MAP, {
-      error: 'Select if you would like to draw a map or upload a file',
+      error: 'Select how you would like to show your red line boundary',
       data: req.session.data || {},
       backLink: ROUTES.UNITS
     })
@@ -415,9 +415,14 @@ router.post(ROUTES.MAP, (req, res) => {
       return res.redirect(ROUTES.NO_EDP)
     }
 
-    // Check capacity: over 15000 units → no capacity exit
+    // Capacity / exclusion checks based on housing unit count.
+    // Exclusion area: greater than 15000 and less than 20000 units.
+    // No capacity: 20000 units or more.
     const units = req.session.data.residentialBuildingCount || 0
-    if (units > 15000) {
+    if (units > 15000 && units < 20000) {
+      return res.redirect(ROUTES.EXCLUSION)
+    }
+    if (units >= 20000) {
       return res.redirect(ROUTES.NO_CAPACITY)
     }
 
@@ -444,6 +449,11 @@ router.get(ROUTES.NO_EDP, (req, res) => {
 // No capacity exit
 router.get(ROUTES.NO_CAPACITY, (req, res) => {
   res.render(TEMPLATES.NO_CAPACITY, { data: req.session.data || {} })
+})
+
+// Exclusion area exit
+router.get(ROUTES.EXCLUSION, (req, res) => {
+  res.render(TEMPLATES.EXCLUSION, { data: req.session.data || {} })
 })
 
 // Email entry
@@ -513,7 +523,7 @@ router.get(ROUTES.DELETE_QUOTE, (req, res) => {
 })
 router.post(ROUTES.DELETE_QUOTE, (req, res) => {
   const confirmDelete = req.body['confirm-delete-quote']
-  if (confirmDelete === 'Yes') {
+  if (confirmDelete === 'Delete') {
     req.session.data = req.session.data || {}
     const keysToRemove = [
       'planningType', 'isHousing', 'residentialBuildingCount',
