@@ -33,7 +33,7 @@ None
 
 Use this service to find out if your relevant development is in an area with an [Environmental Delivery Plan (EDP)](#).
 
-If your development falls into an area with an EDP, you can get a quote and then request to use the nature restoration fund levy to meet your environmental obligations.
+If your development falls into an area with an EDP, you can get a quote and request to use the nature restoration levy to meet the environmental obligations covered by this EDP.
 
 If you choose not to use the nature restoration fund levy, you will still need to [meet your environmental obligations in other ways](#).
 
@@ -138,7 +138,7 @@ Button: Continue
 
 Please use the existing Habitat Regulations to meet your environmental obligations.
 
-[Find out about Habitat Regulations](#)
+[Find out about Habitat Regulations (opens in new tab)](#)
 ```
 
 #### Errors
@@ -210,7 +210,7 @@ Button: Continue
 
 Please use the existing Habitat Regulations to meet your environmental obligations.
 
-[Find out about Habitat Regulations](#)
+[Find out about Habitat Regulations (opens in new tab)](#)
 
 ```
 
@@ -247,7 +247,7 @@ None
 
 ```
 # Enter the maximum number of units you are developing
-Hint text: A housing unit is a house or a flat.
+Hint text: A housing unit is a house or a flat. For variations on existing permissions, use the maximum number you are applying for under the variation application.
 
 Button: Continue
 ```
@@ -355,6 +355,15 @@ Button: Continue
 | Error summary: | There is a problem                                                  |
 | Error message: | The selected file is empty                                          |
 
+#### Implementation notes (not page copy)
+
+- On successful upload, parse the boundary from the file and run the **same EDP intersection, capacity, and exclusion checks** used on the draw-a-map path (see implementation notes on `/nrf-quote-6/map`), storing results the same way (e.g. `redlineBoundaryPolygon.intersectingCatchment`, `intersections.nutrient`, `intersections.gcn`).
+- Apply the same redirect rules as the map path:
+  - no EDP intersection → `/nrf-quote-6/no-edp`
+  - housing units greater than 15000 and less than 20000 → `/nrf-quote-6/exclusion`
+  - housing units 20000 or more → `/nrf-quote-6/no-capacity`
+  - otherwise → `/nrf-quote-6/check-your-answers` (if navigating from check your answers) or `/nrf-quote-6/estimate-email`
+
 ---
 
 ### Draw a red line boundary
@@ -430,7 +439,7 @@ Hint text: Use the map to draw a red line boundary for where the development mig
 
 Please use the existing Habitat Regulations to meet your environmental obligations.
 
-[Find out about Habitat Regulations](#)
+[Find out about Habitat Regulations (opens in new tab)](#)
 ```
 
 #### Errors
@@ -465,24 +474,24 @@ None
 
 ---
 
-### Exit page if within the exclusion area
+### Exit page if within the excluded area
 
 | **Field**              | **Value**                                                                          |
 | ---------------------- | ---------------------------------------------------------------------------------- |
 | Order number:          | 5.5                                                                                |
 | Path:                  | /nrf-quote-6/exclusion                                                             |
-| Title:                 | Development is within the exclusion area of this Environmental Delivery Plan (EDP) |
+| Title:                 | Development is within the excluded area of this Environmental Delivery Plan (EDP) |
 | Data points:           | None                                                                               |
 | Conditional page flow: | display if housing units are greater than 15000 and less than 20000                |
 
 #### Content
 
 ```
-# Development is within the exclusion area of this Environmental Delivery Plan (EDP)
+# Development is within the excluded area of this Environmental Delivery Plan (EDP)
 
 Please use the existing Habitat Regulations to meet your environmental obligations.
 
-[Find out about Habitat Regulations](#)
+[Find out about Habitat Regulations (opens in new tab)](#)
 ```
 
 #### Errors
