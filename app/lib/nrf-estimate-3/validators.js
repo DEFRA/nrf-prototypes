@@ -7,7 +7,7 @@ function validateEmail(email) {
   if (!email || email.trim() === '') {
     return {
       valid: false,
-      error: 'Enter your email address to continue'
+      error: 'Enter your email address'
     }
   }
 
