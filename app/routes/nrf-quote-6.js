@@ -142,14 +142,27 @@ router.post(ROUTES.START, (req, res) => {
 
 // Planning permission type
 router.get(ROUTES.PLANNING_TYPE, (req, res) => {
-  res.render(TEMPLATES.PLANNING_TYPE, { data: req.session.data || {} })
+  const isChange = req.query.change === 'true'
+  const navFromSummary = req.query.nav === 'check-your-answers'
+  const backLink = (isChange && navFromSummary) ? ROUTES.CHECK_YOUR_ANSWERS : ROUTES.START
+  res.render(TEMPLATES.PLANNING_TYPE, {
+    data: req.session.data || {},
+    isChange,
+    navFromSummary,
+    backLink
+  })
 })
 router.post(ROUTES.PLANNING_TYPE, (req, res) => {
   const planningType = req.body['planning-type']
+  const isChange = req.body.isChange === 'true'
+  const navFromSummary = req.body.navFromSummary === 'true'
   if (!planningType) {
     return res.render(TEMPLATES.PLANNING_TYPE, {
       error: 'Select a planning application type',
-      data: req.session.data || {}
+      data: req.session.data || {},
+      isChange,
+      navFromSummary,
+      backLink: (isChange && navFromSummary) ? ROUTES.CHECK_YOUR_ANSWERS : ROUTES.START
     })
   }
   req.session.data = req.session.data || {}
@@ -158,6 +171,9 @@ router.post(ROUTES.PLANNING_TYPE, (req, res) => {
   const allowedTypes = ['Full planning permission', 'Outline planning permission', 'Hybrid planning permission']
   if (!allowedTypes.includes(planningType)) {
     return res.redirect(ROUTES.WRONG_PERMISSION)
+  }
+  if (isChange && navFromSummary) {
+    return res.redirect(ROUTES.CHECK_YOUR_ANSWERS)
   }
   res.redirect(ROUTES.HOUSING)
 })
@@ -256,7 +272,13 @@ router.post(ROUTES.REDLINE_MAP, (req, res) => {
 
 // Upload redline file
 router.get(ROUTES.UPLOAD_REDLINE, (req, res) => {
-  res.render(TEMPLATES.UPLOAD_REDLINE, { data: req.session.data || {} })
+  const isChange = req.query.change === 'true'
+  const navFromSummary = req.query.nav === 'check-your-answers'
+  res.render(TEMPLATES.UPLOAD_REDLINE, {
+    data: req.session.data || {},
+    isChange,
+    navFromSummary
+  })
 })
 router.post(
   ROUTES.UPLOAD_REDLINE,
@@ -289,7 +311,7 @@ router.post(
 
     if (!allowedExtensions.includes(ext)) {
       return res.render(TEMPLATES.UPLOAD_REDLINE, {
-        error: 'The selected file must be a .geojson file, .kml file or a .shp file',
+        error: 'The selected file must be a GeoJSON file (.geojson or .json), keyhole markup language file (.kml), or a shapefile (.shp).  Shapefiles (.shp) must be .zip files and must contain at least the  .shp, .shx, .dbf and .prj files.',
         data: req.session.data || {}
       })
     }
@@ -344,6 +366,8 @@ router.post(
     req.session.data.redlineBoundaryPolygon = boundaryData
     req.session.data.mapReferrer = 'upload-redline'
 
+    const navFromSummary = req.body.navFromSummary === 'true'
+
     req.session.save((err) => {
       if (err) {
         return res.render(TEMPLATES.UPLOAD_REDLINE, {
@@ -351,7 +375,9 @@ router.post(
           data: req.session.data || {}
         })
       }
-      res.redirect(ROUTES.MAP)
+      // Route through the map so EDP/capacity checks run; carry the nav flag
+      // so a change from check your answers returns there after those checks.
+      res.redirect(navFromSummary ? `${ROUTES.MAP}?nav=check-your-answers` : ROUTES.MAP)
     })
   }
 )

@@ -16,6 +16,8 @@ Upload a red line boundary file - Get a quote for Nature Restoration levy - GOV.
   <div class="govuk-grid-column-two-thirds">
 
     <form action="/nrf-quote-6/upload-redline" method="post" enctype="multipart/form-data" novalidate>
+      {% if isChange %}<input type="hidden" name="isChange" value="true">{% endif %}
+      {% if navFromSummary %}<input type="hidden" name="navFromSummary" value="true">{% endif %}
 
       {% if error %}
       {{ govukErrorSummary({
@@ -32,7 +34,7 @@ Upload a red line boundary file - Get a quote for Nature Restoration levy - GOV.
         </h1>
 
         <div id="redline-file-hint" class="govuk-hint">
-          Upload a GeoJSON file (.geojson), keyhole markup language file (.kml), or a shapefile (.shp). The file must be smaller than 2MB.
+          Upload a GeoJSON file (.geojson or .json), Keyhole markup language file (.kml) or a shapefile (.shp). Shapefiles (.shp) must be .zip files and must contain at least the .shp, .shx, .dbf and .prj files. The file must be smaller than 2MB.
         </div>
 
         {% if error %}

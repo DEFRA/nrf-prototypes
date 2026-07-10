@@ -35,7 +35,7 @@ Use this service to find out if your relevant development is in an area with an 
 
 If your development falls into an area with an EDP, you can get a quote and request to use the nature restoration levy to meet the environmental obligations covered by this EDP.
 
-If you choose not to use the nature restoration fund levy, you will still need to [meet your environmental obligations in other ways](#).
+If you choose not to use the nature restoration levy, you will still need to [meet your environmental obligations in other ways](#).
 
 CTA: Start now 
 
@@ -89,7 +89,7 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
     data: {
         planningType: {
             type: radios,
-            values: "Full planning permission" | "Outline planning permission" | "Hybrid planning permission" | Other,
+            values: "Full planning permission" | "Outline planning permission" | "Hybrid planning permission" | "Other",
             fieldName: "planning-type"
         }
     }
@@ -165,7 +165,7 @@ None
         isHousing: {
             type: radios,
             values: "Yes" | "No",
-            conditional: none
+            conditional: none,
             fieldName: "housing"
         }
     }
@@ -294,7 +294,7 @@ Button: Continue
 - Draw on a map
   Hint text: If you have more than one polygon in your red line boundary you must upload a file instead.
 - Upload a file
-  Hint text: Upload a GeoJSON file (.geojson), keyhole markup language file (.kml), or a shapefile (.shp). The file must be smaller than 2MB.
+  Hint text: Upload a GeoJSON file (.geojson or .json), Keyhole markup language file (.kml) or a shapefile (.shp). Shapefiles (.shp) must be .zip files and must contain at least the .shp, .shx, .dbf and .prj files. The file must be smaller than 2MB.
 ```
 
 #### Errors
@@ -335,34 +335,25 @@ Button: Continue
 
 ```
 # Upload a red line boundary file
- Hint text: Upload a GeoJSON file (.geojson), keyhole markup language file (.kml), or a shapefile (.shp). The file must be smaller than 2MB.
+ Hint text: Upload a GeoJSON file (.geojson or .json), Keyhole markup language file (.kml) or a shapefile (.shp). Shapefiles (.shp) must be .zip files and must contain at least the .shp, .shx, .dbf and .prj files. The file must be smaller than 2MB.
 ```
 
 #### Errors
 
-| **Field**      | **Value**                                                           |
-| -------------- | ------------------------------------------------------------------- |
-| Description:   | user submits the page but does not upload a file                    |
-| Error summary: | There is a problem                                                  |
-| Error message: | Select a file                                                       |
-| Description:   | Wrong file type                                                     |
-| Error summary: | There is a problem                                                  |
-| Error message: | The selected file must be a .geojson file, .kml file or a .shp file |
-| Description:   | Wrong file size                                                     |
-| Error summary: | There is a problem                                                  |
-| Error message: | The [file] must be smaller than 2MB                                 |
-| Description:   | File is empty                                                       |
-| Error summary: | There is a problem                                                  |
-| Error message: | The selected file is empty                                          |
-
-#### Implementation notes (not page copy)
-
-- On successful upload, parse the boundary from the file and run the **same EDP intersection, capacity, and exclusion checks** used on the draw-a-map path (see implementation notes on `/nrf-quote-6/map`), storing results the same way (e.g. `redlineBoundaryPolygon.intersectingCatchment`, `intersections.nutrient`, `intersections.gcn`).
-- Apply the same redirect rules as the map path:
-  - no EDP intersection → `/nrf-quote-6/no-edp`
-  - housing units greater than 15000 and less than 20000 → `/nrf-quote-6/exclusion`
-  - housing units 20000 or more → `/nrf-quote-6/no-capacity`
-  - otherwise → `/nrf-quote-6/check-your-answers` (if navigating from check your answers) or `/nrf-quote-6/estimate-email`
+| **Field**      | **Value**                                                                                                                                                                                                                       |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Description:   | user submits the page but does not upload a file                                                                                                                                                                                |
+| Error summary: | There is a problem                                                                                                                                                                                                              |
+| Error message: | Select a file                                                                                                                                                                                                                   |
+| Description:   | Wrong file type                                                                                                                                                                                                                 |
+| Error summary: | There is a problem                                                                                                                                                                                                              |
+| Error message: | The selected file must be a GeoJSON file (.geojson or .json),keyhole markup language file (.kml), or a shapefile (.shp). Shapefiles (.shp) must be .zip files and must contain at least the .shp, .shx, .dbf and .prj files. |
+| Description:   | Wrong file size                                                                                                                                                                                                                 |
+| Error summary: | There is a problem                                                                                                                                                                                                              |
+| Error message: | The [file] must be smaller than 2MB                                                                                                                                                                                             |
+| Description:   | File is empty                                                                                                                                                                                                                   |
+| Error summary: | There is a problem                                                                                                                                                                                                              |
+| Error message: | The selected file is empty                                                                                                                                                                                                      |
 
 ---
 
@@ -424,13 +415,13 @@ Hint text: Use the map to draw a red line boundary for where the development mig
 
 ### Exit page if the development site is not within an EDP area (conditional)
 
-| **Field**              | **Value**                                                  |
-| ---------------------- | ---------------------------------------------------------- |
-| Order number:          | 5.3                                                        |
-| Path:                  | /nrf-quote-6/no-edp                                        |
-| Title:                 | Nature Restoration Fund levy is not available in this area |
-| Data points:           | None                                                       |
-| Conditional page flow: | display if development site is not within an EDP area      |
+| **Field**              | **Value**                                             |
+| ---------------------- | ----------------------------------------------------- |
+| Order number:          | 5.3                                                   |
+| Path:                  | /nrf-quote-6/no-edp                                   |
+| Title:                 | Nature Restoration levy is not available in this area |
+| Data points:           | None                                                  |
+| Conditional page flow: | display if development site is not within an EDP area |
 
 #### Content
 
@@ -474,7 +465,7 @@ None
 
 ---
 
-### Exit page if within the excluded area
+### Exit page if within the exclusion area
 
 | **Field**              | **Value**                                                                          |
 | ---------------------- | ---------------------------------------------------------------------------------- |
@@ -538,7 +529,7 @@ Hint text: Once your quote is calculated, a copy of the quote will be emailed to
 | -------------- | ------------------------------------------------------------------- |
 | Description:   | User has selected ‘Continue’ without entering any details           |
 | Error summary: | There is a problem                                                  |
-| Error message: | Enter your email address to continue                                |
+| Error message: | Enter your email address                                            |
 | Description:   | Incorrect email format                                              |
 | Error summary: | There is a problem                                                  |
 | Error message: | Enter an email address in the correct format, like name@example.com |
@@ -630,7 +621,7 @@ None
 This will permanently delete your quote. You can create a new quote.
 
 Button: Delete
-Secondary button: Cancel
+Cancel link
 ```
 
 
@@ -712,9 +703,9 @@ You will receive an email with details of the quote.
 
 You do not need to pay anything at this point, this service is designed to help you plan how to meet your environmental obligations for your relevant development.
 
-If you decide to meet environmental obligations using nature restoration levy, you can request to use it.
+If you decide to meet environmental obligations using the nature restoration levy, you can request to use it.
 
-Keep the email as a record of the quote and NRF reference number. You can use the reference number to retrieve this quote when you are ready to request to use nature restoration levy.
+Keep the email as a record of the quote and the NRF reference number. You can use the reference number to retrieve this quote when you are ready to request to use the nature restoration levy.
 
 ## Get help with the nature restoration levy
 
