@@ -21,7 +21,7 @@ Turn a clickable Figma prototype into a working GOV.UK Prototype Kit journey. Th
 **Figma REST API directly** (no Figma MCP): it pulls a page's screen frames, the wired prototype
 click-flow, and a rendered PNG per screen, then you map each screen to GOV.UK Design System components
 and scaffold the views + routes so the flow actually clicks through at http://localhost:3000. It is a
-User Research mock — screens are populated from static data, not real services.
+User Research mock.
 
 > **Build with the Prototype Kit, not around it.** Reconstruct every journey using the **standard
 > GOV.UK Prototype Kit 13 patterns** documented in [Build pages the GOV.UK Prototype Kit way](#build-pages-the-govuk-prototype-kit-way).
@@ -208,10 +208,8 @@ Match what you see in the PNG to the closest component, screen by screen.
 
 ## Build pages the GOV.UK Prototype Kit way
 
-This is the authoritative section for turning mapped screens into working pages. **New pages must
-follow these standard kit patterns** — they must **not** replicate any bespoke folder/registry
-architecture that already lives in the repo. Use the kit's built-in capabilities instead of working
-around them. Official references:
+This is the reference for turning mapped screens into working pages — the standard kit patterns
+established above. Official references:
 <https://prototype-kit.service.gov.uk/docs/create-routes>,
 <https://prototype-kit.service.gov.uk/docs/how-to-use-layouts>. A full distilled summary of the kit's
 patterns (auto-routing, layouts/blocks, session data, branching, validation, assets…) lives in
@@ -330,16 +328,6 @@ You **may** group one journey's views in a subfolder — `app/views/<journey>/st
 `/<journey>/check-your-answers`, and you may keep that journey's handlers together in `app/routes.js`
 under a comment. That is ordinary kit usage.
 
-You must **not** create any of the bespoke scaffolding the kit does not ask for: no per-journey config
-folder, no `BASE_PATH`/`ROUTES`/`TEMPLATES` constants module, no journey registry array, no per-journey
-route plugin that has to be registered somewhere. Those are not GOV.UK Prototype Kit features — adding
-them is working around the kit, not with it.
-
-### 6. GOV.UK macros are global
-
-Every `govuk-frontend` component macro is available in every template with no `{% from %}` import — call
-`{{ govukButton({ text: "Continue" }) }}`, `{{ govukRadios({...}) }}`, etc. directly.
-
 ## Naming conventions
 
 Apply these when turning Figma frames into code — **never copy Figma frame names** (they are often
@@ -375,13 +363,9 @@ this skill creates/edits exactly these files:
 | Styles         | `app/assets/sass/application.scss`                              | only if the design needs it               |
 | Skill manifest | `.ai/commands/figma-journey/journeys.json`                      | record frames                             |
 
-Do **not** create a per-journey config folder, a routes-constants module, or a journey registry, and do
-**not** invent a per-journey route file that has to be registered — the kit loads `app/routes.js`
-itself. Then:
-
 1. **Views** — create `app/views/<journey>/<screen>.html` per screen, each
    `{% extends "layouts/main.html" %}` with `{% set pageName %}`, a `{% block beforeContent %}` back
-   link, and a `{% block content %}`. GOV.UK macros are global — call them directly. Wire each
+   link, and a `{% block content %}`. Wire each
    transition from `flow.md`: the element click's destination screen becomes the link `href` (a plain
    `<a href>` to the next auto-served view) or, for a form, the `action` of a `router.post` that
    redirects to the next view. Most screens need **no route at all** — just the view file.
@@ -389,14 +373,10 @@ itself. Then:
    existing `app/views/<journey>/<slug>.html`, and every link/redirect target must be a view that
    exists — after wiring, enumerate the targets and confirm each file exists, or the page throws
    `template not found` / 404 at runtime.
-2. **Service name** — leave the prototype-wide default in `app/config.json` as it is. Give **this**
-   journey its own name by putting `{% set serviceName %}…{% endset %}` at the top of each of its views
-   (the kit-sanctioned per-page override — see [Build pages §3](#3-service-name--configjson-for-the-default-set-servicename-per-page)).
-   It changes the header and `<title>` for those pages only; every other journey is unaffected.
-3. **Routes** — only if a screen branches or needs data, append a `router.get`/`router.post` handler to
-   `app/routes.js`. Keep that journey's handlers together under a clearly-commented block. Store and read
-   form/flow state in `req.session.data`. For a dashboard/list screen, build the static rows object in the
-   route and `res.render('<journey>/<screen>', { rows })`.
+2. **Service name** — give this journey its own name with a per-page `{% set serviceName %}` at the top
+   of each view (see [Build pages §3](#3-service-name--configjson-for-the-default-set-servicename-per-page)).
+3. **Routes** — only if a screen branches or needs data, append a handler to `app/routes.js` under a
+   clearly-commented block for this journey (the pattern is in Build pages §4).
 4. **Styles** — append any custom styles the design needs to `app/assets/sass/application.scss` (guard
    them under a clearly-commented block for this journey). Most screens need none.
 5. **Homepage** — add a launcher link to `app/views/index.html` (the standard kit homepage) pointing to
@@ -428,8 +408,8 @@ itself. Then:
    }
    ```
 
-This is a UR mock: populate any dashboards / tables / stats from a **static data object** in the route
-— do **not** parse real uploads or call live services.
+Populate any dashboards / tables / stats from a **static data object** in the route — do **not** parse
+real uploads or call live services.
 
 ## Step 7 — Verify
 
