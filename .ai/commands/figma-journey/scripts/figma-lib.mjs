@@ -2,8 +2,15 @@
 // figma-reconcile). Imported, never run directly. No npm deps (Node 22 global
 // fetch). Never prints the FIGMA_TOKEN.
 
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+// Skill root resolves relative to this file so the scripts work wherever the
+// skill lives (currently .ai/commands/figma-journey, symlinked from .claude/commands).
+const SKILL_DIR = join(dirname(fileURLToPath(import.meta.url)), '..')
+
 const API_BASE = 'https://api.figma.com/v1'
-const SETUP_DOC = '.claude/skills/figma-journey/references/setup.md'
+const SETUP_DOC = join(SKILL_DIR, 'references', 'setup.md')
 const HTTP_OK = 200
 
 function fail(message) {
@@ -74,4 +81,4 @@ function collectScreens(document) {
   return [document]
 }
 
-export { API_BASE, SETUP_DOC, HTTP_OK, fail, parseArgs, parseLocation, figmaGet, collectScreens }
+export { API_BASE, SETUP_DOC, SKILL_DIR, HTTP_OK, fail, parseArgs, parseLocation, figmaGet, collectScreens }

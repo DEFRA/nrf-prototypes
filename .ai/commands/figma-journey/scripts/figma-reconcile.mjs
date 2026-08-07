@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Reconcile a freshly-extracted Figma flow against the committed journey manifest
-// (.claude/skills/figma-journey/journeys.json). Answers two questions:
+// (journeys.json next to the skill). Answers two questions:
 //   - Is this Figma location a NEW journey, or an UPDATE to an existing one?
 //   - If an update, which frames (and therefore which view files) changed?
 // Run AFTER figma-extract.mjs. Reads .tmp/figma-journey/<fileKey>/flow.json.
@@ -8,15 +8,28 @@
 
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { fail, parseLocation } from './figma-lib.mjs'
+import { fail, parseLocation, SKILL_DIR } from './figma-lib.mjs'
 
-const MANIFEST = '.claude/skills/figma-journey/journeys.json'
+const MANIFEST = join(SKILL_DIR, 'journeys.json')
 
 async function readJson(path, label) {
   try {
     return JSON.parse(await readFile(path, 'utf8'))
   } catch (err) {
     return fail(`Could not read ${label} at ${path}: ${err.message}`)
+  }
+}
+
+// The manifest only exists after the first journey is recorded, so a missing
+// file just means "nothing recorded yet" (MODE: NEW), not an error.
+async function readManifest(path) {
+  try {
+    return JSON.parse(await readFile(path, 'utf8'))
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      return { journeys: [] }
+    }
+    return fail(`Could not read journey manifest at ${path}: ${err.message}`)
   }
 }
 
@@ -63,8 +76,9 @@ function printNew(fileKey, node, siblings) {
     console.log(`Note: the same Figma file already backs [${siblings.join(', ')}] under a different`)
     console.log('node, so this is a separate journey — pick a new journey key.')
   }
-  console.log('\nNext: full reconstruction (SKILL.md Step 5), then add a journey entry to')
-  console.log(`${MANIFEST} recording each frame id → view and its hash from flow.json.`)
+  console.log('\nNext: reconstruct the journey following SKILL.md (build each view under')
+  console.log('app/views/<journey>/, add any branching routes to app/routes.js), then record')
+  console.log(`each frame id → view and its hash from flow.json in ${MANIFEST}.`)
 }
 
 function printUpdate(journey, report) {
@@ -89,7 +103,7 @@ function printUpdate(journey, report) {
     console.log(`Views to update: ${views.join(', ')}`)
   }
   console.log('Re-render only the changed/added frames (figma-images.mjs), re-map them to GDS,')
-  console.log('and patch just those views — preserve hand-written copy and the dashboard macro.')
+  console.log('and patch just those views — preserve hand-written copy and any static route data.')
   console.log(`Then update the changed frames' hashes in ${MANIFEST}.`)
 }
 
@@ -105,7 +119,7 @@ async function main() {
 
   const flowPath = join('.tmp', 'figma-journey', fileKey, 'flow.json')
   const flow = await readJson(flowPath, 'flow.json (run figma-extract.mjs first)')
-  const manifest = await readJson(MANIFEST, 'journey manifest')
+  const manifest = await readManifest(MANIFEST)
   const journeys = manifest.journeys || []
   const resolvedNode = nodeId || flow.nodeId
 

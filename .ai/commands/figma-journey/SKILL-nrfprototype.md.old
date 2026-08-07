@@ -1,0 +1,351 @@
+---
+name: figma-journey
+description: >-
+  Extract a clickable Figma prototype journey via the Figma REST API (not MCP) and reconstruct it —
+  or update an already-built one — as a functional GOV.UK Prototype Kit journey in this repo. Given a
+  Figma prototype URL (or fileKey#node-id), it pulls the page's frames, the wired click-flow, and
+  rendered PNGs, reconciles them against a manifest of journeys it has already built to decide whether
+  this is a NEW journey or an UPDATE, maps each screen to GOV.UK Design System components, and
+  scaffolds (or surgically patches) routes + views + a homepage link. Use when asked to turn a Figma
+  prototype/frame into a working prototype journey, recreate a Figma flow, add a new User Research
+  journey from a design, or refresh/sync/update an existing journey after the designer changed the
+  Figma. Requires a read-only FIGMA_TOKEN in the environment.
+userInvocable: true
+arguments: Figma prototype URL (figma.com/proto/<key>?node-id=<a-b>) or "<fileKey>#<a:b>"
+---
+
+# Figma journey → GOV.UK Prototype Kit journey
+
+Turn a clickable Figma prototype into a working GOV.UK Prototype Kit journey in this repo. The skill
+talks to the **Figma REST API directly** (no Figma MCP): it pulls a page's screen frames, the wired
+prototype click-flow, and a rendered PNG per screen, then you map each screen to GOV.UK Design System
+components and scaffold the routes + views so the flow actually clicks through at http://localhost:3000.
+It is a User Research mock — screens are populated from static config, not real file parsing.
+
+**New or update?** The skill records every journey it builds in a manifest
+(`.ai/commands/figma-journey/journeys.json`): the Figma `fileKey` + `node`, the journey key, and a
+content fingerprint of each frame. On a re-run it **reconciles** the freshly-extracted flow against
+that manifest (Step 3) to decide whether you are building a **new** journey or **updating** an existing
+one — and, for an update, exactly which frames the designer changed. This means you never rebuild a
+journey from scratch just because one screen moved: see [Updating an existing journey](#updating-an-existing-journey).
+
+## Step 0 — Token gate
+
+Confirm a read-only Figma token is on the environment before doing anything else:
+
+```sh
+printf '%s' "${FIGMA_TOKEN:-}" | wc -c
+```
+
+If that prints `0`, stop and show the user `references/setup.md` (how to create and export a token).
+Do **not** proceed without a token, and never print or echo the token itself. Verify the token works:
+
+```sh
+curl -s -o /dev/null -w "%{http_code}\n" -H "X-Figma-Token: $FIGMA_TOKEN" https://api.figma.com/v1/me
+```
+
+Expect `200`. `401` = bad/expired token, `403` = missing File-content read scope — see the
+troubleshooting table in `references/setup.md`.
+
+## Step 1 — Parse the Figma location
+
+Accept either a prototype/file URL (`https://www.figma.com/proto/<KEY>?node-id=<A-B>`, also `/file/`
+and `/design/`) or the compact `"<fileKey>#<A:B>"` form. Derive the **fileKey** and the **nodeId**,
+converting the URL's hyphen node id (`3452-31002`) to the API's colon form (`3452:31002`). The scripts
+below do this parsing for you — you can pass the raw URL straight through. If no node id is supplied,
+the extractor falls back to the file's first page.
+
+## Step 2 — Extract the flow
+
+```sh
+node .ai/commands/figma-journey/scripts/figma-extract.mjs "<url-or-key#node>"
+```
+
+Writes `.tmp/figma-journey/<fileKey>/`:
+
+- `page.json` — the raw Figma node tree (for reference / re-use).
+- `flow.json` — machine-readable: `{ fileKey, nodeId, startNodeId, screens[], transitions{ onPage, offPage } }`.
+  Each screen carries `{ id, name, width, height, annotations, wide, hash }` — `annotations` is the
+  screen's Dev Mode annotation labels and `wide` is `true` when one of them says `WIDE` (see
+  [Wide screens](#wide-screens)).
+- `flow.md` — human-readable: a table of screens (id / name / size / layout / annotations), the flow
+  starting point, the on-page transitions as `"<fromName>" (fromId) → <toScreenName> (toId)`, and a
+  separate "Off-page / library links (ignore)" list (destinations that point at shared library
+  components, not screens on this page).
+
+**Read `flow.md`.** It is your map of the journey — which screens exist and which element clicks lead
+where. Ignore the off-page/library links; they are not part of this journey.
+
+## Step 3 — Reconcile: new journey or update?
+
+```sh
+node .ai/commands/figma-journey/scripts/figma-reconcile.mjs "<url-or-key#node>"
+```
+
+This compares the frames just extracted (`flow.json`) against the journey manifest
+(`.ai/commands/figma-journey/journeys.json`) and prints one of two modes:
+
+- **`MODE: NEW`** — no manifest entry matches this `fileKey` + `node`. Build the whole journey:
+  continue to Step 4 and render **all** screens, then Steps 5–6, and finish by **recording the journey
+  in the manifest** (Step 6.6).
+- **`MODE: UPDATE`** — this Figma location was built before. The script lists each frame as
+  **unchanged / changed / added / removed** and names the view files to touch. **Do not rebuild the
+  journey.** Jump to [Updating an existing journey](#updating-an-existing-journey) and patch only what
+  changed.
+
+The fingerprint ignores a frame's position on the Figma canvas, so moving a frame does not read as a
+change — only its text, structure, or prototype wiring does.
+
+## Step 4 — Render screens
+
+```sh
+node .ai/commands/figma-journey/scripts/figma-images.mjs "<url-or-key#node>"
+```
+
+Downloads one PNG per screen frame into the same working dir as `screen-<frameName>.png` (it reuses
+`flow.json`/`page.json` from Step 2 rather than re-fetching). **Read each PNG** to inspect the screen
+visually — its layout, headings, inputs, tables, tags and buttons drive the component mapping. On an
+**update**, you only need to look at the frames Step 3 flagged as changed or added.
+
+> **Confirm you can actually see the image — `Read` does not always deliver it.** When you Read a PNG,
+> verify the rendered screen really is in your context. Some environments hand the image off to a CDN and
+> return only a URL (_"…has been successfully uploaded to CDN…"_) — in that case you have **not** seen the
+> screen and must not reconstruct its layout from text nodes. Recover the visual content by passing that
+> URL to a vision-capable MCP tool (for example `analyze_image`) and map from the description it returns.
+> If you cannot make a screen viewable by either route, say so, name the screens you could not visually
+> verify, and omit anything you cannot place rather than guessing.
+
+## Step 5 — Map each screen to GDS
+
+Use `references/gds-mapping.md`. Map each element you see to a stock `govuk-frontend` macro.
+
+> **The screen PNG (or its vision description) is the source of truth — not the extracted text.** Text
+> nodes pulled from `page.json` (and any ad-hoc text walk) are a _finding aid_ only and are noisy: they
+> include component-prototype labels (`Label`, `Hint text`, `Hint`, `Error message`), reference codes,
+> header/nav placeholders (`Navigation item 1`, `Nav item 1–8`) and the GOV.UK footer topic list — **and
+> they include text that is not visible on the rendered screen at all** (hidden, overflow, alternate-state
+> or off-canvas layers). Only the image tells you what is actually visible and how it is arranged. _Real
+> case:_ `You have 7 days left to send your application.` was present in the node tree but invisible on the
+> Government Gateway screen, and was wrongly transcribed into an inset.
+
+> **Never invent a component or container to "use" an ambiguous string.** If you extracted a string but
+> cannot see — from the PNG — which on-screen element it is (a heading, field, tag, inset…), do not
+> fabricate one. Omit it or ask the user. Wrapping an unplaceable string in a `govukInsetText` /
+> `govukPanel` / `govukWarningText` is the most common hallucination in this skill.
+
+In this kit
+the GOV.UK macros are **globally available** — call `govukButton`, `govukRadios`, `govukFileUpload`,
+`govukTable`, `govukTag`, `govukBackLink`, `govukPhaseBanner`, … directly in the template; no
+`{% from %}` import is needed. Common mappings: back link → `govukBackLink`; caption + page heading →
+`govuk-caption-l` + `govuk-heading-l` (this repo's h1 convention is **`govuk-heading-l`**, not `xl`);
+radio group → `govukRadios`; file upload → `govukFileUpload({ javascript: true })`; primary/secondary
+buttons → `govukButton`; tables → `govukTable`; status pills → `govukTag`
+(`govuk-tag--green/--yellow/--red/--purple/--light-blue/…`); confirmation → `govukPanel` with
+`titleText`. govuk-frontend is 5.11, so the enhanced file upload and every tag colour class work out of
+the box.
+
+> **This repo has NO reusable dashboard macro** — there is no `appDashboard` / `appSideNav`, so don't
+> look for one and don't try to import `dashboard/macro.njk` (it does not exist). Dashboard-like screens
+> (a "My applications" table, a results list) map to **stock GDS**: `govukTable` for rows + `govukTag`
+> for status pills, populated from a static config object built in the route (see Step 6). If a screen
+> has true metric / stat **cards or big-number tiles** with no GDS equivalent, **flag it to the user**
+> — that needs bespoke markup/CSS agreed first, rather than a silent invention.
+
+> **Styling rules — match the rest of the repo** (authoritative detail in
+> `.cursor/rules/views-and-templates.mdc` and the `/journey-updates` skill): h1 `govuk-heading-l`; h2
+> `govuk-heading-m`; h3 `govuk-heading-s`; **confirmation** pages use `govukPanel` (not an h1);
+> **email-style** pages use `govuk-link` for actions, never `govuk-button`; reference labels are bold
+> (`<strong>Payment reference:</strong>`); multiple actions (submit + delete/cancel) go in **one**
+> `<div class="govuk-button-group">` with the `<form>` as the **outer** wrapper; destructive actions use
+> `govuk-link--destructive` to a confirm page, then `govuk-button--warning` on the confirm step. Keep
+> form options (radios, checkboxes) in the **same order as the Figma design** — do not reorder. British
+> English throughout.
+
+Worked examples already in this repo (built by this skill): `app/views/levy-exploration/manage.html`
+(a dashboard table + `govukTag` status pills, config-built in `app/routes/levy-exploration.js`) and
+`app/views/levy-exploration/upload-pdn.html` (the enhanced `govukFileUpload`).
+
+Match what you see in the PNG to the closest component, screen by screen.
+
+## Naming conventions
+
+This repo enforces strict naming rules (full rationale in the `/fix-journey-prompt` skill). Apply them
+when turning Figma frames into code — **never copy Figma frame names** (they are often canvas labels
+like `1300 - 1280`). Derive a meaningful name from each screen's purpose.
+
+- **Journey key** (kebab-case, e.g. `levy-exploration`) is the single source of truth: it becomes the
+  URL base path (`/levy-exploration`), route file (`app/routes/levy-exploration.js`), config folder
+  (`app/config/levy-exploration/`), and view folder (`app/views/levy-exploration/`). Pick something
+  specific to the service/flow.
+- **View / route slugs**: lowercase, hyphenated, **descriptive and specific**. Prefer `/check-your-answers`
+  over `/summary`, `/confirmation` over `/success`. Avoid generic single words (`/confirm`, `/email`,
+  `/details`, `/summary`) that collide across journeys — prepend context (`/nrf-reference`, not `/ref`).
+- **Session data keys**: `camelCase` — `planningType`, `nrfReference`, `hasRedlineBoundaryFile`.
+- **Form field `name` attributes**: `kebab-case` — `planning-type`, `has-redline-boundary-file` (separate
+  from the camelCase data key it maps to).
+- **`ROUTES` / `TEMPLATES` constants**: `UPPER_SNAKE_CASE` in `app/config/<journey>/routes.js`.
+
+## Step 6 — Reconstruct the journey
+
+_(Skip this step in **update** mode — see [Updating an existing journey](#updating-an-existing-journey).)_
+
+Pick a short kebab-case journey key (e.g. `levy-exploration`) per the [Naming conventions](#naming-conventions)
+above — it is also its base path (`/levy-exploration`), route file, config folder, and view folder. This
+skill creates/edits exactly these files:
+
+| Artifact | Path | When |
+| --- | --- | --- |
+| Route module | `app/routes/<journey>.js` | new |
+| Route constants | `app/config/<journey>/routes.js` | new (if more than ~2 screens) |
+| Views | `app/views/<journey>/*.html` | one per screen |
+| Journey registry | `app/config/shared/journeys.js` | new (add to `JOURNEYS`) |
+| Homepage link | `app/views/index.html` | new (hand-coded) |
+| Styles | `app/assets/sass/application.scss` | only if the design needs it |
+| Skill manifest | `.ai/commands/figma-journey/journeys.json` | new (record frames) |
+
+Do **not** edit `app/routes.js` — journeys auto-mount from `JOURNEYS`. Then:
+
+1. **Routes** — create `app/routes/<journey>.js`. Copy the shape of `app/routes/nrf-quote-6.js` (or the
+   simpler `app/routes/levy-exploration.js`): `const govukPrototypeKit = require('govuk-prototype-kit')`,
+   `const router = govukPrototypeKit.requests.setupRouter()`, `router.get`/`router.post` handlers,
+   `res.render('<journey>/<screen>', data)`, and `module.exports = router`. Wire each transition from
+   `flow.md`: the element click's destination screen becomes the redirect / link target. Store form and
+   flow state in `req.session.data`. For anything beyond a couple of trivial screens, put the path
+   constants in `app/config/<journey>/routes.js` (`BASE_PATH`, `ROUTES`, `TEMPLATES`) and require them —
+   never magic-string paths. (A minimal journey like `levy-exploration` inlines its paths instead; that's
+   fine for a handful of static screens.)
+2. **Register** — add an entry to the `JOURNEYS` array in `app/config/shared/journeys.js`:
+   `{ name, displayName, basePath: '/<journey>', hasStartPage: true, description }`. `app/routes.js`
+   auto-mounts `app/routes/<journey>.js` from the basePath — **do not edit `app/routes.js`**. Because the
+   smoke test GETs `<basePath>/start` for every `hasStartPage: true` journey, always create a `start`
+   route + view (a landing page is fine).
+3. **Views** — create `app/views/<journey>/<screen>.html` per screen, each
+   `{% extends "layouts/main.html" %}` with a `{% block content %}` (and `{% block beforeContent %}`
+   for the back link). GOV.UK macros are global — call them directly. Copy an existing view such as
+   `app/views/nrf-quote-6/planning-type.html` (a radio question page), `app/views/nrf-quote-6/start.html`
+   (a start page), or `app/views/levy-exploration/manage.html` (a dashboard table).
+   **Per-screen service name:** this kit shows no service name in the header by default (and renders a
+   bare `<title>GOV.UK</title>`), so `{% set serviceName %}` has no visible effect. To show the Figma
+   screen's service name, override the block:
+   `{% block header %}{{ govukHeader({ serviceName: "...", serviceUrl: "/<journey>/start", containerClasses: "govuk-width-container", homepageUrl: "/" }) }}{% endblock %}`.
+   For wide screens, see [Wide screens](#wide-screens). **One file per render (non-negotiable):** every
+   `res.render('<journey>/<slug>')` and every `TEMPLATES.*` constant must resolve to an existing
+   `app/views/<journey>/<slug>.html` — after wiring, enumerate the render targets and confirm each file
+   exists, or the page throws `template not found` at runtime.
+4. **Styles** — append any custom styles the design needs to `app/assets/sass/application.scss` (guard
+   them under a clearly-commented block for this journey).
+5. **Homepage** — `app/views/index.html` is **hand-maintained** (not config-driven): add a block in the
+   right section (NRF journeys or LPA journeys) with `<strong class="govuk-tag govuk-tag--blue">In
+   progress</strong>`, a heading, a one-line UR purpose, an optional `<details>` of design changes, and
+   a link to `/<journey>/start` (**no `.html`** suffix). Keep every link inside this journey — no
+   cross-journey linking.
+6. **Record the journey** — add an entry to `.ai/commands/figma-journey/journeys.json` so future
+   re-runs recognise this journey (Step 3) instead of rebuilding it. Copy the frame ids, names,
+   **hashes and `wide` flag straight from `flow.json`**, and map each frame id to the view file you
+   created for it (several frames may map to one view — e.g. an empty and a filled state of the same
+   page). Include `"wide": true` only for screens the designer marked WIDE:
+
+   ```json
+   {
+     "journey": "<journey-key>",
+     "fileKey": "<fileKey>",
+     "node": "<a:b>",
+     "figmaUrl": "<the URL you were given>",
+     "viewsDir": "app/views/<journey>",
+     "routesFile": "app/routes/<journey>.js",
+     "frames": [
+       {
+         "id": "<frameId>",
+         "name": "<short label>",
+         "view": "<screen>.html",
+         "hash": "<from flow.json>",
+         "wide": false
+       }
+     ]
+   }
+   ```
+
+This is a UR mock: populate any dashboards / tables / stats from a **static config object** in the
+route file — do **not** parse real uploads or call live services. Follow the repo code style: no
+semicolons, single quotes, no trailing commas, 2-space indent, brace every `if`/`for` body.
+
+## Step 7 — Verify
+
+```sh
+npm run dev            # serves http://localhost:3000 (PORT=3100 npm run dev for a second instance)
+npm run format:check   # prettier over **/*.{cjs,js,json,md,scss}
+```
+
+Before clicking through, run the **wiring smoke check** from the repo root — it must exit `0`:
+
+```sh
+node -e "require('./app/routes/<journey>.js'); console.log('OK')"
+```
+
+A non-zero exit (`Cannot find module …`) means the journey is mis-wired (missing `JOURNEYS` entry or
+`app/config/<journey>/routes.js`) and **every URL under the base path will 404**. Then start the server,
+open the homepage, launch the journey, and click through every screen. Confirm each transition matches
+`flow.md`, each screen resembles its PNG, and — if you added a `{% block header %}` override — each
+screen's service name renders. Confirm the journey's `/start` page returns 200: the
+`tests/e2e/smoke.spec.js` test GETs it for every `hasStartPage: true` journey (run it with
+`npm run test:e2e`). Fix any route wiring or view that diverges.
+
+`npm run format:check` has pre-existing failures across the repo (it predates the prettier gate) — keep
+only the files you added/edited clean (`.prettierrc.js`: no semicolons, single quotes); do not reformat
+unrelated files.
+
+## Wide screens
+
+Most screens use the GOV.UK default width with their content in a `govuk-grid-column-two-thirds`
+column. When a screen needs more horizontal space (a wide table or dashboard), the extractor sets
+`wide: true` in `flow.json` if the designer added a **`WIDE`** Dev Mode annotation on the frame;
+`flow.md` shows it in the `layout` column.
+
+This repo does **not** ship an `.app-wide` body class, so do **not** add
+`{% set bodyClasses = "app-wide" %}` — it would do nothing (there is no matching CSS in
+`application.scss`). Instead, lay a wide screen out with stock GOV.UK full-width patterns: wrap the
+wide content in `govuk-grid-column-full` (inside the usual `govuk-grid-row`) instead of the two-thirds
+column. The page container stays at the GOV.UK default width; only the content column widens. Record
+the flag as `"wide": true` on the frame in `journeys.json` (Step 6.6) so a later run knows the screen
+was meant to be wide — but the layout mechanism is `govuk-grid-column-full`, not a body class.
+
+> **Note on annotation access:** Dev Mode annotations require the annotation to be readable by the
+> token. If a screen is meant to be wide but its `WIDE` annotation doesn't come through (e.g. seat /
+> permission limits), fall back to a plain text layer containing `WIDE` on the frame — the extractor
+> also matches annotation text, and a text layer is always readable via `characters`.
+
+## Updating an existing journey
+
+When Step 3 prints **`MODE: UPDATE`**, the designer has changed a Figma journey you already built. The
+goal is to apply **only** their delta — never to regenerate the whole journey, because the views hold
+hand-written copy (real wording substituted for Figma's placeholder text), per-screen service-name
+header overrides, and any static dashboard config, all of which a blind rebuild would destroy. Work
+surgically:
+
+1. **Read the reconcile report.** It classifies every frame as **unchanged / changed / added /
+   removed** and lists the affected view files. Unchanged frames are done — do not touch their views.
+2. **Re-render only the changed and added frames** (Step 4) and re-read those PNGs (Step 5). You do not
+   need to look at unchanged screens again.
+3. **Patch, don't replace:**
+   - **changed** → open the mapped view and apply just the designer's structural/content change
+     (a new field, a reworded heading, a re-pointed link). Preserve the surrounding real copy, the
+     dashboard config, and any hand-wiring. If a change is large, regenerate the view to a scratch file
+     and diff it in rather than overwriting.
+   - **added** → build a new view + wire its transition in, exactly as in Step 6 (steps 1–4).
+   - **removed** → **flag it for the user and ask before deleting** anything; a frame can vanish from a
+     flow without the screen being retired. Never auto-delete a route or view.
+4. **Re-point wiring if the flow changed** — recheck `flow.md`'s on-page transitions against the route
+   redirects/links and fix any that moved.
+5. **Update the manifest** — for every frame you reconciled, copy its new `hash` from `flow.json` into
+   its entry in `journeys.json` (add entries for added frames, remove entries for retired ones once the
+   user confirms). This is what makes the _next_ update see a clean baseline.
+6. **Verify** (Step 7) — click through, focusing on the changed screens and the transitions around them.
+
+## Reusability
+
+This skill is generic. Point it at **any** Figma prototype location (`figma.com/proto/...` URL or
+`<fileKey>#<node>`) and choose **any** journey key — nothing here is specific to one prototype. The
+`.tmp/figma-journey/<fileKey>/` working dir is keyed by file, so multiple prototypes coexist, and the
+`journeys.json` manifest lets one file back several journeys (different nodes). Re-run Steps 2–3 any
+time the Figma design changes: the reconcile step tells you whether you are adding a new journey or
+updating an existing one, and exactly which screens moved.

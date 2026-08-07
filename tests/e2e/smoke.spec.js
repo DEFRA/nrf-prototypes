@@ -1,5 +1,7 @@
 const { test, expect } = require('@playwright/test')
 const { getJourneysWithStartPage } = require('../../app/config/shared/journeys')
+const fs = require('fs')
+const path = require('path')
 
 /**
  * Smoke Tests for GOV.UK Prototype Kit - NRF Prototypes
@@ -44,6 +46,39 @@ test.describe('Journey Start Pages', () => {
       expect(response.status()).toBe(200)
 
       // Check that the GOV.UK template is present
+      await expect(page.locator('.govuk-template')).toBeVisible()
+    })
+  }
+})
+
+test.describe('Filesystem start pages (auto-routed, not in the journey registry)', () => {
+  // Cover journeys that expose a /start page but are NOT registered in
+  // app/config/shared/journeys.js — for example standard-kit journeys that
+  // rely on the Prototype Kit's automatic view routing. This keeps them
+  // covered by the smoke test without forcing them into the registry.
+  const viewsDir = path.join(__dirname, '../../app/views')
+  const registryStartPaths = new Set(
+    getJourneysWithStartPage().map((journey) => journey.path)
+  )
+
+  // Build the list of /<folder>/start pages that have a view file on disk and
+  // are NOT already covered by the registry test above.
+  const filesystemStartPages = fs
+    .readdirSync(viewsDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && entry.name !== 'layouts')
+    .map((dir) => ({ folder: dir.name, url: `/${dir.name}/start` }))
+    .filter((startPage) =>
+      fs.existsSync(path.join(viewsDir, startPage.folder, 'start.html'))
+    )
+    .filter((startPage) => !registryStartPaths.has(startPage.url))
+
+  for (const startPage of filesystemStartPages) {
+    test(`${startPage.folder} start page loads without errors`, async ({
+      page
+    }) => {
+      const response = await page.goto(startPage.url)
+
+      expect(response.status()).toBe(200)
       await expect(page.locator('.govuk-template')).toBeVisible()
     })
   }
