@@ -16,17 +16,26 @@ so a read-only token is sufficient and preferred.
 
 ## 2. Export it in your shell
 
-Add the token to `~/.zshrc` (or your shell's rc file) so every session has it:
+Put the token in `~/.zshenv` so it is loaded by **every** zsh invocation — interactive, non-interactive,
+login or subshell. This matters because the shells that AI tools spawn to run the skill's scripts are often
+**non-login, non-interactive** shells, which source `~/.zshenv` but not `~/.zshrc` — so a token exported
+only in `~/.zshrc` can look "missing" to the skill even though your terminal has it. (This is the same
+pattern the team uses for [Atlassian credentials](https://github.com/DEFRA/nrf-solution/blob/main/docs/ai/atlassian-credentials.md).)
 
 ```sh
+# ~/.zshenv
 export FIGMA_TOKEN="figd_your_token_value_here"
 ```
 
-Then reload the current shell:
+Then reload it (or start a new shell):
 
 ```sh
-source ~/.zshrc
+source ~/.zshenv
 ```
+
+No need to duplicate the export into `~/.zshrc` — `~/.zshenv` covers every invocation above.
+
+For **bash** users, add the same export to `~/.bash_profile` (or `~/.bashrc` for non-login shells).
 
 The token is a secret — keep it out of the repo, out of commits, and never print or echo it. The
 skill's scripts read `process.env.FIGMA_TOKEN` and never log its value.

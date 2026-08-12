@@ -8,6 +8,12 @@ click-flow, renders a PNG per screen, and reconciles everything against a manife
 already built. It then maps each screen to GOV.UK Design System components and scaffolds (or surgically
 patches) the views and routes so the flow actually clicks through at `http://localhost:3000`.
 
+> **Not image-to-code.** Each view is built from two reconciled sources: the **text inventory** (the
+> copy, verbatim and in reading order) and the **PNG** (each string's layout and component type). The PNG
+> is never the source of the words on the page — every rendered string must trace back to the inventory,
+> so the PNG cannot invent or supply copy. See
+> [How accuracy is kept](#how-accuracy-is-kept-two-sources-reconciled).
+
 > **Where it lives:** `.ai/commands/figma-journey/` (symlinked from `.claude/commands/`).
 > The instructions are in `SKILL.md`; the helper scripts are in `scripts/`.
 
@@ -97,7 +103,16 @@ change — only changed text, structure or prototype wiring is.
 ## How accuracy is kept: two sources, reconciled
 
 This is the core mechanism that prevents the classic "missing text" / "wrong component" errors. Neither
-source is enough on its own:
+source is enough on its own — they each carry half the information needed to build a view:
+
+- the **text inventory** is the source of the _copy_ (verbatim) and its _reading order_;
+- the **PNG** is the source of the _layout_ and _component type_ for each string (heading, body, inset,
+  panel, warning, hint, radio label, …).
+
+Both shape the generated view: the inventory supplies the words, the PNG decides which GOV.UK component
+each one is. (A vision model may read the PNG — directly, or via an MCP tool when `Read` hands the image
+to a CDN — to extract those layout and component-type decisions.) What the PNG never does is supply the
+strings themselves, so it cannot introduce copy that is not in the inventory:
 
 ```mermaid
 flowchart LR
