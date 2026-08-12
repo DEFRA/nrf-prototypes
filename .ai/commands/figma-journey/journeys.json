@@ -1,0 +1,140 @@
+{
+  "journeys": [
+    {
+      "journey": "request-nature-restoration-levy",
+      "fileKey": "m3uv0qMVxREXKZnj1zw95P",
+      "node": "578:3144",
+      "figmaUrl": "https://www.figma.com/design/m3uv0qMVxREXKZnj1zw95P/Beta---Exploration-%F0%9F%94%8E?node-id=578-3144&p=f&m=dev",
+      "viewsDir": "app/views/request-nature-restoration-levy",
+      "routesFile": "app/routes.js",
+      "frames": [
+        {
+          "id": "578:3226",
+          "name": "Start - Nature restoration levy",
+          "view": "start.html",
+          "hash": "785c4abce7df",
+          "wide": false
+        },
+        {
+          "id": "578:3531",
+          "name": "Do you have a NRF reference?",
+          "view": "do-you-have-nrf-reference.html",
+          "hash": "e8f8572e3368",
+          "wide": false
+        },
+        {
+          "id": "578:3900",
+          "name": "Enter your NRF reference",
+          "view": "enter-nrf-reference.html",
+          "hash": "34a9750cfe6c",
+          "wide": false
+        },
+        {
+          "id": "578:4002",
+          "name": "Enter your email address",
+          "view": "enter-email-address.html",
+          "hash": "456e101c5abf",
+          "wide": false
+        },
+        {
+          "id": "578:4737",
+          "name": "Review and amend your quote details",
+          "view": "review-quote-details.html",
+          "hash": "6ae4e048051a",
+          "wide": false
+        },
+        {
+          "id": "584:5650",
+          "name": "Is this a variation?",
+          "view": "is-this-a-variation.html",
+          "hash": "6e1fa398b6c9",
+          "wide": false
+        },
+        {
+          "id": "586:2077",
+          "name": "Enter the NRF reference for the original planning application",
+          "view": "enter-original-nrf-reference.html",
+          "hash": "9442e17d2ccc",
+          "wide": false
+        },
+        {
+          "id": "585:1731",
+          "name": "Your levy amount has increased since your quote",
+          "view": "levy-amount-increased.html",
+          "hash": "7b0c04a434d7",
+          "wide": false
+        },
+        {
+          "id": "590:2755",
+          "name": "Do you accept your nature restoration levy amount?",
+          "view": "accept-levy-amount.html",
+          "hash": "babf562f5c7d",
+          "wide": false
+        },
+        {
+          "id": "586:1857",
+          "name": "Not enough capacity remaining",
+          "view": "not-enough-capacity.html",
+          "hash": "cda8b4f1f49f",
+          "wide": false
+        },
+        {
+          "id": "584:5856",
+          "name": "Review and confirm your company details",
+          "view": "review-company-details.html",
+          "hash": "b72f3c98d7fa",
+          "wide": false
+        },
+        {
+          "id": "590:2870",
+          "name": "Check your answers",
+          "view": "check-your-answers.html",
+          "hash": "7ada6179f4e5",
+          "wide": false
+        },
+        {
+          "id": "584:6323",
+          "name": "Confirmation - Your details have been submitted",
+          "view": "confirmation.html",
+          "hash": "4d1f0280d06a",
+          "wide": false
+        },
+        {
+          "id": "584:5344",
+          "name": "Retrieve your quote details (landing page)",
+          "view": "retrieve-quote-details.html",
+          "hash": "7bceaeefa763",
+          "wide": false
+        },
+        {
+          "id": "589:6573",
+          "name": "Update on your marine licence application (different service - reference only)",
+          "view": "marine-licence-email.html",
+          "hash": "7269935eb1fb",
+          "wide": false
+        },
+        {
+          "id": "589:6555",
+          "name": "Update on your marine licence application (duplicate)",
+          "view": "marine-licence-email.html",
+          "hash": "c7a8f010d061",
+          "wide": false
+        },
+        {
+          "id": "589:6537",
+          "name": "Update on your marine licence application (duplicate)",
+          "view": "marine-licence-email.html",
+          "hash": "944c6c8aa7b1",
+          "wide": false
+        },
+        {
+          "id": "589:6497",
+          "name": "Update on your marine licence application (duplicate)",
+          "view": "marine-licence-email.html",
+          "hash": "64c9726d6a78",
+          "wide": false
+        }
+      ]
+    }
+  ]
+}
