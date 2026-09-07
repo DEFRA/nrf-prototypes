@@ -1,0 +1,101 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+{{ journey.name }} - flow and screens - GOV.UK
+{% endblock %}
+
+{% block head %}
+{{ super() }}
+<style>
+  .tools-wrap { padding: 0 30px 60px; }
+  .tools-header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 20px; }
+  .tools-header .govuk-heading-l { margin-bottom: 10px; }
+  .tools-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 15px; margin: 15px 0 25px; }
+  .tools-controls label { font-family: "GDS Transport", arial, sans-serif; font-size: 16px; }
+  .tools-controls input[type="range"] { width: 200px; }
+  .flow-diagram { overflow-x: auto; border: 1px solid #b1b4b6; padding: 20px; margin-bottom: 40px; background: #fff; }
+  .flow-diagram svg { max-width: 100%; height: auto; }
+  .flow-diagram pre.mermaid { margin: 0; }
+  .wall-level { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 20px; padding: 20px 0; border-top: 1px solid #b1b4b6; }
+  .wall-level__label { flex: 0 0 100%; font-family: "GDS Transport", arial, sans-serif; font-size: 14px; color: #505a5f; margin: 0; }
+  .wall-card { --wall-scale: 0.4; flex: 0 0 auto; width: calc(1000px * var(--wall-scale)); }
+  .wall-card--branch { margin-left: 30px; }
+  .wall-card__head { font-family: "GDS Transport", arial, sans-serif; font-size: 14px; line-height: 1.4; margin-bottom: 6px; }
+  .wall-card__id { font-weight: 700; color: #0b0c0c; }
+  .wall-card__type { color: #505a5f; }
+  .wall-card__links a { margin-right: 10px; font-size: 14px; }
+  .wall-card__frame { position: relative; width: calc(1000px * var(--wall-scale)); height: calc(var(--wall-height, 760px) * var(--wall-scale)); overflow: hidden; border: 1px solid #b1b4b6; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.12); }
+  .wall-card__frame iframe { width: 1000px; height: var(--wall-height, 760px); border: 0; transform: scale(var(--wall-scale)); transform-origin: 0 0; }
+  .wall-card__shield { position: absolute; inset: 0; cursor: pointer; }
+  .wall-card__shield:hover { outline: 3px solid #ffdd00; outline-offset: -3px; }
+  .wall-card--exit .wall-card__frame { border-color: #505a5f; border-style: dashed; }
+  .wall-card--custom { --wall-height: 900px; }
+  .tools-legend { font-family: "GDS Transport", arial, sans-serif; font-size: 14px; color: #505a5f; margin: 0 0 10px; }
+</style>
+{% endblock %}
+
+{% block main %}
+<main class="govuk-main-wrapper tools-wrap" id="main-content">
+  <div class="tools-header">
+    <div>
+      {{ govukBackLink({ text: "All journeys", href: "/tools/journeys" }) }}
+      <h1 class="govuk-heading-l">{{ journey.name }}</h1>
+    </div>
+  </div>
+
+  <p class="govuk-body">
+    {{ journey.pageCount }} screens, generated from <code>content/{{ journey.id }}/journey.yaml</code>.
+    <a class="govuk-link" href="{{ journey.basePath }}/{{ journey.start }}">Open the prototype</a> ·
+    <a class="govuk-link" href="/tools/journeys/{{ journey.id }}/flow.json">flow.json</a> ·
+    <a class="govuk-link" href="/tools/journeys/{{ journey.id }}/flow.mmd">flow.mmd</a>
+  </p>
+
+  <h2 class="govuk-heading-m">Flow</h2>
+  <p class="tools-legend">Solid arrows are form submissions. Dotted arrows are links, change links and returns to check your answers. Click a node to open the screen with sample data.</p>
+  <div class="flow-diagram">
+    <pre class="mermaid">{{ mermaid }}</pre>
+  </div>
+
+  <h2 class="govuk-heading-m">Screens</h2>
+  <p class="tools-legend">Every screen rendered live with the sample data from <code>journey.yaml → preview</code>. Rows follow the flow; indented cards are branches or exits. Click a screen to open it in a new tab.</p>
+
+  <div class="tools-controls">
+    <label for="wall-scale">Zoom</label>
+    <input type="range" id="wall-scale" min="0.2" max="1" step="0.05" value="0.4">
+    <span id="wall-scale-value">40%</span>
+  </div>
+
+  <div id="screen-wall">
+    {% for level in levels %}
+    <div class="wall-level">
+      <p class="wall-level__label">Step {{ loop.index }}</p>
+      {% for page in level %}
+      <div class="wall-card{% if not loop.first %} wall-card--branch{% endif %}{% if page.isExit %} wall-card--exit{% endif %}{% if page.isCustom %} wall-card--custom{% endif %}">
+        <div class="wall-card__head">
+          <span class="wall-card__id">{{ page.id }}</span>
+          <span class="wall-card__type">· {{ page.type }}</span><br>
+          <span class="wall-card__links">
+            <a class="govuk-link" href="{{ page.path }}?preview=1" target="_blank" rel="noopener">Open</a>
+            {% if page.isQuestion or page.isCustom %}<a class="govuk-link" href="{{ page.path }}?preview=1&error=1" target="_blank" rel="noopener">Error state</a>{% endif %}
+            <span class="wall-card__type" title="{{ page.contentFile }}">{{ page.id }}.md</span>
+          </span>
+        </div>
+        <div class="wall-card__frame">
+          <iframe src="{{ page.path }}?preview=1" loading="lazy" title="{{ page.heading }}" tabindex="-1"></iframe>
+          <a class="wall-card__shield" href="{{ page.path }}?preview=1" target="_blank" rel="noopener" aria-label="Open {{ page.heading }} in a new tab"></a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+</main>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs'
+  mermaid.initialize({ startOnLoad: true, securityLevel: 'loose', flowchart: { useMaxWidth: true, htmlLabels: true, nodeSpacing: 30, rankSpacing: 40 } })
+</script>
+<script src="/public/javascripts/tools/screen-wall.js"></script>
+{% endblock %}
+
+{% block footer %}{% endblock %}

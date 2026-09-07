@@ -1,0 +1,16 @@
+{% extends "journey-engine/_page.html" %}
+
+{% block pageBody %}
+{% if content.panel %}
+{{ govukPanel({
+  titleText: content.panel.title,
+  text: content.panel.body
+}) }}
+{% else %}
+{{ govukPanel({ titleText: content.heading }) }}
+{% endif %}
+
+{{ content.html | safe }}
+
+{% include "journey-engine/_actions.html" %}
+{% endblock %}

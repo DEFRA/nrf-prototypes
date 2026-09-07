@@ -1,0 +1,14 @@
+{% extends "journey-engine/_page.html" %}
+
+{% block pageBody %}
+<h1 class="govuk-heading-l">{{ content.heading }}</h1>
+
+{{ govukSummaryList({
+  classes: "govuk-!-margin-bottom-9",
+  rows: content.rows
+}) }}
+
+{{ content.html | safe }}
+
+{% include "journey-engine/_actions.html" %}
+{% endblock %}

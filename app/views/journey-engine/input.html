@@ -1,0 +1,33 @@
+{% extends "journey-engine/_page.html" %}
+
+{% block pageBody %}
+<form action="{{ page.path }}" method="post" novalidate>
+  {% include "journey-engine/_change-inputs.html" %}
+  {% include "journey-engine/_error-summary.html" %}
+
+  {% set inputType = content.inputType or ("email" if page.type == "email" else ("number" if page.type == "number" else "text")) %}
+  {% set inputClasses = ("govuk-input--width-" + content.width) if content.width else "" %}
+
+  {{ govukInput({
+    id: page.field,
+    name: page.field,
+    type: inputType,
+    inputmode: "numeric" if page.type == "number" else undefined,
+    autocomplete: content.autocomplete or ("email" if page.type == "email" else undefined),
+    spellcheck: false if page.type == "email" else content.spellcheck,
+    classes: inputClasses,
+    label: {
+      text: content.heading,
+      classes: "govuk-label--l",
+      isPageHeading: true
+    },
+    hint: { text: content.hint } if content.hint,
+    value: data[page.sessionKey],
+    errorMessage: { text: error } if error
+  }) }}
+
+  {{ content.html | safe }}
+
+  {{ govukButton({ text: content.button }) }}
+</form>
+{% endblock %}

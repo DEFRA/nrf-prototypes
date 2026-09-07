@@ -19,6 +19,7 @@ const lpaVerifyRoutes = require('./routes/lpa-verify.js')
 const tileserverProxyRoutes = require('./routes/tileserver-proxy.js')
 const vtsMapRoutes = require('./routes/vts-maps.js')
 const mapTilesRoutes = require('./routes/map-tiles.js')
+const toolsRoutes = require('./routes/tools.js')
 
 // Use non-journey routes
 router.use('/', tileserverProxyRoutes) // Add tileserver proxy first
@@ -32,6 +33,7 @@ router.use('/', applications1Routes)
 router.use('/', applications2Routes)
 router.use('/', caseManagementRoutes)
 router.use('/', lpaVerifyRoutes)
+router.use('/', toolsRoutes) // Journey flow diagrams and screen walls
 
 // Dynamically load journey routes from shared config
 // This ensures that all journeys defined in config/shared/journeys.js are automatically loaded

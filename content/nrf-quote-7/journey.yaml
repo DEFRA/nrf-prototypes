@@ -1,0 +1,175 @@
+# Flow and logic for the "Get a quote" journey.
+#
+# Copy lives in pages/*.md. This file decides the order of pages, where each
+# answer leads, what is remembered in the session, and which pages need
+# bespoke code (hooks in app/lib/nrf-quote-7/hooks.js).
+#
+# Conditions are objects: { key: <session key>, <operator>: <value> }.
+# Operators: equals, notEquals, in, notIn, gt, gte, lt, lte, between,
+# truthy, falsy, isSet. Engine values start with $: $navFromSummary,
+# $isChange, $preview. See content/README.md.
+
+id: nrf-quote-7
+name: Get a quote for the nature restoration levy
+serviceName: Get a quote for the nature restoration levy
+start: start
+summaryPage: check-your-answers
+
+# Every session key this journey writes. `clears: $session` expands to this.
+session:
+  - planningType
+  - isHousing
+  - residentialBuildingCount
+  - hasRedlineBoundaryFile
+  - redlineFile
+  - redlineBoundaryPolygon
+  - mapReferrer
+  - estimateEmail
+  - nrfReference
+  - levyAmount
+  - intersectingCatchment
+
+# Sample answers used when a page is opened with ?preview=1 and on the
+# screen wall at /tools/journeys/nrf-quote-7. Never written to the session.
+preview:
+  data:
+    planningType: Full planning permission
+    isHousing: 'Yes'
+    residentialBuildingCount: 120
+    hasRedlineBoundaryFile: false
+    mapReferrer: redline-map
+    redlineFile: site-boundary.geojson
+    redlineBoundaryPolygon:
+      center: [-1.1494, 52.9548]
+      coordinates:
+        - [-1.1544, 52.9518]
+        - [-1.1444, 52.9518]
+        - [-1.1444, 52.9578]
+        - [-1.1544, 52.9578]
+        - [-1.1544, 52.9518]
+      intersections:
+        nutrient: River Trent
+        gcn: null
+      intersectingCatchment: River Trent
+    estimateEmail: jane.smith@example.com
+    nrfReference: NRF-123456
+    levyAmount: '2,500'
+
+pages:
+  - id: start
+    next: planning-type
+
+  - id: planning-type
+    field: planning-type
+    sessionKey: planningType
+    changeable: true
+    next:
+      - when:
+          key: planningType
+          notIn:
+            - Full planning permission
+            - Outline planning permission
+            - Hybrid planning permission
+        goto: wrong-permission
+      - when: { key: $navFromSummary, truthy: true }
+        goto: check-your-answers
+      - goto: housing
+
+  - id: wrong-permission
+
+  - id: housing
+    field: housing
+    sessionKey: isHousing
+    next:
+      - when: { key: isHousing, equals: 'No' }
+        goto: not-housing
+      - goto: units
+
+  - id: not-housing
+
+  - id: units
+    field: unit-count
+    sessionKey: residentialBuildingCount
+    min: 1
+    changeable: true
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: check-your-answers
+      - goto: redline-map
+
+  - id: redline-map
+    field: has-redline-boundary-file
+    sessionKey: hasRedlineBoundaryFile
+    # The radio values are labels; store booleans in the session instead
+    store:
+      'Upload a file': true
+      'Draw on a map': false
+    next:
+      - when: { key: hasRedlineBoundaryFile, truthy: true }
+        goto: upload-redline
+      - goto: map
+        set: { mapReferrer: redline-map }
+
+  - id: upload-redline
+    field: redline-file
+    sessionKey: redlineFile
+    accept: ['.shp', '.geojson', '.kml']
+    maxSize: 2MB
+    changeable: true
+    handler: custom # parses the GeoJSON, see hooks.js
+    next: map # the map runs the EDP and capacity checks
+
+  - id: map
+    template: nrf-quote-7/map
+    field: boundary-data
+    handler: custom # EDP intersection check, see hooks.js
+    changeable: true
+    back:
+      - when: { key: mapReferrer, equals: upload-redline }
+        goto: upload-redline
+      - goto: redline-map
+    next:
+      - when:
+          { key: redlineBoundaryPolygon.intersections.nutrient, falsy: true }
+        goto: no-edp
+      - when: { key: residentialBuildingCount, gt: 15000, lt: 20000 }
+        goto: exclusion
+      - when: { key: residentialBuildingCount, gte: 20000 }
+        goto: no-capacity
+      - when: { key: $navFromSummary, truthy: true }
+        goto: check-your-answers
+      - goto: estimate-email
+
+  - id: no-edp
+
+  - id: exclusion
+
+  - id: no-capacity
+    back: units
+
+  - id: estimate-email
+    field: email
+    sessionKey: estimateEmail
+    changeable: true
+    back:
+      - when: { key: mapReferrer, equals: upload-redline }
+        goto: upload-redline
+      - goto: map
+    next: check-your-answers
+
+  - id: check-your-answers
+    guard: { key: estimateEmail, isSet: true, redirect: estimate-email }
+    handler: custom # mints the NRF reference, see hooks.js
+    next: confirmation
+
+  - id: delete-quote
+    back: check-your-answers
+    clears: $session
+    next: delete-confirmation
+
+  - id: delete-confirmation
+
+  - id: confirmation
+
+  - id: estimate-email-content
+    back: confirmation

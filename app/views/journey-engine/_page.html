@@ -1,0 +1,26 @@
+{#
+Journey engine base page. Every generic page type extends this and fills
+`pageBody`. The model comes from app/lib/journey-engine/router.js.
+#}
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+{% if error %}Error: {% endif %}{{ content.title }} - {{ journey.serviceName }} - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{% if backLink %}
+{{ govukBackLink({
+  text: "Back",
+  href: backLink
+}) }}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    {% block pageBody %}{% endblock %}
+  </div>
+</div>
+{% endblock %}

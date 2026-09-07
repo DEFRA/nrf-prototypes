@@ -1,0 +1,44 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Journey tools - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({ text: "Back", href: "/" }) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <h1 class="govuk-heading-l">Journey tools</h1>
+
+    {% if notFound %}
+    <div class="govuk-error-summary" role="alert">
+      <h2 class="govuk-error-summary__title">Could not load journey "{{ notFound }}"</h2>
+      <div class="govuk-error-summary__body"><pre class="govuk-body" style="white-space: pre-wrap">{{ loadError }}</pre></div>
+    </div>
+    {% endif %}
+
+    <p class="govuk-body">Content-driven journeys found under <code>content/</code>. Each has a flow diagram and a live wall of every screen.</p>
+
+    {% if journeys | length %}
+    <ul class="govuk-list">
+      {% for j in journeys %}
+      <li>
+        {% if j.error %}
+          <strong class="govuk-tag govuk-tag--red">Error</strong> {{ j.id }}
+          <pre class="govuk-body-s" style="white-space: pre-wrap">{{ j.error }}</pre>
+        {% else %}
+          <a class="govuk-link govuk-!-font-weight-bold" href="/tools/journeys/{{ j.id }}">{{ j.name }}</a>
+          <span class="govuk-body-s govuk-!-margin-left-2">{{ j.pageCount }} pages · <a class="govuk-link" href="{{ j.startPath }}">start page</a></span>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="govuk-body">No journeys yet. Add <code>content/&lt;journey&gt;/journey.yaml</code> to get started.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

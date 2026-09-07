@@ -1,0 +1,6 @@
+{% if error %}
+{{ govukErrorSummary({
+  titleText: "There is a problem",
+  errorList: [{ text: error, href: "#" + errorHref }]
+}) }}
+{% endif %}

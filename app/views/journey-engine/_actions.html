@@ -1,0 +1,24 @@
+{#
+Renders `actions` from a page's frontmatter inside a form posting to the
+page. Kinds: submit (default), warning, start, link, destructive.
+#}
+{% if content.actions | length %}
+<form action="{{ page.path }}" method="post" novalidate>
+  {% include "journey-engine/_change-inputs.html" %}
+  <div class="govuk-button-group">
+    {% for action in content.actions %}
+      {% if action.kind == 'link' %}
+        <a class="govuk-link" href="{{ action.href }}">{{ action.text }}</a>
+      {% elif action.kind == 'destructive' %}
+        <a class="govuk-link govuk-link--destructive" href="{{ action.href }}">{{ action.text }}{% if action.hidden %}<span class="govuk-visually-hidden"> {{ action.hidden }}</span>{% endif %}</a>
+      {% elif action.kind == 'warning' %}
+        {{ govukButton({ text: action.text, classes: "govuk-button--warning" }) }}
+      {% elif action.kind == 'start' %}
+        {{ govukButton({ text: action.text, isStartButton: true }) }}
+      {% else %}
+        {{ govukButton({ text: action.text }) }}
+      {% endif %}
+    {% endfor %}
+  </div>
+</form>
+{% endif %}

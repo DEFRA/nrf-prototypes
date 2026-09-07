@@ -1,0 +1,25 @@
+{% extends "journey-engine/_page.html" %}
+
+{% block pageBody %}
+<form action="{{ page.path }}" method="post" enctype="multipart/form-data" novalidate>
+  {% include "journey-engine/_change-inputs.html" %}
+  {% include "journey-engine/_error-summary.html" %}
+
+  {{ govukFileUpload({
+    id: page.field,
+    name: page.field,
+    label: {
+      text: content.heading,
+      classes: "govuk-label--l",
+      isPageHeading: true
+    },
+    hint: { text: content.hint } if content.hint,
+    attributes: { accept: page.accept | join(",") } if page.accept,
+    errorMessage: { text: error } if error
+  }) }}
+
+  {{ content.html | safe }}
+
+  {{ govukButton({ text: content.button }) }}
+</form>
+{% endblock %}
