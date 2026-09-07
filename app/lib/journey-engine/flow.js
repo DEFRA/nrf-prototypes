@@ -177,7 +177,7 @@ function shortHeading(page) {
 function toMermaid(journey, options = {}) {
   const suffix =
     options.querySuffix !== undefined ? options.querySuffix : '?preview=1'
-  const lines = ['flowchart TD']
+  const lines = ['flowchart LR']
   for (const page of journey.pages) {
     const label = mermaidLabel(`${page.id}\n${shortHeading(page)}`)
     lines.push(`  ${page.id}["${label}"]`)
@@ -194,11 +194,17 @@ function toMermaid(journey, options = {}) {
   const exits = journey.pages
     .filter((p) => !(p.next && p.next.length))
     .map((p) => p.id)
+  const mains = journey.pages
+    .filter((p) => p.next && p.next.length && p.id !== journey.start)
+    .map((p) => p.id)
   lines.push('  classDef exit fill:#f3f2f1,stroke:#505a5f,color:#0b0c0c')
   lines.push('  classDef start fill:#00703c,stroke:#00703c,color:#ffffff')
-  lines.push('  classDef question fill:#ffffff,stroke:#1d70b8,color:#0b0c0c')
+  lines.push('  classDef main fill:#d2e2f1,stroke:#1d70b8,color:#0b0c0c')
   if (exits.length) {
     lines.push(`  class ${exits.join(',')} exit`)
+  }
+  if (mains.length) {
+    lines.push(`  class ${mains.join(',')} main`)
   }
   lines.push(`  class ${journey.start} start`)
   return lines.join('\n')

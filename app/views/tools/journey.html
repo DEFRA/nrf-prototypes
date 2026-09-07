@@ -10,12 +10,12 @@
   .tools-wrap { padding: 0 30px 60px; }
   .tools-header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 20px; }
   .tools-header .govuk-heading-l { margin-bottom: 10px; }
-  .tools-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 15px; margin: 15px 0 25px; }
-  .tools-controls label { font-family: "GDS Transport", arial, sans-serif; font-size: 16px; }
+  .tools-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 15px; margin: 15px 0 25px; font-family: "GDS Transport", arial, sans-serif; font-size: 16px; }
   .tools-controls input[type="range"] { width: 200px; }
   .flow-diagram { overflow-x: auto; border: 1px solid #b1b4b6; padding: 20px; margin-bottom: 40px; background: #fff; }
-  .flow-diagram svg { max-width: 100%; height: auto; }
+  .flow-diagram svg { height: auto; }
   .flow-diagram pre.mermaid { margin: 0; }
+  .flow-diagram .node.start .nodeLabel, .flow-diagram .node.start .nodeLabel p { color: #ffffff !important; }
   .wall-level { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 20px; padding: 20px 0; border-top: 1px solid #b1b4b6; }
   .wall-level__label { flex: 0 0 100%; font-family: "GDS Transport", arial, sans-serif; font-size: 14px; color: #505a5f; margin: 0; }
   .wall-card { --wall-scale: 0.4; flex: 0 0 auto; width: calc(1000px * var(--wall-scale)); }
@@ -52,6 +52,11 @@
 
   <h2 class="govuk-heading-m">Flow</h2>
   <p class="tools-legend">Solid arrows are form submissions. Dotted arrows are links, change links and returns to check your answers. Click a node to open the screen with sample data.</p>
+  <div class="tools-controls">
+    <label for="flow-scale">Zoom</label>
+    <input type="range" id="flow-scale" min="0.1" max="1" step="0.05" value="1">
+    <span id="flow-scale-value">100%</span>
+  </div>
   <div class="flow-diagram">
     <pre class="mermaid">{{ mermaid }}</pre>
   </div>
@@ -93,7 +98,46 @@
 
 <script type="module">
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs'
-  mermaid.initialize({ startOnLoad: true, securityLevel: 'loose', flowchart: { useMaxWidth: true, htmlLabels: true, nodeSpacing: 30, rankSpacing: 40 } })
+  import elkLayouts from 'https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0/dist/mermaid-layout-elk.esm.min.mjs'
+  mermaid.registerLayoutLoaders(elkLayouts)
+  mermaid.initialize({ startOnLoad: false, securityLevel: 'loose', layout: 'elk', fontFamily: '"GDS Transport", arial, sans-serif', elk: { cycleBreakingStrategy: 'MODEL_ORDER' }, flowchart: { useMaxWidth: false, htmlLabels: true, nodeSpacing: 30, rankSpacing: 40 } })
+  await mermaid.run()
+
+  const slider = document.getElementById('flow-scale')
+  const label = document.getElementById('flow-scale-value')
+  const container = document.querySelector('.flow-diagram')
+  const svg = container.querySelector('svg')
+  const fullWidth = svg.getBoundingClientRect().width
+  const STORAGE_KEY = 'journey-tools-flow-scale'
+
+  function apply(value) {
+    const scale = parseFloat(value)
+    svg.style.width = fullWidth * scale + 'px'
+    label.textContent = Math.round(scale * 100) + '%'
+  }
+
+  const padding = parseFloat(getComputedStyle(container).paddingLeft) * 2
+  const fit = Math.min(1, (container.clientWidth - padding) / fullWidth)
+  let initial = Math.max(parseFloat(slider.min), Math.floor(fit * 20) / 20)
+  try {
+    const saved = window.localStorage.getItem(STORAGE_KEY)
+    if (saved) {
+      initial = saved
+    }
+  } catch (error) {
+    // localStorage unavailable; fit to width
+  }
+  slider.value = initial
+  apply(initial)
+
+  slider.addEventListener('input', () => {
+    apply(slider.value)
+    try {
+      window.localStorage.setItem(STORAGE_KEY, slider.value)
+    } catch (error) {
+      // ignore
+    }
+  })
 </script>
 <script src="/public/javascripts/tools/screen-wall.js"></script>
 {% endblock %}
