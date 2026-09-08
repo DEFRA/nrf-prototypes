@@ -21,6 +21,7 @@
   .flow-node--confirmation { fill: #00703c; stroke: #00703c; }
   .flow-node--main { fill: #d2e2f1; stroke: #1d70b8; }
   .flow-node--exit { fill: #f3f2f1; stroke: #505a5f; }
+  .flow-node--external { fill: #ffffff; stroke: #505a5f; stroke-dasharray: 4 4; }
   .flow-node__label { box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; text-align: center; padding: 8px 10px; min-height: 100%; font-family: "GDS Transport", arial, sans-serif; font-size: 13px; line-height: 1.3; color: #0b0c0c; overflow-wrap: anywhere; }
   .flow-node__text--start .flow-node__label, .flow-node__text--confirmation .flow-node__label { color: #ffffff; }
   .flow-node__text { pointer-events: none; }
@@ -47,6 +48,9 @@
   .wall-card__shield { position: absolute; inset: 0; cursor: pointer; }
   .wall-card__shield:hover { outline: 3px solid #ffdd00; outline-offset: -3px; }
   .wall-card--exit .wall-card__frame { border-color: #505a5f; border-style: dashed; }
+  .wall-card--external .wall-card__frame { display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; border-style: dashed; border-color: #505a5f; box-shadow: none; background: #f8f8f8; }
+  .wall-card__external { font-family: "GDS Transport", arial, sans-serif; font-size: 16px; line-height: 1.4; color: #505a5f; text-align: center; overflow-wrap: anywhere; }
+  .wall-card__external code { display: block; margin-top: 10px; font-size: 14px; color: #0b0c0c; }
   .wall-card--custom { --wall-height: 900px; }
   .tools-tabs .govuk-tabs__panel { padding-left: 0; padding-right: 0; border-left: 0; border-right: 0; border-bottom: 0; }
   .tools-legend { font-family: "GDS Transport", arial, sans-serif; font-size: 14px; color: #505a5f; margin: 0 0 10px; }
@@ -72,7 +76,7 @@
   </p>
 
   {% set flowPanel %}
-  <p class="tools-legend">Solid arrows are form submissions. Dotted arrows are links, change links and returns to check your answers. Click a node to open the screen with sample data.</p>
+  <p class="tools-legend">Solid arrows are form submissions. Dotted arrows are links, change links and returns to check your answers. Dashed boxes are exits to another journey. Click a node to open the screen with sample data.</p>
   <div class="tools-controls">
     <label for="flow-scale">Zoom</label>
     <input type="range" id="flow-scale" min="0.1" max="1" step="0.05" value="1">
@@ -108,6 +112,21 @@
       <p class="wall-level__label">{% if level.unreachable %}Not reached{% else %}Step {{ loop.index }}{% endif %}</p>
       <div class="wall-level__cards">
       {% for page in level.pages %}
+      {% if page.external %}
+      <div class="wall-card wall-card--branch wall-card--external">
+        <div class="wall-card__head">
+          <span class="wall-card__id">Exit</span>
+          <span class="wall-card__type">· another journey</span><br>
+          <span class="wall-card__links">
+            <a class="govuk-link" href="{{ page.path }}?preview=1" target="_blank" rel="noopener">Open</a>
+          </span>
+        </div>
+        <div class="wall-card__frame">
+          <p class="wall-card__external">Continues in another journey<code>{{ page.path }}</code></p>
+        </div>
+        {% if page.via %}<p class="wall-card__via">&#8627; {{ page.via }}</p>{% endif %}
+      </div>
+      {% else %}
       <div class="wall-card{% if not loop.first %} wall-card--branch{% endif %}{% if page.isExit %} wall-card--exit{% endif %}{% if page.isCustom %} wall-card--custom{% endif %}">
         <div class="wall-card__head">
           <span class="wall-card__id">{{ page.id }}</span>
@@ -115,7 +134,7 @@
           <span class="wall-card__links">
             <a class="govuk-link" href="{{ page.path }}?preview=1" target="_blank" rel="noopener">Open</a>
             {% if page.isQuestion or page.isCustom %}<a class="govuk-link" href="{{ page.path }}?preview=1&error=1" target="_blank" rel="noopener">Error state</a>{% endif %}
-            <span class="wall-card__type" title="{{ page.contentFile }}">{{ page.id }}.md</span>
+            <span class="wall-card__type" title="{{ page.contentFile }}">{% if page.shared %}shared/{% endif %}{{ page.id }}.md</span>
           </span>
         </div>
         <div class="wall-card__frame">
@@ -124,6 +143,7 @@
         </div>
         {% if page.via %}<p class="wall-card__via">&#8627; {{ page.via }}</p>{% endif %}
       </div>
+      {% endif %}
       {% endfor %}
       </div>
     </div>

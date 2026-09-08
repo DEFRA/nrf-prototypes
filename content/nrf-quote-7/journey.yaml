@@ -32,9 +32,11 @@ homepage:
     - Order, branching and session keys in content/nrf-quote-7/journey.yaml
     - Flow diagram and a live wall of every screen at /tools/journeys/nrf-quote-7
     - Map page kept as bespoke code, wired in through hooks
+    - Starts on the start page and "What would you like to do?" shared with the request-to-use journey (content/shared/pages/)
 
 # Every session key this journey writes. `clears: $session` expands to this.
 session:
+  - journeyType
   - planningType
   - isHousing
   - residentialBuildingCount
@@ -51,6 +53,7 @@ session:
 # screen wall at /tools/journeys/nrf-quote-7. Never written to the session.
 preview:
   data:
+    journeyType: quote
     planningType: Full planning permission
     isHousing: 'Yes'
     residentialBuildingCount: 120
@@ -74,8 +77,21 @@ preview:
     levyAmount: '2,500'
 
 pages:
+  # The start page and "What would you like to do?" are shared with the
+  # request-to-use journey: copy lives in content/shared/pages/. Only the
+  # answer that stays in this journey continues here; the other leaves for
+  # the request-to-use journey's first question. Update that path when a
+  # newer request-to-use version becomes the target.
   - id: start
-    next: planning-type
+    shared: true
+    next: what-would-you-like-to-do
+
+  - id: what-would-you-like-to-do
+    shared: true
+    next:
+      - when: { key: journeyType, equals: request-to-use }
+        goto: /nrf-request-to-use-1/quote-reference
+      - goto: planning-type
 
   - id: planning-type
     field: planning-type

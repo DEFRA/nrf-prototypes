@@ -30,7 +30,19 @@ function pageView(page, journey, via) {
     isQuestion: isQuestionType(page.type),
     isCustom: page.type === 'custom',
     isExit: !(page.next && page.next.length),
-    contentFile: `content/${journey.id}/pages/${page.id}.md`
+    shared: page.shared,
+    contentFile: page.contentFile
+  }
+}
+
+// A branch that leaves the journey for an absolute path: no screen here,
+// just a card saying where it goes
+function externalView(entry) {
+  return {
+    via: entry.via || '',
+    id: entry.id,
+    path: entry.path,
+    external: true
   }
 }
 
@@ -75,8 +87,10 @@ router.get('/tools/journeys/:journey', (req, res) => {
   }
   const levels = layoutLevels(journey).map((row) => ({
     unreachable: Boolean(row.unreachable),
-    pages: row.pages.map(({ id, via }) =>
-      pageView(journey.byId.get(id), journey, via)
+    pages: row.pages.map((entry) =>
+      entry.external
+        ? externalView(entry)
+        : pageView(journey.byId.get(entry.id), journey, entry.via)
     )
   }))
   res.render('tools/journey', {

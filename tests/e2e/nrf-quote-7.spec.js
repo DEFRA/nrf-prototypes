@@ -2,7 +2,7 @@ const { test, expect } = require('@playwright/test')
 const fs = require('fs')
 const path = require('path')
 const turf = require('@turf/turf')
-const { loadJourney } = require('../../app/lib/journey-engine')
+const { loadJourney, toFlowGraph } = require('../../app/lib/journey-engine')
 
 /**
  * nrf-quote-7: the content-driven port of nrf-quote-6.
@@ -70,6 +70,11 @@ test.describe('nrf-quote-7 happy path', () => {
 
     await page.goto(`${journey.basePath}/start`)
     await page.getByRole('button', { name: 'Start now' }).click()
+    await expect(page).toHaveURL(/what-would-you-like-to-do/)
+
+    // The shared funnel page: the quote answer stays in this journey
+    await page.getByLabel(/I want a quote/).check()
+    await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page).toHaveURL(/planning-type/)
 
     await page.getByLabel('Full planning permission').check()
@@ -115,6 +120,8 @@ test.describe('nrf-quote-7 happy path', () => {
   test('changing an answer returns to check your answers', async ({ page }) => {
     await page.goto(`${journey.basePath}/start`)
     await page.getByRole('button', { name: 'Start now' }).click()
+    await page.getByLabel(/I want a quote/).check()
+    await page.getByRole('button', { name: 'Continue' }).click()
     await page.getByLabel('Hybrid planning permission').check()
     await page.getByRole('button', { name: 'Continue' }).click()
     await page.getByLabel('Yes', { exact: true }).check()
@@ -178,7 +185,10 @@ test.describe('journey tools', () => {
     await expect(
       page.locator('#flow-diagram[data-rendered="true"]')
     ).toHaveCount(1, { timeout: 20000 })
-    await expect(page.locator('.flow-node')).toHaveCount(journey.pages.length)
+    // Every page plus one node per exit to another journey
+    await expect(page.locator('.flow-node')).toHaveCount(
+      toFlowGraph(journey).nodes.length
+    )
     const rows = await page
       .locator('.flow-node[data-main-chain="true"]')
       .evaluateAll((rects) => rects.map((r) => r.getAttribute('y')))

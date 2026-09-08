@@ -4,11 +4,14 @@ This folder holds the words and the logic for content-driven journeys. The proto
 
 ```
 content/
+  shared/
+    pages/
+      start.md        screens shared by more than one journey (content)
+      what-would-you-like-to-do.md
   nrf-quote-7/
     journey.yaml      order of pages, branching, what is remembered (logic)
     pages/
-      start.md        one file per screen (content)
-      planning-type.md
+      planning-type.md  one file per screen (content)
       ...
 ```
 
@@ -157,6 +160,28 @@ actions:
 
 Kinds: `submit`, `warning` (red button), `link`, `destructive` (red link), `start`.
 
+## Pages shared by more than one journey
+
+The quote and request-to-use journeys both begin with the same start page and the same "What would you like to do?" question. That copy lives once, in `content/shared/pages/`, and each journey lists the page with `shared: true`:
+
+```yaml
+pages:
+  - id: start
+    shared: true # copy comes from content/shared/pages/start.md
+    next: what-would-you-like-to-do
+
+  - id: what-would-you-like-to-do
+    shared: true
+    next:
+      - when: { key: journeyType, equals: request-to-use }
+        goto: /nrf-request-to-use-1/quote-reference # leaves this journey
+      - goto: planning-type
+```
+
+The page keeps the journey's own URL (`/nrf-quote-7/start` and `/nrf-request-to-use-1/start` are the same words), so the homepage cards, the smoke test and the screen wall work as usual. To change the shared copy, edit the file in `content/shared/pages/`; every journey that uses it updates at once. A shared question page carries its own `type`, `field`, `sessionKey`, `options` and `errors` in its frontmatter, so the journeys only decide where each answer goes. A page can also set `serviceName` in its frontmatter (or in `journey.yaml`) to replace the journey's service name in the header and `<title>` on that page alone: the shared pages say "Manage the nature restoration levy" and the journey's own name takes over from the next page.
+
+A `goto` that starts with `/` is an exit to another journey. The engine does not check that the page exists there, so **when a newer version becomes the target (say `nrf-quote-8`), update the path in the other journey's `journey.yaml`**. Exits show in the flow diagram as dashed boxes, on the screen wall as a placeholder card, and in `flow.json` under `transitions.offPage`. A page cannot be both shared and have a file of the same name in the journey's own `pages/`; the loader refuses to guess which one you meant.
+
 ## Things that need a developer
 
 - Adding, removing or renaming a page (the file name is the page's URL). The running server picks the new page up without a restart.
@@ -203,7 +228,7 @@ pages:
 
 Condition operators: `equals`, `notEquals`, `in`, `notIn`, `gt`, `gte`, `lt`, `lte`, `between`, `truthy`, `falsy`, `isSet`. Combine with `all:`, `any:`, `not:`. Engine values: `$navFromSummary`, `$isChange`, `$preview`.
 
-Other page keys: `back` (page id, absolute path, or a rule list), `guard` (condition plus `redirect`), `store` (map radio labels to stored values), `set` (write values on submit; also allowed on a rule), `clears` (list of keys, or `$session`), `handler: custom` (page has hooks), `template` (a hand-written view for `type: custom`), `accept` and `maxSize` for uploads, `min` and `max` for numbers.
+Other page keys: `shared: true` (copy comes from `content/shared/pages/<id>.md`, see "Pages shared by more than one journey"), `back` (page id, absolute path, or a rule list), `guard` (condition plus `redirect`), `store` (map radio labels to stored values), `set` (write values on submit; also allowed on a rule), `clears` (list of keys, or `$session`), `handler: custom` (page has hooks), `template` (a hand-written view for `type: custom`), `accept` and `maxSize` for uploads, `min` and `max` for numbers.
 
 Journey keys: `id`, `name`, `serviceName`, `start`, `summaryPage`, `session`, `preview.data` (sample answers for `?preview=1` and the screen wall), `homepage` (the homepage card: `family`, `version`, `status`, `title`, `description`, `changes`; see "Adding a new journey"). `serviceName` is used in every page `<title>` and, prefixed "PROTOTYPE - ", in the service navigation bar under the header (`app/views/includes/service-header.html`).
 

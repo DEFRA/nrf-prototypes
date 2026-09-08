@@ -134,7 +134,9 @@
         }
       }),
       edges: graph.edges.map(function (edge) {
-        const priority = edge.onMainChain ? '10' : '1'
+        // A strong preference keeps the whole default path on one row even
+        // when an exit to another journey hangs off an early page
+        const priority = edge.onMainChain ? '100' : '1'
         const size = sizes.edgeSize[edge.id]
         return {
           id: edge.id,

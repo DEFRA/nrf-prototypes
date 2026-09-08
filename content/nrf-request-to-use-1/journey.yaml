@@ -27,20 +27,36 @@ homepage:
   changes:
     - First stub with NRF reference, check your answers and confirmation
     - Built from content files, so copy and flow can change without code
+    - Starts on the start page and "What would you like to do?" shared with the quote journey (content/shared/pages/)
 
 # Every session key this journey writes. `clears: $session` expands to this.
 session:
+  - journeyType
   - nrfReference
 
 # Sample answers used when a page is opened with ?preview=1 and on the
 # screen wall at /tools/journeys/nrf-request-to-use-1. Never written to the session.
 preview:
   data:
+    journeyType: request-to-use
     nrfReference: NRF-123456
 
 pages:
+  # The start page and "What would you like to do?" are shared with the quote
+  # journey: copy lives in content/shared/pages/. Only the answer that stays in
+  # this journey continues here; the other leaves for the quote journey's
+  # first question. Update that path when a newer quote version becomes the
+  # target.
   - id: start
-    next: quote-reference
+    shared: true
+    next: what-would-you-like-to-do
+
+  - id: what-would-you-like-to-do
+    shared: true
+    next:
+      - when: { key: journeyType, equals: quote }
+        goto: /nrf-quote-7/planning-type
+      - goto: quote-reference
 
   - id: quote-reference
     field: nrf-reference

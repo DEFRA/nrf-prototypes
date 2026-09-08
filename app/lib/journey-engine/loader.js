@@ -14,6 +14,9 @@ const { validateCondition } = require('./expressions')
 const { extractHeading } = require('./markdown')
 
 const CONTENT_DIR = path.join(__dirname, '../../../content')
+// Pages marked `shared: true` in journey.yaml read their copy from here, so
+// several journeys can start on the same page without duplicating it
+const SHARED_PAGES_DIR = path.join(CONTENT_DIR, 'shared', 'pages')
 
 const TYPES = [
   'start',
@@ -91,10 +94,12 @@ function journeyDir(journeyId) {
 
 function signatureFor(dir) {
   const files = [path.join(dir, 'journey.yaml')]
-  const pagesDir = path.join(dir, 'pages')
-  if (fs.existsSync(pagesDir)) {
-    for (const name of fs.readdirSync(pagesDir)) {
-      files.push(path.join(pagesDir, name))
+  // Shared pages count for every journey, so an edit to one reloads them all
+  for (const pagesDir of [path.join(dir, 'pages'), SHARED_PAGES_DIR]) {
+    if (fs.existsSync(pagesDir)) {
+      for (const name of fs.readdirSync(pagesDir)) {
+        files.push(path.join(pagesDir, name))
+      }
     }
   }
   return files
@@ -139,7 +144,10 @@ function normaliseRules(raw, where, problems) {
 function buildPage(entry, journey, problems) {
   const id = entry.id
   const where = `pages.${id}`
-  const pageFile = path.join(journeyDir(journey.id), 'pages', `${id}.md`)
+  const shared = Boolean(entry.shared)
+  const localFile = path.join(journeyDir(journey.id), 'pages', `${id}.md`)
+  const pageFile = shared ? path.join(SHARED_PAGES_DIR, `${id}.md`) : localFile
+  const contentFile = path.relative(path.dirname(CONTENT_DIR), pageFile)
   let frontmatter = {}
   let body = ''
   if (fs.existsSync(pageFile)) {
@@ -149,8 +157,15 @@ function buildPage(entry, journey, problems) {
     )
     frontmatter = parsed.frontmatter
     body = parsed.body
+  } else if (shared) {
+    problems.push(`${where}: missing shared content file shared/pages/${id}.md`)
   } else {
     problems.push(`${where}: missing content file pages/${id}.md`)
+  }
+  if (shared && fs.existsSync(localFile)) {
+    problems.push(
+      `${where}: is marked shared but pages/${id}.md also exists; delete one of them`
+    )
   }
 
   const type = frontmatter.type || entry.type || 'content'
@@ -212,9 +227,15 @@ function buildPage(entry, journey, problems) {
   return {
     id,
     path: `${journey.basePath}/${id}`,
+    shared,
+    contentFile,
+    serviceName: entry.serviceName || frontmatter.serviceName,
     type,
     field,
-    sessionKey: entry.sessionKey || (field ? camelCase(field) : undefined),
+    sessionKey:
+      entry.sessionKey ||
+      frontmatter.sessionKey ||
+      (field ? camelCase(field) : undefined),
     template,
     changeable: Boolean(entry.changeable),
     handler: entry.handler,
@@ -417,6 +438,7 @@ function getRouteConstants(journeyId) {
 
 module.exports = {
   CONTENT_DIR,
+  SHARED_PAGES_DIR,
   TYPES,
   QUESTION_TYPES,
   isQuestionType,

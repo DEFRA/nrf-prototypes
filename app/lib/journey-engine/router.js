@@ -201,7 +201,9 @@ function buildModel(ctx, extra = {}) {
       id: journey.id,
       basePath: journey.basePath,
       name: journey.name,
-      serviceName: journey.serviceName,
+      // A page can carry its own service name (the shared start page says
+      // "Manage ..." before the journey's own name takes over)
+      serviceName: page.serviceName || journey.serviceName,
       summaryPage: journey.summaryPage,
       start: journey.start
     },

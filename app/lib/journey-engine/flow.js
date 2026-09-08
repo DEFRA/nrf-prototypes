@@ -13,10 +13,18 @@ function isPageTarget(target, journey) {
   return Boolean(target) && !target.startsWith('/') && journey.byId.has(target)
 }
 
+// An absolute path leaves this journey (usually for another journey's page)
+function isExternalTarget(target) {
+  return Boolean(target) && target.startsWith('/')
+}
+
+const EXTERNAL_HEADING = 'Continues in another journey'
+
 /**
- * Edges: { fromId, toId, label, kind } where kind is
+ * Edges: { fromId, toId, label, kind, external } where kind is
  * 'next' (form submission), 'change' (summary change link) or 'link'
- * (an action button/link on the page).
+ * (an action button/link on the page). External edges point at an absolute
+ * path instead of a page id, so `toId` is the path itself.
  */
 function getEdges(journey) {
   const edges = []
@@ -46,6 +54,14 @@ function getEdges(journey) {
           label: rule.when ? describeCondition(rule.when) : '',
           kind: isReturn ? 'return' : 'next'
         })
+      } else if (isExternalTarget(rule.goto)) {
+        add({
+          fromId: page.id,
+          toId: rule.goto,
+          label: rule.when ? describeCondition(rule.when) : '',
+          kind: 'next',
+          external: true
+        })
       }
     }
     for (const row of page.content.rows || []) {
@@ -72,6 +88,14 @@ function getEdges(journey) {
           label: action.text,
           kind: 'link'
         })
+      } else if (isExternalTarget(action.goto)) {
+        add({
+          fromId: page.id,
+          toId: action.goto,
+          label: action.text,
+          kind: 'link',
+          external: true
+        })
       }
     }
     // Links inside the markdown body to other pages in this journey
@@ -90,19 +114,45 @@ function getEdges(journey) {
 }
 
 /**
+ * One node per distinct absolute path the journey exits to, so the diagram
+ * can show where a branch goes instead of dropping it.
+ */
+function externalNodes(journey) {
+  const seen = new Set()
+  const nodes = []
+  for (const edge of getEdges(journey)) {
+    if (edge.external && !seen.has(edge.toId)) {
+      seen.add(edge.toId)
+      nodes.push({
+        id: edge.toId,
+        heading: EXTERNAL_HEADING,
+        path: edge.toId,
+        kind: 'external',
+        external: true,
+        onMainChain: false
+      })
+    }
+  }
+  return nodes
+}
+
+/**
  * Rows for the screen wall: one row per main-chain page, in chain order.
  * Each row lists the main-chain page first, then every page that branches
  * off it (followed through any further off-chain pages), each with a
  * human-readable `via` caption explaining how it is reached. Pages only
  * reached by change links or in-page links join the row of the page that
  * links to them. Anything still unplaced goes in a final "not reached" row.
+ * Exits to another journey sit in the row of the page that leaves, flagged
+ * `external` (they have no screen of their own here).
  *
- * Returns [{ pages: [{ id, via }], unreachable }].
+ * Returns [{ pages: [{ id, via, external?, path? }], unreachable }].
  */
 function layoutLevels(journey) {
   const chain = mainChain(journey)
   const onChain = new Set(chain)
-  const edges = getEdges(journey)
+  const allEdges = getEdges(journey)
+  const edges = allEdges.filter((edge) => !edge.external)
   const outgoing = new Map()
   for (const edge of edges) {
     if (!outgoing.has(edge.fromId)) {
@@ -157,6 +207,20 @@ function layoutLevels(journey) {
   if (unreachable.length) {
     rows.push({ pages: unreachable, unreachable: true })
   }
+  // Pass 3: exits to other journeys join the row of the page that leaves
+  for (const edge of allEdges.filter((e) => e.external)) {
+    const rowIndex = rowOf.get(edge.fromId)
+    if (rowIndex === undefined) {
+      continue
+    }
+    const detail = edge.label ? `, if ${edge.label}` : ''
+    rows[rowIndex].pages.push({
+      id: edge.toId,
+      path: edge.toId,
+      via: `From ${edge.fromId}${detail}`,
+      external: true
+    })
+  }
   return rows
 }
 
@@ -189,14 +253,27 @@ function toMermaid(journey, options = {}) {
     const label = mermaidLabel(`${page.id}\n${shortHeading(page)}`)
     lines.push(`  ${page.id}["${label}"]`)
   }
+  // Paths are not valid Mermaid ids, so exits get ext0, ext1, ...
+  const externals = externalNodes(journey)
+  const externalId = new Map(externals.map((node, i) => [node.id, `ext${i}`]))
+  for (const node of externals) {
+    const label = mermaidLabel(`${node.path}\n${EXTERNAL_HEADING}`)
+    lines.push(`  ${externalId.get(node.id)}["${label}"]`)
+  }
   for (const edge of getEdges(journey)) {
     const arrow = edge.kind === 'next' ? '-->' : '-.->'
     const text = edge.kind === 'return' ? `return: ${edge.label}` : edge.label
     const label = text ? `|"${mermaidLabel(edgeLabel(text))}"|` : ''
-    lines.push(`  ${edge.fromId} ${arrow}${label} ${edge.toId}`)
+    const toId = edge.external ? externalId.get(edge.toId) : edge.toId
+    lines.push(`  ${edge.fromId} ${arrow}${label} ${toId}`)
   }
   for (const page of journey.pages) {
     lines.push(`  click ${page.id} "${page.path}${suffix}" _blank`)
+  }
+  for (const node of externals) {
+    lines.push(
+      `  click ${externalId.get(node.id)} "${node.path}${suffix}" _blank`
+    )
   }
   const exits = journey.pages
     .filter((p) => !(p.next && p.next.length))
@@ -207,11 +284,17 @@ function toMermaid(journey, options = {}) {
   lines.push('  classDef exit fill:#f3f2f1,stroke:#505a5f,color:#0b0c0c')
   lines.push('  classDef start fill:#00703c,stroke:#00703c,color:#ffffff')
   lines.push('  classDef main fill:#d2e2f1,stroke:#1d70b8,color:#0b0c0c')
+  lines.push(
+    '  classDef external fill:#ffffff,stroke:#505a5f,stroke-dasharray:4 4,color:#0b0c0c'
+  )
   if (exits.length) {
     lines.push(`  class ${exits.join(',')} exit`)
   }
   if (mains.length) {
     lines.push(`  class ${mains.join(',')} main`)
+  }
+  if (externals.length) {
+    lines.push(`  class ${[...externalId.values()].join(',')} external`)
   }
   lines.push(`  class ${journey.start} start`)
   return lines.join('\n')
@@ -267,7 +350,8 @@ function toFlowGraph(journey) {
   }
   const nodes = [
     ...chain.map((id) => nodeOf(journey.byId.get(id))),
-    ...journey.pages.filter((p) => !position.has(p.id)).map(nodeOf)
+    ...journey.pages.filter((p) => !position.has(p.id)).map(nodeOf),
+    ...externalNodes(journey)
   ]
   const edges = getEdges(journey).map((edge, index) => {
     const text = edge.kind === 'return' ? `return: ${edge.label}` : edge.label
@@ -282,6 +366,7 @@ function toFlowGraph(journey) {
       label: text ? edgeLabel(text) : '',
       kind: edge.kind,
       dashed: edge.kind !== 'next',
+      external: Boolean(edge.external),
       onMainChain
     }
   })
@@ -298,6 +383,7 @@ function toFlowJson(journey) {
     const page = journey.byId.get(id)
     return page ? page.content.heading : id
   }
+  const edges = getEdges(journey)
   return {
     journey: journey.id,
     basePath: journey.basePath,
@@ -310,15 +396,26 @@ function toFlowJson(journey) {
       template: page.template
     })),
     transitions: {
-      onPage: getEdges(journey).map((edge) => ({
-        fromId: edge.fromId,
-        fromName: nameOf(edge.fromId),
-        toId: edge.toId,
-        toName: nameOf(edge.toId),
-        label: edge.label,
-        kind: edge.kind
-      })),
-      offPage: []
+      onPage: edges
+        .filter((edge) => !edge.external)
+        .map((edge) => ({
+          fromId: edge.fromId,
+          fromName: nameOf(edge.fromId),
+          toId: edge.toId,
+          toName: nameOf(edge.toId),
+          label: edge.label,
+          kind: edge.kind
+        })),
+      // Branches that leave this journey for an absolute path
+      offPage: edges
+        .filter((edge) => edge.external)
+        .map((edge) => ({
+          fromId: edge.fromId,
+          fromName: nameOf(edge.fromId),
+          toPath: edge.toId,
+          label: edge.label,
+          kind: edge.kind
+        }))
     }
   }
 }
@@ -334,7 +431,10 @@ function exportScreens(journey) {
   const screens = []
   let index = 0
   for (const row of layoutLevels(journey)) {
-    for (const { id } of row.pages) {
+    for (const { id, external } of row.pages) {
+      if (external) {
+        continue
+      }
       const page = journey.byId.get(id)
       index += 1
       const prefix = String(index).padStart(2, '0')
@@ -363,6 +463,7 @@ function exportScreens(journey) {
 
 module.exports = {
   getEdges,
+  externalNodes,
   layoutLevels,
   mainChain,
   exportScreens,
