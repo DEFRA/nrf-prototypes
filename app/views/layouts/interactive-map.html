@@ -33,6 +33,11 @@
   <link href="{{ interactiveMapAssets }}/plugins/beta/scale-bar/dist/css/index.css" rel="stylesheet">
 {% endblock %}
 
+{# Production-style header: crown header plus service navigation bar #}
+{% block header %}
+  {% include "includes/service-header.html" %}
+{% endblock %}
+
 {% block bodyStart %}
   <script>document.body.classList.add('im-is-loading')</script>
 {% endblock %}

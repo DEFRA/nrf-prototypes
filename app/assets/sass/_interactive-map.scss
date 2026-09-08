@@ -19,18 +19,24 @@
   flex-direction: column;
 
   // The map's own back button sits at the standard 15px inset from the
-  // viewport edge, so the header is switched to the same full-width,
-  // fixed-gutter layout to line up with it.
-  .govuk-header__container {
+  // viewport edge, so the header and service navigation are switched to the
+  // same full-width, fixed-gutter layout to line up with it.
+  // govuk-header__container--full-width is GOV.UK Frontend's own modifier
+  // for this; service navigation has no equivalent, so its inner
+  // govuk-width-container is overridden to match by hand.
+  .govuk-header__container,
+  .govuk-service-navigation .govuk-width-container {
     max-width: none;
     margin: 0;
     padding: 0 govuk-spacing(3);
   }
 
   // Reclaims vertical space for the map on small screens, where the header
-  // would otherwise take up a disproportionate share of the viewport.
+  // and service navigation would otherwise take up a disproportionate share
+  // of the viewport.
   @media (max-width: 640px) {
-    .govuk-header {
+    .govuk-header,
+    .govuk-service-navigation {
       display: none;
     }
   }

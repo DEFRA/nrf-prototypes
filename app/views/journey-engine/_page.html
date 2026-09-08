@@ -8,7 +8,12 @@ Journey engine base page. Every generic page type extends this and fills
 {% if error %}Error: {% endif %}{{ content.title }} - {{ journey.serviceName }} - GOV.UK
 {% endblock %}
 
+{% block header %}
+{% include "includes/service-header.html" %}
+{% endblock %}
+
 {% block beforeContent %}
+{% include "includes/prototype-phase-banner.html" %}
 {% if backLink %}
 {{ govukBackLink({
   text: "Back",
