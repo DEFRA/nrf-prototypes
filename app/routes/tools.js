@@ -14,6 +14,7 @@ const {
   layoutLevels,
   toMermaid,
   toFlowJson,
+  toFlowGraph,
   isQuestionType
 } = require('../lib/journey-engine')
 
@@ -82,7 +83,8 @@ router.get('/tools/journeys/:journey', (req, res) => {
     },
     levels,
     edges: getEdges(journey),
-    mermaid: toMermaid(journey)
+    // Inlined in a <script> tag, so keep "</" out of the JSON
+    graphJson: JSON.stringify(toFlowGraph(journey)).replace(/</g, '\\u003c')
   })
 })
 

@@ -16,7 +16,14 @@ const {
   TYPES
 } = require('./loader')
 const { createJourneyRouter, previewData } = require('./router')
-const { getEdges, layoutLevels, toMermaid, toFlowJson } = require('./flow')
+const {
+  getEdges,
+  layoutLevels,
+  mainChain,
+  toMermaid,
+  toFlowJson,
+  toFlowGraph
+} = require('./flow')
 const { createRenderer, interpolate } = require('./markdown')
 const { evaluate, firstMatch, describeCondition } = require('./expressions')
 
@@ -30,8 +37,10 @@ module.exports = {
   previewData,
   getEdges,
   layoutLevels,
+  mainChain,
   toMermaid,
   toFlowJson,
+  toFlowGraph,
   createRenderer,
   interpolate,
   evaluate,

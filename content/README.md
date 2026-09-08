@@ -14,7 +14,7 @@ content/
 
 **If you are changing copy, options, hints, error messages or button text, you only ever edit files in `pages/`.** You never need to touch `journey.yaml` for that.
 
-See the flow and every screen side by side at `/tools/journeys/nrf-quote-7` while `npm run dev` is running. Save a page file and refresh: changes show immediately.
+See the flow and every screen side by side at `/tools/journeys/nrf-quote-7` while `npm run dev` is running. Save a page file and refresh: changes show immediately. The flow diagram keeps the default path (following each page's default `goto` from `start`) on a single row, with branches and exits hanging below it; nothing needs marking as "main" by hand.
 
 ## Editing a page
 

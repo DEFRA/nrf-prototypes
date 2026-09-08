@@ -89,6 +89,7 @@ test.describe('nrf-quote-7 happy path', () => {
     await expect(page).toHaveURL(/\/map$/)
 
     // Bypass the drawing UI: set the hidden boundary field and submit the form
+    await page.locator('#boundary-data').waitFor({ state: 'attached' })
     await page.evaluate((coordinates) => {
       const input = document.getElementById('boundary-data')
       input.value = JSON.stringify({ coordinates, center: coordinates[0] })
@@ -146,8 +147,21 @@ test.describe('journey tools', () => {
   test('flow and screen wall page lists every screen', async ({ page }) => {
     const response = await page.goto(`/tools/journeys/${journey.id}`)
     expect(response.status()).toBe(200)
-    await expect(page.locator('pre.mermaid')).toHaveCount(1)
     await expect(page.locator('iframe')).toHaveCount(journey.pages.length)
+  })
+
+  test('flow diagram keeps the default path on one row', async ({ page }) => {
+    await page.goto(`/tools/journeys/${journey.id}`)
+    // ELK is loaded from a CDN, so give the layout a moment
+    await expect(
+      page.locator('#flow-diagram[data-rendered="true"]')
+    ).toHaveCount(1, { timeout: 20000 })
+    await expect(page.locator('.flow-node')).toHaveCount(journey.pages.length)
+    const rows = await page
+      .locator('.flow-node[data-main-chain="true"]')
+      .evaluateAll((rects) => rects.map((r) => r.getAttribute('y')))
+    expect(rows.length).toBeGreaterThan(1)
+    expect(new Set(rows).size).toBe(1)
   })
 
   test('flow.json has the figma-journey shape', async ({ request }) => {

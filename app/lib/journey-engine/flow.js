@@ -211,6 +211,78 @@ function toMermaid(journey, options = {}) {
 }
 
 /**
+ * The default path through the journey: from the start page, follow each
+ * page's default next rule (the one without a `when`) until a page has no
+ * default target. This is what the flow diagram keeps on a single row.
+ */
+function mainChain(journey) {
+  const chain = []
+  const seen = new Set()
+  let id = journey.start
+  while (id && journey.byId.has(id) && !seen.has(id)) {
+    chain.push(id)
+    seen.add(id)
+    const page = journey.byId.get(id)
+    const defaultRule = (page.next || []).find((r) => !r.when)
+    id =
+      defaultRule && isPageTarget(defaultRule.goto, journey)
+        ? defaultRule.goto
+        : null
+  }
+  return chain
+}
+
+/**
+ * Plain graph data for the client-side ELK renderer on the tools page.
+ * Main-chain nodes and edges come first so ELK's model order keeps the
+ * default path on one row; sizes are measured in the browser.
+ */
+function toFlowGraph(journey) {
+  const chain = mainChain(journey)
+  const position = new Map(chain.map((id, index) => [id, index]))
+  const nodeOf = (page) => {
+    const isExit = !(page.next && page.next.length)
+    let kind = 'main'
+    if (page.id === journey.start) {
+      kind = 'start'
+    } else if (page.type === 'confirmation') {
+      kind = 'confirmation'
+    } else if (isExit) {
+      kind = 'exit'
+    }
+    return {
+      id: page.id,
+      heading: shortHeading(page),
+      path: page.path,
+      kind,
+      onMainChain: position.has(page.id)
+    }
+  }
+  const nodes = [
+    ...chain.map((id) => nodeOf(journey.byId.get(id))),
+    ...journey.pages.filter((p) => !position.has(p.id)).map(nodeOf)
+  ]
+  const edges = getEdges(journey).map((edge, index) => {
+    const text = edge.kind === 'return' ? `return: ${edge.label}` : edge.label
+    const onMainChain =
+      edge.kind === 'next' &&
+      position.has(edge.fromId) &&
+      position.get(edge.toId) === position.get(edge.fromId) + 1
+    return {
+      id: `e${index}`,
+      fromId: edge.fromId,
+      toId: edge.toId,
+      label: text ? edgeLabel(text) : '',
+      kind: edge.kind,
+      dashed: edge.kind !== 'next',
+      onMainChain
+    }
+  })
+  edges.sort((a, b) => Number(b.onMainChain) - Number(a.onMainChain))
+  return { mainChain: chain, nodes, edges }
+}
+
+/**
  * Same shape as the figma-journey skill's flow.json so its reconcile and
  * fidelity scripts can consume a markdown-sourced journey.
  */
@@ -244,4 +316,11 @@ function toFlowJson(journey) {
   }
 }
 
-module.exports = { getEdges, layoutLevels, toMermaid, toFlowJson }
+module.exports = {
+  getEdges,
+  layoutLevels,
+  mainChain,
+  toMermaid,
+  toFlowJson,
+  toFlowGraph
+}
