@@ -262,7 +262,7 @@ The prototype-wide default lives in `app/config.json`:
 
 ```json
 {
-  "serviceName": "Nature Restoration Fund User Journey Prototypes"
+  "serviceName": "Nature Restoration Fund Prototypes"
 }
 ```
 
