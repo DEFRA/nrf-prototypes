@@ -5,6 +5,7 @@
 // diagram and the wall can never drift from the running prototype.
 //
 
+const archiver = require('archiver')
 const govukPrototypeKit = require('govuk-prototype-kit')
 const router = govukPrototypeKit.requests.setupRouter()
 const {
@@ -15,7 +16,8 @@ const {
   toMermaid,
   toFlowJson,
   toFlowGraph,
-  isQuestionType
+  isQuestionType,
+  captureScreens
 } = require('../lib/journey-engine')
 
 function pageView(page, journey, via) {
@@ -106,6 +108,38 @@ router.get('/tools/journeys/:journey/flow.mmd', (req, res) => {
     return
   }
   res.type('text/plain').send(toMermaid(journey))
+})
+
+// Every screen as a JPG, zipped. Drives headless Chromium over the preview
+// URLs, so it takes a little while and needs Playwright installed.
+router.get('/tools/journeys/:journey/screens.zip', async (req, res) => {
+  const journey = loadOr404(req, res)
+  if (!journey) {
+    return
+  }
+  let screens
+  try {
+    screens = await captureScreens(journey, {
+      baseUrl: `${req.protocol}://${req.get('host')}`
+    })
+  } catch (error) {
+    res.status(500).type('text/plain').send(error.message)
+    return
+  }
+  res.setHeader('Content-Type', 'application/zip')
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename="${journey.id}-screens.zip"`
+  )
+  const archive = archiver('zip', { zlib: { level: 6 } })
+  archive.on('error', (error) => {
+    res.destroy(error)
+  })
+  archive.pipe(res)
+  for (const { file, buffer } of screens) {
+    archive.append(buffer, { name: `${journey.id}/${file}` })
+  }
+  archive.finalize()
 })
 
 module.exports = router

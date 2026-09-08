@@ -11,6 +11,7 @@
     "format": "prettier --write \"**/*.{cjs,js,json,md,scss}\"",
     "format:check": "prettier --check \"**/*.{cjs,js,json,md,scss}\"",
     "screenshot": "node scripts/screenshot-capture.js",
+    "screenshot:journey": "node scripts/export-screens.js",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui",
@@ -41,6 +42,7 @@
   },
   "devDependencies": {
     "@playwright/test": "1.57.0",
+    "archiver": "7.0.1",
     "husky": "9.1.7",
     "lint-staged": "16.2.5",
     "prettier": "3.6.2",

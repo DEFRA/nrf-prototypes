@@ -7,6 +7,7 @@
  */
 
 const { describeCondition } = require('./expressions')
+const { isQuestionType } = require('./loader')
 
 function isPageTarget(target, journey) {
   return Boolean(target) && !target.startsWith('/') && journey.byId.has(target)
@@ -322,10 +323,49 @@ function toFlowJson(journey) {
   }
 }
 
+/**
+ * Every screen to capture for a JPG export, in screen-wall order (each
+ * main-chain page followed by its branches, unreached pages last). Question
+ * and custom pages get a second entry showing their error state.
+ *
+ * Returns [{ id, type, path, url, file, error }].
+ */
+function exportScreens(journey) {
+  const screens = []
+  let index = 0
+  for (const row of layoutLevels(journey)) {
+    for (const { id } of row.pages) {
+      const page = journey.byId.get(id)
+      index += 1
+      const prefix = String(index).padStart(2, '0')
+      screens.push({
+        id,
+        type: page.type,
+        path: page.path,
+        url: `${page.path}?preview=1`,
+        file: `${prefix}-${id}.jpg`,
+        error: false
+      })
+      if (isQuestionType(page.type) || page.type === 'custom') {
+        screens.push({
+          id,
+          type: page.type,
+          path: page.path,
+          url: `${page.path}?preview=1&error=1`,
+          file: `${prefix}-${id}--error.jpg`,
+          error: true
+        })
+      }
+    }
+  }
+  return screens
+}
+
 module.exports = {
   getEdges,
   layoutLevels,
   mainChain,
+  exportScreens,
   toMermaid,
   toFlowJson,
   toFlowGraph

@@ -50,6 +50,8 @@
   .wall-card--custom { --wall-height: 900px; }
   .tools-tabs .govuk-tabs__panel { padding-left: 0; padding-right: 0; border-left: 0; border-right: 0; border-bottom: 0; }
   .tools-legend { font-family: "GDS Transport", arial, sans-serif; font-size: 14px; color: #505a5f; margin: 0 0 10px; }
+  .tools-legend--inline { margin: 0; }
+  .tools-controls--export { margin-top: -10px; }
 </style>
 {% endblock %}
 
@@ -87,6 +89,16 @@
     <label for="wall-scale">Zoom</label>
     <input type="range" id="wall-scale" min="0.2" max="1" step="0.05" value="0.4">
     <span id="wall-scale-value">40%</span>
+  </div>
+
+  <div class="tools-controls tools-controls--export">
+    {{ govukButton({
+      text: "Export all screens as JPG",
+      href: "/tools/journeys/" + journey.id + "/screens.zip",
+      classes: "govuk-button--secondary govuk-!-margin-bottom-0",
+      attributes: { id: "wall-export", "data-busy-text": "Exporting…" }
+    }) }}
+    <span class="tools-legend tools-legend--inline">Captures each screen with the sample data, including error states, into a zip. Takes about 20 seconds.</span>
   </div>
 
   <div class="screen-wall" id="screen-wall">

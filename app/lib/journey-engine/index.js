@@ -20,10 +20,12 @@ const {
   getEdges,
   layoutLevels,
   mainChain,
+  exportScreens,
   toMermaid,
   toFlowJson,
   toFlowGraph
 } = require('./flow')
+const { captureScreens } = require('./screenshots')
 const { createRenderer, interpolate } = require('./markdown')
 const { evaluate, firstMatch, describeCondition } = require('./expressions')
 
@@ -38,6 +40,8 @@ module.exports = {
   getEdges,
   layoutLevels,
   mainChain,
+  exportScreens,
+  captureScreens,
   toMermaid,
   toFlowJson,
   toFlowGraph,
