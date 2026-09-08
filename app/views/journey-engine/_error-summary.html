@@ -1,4 +1,17 @@
-{% if error %}
+{#
+  `errors` lists one problem per field (form pages); `error` is the single
+  message every other question type shows.
+#}
+{% if errors and errors | length %}
+{% set errorList = [] %}
+{% for item in errors %}
+  {% set errorList = (errorList.push({ text: item.message, href: "#" + item.field }), errorList) %}
+{% endfor %}
+{{ govukErrorSummary({
+  titleText: "There is a problem",
+  errorList: errorList
+}) }}
+{% elif error %}
 {{ govukErrorSummary({
   titleText: "There is a problem",
   errorList: [{ text: error, href: "#" + errorHref }]

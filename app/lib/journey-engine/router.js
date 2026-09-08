@@ -9,6 +9,8 @@
  * Hooks (`app/lib/<journey>/hooks.js`) give a page imperative behaviour:
  *   hooks[pageId] = {
  *     routes(router, journey) → { NAME: path }   extra endpoints, run once
+ *     load(ctx)               → { redirect }?     before the page is built, e.g.
+ *                                                 to put data in the session
  *     get(ctx, model)         → { redirect }?     enrich the render model
  *     validate(ctx)           → { ok, value | error }
  *     process(ctx, value)     → { redirect | error }?  after validation
@@ -17,10 +19,10 @@
 
 const multer = require('multer')
 const { evaluate, firstMatch, isTruthy } = require('./expressions')
-const { validatePage, message } = require('./validation')
+const { validatePage, previewErrors, message } = require('./validation')
 const { resolveBackLink, toPath } = require('./back-link')
 const { createRenderer } = require('./markdown')
-const { loadJourney, isQuestionType } = require('./loader')
+const { loadJourney, isQuestionType, SUMMARY_TARGET } = require('./loader')
 
 const renderer = createRenderer()
 
@@ -75,9 +77,16 @@ function buildContext(req, res, journey, page, options = {}) {
   const preview =
     !options.isPost && ['1', 'true'].includes(String(query.preview))
   const isChange = query.change === 'true' || body.isChange === 'true'
-  const navFromSummary =
-    (Boolean(journey.summaryPage) && query.nav === journey.summaryPage) ||
-    body.navFromSummary === 'true'
+  // The id of the summary page to return to (`?nav=<id>` or the hidden
+  // input a form carries forward), or false. A bare `true` from an older
+  // form means the journey's first summary page.
+  const nav = query.nav || body.navFromSummary
+  let navFromSummary = false
+  if (nav === 'true' && journey.summaryPage) {
+    navFromSummary = journey.summaryPage
+  } else if (nav && journey.summaryPages.includes(nav)) {
+    navFromSummary = nav
+  }
   return {
     req,
     res,
@@ -117,13 +126,32 @@ function isChecked(page, option, data) {
 }
 
 function resolveRow(row, ctx) {
-  const { journey, data } = ctx
+  const { journey, data, page } = ctx
+  // `- heading: Development details` starts a new group of rows
+  if (row.heading && row.key === undefined) {
+    return {
+      heading: renderer.interpolate(row.heading, data, { escape: false })
+    }
+  }
   const key = renderer.interpolate(row.key, data, { escape: false })
-  let value
-  if (row.value && typeof row.value === 'object') {
-    value = evaluate(row.value.when, ctx) ? row.value.then : row.value.else
+  const result = { key: { text: key } }
+  if (row.value && typeof row.value === 'object' && row.value.lines) {
+    // Multi-line value (an address): each line escaped, empties dropped
+    const lines = row.value.lines
+      .map((line) => renderer.interpolate(line, data))
+      .filter((line) => line.trim() !== '')
+    result.value = { html: lines.join('<br>') }
+  } else if (row.value && typeof row.value === 'object') {
+    const chosen = evaluate(row.value.when, ctx)
+      ? row.value.then
+      : row.value.else
+    result.value = {
+      text: renderer.interpolate(chosen, data, { escape: false })
+    }
   } else {
-    value = renderer.interpolate(row.value, data, { escape: false })
+    result.value = {
+      text: renderer.interpolate(row.value, data, { escape: false })
+    }
   }
   let changeTarget
   if (typeof row.change === 'string') {
@@ -132,12 +160,16 @@ function resolveRow(row, ctx) {
     const rule = firstMatch(row.change, ctx)
     changeTarget = rule ? rule.goto : undefined
   }
-  const result = { key: { text: key }, value: { text: value } }
   if (changeTarget) {
     const base = toPath(changeTarget, journey)
     const params = ['change=true']
-    if (journey.summaryPage) {
-      params.push(`nav=${journey.summaryPage}`)
+    // Come back to this summary page if it is one, else the journey's first
+    const returnTo =
+      page && journey.summaryPages.includes(page.id)
+        ? page.id
+        : journey.summaryPage
+    if (returnTo) {
+      params.push(`nav=${returnTo}`)
     }
     result.actions = {
       items: [
@@ -152,10 +184,27 @@ function resolveRow(row, ctx) {
   return result
 }
 
+/**
+ * Split resolved summary rows into groups at each `heading` entry, so a
+ * check-your-answers page can carry several titled summary lists.
+ */
+function groupRows(rows) {
+  const groups = [{ heading: undefined, rows: [] }]
+  for (const row of rows) {
+    if (row.heading !== undefined && row.key === undefined) {
+      groups.push({ heading: row.heading, rows: [] })
+    } else {
+      groups[groups.length - 1].rows.push(row)
+    }
+  }
+  return groups.filter((group) => group.rows.length || group.heading)
+}
+
 function renderContent(page, ctx) {
   const { data, journey } = ctx
   const c = page.content
   const plain = (text) => renderer.interpolate(text, data, { escape: false })
+  const rows = (c.rows || []).map((row) => resolveRow(row, ctx))
   return {
     title: plain(c.title),
     heading: plain(c.heading),
@@ -179,7 +228,13 @@ function renderContent(page, ctx) {
       }
       return item
     }),
-    rows: (c.rows || []).map((row) => resolveRow(row, ctx)),
+    fields: (c.fields || []).map((field) => ({
+      ...field,
+      label: plain(field.label),
+      hint: field.hint ? plain(field.hint) : undefined
+    })),
+    rows: rows.filter((row) => row.key),
+    rowGroups: groupRows(rows),
     actions: (c.actions || []).map((action) => ({
       text: plain(action.text),
       kind: action.kind || 'submit',
@@ -194,8 +249,16 @@ function renderContent(page, ctx) {
 
 function buildModel(ctx, extra = {}) {
   const { journey, page } = ctx
+  // `errors` lists one problem per field (form pages); `error` is the single
+  // message every other question type shows
+  let errors = extra.errors
+  if (!errors && ctx.previewError && page.type === 'form') {
+    errors = previewErrors(page)
+  }
   const error =
-    extra.error || (ctx.previewError ? message(page, 'required') : undefined)
+    extra.error ||
+    (errors && errors.length ? errors[0].message : undefined) ||
+    (ctx.previewError ? message(page, 'required') : undefined)
   return {
     journey: {
       id: journey.id,
@@ -205,12 +268,14 @@ function buildModel(ctx, extra = {}) {
       // "Manage ..." before the journey's own name takes over)
       serviceName: page.serviceName || journey.serviceName,
       summaryPage: journey.summaryPage,
+      summaryPages: journey.summaryPages,
       start: journey.start
     },
     page: {
       id: page.id,
       path: page.path,
       type: page.type,
+      layout: page.layout,
       field: page.field,
       sessionKey: page.sessionKey,
       changeable: page.changeable,
@@ -220,7 +285,12 @@ function buildModel(ctx, extra = {}) {
     content: renderContent(page, ctx),
     backLink: resolveBackLink(page, journey, ctx),
     error,
+    errors,
     errorHref: page.field || 'main-content',
+    // The header shows Sign out (and the agent's organisation) when the
+    // journey's `signedIn` condition holds
+    signedIn: journey.signedIn ? evaluate(journey.signedIn, ctx) : false,
+    account: ctx.data.account,
     isChange: ctx.isChange,
     navFromSummary: ctx.navFromSummary,
     preview: ctx.preview,
@@ -285,8 +355,14 @@ async function handleGet(req, res, journey, page, hooks) {
   if (!ctx.preview && page.guard && !evaluate(page.guard, ctx)) {
     return res.redirect(toPath(page.guard.redirect, journey))
   }
-  const model = buildModel(ctx)
   const hook = hooks[page.id]
+  if (hook && typeof hook.load === 'function') {
+    const result = await hook.load(ctx)
+    if (result && result.redirect) {
+      return res.redirect(result.redirect)
+    }
+  }
+  const model = buildModel(ctx)
   if (hook && typeof hook.get === 'function') {
     const result = await hook.get(ctx, model)
     if (result && result.redirect) {
@@ -311,7 +387,14 @@ async function handlePost(req, res, journey, page, hooks) {
     result = validatePage(page, ctx.body, ctx.file, req.multerError)
   }
   if (!result.ok) {
-    return res.render(page.template, buildModel(ctx, { error: result.error }))
+    return res.render(
+      page.template,
+      buildModel(ctx, {
+        error: result.error,
+        errors: result.errors,
+        values: result.values
+      })
+    )
   }
 
   if (
@@ -356,21 +439,25 @@ async function handlePost(req, res, journey, page, hooks) {
   if (rule.set) {
     Object.assign(data, rule.set)
   }
-  let url = toPath(rule.goto, journey) || page.path
-  const target = journey.byId.get(rule.goto)
+  // `goto: $summary` returns to the summary page the user came from
+  const gotoId =
+    rule.goto === SUMMARY_TARGET
+      ? ctx.navFromSummary || journey.summaryPage
+      : rule.goto
+  let url = toPath(gotoId, journey) || page.path
+  const target = journey.byId.get(gotoId)
   const continuesFlow = target && target.next && target.next.length > 0
   if (
     target &&
     ctx.navFromSummary &&
-    journey.summaryPage &&
-    target.id !== journey.summaryPage &&
+    !journey.summaryPages.includes(target.id) &&
     continuesFlow
   ) {
     const params = []
     if (ctx.isChange) {
       params.push('change=true')
     }
-    params.push(`nav=${journey.summaryPage}`)
+    params.push(`nav=${ctx.navFromSummary}`)
     url += `?${params.join('&')}`
   }
   saveAndRedirect(req, res, url)

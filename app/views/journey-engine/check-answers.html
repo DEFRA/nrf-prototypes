@@ -3,10 +3,16 @@
 {% block pageBody %}
 <h1 class="govuk-heading-l">{{ content.heading }}</h1>
 
-{{ govukSummaryList({
-  classes: "govuk-!-margin-bottom-9",
-  rows: content.rows
-}) }}
+{# `- heading:` entries in rows: split the list into titled groups #}
+{% for group in content.rowGroups %}
+  {% if group.heading %}<h2 class="govuk-heading-m">{{ group.heading }}</h2>{% endif %}
+  {% if group.rows | length %}
+  {{ govukSummaryList({
+    classes: "govuk-!-margin-bottom-9",
+    rows: group.rows
+  }) }}
+  {% endif %}
+{% endfor %}
 
 {{ content.html | safe }}
 

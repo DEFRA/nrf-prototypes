@@ -81,6 +81,51 @@ function validateEmailField(page, body) {
   return { ok: true, value }
 }
 
+function fieldMessage(field, key) {
+  return (
+    field.errors[key] ||
+    field.errors.required ||
+    `Enter ${String(field.label).toLowerCase()}`
+  )
+}
+
+/**
+ * A `type: form` page: every non-optional field must be filled in. Returns
+ * every problem so the error summary can list one link per field, and the
+ * submitted values so the form can be redrawn with them.
+ */
+function validateForm(page, body) {
+  const errors = []
+  const value = {}
+  for (const field of page.content.fields || []) {
+    const raw = String(body[field.name] || '').trim()
+    if (!raw && !field.optional) {
+      errors.push({
+        field: field.name,
+        message: fieldMessage(field, 'required')
+      })
+    } else if (raw) {
+      value[field.key] = raw
+    }
+  }
+  if (errors.length) {
+    return { ok: false, errors, error: errors[0].message, values: body }
+  }
+  return { ok: true, value }
+}
+
+/**
+ * Error list shown when a form page is previewed with ?error=1.
+ */
+function previewErrors(page) {
+  return (page.content.fields || [])
+    .filter((field) => !field.optional)
+    .map((field) => ({
+      field: field.name,
+      message: fieldMessage(field, 'required')
+    }))
+}
+
 function validateFileUpload(page, body, file, multerError) {
   if (multerError) {
     if (multerError.code === 'LIMIT_FILE_SIZE') {
@@ -114,7 +159,10 @@ function validatePage(page, body = {}, file, multerError) {
     case 'checkboxes':
       return validateCheckboxes(page, body)
     case 'input':
+    case 'password':
       return validateInput(page, body)
+    case 'form':
+      return validateForm(page, body)
     case 'number':
       return validateNumber(page, body)
     case 'email':
@@ -126,4 +174,4 @@ function validatePage(page, body = {}, file, multerError) {
   }
 }
 
-module.exports = { validatePage, message }
+module.exports = { validatePage, previewErrors, message }

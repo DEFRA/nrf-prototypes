@@ -27,8 +27,12 @@ const TYPES = [
   'number',
   'email',
   'file-upload',
+  'password',
+  'form',
+  'file-upload',
   'check-answers',
   'confirmation',
+  'document',
   'custom'
 ]
 
@@ -38,6 +42,8 @@ const QUESTION_TYPES = [
   'input',
   'number',
   'email',
+  'password',
+  'form',
   'file-upload'
 ]
 
@@ -49,10 +55,21 @@ const TEMPLATE_BY_TYPE = {
   input: 'journey-engine/input',
   number: 'journey-engine/input',
   email: 'journey-engine/input',
+  password: 'journey-engine/password',
+  form: 'journey-engine/form',
   'file-upload': 'journey-engine/file-upload',
   'check-answers': 'journey-engine/check-answers',
-  confirmation: 'journey-engine/confirmation'
+  confirmation: 'journey-engine/confirmation',
+  document: 'journey-engine/document'
 }
+
+// How a page is dressed: the prototype header and phase banner (default), the
+// GOV.UK One Login look for the mock sign-in pages, or a full-width document
+// with a bare crown header and no banner or back link (certificates, letters)
+const LAYOUTS = ['default', 'one-login', 'document']
+
+// A `goto` of `$summary` returns to whichever summary page the user came from
+const SUMMARY_TARGET = '$summary'
 
 const cache = new Map()
 
@@ -141,6 +158,52 @@ function normaliseRules(raw, where, problems) {
   return rules
 }
 
+/**
+ * Normalise the `fields:` list of a `type: form` page. Each field becomes
+ * { name, key, label, hint, optional, autocomplete, classes, errors }; the
+ * answers are stored together as one object under the page's sessionKey,
+ * keyed by `key` (camelCase of the field name).
+ */
+function buildFields(raw, type, where, problems) {
+  if (type !== 'form') {
+    return []
+  }
+  if (!Array.isArray(raw) || raw.length === 0) {
+    problems.push(`${where}: 'form' pages need a non-empty 'fields' list`)
+    return []
+  }
+  const names = new Set()
+  return raw.map((field, i) => {
+    const f = field && typeof field === 'object' ? field : { name: field }
+    if (!f.name) {
+      problems.push(`${where}.fields[${i}]: needs a 'name'`)
+    }
+    if (!f.label) {
+      problems.push(`${where}.fields[${i}]: needs a 'label'`)
+    }
+    if (names.has(f.name)) {
+      problems.push(`${where}.fields[${i}]: duplicate name '${f.name}'`)
+    }
+    names.add(f.name)
+    let classes = ''
+    if (typeof f.width === 'number') {
+      classes = `govuk-input--width-${f.width}`
+    } else if (f.width) {
+      classes = `govuk-!-width-${f.width}`
+    }
+    return {
+      name: String(f.name || ''),
+      key: camelCase(f.name),
+      label: f.label || f.name,
+      hint: f.hint,
+      optional: Boolean(f.optional),
+      autocomplete: f.autocomplete,
+      classes,
+      errors: f.errors || {}
+    }
+  })
+}
+
 function buildPage(entry, journey, problems) {
   const id = entry.id
   const where = `pages.${id}`
@@ -181,8 +244,38 @@ function buildPage(entry, journey, problems) {
   }
 
   const field = entry.field || frontmatter.field
-  if (isQuestionType(type) && !field) {
+  if (isQuestionType(type) && type !== 'form' && !field) {
     problems.push(`${where}: '${type}' pages need a 'field'`)
+  }
+
+  const layout =
+    entry.layout ||
+    frontmatter.layout ||
+    (type === 'document' ? 'document' : 'default')
+  if (!LAYOUTS.includes(layout)) {
+    problems.push(
+      `${where}: unknown layout '${layout}' (expected one of ${LAYOUTS.join(', ')})`
+    )
+  }
+
+  // `remember: false` keeps an answer out of the session (passwords)
+  const remember =
+    entry.remember !== undefined
+      ? entry.remember !== false
+      : frontmatter.remember !== false
+
+  const fields = buildFields(frontmatter.fields, type, where, problems)
+  let sessionKey =
+    entry.sessionKey ||
+    frontmatter.sessionKey ||
+    (field ? camelCase(field) : undefined)
+  if (type === 'form' && !sessionKey) {
+    problems.push(
+      `${where}: 'form' pages need a 'sessionKey' to store their answers under`
+    )
+  }
+  if (!remember) {
+    sessionKey = undefined
   }
 
   let template = entry.template || TEMPLATE_BY_TYPE[type]
@@ -231,11 +324,10 @@ function buildPage(entry, journey, problems) {
     contentFile,
     serviceName: entry.serviceName || frontmatter.serviceName,
     type,
+    layout,
     field,
-    sessionKey:
-      entry.sessionKey ||
-      frontmatter.sessionKey ||
-      (field ? camelCase(field) : undefined),
+    sessionKey,
+    remember,
     template,
     changeable: Boolean(entry.changeable),
     handler: entry.handler,
@@ -262,6 +354,7 @@ function buildPage(entry, journey, problems) {
       width: frontmatter.width,
       autocomplete: frontmatter.autocomplete,
       spellcheck: frontmatter.spellcheck,
+      fields,
       rows: frontmatter.rows || [],
       actions: frontmatter.actions || [],
       panel: frontmatter.panel,
@@ -276,7 +369,7 @@ function validateTargets(journey, problems) {
     if (!target) {
       return
     }
-    if (target.startsWith('/')) {
+    if (target.startsWith('/') || target === SUMMARY_TARGET) {
       return
     }
     if (!ids.has(target)) {
@@ -286,8 +379,10 @@ function validateTargets(journey, problems) {
   if (!ids.has(journey.start)) {
     problems.push(`start: unknown page '${journey.start}'`)
   }
-  if (journey.summaryPage && !ids.has(journey.summaryPage)) {
-    problems.push(`summaryPage: unknown page '${journey.summaryPage}'`)
+  for (const id of journey.summaryPages) {
+    if (!ids.has(id)) {
+      problems.push(`summaryPages: unknown page '${id}'`)
+    }
   }
   for (const page of journey.pages) {
     const where = `pages.${page.id}`
@@ -328,13 +423,25 @@ function build(journeyId) {
   const raw = yaml.load(fs.readFileSync(yamlFile, 'utf8')) || {}
   const problems = []
 
+  // One summary page (`summaryPage`) or several (`summaryPages`); the first
+  // stays on `summaryPage` for code and content that only know about one
+  const summaryPages = []
+    .concat(raw.summaryPages || raw.summaryPage || [])
+    .filter(Boolean)
+  if (raw.signedIn !== undefined) {
+    problems.push(...validateCondition(raw.signedIn, 'signedIn'))
+  }
+
   const journey = {
     id: raw.id || journeyId,
     basePath: raw.basePath || `/${raw.id || journeyId}`,
     name: raw.name || journeyId,
     serviceName: raw.serviceName || raw.name || journeyId,
     start: raw.start || 'start',
-    summaryPage: raw.summaryPage,
+    summaryPage: summaryPages[0],
+    summaryPages,
+    // Condition (see expressions.js) for showing the signed-in header state
+    signedIn: raw.signedIn,
     session: raw.session || [],
     preview: raw.preview || { data: {} },
     // Homepage card metadata (family, version, status, description, changes).
@@ -441,6 +548,8 @@ module.exports = {
   SHARED_PAGES_DIR,
   TYPES,
   QUESTION_TYPES,
+  LAYOUTS,
+  SUMMARY_TARGET,
   isQuestionType,
   camelCase,
   upperSnake,

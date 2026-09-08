@@ -79,7 +79,12 @@ NRF reference: {{ nrfReference }}
 
 :::button Start now
 :::
+
+:::map redlineBoundaryPolygon
+:::
 ```
+
+`:::map` draws the saved red line boundary on a small read-only map (used on the commitment certificate). The name after `map` is the answer holding the boundary and can be left out.
 
 `:::if key` shows a block only when an answer exists, and `:::if key equals value` only when it matches:
 
@@ -112,10 +117,41 @@ Write the answer's name in double curly braces: `{{ estimateEmail }}`. The names
 | `input`         | `hint`, `errors`, `button`, `width`                               |
 | `number`        | as input                                                          |
 | `email`         | as input                                                          |
+| `password`      | `hint`, `errors`, `button`; has a Show/Hide toggle, never stored  |
+| `form`          | `hint`, `fields`, `button`, `actions` (see "Several fields")      |
 | `file-upload`   | `hint`, `errors`, `button`                                        |
 | `check-answers` | `rows`, `actions`                                                 |
 | `confirmation`  | `title`, `panel` (with `title` and `body`)                        |
+| `document`      | `title`; a full-width document with no banner or back link        |
 | `custom`        | a developer-built screen; `hint`, `errors` still come from here   |
+
+Every page can also set `layout` to change its chrome: `default` (the prototype header and banner), `one-login` (the GOV.UK One Login look used by the shared sign-in pages) or `document` (bare crown header, full width, no banner or back link; `type: document` pages get this automatically).
+
+### Several fields on one page
+
+`type: form` puts more than one text input on a page, an address for example. List the inputs under `fields:`; each has a `name` (kebab-case), a `label` and optionally `hint`, `optional: true`, `width` (a number of characters, or `two-thirds`, `one-half`...), `autocomplete` and its own `errors`. The answers are remembered together as one object under the page's `sessionKey` in `journey.yaml`, so `{{ developerDetails.postcode }}` shows one of them.
+
+```markdown
+---
+type: form
+fields:
+  - name: full-name
+    label: Full name
+    errors:
+      required: Enter the developer's full name
+  - name: address-line-2
+    label: Address line 2
+    optional: true
+  - name: postcode
+    label: Postcode
+    width: 10
+button: Confirm
+---
+
+# What are the developer details?
+```
+
+The error summary lists one link per field that is missing. A `link` or `destructive` entry under `actions:` on any question page adds a link beside its button (a Cancel link, say).
 
 `title` is only needed when the browser tab title should differ from the heading.
 
@@ -145,7 +181,18 @@ rows:
     changeHidden: number of housing units # read out by screen readers
   - key: Housing
     value: '{{ isHousing }}' # no `change` means no Change link
+  - key: Address
+    value:
+      lines: # several lines in one value; empty lines are dropped
+        - '{{ developerDetails.addressLine1 }}'
+        - '{{ developerDetails.postcode }}'
+    change: developer-details
+  - heading: Development details # starts a new titled group of rows
+  - key: Planning permission type
+    value: '{{ planningType }}'
 ```
+
+A `value` can also be a choice, `{ when: <condition>, then: Added, else: Not added }`, and `change` can be a list of rules so the link goes to a different page depending on an answer (a rule list with no default shows no link when nothing matches).
 
 ### Buttons and links at the bottom of a page
 
@@ -162,7 +209,7 @@ Kinds: `submit`, `warning` (red button), `link`, `destructive` (red link), `star
 
 ## Pages shared by more than one journey
 
-The quote and request-to-use journeys both begin with the same start page and the same "What would you like to do?" question. That copy lives once, in `content/shared/pages/`, and each journey lists the page with `shared: true`:
+The quote and request-to-use journeys both begin with the same start page and the same "What would you like to do?" question, and the mock GOV.UK One Login pages (`one-login-email`, `one-login-password`) are shared the same way so any journey can sign the user in. That copy lives once, in `content/shared/pages/`, and each journey lists the page with `shared: true`:
 
 ```yaml
 pages:
@@ -174,7 +221,7 @@ pages:
     shared: true
     next:
       - when: { key: journeyType, equals: request-to-use }
-        goto: /nrf-request-to-use-1/quote-reference # leaves this journey
+        goto: /nrf-request-to-use-1/have-nrl-reference # leaves this journey
       - goto: planning-type
 ```
 
@@ -188,7 +235,7 @@ A `goto` that starts with `/` is an exit to another journey. The engine does not
 - Changing where an answer leads (`journey.yaml → next`).
 - Changing what a page remembers (`journey.yaml → session`).
 - New kinds of block or component.
-- The map page's behaviour (`app/lib/nrf-quote-7/hooks.js`). Changes to hooks, or to `basePath` in `journey.yaml`, need `npm run dev` restarting.
+- The map page's behaviour (`app/lib/nrf-quote-7/hooks.js`), the mock quote store and sign-in accounts (`app/lib/nrf-request-to-use-1/hooks.js`). Changes to hooks, or to `basePath` in `journey.yaml`, need `npm run dev` restarting.
 
 ## Adding a new journey
 
@@ -228,8 +275,10 @@ pages:
 
 Condition operators: `equals`, `notEquals`, `in`, `notIn`, `gt`, `gte`, `lt`, `lte`, `between`, `truthy`, `falsy`, `isSet`. Combine with `all:`, `any:`, `not:`. Engine values: `$navFromSummary`, `$isChange`, `$preview`.
 
-Other page keys: `shared: true` (copy comes from `content/shared/pages/<id>.md`, see "Pages shared by more than one journey"), `back` (page id, absolute path, or a rule list), `guard` (condition plus `redirect`), `store` (map radio labels to stored values), `set` (write values on submit; also allowed on a rule), `clears` (list of keys, or `$session`), `handler: custom` (page has hooks), `template` (a hand-written view for `type: custom`), `accept` and `maxSize` for uploads, `min` and `max` for numbers.
+Other page keys: `shared: true` (copy comes from `content/shared/pages/<id>.md`, see "Pages shared by more than one journey"), `back` (page id, absolute path, or a rule list), `guard` (condition plus `redirect`), `store` (map radio labels to stored values), `set` (write values on submit; also allowed on a rule), `clears` (list of keys, or `$session`), `handler: custom` (page has hooks), `template` (a hand-written view for `type: custom`), `layout` (`default`, `one-login` or `document`), `remember: false` (never write the answer to the session; pair it with a field name starting `_` so the kit's own auto-store skips it too, as the password page does), `accept` and `maxSize` for uploads, `min` and `max` for numbers.
 
-Journey keys: `id`, `name`, `serviceName`, `start`, `summaryPage`, `session`, `preview.data` (sample answers for `?preview=1` and the screen wall), `homepage` (the homepage card: `family`, `version`, `status`, `title`, `description`, `changes`; see "Adding a new journey"). `serviceName` is used in every page `<title>` and, prefixed "PROTOTYPE - ", in the service navigation bar under the header (`app/views/includes/service-header.html`).
+Journey keys: `id`, `name`, `serviceName`, `start`, `summaryPage` or `summaryPages` (every page with Change links; a rule's `goto: $summary` returns to whichever one the user came from), `signedIn` (a condition; while it holds the header shows a Sign out link, pointing at the `SIGN_OUT` route a hook registers, and agents see the organisation they act for), `session`, `preview.data` (sample answers for `?preview=1` and the screen wall; a page can add its own `preview:` block to override them), `homepage` (the homepage card: `family`, `version`, `status`, `title`, `description`, `changes`; see "Adding a new journey"). `serviceName` is used in every page `<title>` and, prefixed "PROTOTYPE - ", in the service navigation bar under the header (`app/views/includes/service-header.html`).
+
+Hooks (`app/lib/<journey>/hooks.js`) are per journey, so a shared page such as `one-login-password` only does something in the journeys that give it a hook. A `load(ctx)` hook runs before a page is built and may put data in the session (the request-to-use journey fills in the retrieved quote this way); `get(ctx, model)` runs after and can add to the render model.
 
 The definition is validated on load. A broken file fails loudly with every problem listed, both on `npm run dev` and at `/tools/journeys`.

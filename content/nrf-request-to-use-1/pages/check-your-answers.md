@@ -1,15 +1,95 @@
 ---
 type: check-answers
 rows:
-  - key: NRF reference
-    value: '{{ nrfReference }}'
-    change: quote-reference
-    changeHidden: NRF reference
+  - key: Accept levy amount
+    value: '{{ acceptLevy }}'
+    change:
+      - when: { key: levyIncreased, truthy: true }
+        goto: levy-increased
+      - goto: accept-levy
+    changeHidden: whether you accept the levy amount
+  - key: Variation
+    value: '{{ isVariation }}'
+    change: variation
+    changeHidden: whether the development is a variation
+  - key: Original NRL reference
+    value:
+      when: { key: isVariation, equals: 'Yes' }
+      then: '{{ originalReference }}'
+      else: Not applicable
+    change:
+      - when: { key: isVariation, equals: 'Yes' }
+        goto: original-reference
+    changeHidden: the NRL reference for the original planning application
+  - key: Full name
+    value: '{{ developerDetails.fullName or account.fullName }}'
+    change:
+      - when: { key: account.accountType, equals: agent }
+        goto: developer-details
+    changeHidden: full name
+  - key: Address
+    value:
+      lines:
+        - '{{ developerDetails.addressLine1 or yourAddress.addressLine1 }}'
+        - '{{ developerDetails.addressLine2 or yourAddress.addressLine2 }}'
+        - '{{ developerDetails.town or yourAddress.town }}'
+        - '{{ developerDetails.county or yourAddress.county }}'
+        - '{{ developerDetails.postcode or yourAddress.postcode }}'
+    change:
+      - when: { key: account.accountType, equals: agent }
+        goto: developer-details
+      - goto: your-address
+    changeHidden: address
+  - key: Details confirmed
+    value: '{{ detailsConfirmed }}'
+    change:
+      - when: { key: account.accountType, equals: agent }
+        goto: review-developer-details
+      - goto: review-your-details
+    changeHidden: the confirmed details
+  - heading: Development details
+  - key: Planning permission type
+    value: '{{ planningType }}'
+    change: planning-type
+    changeHidden: planning permission type
+  - key: Housing
+    value: '{{ isHousing }}'
+    change: housing
+    changeHidden: whether you are developing housing
+  - key: Number of housing units
+    value: '{{ residentialBuildingCount }}'
+    change: units
+    changeHidden: number of housing units
+  - key: Red line boundary
+    value:
+      when: { key: redlineBoundaryPolygon, truthy: true }
+      then: Added
+      else: Not added
+    change: map
+    changeHidden: red line boundary
+  - key: Email address
+    value: '{{ estimateEmail }}'
+    change: email
+    changeHidden: email address
 actions:
   - text: Confirm and submit
     kind: submit
+  - text: Delete
+    kind: destructive
+    goto: delete-quote
+    hidden: quote details
 ---
 
 # Check your answers
 
-By submitting this request you are asking to use the nature restoration levy for the development covered by this quote. Natural England will check the request and, if it is accepted, send you a commitment certificate.
+Update the details of your development to match your planning application. Changes may result in a recalculation of available capacity and the levy amount.
+
+By confirming and submitting these details, you are requesting to use the nature restoration levy.
+
+The details you are submitting must be accurate and correct.
+
+Once Natural England accepts your request to use this levy, you will be issued a commitment certificate that you can use in your planning application.
+
+The commitment certificate will disapply the relevant environmental obligations through the planning application process.
+
+**Levy amount** £{{ levyAmount }} (excluding VAT)

@@ -11,6 +11,10 @@ const { loadJourney } = require('../../app/lib/journey-engine')
 const quote = loadJourney('nrf-quote-7')
 const requestToUse = loadJourney('nrf-request-to-use-1')
 const funnel = quote.byId.get('what-would-you-like-to-do')
+// Where the funnel sends "request to use" answers: the request-to-use
+// journey's first question, read from the rule so the test follows the YAML
+const requestToUseEntry = funnel.next.find((rule) => rule.when).goto
+const requestToUseEntryId = requestToUseEntry.split('/').pop()
 
 test.describe('shared start page', () => {
   test('both journeys are marked as sharing the same content file', () => {
@@ -51,7 +55,7 @@ test.describe('shared start page', () => {
     // The journey's own name takes over from its first question
     await page.goto(quote.byId.get('planning-type').path)
     await expect(serviceNav).toContainText(`PROTOTYPE - ${quote.serviceName}`)
-    await page.goto(requestToUse.byId.get('quote-reference').path)
+    await page.goto(requestToUse.byId.get(requestToUseEntryId).path)
     await expect(serviceNav).toContainText(
       `PROTOTYPE - ${requestToUse.serviceName}`
     )
@@ -74,7 +78,7 @@ test.describe('funnel between journeys', () => {
 
     await page.getByLabel(/request to use/).check()
     await page.getByRole('button', { name: 'Continue' }).click()
-    await expect(page).toHaveURL(`${requestToUse.basePath}/quote-reference`)
+    await expect(page).toHaveURL(requestToUseEntry)
 
     // The back link stays inside the journey we landed in, on its own copy
     // of the shared funnel page, with the answer still selected
@@ -115,7 +119,7 @@ test.describe('journey tools show exits to other journeys', () => {
     expect(flow.transitions.offPage).toEqual([
       expect.objectContaining({
         fromId: 'what-would-you-like-to-do',
-        toPath: `${requestToUse.basePath}/quote-reference`,
+        toPath: requestToUseEntry,
         kind: 'next'
       })
     ])
@@ -131,7 +135,7 @@ test.describe('journey tools show exits to other journeys', () => {
     await expect(page.locator('.flow-node--external')).toHaveCount(1)
     await expect(page.locator('.wall-card--external')).toHaveCount(1)
     await expect(page.locator('.wall-card--external')).toContainText(
-      `${requestToUse.basePath}/quote-reference`
+      requestToUseEntry
     )
     // Placeholder cards carry no iframe, so the wall still has one per page
     await expect(page.locator('iframe')).toHaveCount(quote.pages.length)
@@ -142,7 +146,7 @@ test.describe('journey tools show exits to other journeys', () => {
     expect(response.status()).toBe(200)
     const source = await response.text()
     expect(source).toContain(
-      `ext0["${requestToUse.basePath}/quote-reference<br/>Continues in another journey"]`
+      `ext0["${requestToUseEntry}<br/>Continues in another journey"]`
     )
     expect(source).toContain('class ext0 external')
   })

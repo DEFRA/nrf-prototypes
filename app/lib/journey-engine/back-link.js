@@ -5,7 +5,8 @@
  *   1. A changeable page reached from the summary page goes back there.
  *   2. `back` in journey.yaml: a page id, an absolute path, or a rule list.
  *   3. The first page (in document order) whose `next` rules lead here.
- *   4. The start page goes back to the homepage; confirmation pages have none.
+ *   4. The start page goes back to the homepage; confirmation pages and
+ *      documents have none.
  */
 
 const { firstMatch } = require('./expressions')
@@ -34,13 +35,14 @@ function findReferrer(page, journey) {
 }
 
 function resolveBackLink(page, journey, ctx) {
-  if (
-    page.changeable &&
-    ctx.isChange &&
-    ctx.navFromSummary &&
-    journey.summaryPage
-  ) {
-    return toPath(journey.summaryPage, journey)
+  // ctx.navFromSummary is the id of the summary page the user came from
+  // (journeys may have more than one), or false
+  if (page.changeable && ctx.isChange && ctx.navFromSummary) {
+    const summary =
+      typeof ctx.navFromSummary === 'string'
+        ? ctx.navFromSummary
+        : journey.summaryPage
+    return toPath(summary, journey)
   }
   if (typeof page.back === 'string') {
     return toPath(page.back, journey)
@@ -49,7 +51,7 @@ function resolveBackLink(page, journey, ctx) {
     const rule = firstMatch(page.back, ctx)
     return rule ? toPath(rule.goto, journey) : null
   }
-  if (page.type === 'confirmation') {
+  if (page.type === 'confirmation' || page.layout === 'document') {
     return null
   }
   if (page.id === journey.start) {

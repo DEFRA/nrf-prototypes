@@ -1,10 +1,11 @@
 ---
 type: input
-hint: This is in your quote email, for example NRF-123456.
+hint: Enter the reference to retrieve the details entered during the quote, for example NRL-123456.
 width: 10
 errors:
-  required: Enter your NRF reference
+  required: Enter your NRL reference
+  format: Enter a NRL reference in the correct format, like NRL-123456
 button: Continue
 ---
 
-# Enter your NRF reference
+# Enter your NRL reference

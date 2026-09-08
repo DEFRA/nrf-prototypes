@@ -7,7 +7,25 @@
  */
 
 const { describeCondition } = require('./expressions')
-const { isQuestionType } = require('./loader')
+const { isQuestionType, SUMMARY_TARGET } = require('./loader')
+
+/**
+ * Pages a `goto: $summary` rule can return to: every summary page whose
+ * rows link to `page` with a Change link, or all summary pages if none do.
+ */
+function summaryTargetsFor(page, journey) {
+  const linking = journey.summaryPages.filter((id) => {
+    const summary = journey.byId.get(id)
+    return (summary.content.rows || []).some((row) => {
+      const targets =
+        typeof row.change === 'string'
+          ? [row.change]
+          : (row.change || []).map((r) => r.goto)
+      return targets.includes(page.id)
+    })
+  })
+  return linking.length ? linking : journey.summaryPages
+}
 
 function isPageTarget(target, journey) {
   return Boolean(target) && !target.startsWith('/') && journey.byId.has(target)
@@ -44,7 +62,16 @@ function getEdges(journey) {
       ? [defaultRule, ...rules.filter((r) => r !== defaultRule)]
       : rules
     for (const rule of ordered) {
-      if (isPageTarget(rule.goto, journey)) {
+      if (rule.goto === SUMMARY_TARGET) {
+        for (const toId of summaryTargetsFor(page, journey)) {
+          add({
+            fromId: page.id,
+            toId,
+            label: rule.when ? describeCondition(rule.when) : '',
+            kind: 'return'
+          })
+        }
+      } else if (isPageTarget(rule.goto, journey)) {
         const isReturn =
           Boolean(rule.when) &&
           JSON.stringify(rule.when).includes('$navFromSummary')

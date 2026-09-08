@@ -90,7 +90,7 @@ pages:
     shared: true
     next:
       - when: { key: journeyType, equals: request-to-use }
-        goto: /nrf-request-to-use-1/quote-reference
+        goto: /nrf-request-to-use-1/have-nrl-reference
       - goto: planning-type
 
   - id: planning-type

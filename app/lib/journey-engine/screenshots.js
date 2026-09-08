@@ -50,8 +50,10 @@ async function captureScreens(journey, options = {}) {
     const page = await context.newPage()
     for (const screen of screens) {
       const isCustom = screen.type === 'custom'
+      // Documents may carry a map, so give its tiles a moment too
+      const waitForMap = isCustom || screen.type === 'document'
       await page.goto(baseUrl + screen.url, { waitUntil: 'networkidle' })
-      if (isCustom) {
+      if (waitForMap) {
         await page.waitForTimeout(CUSTOM_PAGE_WAIT_MS)
       }
       const buffer = await page.screenshot({

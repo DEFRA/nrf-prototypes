@@ -1,6 +1,12 @@
 {#
 Journey engine base page. Every generic page type extends this and fills
 `pageBody`. The model comes from app/lib/journey-engine/router.js.
+
+`page.layout` picks the chrome:
+  default    prototype crown header + service navigation, Prototype banner
+  one-login  the GOV.UK One Login look for the mock sign-in pages
+  document   full-width document (certificate, letter): bare header, no
+             banner, no back link
 #}
 {% extends "layouts/main.html" %}
 
@@ -10,16 +16,31 @@ Journey engine base page. Every generic page type extends this and fills
 {% endblock %}
 
 {% block pageTitle %}
-{% if error %}Error: {% endif %}{{ content.title }} - {{ journey.serviceName }} - GOV.UK
+{% if error %}Error: {% endif %}{{ content.title }} - {% if page.layout == 'one-login' %}GOV.UK One Login{% else %}{{ journey.serviceName }} - GOV.UK{% endif %}
 {% endblock %}
 
 {% block header %}
-{% include "includes/service-header.html" %}
+{% if page.layout == 'one-login' %}
+  {% include "includes/one-login-header.html" %}
+{% elif page.layout == 'document' %}
+  {{ govukHeader({
+    homepageUrl: "https://www.gov.uk/",
+    classes: "app-header",
+    containerClasses: "govuk-width-container"
+  }) }}
+{% else %}
+  {% include "includes/service-header.html" %}
+{% endif %}
 {% endblock %}
 
 {% block beforeContent %}
-{% include "includes/prototype-phase-banner.html" %}
-{% if backLink %}
+{% if page.layout == 'one-login' %}
+  {% include "includes/one-login-banner.html" %}
+{% elif page.layout != 'document' %}
+  {% include "includes/prototype-phase-banner.html" %}
+  {% include "journey-engine/_signed-in-bar.html" %}
+{% endif %}
+{% if backLink and page.layout != 'document' %}
 {{ govukBackLink({
   text: "Back",
   href: backLink
@@ -29,8 +50,16 @@ Journey engine base page. Every generic page type extends this and fills
 
 {% block content %}
 <div class="govuk-grid-row">
-  <div class="govuk-grid-column-two-thirds">
+  <div class="{% if page.layout == 'document' %}govuk-grid-column-full app-document{% else %}govuk-grid-column-two-thirds{% endif %}">
     {% block pageBody %}{% endblock %}
   </div>
 </div>
+{% endblock %}
+
+{% block footer %}
+{% if page.layout == 'one-login' %}
+  {% include "includes/one-login-footer.html" %}
+{% else %}
+  {{ super() }}
+{% endif %}
 {% endblock %}
