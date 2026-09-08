@@ -186,6 +186,45 @@ test.describe('journey tools', () => {
     expect(new Set(rows).size).toBe(1)
   })
 
+  test('flow diagram is visible when the Flow tab is opened', async ({
+    page
+  }) => {
+    await page.goto(`/tools/journeys/${journey.id}`)
+    await expect(
+      page.locator('#flow-diagram[data-rendered="true"]')
+    ).toHaveCount(1, { timeout: 20000 })
+    await page.getByRole('tab', { name: 'Flow' }).click()
+    const svg = page.locator('#flow-diagram svg')
+    await expect(svg).toBeVisible()
+    const width = await svg.evaluate((el) => el.getBoundingClientRect().width)
+    expect(width).toBeGreaterThan(100)
+    // Nodes are sized from labels measured at load; a hidden tab must not
+    // collapse them to nothing
+    const node = await page
+      .locator('.flow-node')
+      .first()
+      .evaluate((el) => el.getBoundingClientRect())
+    expect(node.width).toBeGreaterThan(50)
+    expect(node.height).toBeGreaterThan(10)
+  })
+
+  test('screen wall does not scroll when embedded pages take focus', async ({
+    page
+  }) => {
+    await page.goto(`/tools/journeys/${journey.id}`)
+    await page.getByRole('tab', { name: 'Screens' }).click()
+    // The map preview focuses its boundary panel heading once the saved
+    // boundary check completes; that must not drag the wall down to it
+    const mapFrame = page.frameLocator(
+      'iframe[title="Draw a red line boundary"]'
+    )
+    await expect(
+      mapFrame.locator('[data-boundary-info-results]:not([hidden])')
+    ).toHaveCount(1, { timeout: 30000 })
+    await page.waitForTimeout(500)
+    expect(await page.evaluate(() => window.scrollY)).toBe(0)
+  })
+
   test('flow.json has the figma-journey shape', async ({ request }) => {
     const response = await request.get(
       `/tools/journeys/${journey.id}/flow.json`

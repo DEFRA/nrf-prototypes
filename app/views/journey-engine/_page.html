@@ -4,6 +4,11 @@ Journey engine base page. Every generic page type extends this and fills
 #}
 {% extends "layouts/main.html" %}
 
+{% block head %}
+{{ super() }}
+{% include "journey-engine/_preview-head.html" %}
+{% endblock %}
+
 {% block pageTitle %}
 {% if error %}Error: {% endif %}{{ content.title }} - {{ journey.serviceName }} - GOV.UK
 {% endblock %}

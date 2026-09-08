@@ -12,6 +12,11 @@
 #}
 {% extends "layouts/interactive-map.html" %}
 
+{% block head %}
+  {{ super() }}
+  {% include "journey-engine/_preview-head.html" %}
+{% endblock %}
+
 {% set pageName = content.heading %}
 
 {% block pageTitle %}

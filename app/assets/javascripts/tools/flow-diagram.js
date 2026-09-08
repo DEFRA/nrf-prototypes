@@ -50,7 +50,9 @@
   function measure() {
     const probe = document.createElement('div')
     probe.className = 'flow-measure'
-    container.appendChild(probe)
+    // Measure on the body, not in the container: the Flow tab can be hidden
+    // (display: none) at load, and offsetWidth/offsetHeight are 0 in there
+    document.body.appendChild(probe)
     // Every node gets the tallest label's height so the main row lines up
     let nodeHeight = 0
     graph.nodes.forEach(function (node) {
@@ -277,7 +279,11 @@
     if (!slider) {
       return
     }
-    const fullWidth = svg.getBoundingClientRect().width
+    // The rendered width comes from the SVG's own attribute, not from
+    // getBoundingClientRect(): inside a hidden tab the rect is 0 wide, which
+    // would pin the diagram to 0px at every zoom level
+    const fullWidth =
+      parseFloat(svg.getAttribute('width')) || svg.getBoundingClientRect().width
     const STORAGE_KEY = 'journey-tools-flow-scale'
 
     function apply(value) {
