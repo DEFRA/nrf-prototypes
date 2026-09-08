@@ -1,10 +1,10 @@
 /**
  * Journey engine: Express router factory
  *
- * Builds GET and POST handlers for every page in a journey definition.
- * Handlers re-load the definition on each request (cheap, mtime-cached) so
- * copy edits in content/ show up without a restart. Adding a new page to
- * journey.yaml still needs a restart because paths are registered once.
+ * Mounts one dispatcher under the journey's basePath. Every request re-loads
+ * the definition (cheap, mtime-cached) and resolves the page by path, so copy
+ * edits, rule changes and added or removed pages in content/ all show up
+ * without a restart. Only the basePath and hook routes are fixed at boot.
  *
  * Hooks (`app/lib/<journey>/hooks.js`) give a page imperative behaviour:
  *   hooks[pageId] = {
@@ -248,15 +248,145 @@ function hasPost(page) {
   )
 }
 
+const uploads = new Map()
+
+function uploadFor(page) {
+  const key = `${page.field}|${page.maxSize || ''}`
+  if (!uploads.has(key)) {
+    uploads.set(
+      key,
+      multer({
+        storage: multer.memoryStorage(),
+        limits: { fileSize: parseSize(page.maxSize) }
+      })
+    )
+  }
+  return uploads.get(key)
+}
+
+function runUpload(page, req, res) {
+  return new Promise((resolve) => {
+    uploadFor(page).single(page.field)(req, res, (err) => {
+      req.multerError = err
+      resolve()
+    })
+  })
+}
+
+function pageForRequest(journey, basePath, req) {
+  const fullPath = (basePath + req.path).replace(/\/+$/, '') || basePath
+  return journey.pages.find((page) => page.path === fullPath)
+}
+
+async function handleGet(req, res, journey, page, hooks) {
+  const ctx = buildContext(req, res, journey, page)
+  if (!ctx.preview && page.guard && !evaluate(page.guard, ctx)) {
+    return res.redirect(toPath(page.guard.redirect, journey))
+  }
+  const model = buildModel(ctx)
+  const hook = hooks[page.id]
+  if (hook && typeof hook.get === 'function') {
+    const result = await hook.get(ctx, model)
+    if (result && result.redirect) {
+      return res.redirect(result.redirect)
+    }
+  }
+  res.render(page.template, model)
+}
+
+async function handlePost(req, res, journey, page, hooks) {
+  if (page.type === 'file-upload') {
+    await runUpload(page, req, res)
+  }
+  const ctx = buildContext(req, res, journey, page, { isPost: true })
+  const hook = hooks[page.id] || {}
+  const data = ctx.data
+
+  let result = { ok: true }
+  if (typeof hook.validate === 'function') {
+    result = await hook.validate(ctx)
+  } else if (isQuestionType(page.type)) {
+    result = validatePage(page, ctx.body, ctx.file, req.multerError)
+  }
+  if (!result.ok) {
+    return res.render(page.template, buildModel(ctx, { error: result.error }))
+  }
+
+  if (
+    isQuestionType(page.type) &&
+    page.sessionKey &&
+    result.value !== undefined
+  ) {
+    if (page.type === 'file-upload') {
+      data[page.sessionKey] = result.value.originalname
+    } else {
+      data[page.sessionKey] = Array.isArray(result.value)
+        ? result.value.map((v) => storedValueFor(page, v))
+        : storedValueFor(page, result.value)
+    }
+  }
+  if (page.set) {
+    Object.assign(data, page.set)
+  }
+  if (Array.isArray(page.clears)) {
+    for (const key of page.clears) {
+      delete data[key]
+    }
+  }
+
+  if (typeof hook.process === 'function') {
+    const outcome = await hook.process(ctx, result.value)
+    if (outcome && outcome.error) {
+      return res.render(
+        page.template,
+        buildModel(ctx, { error: outcome.error })
+      )
+    }
+    if (outcome && outcome.redirect) {
+      return saveAndRedirect(req, res, outcome.redirect)
+    }
+  }
+
+  const rule = firstMatch(page.next, ctx)
+  if (!rule) {
+    return saveAndRedirect(req, res, page.path)
+  }
+  if (rule.set) {
+    Object.assign(data, rule.set)
+  }
+  let url = toPath(rule.goto, journey) || page.path
+  const target = journey.byId.get(rule.goto)
+  const continuesFlow = target && target.next && target.next.length > 0
+  if (
+    target &&
+    ctx.navFromSummary &&
+    journey.summaryPage &&
+    target.id !== journey.summaryPage &&
+    continuesFlow
+  ) {
+    const params = []
+    if (ctx.isChange) {
+      params.push('change=true')
+    }
+    params.push(`nav=${journey.summaryPage}`)
+    url += `?${params.join('&')}`
+  }
+  saveAndRedirect(req, res, url)
+}
+
 /**
- * Register GET/POST handlers for every page of the journey on `router`.
+ * Mount the journey on `router`: hook routes once, then a single dispatcher
+ * under basePath that resolves the page from the current definition on
+ * every request.
  */
 function createJourneyRouter(router, journeyOrId, hooks = {}) {
   const journeyId =
     typeof journeyOrId === 'string' ? journeyOrId : journeyOrId.id
   const initial = loadJourney(journeyId)
+  const basePath = initial.basePath
 
-  // Hook-provided endpoints (APIs, data files) are registered once
+  // Hook-provided endpoints (APIs, data files) are registered once, before
+  // the dispatcher, so they take precedence over page paths
   initial.hookRoutes = initial.hookRoutes || {}
   for (const [pageId, hook] of Object.entries(hooks)) {
     if (hook && typeof hook.routes === 'function' && initial.byId.has(pageId)) {
@@ -266,137 +396,24 @@ function createJourneyRouter(router, journeyOrId, hooks = {}) {
     }
   }
 
-  for (const staticPage of initial.pages) {
-    const pageId = staticPage.id
-    const current = () => {
+  router.use(basePath, async (req, res, next) => {
+    try {
       const journey = loadJourney(journeyId)
-      return { journey, page: journey.byId.get(pageId) || staticPage }
-    }
-
-    router.get(staticPage.path, async (req, res, next) => {
-      try {
-        const { journey, page } = current()
-        const ctx = buildContext(req, res, journey, page)
-        if (!ctx.preview && page.guard && !evaluate(page.guard, ctx)) {
-          return res.redirect(toPath(page.guard.redirect, journey))
-        }
-        const model = buildModel(ctx)
-        const hook = hooks[page.id]
-        if (hook && typeof hook.get === 'function') {
-          const result = await hook.get(ctx, model)
-          if (result && result.redirect) {
-            return res.redirect(result.redirect)
-          }
-        }
-        res.render(page.template, model)
-      } catch (error) {
-        next(error)
+      const page = pageForRequest(journey, basePath, req)
+      if (!page) {
+        return next()
       }
-    })
-
-    if (!hasPost(staticPage)) {
-      continue
-    }
-
-    const middleware = []
-    if (staticPage.type === 'file-upload') {
-      const upload = multer({
-        storage: multer.memoryStorage(),
-        limits: { fileSize: parseSize(staticPage.maxSize) }
-      })
-      middleware.push((req, res, next) => {
-        upload.single(staticPage.field)(req, res, (err) => {
-          req.multerError = err
-          next()
-        })
-      })
-    }
-
-    router.post(staticPage.path, ...middleware, async (req, res, next) => {
-      try {
-        const { journey, page } = current()
-        const ctx = buildContext(req, res, journey, page, { isPost: true })
-        const hook = hooks[page.id] || {}
-        const data = ctx.data
-
-        let result = { ok: true }
-        if (typeof hook.validate === 'function') {
-          result = await hook.validate(ctx)
-        } else if (isQuestionType(page.type)) {
-          result = validatePage(page, ctx.body, ctx.file, req.multerError)
-        }
-        if (!result.ok) {
-          return res.render(
-            page.template,
-            buildModel(ctx, { error: result.error })
-          )
-        }
-
-        if (
-          isQuestionType(page.type) &&
-          page.sessionKey &&
-          result.value !== undefined
-        ) {
-          if (page.type === 'file-upload') {
-            data[page.sessionKey] = result.value.originalname
-          } else {
-            data[page.sessionKey] = Array.isArray(result.value)
-              ? result.value.map((v) => storedValueFor(page, v))
-              : storedValueFor(page, result.value)
-          }
-        }
-        if (page.set) {
-          Object.assign(data, page.set)
-        }
-        if (Array.isArray(page.clears)) {
-          for (const key of page.clears) {
-            delete data[key]
-          }
-        }
-
-        if (typeof hook.process === 'function') {
-          const outcome = await hook.process(ctx, result.value)
-          if (outcome && outcome.error) {
-            return res.render(
-              page.template,
-              buildModel(ctx, { error: outcome.error })
-            )
-          }
-          if (outcome && outcome.redirect) {
-            return saveAndRedirect(req, res, outcome.redirect)
-          }
-        }
-
-        const rule = firstMatch(page.next, ctx)
-        if (!rule) {
-          return saveAndRedirect(req, res, page.path)
-        }
-        if (rule.set) {
-          Object.assign(data, rule.set)
-        }
-        let url = toPath(rule.goto, journey) || page.path
-        const target = journey.byId.get(rule.goto)
-        const continuesFlow = target && target.next && target.next.length > 0
-        if (
-          target &&
-          ctx.navFromSummary &&
-          journey.summaryPage &&
-          target.id !== journey.summaryPage &&
-          continuesFlow
-        ) {
-          const params = []
-          if (ctx.isChange) {
-            params.push('change=true')
-          }
-          params.push(`nav=${journey.summaryPage}`)
-          url += `?${params.join('&')}`
-        }
-        saveAndRedirect(req, res, url)
-      } catch (error) {
-        next(error)
+      if (req.method === 'GET' || req.method === 'HEAD') {
+        return await handleGet(req, res, journey, page, hooks)
       }
-    })
-  }
+      if (req.method === 'POST' && hasPost(page)) {
+        return await handlePost(req, res, journey, page, hooks)
+      }
+      next()
+    } catch (error) {
+      next(error)
+    }
+  })
 
   return router
 }

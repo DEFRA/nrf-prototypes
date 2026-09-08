@@ -14,7 +14,7 @@ content/
 
 **If you are changing copy, options, hints, error messages or button text, you only ever edit files in `pages/`.** You never need to touch `journey.yaml` for that.
 
-See the flow and every screen side by side at `/tools/journeys/nrf-quote-7` while `npm run dev` is running. Save a page file and refresh: changes show immediately. The flow diagram keeps the default path (following each page's default `goto` from `start`) on a single row, with branches and exits hanging below it; nothing needs marking as "main" by hand.
+See the flow and every screen side by side at `/tools/journeys/nrf-quote-7` while `npm run dev` is running. Save a page file or `journey.yaml` and the open browser tab reloads itself with the change; no refresh and no restart needed. The flow diagram keeps the default path (following each page's default `goto` from `start`) on a single row, with branches and exits hanging below it; nothing needs marking as "main" by hand.
 
 ## Editing a page
 
@@ -159,11 +159,11 @@ Kinds: `submit`, `warning` (red button), `link`, `destructive` (red link), `star
 
 ## Things that need a developer
 
-- Adding, removing or renaming a page (the file name is the page's URL).
+- Adding, removing or renaming a page (the file name is the page's URL). The running server picks the new page up without a restart.
 - Changing where an answer leads (`journey.yaml → next`).
 - Changing what a page remembers (`journey.yaml → session`).
 - New kinds of block or component.
-- The map page's behaviour (`app/lib/nrf-quote-7/hooks.js`).
+- The map page's behaviour (`app/lib/nrf-quote-7/hooks.js`). Changes to hooks, or to `basePath` in `journey.yaml`, need `npm run dev` restarting.
 
 ## For developers: journey.yaml
 
@@ -185,6 +185,6 @@ Condition operators: `equals`, `notEquals`, `in`, `notIn`, `gt`, `gte`, `lt`, `l
 
 Other page keys: `back` (page id, absolute path, or a rule list), `guard` (condition plus `redirect`), `store` (map radio labels to stored values), `set` (write values on submit; also allowed on a rule), `clears` (list of keys, or `$session`), `handler: custom` (page has hooks), `template` (a hand-written view for `type: custom`), `accept` and `maxSize` for uploads, `min` and `max` for numbers.
 
-Journey keys: `id`, `name`, `serviceName`, `start`, `summaryPage`, `session`, `preview.data` (sample answers for `?preview=1` and the screen wall).
+Journey keys: `id`, `name`, `serviceName`, `start`, `summaryPage`, `session`, `preview.data` (sample answers for `?preview=1` and the screen wall). `serviceName` is used in every page `<title>` and, prefixed "PROTOTYPE - ", in the service navigation bar under the header (`app/views/includes/service-header.html`).
 
 The definition is validated on load. A broken file fails loudly with every problem listed, both on `npm run dev` and at `/tools/journeys`.

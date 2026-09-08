@@ -54,4 +54,8 @@ JOURNEYS.forEach((journey) => {
   }
 })
 
+// Reload the browser when content/ changes (development only). The kit's own
+// watchers never look at content/; see app/lib/journey-engine/watch.js.
+require('./lib/journey-engine').watchContent()
+
 module.exports = router

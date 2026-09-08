@@ -16,6 +16,7 @@ const {
   TYPES
 } = require('./loader')
 const { createJourneyRouter, previewData } = require('./router')
+const { watchContent } = require('./watch')
 const {
   getEdges,
   layoutLevels,
@@ -37,6 +38,7 @@ module.exports = {
   TYPES,
   createJourneyRouter,
   previewData,
+  watchContent,
   getEdges,
   layoutLevels,
   mainChain,
