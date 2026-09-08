@@ -29,10 +29,15 @@
   .flow-edge-label { box-sizing: border-box; display: inline-block; padding: 3px 6px; background: #f3f2f1; font-family: "GDS Transport", arial, sans-serif; font-size: 12px; line-height: 1.3; color: #0b0c0c; text-align: center; white-space: normal; }
   .flow-measure { position: absolute; left: -9999px; top: 0; visibility: hidden; }
   .flow-measure .flow-node__label { min-height: 0; }
-  .wall-level { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 20px; padding: 20px 0; border-top: 1px solid #b1b4b6; }
-  .wall-level__label { flex: 0 0 100%; font-family: "GDS Transport", arial, sans-serif; font-size: 14px; color: #505a5f; margin: 0; }
+  .screen-wall { overflow-x: auto; border: 1px solid #b1b4b6; padding: 0 20px; margin-bottom: 40px; background: #fff; }
+  .screen-wall__inner { width: max-content; min-width: 100%; }
+  .wall-level { padding: 20px 0; border-top: 1px solid #b1b4b6; }
+  .wall-level:first-child { border-top: 0; }
+  .wall-level__label { position: sticky; left: 0; width: max-content; font-family: "GDS Transport", arial, sans-serif; font-size: 14px; color: #505a5f; margin: 0 0 15px; }
+  .wall-level__cards { display: flex; flex-wrap: nowrap; align-items: flex-start; gap: 20px; }
   .wall-card { --wall-scale: 0.4; flex: 0 0 auto; width: calc(1000px * var(--wall-scale)); }
   .wall-card--branch { margin-left: 30px; }
+  .wall-card__via { font-family: "GDS Transport", arial, sans-serif; font-size: 14px; line-height: 1.4; color: #505a5f; margin: 6px 0 0; }
   .wall-card__head { font-family: "GDS Transport", arial, sans-serif; font-size: 14px; line-height: 1.4; margin-bottom: 6px; }
   .wall-card__id { font-weight: 700; color: #0b0c0c; }
   .wall-card__type { color: #505a5f; }
@@ -76,7 +81,7 @@
   {% endset %}
 
   {% set screensPanel %}
-  <p class="tools-legend">Every screen rendered live with the sample data from <code>journey.yaml → preview</code>. Rows follow the flow; indented cards are branches or exits. Click a screen to open it in a new tab.</p>
+  <p class="tools-legend">Every screen rendered live with the sample data from <code>journey.yaml → preview</code>. Each row is a page on the default path, followed by the screens that branch off it and how you reach them. Click a screen to open it in a new tab.</p>
 
   <div class="tools-controls">
     <label for="wall-scale">Zoom</label>
@@ -84,11 +89,13 @@
     <span id="wall-scale-value">40%</span>
   </div>
 
-  <div id="screen-wall">
+  <div class="screen-wall" id="screen-wall">
+    <div class="screen-wall__inner">
     {% for level in levels %}
     <div class="wall-level">
-      <p class="wall-level__label">Step {{ loop.index }}</p>
-      {% for page in level %}
+      <p class="wall-level__label">{% if level.unreachable %}Not reached{% else %}Step {{ loop.index }}{% endif %}</p>
+      <div class="wall-level__cards">
+      {% for page in level.pages %}
       <div class="wall-card{% if not loop.first %} wall-card--branch{% endif %}{% if page.isExit %} wall-card--exit{% endif %}{% if page.isCustom %} wall-card--custom{% endif %}">
         <div class="wall-card__head">
           <span class="wall-card__id">{{ page.id }}</span>
@@ -103,10 +110,13 @@
           <iframe src="{{ page.path }}?preview=1" loading="lazy" title="{{ page.heading }}" tabindex="-1"></iframe>
           <a class="wall-card__shield" href="{{ page.path }}?preview=1" target="_blank" rel="noopener" aria-label="Open {{ page.heading }} in a new tab"></a>
         </div>
+        {% if page.via %}<p class="wall-card__via">&#8627; {{ page.via }}</p>{% endif %}
       </div>
       {% endfor %}
+      </div>
     </div>
     {% endfor %}
+    </div>
   </div>
   {% endset %}
 

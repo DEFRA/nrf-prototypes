@@ -150,6 +150,28 @@ test.describe('journey tools', () => {
     await expect(page.locator('iframe')).toHaveCount(journey.pages.length)
   })
 
+  test('screen wall places branch screens beside the page they branch from', async ({
+    page
+  }) => {
+    await page.goto(`/tools/journeys/${journey.id}`)
+    await page.getByRole('tab', { name: 'Screens' }).click()
+    const rowWith = (id) =>
+      page.locator('.wall-level', {
+        has: page.locator('.wall-card__id', { hasText: id })
+      })
+    await expect(
+      rowWith('planning-type').locator('.wall-card__id', {
+        hasText: 'wrong-permission'
+      })
+    ).toHaveCount(1)
+    await expect(
+      rowWith('housing').locator('.wall-card__id', { hasText: 'not-housing' })
+    ).toHaveCount(1)
+    await expect(rowWith('housing').locator('.wall-card__via')).toContainText(
+      'isHousing is No'
+    )
+  })
+
   test('flow diagram keeps the default path on one row', async ({ page }) => {
     await page.goto(`/tools/journeys/${journey.id}`)
     // ELK is loaded from a CDN, so give the layout a moment

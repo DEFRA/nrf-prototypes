@@ -89,11 +89,18 @@ function getEdges(journey) {
 }
 
 /**
- * Breadth-first levels from the start page. Each level is a list of page
- * ids; the default (main-chain) target is placed first within a level.
- * Unreachable pages are appended as a final level.
+ * Rows for the screen wall: one row per main-chain page, in chain order.
+ * Each row lists the main-chain page first, then every page that branches
+ * off it (followed through any further off-chain pages), each with a
+ * human-readable `via` caption explaining how it is reached. Pages only
+ * reached by change links or in-page links join the row of the page that
+ * links to them. Anything still unplaced goes in a final "not reached" row.
+ *
+ * Returns [{ pages: [{ id, via }], unreachable }].
  */
 function layoutLevels(journey) {
+  const chain = mainChain(journey)
+  const onChain = new Set(chain)
   const edges = getEdges(journey)
   const outgoing = new Map()
   for (const edge of edges) {
@@ -102,55 +109,54 @@ function layoutLevels(journey) {
     }
     outgoing.get(edge.fromId).push(edge)
   }
-  // Pass 1: the main flow (form submissions only, no return-to-summary edges)
-  const level = new Map([[journey.start, 0]])
-  const queue = [journey.start]
-  while (queue.length) {
-    const id = queue.shift()
-    for (const edge of (outgoing.get(id) || []).filter(
-      (e) => e.kind === 'next'
-    )) {
-      if (!level.has(edge.toId)) {
-        level.set(edge.toId, level.get(id) + 1)
-        queue.push(edge.toId)
+  const rows = chain.map((id) => ({ pages: [{ id, via: '' }] }))
+  const rowOf = new Map(chain.map((id, index) => [id, index]))
+  const place = (id, rowIndex, via) => {
+    rowOf.set(id, rowIndex)
+    rows[rowIndex].pages.push({ id, via })
+  }
+  // Pass 1: form-submission branches off each main-chain page, followed
+  // depth-first through pages that are not on the chain themselves
+  chain.forEach((chainId, rowIndex) => {
+    const walk = (fromId, depth) => {
+      for (const edge of (outgoing.get(fromId) || []).filter(
+        (e) => e.kind === 'next'
+      )) {
+        if (onChain.has(edge.toId) || rowOf.has(edge.toId)) {
+          continue
+        }
+        const via =
+          depth === 0
+            ? `If ${edge.label}`
+            : `From ${fromId}${edge.label ? `, if ${edge.label}` : ''}`
+        place(edge.toId, rowIndex, via)
+        walk(edge.toId, depth + 1)
       }
     }
-  }
-  // Pass 2: pages only reached by links or change links sit one level after
-  // whichever placed page links to them
+    walk(chainId, 0)
+  })
+  // Pass 2: pages only reached by change links or in-page links join the
+  // row of whichever placed page links to them
   let placed = true
   while (placed) {
     placed = false
     for (const edge of edges) {
-      if (level.has(edge.fromId) && !level.has(edge.toId)) {
-        level.set(edge.toId, level.get(edge.fromId) + 1)
+      if (rowOf.has(edge.fromId) && !rowOf.has(edge.toId)) {
+        const detail =
+          edge.label && edge.label !== 'link' ? ` (${edge.label})` : ''
+        place(edge.toId, rowOf.get(edge.fromId), `From ${edge.fromId}${detail}`)
         placed = true
       }
     }
   }
-  const levels = []
-  for (const page of journey.pages) {
-    if (!level.has(page.id)) {
-      continue
-    }
-    const depth = level.get(page.id)
-    levels[depth] = levels[depth] || []
-    levels[depth].push(page.id)
-  }
-  // Within a level keep BFS discovery order (main chain first)
-  const order = [...level.keys()]
-  for (const group of levels) {
-    if (group) {
-      group.sort((a, b) => order.indexOf(a) - order.indexOf(b))
-    }
-  }
   const unreachable = journey.pages
     .map((p) => p.id)
-    .filter((id) => !level.has(id))
+    .filter((id) => !rowOf.has(id))
+    .map((id) => ({ id, via: '' }))
   if (unreachable.length) {
-    levels.push(unreachable)
+    rows.push({ pages: unreachable, unreachable: true })
   }
-  return levels.filter(Boolean)
+  return rows
 }
 
 function mermaidLabel(text) {

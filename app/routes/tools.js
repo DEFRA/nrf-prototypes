@@ -18,8 +18,9 @@ const {
   isQuestionType
 } = require('../lib/journey-engine')
 
-function pageView(page, journey) {
+function pageView(page, journey, via) {
   return {
+    via: via || '',
     id: page.id,
     path: page.path,
     type: page.type,
@@ -70,9 +71,12 @@ router.get('/tools/journeys/:journey', (req, res) => {
   if (!journey) {
     return
   }
-  const levels = layoutLevels(journey).map((ids) =>
-    ids.map((id) => pageView(journey.byId.get(id), journey))
-  )
+  const levels = layoutLevels(journey).map((row) => ({
+    unreachable: Boolean(row.unreachable),
+    pages: row.pages.map(({ id, via }) =>
+      pageView(journey.byId.get(id), journey, via)
+    )
+  }))
   res.render('tools/journey', {
     journey: {
       id: journey.id,
