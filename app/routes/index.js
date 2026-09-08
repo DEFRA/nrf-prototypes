@@ -1,16 +1,29 @@
 const govukPrototypeKit = require('govuk-prototype-kit')
 const router = govukPrototypeKit.requests.setupRouter()
-const { JOURNEYS } = require('../config/shared/journeys')
+const {
+  groupJourneysByFamily,
+  isMounted
+} = require('../config/shared/journeys')
 
 /**
  * Homepage route
- * Displays all available journeys from the shared config
+ * Builds the tabs from the journey registry on every request, so edits to
+ * app/config/shared/journeys.yaml or a content journey's `homepage:` block
+ * show up on refresh without a restart.
  */
 router.get('/', function (req, res) {
-  // Pass journeys to the view
-  res.render('index', {
-    journeys: JOURNEYS
-  })
+  const families = groupJourneysByFamily().map((family) => ({
+    ...family,
+    all: family.all.map((journey) => ({
+      ...journey,
+      mounted: isMounted(journey.id)
+    }))
+  }))
+  for (const family of families) {
+    family.latest = family.versioned ? family.all[0] : undefined
+    family.previous = family.versioned ? family.all.slice(1) : []
+  }
+  res.render('index', { families })
 })
 
 module.exports = router

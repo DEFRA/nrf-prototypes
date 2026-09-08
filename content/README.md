@@ -165,6 +165,26 @@ Kinds: `submit`, `warning` (red button), `link`, `destructive` (red link), `star
 - New kinds of block or component.
 - The map page's behaviour (`app/lib/nrf-quote-7/hooks.js`). Changes to hooks, or to `basePath` in `journey.yaml`, need `npm run dev` restarting.
 
+## Adding a new journey
+
+1. Create `content/<id>/journey.yaml` and `content/<id>/pages/` with at least a start page. Copy `content/nrf-request-to-use-1/` for the smallest working example.
+2. Give it a `homepage:` block so it lands in the right tab on the homepage:
+
+   ```yaml
+   homepage:
+     family: quote # quote | request-to-use | lpa | other (tabs in app/config/shared/journeys.yaml)
+     version: 8 # highest version in a family is the main card; the rest go under "Previous versions"
+     status: in-progress # tested | in-progress | spike
+     title: Get a quote for Nature Restoration Fund levy (V8)
+     description: One paragraph shown on the card.
+     changes: # optional "Design changes" bullets; { heading, items } groups are allowed
+       - What changed since the last version
+   ```
+
+3. Restart `npm run dev`. The journey mounts at `/<id>` (or `basePath` if set), appears on the homepage and at `/tools/journeys/<id>`. Until the restart the homepage shows the card with a "Restart to mount" tag.
+
+Nothing else needs registering: no route file, no entry in `app/config/shared/journeys.yaml` (that file is only for the older hand-coded journeys). Bespoke page behaviour goes in `app/lib/<id>/hooks.js`, which is picked up automatically on the next restart. Route constants for tests are available with `getRouteConstants('<id>')` from `app/lib/journey-engine` (see `app/config/nrf-quote-7/routes.js`).
+
 ## For developers: journey.yaml
 
 ```yaml
@@ -185,6 +205,6 @@ Condition operators: `equals`, `notEquals`, `in`, `notIn`, `gt`, `gte`, `lt`, `l
 
 Other page keys: `back` (page id, absolute path, or a rule list), `guard` (condition plus `redirect`), `store` (map radio labels to stored values), `set` (write values on submit; also allowed on a rule), `clears` (list of keys, or `$session`), `handler: custom` (page has hooks), `template` (a hand-written view for `type: custom`), `accept` and `maxSize` for uploads, `min` and `max` for numbers.
 
-Journey keys: `id`, `name`, `serviceName`, `start`, `summaryPage`, `session`, `preview.data` (sample answers for `?preview=1` and the screen wall). `serviceName` is used in every page `<title>` and, prefixed "PROTOTYPE - ", in the service navigation bar under the header (`app/views/includes/service-header.html`).
+Journey keys: `id`, `name`, `serviceName`, `start`, `summaryPage`, `session`, `preview.data` (sample answers for `?preview=1` and the screen wall), `homepage` (the homepage card: `family`, `version`, `status`, `title`, `description`, `changes`; see "Adding a new journey"). `serviceName` is used in every page `<title>` and, prefixed "PROTOTYPE - ", in the service navigation bar under the header (`app/views/includes/service-header.html`).
 
 The definition is validated on load. A broken file fails loudly with every problem listed, both on `npm run dev` and at `/tools/journeys`.

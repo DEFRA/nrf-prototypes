@@ -316,6 +316,9 @@ function build(journeyId) {
     summaryPage: raw.summaryPage,
     session: raw.session || [],
     preview: raw.preview || { data: {} },
+    // Homepage card metadata (family, version, status, description, changes).
+    // Read by app/config/shared/journeys.js; the engine itself ignores it.
+    homepage: raw.homepage || {},
     pages: [],
     byId: new Map(),
     routes: {}

@@ -21,7 +21,8 @@ Rapid prototyping of user journeys for the Nature Restoration Fund (NRF) levy se
 app/
 ├── config/
 │   ├── shared/
-│   │   ├── journeys.js          # JOURNEYS list; used by app and tests
+│   │   ├── journeys.yaml        # Registry of hand-coded journeys (homepage cards)
+│   │   ├── journeys.js          # Loads the YAML + content/ journeys; used by app and tests
 │   │   └── building-types.js     # Shared building type config
 │   └── {journey-name}/          # Per-journey route constants
 │       └── routes.js            # ROUTES and TEMPLATES
@@ -45,10 +46,10 @@ app/
 ```
 
 ## Journey Configuration
-- Journeys are defined in `app/config/shared/journeys.js` as `JOURNEYS`.
-- Each entry has `name`, `displayName`, `basePath` (e.g. `/nrf-estimate-4`), optional `hasStartPage`, `entryPath`, `description`.
-- Add a new journey by adding an entry to `JOURNEYS` and creating `app/routes/{basePathWithoutSlash}.js` (e.g. `nrf-estimate-4.js`). `app/routes.js` loads route modules dynamically from `JOURNEYS`, so no change to `routes.js` is needed for new journeys.
-- **Completeness**: For every journey, ensure (1) an entry exists in `JOURNEYS`, (2) `app/config/{journey}/routes.js` exists on disk if `app/routes/{journey}.js` requires it, and (3) `node -e "require('./app/routes/{journey}.js')"` succeeds from the repo root. Omitting (1) or (2) typically causes **404** for the whole journey (router never mounts).
+- Hand-coded journeys are listed in `app/config/shared/journeys.yaml`; `app/config/shared/journeys.js` loads it, merges in every `content/<id>/journey.yaml`, and exports `JOURNEYS`.
+- Each YAML entry has `id` (basePath is `/<id>`), `family`, `version`, `status`, `name`, `title`, `description`, optional `entryPath` (default `/start`), `changes`, `mount`.
+- Add a new hand-coded journey by adding an entry to `journeys.yaml` and creating `app/routes/{id}.js` (e.g. `nrf-estimate-4.js`). Content-driven journeys need only their `content/<id>/` folder with a `homepage:` block in `journey.yaml`. `app/routes.js` mounts both kinds dynamically, so no change to `routes.js` is needed for new journeys.
+- **Completeness**: For every hand-coded journey, ensure (1) an entry exists in `journeys.yaml`, (2) `app/config/{journey}/routes.js` exists on disk if `app/routes/{journey}.js` requires it, and (3) `node -e "require('./app/routes/{journey}.js')"` succeeds from the repo root. Omitting (1) or (2) typically causes **404** for the whole journey (router never mounts).
 
 ## Key Principles
 - **User journey first**: Implement flows from prompts (page flow, data points, content, errors).

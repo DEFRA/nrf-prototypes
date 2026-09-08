@@ -1,0 +1,55 @@
+# Flow and logic for the "Request to use" journey (first stub).
+#
+# Copy lives in pages/*.md. This file decides the order of pages, where each
+# answer leads and what is remembered in the session. See content/README.md.
+#
+# This is a placeholder flow to prove the pattern: a developer with a quote
+# asks to use the nature restoration levy and, once accepted, receives a
+# commitment certificate. Replace and extend the pages as the design lands.
+
+id: nrf-request-to-use-1
+name: Request to use the nature restoration levy
+serviceName: Request to use the nature restoration levy
+start: start
+summaryPage: check-your-answers
+
+# Card shown on the homepage. `family` picks the tab, `version` orders it
+# against the other versions in that family. See app/config/shared/journeys.yaml.
+homepage:
+  family: request-to-use
+  version: 1
+  status: in-progress
+  title: Request to use the nature restoration levy (V1)
+  description: >-
+    Placeholder flow. A developer with a quote asks to use the nature
+    restoration levy and, once the request is accepted, receives a commitment
+    certificate to submit alongside their planning application.
+  changes:
+    - First stub with NRF reference, check your answers and confirmation
+    - Built from content files, so copy and flow can change without code
+
+# Every session key this journey writes. `clears: $session` expands to this.
+session:
+  - nrfReference
+
+# Sample answers used when a page is opened with ?preview=1 and on the
+# screen wall at /tools/journeys/nrf-request-to-use-1. Never written to the session.
+preview:
+  data:
+    nrfReference: NRF-123456
+
+pages:
+  - id: start
+    next: quote-reference
+
+  - id: quote-reference
+    field: nrf-reference
+    sessionKey: nrfReference
+    changeable: true
+    next: check-your-answers
+
+  - id: check-your-answers
+    guard: { key: nrfReference, isSet: true, redirect: quote-reference }
+    next: confirmation
+
+  - id: confirmation
