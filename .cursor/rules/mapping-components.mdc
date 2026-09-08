@@ -1,67 +1,62 @@
 ---
-description: Map pages and mapping – red line boundary, EDP layers, GeoJSON, Leaflet/MapLibre
-globs: ["app/views/**/map.html", "app/routes/**/*.js", "app/assets/**/*", "app/**/map*.js"]
+description: Map pages and mapping – red line boundary, EDP layers, @defra/interactive-map, GeoJSON
+globs: ["app/views/**/map.html", "app/views/layouts/interactive-map.html", "app/routes/**/*.js", "app/lib/**/hooks.js", "app/assets/javascripts/interactive-map/**", "app/assets/**/*", "app/**/map*.js"]
 alwaysApply: false
 ---
 
 # Mapping Components
 
 ## Context
-Prototypes include custom map pages for drawing a red line boundary and checking overlap with EDP (Environmental Delivery Plan) areas. Map pages are full-screen and use GeoJSON and turf for geometry.
+Prototypes include map pages for drawing a red line boundary and checking overlap with EDP (Environmental Delivery Plan) areas. There are two patterns in the repo:
 
-## Map Pages in Journeys
-- **Red line boundary**: User draws a polygon for the development site (e.g. `/nrf-estimate-4/map`). Optional: upload shapefile/GeoJSON instead (separate upload page).
-- **EDP check**: Boundary is checked against EDP GeoJSON; if no intersection, user is sent to an exit page (e.g. `/nrf-estimate-4/no-edp`).
-- **LPA / approval**: Some journeys show a read-only map with the development boundary (e.g. approve-details page).
+1. **Production map component (preferred, `nrf-quote-7`)** – the same `@defra/interactive-map` npm package the live service uses, loaded through the Prototype Kit's plugin asset serving. Use this for new work.
+2. **Legacy stacks** – a hand-copied older alpha of the same package plus `app/assets/javascripts/components/map/` (`nrf-estimate-5/6`, `nrf-quote-6`), and MapLibre + mapbox-gl-draw scripts (`nrf-estimate-1..4`, `nrf-quote-4`). Leave these alone unless you are migrating a journey.
 
-## Layout and Assets
-- **Layout**: Map pages extend `layouts/map.html` (not `main.html`) for full-screen map UX.
-- **Libraries**: MapLibre GL (or Leaflet), Mapbox GL Draw (or equivalent) for drawing; turf.js for intersection/geometry.
-- **Layers**: GeoJSON in `app/assets/map-layers/` (e.g. catchments, GCN EDP). Routes may load these once at startup and cache in memory.
+## Production map pattern (nrf-quote-7)
+- **Package**: `@defra/interactive-map` is pinned to an exact alpha version in `package.json`. It ships a `govuk-prototype-kit.config.json`, so the kit serves its UMD bundles, CSS and page templates at `/plugin-assets/%40defra%2Finteractive-map/...`. **Never vendor or copy its files.** To upgrade, bump the version and re-test.
+- **Layout**: map pages extend `layouts/interactive-map.html`. It links the plugin CSS, loads the UMD `<script>` tags in the right order (core, maplibre provider, interact, draw, datasets, map-key, map-styles, scale-bar, search) and exposes a `mapScripts` block for the page's `<script type="module">`. Do not add `defer`/`async` to the UMD tags: the module script relies on them having populated `window.defra` first.
+- **Client glue**: `app/assets/javascripts/interactive-map/` is a near-verbatim port of the production frontend's `src/client/javascripts/map/` (nrf-frontend), written as browser ES modules with no bundler. Keep the file structure and names identical to production so the two can be diffed; the only intended differences are reading the library from `window.defra`, using `console` instead of the production logger, and submitting the page form instead of a JSON save endpoint.
+- **Basemaps**: style JSON lives in `app/assets/data/vts/` (served at `/public/data/vts/`, the same path production uses). Ordnance Survey styles go through `app/routes/os-base-map.js`, which adds `OS_API_KEY` server-side and rewrites OS URLs so the key never reaches the browser. Without a key only the keyless Satellite and Streets (OpenFreeMap) styles are offered (`shared-helpers/styles.js`).
+- **EDP overlays**: the datasets config is identical to production's and requests `/impact-assessor-map/tiles/{layer}/{z}/{x}/{y}.mvt`. `app/routes/tileserver-proxy.js` slices those tiles on demand with geojson-vt from `app/lib/map/edp-data.js` (production layer names, every zoom level), or proxies the real service when `IMPACT_ASSESSOR_BASE_URL` is set. `edp-data.js` groups the nutrient catchments in `app/assets/map-layers/` by designated site and dissolves each group into one EDP outline (the live Broads/Wensum EDP uses production's exact label; other groups are synthetic EDPs so the journey works anywhere), and holds the excluded areas (`edp_excluded_areas.geojson`: River Wensum SAC, The Broads SAC and Broadland Ramsar boundaries from Natural England open data, OGL v3). Boundary checks report whole EDPs, one entry per plan, like production.
+- **Boundary check API**: the page's hook registers `POST {basePath}/api/boundary/check` taking `{ geometry }` (GeoJSON Polygon) and returning the production shape: `{ boundaryGeometryWgs84, boundaryGeometryOriginal, boundaryMetadata: { area: { hectares, acres }, perimeter: { kilometres, miles }, bounds: { bottomLeft, topRight }, centre }, intersectingEdps: [{ label, type }], intersectingExcludedAreas: [] }`. The map's "Boundary information" panel renders this.
+- **Saving**: the panel's "Save and continue" writes the check payload into the hidden `#boundary-data` input and submits `#map-form`. The hook's `validate` accepts that payload (plus GeoJSON and the legacy `{ center, coordinates }` shape), `process` re-runs the EDP check server-side and stores the session shape below, and `journey.yaml` decides the next page.
 
-## Route Responsibilities
-- **GET map page**: Pass `data` and any config (e.g. catchments URL, initial centre). Ensure session has `mapReferrer` or similar for back link.
-- **POST map page**: Receive boundary (e.g. JSON body or hidden form field). Validate polygon; run EDP intersection (e.g. turf.booleanIntersects); set `req.session.data.redlineBoundaryPolygon` and intersection result; redirect to next step or to no-edp.
-- **API for EDP check**: Optional GET/POST endpoint (e.g. `/nrf-estimate-4/api/check-edp-intersection`) that accepts coordinates and returns intersection result for client-side use before submit.
+## Legacy map pages
+- **Layout**: `layouts/map.html` (full-screen `main`, no footer).
+- **Libraries**: vendored `@defra/interactive-map` 0.0.10 UMD under `app/assets/javascripts/vendor/interactive-map/` with `components/map/init.js`, or MapLibre GL + Mapbox GL Draw from CDN; turf.js for geometry.
+- **API**: `POST {basePath}/api/check-edp-intersection` taking `{ coordinates }`.
 
-## Data Stored for Boundary
-- **redlineBoundaryPolygon**: Coordinates array or GeoJSON; optionally `intersectingCatchment` (or similar) from EDP intersection for display in summary and emails.
-- **hasRedlineBoundaryFile**: Whether user chose “Upload a file”; if false, they used the map.
+## Data stored for the boundary (all patterns)
+- **redlineBoundaryPolygon**: `{ center, coordinates (unclosed ring), intersections: { nutrient, gcn }, intersectingCatchment }`; the production pattern adds `boundaryGeojson` (the full check payload).
+- **intersectingCatchment**: first nutrient EDP name, used for branching, summary and emails.
+- **hasRedlineBoundaryFile** / **mapReferrer**: whether the user uploaded a file; where the map's back link goes.
 
-## Client-Side Behaviour (when implementing)
-- **Drawing**: Draw polygon; “Save and continue” sends coordinates to server (or form submit). Button can be enabled only when a valid polygon exists (client-side validation).
-- **Validation message**: If user submits without drawing: “Draw a red line boundary to continue” (match prompt).
-- **Controls**: “Show all England”, “Zoom to boundary”, “Toggle catchments” (if applicable) for UX only; no need to persist in session.
-
-## EDP Data and Performance
-- Load GeoJSON once in the route module (or a shared lib) at startup; avoid reading from disk on every request.
+## EDP data and performance
+- GeoJSON in `app/assets/map-layers/`. Load it once at module startup and cache it (see `loadEdpData()` in `app/lib/nrf-quote-7/hooks.js`); never `readFileSync` per request.
 - Use turf for intersection: `turf.booleanIntersects(boundaryPolygon, edpFeature)`; collect intersecting EDP names for redirect logic and display.
+- Vector tiles are MBTiles in `tileserver/data/mbtiles/`; regenerate with `npm run tiles:convert`.
+
+## Validation and copy
+- Submitting without a boundary: "Draw a red line boundary to continue" (match the prompt / page file).
+- Page title: "Draw a red line boundary – Get a quote for Nature Restoration Fund levy – GOV.UK".
 
 ## Examples
 
-### ✅ Good – EDP check in route (conceptual)
+### ✅ Good – production-shaped boundary check in a hook
 ```javascript
-const { ROUTES, TEMPLATES } = require('../config/nrf-estimate-4/routes')
-const turf = require('@turf/turf')
-
-function checkEDPIntersections(coordinates) {
-  if (!coordinates || coordinates.length < 3) return { nutrient: null, intersections: [] }
-  const boundaryPolygon = turf.polygon([coordinates])
-  const intersections = []
-  for (const feature of nutrientEdpData.features) {
-    if (turf.booleanIntersects(boundaryPolygon, feature)) {
-      intersections.push({ type: 'nutrient', name: feature.properties.Label || 'EDP Area' })
-    }
+router.post(`${journey.basePath}/api/boundary/check`, (req, res) => {
+  const failureReason = validatePolygonGeometry(req.body.geometry)
+  if (failureReason) {
+    return res.status(400).json({ error: 'Draw a valid red line boundary to check it', failureReason })
   }
-  return { nutrient: intersections[0]?.name || null, intersections }
-}
+  return res.json(checkBoundary(req.body.geometry))
+})
 ```
 
-### ✅ Good – Map page title and back link
-- Page title: “Draw a red line boundary – Get a quote for Nature Restoration Fund levy – GOV.UK”.
-- Back link: Previous step (e.g. redline-map or start) from `req.session.data.mapReferrer` or route constant.
+### ❌ Poor – copying library files into app/assets
+Do not copy `node_modules/@defra/interactive-map/**` into `app/assets/javascripts/vendor/`. Reference `/plugin-assets/%40defra%2Finteractive-map/...` instead so upgrades are a version bump.
 
-### ❌ Poor – Reading GeoJSON on every request
+### ❌ Poor – reading GeoJSON on every request
 ```javascript
 router.get(ROUTES.MAP, (req, res) => {
   const geojson = JSON.parse(fs.readFileSync(path.join(__dirname, '../assets/map-layers/catchments.geojson'), 'utf8'))

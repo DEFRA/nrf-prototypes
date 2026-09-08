@@ -6,32 +6,40 @@
  * intersection check), parsing an uploaded GeoJSON file, and minting the
  * NRF reference. All user-facing wording still comes from the page files.
  *
- * Copied, not moved, from app/routes/nrf-quote-6.js so quote-6 is untouched.
+ * The map page uses the production map component (@defra/interactive-map,
+ * see app/views/layouts/interactive-map.html). Its boundary check API and
+ * response shape mirror the production frontend so the client glue under
+ * app/assets/javascripts/interactive-map/ stays diffable against production.
  */
 
 const path = require('path')
 const fs = require('fs')
 const turf = require('@turf/turf')
 const { message } = require('../journey-engine/validation')
+const edpData = require('../map/edp-data')
 
 // ============================================================================
 // EDP DATA (loaded once at startup)
 // ============================================================================
 
+// Nutrient EDPs (dissolved catchments) and excluded areas come from the shared
+// app/lib/map/edp-data.js; the great crested newt EDP areas are loaded here.
 const MAP_LAYERS = path.join(__dirname, '../../assets/map-layers')
-const NUTRIENT_FILE = path.join(
-  MAP_LAYERS,
-  'catchments_nn_catchments_03_2024.geojson'
-)
 const GCN_FILE = path.join(MAP_LAYERS, 'gcn_edp_all_regions.geojson')
 
-let nutrientEdpData = null
+const MAX_BOUNDARY_POINTS = 10000
+const SQUARE_METRES_PER_HECTARE = 10000
+const SQUARE_METRES_PER_ACRE = 4046.8564224
+const MILES_PER_KILOMETRE = 0.621371
+// Production shows four decimal places in the boundary information panel
+const METADATA_DECIMAL_PLACES = 4
+
 let gcnEdpData = null
 
 function loadEdpData() {
   try {
-    nutrientEdpData = JSON.parse(fs.readFileSync(NUTRIENT_FILE, 'utf8'))
     gcnEdpData = JSON.parse(fs.readFileSync(GCN_FILE, 'utf8'))
+    edpData.getEdps()
   } catch (error) {
     console.error('Error loading EDP data:', error)
   }
@@ -39,40 +47,56 @@ function loadEdpData() {
 
 loadEdpData()
 
+function closeRing(coordinates) {
+  const closed = [...coordinates]
+  const first = closed[0]
+  const last = closed[closed.length - 1]
+  if (first[0] !== last[0] || first[1] !== last[1]) {
+    closed.push(first)
+  }
+  return closed
+}
+
+function openRing(coordinates) {
+  if (coordinates.length < 2) {
+    return [...coordinates]
+  }
+  const first = coordinates[0]
+  const last = coordinates[coordinates.length - 1]
+  if (first[0] === last[0] && first[1] === last[1]) {
+    return coordinates.slice(0, -1)
+  }
+  return [...coordinates]
+}
+
+/**
+ * Which EDPs a boundary falls in. Like production, nutrient EDPs are whole
+ * plans (one entry per EDP, not per catchment).
+ * @returns {{ nutrient: string|null, gcn: string|null, intersections: Array, excludedAreas: Array }}
+ */
 function checkEDPIntersections(coordinates) {
   if (!coordinates || coordinates.length < 3) {
-    return { nutrient: null, gcn: null, intersections: [] }
+    return { nutrient: null, gcn: null, intersections: [], excludedAreas: [] }
   }
   try {
-    const closedCoords = [...coordinates]
-    const first = closedCoords[0]
-    const last = closedCoords[closedCoords.length - 1]
-    if (first[0] !== last[0] || first[1] !== last[1]) {
-      closedCoords.push(first)
-    }
-    const boundaryPolygon = turf.polygon([closedCoords])
+    const boundaryPolygon = turf.polygon([closeRing(coordinates)])
     const intersections = []
     let nutrientIntersection = null
     let gcnIntersection = null
 
-    if (nutrientEdpData && nutrientEdpData.features) {
-      for (const feature of nutrientEdpData.features) {
-        if (turf.booleanIntersects(boundaryPolygon, feature)) {
-          const name =
-            feature.properties.Label ||
-            feature.properties.N2K_Site_N ||
-            'Nutrient EDP Area'
-          intersections.push({
-            type: 'nutrient',
-            name,
-            properties: feature.properties
-          })
-          if (!nutrientIntersection) {
-            nutrientIntersection = name
-          }
-        }
+    for (const edp of edpData.findIntersectingEdps(boundaryPolygon)) {
+      intersections.push({
+        type: 'nutrient',
+        name: edp.label,
+        id: edp.id,
+        live: edp.live
+      })
+      if (!nutrientIntersection) {
+        nutrientIntersection = edp.label
       }
     }
+    const excludedAreas = edpData.findIntersectingExcludedAreas(boundaryPolygon)
+
     if (gcnEdpData && gcnEdpData.features) {
       for (const feature of gcnEdpData.features) {
         if (turf.booleanIntersects(boundaryPolygon, feature)) {
@@ -91,11 +115,12 @@ function checkEDPIntersections(coordinates) {
     return {
       nutrient: nutrientIntersection,
       gcn: gcnIntersection,
-      intersections
+      intersections,
+      excludedAreas
     }
   } catch (error) {
     console.error('Error checking EDP intersections:', error)
-    return { nutrient: null, gcn: null, intersections: [] }
+    return { nutrient: null, gcn: null, intersections: [], excludedAreas: [] }
   }
 }
 
@@ -123,62 +148,159 @@ function polygonCoordinatesFromGeoJson(geojson) {
 }
 
 // ============================================================================
+// BOUNDARY CHECK (mirrors the production impact assessor response)
+// ============================================================================
+
+function isPosition(value) {
+  return (
+    Array.isArray(value) &&
+    value.length === 2 &&
+    typeof value[0] === 'number' &&
+    typeof value[1] === 'number' &&
+    Number.isFinite(value[0]) &&
+    Number.isFinite(value[1])
+  )
+}
+
+/**
+ * Validate a GeoJSON Polygon geometry from the client.
+ * @returns {string|null} a failure reason, or null when valid
+ */
+function validatePolygonGeometry(geometry) {
+  if (!geometry || geometry.type !== 'Polygon') {
+    return 'not_a_polygon'
+  }
+  if (!Array.isArray(geometry.coordinates) || !geometry.coordinates.length) {
+    return 'invalid_geometry'
+  }
+  const ring = geometry.coordinates[0]
+  if (!Array.isArray(ring) || ring.length < 4) {
+    return 'too_few_points'
+  }
+  if (ring.length > MAX_BOUNDARY_POINTS + 1) {
+    return 'too_many_points'
+  }
+  if (!ring.every(isPosition)) {
+    return 'invalid_coordinates'
+  }
+  return null
+}
+
+function round(value, decimalPlaces = METADATA_DECIMAL_PLACES) {
+  const factor = 10 ** decimalPlaces
+  return Math.round(value * factor) / factor
+}
+
+/**
+ * Area, perimeter, bounds and centre in the shape the map panel expects.
+ */
+function buildBoundaryMetadata(geometry) {
+  const polygon = turf.polygon(geometry.coordinates)
+  const areaSquareMetres = turf.area(polygon)
+  const kilometres = turf.length(turf.polygonToLine(polygon), {
+    units: 'kilometers'
+  })
+  const [west, south, east, north] = turf.bbox(polygon)
+  return {
+    area: {
+      hectares: round(areaSquareMetres / SQUARE_METRES_PER_HECTARE),
+      acres: round(areaSquareMetres / SQUARE_METRES_PER_ACRE)
+    },
+    perimeter: {
+      kilometres: round(kilometres),
+      miles: round(kilometres * MILES_PER_KILOMETRE)
+    },
+    bounds: { bottomLeft: [west, south], topRight: [east, north] },
+    centre: turf.centroid(polygon).geometry.coordinates
+  }
+}
+
+/**
+ * Run the EDP check for a Polygon geometry and return the production-shaped
+ * payload the map's boundary information panel renders.
+ */
+function checkBoundary(geometry) {
+  const results = checkEDPIntersections(geometry.coordinates[0])
+  return {
+    boundaryGeometryWgs84: geometry,
+    boundaryGeometryOriginal: geometry,
+    boundaryMetadata: buildBoundaryMetadata(geometry),
+    // Nutrient EDPs only, one entry per plan, as production's panel expects
+    intersectingEdps: results.intersections
+      .filter((intersection) => intersection.type === 'nutrient')
+      .map((intersection) => ({
+        id: intersection.id,
+        label: intersection.name,
+        live: intersection.live
+      })),
+    intersectingExcludedAreas: results.excludedAreas
+  }
+}
+
+function polygonFeatureFromCoordinates(coordinates) {
+  return {
+    type: 'Feature',
+    properties: {},
+    geometry: { type: 'Polygon', coordinates: [closeRing(coordinates)] }
+  }
+}
+
+/**
+ * The hidden boundary-data input may hold the production check payload
+ * (written by the map's Save and continue button), a GeoJSON Feature or
+ * geometry, or the legacy { center, coordinates } shape.
+ * @returns {{ center?: number[], coordinates: number[][], boundaryGeojson?: object }|null}
+ */
+function normaliseBoundaryData(parsed) {
+  if (!parsed || typeof parsed !== 'object') {
+    return null
+  }
+  if (parsed.boundaryGeometryWgs84) {
+    const geometry = parsed.boundaryGeometryWgs84
+    const ring = geometry.coordinates && geometry.coordinates[0]
+    return {
+      center: parsed.boundaryMetadata && parsed.boundaryMetadata.centre,
+      coordinates: Array.isArray(ring) ? openRing(ring) : [],
+      boundaryGeojson: parsed
+    }
+  }
+  if (parsed.type === 'Feature' || parsed.type === 'Polygon') {
+    const ring = polygonCoordinatesFromGeoJson(parsed)
+    return { coordinates: openRing(ring) }
+  }
+  if (Array.isArray(parsed.coordinates)) {
+    return { center: parsed.center, coordinates: openRing(parsed.coordinates) }
+  }
+  return null
+}
+
+// ============================================================================
 // HOOKS
 // ============================================================================
 
 const map = {
   routes(router, journey) {
     const routes = {
-      CATCHMENTS_GEOJSON: `${journey.basePath}/catchments.geojson`,
-      API_CHECK_EDP_INTERSECTION: `${journey.basePath}/api/check-edp-intersection`
+      API_BOUNDARY_CHECK: `${journey.basePath}/api/boundary/check`
     }
 
-    router.post(routes.API_CHECK_EDP_INTERSECTION, (req, res) => {
+    router.post(routes.API_BOUNDARY_CHECK, (req, res) => {
       try {
-        const { coordinates } = req.body
-        if (
-          !coordinates ||
-          !Array.isArray(coordinates) ||
-          coordinates.length < 3
-        ) {
-          return res
-            .status(400)
-            .json({ success: false, error: 'Invalid boundary data.' })
+        const geometry = req.body && req.body.geometry
+        const failureReason = validatePolygonGeometry(geometry)
+        if (failureReason) {
+          return res.status(400).json({
+            error: 'Draw a valid red line boundary to check it',
+            failureReason
+          })
         }
-        if (coordinates.length > 10000) {
-          return res
-            .status(400)
-            .json({ success: false, error: 'Too many coordinates.' })
-        }
-        const valid = coordinates.every(
-          (c) =>
-            Array.isArray(c) &&
-            c.length === 2 &&
-            typeof c[0] === 'number' &&
-            typeof c[1] === 'number'
-        )
-        if (!valid) {
-          return res
-            .status(400)
-            .json({ success: false, error: 'Invalid coordinate format.' })
-        }
-        return res.json({
-          success: true,
-          intersections: checkEDPIntersections(coordinates)
+        return res.json(checkBoundary(geometry))
+      } catch (error) {
+        console.error('Boundary check failed:', error)
+        return res.status(500).json({
+          error: 'An error occurred checking the boundary',
+          failureReason: 'server_error'
         })
-      } catch (error) {
-        return res
-          .status(500)
-          .json({ success: false, error: 'An error occurred.' })
-      }
-    })
-
-    router.get(routes.CATCHMENTS_GEOJSON, (req, res) => {
-      try {
-        res.setHeader('Content-Type', 'application/json')
-        res.send(fs.readFileSync(NUTRIENT_FILE, 'utf8'))
-      } catch (error) {
-        res.status(500).json({ error: 'Could not load catchments data' })
       }
     })
 
@@ -186,9 +308,24 @@ const map = {
   },
 
   get(ctx, model) {
-    model.existingBoundaryData = ctx.data.redlineBoundaryPolygon
-      ? JSON.stringify(ctx.data.redlineBoundaryPolygon)
-      : ''
+    const existing = ctx.data.redlineBoundaryPolygon
+    model.existingBoundaryData = ''
+    model.existingBoundaryGeojson = ''
+    model.existingBoundaryMetadata = ''
+    model.hasOsKey = Boolean(process.env.OS_API_KEY)
+
+    if (existing && Array.isArray(existing.coordinates)) {
+      const coordinates = openRing(existing.coordinates)
+      if (coordinates.length >= 3) {
+        const feature = polygonFeatureFromCoordinates(coordinates)
+        const storedMetadata =
+          existing.boundaryGeojson && existing.boundaryGeojson.boundaryMetadata
+        model.existingBoundaryGeojson = JSON.stringify(feature)
+        model.existingBoundaryMetadata = JSON.stringify(
+          storedMetadata || buildBoundaryMetadata(feature.geometry)
+        )
+      }
+    }
   },
 
   validate(ctx) {
@@ -203,26 +340,36 @@ const map = {
     } catch (error) {
       return { ok: false, error: message(page, 'required') }
     }
+    const boundary = normaliseBoundaryData(parsed)
     if (
-      !parsed.coordinates ||
-      !Array.isArray(parsed.coordinates) ||
-      parsed.coordinates.length < 3
+      !boundary ||
+      !Array.isArray(boundary.coordinates) ||
+      boundary.coordinates.length < 3 ||
+      !boundary.coordinates.every(isPosition)
     ) {
       return { ok: false, error: message(page, 'invalid') }
     }
-    if (parsed.coordinates.length > 10000) {
+    if (boundary.coordinates.length > MAX_BOUNDARY_POINTS) {
       return { ok: false, error: message(page, 'tooComplex') }
     }
-    return { ok: true, value: parsed }
+    return { ok: true, value: boundary }
   },
 
-  process(ctx, parsed) {
-    const results = checkEDPIntersections(parsed.coordinates)
+  process(ctx, boundary) {
+    // The server-side check is authoritative even when the client already
+    // ran one; the result drives the journey.yaml branching.
+    const results = checkEDPIntersections(boundary.coordinates)
+    const center =
+      boundary.center ||
+      turf.centroid(polygonFeatureFromCoordinates(boundary.coordinates))
+        .geometry.coordinates
     ctx.data.redlineBoundaryPolygon = {
-      center: parsed.center,
-      coordinates: parsed.coordinates,
+      center,
+      coordinates: boundary.coordinates,
       intersections: { nutrient: results.nutrient, gcn: results.gcn },
-      intersectingCatchment: results.nutrient
+      intersectingCatchment: results.nutrient,
+      intersectingExcludedAreas: results.excludedAreas,
+      boundaryGeojson: boundary.boundaryGeojson || null
     }
     ctx.data.intersectingCatchment = results.nutrient
   }
@@ -266,5 +413,7 @@ module.exports = {
   map,
   'upload-redline': uploadRedline,
   'check-your-answers': checkYourAnswers,
-  checkEDPIntersections
+  checkEDPIntersections,
+  checkBoundary,
+  buildBoundaryMetadata
 }

@@ -1,0 +1,56 @@
+{#
+  Full-bleed layout for pages built on @defra/interactive-map (the production
+  map component). The library's UMD builds and CSS are served by the Prototype
+  Kit from /plugin-assets/... because the package is a kit plugin – nothing is
+  vendored. To upgrade the map, bump the pinned version in package.json.
+
+  Pages set the map up in a <script type="module"> (see
+  app/assets/javascripts/interactive-map/). Load order matters: the classic
+  <script> tags below run synchronously and populate window.defra; the module
+  script is deferred until parsing finishes, so it always runs after them.
+  Never add defer or async to the UMD tags.
+
+  The class hooks (htmlClasses, bodyClasses, containerClasses, mainClasses)
+  are honoured by govuk-frontend's page template and styled in
+  app/assets/sass/_interactive-map.scss so the map fills the viewport below
+  the header.
+#}
+{% extends "layouts/main.html" %}
+
+{% set htmlClasses = "app-draw-boundary-html" %}
+{% set bodyClasses = "app-draw-boundary-body" %}
+{% set containerClasses = "app-draw-boundary-container" %}
+{% set mainClasses = "app-main-wrapper--draw-boundary" %}
+{% set interactiveMapAssets = "/plugin-assets/%40defra%2Finteractive-map" %}
+
+{% block head %}
+  {{ super() }}
+  <link href="{{ interactiveMapAssets }}/dist/css/index.css" rel="stylesheet">
+  <link href="{{ interactiveMapAssets }}/plugins/datasets/dist/css/index.css" rel="stylesheet">
+  <link href="{{ interactiveMapAssets }}/plugins/map-key/dist/css/index.css" rel="stylesheet">
+  <link href="{{ interactiveMapAssets }}/plugins/beta/map-styles/dist/css/index.css" rel="stylesheet">
+  <link href="{{ interactiveMapAssets }}/plugins/search/dist/css/index.css" rel="stylesheet">
+  <link href="{{ interactiveMapAssets }}/plugins/beta/scale-bar/dist/css/index.css" rel="stylesheet">
+{% endblock %}
+
+{% block bodyStart %}
+  <script>document.body.classList.add('im-is-loading')</script>
+{% endblock %}
+
+{# No footer: the map takes the rest of the viewport #}
+{% block footer %}{% endblock %}
+
+{% block pageScripts %}
+  {{ super() }}
+  {# @defra/interactive-map UMD bundles – order matters, see comment above #}
+  <script src="{{ interactiveMapAssets }}/dist/umd/index.js"></script>
+  <script src="{{ interactiveMapAssets }}/providers/maplibre/dist/umd/index.js"></script>
+  <script src="{{ interactiveMapAssets }}/plugins/interact/dist/umd/index.js"></script>
+  <script src="{{ interactiveMapAssets }}/plugins/draw/dist/umd/index.js"></script>
+  <script src="{{ interactiveMapAssets }}/plugins/datasets/dist/umd/index.js"></script>
+  <script src="{{ interactiveMapAssets }}/plugins/map-key/dist/umd/index.js"></script>
+  <script src="{{ interactiveMapAssets }}/plugins/beta/map-styles/dist/umd/index.js"></script>
+  <script src="{{ interactiveMapAssets }}/plugins/beta/scale-bar/dist/umd/index.js"></script>
+  <script src="{{ interactiveMapAssets }}/plugins/search/dist/umd/index.js"></script>
+  {% block mapScripts %}{% endblock %}
+{% endblock %}

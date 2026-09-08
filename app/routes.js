@@ -19,11 +19,13 @@ const lpaVerifyRoutes = require('./routes/lpa-verify.js')
 const tileserverProxyRoutes = require('./routes/tileserver-proxy.js')
 const vtsMapRoutes = require('./routes/vts-maps.js')
 const mapTilesRoutes = require('./routes/map-tiles.js')
+const osBaseMapRoutes = require('./routes/os-base-map.js')
 const toolsRoutes = require('./routes/tools.js')
 
 // Use non-journey routes
 router.use('/', tileserverProxyRoutes) // Add tileserver proxy first
 router.use('/', mapTilesRoutes) // Add generic map tiles endpoint
+router.use('/', osBaseMapRoutes) // Production-style OS basemap + names proxies
 router.use('/', vtsMapRoutes)
 router.use('/', indexRoutes)
 router.use('/', userJourney1Routes)

@@ -387,21 +387,14 @@ Hint text: Use the map to draw a red line boundary for where the development mig
 ```
 #### Implementation notes (not page copy)
 
-- Use the **same map architecture and structure as** `app/views/nrf-estimate-5/map.html` (do not generate the older custom map stack used in some journeys).
-- The map page must use the `@defra/interactive-map` vendor bundle pattern (CSS + UMD scripts) and the component modules under `/public/javascripts/components/map/`.
-- Keep the same structural pattern used by `nrf-estimate-5`:
-  - map container with `id="map"`
-  - stats slot with `id="stats-panel-slot"`
-  - desktop drawing menu include (`map/_drawing-menu-desktop.html`)
-  - instructions include (`map/_instructions.html`)
-  - hidden input `id="boundary-data"` with form POST to `{basePath}/map`
-- Keep the same UX capabilities and control set as `nrf-estimate-5`:
-  - location search
-  - drawing controls (add/edit/delete)
-  - map view controls (show all England, zoom to boundary)
-  - datasets/catchments toggle panel
-  - contextual hints + client-side validation + save/continue flow
-- Do **not** use the legacy map implementation pattern that relies on `mapbox-gl-draw` + custom scripts like `map-drawing-layers-spike.js`.
+- Use the **production map pattern from `nrf-quote-7`** (do not generate the older custom map stacks used in some journeys):
+  - extend `layouts/interactive-map.html`, which loads the `@defra/interactive-map` package from the kit's `/plugin-assets/` (never vendor the library)
+  - initialise the map with `app/assets/javascripts/interactive-map/draw/index.js` (a `<script type="module">` in the `mapScripts` block)
+  - map container `id="draw-boundary-map"` with `data-boundary-check-url`, `data-back-link-path`, `data-existing-boundary-geojson`, `data-existing-boundary-metadata` and `data-has-os-key`
+  - hidden input `id="boundary-data"` inside `form#map-form` POSTing to `{basePath}/map`; the map's "Save and continue" button fills the input and submits the form
+  - a `POST {basePath}/api/boundary/check` endpoint returning the production payload shape (see `app/lib/nrf-quote-7/hooks.js`)
+- Keep the same UX capabilities as `nrf-quote-7`: location search, Draw / edit / delete tools, basemap switcher, Layers and Key panels for the EDP overlays, the Boundary information panel (area, perimeter, EDPs) with Save and continue.
+- Do **not** use the legacy patterns: the vendored UMD bundle under `/public/javascripts/vendor/interactive-map/` with `components/map/init.js`, or `mapbox-gl-draw` + custom scripts like `map-drawing-layers-spike.js`.
 
 #### Errors
 
