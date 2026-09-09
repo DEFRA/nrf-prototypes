@@ -1,0 +1,10 @@
+{#
+  GOV.UK One Login look: the bare crown header with no service name or
+  service navigation, as the real sign-in pages have.
+  Use with: {% block header %}{% include "includes/one-login-header.html" %}{% endblock %}
+#}
+{{ govukHeader({
+  homepageUrl: "https://www.gov.uk/",
+  classes: "app-header app-one-login-header",
+  containerClasses: "govuk-width-container"
+}) }}

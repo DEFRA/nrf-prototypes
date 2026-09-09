@@ -1,0 +1,286 @@
+# Journey registry for the homepage and for mounting routes.
+#
+# `families` are the homepage tabs, in order. Versioned families show the
+# highest `version` as the main card and the rest under "Previous versions".
+#
+# `journeys` lists the hand-coded journeys only. Content-driven journeys under
+# content/<id>/journey.yaml are discovered automatically and carry their own
+# card metadata in a `homepage:` block, so they never need an entry here.
+#
+# Keys per journey:
+#   id            directory name; basePath is /<id> and the route file is app/routes/<id>.js
+#   family        one of families[].id
+#   version       number used to order versions within a family (highest = latest)
+#   versionLabel  optional label shown on the card (defaults to "V<version>")
+#   variant       optional short caption to tell two versions apart
+#   status        tested | in-progress | spike
+#   name          short name for logs and test titles
+#   title         card heading
+#   description   card body
+#   entryPath     relative to basePath; defaults to /start; '' means the basePath itself
+#   changesTitle  optional heading for the design changes details (default "Design changes")
+#   changes       optional list: plain strings, or { heading, items } groups
+#   mount         optional; false stops app/routes.js requiring app/routes/<id>.js
+
+families:
+  - id: quote
+    label: Quote
+  - id: request-to-use
+    label: Request to use
+  - id: lpa
+    label: LPA
+  - id: other
+    label: Other prototypes
+    versioned: false
+
+journeys:
+  # ---------------------------------------------------------------- Quote
+  - id: nrf-estimate-1
+    family: quote
+    version: 1
+    status: tested
+    name: NRF Estimate 1
+    title: Get an estimate for Nature Restoration Fund Levy (V1)
+    description: >-
+      A user journey for developers to obtain a quote for the Nature Restoration
+      Fund levy required when submitting planning permission. Includes map-based
+      boundary drawing and EDP area validation.
+
+  - id: nrf-estimate-3
+    family: quote
+    version: 2
+    status: tested
+    name: NRF Estimate 3
+    title: Estimate, Commit and Pay Nature Restoration Fund Levy (V2)
+    description: >-
+      A user journey for developers to estimate, commit and pay for the Nature
+      Restoration Fund levy required when submitting planning permission. This
+      journey allows users to commit to using the levy and complete payment.
+    changes:
+      - Enhanced start page
+      - New branching page with commit added
+      - New upload or draw page with file types
+      - Search on map, full size map, key, instructions, satellite layer
+      - Development types refined
+      - Email address hint text added, to explain why we email the quote
+
+  - id: nrf-quote-4
+    family: quote
+    version: 3
+    status: tested
+    name: NRF Quote 4
+    title: Get a quote for Nature Restoration Fund Levy (V3)
+    description: >-
+      A user journey for developers to obtain a quote for the Nature Restoration
+      Fund levy required when submitting planning permission. Includes map-based
+      boundary drawing and EDP area validation.
+    changes:
+      - Changed language from estimate to quote
+      - Refined language to ‘Discharge planning conditions’
+      - Amended hint text on branching page to be aligned with where the user is in the planning process
+      - heading: Map updates
+        items:
+          - Satellite layer as default
+          - Stats panel added
+          - Changed to a single reference number throughout the 3 journeys
+          - Added in Defra ID sign in screens only
+          - Added prompt to create account to the quote email
+          - Upload Planning Decision Notice to the pay journey
+
+  - id: nrf-estimate-4
+    family: quote
+    version: 4
+    status: tested
+    name: NRF Estimate 4
+    title: Get a quote for Nature Restoration Fund Levy (V4)
+    description: >-
+      A user journey for developers to obtain a quote for the Nature Restoration
+      Fund levy (v4). Quote journey with check your answers, confirmation and
+      estimate email content.
+    changes:
+      - Added unhappy paths
+      - Added back links
+      - Added delete options
+      - Development types questions updated
+      - WWTW question added
+      - Email for LPA rejection added
+
+  - id: nrf-estimate-5
+    family: quote
+    version: 5
+    status: tested
+    name: NRF Estimate 5
+    title: Get a quote for Nature Restoration Fund Levy (V5)
+    description: >-
+      A user journey for developers to obtain a quote for the Nature Restoration
+      Fund levy (v5).
+    changes:
+      - heading: Map update only
+        items:
+          - Different content hierarchy new panels
+          - Enhanced drawing tools
+          - Snap feature
+          - Accessibility enhancements
+          - Colours in key
+          - On screen tool tips
+          - Different styles - B&W, outline
+          - New colours for EDPs for colour blindness
+
+  - id: nrf-estimate-6
+    family: quote
+    version: 6
+    versionLabel: V6 (estimate)
+    variant: estimate, commit and pay flow on the previous map stack
+    status: in-progress
+    name: NRF Estimate 6
+    title: Get a quote for Nature Restoration Fund Levy (V6)
+    description: >-
+      A user journey for developers to obtain a quote for the Nature Restoration
+      Fund levy (v6).
+
+  - id: nrf-quote-6
+    family: quote
+    version: 6.1
+    versionLabel: V6
+    status: in-progress
+    name: NRF Quote 6
+    title: Get a quote for Nature Restoration Fund levy (V6)
+    description: >-
+      A simplified quote-only journey for developers. Covers planning permission
+      type, housing units, red line boundary, and email entry.
+    changes:
+      - Simplified quote-only flow (no commit or pay branches)
+      - New planning permission type question
+      - Housing-only scope with unit count
+      - Capacity exit page if over 15,000 units
+
+  # ------------------------------------------------------------------ LPA
+  - id: lpa-approve-1
+    family: lpa
+    version: 1
+    status: tested
+    name: LPA Approve 1
+    title: LPA Approval
+    description: >-
+      A user journey for the LPA to check and approve the details sent from the
+      developer.
+    entryPath: /lpa-approval-email-content
+
+  - id: lpa-approve-2
+    family: lpa
+    version: 2
+    status: tested
+    name: LPA Approve 2
+    title: LPA approve developer request to pay NRF (V2)
+    description: >-
+      A user journey for the LPA to check and approve the details sent from the
+      developer.
+    entryPath: /lpa-approval-email-content
+    changes:
+      - Added H2 to explain what map pic is for
+      - Added page to add name and email of approver
+
+  - id: lpa-approve-3
+    family: lpa
+    version: 3
+    status: tested
+    name: LPA Approve 3
+    title: LPA approve developer request to pay NRF (V3)
+    description: >-
+      A user journey for the LPA to check and approve the details sent from the
+      developer.
+    entryPath: /lpa-approval-email-content
+    changes:
+      - Added WWTW as a field
+      - Added reject option
+
+  - id: lpa-approve-4
+    family: lpa
+    version: 4
+    status: in-progress
+    name: LPA Approve 4
+    title: LPA approve developer request to pay NRF (V4)
+    description: >-
+      A user journey for the LPA to check and approve or reject the details
+      sent from the developer. Includes a rejection flow with reason capture.
+    entryPath: /lpa-approval-email-content
+
+  # ----------------------------------------------------- Other prototypes
+  - id: edp-search
+    family: other
+    status: spike
+    name: EDP search
+    title: Development site assessment
+    description: >-
+      Exploratory spike from prompts/developer-edp-search-feature.md. A
+      developer defines a site by file upload, postcode, coordinates or drawing,
+      then checks whether it falls within an EDP and what the levy might cost.
+
+  - id: applications
+    family: other
+    status: spike
+    name: Applications
+    title: Applications dashboard
+    description: >-
+      Spike of a signed-in developer dashboard listing applications, with a new
+      application flow that captures the site location and takes payment.
+    entryPath: ''
+
+  - id: applications-1
+    family: other
+    status: spike
+    name: Applications 1
+    title: Applications dashboard (second iteration)
+    description: >-
+      Second iteration of the applications dashboard spike with updated
+      location capture and payment screens.
+    entryPath: ''
+
+  - id: case-management
+    family: other
+    status: spike
+    name: Case management
+    title: Natural England case management
+    description: >-
+      Spike from prompts/ne-case-management-prompt.md. Natural England staff
+      view, filter, edit and audit developer applications and their payment
+      status.
+    entryPath: ''
+
+  - id: lpa-verify
+    family: other
+    status: spike
+    name: LPA verify
+    title: LPA verify a levy payment
+    description: >-
+      Spike from prompts/lpa-verify-application-prompt.md. LPA staff enter an
+      application reference and developer name to confirm the levy has been
+      paid before granting planning permission.
+    entryPath: ''
+
+  - id: nrf-estimate-2
+    family: other
+    status: spike
+    name: NRF Estimate 2
+    title: Estimate, commit and pay (intermediate build)
+    description: >-
+      Intermediate estimate, commit and pay iteration between V1 and V2. Kept
+      for reference; it was never linked from the homepage before.
+
+  - id: nrf-estimate-2-map-layers-spike
+    family: other
+    status: spike
+    name: NRF Estimate 2 map layers spike
+    title: Map layers spike
+    description: >-
+      The intermediate estimate build with experimental EDP map layers on the
+      boundary map.
+
+  - id: user-journey-1
+    family: other
+    status: spike
+    name: User journey 1
+    title: Sample user journey
+    description: >-
+      The original single-page starter journey that demonstrates the prototype
+      pattern. Kept for reference.

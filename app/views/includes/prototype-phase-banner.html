@@ -1,0 +1,10 @@
+{#
+  Prototype phase banner. Takes the place of production's Beta banner on
+  prototype pages. Include it at the top of the beforeContent block, above
+  the back link.
+#}
+{{ govukPhaseBanner({
+  tag: { text: "Prototype" },
+  text: "This is a prototype. No real data is processed.",
+  attributes: { role: "region", "aria-label": "Prototype notice" }
+}) }}

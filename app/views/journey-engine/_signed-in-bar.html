@@ -1,0 +1,13 @@
+{#
+  Shown under the phase banner once the journey's `signedIn` condition holds
+  and the account is an agent: which organisation they are acting for, with
+  a link back to the sign-in choice to change it (Figma "Signed in as an agent").
+#}
+{% if signedIn and account and account.accountType == 'agent' %}
+<div class="app-organisation-bar">
+  <p class="govuk-body-s govuk-!-margin-bottom-0">
+    <strong>{{ account.organisationName or "Organisation name" }}</strong>
+    <a class="govuk-link app-organisation-bar__change" href="{{ journey.chromeBasePath or journey.basePath }}/sign-in-method">Change organisation</a>
+  </p>
+</div>
+{% endif %}

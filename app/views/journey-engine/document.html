@@ -1,0 +1,35 @@
+{#
+  `type: document`: a full-width document such as a commitment certificate.
+  Uses the `document` layout (bare crown header, no banner or back link).
+  When the copy includes a `:::map` block the production map plugin is
+  loaded so the boundary shows on a real basemap; without it the inline SVG
+  drawn by the engine stays.
+#}
+{% extends "journey-engine/_page.html" %}
+
+{% set hasMap = "app-boundary-map" in content.html %}
+{% set interactiveMapAssets = "/plugin-assets/%40defra%2Finteractive-map" %}
+
+{% block head %}
+  {{ super() }}
+  {% if hasMap %}
+  <link href="{{ interactiveMapAssets }}/dist/css/index.css" rel="stylesheet">
+  <link href="{{ interactiveMapAssets }}/plugins/datasets/dist/css/index.css" rel="stylesheet">
+  {% endif %}
+{% endblock %}
+
+{% block pageBody %}
+{% if not content.headingInBody %}<h1 class="govuk-heading-l">{{ content.heading }}</h1>{% endif %}
+{{ content.html | safe }}
+{% include "journey-engine/_actions.html" %}
+{% endblock %}
+
+{% block pageScripts %}
+  {{ super() }}
+  {% if hasMap %}
+  <script src="{{ interactiveMapAssets }}/dist/umd/index.js"></script>
+  <script src="{{ interactiveMapAssets }}/providers/maplibre/dist/umd/index.js"></script>
+  <script src="{{ interactiveMapAssets }}/plugins/datasets/dist/umd/index.js"></script>
+  <script src="/public/javascripts/boundary-map.js"></script>
+  {% endif %}
+{% endblock %}

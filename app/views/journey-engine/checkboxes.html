@@ -1,0 +1,27 @@
+{% extends "journey-engine/_page.html" %}
+
+{% block pageBody %}
+<form action="{{ page.path }}" method="post" novalidate>
+  {% include "journey-engine/_change-inputs.html" %}
+  {% include "journey-engine/_error-summary.html" %}
+
+  {{ govukCheckboxes({
+    name: page.field,
+    idPrefix: page.field,
+    fieldset: {
+      legend: {
+        text: content.heading,
+        isPageHeading: true,
+        classes: "govuk-fieldset__legend--l"
+      }
+    },
+    hint: { text: content.hint } if content.hint,
+    items: content.items,
+    errorMessage: { text: error } if error
+  }) }}
+
+  {{ content.html | safe }}
+
+  {{ govukButton({ text: content.button }) }}
+</form>
+{% endblock %}

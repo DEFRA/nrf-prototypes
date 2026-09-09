@@ -1,0 +1,21 @@
+{#
+  Included in the <head> of every journey-engine page when it is rendered
+  with ?preview=1, which is how the screen wall at /tools/journeys/<id>
+  embeds pages in iframes.
+
+  Moving focus inside an iframe scrolls every ancestor document until the
+  focused element is in view. The map's boundary panel does exactly that
+  once the saved boundary check completes (deliberately, for screen reader
+  users), which dragged the whole wall down to the map card on load. Keep
+  the focus moves, drop the scrolling. Runs before any page script.
+#}
+{% if preview %}
+<script>
+  ;(function () {
+    var focus = HTMLElement.prototype.focus
+    HTMLElement.prototype.focus = function (options) {
+      focus.call(this, Object.assign({}, options, { preventScroll: true }))
+    }
+  })()
+</script>
+{% endif %}

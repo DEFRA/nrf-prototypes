@@ -1,0 +1,63 @@
+{#
+  Draw a red line boundary – nrf-quote-7.
+
+  Uses the production map component (@defra/interactive-map) through
+  layouts/interactive-map.html. Copy comes from content/nrf-quote-7/pages/map.md,
+  the check API URL and existing boundary from the map hook in
+  app/lib/nrf-quote-7/hooks.js.
+
+  The form holds only hidden inputs. The map's "Save and continue" button
+  writes the boundary check payload into #boundary-data and submits #map-form,
+  so the journey engine validates it and journey.yaml decides the next page.
+#}
+{% extends "layouts/interactive-map.html" %}
+
+{% block head %}
+  {{ super() }}
+  {% include "journey-engine/_preview-head.html" %}
+{% endblock %}
+
+{% set pageName = content.heading %}
+
+{% block pageTitle %}
+{% if error %}Error: {% endif %}{{ content.title }} - {{ journey.serviceName }} - GOV.UK
+{% endblock %}
+
+{% block content %}
+<div class="app-draw-boundary">
+  <h1 class="govuk-visually-hidden">{{ content.heading }}</h1>
+
+  {% if error %}
+  <div class="app-draw-boundary__error">
+    {{ govukErrorSummary({
+      titleText: "There is a problem",
+      errorList: [{ text: error, href: "#draw-boundary-map" }]
+    }) }}
+  </div>
+  {% endif %}
+
+  <form id="map-form" action="{{ page.path }}" method="post" novalidate>
+    {% include "journey-engine/_change-inputs.html" %}
+    <input type="hidden" id="boundary-data" name="boundary-data" value="{{ existingBoundaryData }}">
+  </form>
+
+  {# Page config for draw/index.js. Kept off the map element itself because
+     interactive-map reads every data-* attribute on its root element as
+     component config. #}
+  <div
+    id="draw-boundary-config"
+    hidden
+    data-boundary-check-url="{{ routes.API_BOUNDARY_CHECK }}"
+    data-back-link-path="{{ backLink }}"
+    data-existing-boundary-geojson="{{ existingBoundaryGeojson }}"
+    data-existing-boundary-metadata="{{ existingBoundaryMetadata }}"
+    data-has-os-key="{{ hasOsKey }}"
+  ></div>
+
+  <div id="draw-boundary-map" class="app-draw-boundary__map"></div>
+</div>
+{% endblock %}
+
+{% block mapScripts %}
+  <script type="module" src="/public/javascripts/interactive-map/draw/index.js"></script>
+{% endblock %}

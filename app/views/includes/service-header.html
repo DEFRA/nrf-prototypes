@@ -1,0 +1,35 @@
+{#
+  Production-style header: bare crown header with the service name in a
+  service navigation bar underneath (mirrors nrf-frontend's layouts/page.njk).
+
+  Uses the journey engine's journey.serviceName when a journey model is
+  present, otherwise the global serviceName from app/config.json. The
+  "PROTOTYPE - " prefix marks the page as a prototype in user research.
+
+  When the journey engine reports the user as signed in (`signedIn` in
+  journey.yaml) a Sign out link joins the service navigation; the hook that
+  signs out registers routes.SIGN_OUT.
+
+  Use with: {% block header %}{% include "includes/service-header.html" %}{% endblock %}
+#}
+{% set appServiceName = journey.serviceName if journey and journey.serviceName else serviceName %}
+{% set appServiceUrl = journey.basePath + "/start" if journey and journey.basePath else "/" %}
+{% set appNavigation = [] %}
+{% if signedIn %}
+  {% set appNavigation = [{
+    text: "Sign out",
+    href: routes.SIGN_OUT if routes and routes.SIGN_OUT else appServiceUrl,
+    classes: "app-service-navigation__sign-out"
+  }] %}
+{% endif %}
+{{ govukHeader({
+  homepageUrl: "https://www.gov.uk/",
+  classes: "app-header",
+  containerClasses: "govuk-width-container"
+}) }}
+{{ govukServiceNavigation({
+  serviceName: "PROTOTYPE - " + appServiceName,
+  serviceUrl: appServiceUrl,
+  navigation: appNavigation,
+  classes: "app-service-navigation--signed-in" if signedIn else ""
+}) }}

@@ -1,0 +1,39 @@
+{#
+  `type: form`: several text inputs on one page (an address, say). Fields come
+  from the page's `fields:` frontmatter; answers are stored together as one
+  object under the page's sessionKey. `values` holds what was just submitted
+  when validation failed, so nothing the user typed is lost.
+#}
+{% extends "journey-engine/_page.html" %}
+
+{% block pageBody %}
+<form action="{{ page.path }}" method="post" novalidate>
+  {% include "journey-engine/_change-inputs.html" %}
+  {% include "journey-engine/_error-summary.html" %}
+
+  <h1 class="govuk-heading-l">{{ content.heading }}</h1>
+  {% if content.hint %}<p class="govuk-body">{{ content.hint }}</p>{% endif %}
+  {{ content.html | safe }}
+
+  {% set saved = data[page.sessionKey] if page.sessionKey and data[page.sessionKey] else {} %}
+  {% for field in content.fields %}
+    {% set fieldError = false %}
+    {% for item in errors %}
+      {% if item.field == field.name %}{% set fieldError = item.message %}{% endif %}
+    {% endfor %}
+    {% set fieldValue = values[field.name] if values else saved[field.key] %}
+    {{ govukInput({
+      id: field.name,
+      name: field.name,
+      classes: field.classes,
+      autocomplete: field.autocomplete,
+      label: { text: field.label + (" (optional)" if field.optional and not (" (optional)" in field.label) else "") },
+      hint: { text: field.hint } if field.hint,
+      value: fieldValue,
+      errorMessage: { text: fieldError } if fieldError
+    }) }}
+  {% endfor %}
+
+  {% include "journey-engine/_question-actions.html" %}
+</form>
+{% endblock %}

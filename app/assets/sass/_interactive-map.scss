@@ -1,0 +1,276 @@
+// Styles for pages built on @defra/interactive-map via
+// layouts/interactive-map.html. Ported from the production frontend
+// (nrf-frontend src/client/stylesheets/map/_draw-boundary.scss,
+// _boundary-info-panel.scss and _layers-panel.scss). Production selects the
+// wrappers with :has(); here the layout sets explicit classes on html, body,
+// the width container and main instead, so the rules are plainer.
+
+// Full-bleed layout: rather than guessing the viewport height left over for
+// the map with a magic-number calc(), each ancestor down to the map is made
+// a flex column with a definite height, so the map genuinely fills whatever
+// space is left below the header.
+.app-draw-boundary-html {
+  height: 100%;
+}
+
+.app-draw-boundary-body {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  // The map's own back button sits at the standard 15px inset from the
+  // viewport edge, so the header and service navigation are switched to the
+  // same full-width, fixed-gutter layout to line up with it.
+  // govuk-header__container--full-width is GOV.UK Frontend's own modifier
+  // for this; service navigation has no equivalent, so its inner
+  // govuk-width-container is overridden to match by hand.
+  .govuk-header__container,
+  .govuk-service-navigation .govuk-width-container {
+    max-width: none;
+    margin: 0;
+    padding: 0 govuk-spacing(3);
+  }
+
+  // Reclaims vertical space for the map on small screens, where the header
+  // and service navigation would otherwise take up a disproportionate share
+  // of the viewport.
+  @media (max-width: 640px) {
+    .govuk-header,
+    .govuk-service-navigation {
+      display: none;
+    }
+  }
+}
+
+.app-draw-boundary-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+.app-main-wrapper--draw-boundary {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.app-draw-boundary {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: govuk-spacing(8);
+}
+
+.app-draw-boundary__error {
+  padding: govuk-spacing(3) govuk-spacing(3) 0;
+
+  .govuk-error-summary {
+    margin-bottom: govuk-spacing(3);
+  }
+}
+
+.app-draw-boundary__map {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  margin-bottom: 0;
+  min-height: govuk-spacing(8);
+}
+
+// Dims and blocks pointer interaction with the Done button while a boundary
+// check is in flight (see boundary-info.js), so it can't be clicked again
+// before the current check request resolves.
+.app-draw-boundary-checking .im-c-map-button--draw-done {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+// Boundary information panel -----------------------------------------------
+
+.app-boundary-info-panel {
+  display: flex;
+  flex-direction: column;
+  gap: govuk-spacing(3);
+}
+
+// Custom layout for the "Boundary information" map panel. Built from plain
+// rules rather than govuk-summary-list/govuk-heading-s/utility classes,
+// since this panel lives inside the interactive map's own panel chrome
+// rather than a standard GOV.UK page layout.
+.app-boundary-info-panel [data-boundary-info-summary][hidden],
+.app-boundary-info-panel [data-boundary-info-error][hidden],
+.app-boundary-info-panel [data-boundary-info-results][hidden],
+.app-boundary-info-panel [data-boundary-info-edps][hidden],
+.app-boundary-info-panel [data-boundary-action='edit'][hidden],
+.app-boundary-info-panel [data-boundary-action='save'][hidden] {
+  display: none;
+}
+
+.app-boundary-info-panel__error {
+  margin: 0;
+  color: govuk-colour('black');
+  font-weight: 700;
+}
+
+.app-boundary-info-panel__summary {
+  margin: 0 0 govuk-spacing(2);
+}
+
+.app-boundary-info-panel__stats-row {
+  display: flex;
+  justify-content: space-between;
+  gap: govuk-spacing(2);
+  padding: govuk-spacing(2) 0;
+  border-bottom: 1px solid govuk-colour('mid-grey');
+}
+
+.app-boundary-info-panel__stats-row:first-child {
+  padding-top: govuk-spacing(1);
+}
+
+.app-boundary-info-panel__stats-key {
+  margin: 0;
+  font-weight: 700;
+  overflow-wrap: normal;
+  word-break: keep-all;
+}
+
+.app-boundary-info-panel__stats-value {
+  margin: 0;
+  text-align: right;
+}
+
+.app-boundary-info-panel__edp-list {
+  margin: 0 0 govuk-spacing(5);
+  padding: 0;
+  list-style: none;
+}
+
+.app-boundary-info-panel__edp-item {
+  display: flex;
+  align-items: flex-start;
+  gap: govuk-spacing(1);
+  margin-bottom: govuk-spacing(3);
+}
+
+.app-boundary-info-panel__edp-item:last-child {
+  margin-bottom: 0;
+}
+
+// Matches govuk-body-s's line-height, so centring the swatch inside this
+// wrapper lines it up with the vertical centre of the name's text line,
+// without a hard-coded pixel nudge.
+.app-boundary-info-panel__edp-swatch-wrap {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: govuk-spacing(5);
+}
+
+.app-boundary-info-panel__edp-swatch {
+  width: govuk-spacing(4);
+  height: govuk-spacing(4);
+  border: 1px solid govuk-colour('black');
+}
+
+.app-boundary-info-panel__edp-text {
+  min-width: 0;
+}
+
+.app-boundary-info-panel__edp-name {
+  font-weight: 700;
+}
+
+.app-boundary-info-panel__edp-description {
+  margin: govuk-spacing(1) 0 0;
+  color: govuk-colour('dark-grey');
+}
+
+.app-boundary-info-panel__actions {
+  display: flex;
+  flex-direction: column;
+  gap: govuk-spacing(2);
+}
+
+.app-boundary-info-panel__action-button {
+  width: 100%;
+}
+
+// Layers panel ---------------------------------------------------------------
+
+.app-layer-legend-swatch {
+  display: inline-block;
+  width: govuk-spacing(5);
+  height: govuk-spacing(5);
+  border: 1px solid currentcolor;
+  margin-right: govuk-spacing(2);
+  vertical-align: -0.2rem;
+}
+
+// Basemap copyright on mobile -------------------------------------------------
+//
+// @defra/interactive-map renders no attributions at its mobile breakpoint, so
+// app/assets/javascripts/interactive-map/shared-helpers/mobile-attributions.js
+// injects our own copy into the library's attributions container. We have to
+// show the copyright at every breakpoint.
+//
+// The injected element is given a fixed height so the space reserved for it
+// below the bottom row matches what it actually occupies. That reserved space
+// is static CSS, so the library's own layout maths (which measures the bottom
+// row's position) picks it up on its first pass and lifts the scale bar and
+// the Draw tools button clear of the copyright.
+
+$app-attributions-height: 24px;
+
+// Hide ours wherever the library renders its own, so it never doubles up.
+.im-o-app:not(.im-o-app--mobile) .app-c-attributions--mobile {
+  display: none;
+}
+
+.im-o-app--mobile {
+  .app-c-attributions--mobile {
+    box-sizing: border-box;
+    height: $app-attributions-height;
+    line-height: $app-attributions-height - 4px; // less the library's 2px padding
+  }
+
+  // Push the bottom row (Draw tools, and with it the scale bar above) up by the
+  // height of the copyright strip.
+  .im-o-app__bottom {
+    margin-bottom: $app-attributions-height;
+  }
+
+  // ...and keep the copyright itself where the library puts it, flush with the
+  // bottom of the map, by cancelling out that shift.
+  .im-o-app__attributions:not(:empty) {
+    bottom: calc(-1 * (var(--primary-gap) + #{$app-attributions-height}));
+  }
+}
+
+// Map key swatches -----------------------------------------------------------
+//
+// The key draws each dataset's symbol in the same colours it uses on the map,
+// on the panel's white background — so the yellow EDP boundary all but
+// disappears. Sitting the symbol on a dark ground restores the contrast and
+// matches how the layers read over the satellite basemap, and lets each
+// dataset's own coloured outline read as the swatch's border.
+//
+// #383f43 is interactive-map's own dark app background, and about as light as
+// this can go: it keeps the orange excluded-areas swatch above the 3:1
+// non-text contrast threshold (3.8:1), with the yellow EDP swatch at 7.9:1.
+// Point symbols (markers) are excluded — they are drawn to bleed outside
+// their 20px box, so a background behind them would clip oddly.
+
+.im-c-map-key-symbol:not(.im-c-map-key-symbol--point) {
+  background-color: #383f43;
+  border-radius: 2px;
+  border: 2px solid #383f43;
+}

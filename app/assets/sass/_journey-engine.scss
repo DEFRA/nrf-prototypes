@@ -1,0 +1,88 @@
+// Styles for the journey engine's page chrome and blocks
+// (app/views/journey-engine/, app/views/includes/one-login-*.html).
+
+// GOV.UK One Login look: the "Test" banner and language toggle sit on one line
+.app-one-login-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: govuk-spacing(2);
+
+  &__phase {
+    flex: 1 1 auto;
+  }
+}
+
+.app-language-toggle {
+  margin: govuk-spacing(2) 0 0;
+  white-space: nowrap;
+
+  &__separator {
+    margin: 0 govuk-spacing(1);
+    color: govuk-colour('dark-grey');
+  }
+}
+
+// "Organisation name  Change organisation" line for signed-in agents
+.app-organisation-bar {
+  padding: govuk-spacing(2) 0;
+  border-bottom: 1px solid govuk-colour('mid-grey');
+  margin-bottom: govuk-spacing(3);
+
+  &__change {
+    margin-left: govuk-spacing(3);
+  }
+}
+
+// Sign out sits at the right of the service navigation bar
+.app-service-navigation--signed-in .govuk-service-navigation__container {
+  justify-content: space-between;
+}
+
+// The `:::map` block: a bordered frame holding the SVG fallback until the
+// map plugin replaces it with a real basemap
+.app-boundary-map {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  height: 400px;
+  margin: 0 0 govuk-spacing(6);
+  border: 2px solid govuk-colour('black');
+  background: govuk-colour('light-grey');
+  overflow: hidden;
+
+  &__svg,
+  &__canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  // A read-only picture: no panning or zooming
+  &__canvas {
+    pointer-events: none;
+  }
+
+  &__canvas[hidden] {
+    display: none;
+  }
+}
+
+// Documents (certificates) print without the site chrome
+@media print {
+  .app-document ~ *,
+  .govuk-header,
+  .govuk-footer,
+  .govuk-service-navigation,
+  .govuk-phase-banner,
+  .govuk-back-link {
+    display: none !important;
+  }
+
+  .app-boundary-map,
+  .govuk-table,
+  .govuk-summary-list__row {
+    break-inside: avoid;
+  }
+}

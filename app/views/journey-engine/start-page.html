@@ -1,0 +1,7 @@
+{% extends "journey-engine/_page.html" %}
+
+{% block pageBody %}
+{% if not content.headingInBody %}<h1 class="govuk-heading-l">{{ content.heading }}</h1>{% endif %}
+{{ content.html | safe }}
+{% include "journey-engine/_actions.html" %}
+{% endblock %}

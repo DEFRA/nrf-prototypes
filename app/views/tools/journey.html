@@ -1,0 +1,169 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+{{ journey.name }} - flow and screens - GOV.UK
+{% endblock %}
+
+{% block head %}
+{{ super() }}
+<style>
+  .tools-wrap { padding: 0 30px 60px; }
+  .tools-header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 20px; }
+  .tools-header .govuk-heading-l { margin-bottom: 10px; }
+  .tools-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 15px; margin: 15px 0 25px; font-family: "GDS Transport", arial, sans-serif; font-size: 16px; }
+  .tools-controls input[type="range"] { width: 200px; }
+  .flow-diagram { overflow-x: auto; border: 1px solid #b1b4b6; padding: 20px; margin-bottom: 40px; background: #fff; }
+  .flow-diagram svg { height: auto; display: block; }
+  .flow-diagram a:focus { outline: none; }
+  .flow-diagram a:focus .flow-node, .flow-diagram a:hover .flow-node { stroke: #ffdd00; stroke-width: 3; }
+  .flow-node { stroke-width: 1; }
+  .flow-node--start { fill: #1d70b8; stroke: #1d70b8; }
+  .flow-node--confirmation { fill: #00703c; stroke: #00703c; }
+  .flow-node--main { fill: #d2e2f1; stroke: #1d70b8; }
+  .flow-node--exit { fill: #f3f2f1; stroke: #505a5f; }
+  .flow-node--external { fill: #ffffff; stroke: #505a5f; stroke-dasharray: 4 4; }
+  .flow-node__label { box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; text-align: center; padding: 8px 10px; min-height: 100%; font-family: "GDS Transport", arial, sans-serif; font-size: 13px; line-height: 1.3; color: #0b0c0c; overflow-wrap: anywhere; }
+  .flow-node__text--start .flow-node__label, .flow-node__text--confirmation .flow-node__label { color: #ffffff; }
+  .flow-node__text { pointer-events: none; }
+  .flow-edge { fill: none; stroke: #0b0c0c; stroke-width: 1.5; }
+  .flow-edge--dashed { stroke: #505a5f; stroke-dasharray: 4 4; }
+  .flow-edge-label { box-sizing: border-box; display: inline-block; padding: 3px 6px; background: #f3f2f1; font-family: "GDS Transport", arial, sans-serif; font-size: 12px; line-height: 1.3; color: #0b0c0c; text-align: center; white-space: normal; }
+  .flow-measure { position: absolute; left: -9999px; top: 0; visibility: hidden; }
+  .flow-measure .flow-node__label { min-height: 0; }
+  .screen-wall { overflow-x: auto; border: 1px solid #b1b4b6; padding: 0 20px; margin-bottom: 40px; background: #fff; }
+  .screen-wall__inner { width: max-content; min-width: 100%; }
+  .wall-level { padding: 20px 0; border-top: 1px solid #b1b4b6; }
+  .wall-level:first-child { border-top: 0; }
+  .wall-level__label { position: sticky; left: 0; width: max-content; font-family: "GDS Transport", arial, sans-serif; font-size: 14px; color: #505a5f; margin: 0 0 15px; }
+  .wall-level__cards { display: flex; flex-wrap: nowrap; align-items: flex-start; gap: 20px; }
+  .wall-card { --wall-scale: 0.4; flex: 0 0 auto; width: calc(1000px * var(--wall-scale)); }
+  .wall-card--branch { margin-left: 30px; }
+  .wall-card__via { font-family: "GDS Transport", arial, sans-serif; font-size: 14px; line-height: 1.4; color: #505a5f; margin: 6px 0 0; }
+  .wall-card__head { font-family: "GDS Transport", arial, sans-serif; font-size: 14px; line-height: 1.4; margin-bottom: 6px; }
+  .wall-card__id { font-weight: 700; color: #0b0c0c; }
+  .wall-card__type { color: #505a5f; }
+  .wall-card__links a { margin-right: 10px; font-size: 14px; }
+  .wall-card__frame { position: relative; width: calc(1000px * var(--wall-scale)); height: calc(var(--wall-height, 760px) * var(--wall-scale)); overflow: hidden; border: 1px solid #b1b4b6; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.12); }
+  .wall-card__frame iframe { width: 1000px; height: var(--wall-height, 760px); border: 0; transform: scale(var(--wall-scale)); transform-origin: 0 0; }
+  .wall-card__shield { position: absolute; inset: 0; cursor: pointer; }
+  .wall-card__shield:hover { outline: 3px solid #ffdd00; outline-offset: -3px; }
+  .wall-card--exit .wall-card__frame { border-color: #505a5f; border-style: dashed; }
+  .wall-card--external .wall-card__frame { display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; border-style: dashed; border-color: #505a5f; box-shadow: none; background: #f8f8f8; }
+  .wall-card__external { font-family: "GDS Transport", arial, sans-serif; font-size: 16px; line-height: 1.4; color: #505a5f; text-align: center; overflow-wrap: anywhere; }
+  .wall-card__external code { display: block; margin-top: 10px; font-size: 14px; color: #0b0c0c; }
+  .wall-card--custom { --wall-height: 900px; }
+  .tools-tabs .govuk-tabs__panel { padding-left: 0; padding-right: 0; border-left: 0; border-right: 0; border-bottom: 0; }
+  .tools-legend { font-family: "GDS Transport", arial, sans-serif; font-size: 14px; color: #505a5f; margin: 0 0 10px; }
+  .tools-legend--inline { margin: 0; }
+  .tools-controls--export { margin-top: -10px; }
+</style>
+{% endblock %}
+
+{% block main %}
+<main class="govuk-main-wrapper tools-wrap" id="main-content">
+  <div class="tools-header">
+    <div>
+      {{ govukBackLink({ text: "All journeys", href: "/tools/journeys" }) }}
+      <h1 class="govuk-heading-l">{{ journey.name }}</h1>
+    </div>
+  </div>
+
+  <p class="govuk-body">
+    {{ journey.pageCount }} screens, generated from <code>content/{{ journey.id }}/journey.yaml</code>.
+    <a class="govuk-link" href="{{ journey.basePath }}/{{ journey.start }}">Open the prototype</a> ·
+    <a class="govuk-link" href="/tools/journeys/{{ journey.id }}/flow.json">flow.json</a> ·
+    <a class="govuk-link" href="/tools/journeys/{{ journey.id }}/flow.mmd">flow.mmd</a>
+  </p>
+
+  {% set flowPanel %}
+  <p class="tools-legend">Solid arrows are form submissions. Dotted arrows are links, change links and returns to check your answers. Dashed boxes are exits to another journey. Click a node to open the screen with sample data.</p>
+  <div class="tools-controls">
+    <label for="flow-scale">Zoom</label>
+    <input type="range" id="flow-scale" min="0.1" max="1" step="0.05" value="1">
+    <span id="flow-scale-value">100%</span>
+  </div>
+  <div class="flow-diagram" id="flow-diagram"></div>
+  <script type="application/json" id="flow-data">{{ graphJson | safe }}</script>
+  {% endset %}
+
+  {% set screensPanel %}
+  <p class="tools-legend">Every screen rendered live with the sample data from <code>journey.yaml → preview</code>. Each row is a page on the default path, followed by the screens that branch off it and how you reach them. Click a screen to open it in a new tab.</p>
+
+  <div class="tools-controls">
+    <label for="wall-scale">Zoom</label>
+    <input type="range" id="wall-scale" min="0.2" max="1" step="0.05" value="0.4">
+    <span id="wall-scale-value">40%</span>
+  </div>
+
+  <div class="tools-controls tools-controls--export">
+    {{ govukButton({
+      text: "Export all screens as JPG",
+      href: "/tools/journeys/" + journey.id + "/screens.zip",
+      classes: "govuk-button--secondary govuk-!-margin-bottom-0",
+      attributes: { id: "wall-export", "data-busy-text": "Exporting…" }
+    }) }}
+    <span class="tools-legend tools-legend--inline">Captures each screen with the sample data, including error states, into a zip. Takes about 20 seconds.</span>
+  </div>
+
+  <div class="screen-wall" id="screen-wall">
+    <div class="screen-wall__inner">
+    {% for level in levels %}
+    <div class="wall-level">
+      <p class="wall-level__label">{% if level.unreachable %}Not reached{% else %}Step {{ loop.index }}{% endif %}</p>
+      <div class="wall-level__cards">
+      {% for page in level.pages %}
+      {% if page.external %}
+      <div class="wall-card wall-card--branch wall-card--external">
+        <div class="wall-card__head">
+          <span class="wall-card__id">Exit</span>
+          <span class="wall-card__type">· another journey</span><br>
+          <span class="wall-card__links">
+            <a class="govuk-link" href="{{ page.path }}?preview=1" target="_blank" rel="noopener">Open</a>
+          </span>
+        </div>
+        <div class="wall-card__frame">
+          <p class="wall-card__external">Continues in another journey<code>{{ page.path }}</code></p>
+        </div>
+        {% if page.via %}<p class="wall-card__via">&#8627; {{ page.via }}</p>{% endif %}
+      </div>
+      {% else %}
+      <div class="wall-card{% if not loop.first %} wall-card--branch{% endif %}{% if page.isExit %} wall-card--exit{% endif %}{% if page.isCustom %} wall-card--custom{% endif %}">
+        <div class="wall-card__head">
+          <span class="wall-card__id">{{ page.id }}</span>
+          <span class="wall-card__type">· {{ page.type }}</span><br>
+          <span class="wall-card__links">
+            <a class="govuk-link" href="{{ page.path }}?preview=1" target="_blank" rel="noopener">Open</a>
+            {% if page.isQuestion or page.isCustom %}<a class="govuk-link" href="{{ page.path }}?preview=1&error=1" target="_blank" rel="noopener">Error state</a>{% endif %}
+            <span class="wall-card__type" title="{{ page.contentFile }}">{% if page.shared %}shared/{% endif %}{{ page.id }}.md</span>
+          </span>
+        </div>
+        <div class="wall-card__frame">
+          <iframe src="{{ page.path }}?preview=1" loading="lazy" title="{{ page.heading }}" tabindex="-1"></iframe>
+          <a class="wall-card__shield" href="{{ page.path }}?preview=1" target="_blank" rel="noopener" aria-label="Open {{ page.heading }} in a new tab"></a>
+        </div>
+        {% if page.via %}<p class="wall-card__via">&#8627; {{ page.via }}</p>{% endif %}
+      </div>
+      {% endif %}
+      {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+    </div>
+  </div>
+  {% endset %}
+
+  {{ govukTabs({
+    classes: "tools-tabs",
+    items: [
+      { label: "Screens", id: "screens", panel: { html: screensPanel } },
+      { label: "Flow", id: "flow", panel: { html: flowPanel } }
+    ]
+  }) }}
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/elkjs@0.9.3/lib/elk.bundled.js"></script>
+<script src="/public/javascripts/tools/flow-diagram.js"></script>
+<script src="/public/javascripts/tools/screen-wall.js"></script>
+{% endblock %}
+
+{% block footer %}{% endblock %}

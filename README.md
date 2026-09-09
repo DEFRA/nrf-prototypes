@@ -15,6 +15,7 @@ the [GOV.UK Frontend](https://github.com/alphagov/govuk-frontend).
 - [Map and Vector Tiles](#map-and-vector-tiles)
   - [Running with maps](#running-with-maps)
   - [Vector Tile Conversion](#vector-tile-conversion)
+  - [Production map component](#production-map-component)
   - [How it works](#how-it-works)
 - [Npm scripts](#npm-scripts)
 - [Updating dependencies](#updating-dependencies)
@@ -161,6 +162,14 @@ The conversion script processes GeoJSON files from `app/assets/map-layers/` and 
 - The Express app serves tiles directly via the `/tiles/data/{layer}/{z}/{x}/{y}.pbf` endpoint
 - Tiles are read from MBTiles using `better-sqlite3` for fast, efficient access
 - This approach works identically in development and production, with no external dependencies
+
+### Production map component
+
+`nrf-quote-7` uses the same [`@defra/interactive-map`](https://github.com/DEFRA/interactive-map) component as the live service. The package is a GOV.UK Prototype Kit plugin, so its scripts and styles are served automatically from `/plugin-assets/%40defra%2Finteractive-map/` – nothing is vendored. To upgrade, bump the pinned version in `package.json`.
+
+- Ordnance Survey basemaps need an `OS_API_KEY` in `.env` (see `.env.template`). Without one the map offers the keyless Satellite and Streets basemaps.
+- EDP overlays are served at `/impact-assessor-map/tiles/{layer}/{z}/{x}/{y}.mvt`, mirroring production's tile service. They are sliced on demand (no tippecanoe needed) from `app/lib/map/edp-data.js`, which dissolves the nutrient catchments into whole EDP outlines and holds the excluded areas. `app/assets/map-layers/edp_excluded_areas.geojson` contains the River Wensum SAC, The Broads SAC and Broadland Ramsar boundaries from [Natural England Open Data](https://naturalengland-defra.opendata.arcgis.com/) (Open Government Licence v3.0). Set `IMPACT_ASSESSOR_BASE_URL` to proxy the real service instead.
+- The client code lives in `app/assets/javascripts/interactive-map/` and mirrors the production frontend's `src/client/javascripts/map/` so the two can be diffed.
 
 ## Npm scripts
 

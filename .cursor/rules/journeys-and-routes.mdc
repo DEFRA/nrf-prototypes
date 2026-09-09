@@ -7,7 +7,7 @@ alwaysApply: false
 # Journeys and Routes
 
 ## Context
-Each user journey has a dedicated route module and config. Routes are registered via `app/config/shared/journeys.js` and `app/routes.js`.
+Each user journey has a dedicated route module and config. Routes are registered via `app/config/shared/journeys.yaml` (loaded by `journeys.js`) and `app/routes.js`.
 
 ## File Structure
 
@@ -25,8 +25,10 @@ Each user journey has a dedicated route module and config. Routes are registered
 - Export: `module.exports = router`.
 
 ### 3. Registration
-- Add the journey to `JOURNEYS` in `app/config/shared/journeys.js` with `name`, `displayName`, `basePath`, `hasStartPage`, optional `entryPath`, `description`.
-- `app/routes.js` loads routes by `basePath` (e.g. `nrf-estimate-4` → `./routes/nrf-estimate-4.js`). No need to add a new `require` for journey routes that follow this naming.
+- Add the journey to `app/config/shared/journeys.yaml` with `id`, `family` (`quote` | `request-to-use` | `lpa` | `other`), `version`, `status` (`tested` | `in-progress` | `spike`), `name`, `title`, `description`, optional `entryPath` (defaults to `/start`), `changes`.
+- `app/routes.js` loads routes by `id` (e.g. `nrf-estimate-4` → `./routes/nrf-estimate-4.js`). No need to add a new `require` for journey routes that follow this naming.
+- Content-driven journeys (`content/<id>/journey.yaml`) are discovered and mounted automatically and carry their card metadata in a `homepage:` block; they never go in `journeys.yaml`.
+- The homepage is generated from this registry; never hand-edit `app/views/index.html` to add a journey.
 
 ## Conditional Page Flow
 - **Branching**: Use `req.session.data` (e.g. `journeyType`, `hasRedlineBoundaryFile`, `buildingTypes`) to decide next path in POST handlers.
@@ -62,13 +64,15 @@ router.get(ROUTES.CHECK_YOUR_ANSWERS, (req, res) => {
 })
 ```
 
-### ✅ Good – Journey entry in journeys.js
-```javascript
-{
-  name: 'NRF Estimate 4',
-  displayName: 'Get a quote for Nature Restoration Fund Levy (V4)',
-  basePath: '/nrf-estimate-4',
-  hasStartPage: true,
-  description: '...'
-}
+### ✅ Good – Journey entry in journeys.yaml
+```yaml
+- id: nrf-estimate-4
+  family: quote
+  version: 4
+  status: tested
+  name: NRF Estimate 4
+  title: Get a quote for Nature Restoration Fund Levy (V4)
+  description: ...
+  changes:
+    - Added unhappy paths
 ```
