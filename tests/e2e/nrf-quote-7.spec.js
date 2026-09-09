@@ -147,6 +147,22 @@ test.describe('nrf-quote-7 happy path', () => {
     await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page).toHaveURL(/check-your-answers$/)
     await expect(page.locator('.govuk-summary-list')).toContainText('25')
+
+    // The delete page's Back and Cancel still mean check your answers here
+    // (`$summary` with no `nav` from another journey)
+    await page.getByRole('link', { name: /Delete/ }).click()
+    await expect(page).toHaveURL(`${journey.basePath}/delete-quote`)
+    await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
+      'href',
+      `${journey.basePath}/check-your-answers`
+    )
+    await expect(page.getByRole('link', { name: 'Cancel' })).toHaveAttribute(
+      'href',
+      `${journey.basePath}/check-your-answers`
+    )
+    await expect(
+      page.locator('.govuk-service-navigation__service-name')
+    ).toContainText(`PROTOTYPE - ${journey.serviceName}`)
   })
 })
 

@@ -50,22 +50,22 @@ rows:
   - heading: Development details
   - key: Planning permission type
     value: '{{ planningType }}'
-    change: planning-type
+    change: /nrf-quote-7/planning-type
     changeHidden: planning permission type
   - key: Housing
     value: '{{ isHousing }}'
-    change: housing
+    change: /nrf-quote-7/housing
     changeHidden: whether you are developing housing
   - key: Number of housing units
     value: '{{ residentialBuildingCount }}'
-    change: units
+    change: /nrf-quote-7/units
     changeHidden: number of housing units
   - key: Red line boundary
     value:
       when: { key: redlineBoundaryPolygon, truthy: true }
       then: Added
       else: Not added
-    change: map
+    change: /nrf-quote-7/map
     changeHidden: red line boundary
   - key: Email address
     value: '{{ estimateEmail }}'
@@ -76,7 +76,8 @@ actions:
     kind: submit
   - text: Delete
     kind: destructive
-    goto: delete-quote
+    goto: /nrf-quote-7/delete-quote
+    return: check-your-answers
     hidden: quote details
 ---
 

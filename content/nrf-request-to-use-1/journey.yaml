@@ -8,7 +8,13 @@
 # mock GOV.UK One Login and confirms who the developer is. On submission they
 # get an email and a commitment certificate to give to their local planning
 # authority. Behaviour that needs code (the mock quote store, sign-in accounts,
-# the map, the NRL reference) is in app/lib/nrf-request-to-use-1/hooks.js.
+# the NRL reference) is in app/lib/nrf-request-to-use-1/hooks.js.
+#
+# The development details (planning type, housing, units, the map) and the
+# delete flow are the quote journey's own pages, borrowed rather than copied:
+# the Change links and the "No, delete my quote details" answer leave for
+# /nrf-quote-7/... with the way back in `nav`, and those pages return here.
+# Update the paths when a newer quote version becomes the target.
 
 id: nrf-request-to-use-1
 name: Request to use the nature restoration levy
@@ -41,7 +47,7 @@ homepage:
     receive an email and a commitment certificate to submit with their
     planning application.
   changes:
-    - Retrieve a quote by NRL reference and email, review and amend the details
+    - Retrieve a quote by NRL reference and email, review and amend the details on the quote journey's own pages (borrowed, not copied)
     - Levy increased and not enough capacity branches, driven by the number of units
     - Variation to an existing planning application
     - Mock GOV.UK One Login sign in (email then password), shared with other journeys
@@ -110,7 +116,7 @@ preview:
       intersectingCatchment: Broads SAC, Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2026 to 2036)
     intersectingCatchment: Broads SAC, Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2026 to 2036)
     edpName: Broads SAC, Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2026 to 2036)
-    quoteLoaded: true
+    quoteLoaded: NRL-123456
     quotedUnits: 100
     quotedLevyAmount: '25,000'
     levyAmount: '30,000'
@@ -206,53 +212,15 @@ pages:
         goto: $summary
       - goto: accept-levy
 
-  # The development details, reached from the Change links. Each returns to
-  # the summary page it was opened from.
-  - id: planning-type
-    field: planning-type
-    sessionKey: planningType
-    changeable: true
-    back: review-quote-details
-    next:
-      - when: { key: $navFromSummary, truthy: true }
-        goto: $summary
-      - goto: review-quote-details
-
-  - id: housing
-    field: housing
-    sessionKey: isHousing
-    changeable: true
-    back: review-quote-details
-    next:
-      - when: { key: $navFromSummary, truthy: true }
-        goto: $summary
-      - goto: review-quote-details
-
-  - id: units
-    field: unit-count
-    sessionKey: residentialBuildingCount
-    min: 1
-    changeable: true
-    back: review-quote-details
-    next:
-      - when: { key: $navFromSummary, truthy: true }
-        goto: $summary
-      - goto: review-quote-details
-
-  - id: map
-    template: nrf-quote-7/map
-    field: boundary-data
-    handler: custom # production map and EDP check, reused from nrf-quote-7
-    changeable: true
-    back: review-quote-details
-    next:
-      - when: { key: $navFromSummary, truthy: true }
-        goto: $summary
-      - goto: review-quote-details
+  # The development details are changed on the quote journey's own pages:
+  # the Change links on review-quote-details and check-your-answers point at
+  # /nrf-quote-7/planning-type, housing, units and map, which come back here.
 
   - id: not-enough-capacity
     back: review-quote-details
 
+  # Deleting the quote details happens on the quote journey's delete pages;
+  # `return` gives them the way back for Back and Cancel
   - id: levy-increased
     field: accept-levy
     sessionKey: acceptLevy
@@ -262,7 +230,8 @@ pages:
       'No, delete my quote details': 'No'
     next:
       - when: { key: acceptLevy, equals: 'No' }
-        goto: delete-quote
+        goto: /nrf-quote-7/delete-quote
+        return: review-quote-details
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: variation
@@ -276,17 +245,11 @@ pages:
       'No, delete my quote details': 'No'
     next:
       - when: { key: acceptLevy, equals: 'No' }
-        goto: delete-quote
+        goto: /nrf-quote-7/delete-quote
+        return: review-quote-details
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: variation
-
-  - id: delete-quote
-    back: review-quote-details
-    clears: $session
-    next: delete-confirmation
-
-  - id: delete-confirmation
 
   - id: variation
     field: variation

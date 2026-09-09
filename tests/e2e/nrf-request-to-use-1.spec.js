@@ -238,32 +238,112 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
 })
 
 test.describe('nrf-request-to-use-1 amending the quote', () => {
-  test('raising the units above the quote flags the increase', async ({
+  // The development details are the quote journey's own pages, borrowed
+  // with the way back in `nav` (see content/README.md)
+  const quote = '/nrf-quote-7'
+  const review = `${base}/review-quote-details`
+  const serviceNav = '.govuk-service-navigation__service-name'
+
+  test('changing the units borrows the quote page and comes back', async ({
     page
   }) => {
     await retrieveQuote(page)
     await page
       .getByRole('link', { name: /Change.*number of housing units/ })
       .click()
-    await expect(page).toHaveURL(
-      `${base}/units?change=true&nav=review-quote-details`
+    await expect(page).toHaveURL(`${quote}/units?change=true&nav=${review}`)
+    // The borrowed page wears the request-to-use header
+    await expect(page.locator(serviceNav)).toContainText(
+      `PROTOTYPE - ${journey.serviceName}`
     )
     await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
       'href',
-      `${base}/review-quote-details`
+      review
     )
     await page.getByLabel(/maximum number of units/).fill('120')
     await page.getByRole('button', { name: 'Continue' }).click()
-    await expect(page).toHaveURL(`${base}/review-quote-details`)
+    await expect(page).toHaveURL(review)
     await expect(page.locator('.govuk-summary-list')).toContainText('120')
 
     await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page).toHaveURL(`${base}/levy-increased`)
     await expect(page.locator('.govuk-hint')).toContainText('£30,000')
+  })
+
+  test('deleting the quote details uses the quote journey and starts afresh', async ({
+    page
+  }) => {
+    await retrieveQuote(page)
+    await page
+      .getByRole('link', { name: /Change.*number of housing units/ })
+      .click()
+    await page.getByLabel(/maximum number of units/).fill('120')
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/levy-increased`)
 
     await page.getByLabel(/No, delete/).check()
     await page.getByRole('button', { name: 'Continue' }).click()
-    await expect(page).toHaveURL(`${base}/delete-quote`)
+    await expect(page).toHaveURL(`${quote}/delete-quote?nav=${review}`)
+    await expect(page.locator(serviceNav)).toContainText(
+      `PROTOTYPE - ${journey.serviceName}`
+    )
+    await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
+      'href',
+      review
+    )
+    await expect(page.getByRole('link', { name: 'Cancel' })).toHaveAttribute(
+      'href',
+      review
+    )
+
+    await page.getByRole('button', { name: 'Delete' }).click()
+    await expect(page).toHaveURL(`${quote}/delete-confirmation`)
+    await expect(page.locator('.govuk-panel__title')).toContainText('deleted')
+
+    // Retrieving again, even with the same reference, gives the quoted
+    // figures afresh rather than the amended ones
+    await retrieveQuote(page)
+    await expect(page.locator('.govuk-summary-list')).toContainText('100')
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/accept-levy`)
+    await expect(page.locator('.govuk-hint')).toContainText('£25,000')
+    await expect(page.getByLabel(/No, delete/)).not.toBeChecked()
+  })
+
+  test('the delete link on check your answers also comes back here', async ({
+    page
+  }) => {
+    await retrieveQuote(page)
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await page.getByLabel(/Yes, accept/).check()
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await page.getByLabel('No', { exact: true }).check()
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await signIn(page, 'agent@example.com')
+    await page.getByLabel('Full name').fill('A Developer')
+    await page.getByLabel('Address line 1').fill('Development Road')
+    await page.getByLabel('Town or city').fill('Development')
+    await page.getByLabel('Postcode').fill('DV1 6RP')
+    await page.getByRole('button', { name: 'Confirm' }).click()
+    await page.getByRole('button', { name: 'Confirm' }).click()
+    await expect(page).toHaveURL(`${base}/check-your-answers`)
+
+    const cya = `${base}/check-your-answers`
+    await expect(
+      page.getByRole('link', { name: /Change.*planning permission type/ })
+    ).toHaveAttribute('href', `${quote}/planning-type?change=true&nav=${cya}`)
+    await page.getByRole('link', { name: /Delete.*quote details/ }).click()
+    await expect(page).toHaveURL(`${quote}/delete-quote?nav=${cya}`)
+    // Signed in as an agent: the borrowed page keeps the organisation bar
+    await expect(page.locator('.app-organisation-bar')).toContainText(
+      'Organisation name'
+    )
+    await expect(
+      page.getByRole('link', { name: 'Change organisation' })
+    ).toHaveAttribute('href', `${base}/sign-in-method`)
+    await page.getByRole('link', { name: 'Cancel' }).click()
+    await expect(page).toHaveURL(cya)
   })
 
   test('too many units means not enough capacity', async ({ page }) => {
@@ -273,9 +353,11 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
       .click()
     await page.getByLabel(/maximum number of units/).fill('16000')
     await page.getByRole('button', { name: 'Continue' }).click()
-    await expect(page).toHaveURL(`${base}/review-quote-details`)
+    await expect(page).toHaveURL(review)
     await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page).toHaveURL(`${base}/not-enough-capacity`)
+    await page.getByRole('link', { name: /change the number/ }).click()
+    await expect(page).toHaveURL(`${quote}/units?change=true&nav=${review}`)
   })
 
   test('no reference sends the user to get a quote', async ({ page }) => {
@@ -283,6 +365,28 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
     await page.getByLabel('No', { exact: true }).check()
     await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page).toHaveURL('/nrf-quote-7/planning-type')
+  })
+
+  test('the journey has no copies of the quote pages', () => {
+    for (const id of [
+      'planning-type',
+      'housing',
+      'units',
+      'map',
+      'delete-quote',
+      'delete-confirmation'
+    ]) {
+      expect(journey.byId.has(id)).toBe(false)
+    }
+    const graph = toFlowGraph(journey)
+    const borrowed = graph.nodes.filter((node) => node.external)
+    expect(borrowed.map((node) => node.path).sort()).toEqual([
+      '/nrf-quote-7/delete-quote',
+      '/nrf-quote-7/housing',
+      '/nrf-quote-7/map',
+      '/nrf-quote-7/planning-type',
+      '/nrf-quote-7/units'
+    ])
   })
 })
 

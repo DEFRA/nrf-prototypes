@@ -22,7 +22,12 @@ const { evaluate, firstMatch, isTruthy } = require('./expressions')
 const { validatePage, previewErrors, message } = require('./validation')
 const { resolveBackLink, toPath } = require('./back-link')
 const { createRenderer } = require('./markdown')
-const { loadJourney, isQuestionType, SUMMARY_TARGET } = require('./loader')
+const {
+  loadJourney,
+  resolveSummaryPath,
+  isQuestionType,
+  SUMMARY_TARGET
+} = require('./loader')
 
 const renderer = createRenderer()
 
@@ -77,15 +82,26 @@ function buildContext(req, res, journey, page, options = {}) {
   const preview =
     !options.isPost && ['1', 'true'].includes(String(query.preview))
   const isChange = query.change === 'true' || body.isChange === 'true'
-  // The id of the summary page to return to (`?nav=<id>` or the hidden
-  // input a form carries forward), or false. A bare `true` from an older
-  // form means the journey's first summary page.
+  // The summary page to return to (`?nav=...` or the hidden input a form
+  // carries forward), or false: the id of one of this journey's summary
+  // pages, or the absolute path of another journey's summary page when this
+  // page has been borrowed by that journey (a Change link on its summary
+  // page pointing here). A bare `true` from an older form means the
+  // journey's first summary page. Anything else is ignored, so `nav` can
+  // never redirect outside the mounted journeys.
   const nav = query.nav || body.navFromSummary
   let navFromSummary = false
+  let returnJourney = null
   if (nav === 'true' && journey.summaryPage) {
     navFromSummary = journey.summaryPage
   } else if (nav && journey.summaryPages.includes(nav)) {
     navFromSummary = nav
+  } else if (nav && String(nav).startsWith('/')) {
+    const found = resolveSummaryPath(String(nav))
+    if (found) {
+      navFromSummary = String(nav)
+      returnJourney = found.journey
+    }
   }
   return {
     req,
@@ -99,8 +115,24 @@ function buildContext(req, res, journey, page, options = {}) {
     preview,
     previewError: preview && ['1', 'true'].includes(String(query.error)),
     isChange,
-    navFromSummary
+    navFromSummary,
+    // The journey that borrowed this page, when navFromSummary is a path
+    // into another journey; its header is shown instead of this journey's
+    returnJourney
   }
+}
+
+/**
+ * Append the way back to a URL that leaves for another journey: `nav` is the
+ * absolute path of the summary page to return to, so the borrowed page's
+ * Back link, `$summary` and Cancel all come back here.
+ */
+function withReturn(url, returnTo, journey) {
+  const returnPath = toPath(returnTo, journey)
+  if (!url || !returnPath) {
+    return url
+  }
+  return `${url}${url.includes('?') ? '&' : '?'}nav=${returnPath}`
 }
 
 function storedValueFor(page, optionValue) {
@@ -163,12 +195,15 @@ function resolveRow(row, ctx) {
   if (changeTarget) {
     const base = toPath(changeTarget, journey)
     const params = ['change=true']
-    // Come back to this summary page if it is one, else the journey's first
+    // Come back to this summary page if it is one, else the journey's first.
+    // A page borrowed from another journey needs the full path to find it.
     const returnTo =
       page && journey.summaryPages.includes(page.id)
         ? page.id
         : journey.summaryPage
-    if (returnTo) {
+    if (returnTo && changeTarget.startsWith('/')) {
+      params.push(`nav=${toPath(returnTo, journey)}`)
+    } else if (returnTo) {
       params.push(`nav=${returnTo}`)
     }
     result.actions = {
@@ -235,10 +270,16 @@ function renderContent(page, ctx) {
     })),
     rows: rows.filter((row) => row.key),
     rowGroups: groupRows(rows),
+    // A link action may leave for another journey (`goto: /other/page`)
+    // and carry the way back (`return: <summary page>`); `$summary` works
+    // here too, so a Cancel link returns to whichever summary page the
+    // user came from
     actions: (c.actions || []).map((action) => ({
       text: plain(action.text),
       kind: action.kind || 'submit',
-      href: action.goto ? toPath(action.goto, journey) : undefined,
+      href: action.goto
+        ? withReturn(toPath(action.goto, journey, ctx), action.return, journey)
+        : undefined,
       hidden: action.hidden
     })),
     panel: c.panel
@@ -259,6 +300,11 @@ function buildModel(ctx, extra = {}) {
     extra.error ||
     (errors && errors.length ? errors[0].message : undefined) ||
     (ctx.previewError ? message(page, 'required') : undefined)
+  // A page borrowed by another journey (reached from its summary page with
+  // the way back in `nav`) wears that journey's header: its service name and
+  // signed-in state, so the user does not see the service change under them.
+  // Everything else (basePath, hook routes, rules) stays this journey's.
+  const chrome = ctx.returnJourney || journey
   return {
     journey: {
       id: journey.id,
@@ -266,7 +312,9 @@ function buildModel(ctx, extra = {}) {
       name: journey.name,
       // A page can carry its own service name (the shared start page says
       // "Manage ..." before the journey's own name takes over)
-      serviceName: page.serviceName || journey.serviceName,
+      serviceName: page.serviceName || chrome.serviceName,
+      // Where the header's own links (Change organisation) point
+      chromeBasePath: chrome.basePath,
       summaryPage: journey.summaryPage,
       summaryPages: journey.summaryPages,
       start: journey.start
@@ -289,7 +337,7 @@ function buildModel(ctx, extra = {}) {
     errorHref: page.field || 'main-content',
     // The header shows Sign out (and the agent's organisation) when the
     // journey's `signedIn` condition holds
-    signedIn: journey.signedIn ? evaluate(journey.signedIn, ctx) : false,
+    signedIn: chrome.signedIn ? evaluate(chrome.signedIn, ctx) : false,
     account: ctx.data.account,
     isChange: ctx.isChange,
     navFromSummary: ctx.navFromSummary,
@@ -439,7 +487,8 @@ async function handlePost(req, res, journey, page, hooks) {
   if (rule.set) {
     Object.assign(data, rule.set)
   }
-  // `goto: $summary` returns to the summary page the user came from
+  // `goto: $summary` returns to the summary page the user came from, which
+  // may be in another journey (an absolute path) when this page is borrowed
   const gotoId =
     rule.goto === SUMMARY_TARGET
       ? ctx.navFromSummary || journey.summaryPage
@@ -460,6 +509,8 @@ async function handlePost(req, res, journey, page, hooks) {
     params.push(`nav=${ctx.navFromSummary}`)
     url += `?${params.join('&')}`
   }
+  // A rule leaving for another journey may carry the way back
+  url = withReturn(url, rule.return, journey)
   saveAndRedirect(req, res, url)
 }
 

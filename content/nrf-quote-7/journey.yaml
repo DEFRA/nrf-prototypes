@@ -93,6 +93,10 @@ pages:
         goto: /nrf-request-to-use-1/have-nrl-reference
       - goto: planning-type
 
+  # planning-type, housing, units and map are also the pages the
+  # request-to-use journey's Change links open (borrowed with the way back
+  # in `nav`); `goto: $summary` returns to whichever summary page sent the
+  # user, in either journey
   - id: planning-type
     field: planning-type
     sessionKey: planningType
@@ -106,17 +110,23 @@ pages:
             - Hybrid planning permission
         goto: wrong-permission
       - when: { key: $navFromSummary, truthy: true }
-        goto: check-your-answers
+        goto: $summary
       - goto: housing
 
   - id: wrong-permission
 
+  # Only the request-to-use journey changes this answer (from its review
+  # page), so the return rule matters there rather than on the quote's own
+  # check your answers
   - id: housing
     field: housing
     sessionKey: isHousing
+    changeable: true
     next:
       - when: { key: isHousing, equals: 'No' }
         goto: not-housing
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
       - goto: units
 
   - id: not-housing
@@ -128,7 +138,7 @@ pages:
     changeable: true
     next:
       - when: { key: $navFromSummary, truthy: true }
-        goto: check-your-answers
+        goto: $summary
       - goto: redline-map
 
   - id: redline-map
@@ -171,7 +181,7 @@ pages:
       - when: { key: residentialBuildingCount, gte: 20000 }
         goto: no-capacity
       - when: { key: $navFromSummary, truthy: true }
-        goto: check-your-answers
+        goto: $summary
       - goto: estimate-email
 
   - id: no-edp
@@ -196,8 +206,14 @@ pages:
     handler: custom # mints the NRF reference, see hooks.js
     next: confirmation
 
+  # Also used by the request-to-use journey ("No, delete my quote details"),
+  # which arrives with the way back in `nav`; Back and Cancel then return to
+  # its review page instead of check your answers
   - id: delete-quote
-    back: check-your-answers
+    back:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: check-your-answers
     clears: $session
     next: delete-confirmation
 

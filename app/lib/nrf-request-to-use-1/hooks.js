@@ -9,12 +9,14 @@
  *   - a mock GOV.UK One Login: the sign-in email decides the account type
  *     (company@… company, individual@… individual, anything else an agent)
  *   - sign out, the NRL reference and certificate dates on submission
- *   - the production map page, reused from nrf-quote-7
+ *
+ * The development details and the delete flow are the quote journey's own
+ * pages (content/nrf-quote-7), borrowed with the way back in `nav`, so the
+ * map and its API stay in app/lib/nrf-quote-7/hooks.js.
  *
  * Nothing here is real: no passwords are checked or stored.
  */
 
-const quoteHooks = require('../nrf-quote-7/hooks')
 const { message } = require('../journey-engine/validation')
 
 const EDP_NAME =
@@ -107,6 +109,11 @@ function accountFor(email) {
  * Put the retrieved quote into the session. A quote made in nrf-quote-7 in
  * the same session is kept; otherwise the fixture stands in for the store.
  * The reference and email the user just typed always win.
+ *
+ * `quoteLoaded` holds the reference the quoted figures belong to. Deleting
+ * the quote happens on the quote journey's pages, which clear only that
+ * journey's keys, so a different reference (or the same one typed again
+ * after a delete, when the quote itself is gone) starts the figures afresh.
  */
 function loadQuote(data) {
   const hasQuote =
@@ -115,13 +122,15 @@ function loadQuote(data) {
     const { estimateEmail, ...quote } = FIXTURE_QUOTE
     Object.assign(data, JSON.parse(JSON.stringify(quote)))
     data.estimateEmail = data.estimateEmail || estimateEmail
+    delete data.quoteLoaded
   }
-  if (!data.quoteLoaded) {
+  if (data.quoteLoaded !== data.nrfReference) {
     data.quotedUnits = Number(data.residentialBuildingCount)
     data.quotedLevyAmount = levyFor(data.quotedUnits)
     data.levyAmount = data.quotedLevyAmount
     data.levyIncreased = false
-    data.quoteLoaded = true
+    delete data.acceptLevy
+    data.quoteLoaded = data.nrfReference
   }
   data.edpName =
     (data.redlineBoundaryPolygon &&
@@ -210,7 +219,6 @@ module.exports = {
   'quote-reference': quoteReference,
   'original-reference': originalReference,
   'review-quote-details': reviewQuoteDetails,
-  map: quoteHooks.map,
   'sign-in-method': signInMethod,
   'one-login-password': oneLoginPassword,
   'check-your-answers': checkYourAnswers,

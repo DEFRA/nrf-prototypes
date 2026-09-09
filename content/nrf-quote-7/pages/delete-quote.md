@@ -5,7 +5,7 @@ actions:
     kind: warning
   - text: Cancel
     kind: link
-    goto: check-your-answers
+    goto: $summary
 ---
 
 # Are you sure you want to delete this quote?

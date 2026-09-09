@@ -69,7 +69,7 @@ const TEMPLATE_BY_TYPE = {
 const LAYOUTS = ['default', 'one-login', 'document']
 
 // A `goto` of `$summary` returns to whichever summary page the user came from
-const SUMMARY_TARGET = '$summary'
+const { SUMMARY_TARGET } = require('./back-link')
 
 const cache = new Map()
 
@@ -376,6 +376,24 @@ function validateTargets(journey, problems) {
       problems.push(`${where}: unknown page '${target}'`)
     }
   }
+  // `return: <summary page>` on a rule or action that leaves for another
+  // journey: the borrowed page comes back here (see "Borrowing a page from
+  // another journey" in content/README.md)
+  const checkReturn = (rule, where) => {
+    if (!rule || rule.return === undefined) {
+      return
+    }
+    if (!journey.summaryPages.includes(rule.return)) {
+      problems.push(
+        `${where}.return: '${rule.return}' is not one of summaryPages`
+      )
+    }
+    if (!rule.goto || !rule.goto.startsWith('/')) {
+      problems.push(
+        `${where}.return: only applies to a 'goto' that leaves for another journey (an absolute path)`
+      )
+    }
+  }
   if (!ids.has(journey.start)) {
     problems.push(`start: unknown page '${journey.start}'`)
   }
@@ -386,9 +404,10 @@ function validateTargets(journey, problems) {
   }
   for (const page of journey.pages) {
     const where = `pages.${page.id}`
-    ;(page.next || []).forEach((rule, i) =>
+    ;(page.next || []).forEach((rule, i) => {
       check(rule.goto, `${where}.next[${i}]`)
-    )
+      checkReturn(rule, `${where}.next[${i}]`)
+    })
     if (typeof page.back === 'string') {
       check(page.back, `${where}.back`)
     } else {
@@ -408,9 +427,10 @@ function validateTargets(journey, problems) {
         )
       }
     })
-    page.content.actions.forEach((action, i) =>
+    page.content.actions.forEach((action, i) => {
       check(action.goto, `${where}.actions[${i}].goto`)
-    )
+      checkReturn(action, `${where}.actions[${i}]`)
+    })
   }
 }
 
@@ -530,6 +550,34 @@ function getJourneyIds() {
 }
 
 /**
+ * The journey and page an absolute path names, provided that page is one of
+ * the journey's summary pages. This is how a `nav` that points into another
+ * journey is checked before it is ever used as a redirect or back link: a
+ * path that is not a mounted journey's summary page resolves to null.
+ */
+function resolveSummaryPath(target) {
+  if (typeof target !== 'string' || !target.startsWith('/')) {
+    return null
+  }
+  for (const id of getJourneyIds()) {
+    let journey
+    try {
+      journey = loadJourney(id)
+    } catch (error) {
+      continue
+    }
+    if (!target.startsWith(`${journey.basePath}/`)) {
+      continue
+    }
+    const pageId = target.slice(journey.basePath.length + 1)
+    if (journey.summaryPages.includes(pageId)) {
+      return { journey, page: journey.byId.get(pageId) }
+    }
+  }
+  return null
+}
+
+/**
  * ROUTES / TEMPLATES constants in the shape the rest of the repo expects
  * (see app/config/<journey>/routes.js in hand-written journeys).
  */
@@ -556,5 +604,6 @@ module.exports = {
   parseMarkdownFile,
   loadJourney,
   getJourneyIds,
+  resolveSummaryPath,
   getRouteConstants
 }

@@ -104,6 +104,15 @@ function getEdges(journey) {
             label: `Change ${row.key}`,
             kind: 'change'
           })
+        } else if (isExternalTarget(target)) {
+          // A Change link that borrows another journey's page
+          add({
+            fromId: page.id,
+            toId: target,
+            label: `Change ${row.key}`,
+            kind: 'change',
+            external: true
+          })
         }
       }
     }
@@ -240,7 +249,12 @@ function layoutLevels(journey) {
     if (rowIndex === undefined) {
       continue
     }
-    const detail = edge.label ? `, if ${edge.label}` : ''
+    let detail = ''
+    if (edge.label && edge.kind === 'next') {
+      detail = `, if ${edge.label}`
+    } else if (edge.label) {
+      detail = ` (${edge.label})`
+    }
     rows[rowIndex].pages.push({
       id: edge.toId,
       path: edge.toId,

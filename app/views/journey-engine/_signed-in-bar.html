@@ -7,7 +7,7 @@
 <div class="app-organisation-bar">
   <p class="govuk-body-s govuk-!-margin-bottom-0">
     <strong>{{ account.organisationName or "Organisation name" }}</strong>
-    <a class="govuk-link app-organisation-bar__change" href="{{ journey.basePath }}/sign-in-method">Change organisation</a>
+    <a class="govuk-link app-organisation-bar__change" href="{{ journey.chromeBasePath or journey.basePath }}/sign-in-method">Change organisation</a>
   </p>
 </div>
 {% endif %}

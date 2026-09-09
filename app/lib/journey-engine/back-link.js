@@ -11,9 +11,24 @@
 
 const { firstMatch } = require('./expressions')
 
-function toPath(target, journey) {
+// A `goto` of `$summary` returns to whichever summary page the user came
+// from (kept in step with SUMMARY_TARGET in loader.js, which requires this
+// file)
+const SUMMARY_TARGET = '$summary'
+
+/**
+ * The URL for a `goto` target: a page id in this journey, an absolute path
+ * (another journey's page), or `$summary`, which needs the request context
+ * to know which summary page the user came from. That summary page may be
+ * in another journey, in which case `ctx.navFromSummary` is already a path.
+ */
+function toPath(target, journey, ctx) {
   if (!target) {
     return null
+  }
+  if (target === SUMMARY_TARGET) {
+    const summary = (ctx && ctx.navFromSummary) || journey.summaryPage
+    return summary ? toPath(summary, journey) : null
   }
   if (target.startsWith('/')) {
     return target
@@ -38,18 +53,14 @@ function resolveBackLink(page, journey, ctx) {
   // ctx.navFromSummary is the id of the summary page the user came from
   // (journeys may have more than one), or false
   if (page.changeable && ctx.isChange && ctx.navFromSummary) {
-    const summary =
-      typeof ctx.navFromSummary === 'string'
-        ? ctx.navFromSummary
-        : journey.summaryPage
-    return toPath(summary, journey)
+    return toPath(SUMMARY_TARGET, journey, ctx)
   }
   if (typeof page.back === 'string') {
-    return toPath(page.back, journey)
+    return toPath(page.back, journey, ctx)
   }
   if (Array.isArray(page.back)) {
     const rule = firstMatch(page.back, ctx)
-    return rule ? toPath(rule.goto, journey) : null
+    return rule ? toPath(rule.goto, journey, ctx) : null
   }
   if (page.type === 'confirmation' || page.layout === 'document') {
     return null
@@ -61,4 +72,4 @@ function resolveBackLink(page, journey, ctx) {
   return referrer ? referrer.path : null
 }
 
-module.exports = { resolveBackLink, toPath, findReferrer }
+module.exports = { resolveBackLink, toPath, findReferrer, SUMMARY_TARGET }

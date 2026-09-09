@@ -229,13 +229,41 @@ The page keeps the journey's own URL (`/nrf-quote-7/start` and `/nrf-request-to-
 
 A `goto` that starts with `/` is an exit to another journey. The engine does not check that the page exists there, so **when a newer version becomes the target (say `nrf-quote-8`), update the path in the other journey's `journey.yaml`**. Exits show in the flow diagram as dashed boxes, on the screen wall as a placeholder card, and in `flow.json` under `transitions.offPage`. A page cannot be both shared and have a file of the same name in the journey's own `pages/`; the loader refuses to guess which one you meant.
 
+## Borrowing a page from another journey
+
+Sharing is for a page both journeys walk through in order. When a journey only needs to send the user to another journey's page _and get them back_, borrow it instead of copying it. The request-to-use journey does this for the development details: "Review and amend your quote details" has Change links to the quote journey's planning type, housing, units and map pages, and "No, delete my quote details" leaves for the quote journey's delete flow. The request-to-use journey has no copies of those pages.
+
+```yaml
+# In a check-answers page's rows: a Change link to another journey's page
+rows:
+  - key: Number of housing units
+    value: '{{ residentialBuildingCount }}'
+    change: /nrf-quote-7/units
+
+# In actions or a `next` rule: an exit that comes back, `return` names one
+# of this journey's summaryPages
+actions:
+  - text: Delete
+    kind: destructive
+    goto: /nrf-quote-7/delete-quote
+    return: review-quote-details
+```
+
+A Change link to another journey carries the way back on its own. For an exit from `actions` or a `next` rule add `return: <summary page>`. Either way the link opens the borrowed page with `?nav=/nrf-request-to-use-1/review-quote-details`, and on that page:
+
+- the Back link and any `goto: $summary` (in `next`, `back` or `actions`, a Cancel link say) return to that summary page, so the borrowed page's own rules still run (a `wrong-permission` branch still applies) and its `$navFromSummary` rule brings the user back
+- the header shows the borrowing journey's service name and signed-in state, so the user does not see the service change under them
+- everything else (URL, session keys, hooks such as the map's API) stays the borrowed journey's
+
+For this to work the borrowed page needs `changeable: true` and a `$navFromSummary` rule ending in `goto: $summary` (not a hard-coded page id). `nav` is only honoured when it names a summary page of a mounted journey; anything else is ignored. The page still lives in the other journey, so **the same caveat as exits applies: update the paths when a newer version becomes the target.**
+
 ## Things that need a developer
 
 - Adding, removing or renaming a page (the file name is the page's URL). The running server picks the new page up without a restart.
 - Changing where an answer leads (`journey.yaml → next`).
 - Changing what a page remembers (`journey.yaml → session`).
 - New kinds of block or component.
-- The map page's behaviour (`app/lib/nrf-quote-7/hooks.js`), the mock quote store and sign-in accounts (`app/lib/nrf-request-to-use-1/hooks.js`). Changes to hooks, or to `basePath` in `journey.yaml`, need `npm run dev` restarting.
+- The map page's behaviour (`app/lib/nrf-quote-7/hooks.js`; the request-to-use journey borrows that page rather than having its own), the mock quote store and sign-in accounts (`app/lib/nrf-request-to-use-1/hooks.js`). Changes to hooks, or to `basePath` in `journey.yaml`, need `npm run dev` restarting.
 
 ## Adding a new journey
 
@@ -277,7 +305,9 @@ Condition operators: `equals`, `notEquals`, `in`, `notIn`, `gt`, `gte`, `lt`, `l
 
 Other page keys: `shared: true` (copy comes from `content/shared/pages/<id>.md`, see "Pages shared by more than one journey"), `back` (page id, absolute path, or a rule list), `guard` (condition plus `redirect`), `store` (map radio labels to stored values), `set` (write values on submit; also allowed on a rule), `clears` (list of keys, or `$session`), `handler: custom` (page has hooks), `template` (a hand-written view for `type: custom`), `layout` (`default`, `one-login` or `document`), `remember: false` (never write the answer to the session; pair it with a field name starting `_` so the kit's own auto-store skips it too, as the password page does), `accept` and `maxSize` for uploads, `min` and `max` for numbers.
 
-Journey keys: `id`, `name`, `serviceName`, `start`, `summaryPage` or `summaryPages` (every page with Change links; a rule's `goto: $summary` returns to whichever one the user came from), `signedIn` (a condition; while it holds the header shows a Sign out link, pointing at the `SIGN_OUT` route a hook registers, and agents see the organisation they act for), `session`, `preview.data` (sample answers for `?preview=1` and the screen wall; a page can add its own `preview:` block to override them), `homepage` (the homepage card: `family`, `version`, `status`, `title`, `description`, `changes`; see "Adding a new journey"). `serviceName` is used in every page `<title>` and, prefixed "PROTOTYPE - ", in the service navigation bar under the header (`app/views/includes/service-header.html`).
+A `next` rule or an action whose `goto` leaves for another journey can add `return: <summary page id>` so that journey's page comes back here (see "Borrowing a page from another journey"). `$summary` is allowed wherever a `goto` is: `next`, `back` and `actions`.
+
+Journey keys: `id`, `name`, `serviceName`, `start`, `summaryPage` or `summaryPages` (every page with Change links; a rule's `goto: $summary` returns to whichever one the user came from, which may be in another journey when the page is borrowed), `signedIn` (a condition; while it holds the header shows a Sign out link, pointing at the `SIGN_OUT` route a hook registers, and agents see the organisation they act for), `session`, `preview.data` (sample answers for `?preview=1` and the screen wall; a page can add its own `preview:` block to override them), `homepage` (the homepage card: `family`, `version`, `status`, `title`, `description`, `changes`; see "Adding a new journey"). `serviceName` is used in every page `<title>` and, prefixed "PROTOTYPE - ", in the service navigation bar under the header (`app/views/includes/service-header.html`).
 
 Hooks (`app/lib/<journey>/hooks.js`) are per journey, so a shared page such as `one-login-password` only does something in the journeys that give it a hook. A `load(ctx)` hook runs before a page is built and may put data in the session (the request-to-use journey fills in the retrieved quote this way); `get(ctx, model)` runs after and can add to the render model.
 
