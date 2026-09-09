@@ -16,9 +16,7 @@ title: Nature restoration levy – commitment certificate
 The relevant development is planned to have:
 
 - {{ planningType | lower }}
-
 :::if residentialBuildingCount
-
 - housing with a total of {{ residentialBuildingCount }} unit(s)
 
 :::

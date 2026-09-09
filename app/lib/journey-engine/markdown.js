@@ -155,6 +155,27 @@ function applyConditionals(html) {
   return out
 }
 
+/**
+ * Stitch back together lists that a directive split in two.
+ *
+ * `:::if` (and `:::map`) are block-level containers, so a conditional bullet
+ * inside a list closes the list and opens a new one. Once the conditional
+ * markers are gone the two lists are adjacent and identical, and a reader
+ * sees two bulleted lists where the content designer wrote one. Merge any
+ * run of adjacent lists sharing the same open tag; markdown on its own never
+ * produces those, so nothing else is affected.
+ */
+function mergeAdjacentLists(html) {
+  const pattern = /<(ul|ol)([^>]*)>((?:(?!<\/?\1[\s>])[\s\S])*)<\/\1>\s*<\1\2>/g
+  let out = html
+  let previous
+  do {
+    previous = out
+    out = out.replace(pattern, '<$1$2>$3')
+  } while (out !== previous)
+  return out
+}
+
 const MAP_WIDTH = 600
 const MAP_HEIGHT = 400
 const MAP_PADDING = 0.15
@@ -437,7 +458,7 @@ function createRenderer() {
     }
     const env = { ctx, page: ctx.page, inPanel: false }
     const html = md.render(String(markdown), env)
-    return interpolate(applyConditionals(html), ctx.data)
+    return interpolate(mergeAdjacentLists(applyConditionals(html)), ctx.data)
   }
 
   /**
@@ -458,6 +479,7 @@ module.exports = {
   createRenderer,
   createMarkdown,
   applyConditionals,
+  mergeAdjacentLists,
   interpolate,
   extractHeading,
   escapeHtml,
