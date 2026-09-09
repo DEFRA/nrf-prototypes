@@ -122,6 +122,8 @@ test.describe('nrf-quote-7 production map', () => {
 
       await page.goto(`${BASE}/start`)
       await page.getByRole('button', { name: 'Start now' }).click()
+      await page.getByLabel(/I want a quote/).check()
+      await page.getByRole('button', { name: 'Continue' }).click()
       await page.getByLabel('Full planning permission').check()
       await page.getByRole('button', { name: 'Continue' }).click()
       await page.getByLabel('Yes', { exact: true }).check()
