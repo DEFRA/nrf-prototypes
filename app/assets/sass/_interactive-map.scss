@@ -214,3 +214,63 @@
   margin-right: govuk-spacing(2);
   vertical-align: -0.2rem;
 }
+
+// Basemap copyright on mobile -------------------------------------------------
+//
+// @defra/interactive-map renders no attributions at its mobile breakpoint, so
+// app/assets/javascripts/interactive-map/shared-helpers/mobile-attributions.js
+// injects our own copy into the library's attributions container. We have to
+// show the copyright at every breakpoint.
+//
+// The injected element is given a fixed height so the space reserved for it
+// below the bottom row matches what it actually occupies. That reserved space
+// is static CSS, so the library's own layout maths (which measures the bottom
+// row's position) picks it up on its first pass and lifts the scale bar and
+// the Draw tools button clear of the copyright.
+
+$app-attributions-height: 24px;
+
+// Hide ours wherever the library renders its own, so it never doubles up.
+.im-o-app:not(.im-o-app--mobile) .app-c-attributions--mobile {
+  display: none;
+}
+
+.im-o-app--mobile {
+  .app-c-attributions--mobile {
+    box-sizing: border-box;
+    height: $app-attributions-height;
+    line-height: $app-attributions-height - 4px; // less the library's 2px padding
+  }
+
+  // Push the bottom row (Draw tools, and with it the scale bar above) up by the
+  // height of the copyright strip.
+  .im-o-app__bottom {
+    margin-bottom: $app-attributions-height;
+  }
+
+  // ...and keep the copyright itself where the library puts it, flush with the
+  // bottom of the map, by cancelling out that shift.
+  .im-o-app__attributions:not(:empty) {
+    bottom: calc(-1 * (var(--primary-gap) + #{$app-attributions-height}));
+  }
+}
+
+// Map key swatches -----------------------------------------------------------
+//
+// The key draws each dataset's symbol in the same colours it uses on the map,
+// on the panel's white background — so the yellow EDP boundary all but
+// disappears. Sitting the symbol on a dark ground restores the contrast and
+// matches how the layers read over the satellite basemap, and lets each
+// dataset's own coloured outline read as the swatch's border.
+//
+// #383f43 is interactive-map's own dark app background, and about as light as
+// this can go: it keeps the orange excluded-areas swatch above the 3:1
+// non-text contrast threshold (3.8:1), with the yellow EDP swatch at 7.9:1.
+// Point symbols (markers) are excluded — they are drawn to bleed outside
+// their 20px box, so a background behind them would clip oddly.
+
+.im-c-map-key-symbol:not(.im-c-map-key-symbol--point) {
+  background-color: #383f43;
+  border-radius: 2px;
+  border: 2px solid #383f43;
+}

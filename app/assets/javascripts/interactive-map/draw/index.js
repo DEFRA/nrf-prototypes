@@ -29,6 +29,7 @@ import { readExistingBoundary } from '../shared-helpers/read-boundary-metadata.j
 import { wireSavedBoundary } from './helpers/saved-boundary.js'
 import { createInteractiveMap } from './helpers/create-interactive-map.js'
 import { wireMapErrorLogging } from '../shared-helpers/map-error-logging.js'
+import { wireMobileAttributions } from '../shared-helpers/mobile-attributions.js'
 import { toAbsoluteUrl } from '../shared-helpers/to-absolute-url.js'
 
 const MAP_ELEMENT_ID = 'draw-boundary-map'
@@ -118,15 +119,21 @@ function buildMapPlugins({
 
 /**
  * @param {object} interactiveMap
- * @param {{ configElement: HTMLElement, interactPlugin: object, drawPlugin: object, initialFeature: object|null }} params
+ * @param {{ configElement: HTMLElement, interactPlugin: object, drawPlugin: object, initialFeature: object|null, mapStyles: object[] }} params
  */
 function wireDrawBoundaryMap(
   interactiveMap,
-  { configElement, interactPlugin, drawPlugin, initialFeature }
+  { configElement, interactPlugin, drawPlugin, initialFeature, mapStyles }
 ) {
   interactiveMap.on('map:ready', (mapReadyEvent) =>
     wireMapErrorLogging(mapReadyEvent.map)
   )
+
+  // The library hides the basemap copyright on mobile; we have to show it.
+  wireMobileAttributions(interactiveMap, {
+    mapStyles,
+    mapElementId: MAP_ELEMENT_ID
+  })
 
   // The datasets plugin adds a Layers button for toggling datasets. Nothing
   // here is toggleable (showInMenu is off) and production has no Layers
@@ -215,7 +222,8 @@ function initDrawBoundaryMap() {
     configElement,
     interactPlugin,
     drawPlugin,
-    initialFeature
+    initialFeature,
+    mapStyles
   })
 }
 
