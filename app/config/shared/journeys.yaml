@@ -131,7 +131,7 @@ journeys:
     version: 6
     versionLabel: V6 (estimate)
     variant: estimate, commit and pay flow on the previous map stack
-    status: in-progress
+    status: tested
     name: NRF Estimate 6
     title: Get a quote for Nature Restoration Fund Levy (V6)
     description: >-
@@ -142,7 +142,7 @@ journeys:
     family: quote
     version: 6.1
     versionLabel: V6
-    status: in-progress
+    status: tested
     name: NRF Quote 6
     title: Get a quote for Nature Restoration Fund levy (V6)
     description: >-

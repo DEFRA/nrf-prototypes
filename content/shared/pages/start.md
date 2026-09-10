@@ -1,6 +1,5 @@
 ---
 type: start
-title: Nature restoration levy
 # Shown in the header on this page only; the journey's own service name
 # takes over once the user has chosen what to do
 serviceName: Manage the nature restoration levy

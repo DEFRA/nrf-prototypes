@@ -4,7 +4,6 @@
 # The email decides the mock account type in the journey's hooks.
 type: email
 layout: one-login
-title: Enter your email address to sign in to your GOV.UK One Login
 field: one-login-email
 sessionKey: signInEmail
 errors:

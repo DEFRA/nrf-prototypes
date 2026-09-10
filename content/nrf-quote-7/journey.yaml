@@ -20,7 +20,7 @@ summaryPage: check-your-answers
 homepage:
   family: quote
   version: 7
-  status: spike
+  status: in-progress
   title: Get a quote for Nature Restoration Fund levy (V7, content-driven)
   description: >-
     The V6 quote journey rebuilt from plain content files. Copy lives in
