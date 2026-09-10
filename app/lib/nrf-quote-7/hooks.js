@@ -380,8 +380,16 @@ const uploadRedline = {
     const { page, data } = ctx
     const name = String(file.originalname || '').toLowerCase()
     const ext = name.slice(name.lastIndexOf('.'))
-    if (ext !== '.geojson') {
-      return { error: message(page, 'unsupportedFormat') }
+    // The prototype only parses GeoJSON. Other permitted formats fall back
+    // to the production error wording from the page's `errors:` frontmatter.
+    if (ext === '.zip') {
+      return { error: message(page, 'noShapefile') }
+    }
+    if (ext === '.shp') {
+      return { error: message(page, 'missingFiles') }
+    }
+    if (ext !== '.geojson' && ext !== '.json') {
+      return { error: message(page, 'wrongType') }
     }
     let coordinates
     try {
@@ -389,10 +397,10 @@ const uploadRedline = {
         JSON.parse(file.buffer.toString('utf8'))
       )
     } catch (error) {
-      return { error: message(page, 'notGeoJson') }
+      return { error: message(page, 'wrongType') }
     }
     if (!coordinates || coordinates.length === 0) {
-      return { error: message(page, 'noPolygon') }
+      return { error: message(page, 'wrongType') }
     }
     data.redlineFile = file.originalname
     data.hasRedlineBoundaryFile = true

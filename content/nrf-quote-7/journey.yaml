@@ -157,7 +157,7 @@ pages:
   - id: upload-redline
     field: redline-file
     sessionKey: redlineFile
-    accept: ['.shp', '.geojson', '.kml']
+    accept: ['.geojson', '.json', '.kml', '.zip', '.shp']
     maxSize: 2MB
     changeable: true
     handler: custom # parses the GeoJSON, see hooks.js

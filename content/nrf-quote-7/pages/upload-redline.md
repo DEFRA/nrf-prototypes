@@ -2,14 +2,12 @@
 type: file-upload
 hint: Upload a GeoJSON file (.geojson or .json), Keyhole markup language file (.kml) or a shapefile (.shp). Shapefiles (.shp) must be .zip files and must contain at least the .shp, .shx, .dbf and .prj files. The file must be smaller than 2MB.
 errors:
-  required: Select a file
-  wrongType: The selected file must be a GeoJSON file (.geojson or .json), keyhole markup language file (.kml), or a shapefile (.shp). Shapefiles (.shp) must be .zip files and must contain at least the .shp, .shx, .dbf and .prj files.
-  tooLarge: The [file] must be smaller than 2MB
-  empty: The selected file is empty
-  uploadFailed: There was a problem uploading the file
-  notGeoJson: The selected file is not a valid GeoJSON file
-  noPolygon: The GeoJSON file does not contain valid polygon coordinates
-  unsupportedFormat: Shapefile and KML parsing is not yet supported. Please use GeoJSON format.
+  required: Select a red line boundary file
+  noShapefile: The ZIP file does not contain a shapefile (.shp). Upload a ZIP file containing a shapefile
+  wrongType: The selected file must be a GeoJSON file (.geojson or .json), keyhole markup language file (.kml), or a shapefile (.shp). Shapefiles (shp) must be .zip files and must contain at least the .shp, .shx, .dbf and .prj files
+  missingFiles: The zipped file is missing one or more required files
+  tooLarge: The selected file must be smaller than 2MB
+  virus: The selected file contains a virus
 button: Continue
 ---
 
