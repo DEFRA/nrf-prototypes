@@ -5,6 +5,7 @@
  * content designer owns the wording. Keys:
  *   required   nothing entered / selected / uploaded
  *   invalid    not a number
+ *   whole      not a whole number
  *   min, max   number out of range
  *   format     email in the wrong shape
  *   tooLarge   file over the size limit
@@ -62,13 +63,16 @@ function validateNumber(page, body) {
   if (Number.isNaN(value)) {
     return fail(page, 'invalid')
   }
+  if (!Number.isInteger(value)) {
+    return fail(page, 'whole')
+  }
   if (page.min !== undefined && value < page.min) {
     return fail(page, 'min')
   }
   if (page.max !== undefined && value > page.max) {
     return fail(page, 'max')
   }
-  return { ok: true, value: Number.isInteger(value) ? value : value }
+  return { ok: true, value }
 }
 
 function validateEmailField(page, body) {

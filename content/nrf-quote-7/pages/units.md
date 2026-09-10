@@ -4,8 +4,10 @@ hint: A housing unit is a house or a flat. For variations on existing permission
 width: 5
 errors:
   required: Enter the number of housing units
-  invalid: Enter the number of housing units
-  min: Enter the number of housing units
+  invalid: Housing units must be a number
+  whole: Housing units must be a whole number
+  min: Housing units must be 1 or more
+  max: Housing units must be 50,000 or fewer
 button: Continue
 ---
 

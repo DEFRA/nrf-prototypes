@@ -1,6 +1,5 @@
 ---
 type: custom
-hint: Use the map to draw a red line boundary for where the development might be.
 errors:
   required: Draw a red line boundary to continue
   invalid: Invalid boundary data. Please draw a valid boundary.
@@ -8,4 +7,4 @@ errors:
 button: Save and continue
 ---
 
-# Draw a red line boundary
+# Draw your boundary on a map

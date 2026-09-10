@@ -211,12 +211,25 @@ function resolveRow(row, ctx) {
         {
           href: `${base}?${params.join('&')}`,
           text: 'Change',
-          visuallyHiddenText: row.changeHidden || key
+          visuallyHiddenText: resolveHiddenText(row.changeHidden, ctx) || key
         }
       ]
     }
   }
   return result
+}
+
+/**
+ * `changeHidden` is a string, or `{ when, then, else }` when the hidden text
+ * depends on the answer (an uploaded versus a drawn boundary)
+ */
+function resolveHiddenText(changeHidden, ctx) {
+  if (changeHidden && typeof changeHidden === 'object') {
+    return evaluate(changeHidden.when, ctx)
+      ? changeHidden.then
+      : changeHidden.else
+  }
+  return changeHidden
 }
 
 /**

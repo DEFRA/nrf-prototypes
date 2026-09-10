@@ -3,7 +3,7 @@ type: confirmation
 title: Your details have been submitted
 panel:
   title: Your details have been submitted
-  body: 'NRF reference: {{ nrfReference }}'
+  body: 'NRL reference: {{ nrfReference }}'
 ---
 
 ## What happens next
@@ -14,7 +14,7 @@ You do not need to pay anything at this point, this service is designed to help 
 
 If you decide to meet environmental obligations using the nature restoration levy, you can request to use it.
 
-Keep the email as a record of the quote and the NRF reference number. You can use the reference number to retrieve this quote when you are ready to request to use the nature restoration levy.
+Keep the email as a record of the quote and the NRL reference number. You can use the reference number to retrieve this quote when you are ready to request to use the nature restoration levy.
 
 ## Get help with the nature restoration levy
 

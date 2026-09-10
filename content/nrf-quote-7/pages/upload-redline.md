@@ -1,12 +1,12 @@
 ---
 type: file-upload
-hint: Upload a GeoJSON file (.geojson or .json), Keyhole markup language file (.kml) or a shapefile (.shp). Shapefiles (.shp) must be .zip files and must contain at least the .shp, .shx, .dbf and .prj files. The file must be smaller than 2MB.
+hint: Upload a GeoJSON file (.geojson or .json), keyhole markup language file (.kml) or a shapefile (.shp). Shapefiles (.shp) must be .zip files and must contain at least the .shp, .shx, .dbf and .prj files. The file must be smaller than 2MB.
 errors:
   required: Select a red line boundary file
-  noShapefile: The ZIP file does not contain a shapefile (.shp). Upload a ZIP file containing a shapefile
-  wrongType: The selected file must be a GeoJSON file (.geojson or .json), keyhole markup language file (.kml), or a shapefile (.shp). Shapefiles (shp) must be .zip files and must contain at least the .shp, .shx, .dbf and .prj files
-  missingFiles: The zipped file is missing one or more required files
-  tooLarge: The selected file must be smaller than 2MB
+  noShapefile: The ZIP file does not contain a shapefile (.shp). Upload a ZIP file containing a shapefile.
+  wrongType: The selected file must be a GeoJSON file (.geojson or .json), keyhole markup language file (.kml) or a shapefile (.shp). Shapefiles (.shp) must be .zip files and must contain at least the .shp, .shx, .dbf and .prj files.
+  missingFiles: The shapefile is incomplete. Make sure the ZIP file contains all the required files, then upload it again.
+  tooLarge: The selected file must be smaller than 2MB.
   virus: The selected file contains a virus
 button: Continue
 ---

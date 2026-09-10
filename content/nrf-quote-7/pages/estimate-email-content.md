@@ -6,16 +6,16 @@ title: Email sent from the Nature Restoration Fund service
 :::inset
 **To:** {{ estimateEmail or "user@example.com" }}
 
-**Subject:** Nature restoration levy – quote
+**Subject:** Nature restoration levy - quote
 :::
 
-# Nature restoration levy – quote
+# Nature restoration levy - quote
 
-## NRF reference: {{ nrfReference }}
+## NRL reference: {{ nrfReference }}
 
 Thank you for submitting details of the relevant development on [Get a quote for the nature restoration levy](#).
 
-This is an indicative nature restoration levy quote, based on the details you provided. For the purposes of section 72 of the Planning and Infrastructure Act 2025, this quote does not commit you to pay the nature restoration levy and does not disapply any relevant environmental obligations. A Local Planning Authority must not accept this quote as part of any planning and decision-making processes.
+This is an indicative nature restoration levy quote, based on the details you provided. For the purposes of section 72 of the Planning and Infrastructure Act 2025, this quote does not commit you to pay the nature restoration levy and does not disapply any relevant environmental obligations. A local planning authority must not accept this quote as part of any planning and decision-making processes.
 
 ## Details of your relevant development
 
@@ -33,11 +33,11 @@ You told us the relevant development is planned to have:
 
 Your relevant development is planned in {{ redlineBoundaryPolygon.intersectingCatchment or intersectingCatchment }} Environmental Delivery Plan (EDP) addressing nutrient pollution.
 
-### Provisional nature restoration levy amount £X,XXX (plus VAT charged at 20%)
+### Provisional nature restoration levy amount £X.XXX (plus VAT charged at 20%)
 
 The amount is calculated from the charging schedule in the relevant EDP.
 
-### Inflation-adjusted nature restoration levy amount: £X,XXX (plus VAT charged at 20%)
+### Inflation-adjusted nature restoration levy amount: £X.XXX (plus VAT charged at 20%)
 
 This shows the indicative levy amount for the year the quote was issued. The amount includes annual inflation in line with the Royal Institute of Chartered Surveyors (RICS) Community Infrastructure Levy (CIL) Index, published on 1 November and applied on 1 January for the following calendar year. This quote is indicative and subject to annual inflation. It shows the amount you may need to pay if you request to use the nature restoration levy.
 

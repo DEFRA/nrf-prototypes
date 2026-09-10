@@ -10,7 +10,7 @@ options:
     value: quote
   - label: I am ready to request to use the nature restoration levy
     value: request-to-use
-    hint: Do this as part of your planning application. You will need the NRF reference from your quote email.
+    hint: Do this as part of your planning application. You will need the NRL reference from your quote email.
 errors:
   required: Select what you would like to do
 button: Continue

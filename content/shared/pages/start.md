@@ -9,11 +9,11 @@ serviceName: Manage the nature restoration levy
 
 ## Using the nature restoration levy to meet your environmental obligations
 
-Use this service to find out if your relevant development is in an area with an [Environmental Delivery Plan (EDP)](#).
+Use this service to find out if your relevant development is in an area with an [Environmental Delivery Plan (EDP) (opens in new tab)](https://www.gov.uk/government/collections/environmental-delivery-plans).
 
-If your development falls into an area with an EDP, you can get a quote and request to use the nature restoration levy to meet the environmental obligations covered by this EDP.
+If your development falls into an area with an EDP, you can get a quote and request to use [the nature restoration levy (opens in new tab)](https://www.gov.uk/guidance/understanding-the-nature-restoration-fund) to meet the environmental obligations covered by this EDP.
 
-If you choose not to use the nature restoration levy, you will still need to [meet your environmental obligations in other ways](#).
+If you choose not to use the nature restoration levy, you will still need to [meet your environmental obligations in other ways (opens in new tab)](https://www.gov.uk/guidance/habitats-regulations-assessments-protecting-a-european-site).
 
 :::button Start now
 :::
@@ -29,17 +29,29 @@ To get a quote you will need to tell us:
 - the number of units of housing
 - where the development is planned – you can use a red line boundary file or draw a red line boundary
 
-You will be sent a quote email with a NRF reference and the amount of the levy. You can get as many quotes as you like.
+You will be sent a quote email with a NRL reference and the amount of the levy. You can get as many quotes as you like.
 
 ### What to do with your quote
 
-You will receive an indicative nature restoration levy quote, based on the details you provided. For the purposes of section 72 of the Planning and Infrastructure Act 2025, this quote will not commit you to pay the nature restoration levy and will not disapply any relevant environmental obligations. A Local Planning Authority must not accept this quote as part of any planning and decision-making processes.
+You will receive an indicative nature restoration levy quote, based on the details you provided. For the purposes of section 72 of the Planning and Infrastructure Act 2025, this quote will not commit you to pay the nature restoration levy and will not disapply any relevant environmental obligations. A local planning authority must not accept this quote as part of any planning and decision-making processes.
 
-### Requesting to use the levy
+## Request to use nature restoration levy
 
-When you are ready to start the planning and development process, you can request to use the nature restoration levy. You will need the NRF reference from your quote email.
+Do this as part of your planning application.
 
-Once your request is accepted, you will receive a commitment certificate. You can submit this alongside your planning application. Natural England will check your request against the quote and the EDP. You do not need to pay anything now.
+To request to use nature restoration levy you will need to:
+
+- enter the NRL reference from your quote
+- confirm the details of your development
+- review and agree the cost of the levy
+- confirm if it is a variation
+- create a Defra ID account
+- review your company details
+- submit your details to receive a commitment certificate
+
+### What to do with your commitment certificate
+
+You will receive a commitment certificate that you can submit with your planning application.
 
 ## Get help with the nature restoration levy
 
@@ -49,4 +61,4 @@ Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)\
 Telephone: 00000000000\
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
-[Find out about call charges](https://www.gov.uk/call-charges)
+[Find out about call charges (opens in new tab)](https://www.gov.uk/call-charges)

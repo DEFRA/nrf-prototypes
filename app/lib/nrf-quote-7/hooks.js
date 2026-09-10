@@ -4,7 +4,7 @@
  * Everything declarative lives in content/nrf-quote-7. These hooks cover the
  * three things that need real code: the red line boundary map (EDP
  * intersection check), parsing an uploaded GeoJSON file, and minting the
- * NRF reference. All user-facing wording still comes from the page files.
+ * NRL reference. All user-facing wording still comes from the page files.
  *
  * The map page uses the production map component (@defra/interactive-map,
  * see app/views/layouts/interactive-map.html). Its boundary check API and
@@ -412,7 +412,7 @@ const uploadRedline = {
 const checkYourAnswers = {
   process(ctx) {
     const suffix = Date.now().toString().slice(-6)
-    ctx.data.nrfReference = `NRF-${suffix}`
+    ctx.data.nrfReference = `NRL-${suffix}`
     ctx.data.levyAmount = ctx.data.levyAmount || '2,500'
   }
 }
