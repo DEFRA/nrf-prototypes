@@ -5,8 +5,10 @@
  * Usage:
  *   npm run screenshot:journey nrf-quote-7
  *   npm run screenshot:journey nrf-quote-7 -- --base-url http://localhost:3100
+ *   npm run screenshot:journey nrf-quote-7 -- --mobile
  *
  * The prototype must already be running. Files go to screenshots/<journey>/
+ * (screenshots/<journey>-mobile/ with --mobile, which captures at phone width)
  * and use the same capture code as the "Export all screens as JPG" button on
  * /tools/journeys/<journey>.
  */
@@ -16,11 +18,16 @@ const path = require('path')
 const {
   loadJourney,
   getJourneyIds,
-  captureScreens
+  captureScreens,
+  VIEWPORTS
 } = require('../app/lib/journey-engine')
 
 function parseArgs(argv) {
-  const options = { baseUrl: 'http://localhost:3000', outDir: 'screenshots' }
+  const options = {
+    baseUrl: 'http://localhost:3000',
+    outDir: 'screenshots',
+    viewport: 'desktop'
+  }
   const positional = []
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i]
@@ -30,6 +37,8 @@ function parseArgs(argv) {
     } else if (arg === '--out') {
       options.outDir = argv[i + 1]
       i += 1
+    } else if (arg === '--mobile') {
+      options.viewport = 'mobile'
     } else {
       positional.push(arg)
     }
@@ -42,18 +51,26 @@ async function main() {
   const options = parseArgs(process.argv.slice(2))
   if (!options.journey) {
     console.error(
-      'Usage: npm run screenshot:journey <journey> [-- --base-url <url>] [--out <dir>]'
+      'Usage: npm run screenshot:journey <journey> [-- --base-url <url>] [--out <dir>] [--mobile]'
     )
     console.error(`Journeys: ${getJourneyIds().join(', ')}`)
     process.exit(1)
   }
   const journey = loadJourney(options.journey)
-  const outDir = path.resolve(options.outDir, journey.id)
+  const folder =
+    options.viewport === 'desktop'
+      ? journey.id
+      : `${journey.id}-${options.viewport}`
+  const outDir = path.resolve(options.outDir, folder)
   fs.mkdirSync(outDir, { recursive: true })
 
-  console.log(`Capturing ${journey.name} from ${options.baseUrl}`)
+  const size = VIEWPORTS[options.viewport]
+  console.log(
+    `Capturing ${journey.name} from ${options.baseUrl} at ${size.width}px wide`
+  )
   const results = await captureScreens(journey, {
     baseUrl: options.baseUrl,
+    viewport: options.viewport,
     onProgress: (screen, done, total) => {
       console.log(`  [${done}/${total}] ${screen.file}`)
     }

@@ -56,6 +56,19 @@
   .tools-legend { font-family: "GDS Transport", arial, sans-serif; font-size: 14px; color: #505a5f; margin: 0 0 10px; }
   .tools-legend--inline { margin: 0; }
   .tools-controls--export { margin-top: -10px; }
+  .tools-controls--export form { display: flex; flex-wrap: wrap; align-items: center; gap: 15px; }
+  .tools-controls--export .govuk-form-group { margin-bottom: 0; }
+  .tools-controls--export .govuk-radios__item { margin-bottom: 0; }
+  .tools-controls--export .govuk-radios__label { white-space: nowrap; }
+  .wall-card__copy { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; margin: 0 6px 0 -4px; padding: 0; border: 0; border-radius: 3px; background: transparent; color: #1d70b8; cursor: pointer; vertical-align: middle; }
+  .wall-card__copy svg { width: 16px; height: 16px; }
+  .wall-card__copy:hover { color: #003078; background: #f3f2f1; }
+  .wall-card__copy:focus-visible { outline: 3px solid transparent; background: #ffdd00; box-shadow: 0 -2px #ffdd00, 0 4px #0b0c0c; color: #0b0c0c; }
+  .wall-card__copy::after { content: attr(data-feedback); position: absolute; left: calc(100% + 4px); top: 50%; transform: translateY(-50%); z-index: 2; padding: 3px 8px; border-radius: 3px; background: #0b0c0c; color: #fff; font-family: "GDS Transport", arial, sans-serif; font-size: 13px; line-height: 1.3; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.15s; }
+  .wall-card__copy--copied { color: #00703c; }
+  .wall-card__copy--copied::after, .wall-card__copy--failed::after { opacity: 1; }
+  .wall-card__copy--copied::after { background: #00703c; }
+  .wall-card__copy--failed::after { background: #d4351c; }
 </style>
 {% endblock %}
 
@@ -96,13 +109,24 @@
   </div>
 
   <div class="tools-controls tools-controls--export">
-    {{ govukButton({
-      text: "Export all screens as JPG",
-      href: "/tools/journeys/" + journey.id + "/screens.zip",
-      classes: "govuk-button--secondary govuk-!-margin-bottom-0",
-      attributes: { id: "wall-export", "data-busy-text": "Exporting…" }
-    }) }}
-    <span class="tools-legend tools-legend--inline">Captures each screen with the sample data, including error states, into a zip. Takes about 20 seconds.</span>
+    <form method="get" action="/tools/journeys/{{ journey.id }}/screens.zip">
+      {{ govukRadios({
+        name: "viewport",
+        idPrefix: "wall-viewport",
+        classes: "govuk-radios--small govuk-radios--inline",
+        fieldset: { legend: { text: "Screen size", classes: "govuk-visually-hidden" } },
+        items: [
+          { value: "desktop", text: "Desktop (1000px)", checked: true },
+          { value: "mobile", text: "Mobile (375px)" }
+        ]
+      }) }}
+      {{ govukButton({
+        text: "Export all screens as JPG",
+        classes: "govuk-button--secondary govuk-!-margin-bottom-0",
+        attributes: { id: "wall-export", "data-busy-text": "Exporting…" }
+      }) }}
+      <span class="tools-legend tools-legend--inline">Captures each screen at the chosen width with the sample data, including error states, into a zip. Takes about 20 seconds.</span>
+    </form>
   </div>
 
   <div class="screen-wall" id="screen-wall">
@@ -118,6 +142,7 @@
           <span class="wall-card__id">Exit</span>
           <span class="wall-card__type">· another journey</span><br>
           <span class="wall-card__links">
+            <button type="button" class="wall-card__copy" data-copy-url="{{ publicBaseUrl }}{{ page.path }}" data-feedback="" title="Copy link" aria-label="Copy link to {{ page.path }}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
             <a class="govuk-link" href="{{ page.path }}?preview=1" target="_blank" rel="noopener">Open</a>
           </span>
         </div>
@@ -132,6 +157,7 @@
           <span class="wall-card__id">{{ page.id }}</span>
           <span class="wall-card__type">· {{ page.type }}</span><br>
           <span class="wall-card__links">
+            <button type="button" class="wall-card__copy" data-copy-url="{{ publicBaseUrl }}{{ page.path }}" data-feedback="" title="Copy link" aria-label="Copy link to {{ page.id }}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
             <a class="govuk-link" href="{{ page.path }}?preview=1" target="_blank" rel="noopener">Open</a>
             {% if page.isQuestion or page.isCustom %}<a class="govuk-link" href="{{ page.path }}?preview=1&error=1" target="_blank" rel="noopener">Error state</a>{% endif %}
             <span class="wall-card__type" title="{{ page.contentFile }}">{% if page.shared %}shared/{% endif %}{{ page.id }}.md</span>

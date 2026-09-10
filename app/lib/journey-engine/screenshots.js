@@ -8,7 +8,12 @@
 
 const { exportScreens } = require('./flow')
 
-const VIEWPORT = { width: 1000, height: 760 }
+// Capture sizes. Non-map pages are captured full length, so the height only
+// sets the initial viewport
+const VIEWPORTS = {
+  desktop: { width: 1000, height: 760 },
+  mobile: { width: 375, height: 812 }
+}
 // Map pages fetch tiles after load; give them a moment and capture the
 // viewport only, as a full-page capture of a map canvas is unreliable
 const CUSTOM_PAGE_WAIT_MS = 3000
@@ -27,7 +32,8 @@ function loadChromium() {
  * Capture every screen of a journey as a JPEG.
  *
  * @param {object} journey  loaded journey definition
- * @param {object} options  { baseUrl, quality, onProgress }
+ * @param {object} options  { baseUrl, viewport, quality, onProgress }
+ *   viewport is a key of VIEWPORTS ('desktop' by default)
  * @returns {Promise<Array<{ file: string, buffer: Buffer }>>}
  */
 async function captureScreens(journey, options = {}) {
@@ -35,6 +41,7 @@ async function captureScreens(journey, options = {}) {
     /\/$/,
     ''
   )
+  const viewport = VIEWPORTS[options.viewport] || VIEWPORTS.desktop
   const quality = options.quality || 85
   const onProgress = options.onProgress || (() => {})
   const chromium = loadChromium()
@@ -44,7 +51,7 @@ async function captureScreens(journey, options = {}) {
   const browser = await chromium.launch({ headless: true })
   try {
     const context = await browser.newContext({
-      viewport: VIEWPORT,
+      viewport,
       deviceScaleFactor: 2
     })
     const page = await context.newPage()
@@ -70,4 +77,4 @@ async function captureScreens(journey, options = {}) {
   return results
 }
 
-module.exports = { captureScreens }
+module.exports = { captureScreens, VIEWPORTS }

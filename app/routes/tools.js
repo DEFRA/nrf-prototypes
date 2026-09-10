@@ -17,8 +17,15 @@ const {
   toFlowJson,
   toFlowGraph,
   isQuestionType,
-  captureScreens
+  captureScreens,
+  VIEWPORTS
 } = require('../lib/journey-engine')
+
+// Where the prototype is published, for the "copy link" buttons on the wall
+const PUBLIC_BASE_URL = (
+  process.env.PUBLIC_BASE_URL ||
+  'https://nrf-prototypes.ext-test.cdp-int.defra.cloud'
+).replace(/\/$/, '')
 
 function pageView(page, journey, via) {
   return {
@@ -101,6 +108,7 @@ router.get('/tools/journeys/:journey', (req, res) => {
       start: journey.start,
       pageCount: journey.pages.length
     },
+    publicBaseUrl: PUBLIC_BASE_URL,
     levels,
     edges: getEdges(journey),
     // Inlined in a <script> tag, so keep "</" out of the JSON
@@ -126,15 +134,22 @@ router.get('/tools/journeys/:journey/flow.mmd', (req, res) => {
 
 // Every screen as a JPG, zipped. Drives headless Chromium over the preview
 // URLs, so it takes a little while and needs Playwright installed.
+// ?viewport=mobile captures at phone width (see VIEWPORTS in screenshots.js)
 router.get('/tools/journeys/:journey/screens.zip', async (req, res) => {
   const journey = loadOr404(req, res)
   if (!journey) {
     return
   }
+  const viewport = VIEWPORTS[req.query.viewport]
+    ? req.query.viewport
+    : 'desktop'
+  const folder =
+    viewport === 'desktop' ? journey.id : `${journey.id}-${viewport}`
   let screens
   try {
     screens = await captureScreens(journey, {
-      baseUrl: `${req.protocol}://${req.get('host')}`
+      baseUrl: `${req.protocol}://${req.get('host')}`,
+      viewport
     })
   } catch (error) {
     res.status(500).type('text/plain').send(error.message)
@@ -143,7 +158,7 @@ router.get('/tools/journeys/:journey/screens.zip', async (req, res) => {
   res.setHeader('Content-Type', 'application/zip')
   res.setHeader(
     'Content-Disposition',
-    `attachment; filename="${journey.id}-screens.zip"`
+    `attachment; filename="${folder}-screens.zip"`
   )
   const archive = archiver('zip', { zlib: { level: 6 } })
   archive.on('error', (error) => {
@@ -151,7 +166,7 @@ router.get('/tools/journeys/:journey/screens.zip', async (req, res) => {
   })
   archive.pipe(res)
   for (const { file, buffer } of screens) {
-    archive.append(buffer, { name: `${journey.id}/${file}` })
+    archive.append(buffer, { name: `${folder}/${file}` })
   }
   archive.finalize()
 })

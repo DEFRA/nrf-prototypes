@@ -1,4 +1,5 @@
-// Zoom control for the journey screen wall (/tools/journeys/<journey>)
+// Zoom, export and copy-link controls for the journey screen wall
+// (/tools/journeys/<journey>)
 ;(function () {
   const slider = document.getElementById('wall-scale')
   const label = document.getElementById('wall-scale-value')
@@ -62,4 +63,70 @@
       }, BUSY_MS)
     })
   }
+
+  // Copy the published URL of a screen to the clipboard, with a moment of
+  // feedback on the button. Falls back to execCommand for plain-http hosts,
+  // where navigator.clipboard is unavailable.
+  function writeClipboard(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text)
+    }
+    return new Promise(function (resolve, reject) {
+      const area = document.createElement('textarea')
+      area.value = text
+      area.setAttribute('readonly', '')
+      area.style.position = 'fixed'
+      area.style.left = '-9999px'
+      document.body.appendChild(area)
+      area.select()
+      let copied = false
+      try {
+        copied = document.execCommand('copy')
+      } catch (error) {
+        copied = false
+      }
+      document.body.removeChild(area)
+      if (copied) {
+        resolve()
+      } else {
+        reject(new Error('Copy failed'))
+      }
+    })
+  }
+
+  const FEEDBACK_MS = 1500
+  wall.addEventListener('click', function (event) {
+    const button = event.target.closest('.wall-card__copy')
+    if (!button) {
+      return
+    }
+    event.preventDefault()
+    const url = button.getAttribute('data-copy-url')
+    if (!url) {
+      return
+    }
+    function feedback(state, text) {
+      window.clearTimeout(button.feedbackTimer)
+      button.classList.remove(
+        'wall-card__copy--copied',
+        'wall-card__copy--failed'
+      )
+      button.classList.add('wall-card__copy--' + state)
+      button.setAttribute('data-feedback', text)
+      button.setAttribute('title', text)
+      button.feedbackTimer = window.setTimeout(function () {
+        button.classList.remove('wall-card__copy--' + state)
+        button.setAttribute('data-feedback', '')
+        button.setAttribute('title', 'Copy link')
+      }, FEEDBACK_MS)
+    }
+    writeClipboard(url).then(
+      function () {
+        feedback('copied', 'Copied')
+      },
+      function () {
+        feedback('failed', 'Copy failed')
+      }
+    )
+  })
 })()
