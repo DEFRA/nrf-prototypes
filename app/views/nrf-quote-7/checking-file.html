@@ -1,0 +1,37 @@
+{#
+  Checking your file – nrf-quote-7.
+
+  Production polls the uploader on this page (a meta refresh every 5
+  seconds) and moves on when the boundary check finishes. The prototype has
+  already checked the file, so the page shows the spinner for a moment and
+  then continues to the file preview. Copy comes from
+  content/nrf-quote-7/pages/checking-file.md; continueUrl and
+  refreshSeconds from the checking-file hook in app/lib/nrf-quote-7/hooks.js.
+
+  On the screen wall (?preview=1) the page stays put so the card does not
+  navigate away.
+#}
+{% extends "journey-engine/_page.html" %}
+
+{% set backLink = false %}
+
+{% block head %}
+  {{ super() }}
+  {% if not preview %}
+  <meta http-equiv="refresh" content="{{ refreshSeconds }};url={{ continueUrl }}">
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+    <div class="app-loading-spinner" role="status">
+      <div class="app-loading-spinner__spinner"></div>
+      <div class="app-loading-spinner__content">
+        <h1 class="govuk-heading-l">{{ content.heading }}</h1>
+        {{ content.html | safe }}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

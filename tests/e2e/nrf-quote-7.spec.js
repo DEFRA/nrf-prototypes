@@ -2,7 +2,11 @@ const { test, expect } = require('@playwright/test')
 const fs = require('fs')
 const path = require('path')
 const turf = require('@turf/turf')
-const { loadJourney, toFlowGraph } = require('../../app/lib/journey-engine')
+const {
+  loadJourney,
+  toFlowGraph,
+  previewVariants
+} = require('../../app/lib/journey-engine')
 
 /**
  * nrf-quote-7: the content-driven port of nrf-quote-6.
@@ -12,6 +16,11 @@ const { loadJourney, toFlowGraph } = require('../../app/lib/journey-engine')
  */
 
 const journey = loadJourney('nrf-quote-7')
+// The wall shows one card per page plus one per preview variant
+const wallCardCount = journey.pages.reduce(
+  (count, page) => count + 1 + previewVariants(page).length,
+  0
+)
 
 test.describe('nrf-quote-7 preview mode', () => {
   for (const page of journey.pages) {
@@ -114,7 +123,120 @@ test.describe('nrf-quote-7 happy path', () => {
 
     await page.getByRole('button', { name: 'Confirm and submit' }).click()
     await expect(page).toHaveURL(/confirmation/)
-    await expect(page.locator('.govuk-panel__body')).toContainText('NRF-')
+    await expect(page.locator('.govuk-panel__body')).toContainText('NRL-')
+  })
+
+  test('uploads a boundary file, sees it checked and previewed', async ({
+    page
+  }) => {
+    // A square inside the live Broads/Wensum EDP
+    const ring = [
+      [1.162, 52.6845],
+      [1.165, 52.6845],
+      [1.165, 52.6875],
+      [1.162, 52.6875],
+      [1.162, 52.6845]
+    ]
+    const geojson = (coordinates) =>
+      Buffer.from(
+        JSON.stringify({
+          type: 'Feature',
+          properties: {},
+          geometry: { type: 'Polygon', coordinates: [coordinates] }
+        })
+      )
+
+    await page.goto(`${journey.basePath}/planning-type`)
+    await page.getByLabel('Full planning permission').check()
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await page.getByLabel('Yes', { exact: true }).check()
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await page.getByLabel(/maximum number of units/).fill('100')
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await page.getByLabel('Upload a file').check()
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(/upload-redline$/)
+
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'site.geojson',
+      mimeType: 'application/geo+json',
+      buffer: geojson(ring)
+    })
+    await page.getByRole('button', { name: 'Continue' }).click()
+
+    // The spinner page moves on by itself
+    await expect(page).toHaveURL(/checking-file$/)
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(
+      'Checking your file'
+    )
+    await expect(page).toHaveURL(/file-preview$/, { timeout: 10000 })
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+      'Your uploaded red line boundary file'
+    )
+    await expect(page.locator('.govuk-list--bullet')).toContainText(
+      'Broads SAC, Broadland Ramsar and River Wensum SAC'
+    )
+    await expect(page.locator('.govuk-list--bullet')).toContainText(
+      '(100% of boundary)'
+    )
+    await expect(page.locator('#boundary-map')).toBeAttached()
+    await page.getByRole('button', { name: 'Save and continue' }).click()
+    await expect(page).toHaveURL(/estimate-email$/)
+    await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
+      'href',
+      `${journey.basePath}/file-preview`
+    )
+
+    // Nothing is checked: a file that is not GeoJSON still reaches the
+    // preview, plotted with the sample boundary
+    await page.goto(`${journey.basePath}/upload-redline`)
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'site.kml',
+      mimeType: 'application/vnd.google-earth.kml+xml',
+      buffer: Buffer.from('<kml></kml>')
+    })
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(/file-preview$/, { timeout: 10000 })
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+      'Your uploaded red line boundary file'
+    )
+
+    // A GeoJSON polygon outside every EDP still reaches the preview, with
+    // the sample boundary standing in
+    await page.goto(`${journey.basePath}/upload-redline`)
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'nottingham.geojson',
+      mimeType: 'application/geo+json',
+      buffer: geojson([
+        [-1.1544, 52.9518],
+        [-1.1444, 52.9518],
+        [-1.1444, 52.9578],
+        [-1.1544, 52.9578],
+        [-1.1544, 52.9518]
+      ])
+    })
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(/file-preview$/, { timeout: 10000 })
+    await expect(page.locator('.govuk-list--bullet')).toContainText(
+      'Broads SAC, Broadland Ramsar and River Wensum SAC'
+    )
+
+    // The error states live on the screen wall as preview variants
+    await page.goto(
+      `${journey.basePath}/file-preview?preview=1&variant=overlapping`
+    )
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+      'Your red line boundary file contains an error'
+    )
+    await expect(page.locator('main')).toContainText(
+      'The red line boundary is overlapping itself.'
+    )
+    await expect(
+      page.getByRole('link', { name: 'Upload a new file or draw on a map' })
+    ).toHaveAttribute('href', `${journey.basePath}/redline-map`)
+    await expect(
+      page.getByRole('button', { name: 'Save and continue' })
+    ).toHaveCount(0)
   })
 
   test('changing an answer returns to check your answers', async ({ page }) => {
@@ -135,9 +257,7 @@ test.describe('nrf-quote-7 happy path', () => {
     await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page).toHaveURL(/check-your-answers/)
 
-    await page
-      .getByRole('link', { name: /Change.*number of housing units/ })
-      .click()
+    await page.getByRole('link', { name: /Change.*number of units/ }).click()
     await expect(page).toHaveURL(/units\?change=true&nav=check-your-answers/)
     await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
       'href',
@@ -170,7 +290,20 @@ test.describe('journey tools', () => {
   test('flow and screen wall page lists every screen', async ({ page }) => {
     const response = await page.goto(`/tools/journeys/${journey.id}`)
     expect(response.status()).toBe(200)
-    await expect(page.locator('iframe')).toHaveCount(journey.pages.length)
+    await expect(page.locator('iframe')).toHaveCount(wallCardCount)
+  })
+
+  test('screen wall shows a card per preview variant', async ({ page }) => {
+    await page.goto(`/tools/journeys/${journey.id}`)
+    await page.getByRole('tab', { name: 'Screens' }).click()
+    const variants = previewVariants(journey.byId.get('file-preview'))
+    expect(variants.length).toBeGreaterThan(0)
+    await expect(page.locator('.wall-card--variant')).toHaveCount(
+      variants.length
+    )
+    await expect(
+      page.locator('.wall-card--variant iframe').first()
+    ).toHaveAttribute('src', /file-preview\?preview=1&variant=/)
   })
 
   test('screen wall places branch screens beside the page they branch from', async ({
@@ -242,7 +375,7 @@ test.describe('journey tools', () => {
     // The map preview focuses its boundary panel heading once the saved
     // boundary check completes; that must not drag the wall down to it
     const mapFrame = page.frameLocator(
-      'iframe[title="Draw a red line boundary"]'
+      'iframe[title="Draw your boundary on a map"]'
     )
     await expect(
       mapFrame.locator('[data-boundary-info-results]:not([hidden])')

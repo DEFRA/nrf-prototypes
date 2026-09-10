@@ -1,0 +1,37 @@
+// "Checking your file" spinner, ported from the production frontend's
+// loading-spinner component (nrf-frontend
+// src/server/common/components/loading-spinner/_loading-spinner.scss).
+
+.app-loading-spinner {
+  padding-top: govuk-spacing(4);
+
+  &__spinner {
+    margin-left: auto;
+    margin-right: auto;
+    border: 12px solid #dee0e2;
+    border-radius: 50%;
+    border-top-color: govuk-colour('blue');
+    width: 80px;
+    height: 80px;
+    animation: app-loading-spinner-animation 2s linear infinite;
+
+    @media (prefers-reduced-motion: reduce) {
+      display: none;
+    }
+  }
+
+  &__content {
+    text-align: center;
+    padding-top: govuk-spacing(6);
+  }
+}
+
+@keyframes app-loading-spinner-animation {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}

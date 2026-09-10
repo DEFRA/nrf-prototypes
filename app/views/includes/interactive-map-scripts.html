@@ -1,0 +1,16 @@
+{#
+  @defra/interactive-map UMD bundles. These classic <script> tags run
+  synchronously and populate window.defra; a page's own
+  <script type="module"> is deferred until parsing finishes, so it always
+  runs after them. Never add defer or async to these tags.
+#}
+{% set interactiveMapAssets = "/plugin-assets/%40defra%2Finteractive-map" %}
+<script src="{{ interactiveMapAssets }}/dist/umd/index.js"></script>
+<script src="{{ interactiveMapAssets }}/providers/maplibre/dist/umd/index.js"></script>
+<script src="{{ interactiveMapAssets }}/plugins/interact/dist/umd/index.js"></script>
+<script src="{{ interactiveMapAssets }}/plugins/draw/dist/umd/index.js"></script>
+<script src="{{ interactiveMapAssets }}/plugins/datasets/dist/umd/index.js"></script>
+<script src="{{ interactiveMapAssets }}/plugins/map-key/dist/umd/index.js"></script>
+<script src="{{ interactiveMapAssets }}/plugins/beta/map-styles/dist/umd/index.js"></script>
+<script src="{{ interactiveMapAssets }}/plugins/beta/scale-bar/dist/umd/index.js"></script>
+<script src="{{ interactiveMapAssets }}/plugins/search/dist/umd/index.js"></script>

@@ -1,0 +1,87 @@
+{#
+  Your uploaded red line boundary file – nrf-quote-7.
+
+  A port of production's quote/file-preview page: the uploaded boundary on a
+  read-only map with the EDPs it falls in, or the error the check found
+  with the shape drawn so the user can see what went wrong. Copy comes from
+  content/nrf-quote-7/pages/file-preview.md (`text:` for the strings this
+  template assembles, `errors:` for the failure messages); the boundary,
+  EDP list and error from the file-preview hook in
+  app/lib/nrf-quote-7/hooks.js.
+
+  "Save and continue" posts an empty form; journey.yaml decides the next
+  page from the stored boundary, as it does for the drawn map.
+#}
+{% extends "journey-engine/_page.html" %}
+
+{% block head %}
+  {{ super() }}
+  {% include "includes/interactive-map-head.html" %}
+{% endblock %}
+
+{% set heading = content.text.errorHeading if boundaryError else content.heading %}
+
+{% block pageTitle %}
+{{ heading }} - {{ journey.serviceName }} - GOV.UK
+{% endblock %}
+
+{% block content %}
+<h1 class="govuk-heading-l">{{ heading }}</h1>
+
+{% if boundaryError %}
+  <p class="govuk-body">{{ boundaryError }} <a href="{{ boundaryTypePath }}" class="govuk-link">{{ content.text.uploadAgain }}</a></p>
+{% endif %}
+
+{% set edpCount = intersectingEdps | length %}
+{% set showEdpContent = edpCount > 0 and not boundaryError %}
+
+{% if showEdpContent %}
+  <p class="govuk-body">
+    {% if edpCount == 1 %}{{ content.text.withinEdpOne }}{% else %}{{ content.text.withinEdpMany | replace("{count}", edpCount) }}{% endif %}
+  </p>
+  <ul class="govuk-list govuk-list--bullet govuk-!-margin-bottom-6">
+    {% for edp in intersectingEdps %}
+      <li>
+        {%- if edp.overlap_area_ha is defined and edp.overlap_percentage is defined -%}
+          {{ content.text.edpOverlap | replace("{label}", edp.label) | replace("{ha}", edp.overlap_area_ha) | replace("{percent}", edp.overlap_percentage) }}
+        {%- else -%}
+          {{ edp.label }}
+        {%- endif -%}
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+{% if showMap %}
+  {# Page config lives on a separate element: interactive-map JSON-parses
+     every data-* attribute on its own root element as component config. #}
+  <div
+    id="boundary-map-config"
+    hidden
+    data-existing-boundary-geojson="{{ existingBoundaryGeojson }}"
+    data-existing-boundary-metadata="{{ existingBoundaryMetadata }}"
+    data-has-os-key="{{ hasOsKey }}"
+  ></div>
+  <div class="app-boundary-map-wrapper govuk-!-margin-bottom-6">
+    <div id="boundary-map" class="app-boundary-map-wrapper__map"></div>
+  </div>
+{% endif %}
+
+{% if showEdpContent %}
+  <form action="{{ page.path }}" method="post" novalidate>
+    {% include "journey-engine/_change-inputs.html" %}
+    <div class="govuk-button-group">
+      {{ govukButton({ text: content.button, preventDoubleClick: true }) }}
+      <a href="{{ boundaryTypePath }}" class="govuk-link">{{ content.text.uploadAgain }}</a>
+    </div>
+  </form>
+{% endif %}
+{% endblock %}
+
+{% block pageScripts %}
+  {{ super() }}
+  {% if showMap %}
+  {% include "includes/interactive-map-scripts.html" %}
+  <script type="module" src="/public/javascripts/interactive-map/upload/index.js"></script>
+  {% endif %}
+{% endblock %}

@@ -358,6 +358,8 @@ function buildPage(entry, journey, problems) {
       rows: frontmatter.rows || [],
       actions: frontmatter.actions || [],
       panel: frontmatter.panel,
+      // Named strings a hand-written template (type: custom) renders itself
+      text: frontmatter.text || {},
       body: bodyMarkdown
     }
   }

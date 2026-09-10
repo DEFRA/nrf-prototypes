@@ -22,6 +22,7 @@ const {
   layoutLevels,
   mainChain,
   exportScreens,
+  previewVariants,
   toMermaid,
   toFlowJson,
   toFlowGraph
@@ -43,6 +44,7 @@ module.exports = {
   layoutLevels,
   mainChain,
   exportScreens,
+  previewVariants,
   captureScreens,
   VIEWPORTS,
   toMermaid,

@@ -108,22 +108,22 @@ Write the answer's name in double curly braces: `{{ estimateEmail }}`. The names
 
 ## Settings by page type
 
-| `type`          | Settings you can use                                              |
-| --------------- | ----------------------------------------------------------------- |
-| `start`         | `title`                                                           |
-| `content`       | `title`, `actions`                                                |
-| `radios`        | `hint`, `options` (each with optional `hint`), `errors`, `button` |
-| `checkboxes`    | as radios                                                         |
-| `input`         | `hint`, `errors`, `button`, `width`                               |
-| `number`        | as input                                                          |
-| `email`         | as input                                                          |
-| `password`      | `hint`, `errors`, `button`; has a Show/Hide toggle, never stored  |
-| `form`          | `hint`, `fields`, `button`, `actions` (see "Several fields")      |
-| `file-upload`   | `hint`, `errors`, `button`                                        |
-| `check-answers` | `rows`, `actions`                                                 |
-| `confirmation`  | `title`, `panel` (with `title` and `body`)                        |
-| `document`      | `title`; a full-width document with no banner or back link        |
-| `custom`        | a developer-built screen; `hint`, `errors` still come from here   |
+| `type`          | Settings you can use                                                                                             |
+| --------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `start`         | `title`                                                                                                          |
+| `content`       | `title`, `actions`                                                                                               |
+| `radios`        | `hint`, `options` (each with optional `hint`), `errors`, `button`                                                |
+| `checkboxes`    | as radios                                                                                                        |
+| `input`         | `hint`, `errors`, `button`, `width`                                                                              |
+| `number`        | as input                                                                                                         |
+| `email`         | as input                                                                                                         |
+| `password`      | `hint`, `errors`, `button`; has a Show/Hide toggle, never stored                                                 |
+| `form`          | `hint`, `fields`, `button`, `actions` (see "Several fields")                                                     |
+| `file-upload`   | `hint`, `errors`, `button`                                                                                       |
+| `check-answers` | `rows`, `actions`                                                                                                |
+| `confirmation`  | `title`, `panel` (with `title` and `body`)                                                                       |
+| `document`      | `title`; a full-width document with no banner or back link                                                       |
+| `custom`        | a developer-built screen; `hint`, `errors` and `text:` (named strings the template renders) still come from here |
 
 Every page can also set `layout` to change its chrome: `default` (the prototype header and banner), `one-login` (the GOV.UK One Login look used by the shared sign-in pages) or `document` (bare crown header, full width, no banner or back link; `type: document` pages get this automatically).
 
@@ -307,7 +307,7 @@ Other page keys: `shared: true` (copy comes from `content/shared/pages/<id>.md`,
 
 A `next` rule or an action whose `goto` leaves for another journey can add `return: <summary page id>` so that journey's page comes back here (see "Borrowing a page from another journey"). `$summary` is allowed wherever a `goto` is: `next`, `back` and `actions`.
 
-Journey keys: `id`, `name`, `serviceName`, `start`, `summaryPage` or `summaryPages` (every page with Change links; a rule's `goto: $summary` returns to whichever one the user came from, which may be in another journey when the page is borrowed), `signedIn` (a condition; while it holds the header shows a Sign out link, pointing at the `SIGN_OUT` route a hook registers, and agents see the organisation they act for), `session`, `preview.data` (sample answers for `?preview=1` and the screen wall; a page can add its own `preview:` block to override them), `homepage` (the homepage card: `family`, `version`, `status`, `title`, `description`, `changes`; see "Adding a new journey"). `serviceName` is used in every page `<title>` and, prefixed "PROTOTYPE - ", in the service navigation bar under the header (`app/views/includes/service-header.html`).
+Journey keys: `id`, `name`, `serviceName`, `start`, `summaryPage` or `summaryPages` (every page with Change links; a rule's `goto: $summary` returns to whichever one the user came from, which may be in another journey when the page is borrowed), `signedIn` (a condition; while it holds the header shows a Sign out link, pointing at the `SIGN_OUT` route a hook registers, and agents see the organisation they act for), `session`, `preview.data` (sample answers for `?preview=1` and the screen wall; a page can add its own `preview:` block with `data:` to override them, and `variants:` — a list of `{ id, label, data }` — to show other states of the same screen on the wall and in the JPG export, opened with `?preview=1&variant=<id>`), `homepage` (the homepage card: `family`, `version`, `status`, `title`, `description`, `changes`; see "Adding a new journey"). `serviceName` is used in every page `<title>` and, prefixed "PROTOTYPE - ", in the service navigation bar under the header (`app/views/includes/service-header.html`).
 
 Hooks (`app/lib/<journey>/hooks.js`) are per journey, so a shared page such as `one-login-password` only does something in the journeys that give it a hook. A `load(ctx)` hook runs before a page is built and may put data in the session (the request-to-use journey fills in the retrieved quote this way); `get(ctx, model)` runs after and can add to the render model.
 

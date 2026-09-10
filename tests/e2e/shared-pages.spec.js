@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test')
-const { loadJourney } = require('../../app/lib/journey-engine')
+const { loadJourney, previewVariants } = require('../../app/lib/journey-engine')
 
 /**
  * Shared pages: the quote and request-to-use journeys both start on the
@@ -138,7 +138,12 @@ test.describe('journey tools show exits to other journeys', () => {
       requestToUseEntry
     )
     // Placeholder cards carry no iframe, so the wall still has one per page
-    await expect(page.locator('iframe')).toHaveCount(quote.pages.length)
+    // (plus one per preview variant)
+    const cards = quote.pages.reduce(
+      (count, page) => count + 1 + previewVariants(page).length,
+      0
+    )
+    await expect(page.locator('iframe')).toHaveCount(cards)
   })
 
   test('flow.mmd gives the exit a valid node id', async ({ request }) => {

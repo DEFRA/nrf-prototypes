@@ -19,7 +19,7 @@ rows:
       else: Added
     change:
       - when: { key: hasRedlineBoundaryFile, truthy: true }
-        goto: upload-redline
+        goto: file-preview
       - goto: map
     changeHidden:
       when: { key: hasRedlineBoundaryFile, truthy: true }

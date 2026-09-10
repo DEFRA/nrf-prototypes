@@ -39,6 +39,7 @@ const ENGINE_KEYS = [
   'change',
   'nav',
   'error',
+  'variant',
   'isChange',
   'navFromSummary'
 ]
@@ -49,11 +50,22 @@ function scrub(sessionData) {
   }
 }
 
-function previewData(journey, page) {
+/**
+ * Sample answers for a page: the journey's `preview.data`, then the page's
+ * own `preview.data` (or a bare `preview:` map of answers), then the named
+ * variant's `data` when `?variant=<id>` is set. Variants show alternative
+ * states of one screen on the wall (an upload that failed, say).
+ */
+function previewData(journey, page, variantId) {
   const base = (journey.preview && journey.preview.data) || {}
-  const override =
-    page.preview && page.preview.data ? page.preview.data : page.preview || {}
-  return JSON.parse(JSON.stringify({ ...base, ...override }))
+  const pagePreview = page.preview || {}
+  const structured = 'data' in pagePreview || 'variants' in pagePreview
+  const override = structured ? pagePreview.data || {} : pagePreview
+  const variant = variantId
+    ? (pagePreview.variants || []).find((item) => item.id === variantId)
+    : null
+  const variantData = (variant && variant.data) || {}
+  return JSON.parse(JSON.stringify({ ...base, ...override, ...variantData }))
 }
 
 function parseSize(value) {
@@ -108,12 +120,15 @@ function buildContext(req, res, journey, page, options = {}) {
     res,
     journey,
     page,
-    data: preview ? previewData(journey, page) : req.session.data,
+    data: preview
+      ? previewData(journey, page, query.variant)
+      : req.session.data,
     body,
     file: req.file,
     query,
     preview,
     previewError: preview && ['1', 'true'].includes(String(query.error)),
+    variant: preview && query.variant ? String(query.variant) : null,
     isChange,
     navFromSummary,
     // The journey that borrowed this page, when navFromSummary is a path
@@ -265,6 +280,8 @@ function renderContent(page, ctx) {
     autocomplete: c.autocomplete,
     spellcheck: c.spellcheck,
     errors: c.errors,
+    // Named strings a custom template renders itself (`text:` frontmatter)
+    text: c.text || {},
     items: (c.options || []).map((option) => {
       const item = {
         text: plain(option.label),
@@ -355,6 +372,7 @@ function buildModel(ctx, extra = {}) {
     isChange: ctx.isChange,
     navFromSummary: ctx.navFromSummary,
     preview: ctx.preview,
+    variant: ctx.variant,
     routes: journey.routes,
     ...extra
   }

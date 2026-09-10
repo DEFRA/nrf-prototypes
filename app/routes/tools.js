@@ -17,6 +17,7 @@ const {
   toFlowJson,
   toFlowGraph,
   isQuestionType,
+  previewVariants,
   captureScreens,
   VIEWPORTS
 } = require('../lib/journey-engine')
@@ -37,6 +38,7 @@ function pageView(page, journey, via) {
     isQuestion: isQuestionType(page.type),
     isCustom: page.type === 'custom',
     isExit: !(page.next && page.next.length),
+    variants: previewVariants(page),
     shared: page.shared,
     contentFile: page.contentFile
   }

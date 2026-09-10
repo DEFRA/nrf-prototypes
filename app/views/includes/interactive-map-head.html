@@ -1,0 +1,13 @@
+{#
+  Stylesheets for @defra/interactive-map (the production map component).
+  Served by the Prototype Kit from /plugin-assets/... because the package is
+  a kit plugin - nothing is vendored. Used by layouts/interactive-map.html
+  and any standard page that embeds a map (nrf-quote-7/file-preview.html).
+#}
+{% set interactiveMapAssets = "/plugin-assets/%40defra%2Finteractive-map" %}
+<link href="{{ interactiveMapAssets }}/dist/css/index.css" rel="stylesheet">
+<link href="{{ interactiveMapAssets }}/plugins/datasets/dist/css/index.css" rel="stylesheet">
+<link href="{{ interactiveMapAssets }}/plugins/map-key/dist/css/index.css" rel="stylesheet">
+<link href="{{ interactiveMapAssets }}/plugins/beta/map-styles/dist/css/index.css" rel="stylesheet">
+<link href="{{ interactiveMapAssets }}/plugins/search/dist/css/index.css" rel="stylesheet">
+<link href="{{ interactiveMapAssets }}/plugins/beta/scale-bar/dist/css/index.css" rel="stylesheet">

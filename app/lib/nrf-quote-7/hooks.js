@@ -2,9 +2,10 @@
  * Bespoke behaviour for the nrf-quote-7 journey.
  *
  * Everything declarative lives in content/nrf-quote-7. These hooks cover the
- * three things that need real code: the red line boundary map (EDP
- * intersection check), parsing an uploaded GeoJSON file, and minting the
- * NRL reference. All user-facing wording still comes from the page files.
+ * things that need real code: the red line boundary map (EDP intersection
+ * check), plotting an uploaded file, the file preview page that follows it,
+ * and minting the NRL reference. All user-facing
+ * wording still comes from the page files.
  *
  * The map page uses the production map component (@defra/interactive-map,
  * see app/views/layouts/interactive-map.html). Its boundary check API and
@@ -225,15 +226,50 @@ function checkBoundary(geometry) {
     boundaryGeometryWgs84: geometry,
     boundaryGeometryOriginal: geometry,
     boundaryMetadata: buildBoundaryMetadata(geometry),
-    // Nutrient EDPs only, one entry per plan, as production's panel expects
+    // Nutrient EDPs only, one entry per plan, as production's panel expects.
+    // The file preview page also shows how much of the boundary each EDP
+    // covers, like production's impact assessor response.
     intersectingEdps: results.intersections
       .filter((intersection) => intersection.type === 'nutrient')
       .map((intersection) => ({
         id: intersection.id,
         label: intersection.name,
-        live: intersection.live
+        live: intersection.live,
+        ...edpOverlap(geometry, intersection.id)
       })),
     intersectingExcludedAreas: results.excludedAreas
+  }
+}
+
+/**
+ * Area of the boundary inside one EDP, in hectares and as a share of the
+ * boundary: { overlap_area_ha, overlap_percentage }, or {} when it cannot
+ * be worked out.
+ */
+function edpOverlap(geometry, edpId) {
+  try {
+    const edp = edpData.getEdps().find((item) => item.id === edpId)
+    if (!edp) {
+      return {}
+    }
+    const boundary = turf.polygon(geometry.coordinates)
+    const overlap = turf.intersect(
+      turf.featureCollection([boundary, turf.feature(edp.geometry)])
+    )
+    if (!overlap) {
+      return {}
+    }
+    const boundaryArea = turf.area(boundary)
+    const overlapArea = turf.area(overlap)
+    return {
+      overlap_area_ha: round(overlapArea / SQUARE_METRES_PER_HECTARE),
+      overlap_percentage: boundaryArea
+        ? Math.round((overlapArea / boundaryArea) * 100)
+        : 0
+    }
+  } catch (error) {
+    console.error('EDP overlap calculation failed:', error)
+    return {}
   }
 }
 
@@ -272,6 +308,126 @@ function normaliseBoundaryData(parsed) {
     return { center: parsed.center, coordinates: openRing(parsed.coordinates) }
   }
   return null
+}
+
+// ============================================================================
+// UPLOADED FILES
+// ============================================================================
+
+// The prototype does not check uploaded files. Whatever was uploaded, the
+// user sees the spinner and then the preview. A GeoJSON polygon inside an
+// EDP is plotted as uploaded; anything else (another format, a polygon
+// outside every EDP, an unreadable file) stands in with this sample boundary
+// inside the live Broads/Wensum EDP, so the preview always has something to
+// show. The error states of the preview page are preview variants in
+// journey.yaml, for the screen wall only.
+const SAMPLE_BOUNDARY_RING = [
+  [1.162, 52.6845],
+  [1.165, 52.6845],
+  [1.165, 52.6875],
+  [1.162, 52.6875],
+  [1.162, 52.6845]
+]
+
+function firstGeometry(geojson) {
+  if (!geojson || typeof geojson !== 'object') {
+    return null
+  }
+  if (geojson.type === 'FeatureCollection') {
+    const feature = (geojson.features || [])[0]
+    return feature ? feature.geometry || null : null
+  }
+  if (geojson.type === 'Feature') {
+    return geojson.geometry || null
+  }
+  return geojson.type ? geojson : null
+}
+
+const SAMPLE_BOUNDARY = {
+  type: 'Polygon',
+  coordinates: [SAMPLE_BOUNDARY_RING]
+}
+
+/**
+ * The polygon to plot for an uploaded file: the file's own first polygon
+ * when it is GeoJSON with one that falls in an EDP, else the sample
+ * boundary. Returns the geometry with its check result.
+ */
+function uploadedBoundary(file) {
+  const geometry = uploadedGeometry(file)
+  const result = checkBoundary(geometry)
+  if (result.intersectingEdps.length) {
+    return { geometry, boundaryGeojson: result }
+  }
+  return {
+    geometry: SAMPLE_BOUNDARY,
+    boundaryGeojson: checkBoundary(SAMPLE_BOUNDARY)
+  }
+}
+
+function uploadedGeometry(file) {
+  try {
+    const geometry = firstGeometry(JSON.parse(file.buffer.toString('utf8')))
+    const ring =
+      geometry && geometry.type === 'Polygon'
+        ? geometry.coordinates[0]
+        : geometry && geometry.type === 'MultiPolygon'
+          ? geometry.coordinates[0][0]
+          : null
+    if (Array.isArray(ring) && ring.length >= 4 && ring.every(isPosition)) {
+      return { type: 'Polygon', coordinates: [closeRing(ring)] }
+    }
+  } catch (error) {
+    // Not GeoJSON (a KML or zipped shapefile, say): use the sample
+  }
+  return SAMPLE_BOUNDARY
+}
+
+/**
+ * Remember a checked boundary in the session in the shape every later page
+ * reads (journey.yaml branches on `redlineBoundaryPolygon.intersections`).
+ */
+function storeBoundary(data, geometry, boundaryGeojson) {
+  const coordinates = openRing(geometry.coordinates[0])
+  const results = checkEDPIntersections(coordinates)
+  data.redlineBoundaryPolygon = {
+    center:
+      (boundaryGeojson && boundaryGeojson.boundaryMetadata.centre) ||
+      turf.centroid(polygonFeatureFromCoordinates(coordinates)).geometry
+        .coordinates,
+    coordinates,
+    geometry,
+    intersections: { nutrient: results.nutrient, gcn: results.gcn },
+    intersectingCatchment: results.nutrient,
+    intersectingExcludedAreas: results.excludedAreas,
+    boundaryGeojson: boundaryGeojson || null
+  }
+  data.intersectingCatchment = results.nutrient
+}
+
+/**
+ * The stored boundary as a Polygon geometry, whichever shape the session
+ * (or the preview sample data) holds it in.
+ */
+function storedGeometry(polygon) {
+  if (!polygon) {
+    return null
+  }
+  if (polygon.geometry && polygon.geometry.type === 'Polygon') {
+    return polygon.geometry
+  }
+  if (Array.isArray(polygon.coordinates) && polygon.coordinates.length >= 3) {
+    return polygonFeatureFromCoordinates(openRing(polygon.coordinates)).geometry
+  }
+  return null
+}
+
+function safeMetadata(geometry) {
+  try {
+    return buildBoundaryMetadata(geometry)
+  } catch (error) {
+    return null
+  }
 }
 
 // ============================================================================
@@ -358,54 +514,97 @@ const map = {
   process(ctx, boundary) {
     // The server-side check is authoritative even when the client already
     // ran one; the result drives the journey.yaml branching.
-    const results = checkEDPIntersections(boundary.coordinates)
-    const center =
-      boundary.center ||
-      turf.centroid(polygonFeatureFromCoordinates(boundary.coordinates))
-        .geometry.coordinates
-    ctx.data.redlineBoundaryPolygon = {
-      center,
-      coordinates: boundary.coordinates,
-      intersections: { nutrient: results.nutrient, gcn: results.gcn },
-      intersectingCatchment: results.nutrient,
-      intersectingExcludedAreas: results.excludedAreas,
-      boundaryGeojson: boundary.boundaryGeojson || null
-    }
-    ctx.data.intersectingCatchment = results.nutrient
+    const geometry = polygonFeatureFromCoordinates(
+      boundary.coordinates
+    ).geometry
+    storeBoundary(ctx.data, geometry, boundary.boundaryGeojson || null)
+    delete ctx.data.boundaryFailureReason
   }
 }
 
 const uploadRedline = {
   process(ctx, file) {
-    const { page, data } = ctx
-    const name = String(file.originalname || '').toLowerCase()
-    const ext = name.slice(name.lastIndexOf('.'))
-    // The prototype only parses GeoJSON. Other permitted formats fall back
-    // to the production error wording from the page's `errors:` frontmatter.
-    if (ext === '.zip') {
-      return { error: message(page, 'noShapefile') }
-    }
-    if (ext === '.shp') {
-      return { error: message(page, 'missingFiles') }
-    }
-    if (ext !== '.geojson' && ext !== '.json') {
-      return { error: message(page, 'wrongType') }
-    }
-    let coordinates
-    try {
-      coordinates = polygonCoordinatesFromGeoJson(
-        JSON.parse(file.buffer.toString('utf8'))
-      )
-    } catch (error) {
-      return { error: message(page, 'wrongType') }
-    }
-    if (!coordinates || coordinates.length === 0) {
-      return { error: message(page, 'wrongType') }
-    }
+    const { data } = ctx
     data.redlineFile = file.originalname
     data.hasRedlineBoundaryFile = true
-    data.redlineBoundaryPolygon = { coordinates }
     data.mapReferrer = 'upload-redline'
+    delete data.boundaryFailureReason
+    const { geometry, boundaryGeojson } = uploadedBoundary(file)
+    storeBoundary(data, geometry, boundaryGeojson)
+  }
+}
+
+// "Checking your file": production polls the uploader here and moves on when
+// the check is done. The prototype checks nothing, so the page just shows
+// the spinner for a moment and then continues.
+const checkingFile = {
+  get(ctx, model) {
+    model.continueUrl = ctx.journey.byId.get('file-preview').path
+    model.refreshSeconds = 3
+  }
+}
+
+// "Your uploaded red line boundary file": the boundary drawn on a read-only
+// map with the EDPs it falls in. Every upload reaches this page (see
+// uploadedBoundary); the error states only ever come from the preview
+// variants in journey.yaml (boundaryFailureReason is never set by an
+// upload).
+const filePreview = {
+  load(ctx) {
+    const { data, journey, preview } = ctx
+    if (preview) {
+      return undefined
+    }
+    if (data.boundaryFailureReason) {
+      return undefined
+    }
+    const polygon = data.redlineBoundaryPolygon
+    if (!polygon || !storedGeometry(polygon)) {
+      return { redirect: journey.byId.get('upload-redline').path }
+    }
+    return undefined
+  },
+
+  get(ctx, model) {
+    const { data, journey, page } = ctx
+    const failureReason = data.boundaryFailureReason || null
+    const geometry = storedGeometry(data.redlineBoundaryPolygon)
+    const stored =
+      data.redlineBoundaryPolygon && data.redlineBoundaryPolygon.boundaryGeojson
+    // The preview sample data carries a shape but no check result, so run
+    // the check now for a valid boundary
+    const boundaryGeojson =
+      stored || (geometry && !failureReason ? checkBoundary(geometry) : null)
+
+    model.boundaryError = failureReason ? message(page, failureReason) : null
+    model.intersectingEdps =
+      !failureReason && boundaryGeojson ? boundaryGeojson.intersectingEdps : []
+    model.showMap = Boolean(geometry)
+    model.existingBoundaryGeojson = geometry
+      ? JSON.stringify({ type: 'Feature', properties: {}, geometry })
+      : ''
+    model.existingBoundaryMetadata = geometry
+      ? JSON.stringify(
+          (boundaryGeojson && boundaryGeojson.boundaryMetadata) ||
+            safeMetadata(geometry)
+        )
+      : ''
+    model.hasOsKey = Boolean(process.env.OS_API_KEY)
+    model.boundaryTypePath = journey.byId.get('redline-map').path
+  },
+
+  validate() {
+    return { ok: true, value: null }
+  },
+
+  process(ctx) {
+    const { data, journey } = ctx
+    // Nothing to save: the upload hook already stored the boundary. A stray
+    // submit while the file is invalid starts the boundary step again.
+    if (data.boundaryFailureReason || !data.redlineBoundaryPolygon) {
+      return { redirect: journey.byId.get('redline-map').path }
+    }
+    return undefined
   }
 }
 
@@ -420,6 +619,8 @@ const checkYourAnswers = {
 module.exports = {
   map,
   'upload-redline': uploadRedline,
+  'checking-file': checkingFile,
+  'file-preview': filePreview,
   'check-your-answers': checkYourAnswers,
   checkEDPIntersections,
   checkBoundary,

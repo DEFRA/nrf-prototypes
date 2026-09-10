@@ -5,8 +5,11 @@
   vendored. To upgrade the map, bump the pinned version in package.json.
 
   Pages set the map up in a <script type="module"> (see
-  app/assets/javascripts/interactive-map/). Load order matters: the classic
-  <script> tags below run synchronously and populate window.defra; the module
+  app/assets/javascripts/interactive-map/). The stylesheet and UMD script
+  tags live in includes/interactive-map-head.html and
+  includes/interactive-map-scripts.html so a standard page can embed a map
+  too (nrf-quote-7/file-preview.html). Load order matters: the classic
+  <script> tags run synchronously and populate window.defra; the module
   script is deferred until parsing finishes, so it always runs after them.
   Never add defer or async to the UMD tags.
 
@@ -21,16 +24,10 @@
 {% set bodyClasses = "app-draw-boundary-body" %}
 {% set containerClasses = "app-draw-boundary-container" %}
 {% set mainClasses = "app-main-wrapper--draw-boundary" %}
-{% set interactiveMapAssets = "/plugin-assets/%40defra%2Finteractive-map" %}
 
 {% block head %}
   {{ super() }}
-  <link href="{{ interactiveMapAssets }}/dist/css/index.css" rel="stylesheet">
-  <link href="{{ interactiveMapAssets }}/plugins/datasets/dist/css/index.css" rel="stylesheet">
-  <link href="{{ interactiveMapAssets }}/plugins/map-key/dist/css/index.css" rel="stylesheet">
-  <link href="{{ interactiveMapAssets }}/plugins/beta/map-styles/dist/css/index.css" rel="stylesheet">
-  <link href="{{ interactiveMapAssets }}/plugins/search/dist/css/index.css" rel="stylesheet">
-  <link href="{{ interactiveMapAssets }}/plugins/beta/scale-bar/dist/css/index.css" rel="stylesheet">
+  {% include "includes/interactive-map-head.html" %}
 {% endblock %}
 
 {# Production-style header: crown header plus service navigation bar #}
@@ -48,14 +45,6 @@
 {% block pageScripts %}
   {{ super() }}
   {# @defra/interactive-map UMD bundles – order matters, see comment above #}
-  <script src="{{ interactiveMapAssets }}/dist/umd/index.js"></script>
-  <script src="{{ interactiveMapAssets }}/providers/maplibre/dist/umd/index.js"></script>
-  <script src="{{ interactiveMapAssets }}/plugins/interact/dist/umd/index.js"></script>
-  <script src="{{ interactiveMapAssets }}/plugins/draw/dist/umd/index.js"></script>
-  <script src="{{ interactiveMapAssets }}/plugins/datasets/dist/umd/index.js"></script>
-  <script src="{{ interactiveMapAssets }}/plugins/map-key/dist/umd/index.js"></script>
-  <script src="{{ interactiveMapAssets }}/plugins/beta/map-styles/dist/umd/index.js"></script>
-  <script src="{{ interactiveMapAssets }}/plugins/beta/scale-bar/dist/umd/index.js"></script>
-  <script src="{{ interactiveMapAssets }}/plugins/search/dist/umd/index.js"></script>
+  {% include "includes/interactive-map-scripts.html" %}
   {% block mapScripts %}{% endblock %}
 {% endblock %}

@@ -274,3 +274,22 @@ $app-attributions-height: 24px;
   border-radius: 2px;
   outline: 3px solid #383f43;
 }
+
+// Read-only boundary preview on a standard page ------------------------------
+//
+// The file preview page embeds the map in the flow of the page rather than
+// full-bleed. Ported from nrf-frontend
+// src/client/stylesheets/map/_upload-preview-map.scss.
+
+.app-boundary-map-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
+
+.app-boundary-map-wrapper__map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}

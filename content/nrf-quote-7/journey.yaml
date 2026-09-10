@@ -43,6 +43,7 @@ session:
   - hasRedlineBoundaryFile
   - redlineFile
   - redlineBoundaryPolygon
+  - boundaryFailureReason
   - mapReferrer
   - estimateEmail
   - nrfReference
@@ -161,8 +162,87 @@ pages:
     accept: ['.geojson', '.json', '.kml', '.zip']
     maxSize: 2MB
     changeable: true
-    handler: custom # parses the GeoJSON, see hooks.js
-    next: map # the map runs the EDP and capacity checks
+    handler: custom # plots the file (or a sample boundary), see hooks.js
+    next: checking-file
+
+  # Production polls the uploader here; the prototype shows the spinner for
+  # a moment and moves on (a meta refresh in the template)
+  - id: checking-file
+    template: nrf-quote-7/checking-file
+    handler: custom # where to continue to, see hooks.js
+    guard: { key: redlineFile, isSet: true, redirect: upload-redline }
+    next: file-preview
+
+  # The uploaded boundary on a read-only map. Nothing is checked and every
+  # upload lands here (a polygon outside every EDP is swapped for a sample
+  # one inside the live EDP); the error states below exist for the screen
+  # wall only.
+  - id: file-preview
+    template: nrf-quote-7/file-preview
+    handler: custom # boundary, EDP list and error, see hooks.js
+    changeable: true
+    back: upload-redline
+    preview:
+      data:
+        hasRedlineBoundaryFile: true
+        mapReferrer: upload-redline
+        redlineBoundaryPolygon:
+          coordinates:
+            - [1.162, 52.6845]
+            - [1.165, 52.6845]
+            - [1.165, 52.6875]
+            - [1.162, 52.6875]
+      # Error states, shown on the screen wall only (an upload never sets
+      # `boundaryFailureReason`). Each is a key in file-preview.md's errors;
+      # the shape (when there is one) is drawn so the problem can be seen
+      variants:
+        - id: overlapping
+          label: File contains an error (overlapping itself)
+          data:
+            boundaryFailureReason: selfIntersecting
+            redlineBoundaryPolygon:
+              geometry:
+                type: Polygon
+                coordinates:
+                  - - [1.162, 52.6845]
+                    - [1.165, 52.6875]
+                    - [1.165, 52.6845]
+                    - [1.162, 52.6875]
+                    - [1.162, 52.6845]
+        - id: hole
+          label: File contains an error (hole)
+          data:
+            boundaryFailureReason: hasHoles
+            redlineBoundaryPolygon:
+              geometry:
+                type: Polygon
+                coordinates:
+                  - - [1.162, 52.6845]
+                    - [1.165, 52.6845]
+                    - [1.165, 52.6875]
+                    - [1.162, 52.6875]
+                    - [1.162, 52.6845]
+                  - - [1.163, 52.6855]
+                    - [1.164, 52.6855]
+                    - [1.164, 52.6865]
+                    - [1.163, 52.6865]
+                    - [1.163, 52.6855]
+        - id: not-an-area
+          label: File contains an error (point or line, no map)
+          data:
+            boundaryFailureReason: unsupportedGeometry
+            redlineBoundaryPolygon: null
+    next:
+      - when:
+          { key: redlineBoundaryPolygon.intersections.nutrient, falsy: true }
+        goto: no-edp
+      - when: { key: residentialBuildingCount, gt: 15000, lt: 20000 }
+        goto: exclusion
+      - when: { key: residentialBuildingCount, gte: 20000 }
+        goto: no-capacity
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: estimate-email
 
   - id: map
     template: nrf-quote-7/map
@@ -198,7 +278,7 @@ pages:
     changeable: true
     back:
       - when: { key: mapReferrer, equals: upload-redline }
-        goto: upload-redline
+        goto: file-preview
       - goto: map
     next: check-your-answers
 

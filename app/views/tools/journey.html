@@ -169,6 +169,23 @@
         </div>
         {% if page.via %}<p class="wall-card__via">&#8627; {{ page.via }}</p>{% endif %}
       </div>
+      {% for variant in page.variants %}
+      <div class="wall-card wall-card--branch wall-card--variant{% if page.isCustom %} wall-card--custom{% endif %}">
+        <div class="wall-card__head">
+          <span class="wall-card__id">{{ page.id }}</span>
+          <span class="wall-card__type">· {{ variant.label }}</span><br>
+          <span class="wall-card__links">
+            <a class="govuk-link" href="{{ page.path }}?preview=1&variant={{ variant.id }}" target="_blank" rel="noopener">Open</a>
+            <span class="wall-card__type">variant: {{ variant.id }}</span>
+          </span>
+        </div>
+        <div class="wall-card__frame">
+          <iframe src="{{ page.path }}?preview=1&variant={{ variant.id }}" loading="lazy" title="{{ page.heading }} ({{ variant.label }})" tabindex="-1"></iframe>
+          <a class="wall-card__shield" href="{{ page.path }}?preview=1&variant={{ variant.id }}" target="_blank" rel="noopener" aria-label="Open {{ page.heading }} ({{ variant.label }}) in a new tab"></a>
+        </div>
+        <p class="wall-card__via">&#8627; {{ variant.label }}</p>
+      </div>
+      {% endfor %}
       {% endif %}
       {% endfor %}
       </div>

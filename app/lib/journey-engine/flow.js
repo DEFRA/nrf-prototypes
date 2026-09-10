@@ -464,10 +464,25 @@ function toFlowJson(journey) {
 /**
  * Every screen to capture for a JPG export, in screen-wall order (each
  * main-chain page followed by its branches, unreached pages last). Question
- * and custom pages get a second entry showing their error state.
+ * and custom pages get a second entry showing their error state, and a page
+ * with `preview.variants` gets one entry per variant.
  *
- * Returns [{ id, type, path, url, file, error }].
+ * Returns [{ id, type, path, url, file, error, variant }].
  */
+/**
+ * The named preview variants of a page (`preview.variants` in journey.yaml
+ * or the page's frontmatter): [{ id, label }].
+ */
+function previewVariants(page) {
+  const variants = (page.preview && page.preview.variants) || []
+  return variants
+    .filter((variant) => variant && variant.id)
+    .map((variant) => ({
+      id: String(variant.id),
+      label: variant.label || String(variant.id)
+    }))
+}
+
 function exportScreens(journey) {
   const screens = []
   let index = 0
@@ -485,7 +500,8 @@ function exportScreens(journey) {
         path: page.path,
         url: `${page.path}?preview=1`,
         file: `${prefix}-${id}.jpg`,
-        error: false
+        error: false,
+        variant: null
       })
       if (isQuestionType(page.type) || page.type === 'custom') {
         screens.push({
@@ -494,7 +510,19 @@ function exportScreens(journey) {
           path: page.path,
           url: `${page.path}?preview=1&error=1`,
           file: `${prefix}-${id}--error.jpg`,
-          error: true
+          error: true,
+          variant: null
+        })
+      }
+      for (const variant of previewVariants(page)) {
+        screens.push({
+          id,
+          type: page.type,
+          path: page.path,
+          url: `${page.path}?preview=1&variant=${variant.id}`,
+          file: `${prefix}-${id}--${variant.id}.jpg`,
+          error: false,
+          variant: variant.id
         })
       }
     }
@@ -503,6 +531,7 @@ function exportScreens(journey) {
 }
 
 module.exports = {
+  previewVariants,
   getEdges,
   externalNodes,
   layoutLevels,
