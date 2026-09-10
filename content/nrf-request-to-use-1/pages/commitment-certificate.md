@@ -84,3 +84,14 @@ In accordance with the requirements of the Environmental Delivery Plan(s) the lo
 \*\*Natural England recognises that Local Plans may set lower water efficiency targets and encourage any condition to be in line with the relevant Local Plan where this is the case.
 
 [See guidance for local planning authorities for more information on imposing conditions](#)
+
+## Get help with the nature restoration levy
+
+If you need help with the nature restoration levy, contact XXXX.
+
+Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)\
+Telephone: 00000000000\
+Monday to Friday, 8:30am to 5pm, except bank holidays
+
+[Find out about call charges](https://www.gov.uk/call-charges)
+
