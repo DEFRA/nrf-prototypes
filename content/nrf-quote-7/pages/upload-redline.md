@@ -14,3 +14,7 @@ button: Continue
 ---
 
 # Upload a red line boundary file
+
+::: details My file is in a different format (eg. PDF)
+We don't support PDF uploads, you'll need to re-export the shape from whichever tool was used to create it.
+:::
