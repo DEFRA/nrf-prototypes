@@ -12,13 +12,22 @@ rows:
     value: '{{ isVariation }}'
     change: variation
     changeHidden: whether the development is a variation
-  - key: Original NRL reference
+  - key: Original application committed to the levy
     value:
       when: { key: isVariation, equals: 'Yes' }
-      then: '{{ originalReference }}'
+      then: '{{ originalCommitted }}'
       else: Not applicable
     change:
       - when: { key: isVariation, equals: 'Yes' }
+        goto: original-committed
+    changeHidden: whether the original application was committed to using the levy
+  - key: Original NRL reference
+    value:
+      when: { key: originalCommitted, equals: 'Yes' }
+      then: '{{ originalReference }}'
+      else: Not applicable
+    change:
+      - when: { key: originalCommitted, equals: 'Yes' }
         goto: original-reference
     changeHidden: the NRL reference for the original planning application
   - key: Full name

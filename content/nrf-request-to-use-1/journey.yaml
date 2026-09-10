@@ -49,7 +49,7 @@ homepage:
   changes:
     - Retrieve a quote by NRL reference and email, review and amend the details on the quote journey's own pages (borrowed, not copied)
     - Levy increased and not enough capacity branches, driven by the number of units
-    - Variation to an existing planning application
+    - Variation to an existing planning application, then whether the original application was committed to using the levy
     - Mock GOV.UK One Login sign in (email then password), shared with other journeys
     - Agent, company and individual account types decided by the sign-in email (agent by default)
     - Developer details or your address, review, check your answers, confirmation
@@ -80,6 +80,7 @@ session:
   - edpName
   - acceptLevy
   - isVariation
+  - originalCommitted
   - originalReference
   - signInMethod
   - signInEmail
@@ -123,6 +124,7 @@ preview:
     levyIncreased: true
     acceptLevy: 'Yes'
     isVariation: 'Yes'
+    originalCommitted: 'Yes'
     originalReference: NRL-654321
     signInMethod: one-login
     signInEmail: agent@example.com
@@ -251,12 +253,26 @@ pages:
         goto: $summary
       - goto: variation
 
+  # A variation only needs the original NRL reference when the original
+  # application was committed to using the levy
   - id: variation
     field: variation
     sessionKey: isVariation
     changeable: true
     next:
       - when: { key: isVariation, equals: 'Yes' }
+        goto: original-committed
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: sign-in-method
+
+  - id: original-committed
+    field: original-committed
+    sessionKey: originalCommitted
+    changeable: true
+    guard: { key: isVariation, equals: 'Yes', redirect: variation }
+    next:
+      - when: { key: originalCommitted, equals: 'Yes' }
         goto: original-reference
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
