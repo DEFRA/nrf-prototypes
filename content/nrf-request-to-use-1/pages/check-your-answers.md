@@ -102,4 +102,6 @@ Once Natural England accepts your request to use this levy, you will be issued a
 
 The commitment certificate will disapply the relevant environmental obligations through the planning application process.
 
-**Levy amount** £{{ levyAmount }} (excluding VAT)
+Once your planning application is approved and you are ready to start development, you must assume liability to pay the levy.
+
+Levy amount £{{ levyAmount }} (excluding VAT)
