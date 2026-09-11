@@ -10,7 +10,7 @@
     idPrefix: page.field,
     fieldset: {
       legend: {
-        text: content.heading,
+        html: ('<span class="govuk-caption-l">' + (content.caption | escape) + '</span> ' if content.caption else '') + (content.heading | escape),
         isPageHeading: true,
         classes: "govuk-fieldset__legend--l"
       }

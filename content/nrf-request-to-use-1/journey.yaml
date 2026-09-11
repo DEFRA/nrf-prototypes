@@ -28,6 +28,8 @@ summaryPages:
   - review-developer-details
   - review-your-details
   - check-your-answers
+  - defra-check-answers
+  - defra-business-check-answers
 
 # When this holds the header shows Sign out and, for agents, the organisation
 # they are acting for
@@ -50,8 +52,9 @@ homepage:
     - Retrieve a quote by NRL reference and email, review and amend the details on the quote journey's own pages (borrowed, not copied)
     - Levy increased and not enough capacity branches, driven by the number of units
     - Variation to an existing planning application, then whether the original application was committed to using the levy
-    - Mock GOV.UK One Login sign in (email then password), shared with other journeys
+    - Mock GOV.UK One Login sign in (create or sign in, email, then password), shared with other journeys
     - Agent, company and individual account types decided by the sign-in email (agent by default)
+    - Mock Defra ID registration for sign-in emails containing "new" (new-individual@, new-company@, new@ for an agent), as an individual or a business; the registration answer decides the account type
     - Developer details or your address, review, check your answers, confirmation
     - Email and commitment certificate with the red line boundary on a map
     - Built from content files, so copy and flow can change without code
@@ -90,6 +93,19 @@ session:
   - detailsConfirmed
   - nrlReference
   - certificate
+  # Defra ID registration (sign-in emails containing "new")
+  - defraAccountType
+  - defraName
+  - defraTelephone
+  - defraPostcode
+  - defraAddress
+  - defraAddressManual
+  - defraMemorableWord
+  - defraTradingUk
+  - defraHasCrn
+  - defraCrn
+  - defraBusinessContact
+  - defraAccountCreated
 
 # Sample answers used when a page is opened with ?preview=1 and on the
 # screen wall at /tools/journeys/nrf-request-to-use-1. Never written to the session.
@@ -147,6 +163,25 @@ preview:
       county: ''
       postcode: LP1 7RF
     detailsConfirmed: 'Yes'
+    defraAccountType: individual
+    defraName:
+      firstName: John
+      lastName: Smith
+    defraTelephone:
+      telephoneNumber: '07900 123456'
+    defraPostcode:
+      postcode: SW1A 1AA
+    defraAddress: 1 Church Street, London, SW1A 1AA
+    defraMemorableWord:
+      memorableWord: sundance
+      hintQuestion: What is the name of my first school?
+    defraTradingUk: 'Yes'
+    defraHasCrn: 'Yes'
+    defraCrn:
+      companyRegistrationNumber: '09084488'
+    defraBusinessContact:
+      telephoneNumber: '07900 123456'
+      emailAddress: hello@acme.com
     nrlReference: NRL-912665
     certificate:
       issueDate: 1 September 2026
@@ -295,16 +330,181 @@ pages:
     store:
       Sign in with GOV.UK One Login: one-login
       Sign in with Government Gateway: government-gateway
+    next: one-login-start
+
+  # Mock GOV.UK One Login, shared with other journeys (content/shared/pages/).
+  # Create and Sign in both lead to the email page.
+  - id: one-login-start
+    shared: true
     next: one-login-email
 
-  # Mock GOV.UK One Login, shared with other journeys (content/shared/pages/)
   - id: one-login-email
     shared: true
     next: one-login-password
 
+  # A sign-in email containing "new" has no Defra account yet and registers
+  # one first (new-individual@, new-company@, new@ for an agent)
   - id: one-login-password
     shared: true
     handler: custom # decides the account type from the email, see hooks.js
+    next:
+      - when: { key: account.needsDefraAccount, truthy: true }
+        goto: defra-register
+      - when: { key: account.accountType, in: [company, individual] }
+        goto: your-address
+      - goto: developer-details
+
+  # Mock Defra ID: register a Defra account. The business or individual
+  # answer picks the screens and, on the check your answers page, the account
+  # type for the rest of the journey (see hooks.js). Every page needs the
+  # One Login sign in first.
+  - id: defra-register
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    next: defra-terms
+
+  - id: defra-terms
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    next: defra-what-we-need
+
+  - id: defra-what-we-need
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    next: defra-registration-type
+
+  - id: defra-registration-type
+    field: registration-type
+    sessionKey: defraAccountType
+    changeable: true
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    store:
+      Yes, and I have permission to create an account: business
+      No, as an individual for personal use: individual
+    next:
+      - when: { key: defraAccountType, equals: individual }
+        goto: defra-name
+      - goto: defra-trading-uk
+
+  # Individual: name, telephone, address (found or entered), memorable word
+  - id: defra-name
+    sessionKey: defraName
+    changeable: true
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: defra-telephone
+
+  - id: defra-telephone
+    sessionKey: defraTelephone
+    changeable: true
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: defra-postcode
+
+  # Find address: the postcode leads to a fixed list; the links on both pages
+  # go to the manual address form
+  - id: defra-postcode
+    sessionKey: defraPostcode
+    changeable: true
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    next: defra-select-address
+
+  - id: defra-select-address
+    field: address
+    sessionKey: defraAddress
+    changeable: true
+    handler: custom # forgets a manual address, see hooks.js
+    guard: { key: defraPostcode, isSet: true, redirect: defra-postcode }
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: defra-memorable-word
+
+  - id: defra-address-manual
+    sessionKey: defraAddressManual
+    changeable: true
+    handler: custom # joins the lines into the address, see hooks.js
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    back:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: defra-postcode
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: defra-memorable-word
+
+  - id: defra-memorable-word
+    sessionKey: defraMemorableWord
+    changeable: true
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: defra-check-answers
+
+  - id: defra-check-answers
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    handler: custom # completes the registration and sets the account type, see hooks.js
+    next:
+      - when: { key: account.accountType, in: [company, individual] }
+        goto: your-address
+      - goto: developer-details
+
+  # Business: registered to trade, company registration number (Companies
+  # House fixture), contact details. "No" answers carry on: not trading in
+  # the UK still asks for the number; no number skips to the contact details.
+  - id: defra-trading-uk
+    field: trading-uk
+    sessionKey: defraTradingUk
+    changeable: true
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: defra-has-crn
+
+  - id: defra-has-crn
+    field: has-crn
+    sessionKey: defraHasCrn
+    changeable: true
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    next:
+      - when: { key: defraHasCrn, equals: 'No' }
+        goto: defra-business-contact
+      - goto: defra-crn
+
+  - id: defra-crn
+    sessionKey: defraCrn
+    changeable: true
+    guard: { key: defraHasCrn, equals: 'Yes', redirect: defra-has-crn }
+    next: defra-confirm-business
+
+  - id: defra-confirm-business
+    guard: { key: defraCrn, isSet: true, redirect: defra-crn }
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: defra-business-contact
+
+  - id: defra-business-contact
+    sessionKey: defraBusinessContact
+    changeable: true
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: defra-business-check-answers
+
+  - id: defra-business-check-answers
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    handler: custom # completes the registration and sets the account type, see hooks.js
+    preview:
+      account:
+        accountType: agent
+        fullName: John Smith
+        email: new@example.com
     next:
       - when: { key: account.accountType, in: [company, individual] }
         goto: your-address

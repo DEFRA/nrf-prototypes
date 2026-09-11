@@ -1,7 +1,7 @@
 {% extends "journey-engine/_page.html" %}
 
 {% block pageBody %}
-<h1 class="govuk-heading-l">{{ content.heading }}</h1>
+<h1 class="govuk-heading-l">{% include "journey-engine/_caption.html" %}{{ content.heading }}</h1>
 
 {# `- heading:` entries in rows: split the list into titled groups #}
 {% for group in content.rowGroups %}

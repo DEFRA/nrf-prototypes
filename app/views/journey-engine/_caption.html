@@ -1,0 +1,6 @@
+{#
+  Grey caption above a page heading (`caption:` in the page's frontmatter),
+  "Register Defra account" say. Include inside the h1 or legend so screen
+  readers announce it with the heading.
+#}
+{% if content.caption %}<span class="govuk-caption-l">{{ content.caption }}</span> {% endif %}

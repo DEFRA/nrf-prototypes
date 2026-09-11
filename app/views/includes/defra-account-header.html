@@ -1,0 +1,24 @@
+{#
+  Mock Defra ID chrome for the business registration pages: "Your Defra
+  account" on the service navigation bar with the signed-in user's name,
+  Manage account and Sign out. Only Sign out goes anywhere in the prototype.
+#}
+{{ govukHeader({
+  homepageUrl: "https://www.gov.uk/",
+  classes: "app-header",
+  containerClasses: "govuk-width-container"
+}) }}
+{{ govukServiceNavigation({
+  serviceName: "Your Defra account",
+  serviceUrl: "#",
+  navigation: [
+    { text: account.fullName if account and account.fullName else "Your name", href: "#" },
+    { text: "Manage account", href: "#" },
+    {
+      text: "Sign out",
+      href: routes.SIGN_OUT if routes and routes.SIGN_OUT else "/",
+      classes: "app-service-navigation__sign-out"
+    }
+  ],
+  classes: "app-defra-account-navigation"
+}) }}

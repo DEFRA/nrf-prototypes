@@ -150,6 +150,32 @@ function withReturn(url, returnTo, journey) {
   return `${url}${url.includes('?') ? '&' : '?'}nav=${returnPath}`
 }
 
+/**
+ * A change detour (reached from a summary page with ?change=true&nav=...)
+ * that moves on to another page of this journey keeps its way back, so the
+ * detour can chain across several pages before returning. Summary pages and
+ * pages that end the flow are left alone.
+ */
+function withChangeDetour(url, target, ctx) {
+  const { journey } = ctx
+  const continuesFlow = target && target.next && target.next.length > 0
+  if (
+    !url ||
+    !target ||
+    !ctx.navFromSummary ||
+    journey.summaryPages.includes(target.id) ||
+    !continuesFlow
+  ) {
+    return url
+  }
+  const params = []
+  if (ctx.isChange) {
+    params.push('change=true')
+  }
+  params.push(`nav=${ctx.navFromSummary}`)
+  return `${url}${url.includes('?') ? '&' : '?'}${params.join('&')}`
+}
+
 function storedValueFor(page, optionValue) {
   if (
     page.store &&
@@ -272,7 +298,10 @@ function renderContent(page, ctx) {
     title: plain(c.title),
     heading: plain(c.heading),
     headingInBody: c.headingInBody,
+    caption: c.caption ? plain(c.caption) : undefined,
     hint: c.hint ? plain(c.hint) : undefined,
+    label: c.label ? plain(c.label) : undefined,
+    placeholder: c.placeholder ? plain(c.placeholder) : undefined,
     html: renderer.render(c.body, ctx),
     button: c.button,
     inputType: c.inputType,
@@ -303,12 +332,21 @@ function renderContent(page, ctx) {
     // A link action may leave for another journey (`goto: /other/page`)
     // and carry the way back (`return: <summary page>`); `$summary` works
     // here too, so a Cancel link returns to whichever summary page the
-    // user came from
+    // user came from. A link to a page of this journey keeps a change
+    // detour going ("Enter the address manually" from the postcode page).
     actions: (c.actions || []).map((action) => ({
       text: plain(action.text),
       kind: action.kind || 'submit',
       href: action.goto
-        ? withReturn(toPath(action.goto, journey, ctx), action.return, journey)
+        ? withReturn(
+            withChangeDetour(
+              toPath(action.goto, journey, ctx),
+              journey.byId.get(action.goto),
+              ctx
+            ),
+            action.return,
+            journey
+          )
         : undefined,
       hidden: action.hidden
     })),
@@ -525,21 +563,7 @@ async function handlePost(req, res, journey, page, hooks) {
       ? ctx.navFromSummary || journey.summaryPage
       : rule.goto
   let url = toPath(gotoId, journey) || page.path
-  const target = journey.byId.get(gotoId)
-  const continuesFlow = target && target.next && target.next.length > 0
-  if (
-    target &&
-    ctx.navFromSummary &&
-    !journey.summaryPages.includes(target.id) &&
-    continuesFlow
-  ) {
-    const params = []
-    if (ctx.isChange) {
-      params.push('change=true')
-    }
-    params.push(`nav=${ctx.navFromSummary}`)
-    url += `?${params.join('&')}`
-  }
+  url = withChangeDetour(url, journey.byId.get(gotoId), ctx)
   // A rule leaving for another journey may carry the way back
   url = withReturn(url, rule.return, journey)
   saveAndRedirect(req, res, url)

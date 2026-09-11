@@ -39,6 +39,9 @@ async function signIn(page, email) {
   await expect(page).toHaveURL(`${base}/sign-in-method`)
   await page.getByLabel(/GOV.UK One Login/).check()
   await page.getByRole('button', { name: 'Continue' }).click()
+  await expect(page).toHaveURL(`${base}/one-login-start`)
+
+  await page.getByRole('button', { name: 'Sign in' }).click()
   await expect(page).toHaveURL(`${base}/one-login-email`)
 
   await page.getByLabel(/email address/).fill(email)
@@ -228,6 +231,14 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
   })
 
   test('the One Login pages look like One Login', async ({ page }) => {
+    await page.goto(`${base}/one-login-start`)
+    await expect(page.locator('.govuk-service-navigation')).toHaveCount(0)
+    await expect(
+      page.getByRole('button', { name: 'Create your GOV.UK One Login' })
+    ).toHaveCount(1)
+    await expect(page.getByRole('button', { name: 'Sign in' })).toHaveClass(
+      /govuk-button--secondary/
+    )
     await page.goto(`${base}/one-login-email`)
     await expect(page.locator('.govuk-service-navigation')).toHaveCount(0)
     await expect(page.locator('.govuk-phase-banner .govuk-tag')).toHaveText(
@@ -238,6 +249,201 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
       page.getByRole('link', { name: 'Accessibility statement' })
     ).toHaveCount(1)
     await expect(page).toHaveTitle(/GOV.UK One Login$/)
+  })
+})
+
+test.describe('nrf-request-to-use-1 Defra ID registration', () => {
+  // Sign-in emails containing "new" register a Defra account first; the
+  // business or individual answer then decides the account type
+  async function reachSignIn(page) {
+    await retrieveQuote(page)
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await page.getByLabel(/Yes, accept/).check()
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/variation`)
+    await page.getByLabel('No', { exact: true }).check()
+    await page.getByRole('button', { name: 'Continue' }).click()
+  }
+
+  async function registerStart(page, email) {
+    await reachSignIn(page)
+    await signIn(page, email)
+    await expect(page).toHaveURL(`${base}/defra-register`)
+    // Defra ID chrome: Sign out bar, no phase banner, Defra footer
+    await expect(page.locator('.govuk-phase-banner')).toHaveCount(0)
+    await expect(
+      page.locator('.govuk-service-navigation').getByRole('link', {
+        name: 'Sign out'
+      })
+    ).toHaveCount(1)
+    await expect(page.getByRole('link', { name: 'Help' })).toHaveCount(1)
+    await expect(page).toHaveTitle(/Defra account - GOV.UK$/)
+
+    await page
+      .getByRole('button', { name: 'Continue Registering for a Defra Account' })
+      .click()
+    await expect(page).toHaveURL(`${base}/defra-terms`)
+    await page.getByRole('button', { name: 'Accept and Continue' }).click()
+    await expect(page).toHaveURL(`${base}/defra-what-we-need`)
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/defra-registration-type`)
+    await expect(page.locator('.govuk-caption-l')).toContainText(
+      'Register Defra account'
+    )
+  }
+
+  test('an individual registers, finds their address and continues', async ({
+    page
+  }) => {
+    await registerStart(page, 'new-individual@example.com')
+    await page.getByLabel(/No, as an individual/).check()
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/defra-name`)
+
+    await page.getByLabel('First name').fill('John')
+    await page.getByLabel('Last name').fill('Smith')
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/defra-telephone`)
+    await page.getByLabel('Telephone number').fill('07387 202019')
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/defra-postcode`)
+
+    await page.getByLabel('Postcode').fill('SK11 8BD')
+    await page.getByRole('button', { name: 'Find address' }).click()
+    await expect(page).toHaveURL(`${base}/defra-select-address`)
+    await expect(page.locator('main')).toContainText('SK11 8BD')
+    // Nothing selected is an error
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page.locator('.govuk-error-summary')).toContainText(
+      'Select your address'
+    )
+    await page.getByLabel('Select your address').selectOption({
+      label: '84 Hobson Street, Macclesfield, Cheshire, SK11 8BD'
+    })
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/defra-memorable-word`)
+
+    await page.getByLabel('Memorable word').fill('sundance')
+    await page.getByLabel('Hint question').fill('First school?')
+    await expect(page.locator('.govuk-character-count__status')).toContainText(
+      'characters remaining'
+    )
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/defra-check-answers`)
+    const summary = page.locator('.govuk-summary-list')
+    await expect(summary.first()).toContainText('Individual')
+    await expect(summary.last()).toContainText('John Smith')
+    await expect(summary.last()).toContainText('84 Hobson Street')
+    await expect(summary.last()).toContainText('sundance')
+
+    // Changing the address by hand comes back here
+    await page.getByRole('link', { name: /Change.*address/ }).click()
+    await expect(page).toHaveURL(/defra-postcode\?change=true/)
+    await page.getByRole('link', { name: 'Enter the address manually' }).click()
+    await expect(page).toHaveURL(/defra-address-manual/)
+    await page.getByLabel('Address line 1').fill('1 Manual Street')
+    await page.getByLabel('Town or city').fill('Macclesfield')
+    await page.getByLabel('Postcode').fill('SK11 8BD')
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/defra-check-answers`)
+    await expect(summary.last()).toContainText('1 Manual Street, Macclesfield')
+
+    await page
+      .getByRole('button', { name: 'Confirm and complete registration' })
+      .click()
+    await expect(page).toHaveURL(`${base}/your-address`)
+    await expect(page.locator('main')).not.toContainText('company address')
+    await page.getByLabel('Address line 1').fill('53 Business Lane')
+    await page.getByLabel('Town or city').fill('Business')
+    await page.getByLabel('Postcode').fill('LP1 7RF')
+    await page.getByRole('button', { name: 'Confirm' }).click()
+    await expect(page).toHaveURL(`${base}/review-your-details`)
+    await expect(page.locator('.govuk-summary-list')).toContainText(
+      'John Smith'
+    )
+  })
+
+  test('a business registers and becomes a company when the email says so', async ({
+    page
+  }) => {
+    await registerStart(page, 'new-company@example.com')
+    await page.getByLabel(/Yes, and I have permission/).check()
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/defra-trading-uk`)
+    // The business pages wear the "Your Defra account" bar
+    await expect(
+      page.locator('.govuk-service-navigation__service-name')
+    ).toContainText('Your Defra account')
+    await expect(
+      page.getByRole('link', { name: 'Manage account' })
+    ).toHaveCount(1)
+    await expect(page.locator('.govuk-caption-l')).toContainText(
+      'Register new Defra account'
+    )
+
+    await page.getByLabel('Yes', { exact: true }).check()
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/defra-has-crn`)
+    await page.getByLabel('Yes', { exact: true }).check()
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/defra-crn`)
+    await page.getByLabel('Company registration number').fill('09084488')
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/defra-confirm-business`)
+    await expect(page.locator('.govuk-inset-text')).toContainText('ACME LTD')
+    await page.getByRole('button', { name: 'Confirm and continue' }).click()
+    await expect(page).toHaveURL(`${base}/defra-business-contact`)
+    await page.getByLabel('Telephone number').fill('07387 202019')
+    await page.getByLabel('Email address').fill('hello@acme.com')
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/defra-business-check-answers`)
+    await expect(page.locator('main')).toContainText('09084488')
+    await expect(page.locator('main')).toContainText('hello@acme.com')
+
+    await page.getByRole('button', { name: 'Accept and continue' }).click()
+    await expect(page).toHaveURL(`${base}/your-address`)
+    await expect(page.locator('main')).toContainText('company address')
+  })
+
+  test('a business with no registration number is an agent by default', async ({
+    page
+  }) => {
+    await registerStart(page, 'new@example.com')
+    await page.getByLabel(/Yes, and I have permission/).check()
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await page.getByLabel('No', { exact: true }).check()
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/defra-has-crn`)
+    await page.getByLabel('No', { exact: true }).check()
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/defra-business-contact`)
+    await page.getByLabel('Telephone number').fill('07387 202019')
+    await page.getByLabel('Email address').fill('hello@acme.com')
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/defra-business-check-answers`)
+    await expect(page.locator('main')).toContainText('Not provided')
+    await page.getByRole('button', { name: 'Accept and continue' }).click()
+    await expect(page).toHaveURL(`${base}/developer-details`)
+    await expect(page.locator('.app-organisation-bar')).toHaveCount(1)
+  })
+
+  test('signing out from a Defra page forgets the registration', async ({
+    page
+  }) => {
+    await registerStart(page, 'new@example.com')
+    await page
+      .locator('.govuk-service-navigation')
+      .getByRole('link', { name: 'Sign out' })
+      .click()
+    await expect(page).toHaveURL(`${base}/start`)
+    await page.goto(`${base}/defra-name`)
+    await expect(page).toHaveURL(`${base}/sign-in-method`)
+  })
+
+  test('other emails skip registration', async ({ page }) => {
+    await reachSignIn(page)
+    await signIn(page, 'individual@example.com')
+    await expect(page).toHaveURL(`${base}/your-address`)
   })
 })
 

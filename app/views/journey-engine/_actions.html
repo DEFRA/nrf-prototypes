@@ -1,6 +1,6 @@
 {#
 Renders `actions` from a page's frontmatter inside a form posting to the
-page. Kinds: submit (default), warning, start, link, destructive.
+page. Kinds: submit (default), secondary, warning, start, link, destructive.
 #}
 {% if content.actions | length %}
 <form action="{{ page.path }}" method="post" novalidate>
@@ -13,6 +13,8 @@ page. Kinds: submit (default), warning, start, link, destructive.
         <a class="govuk-link govuk-link--destructive" href="{{ action.href }}">{{ action.text }}{% if action.hidden %}<span class="govuk-visually-hidden"> {{ action.hidden }}</span>{% endif %}</a>
       {% elif action.kind == 'warning' %}
         {{ govukButton({ text: action.text, classes: "govuk-button--warning" }) }}
+      {% elif action.kind == 'secondary' %}
+        {{ govukButton({ text: action.text, classes: "govuk-button--secondary" }) }}
       {% elif action.kind == 'start' %}
         {{ govukButton({ text: action.text, isStartButton: true }) }}
       {% else %}

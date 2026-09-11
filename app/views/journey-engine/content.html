@@ -2,7 +2,7 @@
 
 {% block pageBody %}
 {% include "journey-engine/_error-summary.html" %}
-{% if not content.headingInBody %}<h1 class="govuk-heading-l">{{ content.heading }}</h1>{% endif %}
+{% if not content.headingInBody %}<h1 class="govuk-heading-l">{% include "journey-engine/_caption.html" %}{{ content.heading }}</h1>{% endif %}
 {{ content.html | safe }}
 {% include "journey-engine/_actions.html" %}
 {% endblock %}
