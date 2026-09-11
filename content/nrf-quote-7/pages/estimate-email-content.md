@@ -13,7 +13,7 @@ title: Email sent from the Nature Restoration Fund service
 
 ## NRL reference: {{ nrfReference }}
 
-Thank you for submitting details of the relevant development on [Get a quote for the nature restoration levy](#).
+Thank you for submitting details of the relevant development on [Get a quote for the nature restoration levy](start).
 
 This is an indicative nature restoration levy quote, based on the details you provided. For the purposes of section 72 of the Planning and Infrastructure Act 2025, this quote does not commit you to pay the nature restoration levy and does not disapply any relevant environmental obligations. A local planning authority must not accept this quote as part of any planning and decision-making processes.
 
@@ -47,7 +47,7 @@ You do not need to pay anything now, this service is designed to help you plan h
 
 Keep this email for your records.
 
-When you are ready to start the planning and development process, you can [request to use the nature restoration levy](#). Once your request is accepted, you will receive a commitment certificate. You can submit this alongside your planning application.
+When you are ready to start the planning and development process, you can [request to use the nature restoration levy](/nrf-request-to-use-1/have-nrl-reference). Once your request is accepted, you will receive a commitment certificate. You can submit this alongside your planning application.
 
 ## How your nature restoration levy was calculated
 
