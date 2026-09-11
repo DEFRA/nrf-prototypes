@@ -5,11 +5,24 @@
   {% include "journey-engine/_change-inputs.html" %}
   {% include "journey-engine/_error-summary.html" %}
 
+  {#
+    With `bodyFirst` the body copy comes between the heading and the options:
+    the heading becomes a plain h1 and the fieldset keeps the question as a
+    visually hidden legend, so screen readers still hear it with the options.
+  #}
+  {% if content.bodyFirst %}
+    <h1 class="govuk-heading-l">{% include "journey-engine/_caption.html" %}{{ content.heading }}</h1>
+    {{ content.html | safe }}
+  {% endif %}
+
   {{ govukRadios({
     name: page.field,
     idPrefix: page.field,
     fieldset: {
       legend: {
+        text: content.heading,
+        classes: "govuk-visually-hidden"
+      } if content.bodyFirst else {
         html: ('<span class="govuk-caption-l">' + (content.caption | escape) + '</span> ' if content.caption else '') + (content.heading | escape),
         isPageHeading: true,
         classes: "govuk-fieldset__legend--l"
@@ -20,7 +33,9 @@
     errorMessage: { text: error } if error
   }) }}
 
-  {{ content.html | safe }}
+  {% if not content.bodyFirst %}
+    {{ content.html | safe }}
+  {% endif %}
 
   {% include "journey-engine/_question-actions.html" %}
 </form>

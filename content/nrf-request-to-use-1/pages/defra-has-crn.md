@@ -1,5 +1,6 @@
 ---
 type: radios
+bodyFirst: true
 layout: defra-account
 caption: Register new Defra account
 options:

@@ -372,6 +372,9 @@ function buildPage(entry, journey, problems) {
       headingInBody: heading === null && Boolean(bodyHeading),
       // Grey text above the heading ("Register Defra account")
       caption: frontmatter.caption,
+      // Radios: body copy sits between the heading and the options rather
+      // than after them (the heading leaves the fieldset legend)
+      bodyFirst: Boolean(frontmatter.bodyFirst),
       hint: frontmatter.hint,
       // The label and placeholder of a `type: select` page's dropdown (the
       // heading is an h1)

@@ -112,7 +112,7 @@ Write the answer's name in double curly braces: `{{ estimateEmail }}`. The names
 | --------------- | ---------------------------------------------------------------------------------------------------------------- |
 | `start`         | `title`                                                                                                          |
 | `content`       | `title`, `actions`                                                                                               |
-| `radios`        | `hint`, `options` (each with optional `hint`), `errors`, `button`                                                |
+| `radios`        | `hint`, `options` (each with optional `hint`), `errors`, `button`, `bodyFirst` (body copy above the options)     |
 | `checkboxes`    | as radios                                                                                                        |
 | `input`         | `hint`, `errors`, `button`, `width`                                                                              |
 | `number`        | as input                                                                                                         |

@@ -136,7 +136,7 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
 
     await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page).toHaveURL(`${base}/accept-levy`)
-    await expect(page.locator('.govuk-hint')).toContainText('£25,000')
+    await expect(page.locator('main')).toContainText('£25,000')
     await page.getByLabel(/Yes, accept/).check()
     await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page).toHaveURL(`${base}/variation`)
@@ -517,7 +517,7 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
     await expect(page.locator('.govuk-summary-list')).toContainText('100')
     await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page).toHaveURL(`${base}/accept-levy`)
-    await expect(page.locator('.govuk-hint')).toContainText('£25,000')
+    await expect(page.locator('main')).toContainText('£25,000')
     await expect(page.getByLabel(/No, delete/)).not.toBeChecked()
   })
 
