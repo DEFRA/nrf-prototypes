@@ -4,6 +4,7 @@ type: content
 
 # Not enough capacity remaining
 
-This Environmental Delivery Plan (EDP) in this area does not have enough capacity remaining for this number of houses.
+This Environmental Delivery Plan (EDP) in this area does not have enough capacity remaining for this number of houses. [Learn about capacity (opens in new tab)](*)
 
-You can [change the number of housing units](/nrf-quote-7/units?change=true&nav=/nrf-request-to-use-1/review-quote-details) or [meet your environmental obligations in other ways](#).
+Please use the existing Habitat Regulations to meet your environmental obligations.
+[Find out about Habitat Regulations (opens in new tab)](https://www.gov.uk/guidance/habitats-regulations-assessments-protecting-a-european-site)
