@@ -623,8 +623,12 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
     await expect(page).toHaveURL(review)
     await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page).toHaveURL(`${base}/not-enough-capacity`)
-    await page.getByRole('link', { name: /change the number/ }).click()
-    await expect(page).toHaveURL(`${quote}/units?change=true&nav=${review}`)
+    await expect(
+      page.getByRole('link', { name: /Habitat Regulations/ })
+    ).toHaveAttribute(
+      'href',
+      'https://www.gov.uk/guidance/habitats-regulations-assessments-protecting-a-european-site'
+    )
   })
 
   test('no reference sends the user to get a quote', async ({ page }) => {
