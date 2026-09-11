@@ -1,0 +1,19 @@
+{#
+  Mock Defra ID chrome for the "register a Defra account" pages: the bare
+  crown header with a Sign out link on the service navigation bar underneath
+  and no service name, as Defra ID shows before an account exists. The hook
+  that signs out registers routes.SIGN_OUT.
+#}
+{{ govukHeader({
+  homepageUrl: "https://www.gov.uk/",
+  classes: "app-header",
+  containerClasses: "govuk-width-container"
+}) }}
+{{ govukServiceNavigation({
+  navigation: [{
+    text: "Sign out",
+    href: routes.SIGN_OUT if routes and routes.SIGN_OUT else "/",
+    classes: "app-service-navigation__sign-out"
+  }],
+  classes: "app-service-navigation--signed-in app-defra-id-navigation"
+}) }}

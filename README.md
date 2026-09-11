@@ -171,6 +171,55 @@ The conversion script processes GeoJSON files from `app/assets/map-layers/` and 
 - EDP overlays are served at `/impact-assessor-map/tiles/{layer}/{z}/{x}/{y}.mvt`, mirroring production's tile service. They are sliced on demand (no tippecanoe needed) from `app/lib/map/edp-data.js`, which dissolves the nutrient catchments into whole EDP outlines and holds the excluded areas. `app/assets/map-layers/edp_excluded_areas.geojson` contains the River Wensum SAC, The Broads SAC and Broadland Ramsar boundaries from [Natural England Open Data](https://naturalengland-defra.opendata.arcgis.com/) (Open Government Licence v3.0). Set `IMPACT_ASSESSOR_BASE_URL` to proxy the real service instead.
 - The client code lives in `app/assets/javascripts/interactive-map/` and mirrors the production frontend's `src/client/javascripts/map/` so the two can be diffed.
 
+## Testing with the prototype
+
+The content-driven journeys (`nrf-quote-7` and `nrf-request-to-use-1`) have no hidden switches. What a participant types decides the path they take, so a facilitator can steer a session with the email address or the numbers they hand over. Nothing is stored between sessions and no password is ever checked.
+
+### Sign in as different kinds of user
+
+Signing in to "Request to use the nature restoration levy" goes through a mock GOV.UK One Login: "Create your GOV.UK One Login" and "Sign in" both lead to the email page, and any password is accepted (the "Sign in with Government Gateway" option goes to the same mock for now). The part of the email address before the `@` decides who the participant is:
+
+| Email contains                      | Account    | What they see after signing in                                                       |
+| ----------------------------------- | ---------- | ------------------------------------------------------------------------------------ |
+| `company` (e.g. `company@test.com`) | Company    | "What is your address?", then review your details                                    |
+| `individual`                        | Individual | "What is your address?", then review your details                                    |
+| anything else (e.g. `agent@…`)      | Agent      | "What are the developer details?", with the organisation bar and Change organisation |
+
+Case does not matter, and the domain is ignored. Sign out (in the header) forgets the account so another email can be tried in the same browser.
+
+#### Registering a Defra account first
+
+An email whose local part contains `new` has no Defra account yet, so after the One Login password the participant is taken through the Defra ID "register a Defra account" screens before the journey continues:
+
+| Email                  | Registration screens                                          | Account afterwards |
+| ---------------------- | ------------------------------------------------------------- | ------------------ |
+| `new-individual@…`     | individual (name, telephone, address, memorable word)         | Individual         |
+| `new-company@…`        | business (trading in the UK, company number, contact details) | Company            |
+| `new@…`, `new-agent@…` | business                                                      | Agent              |
+
+The answer to "Are you registering as a business or organisation?" wins over the email: choosing "No, as an individual" always produces an individual, and choosing "Yes" produces a company only when the email contains `company`, otherwise an agent. Inside the registration:
+
+- any company registration number finds the same fixture business (ACME LTD), and "This is not the right business" goes back to the number
+- "No" to having a company registration number skips to the business telephone and email; "No" to being registered to trade in the UK carries on regardless
+- any postcode finds the same three addresses; "Enter the address manually" and "My address is not in this list" open a manual address form
+- Sign out during registration forgets everything entered so far
+
+### Quote references, units and amounts
+
+- A quote reference must look like `NRL-123456` (or `NRF-123456`). Any reference in that shape retrieves the fixture quote: full planning permission, 100 housing units, a red line boundary inside the Broads and Wensum EDP, and a levy of £25,000 (£250 per unit). A quote made in the quote journey earlier in the same browser session is used instead of the fixture.
+- Changing the number of units on "Review and amend your quote details" recalculates the levy at £250 per unit. More units than the quote had shows the "levy increased" page; more than 15,000 units shows "not enough capacity".
+- "No, delete my quote details" (on the accept levy pages or check your answers) uses the quote journey's delete pages and starts the quote afresh.
+- In the quote journey, a red line boundary that does not touch an EDP ends at "no EDP"; 15,001 to 19,999 units ends at the exclusion page and 20,000 or more at "no capacity".
+- "Is this a variation?" followed by "Yes" asks whether the original application was committed to the levy, and then for the original reference (same format).
+
+### Clicking through without filling anything in
+
+Use the "Turn errors off" link in the footer, next to Clear data, or add `?errors=false` to any page of a content-driven journey. Validation is then switched off for the rest of the browser session: every Continue works even with nothing entered or selected. Anything the participant does type is kept; a blank answer is filled in from the journey's sample answers, so later pages still show sensible details (the sample sign-in email is an agent's, so a blank email signs in as an agent). "Turn errors on" in the footer (or `?errors=true`) turns validation back on; Clear data resets it too.
+
+### Seeing any screen without walking the journey
+
+Add `?preview=1` to any page of a content-driven journey to render it with sample answers (`&error=1` shows its error state), or open `/tools/journeys/<journey id>` for the flow diagram and every screen side by side. The sample answers live under `preview` in `content/<journey id>/journey.yaml`; see `content/README.md` for how the journeys are written.
+
 ## Npm scripts
 
 All available Npm scripts can be seen in [package.json](./package.json)

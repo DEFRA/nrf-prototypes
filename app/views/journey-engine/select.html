@@ -1,0 +1,36 @@
+{#
+  `type: select`: a dropdown of `options` under an h1, with the body copy in
+  between (an address picker, say). `label:` names the dropdown and
+  `placeholder:` the first, unselectable entry ("3 addresses found").
+#}
+{% extends "journey-engine/_page.html" %}
+
+{% block pageBody %}
+<form action="{{ page.path }}" method="post" novalidate>
+  {% include "journey-engine/_change-inputs.html" %}
+  {% include "journey-engine/_error-summary.html" %}
+
+  <h1 class="govuk-heading-l">{% include "journey-engine/_caption.html" %}{{ content.heading }}</h1>
+  {{ content.html | safe }}
+
+  {% set selectItems = [{
+    text: content.placeholder or "Select an option",
+    value: "",
+    selected: true
+  }] %}
+  {% for item in content.items %}
+    {% set selectItems = (selectItems.push({ text: item.text, value: item.value, selected: item.checked }), selectItems) %}
+  {% endfor %}
+
+  {{ govukSelect({
+    id: page.field,
+    name: page.field,
+    label: { text: content.label or content.heading },
+    hint: { text: content.hint } if content.hint,
+    items: selectItems,
+    errorMessage: { text: error } if error
+  }) }}
+
+  {% include "journey-engine/_question-actions.html" %}
+</form>
+{% endblock %}

@@ -68,6 +68,49 @@ function previewData(journey, page, variantId) {
   return JSON.parse(JSON.stringify({ ...base, ...override, ...variantData }))
 }
 
+/**
+ * `?errors=false` on any page turns validation off for the rest of the
+ * session (the kit keeps every query parameter in session data, so the
+ * flag arrives here as `data.errors`); `?errors=true` turns it back on.
+ */
+function errorsOff(data) {
+  return String(data.errors).toLowerCase() === 'false'
+}
+
+/**
+ * With validation off, whatever was typed is kept and each blank answer is
+ * filled from the journey's sample data, so the pages that follow still
+ * have something to show and their guards still pass.
+ */
+function lenientValue(journey, page, body) {
+  const sample = previewData(journey, page)
+  const stored = page.sessionKey ? sample[page.sessionKey] : undefined
+  if (page.type === 'form') {
+    const value = {}
+    const saved = stored && typeof stored === 'object' ? stored : {}
+    for (const field of page.content.fields || []) {
+      const raw = String(body[field.name] || '').trim()
+      if (raw) {
+        value[field.key] = raw
+      } else if (saved[field.key] !== undefined) {
+        value[field.key] = saved[field.key]
+      }
+    }
+    return value
+  }
+  if (page.type === 'file-upload') {
+    return undefined
+  }
+  const raw = body[page.field]
+  const typed = []
+    .concat(raw === undefined ? [] : raw)
+    .filter((v) => v && v !== '_unchecked' && String(v).trim())
+  if (typed.length) {
+    return page.type === 'checkboxes' ? typed : String(typed[0]).trim()
+  }
+  return stored
+}
+
 function parseSize(value) {
   if (!value) {
     return 2 * 1024 * 1024
@@ -148,6 +191,32 @@ function withReturn(url, returnTo, journey) {
     return url
   }
   return `${url}${url.includes('?') ? '&' : '?'}nav=${returnPath}`
+}
+
+/**
+ * A change detour (reached from a summary page with ?change=true&nav=...)
+ * that moves on to another page of this journey keeps its way back, so the
+ * detour can chain across several pages before returning. Summary pages and
+ * pages that end the flow are left alone.
+ */
+function withChangeDetour(url, target, ctx) {
+  const { journey } = ctx
+  const continuesFlow = target && target.next && target.next.length > 0
+  if (
+    !url ||
+    !target ||
+    !ctx.navFromSummary ||
+    journey.summaryPages.includes(target.id) ||
+    !continuesFlow
+  ) {
+    return url
+  }
+  const params = []
+  if (ctx.isChange) {
+    params.push('change=true')
+  }
+  params.push(`nav=${ctx.navFromSummary}`)
+  return `${url}${url.includes('?') ? '&' : '?'}${params.join('&')}`
 }
 
 function storedValueFor(page, optionValue) {
@@ -272,7 +341,11 @@ function renderContent(page, ctx) {
     title: plain(c.title),
     heading: plain(c.heading),
     headingInBody: c.headingInBody,
+    caption: c.caption ? plain(c.caption) : undefined,
+    bodyFirst: c.bodyFirst,
     hint: c.hint ? plain(c.hint) : undefined,
+    label: c.label ? plain(c.label) : undefined,
+    placeholder: c.placeholder ? plain(c.placeholder) : undefined,
     html: renderer.render(c.body, ctx),
     button: c.button,
     inputType: c.inputType,
@@ -303,12 +376,21 @@ function renderContent(page, ctx) {
     // A link action may leave for another journey (`goto: /other/page`)
     // and carry the way back (`return: <summary page>`); `$summary` works
     // here too, so a Cancel link returns to whichever summary page the
-    // user came from
+    // user came from. A link to a page of this journey keeps a change
+    // detour going ("Enter the address manually" from the postcode page).
     actions: (c.actions || []).map((action) => ({
       text: plain(action.text),
       kind: action.kind || 'submit',
       href: action.goto
-        ? withReturn(toPath(action.goto, journey, ctx), action.return, journey)
+        ? withReturn(
+            withChangeDetour(
+              toPath(action.goto, journey, ctx),
+              journey.byId.get(action.goto),
+              ctx
+            ),
+            action.return,
+            journey
+          )
         : undefined,
       hidden: action.hidden
     })),
@@ -466,14 +548,17 @@ async function handlePost(req, res, journey, page, hooks) {
     result = validatePage(page, ctx.body, ctx.file, req.multerError)
   }
   if (!result.ok) {
-    return res.render(
-      page.template,
-      buildModel(ctx, {
-        error: result.error,
-        errors: result.errors,
-        values: result.values
-      })
-    )
+    if (!errorsOff(data)) {
+      return res.render(
+        page.template,
+        buildModel(ctx, {
+          error: result.error,
+          errors: result.errors,
+          values: result.values
+        })
+      )
+    }
+    result = { ok: true, value: lenientValue(journey, page, ctx.body) }
   }
 
   if (
@@ -525,21 +610,7 @@ async function handlePost(req, res, journey, page, hooks) {
       ? ctx.navFromSummary || journey.summaryPage
       : rule.goto
   let url = toPath(gotoId, journey) || page.path
-  const target = journey.byId.get(gotoId)
-  const continuesFlow = target && target.next && target.next.length > 0
-  if (
-    target &&
-    ctx.navFromSummary &&
-    !journey.summaryPages.includes(target.id) &&
-    continuesFlow
-  ) {
-    const params = []
-    if (ctx.isChange) {
-      params.push('change=true')
-    }
-    params.push(`nav=${ctx.navFromSummary}`)
-    url += `?${params.join('&')}`
-  }
+  url = withChangeDetour(url, journey.byId.get(gotoId), ctx)
   // A rule leaving for another journey may carry the way back
   url = withReturn(url, rule.return, journey)
   saveAndRedirect(req, res, url)

@@ -11,7 +11,7 @@
   {% include "journey-engine/_change-inputs.html" %}
   {% include "journey-engine/_error-summary.html" %}
 
-  <h1 class="govuk-heading-l">{{ content.heading }}</h1>
+  <h1 class="govuk-heading-l">{% include "journey-engine/_caption.html" %}{{ content.heading }}</h1>
   {% if content.hint %}<p class="govuk-body">{{ content.hint }}</p>{% endif %}
   {{ content.html | safe }}
 
@@ -22,16 +22,31 @@
       {% if item.field == field.name %}{% set fieldError = item.message %}{% endif %}
     {% endfor %}
     {% set fieldValue = values[field.name] if values else saved[field.key] %}
-    {{ govukInput({
-      id: field.name,
-      name: field.name,
-      classes: field.classes,
-      autocomplete: field.autocomplete,
-      label: { text: field.label + (" (optional)" if field.optional and not (" (optional)" in field.label) else "") },
-      hint: { text: field.hint } if field.hint,
-      value: fieldValue,
-      errorMessage: { text: fieldError } if fieldError
-    }) }}
+    {% set fieldLabel = field.label + (" (optional)" if field.optional and not (" (optional)" in field.label) else "") %}
+    {% if field.type == 'textarea' %}
+      {{ govukCharacterCount({
+        id: field.name,
+        name: field.name,
+        rows: field.rows or 3,
+        maxlength: field.maxLength,
+        label: { text: fieldLabel },
+        hint: { text: field.hint } if field.hint,
+        value: fieldValue,
+        errorMessage: { text: fieldError } if fieldError
+      }) }}
+    {% else %}
+      {{ govukInput({
+        id: field.name,
+        name: field.name,
+        type: field.type or "text",
+        classes: field.classes,
+        autocomplete: field.autocomplete,
+        label: { text: fieldLabel },
+        hint: { text: field.hint } if field.hint,
+        value: fieldValue,
+        errorMessage: { text: fieldError } if fieldError
+      }) }}
+    {% endif %}
   {% endfor %}
 
   {% include "journey-engine/_question-actions.html" %}

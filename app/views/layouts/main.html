@@ -5,6 +5,26 @@ https://prototype-kit.service.gov.uk/docs/how-to-use-layouts
 
 {% extends "govuk-prototype-kit/layouts/govuk-branded.njk" %}
 
+{#
+  The kit's footer links (Manage your prototype, Clear data) plus a switch
+  for validation: "Turn errors off" reloads the page with ?errors=false,
+  which the kit keeps in session data and the journey engine honours until
+  "Turn errors on" (?errors=true). See README.md, "Testing with the prototype".
+#}
+{% block footer %}
+  {% set errorsOff = data and (data.errors == 'false' or data.errors == false) %}
+  {% set errorsToggle = {
+    href: (currentPath or "/") + ("?errors=true" if errorsOff else "?errors=false"),
+    text: "Turn errors on" if errorsOff else "Turn errors off"
+  } %}
+  {{ govukFooter({
+    meta: {
+      items: (footerItems or []).concat([errorsToggle]),
+      visuallyHiddenTitle: "Footer links"
+    }
+  }) }}
+{% endblock %}
+
 {% block pageScripts %}
 <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
 {% endblock %}

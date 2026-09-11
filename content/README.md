@@ -112,24 +112,27 @@ Write the answer's name in double curly braces: `{{ estimateEmail }}`. The names
 | --------------- | ---------------------------------------------------------------------------------------------------------------- |
 | `start`         | `title`                                                                                                          |
 | `content`       | `title`, `actions`                                                                                               |
-| `radios`        | `hint`, `options` (each with optional `hint`), `errors`, `button`                                                |
+| `radios`        | `hint`, `options` (each with optional `hint`), `errors`, `button`, `bodyFirst` (body copy above the options)     |
 | `checkboxes`    | as radios                                                                                                        |
 | `input`         | `hint`, `errors`, `button`, `width`                                                                              |
 | `number`        | as input                                                                                                         |
 | `email`         | as input                                                                                                         |
 | `password`      | `hint`, `errors`, `button`; has a Show/Hide toggle, never stored                                                 |
 | `form`          | `hint`, `fields`, `button`, `actions` (see "Several fields")                                                     |
+| `select`        | `label`, `placeholder`, `options`, `errors`, `button`, `actions`; a dropdown under the heading and body copy     |
 | `file-upload`   | `hint`, `errors`, `button`                                                                                       |
 | `check-answers` | `rows`, `actions`                                                                                                |
 | `confirmation`  | `title`, `panel` (with `title` and `body`)                                                                       |
 | `document`      | `title`; a full-width document with no banner or back link                                                       |
 | `custom`        | a developer-built screen; `hint`, `errors` and `text:` (named strings the template renders) still come from here |
 
-Every page can also set `layout` to change its chrome: `default` (the prototype header and banner), `one-login` (the GOV.UK One Login look used by the shared sign-in pages) or `document` (bare crown header, full width, no banner or back link; `type: document` pages get this automatically).
+Every page can also set `layout` to change its chrome: `default` (the prototype header and banner), `one-login` (the GOV.UK One Login look used by the shared sign-in pages), `defra-id` (the Defra ID look: bare header with a Sign out bar and the Defra footer, used by the mock "register a Defra account" pages), `defra-account` (as `defra-id` with the "Your Defra account" bar showing the user's name, Manage account and Sign out) or `document` (bare crown header, full width, no banner or back link; `type: document` pages get this automatically).
+
+A `caption` ("Register Defra account", say) shows in grey above the heading of content, radios, form, select and check your answers pages.
 
 ### Several fields on one page
 
-`type: form` puts more than one text input on a page, an address for example. List the inputs under `fields:`; each has a `name` (kebab-case), a `label` and optionally `hint`, `optional: true`, `width` (a number of characters, or `two-thirds`, `one-half`...), `autocomplete` and its own `errors`. The answers are remembered together as one object under the page's `sessionKey` in `journey.yaml`, so `{{ developerDetails.postcode }}` shows one of them.
+`type: form` puts more than one text input on a page, an address for example. List the inputs under `fields:`; each has a `name` (kebab-case), a `label` and optionally `hint`, `optional: true`, `width` (a number of characters, or `two-thirds`, `one-half`...), `autocomplete`, `type` (`text` unless you say `tel`, `email` or `textarea`; a `textarea` with a `maxLength` shows how many characters are left) and its own `errors`. The answers are remembered together as one object under the page's `sessionKey` in `journey.yaml`, so `{{ developerDetails.postcode }}` shows one of them.
 
 ```markdown
 ---
@@ -205,11 +208,11 @@ actions:
     goto: delete-quote
 ```
 
-Kinds: `submit`, `warning` (red button), `link`, `destructive` (red link), `start`.
+Kinds: `submit`, `secondary` (grey button, submits the same form), `warning` (red button), `link`, `destructive` (red link), `start`.
 
 ## Pages shared by more than one journey
 
-The quote and request-to-use journeys both begin with the same start page and the same "What would you like to do?" question, and the mock GOV.UK One Login pages (`one-login-email`, `one-login-password`) are shared the same way so any journey can sign the user in. That copy lives once, in `content/shared/pages/`, and each journey lists the page with `shared: true`:
+The quote and request-to-use journeys both begin with the same start page and the same "What would you like to do?" question, and the mock GOV.UK One Login pages (`one-login-start`, `one-login-email`, `one-login-password`) are shared the same way so any journey can sign the user in. That copy lives once, in `content/shared/pages/`, and each journey lists the page with `shared: true`:
 
 ```yaml
 pages:
@@ -263,7 +266,7 @@ For this to work the borrowed page needs `changeable: true` and a `$navFromSumma
 - Changing where an answer leads (`journey.yaml → next`).
 - Changing what a page remembers (`journey.yaml → session`).
 - New kinds of block or component.
-- The map page's behaviour (`app/lib/nrf-quote-7/hooks.js`; the request-to-use journey borrows that page rather than having its own), the mock quote store and sign-in accounts (`app/lib/nrf-request-to-use-1/hooks.js`). Changes to hooks, or to `basePath` in `journey.yaml`, need `npm run dev` restarting.
+- The map page's behaviour (`app/lib/nrf-quote-7/hooks.js`; the request-to-use journey borrows that page rather than having its own), the mock quote store, sign-in accounts and Defra ID registration (`app/lib/nrf-request-to-use-1/hooks.js`; a sign-in email containing `new` registers a Defra account first). Changes to hooks, or to `basePath` in `journey.yaml`, need `npm run dev` restarting.
 
 ## Adding a new journey
 
@@ -303,12 +306,14 @@ pages:
 
 Condition operators: `equals`, `notEquals`, `in`, `notIn`, `gt`, `gte`, `lt`, `lte`, `between`, `truthy`, `falsy`, `isSet`. Combine with `all:`, `any:`, `not:`. Engine values: `$navFromSummary`, `$isChange`, `$preview`.
 
-Other page keys: `shared: true` (copy comes from `content/shared/pages/<id>.md`, see "Pages shared by more than one journey"), `back` (page id, absolute path, or a rule list), `guard` (condition plus `redirect`), `store` (map radio labels to stored values), `set` (write values on submit; also allowed on a rule), `clears` (list of keys, or `$session`), `handler: custom` (page has hooks), `template` (a hand-written view for `type: custom`), `layout` (`default`, `one-login` or `document`), `remember: false` (never write the answer to the session; pair it with a field name starting `_` so the kit's own auto-store skips it too, as the password page does), `accept` and `maxSize` for uploads, `min` and `max` for numbers.
+Other page keys: `shared: true` (copy comes from `content/shared/pages/<id>.md`, see "Pages shared by more than one journey"), `back` (page id, absolute path, or a rule list), `guard` (condition plus `redirect`), `store` (map radio labels to stored values), `set` (write values on submit; also allowed on a rule), `clears` (list of keys, or `$session`), `handler: custom` (page has hooks), `template` (a hand-written view for `type: custom`), `layout` (`default`, `one-login`, `defra-id`, `defra-account` or `document`), `remember: false` (never write the answer to the session; pair it with a field name starting `_` so the kit's own auto-store skips it too, as the password page does), `accept` and `maxSize` for uploads, `min` and `max` for numbers.
 
 A `next` rule or an action whose `goto` leaves for another journey can add `return: <summary page id>` so that journey's page comes back here (see "Borrowing a page from another journey"). `$summary` is allowed wherever a `goto` is: `next`, `back` and `actions`.
 
 Journey keys: `id`, `name`, `serviceName`, `start`, `summaryPage` or `summaryPages` (every page with Change links; a rule's `goto: $summary` returns to whichever one the user came from, which may be in another journey when the page is borrowed), `signedIn` (a condition; while it holds the header shows a Sign out link, pointing at the `SIGN_OUT` route a hook registers, and agents see the organisation they act for), `session`, `preview.data` (sample answers for `?preview=1` and the screen wall; a page can add its own `preview:` block with `data:` to override them, and `variants:` — a list of `{ id, label, data }` — to show other states of the same screen on the wall and in the JPG export, opened with `?preview=1&variant=<id>`), `homepage` (the homepage card: `family`, `version`, `status`, `title`, `description`, `changes`; see "Adding a new journey"). `serviceName` is used in every page `<title>` and, prefixed "PROTOTYPE - ", in the service navigation bar under the header (`app/views/includes/service-header.html`).
 
 Hooks (`app/lib/<journey>/hooks.js`) are per journey, so a shared page such as `one-login-password` only does something in the journeys that give it a hook. A `load(ctx)` hook runs before a page is built and may put data in the session (the request-to-use journey fills in the retrieved quote this way); `get(ctx, model)` runs after and can add to the render model.
+
+`?errors=false` on any page turns server-side validation off for the session (the kit keeps the flag in session data as `errors`); blank answers are then filled from `preview.data`, so keep the sample answers complete enough for every guard to pass. `?errors=true` turns validation back on.
 
 The definition is validated on load. A broken file fails loudly with every problem listed, both on `npm run dev` and at `/tools/journeys`.

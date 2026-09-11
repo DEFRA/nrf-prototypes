@@ -159,6 +159,7 @@ function validateFileUpload(page, body, file, multerError) {
 function validatePage(page, body = {}, file, multerError) {
   switch (page.type) {
     case 'radios':
+    case 'select':
       return validateRadios(page, body)
     case 'checkboxes':
       return validateCheckboxes(page, body)

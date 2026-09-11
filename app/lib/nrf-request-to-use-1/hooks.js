@@ -8,6 +8,9 @@
  *   - "levy increased" and the levy amount, recalculated when units change
  *   - a mock GOV.UK One Login: the sign-in email decides the account type
  *     (company@… company, individual@… individual, anything else an agent)
+ *   - a mock Defra ID registration for emails containing "new"
+ *     (new-individual@, new-company@, new@ for an agent): the business or
+ *     individual answer on the registration pages decides the account type
  *   - sign out, the NRL reference and certificate dates on submission
  *
  * The development details and the delete flow are the quote journey's own
@@ -93,16 +96,53 @@ function levyFor(units) {
   return formatMoney(Number(units) * LEVY_PER_UNIT)
 }
 
-/**
- * Which mock account an email address signs in to.
- */
-function accountFor(email) {
-  const local = String(email || '')
+// The business every company registration number finds (a fixture)
+const FIXTURE_BUSINESS = 'ACME LTD'
+
+function emailLocalPart(email) {
+  return String(email || '')
     .trim()
     .toLowerCase()
     .split('@')[0]
-  const type = ['company', 'individual'].find((t) => local.startsWith(t))
-  return { ...ACCOUNTS[type || 'agent'], email: String(email || '').trim() }
+}
+
+/**
+ * Which mock account an email address signs in to. An email containing
+ * "new" has no Defra account yet, so the journey registers one first.
+ */
+function accountFor(email) {
+  const local = emailLocalPart(email)
+  const type = ['company', 'individual'].find((t) => local.includes(t))
+  return {
+    ...ACCOUNTS[type || 'agent'],
+    email: String(email || '').trim(),
+    needsDefraAccount: local.includes('new')
+  }
+}
+
+/**
+ * The account once a Defra account is registered. The business or individual
+ * answer wins over the email: an individual is an individual; a business is a
+ * company when the email says so, otherwise an agent (the assumed path).
+ */
+function registeredAccount(data) {
+  const email = (data.account && data.account.email) || data.signInEmail
+  const business = data.defraAccountType === 'business'
+  const type = !business
+    ? 'individual'
+    : emailLocalPart(email).includes('company')
+      ? 'company'
+      : 'agent'
+  const name = data.defraName || {}
+  const fullName = [name.firstName, name.lastName].filter(Boolean).join(' ')
+  const account = { ...ACCOUNTS[type], email: String(email || '').trim() }
+  if (fullName) {
+    account.fullName = fullName
+  }
+  if (business) {
+    account.businessName = FIXTURE_BUSINESS
+  }
+  return account
 }
 
 /**
@@ -175,7 +215,23 @@ const reviewQuoteDetails = {
   }
 }
 
-const SIGN_IN_KEYS = ['account', 'signInEmail', 'signInMethod']
+const SIGN_IN_KEYS = [
+  'account',
+  'signInEmail',
+  'signInMethod',
+  'defraAccountType',
+  'defraName',
+  'defraTelephone',
+  'defraPostcode',
+  'defraAddress',
+  'defraAddressManual',
+  'defraMemorableWord',
+  'defraTradingUk',
+  'defraHasCrn',
+  'defraCrn',
+  'defraBusinessContact',
+  'defraAccountCreated'
+]
 
 const signInMethod = {
   routes(router, journey) {
@@ -201,6 +257,39 @@ const oneLoginPassword = {
   }
 }
 
+// Picking an address from the list forgets one entered by hand, and the other
+// way round: check your answers shows whichever the user gave last
+const defraSelectAddress = {
+  process(ctx) {
+    delete ctx.data.defraAddressManual
+  }
+}
+
+const defraAddressManual = {
+  process(ctx) {
+    const { data } = ctx
+    const address = data.defraAddressManual || {}
+    data.defraAddress = [
+      address.addressLine1,
+      address.addressLine2,
+      address.town,
+      address.county,
+      address.postcode
+    ]
+      .filter(Boolean)
+      .join(', ')
+  }
+}
+
+// Both Defra ID check your answers pages (individual and business)
+const completeRegistration = {
+  process(ctx) {
+    const { data } = ctx
+    data.account = registeredAccount(data)
+    data.defraAccountCreated = 'Yes'
+  }
+}
+
 const checkYourAnswers = {
   process(ctx) {
     const { data } = ctx
@@ -221,9 +310,15 @@ module.exports = {
   'review-quote-details': reviewQuoteDetails,
   'sign-in-method': signInMethod,
   'one-login-password': oneLoginPassword,
+  'defra-select-address': defraSelectAddress,
+  'defra-address-manual': defraAddressManual,
+  'defra-check-answers': completeRegistration,
+  'defra-business-check-answers': completeRegistration,
   'check-your-answers': checkYourAnswers,
   // For tests
   accountFor,
+  registeredAccount,
+  FIXTURE_BUSINESS,
   loadQuote,
   levyFor,
   FIXTURE_QUOTE,

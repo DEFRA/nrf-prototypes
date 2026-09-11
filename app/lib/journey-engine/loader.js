@@ -29,7 +29,7 @@ const TYPES = [
   'file-upload',
   'password',
   'form',
-  'file-upload',
+  'select',
   'check-answers',
   'confirmation',
   'document',
@@ -44,6 +44,7 @@ const QUESTION_TYPES = [
   'email',
   'password',
   'form',
+  'select',
   'file-upload'
 ]
 
@@ -57,6 +58,7 @@ const TEMPLATE_BY_TYPE = {
   email: 'journey-engine/input',
   password: 'journey-engine/password',
   form: 'journey-engine/form',
+  select: 'journey-engine/select',
   'file-upload': 'journey-engine/file-upload',
   'check-answers': 'journey-engine/check-answers',
   confirmation: 'journey-engine/confirmation',
@@ -64,9 +66,18 @@ const TEMPLATE_BY_TYPE = {
 }
 
 // How a page is dressed: the prototype header and phase banner (default), the
-// GOV.UK One Login look for the mock sign-in pages, or a full-width document
-// with a bare crown header and no banner or back link (certificates, letters)
-const LAYOUTS = ['default', 'one-login', 'document']
+// GOV.UK One Login look for the mock sign-in pages, the Defra ID look for the
+// mock "register a Defra account" pages (defra-id: a bare Sign out bar;
+// defra-account: the "Your Defra account" bar with the user's name), or a
+// full-width document with a bare crown header and no banner or back link
+// (certificates, letters)
+const LAYOUTS = [
+  'default',
+  'one-login',
+  'defra-id',
+  'defra-account',
+  'document'
+]
 
 // A `goto` of `$summary` returns to whichever summary page the user came from
 const { SUMMARY_TARGET } = require('./back-link')
@@ -160,10 +171,14 @@ function normaliseRules(raw, where, problems) {
 
 /**
  * Normalise the `fields:` list of a `type: form` page. Each field becomes
- * { name, key, label, hint, optional, autocomplete, classes, errors }; the
- * answers are stored together as one object under the page's sessionKey,
- * keyed by `key` (camelCase of the field name).
+ * { name, key, label, hint, optional, autocomplete, classes, type, maxLength,
+ * rows, errors }; the answers are stored together as one object under the
+ * page's sessionKey, keyed by `key` (camelCase of the field name). `type` is
+ * text by default; `tel` and `email` set the input type, `textarea` (with an
+ * optional `maxLength`, which adds a character count) gives a bigger box.
  */
+const FIELD_TYPES = ['text', 'tel', 'email', 'textarea']
+
 function buildFields(raw, type, where, problems) {
   if (type !== 'form') {
     return []
@@ -185,6 +200,12 @@ function buildFields(raw, type, where, problems) {
       problems.push(`${where}.fields[${i}]: duplicate name '${f.name}'`)
     }
     names.add(f.name)
+    const fieldType = f.type || 'text'
+    if (!FIELD_TYPES.includes(fieldType)) {
+      problems.push(
+        `${where}.fields[${i}]: unknown type '${fieldType}' (expected one of ${FIELD_TYPES.join(', ')})`
+      )
+    }
     let classes = ''
     if (typeof f.width === 'number') {
       classes = `govuk-input--width-${f.width}`
@@ -199,6 +220,9 @@ function buildFields(raw, type, where, problems) {
       optional: Boolean(f.optional),
       autocomplete: f.autocomplete,
       classes,
+      type: fieldType,
+      maxLength: f.maxLength,
+      rows: f.rows,
       errors: f.errors || {}
     }
   })
@@ -346,7 +370,16 @@ function buildPage(entry, journey, problems) {
       title: frontmatter.title || heading || bodyHeading || id,
       heading: heading || bodyHeading || frontmatter.title || id,
       headingInBody: heading === null && Boolean(bodyHeading),
+      // Grey text above the heading ("Register Defra account")
+      caption: frontmatter.caption,
+      // Radios: body copy sits between the heading and the options rather
+      // than after them (the heading leaves the fieldset legend)
+      bodyFirst: Boolean(frontmatter.bodyFirst),
       hint: frontmatter.hint,
+      // The label and placeholder of a `type: select` page's dropdown (the
+      // heading is an h1)
+      label: frontmatter.label,
+      placeholder: frontmatter.placeholder,
       options,
       errors,
       button: frontmatter.button || 'Continue',

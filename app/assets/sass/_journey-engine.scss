@@ -40,6 +40,17 @@
   justify-content: space-between;
 }
 
+// Mock Defra ID bars: Sign out alone on the right (defra-id), or "Your Defra
+// account" on the left with the user's links on the right (defra-account).
+// The nav wrapper grows to fill the bar and its list is a flex row from
+// tablet up, so the items are pushed to the end of the list.
+@include govuk-media-query($from: tablet) {
+  .app-defra-id-navigation .govuk-service-navigation__list,
+  .app-defra-account-navigation .govuk-service-navigation__list {
+    justify-content: flex-end;
+  }
+}
+
 // The `:::map` block: a bordered frame holding the SVG fallback until the
 // map plugin replaces it with a real basemap
 .app-boundary-map {
