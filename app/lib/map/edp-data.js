@@ -170,11 +170,15 @@ function load() {
     const catchments = readGeojson(CATCHMENTS_FILE)
     const excludedAreas = readGeojson(EXCLUDED_AREAS_FILE)
     const edps = buildEdps(catchments, excludedAreas)
-    const edpFeatures = edps.map((edp) => ({
-      type: 'Feature',
-      properties: { id: edp.id, label: edp.label, live: edp.live },
-      geometry: edp.geometry
-    }))
+    // The map draws live EDPs only, as production's impact assessor tiles do.
+    // The boundary check still sees every EDP, live or not (getEdps).
+    const edpFeatures = edps
+      .filter((edp) => edp.live)
+      .map((edp) => ({
+        type: 'Feature',
+        properties: { id: edp.id, label: edp.label, live: edp.live },
+        geometry: edp.geometry
+      }))
     cache = {
       edps,
       edpBoundaries: turf.featureCollection(edpFeatures),
@@ -192,7 +196,7 @@ function getEdps() {
   return load().edps
 }
 
-/** One feature per EDP (dissolved outline) - the map's edp_boundaries layer. */
+/** One feature per live EDP (dissolved outline) - the map's edp_boundaries layer. */
 function getEdpBoundaries() {
   return load().edpBoundaries
 }
