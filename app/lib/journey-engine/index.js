@@ -27,7 +27,7 @@ const {
   toFlowJson,
   toFlowGraph
 } = require('./flow')
-const { captureScreens, VIEWPORTS } = require('./screenshots')
+const { captureScreens, canExportScreens, VIEWPORTS } = require('./screenshots')
 const { createRenderer, interpolate } = require('./markdown')
 const { evaluate, firstMatch, describeCondition } = require('./expressions')
 
@@ -46,6 +46,7 @@ module.exports = {
   exportScreens,
   previewVariants,
   captureScreens,
+  canExportScreens,
   VIEWPORTS,
   toMermaid,
   toFlowJson,

@@ -29,6 +29,21 @@ function loadChromium() {
 }
 
 /**
+ * Whether the export can run here. Playwright is a dev dependency, so a
+ * production install (`npm ci --omit=dev`, as the Dockerfile does for CDP)
+ * has no Playwright and the screen wall hides the export instead of
+ * offering a button that can only fail.
+ */
+function canExportScreens() {
+  try {
+    require.resolve('@playwright/test')
+    return true
+  } catch (error) {
+    return false
+  }
+}
+
+/**
  * Capture every screen of a journey as a JPEG.
  *
  * @param {object} journey  loaded journey definition
@@ -77,4 +92,4 @@ async function captureScreens(journey, options = {}) {
   return results
 }
 
-module.exports = { captureScreens, VIEWPORTS }
+module.exports = { captureScreens, canExportScreens, VIEWPORTS }

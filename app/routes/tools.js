@@ -19,6 +19,7 @@ const {
   isQuestionType,
   previewVariants,
   captureScreens,
+  canExportScreens,
   VIEWPORTS
 } = require('../lib/journey-engine')
 
@@ -111,6 +112,8 @@ router.get('/tools/journeys/:journey', (req, res) => {
       pageCount: journey.pages.length
     },
     publicBaseUrl: PUBLIC_BASE_URL,
+    // Playwright is a dev dependency, so the export is local-only
+    canExportScreens: canExportScreens(),
     levels,
     edges: getEdges(journey),
     // Inlined in a <script> tag, so keep "</" out of the JSON

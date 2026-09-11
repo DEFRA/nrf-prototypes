@@ -108,6 +108,7 @@
     <span id="wall-scale-value">40%</span>
   </div>
 
+  {% if canExportScreens %}
   <div class="tools-controls tools-controls--export">
     <form method="get" action="/tools/journeys/{{ journey.id }}/screens.zip">
       {{ govukRadios({
@@ -128,6 +129,9 @@
       <span class="tools-legend tools-legend--inline">Captures each screen at the chosen width with the sample data, including error states, into a zip. Takes about 20 seconds.</span>
     </form>
   </div>
+  {% else %}
+  <p class="tools-legend">The JPG export runs locally only: it drives a headless browser, which the deployed prototype does not have. Run the prototype on your machine to export the screens.</p>
+  {% endif %}
 
   <div class="screen-wall" id="screen-wall">
     <div class="screen-wall__inner">
