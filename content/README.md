@@ -314,4 +314,6 @@ Journey keys: `id`, `name`, `serviceName`, `start`, `summaryPage` or `summaryPag
 
 Hooks (`app/lib/<journey>/hooks.js`) are per journey, so a shared page such as `one-login-password` only does something in the journeys that give it a hook. A `load(ctx)` hook runs before a page is built and may put data in the session (the request-to-use journey fills in the retrieved quote this way); `get(ctx, model)` runs after and can add to the render model.
 
+`?errors=false` on any page turns server-side validation off for the session (the kit keeps the flag in session data as `errors`); blank answers are then filled from `preview.data`, so keep the sample answers complete enough for every guard to pass. `?errors=true` turns validation back on.
+
 The definition is validated on load. A broken file fails loudly with every problem listed, both on `npm run dev` and at `/tools/journeys`.

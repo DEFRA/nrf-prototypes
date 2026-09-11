@@ -19,6 +19,13 @@ const mapTilesRoutes = require('./routes/map-tiles.js')
 const osBaseMapRoutes = require('./routes/os-base-map.js')
 const toolsRoutes = require('./routes/tools.js')
 
+// The footer's "Turn errors off/on" link reloads the current page with
+// ?errors=false or ?errors=true (see layouts/main.html)
+router.use((req, res, next) => {
+  res.locals.currentPath = req.path
+  next()
+})
+
 // Use non-journey routes
 router.use('/', tileserverProxyRoutes) // Add tileserver proxy first
 router.use('/', mapTilesRoutes) // Add generic map tiles endpoint

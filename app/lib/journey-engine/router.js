@@ -68,6 +68,49 @@ function previewData(journey, page, variantId) {
   return JSON.parse(JSON.stringify({ ...base, ...override, ...variantData }))
 }
 
+/**
+ * `?errors=false` on any page turns validation off for the rest of the
+ * session (the kit keeps every query parameter in session data, so the
+ * flag arrives here as `data.errors`); `?errors=true` turns it back on.
+ */
+function errorsOff(data) {
+  return String(data.errors).toLowerCase() === 'false'
+}
+
+/**
+ * With validation off, whatever was typed is kept and each blank answer is
+ * filled from the journey's sample data, so the pages that follow still
+ * have something to show and their guards still pass.
+ */
+function lenientValue(journey, page, body) {
+  const sample = previewData(journey, page)
+  const stored = page.sessionKey ? sample[page.sessionKey] : undefined
+  if (page.type === 'form') {
+    const value = {}
+    const saved = stored && typeof stored === 'object' ? stored : {}
+    for (const field of page.content.fields || []) {
+      const raw = String(body[field.name] || '').trim()
+      if (raw) {
+        value[field.key] = raw
+      } else if (saved[field.key] !== undefined) {
+        value[field.key] = saved[field.key]
+      }
+    }
+    return value
+  }
+  if (page.type === 'file-upload') {
+    return undefined
+  }
+  const raw = body[page.field]
+  const typed = []
+    .concat(raw === undefined ? [] : raw)
+    .filter((v) => v && v !== '_unchecked' && String(v).trim())
+  if (typed.length) {
+    return page.type === 'checkboxes' ? typed : String(typed[0]).trim()
+  }
+  return stored
+}
+
 function parseSize(value) {
   if (!value) {
     return 2 * 1024 * 1024
@@ -505,14 +548,17 @@ async function handlePost(req, res, journey, page, hooks) {
     result = validatePage(page, ctx.body, ctx.file, req.multerError)
   }
   if (!result.ok) {
-    return res.render(
-      page.template,
-      buildModel(ctx, {
-        error: result.error,
-        errors: result.errors,
-        values: result.values
-      })
-    )
+    if (!errorsOff(data)) {
+      return res.render(
+        page.template,
+        buildModel(ctx, {
+          error: result.error,
+          errors: result.errors,
+          values: result.values
+        })
+      )
+    }
+    result = { ok: true, value: lenientValue(journey, page, ctx.body) }
   }
 
   if (

@@ -447,6 +447,63 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
   })
 })
 
+test.describe('nrf-request-to-use-1 with errors switched off', () => {
+  test('?errors=false lets every page continue with nothing entered', async ({
+    page
+  }) => {
+    await page.goto(`${base}/have-nrl-reference`)
+    await page.getByRole('link', { name: 'Turn errors off' }).click()
+    await expect(page).toHaveURL(`${base}/have-nrl-reference?errors=false`)
+    await expect(
+      page.getByRole('link', { name: 'Turn errors on' })
+    ).toHaveCount(1)
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/quote-reference`)
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/email`)
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/retrieve-email`)
+    await page.getByRole('link', { name: 'Retrieve the quote details' }).click()
+    await expect(page).toHaveURL(`${base}/review-quote-details`)
+    // Blanks were filled from the sample answers
+    await expect(page.locator('.govuk-summary-list')).toContainText(
+      'developer@example.com'
+    )
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/accept-levy`)
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/variation`)
+    // The sample answers say it is a variation of a committed application
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/original-committed`)
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/original-reference`)
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/sign-in-method`)
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/one-login-start`)
+    await page.getByRole('button', { name: 'Sign in' }).click()
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/one-login-password`)
+    await page.getByRole('button', { name: 'Continue' }).click()
+    // The sample sign-in email is an agent's
+    await expect(page).toHaveURL(`${base}/developer-details`)
+    await page.getByRole('button', { name: 'Confirm' }).click()
+    await expect(page).toHaveURL(`${base}/review-developer-details`)
+    await expect(page.locator('.govuk-summary-list')).toContainText(
+      'Development Road'
+    )
+
+    // The footer link brings the errors back
+    await page.goto(`${base}/quote-reference`)
+    await page.getByRole('link', { name: 'Turn errors on' }).click()
+    await expect(page).toHaveURL(`${base}/quote-reference?errors=true`)
+    await page.getByLabel(/NRL reference/).fill('')
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page.locator('.govuk-error-summary')).toBeVisible()
+  })
+})
+
 test.describe('nrf-request-to-use-1 amending the quote', () => {
   // The development details are the quote journey's own pages, borrowed
   // with the way back in `nav` (see content/README.md)
