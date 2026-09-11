@@ -71,7 +71,6 @@ preview:
         - [-1.1544, 52.9518]
       intersections:
         nutrient: River Trent
-        gcn: null
       intersectingCatchment: River Trent
     estimateEmail: jane.smith@example.com
     nrfReference: NRL-123456

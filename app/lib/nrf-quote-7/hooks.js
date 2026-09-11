@@ -13,8 +13,6 @@
  * app/assets/javascripts/interactive-map/ stays diffable against production.
  */
 
-const path = require('path')
-const fs = require('fs')
 const turf = require('@turf/turf')
 const { message } = require('../journey-engine/validation')
 const edpData = require('../map/edp-data')
@@ -24,9 +22,7 @@ const edpData = require('../map/edp-data')
 // ============================================================================
 
 // Nutrient EDPs (dissolved catchments) and excluded areas come from the shared
-// app/lib/map/edp-data.js; the great crested newt EDP areas are loaded here.
-const MAP_LAYERS = path.join(__dirname, '../../assets/map-layers')
-const GCN_FILE = path.join(MAP_LAYERS, 'gcn_edp_all_regions.geojson')
+// app/lib/map/edp-data.js. Like production, only nutrient EDPs are checked.
 
 const MAX_BOUNDARY_POINTS = 10000
 const SQUARE_METRES_PER_HECTARE = 10000
@@ -35,11 +31,8 @@ const MILES_PER_KILOMETRE = 0.621371
 // Production shows four decimal places in the boundary information panel
 const METADATA_DECIMAL_PLACES = 4
 
-let gcnEdpData = null
-
 function loadEdpData() {
   try {
-    gcnEdpData = JSON.parse(fs.readFileSync(GCN_FILE, 'utf8'))
     edpData.getEdps()
   } catch (error) {
     console.error('Error loading EDP data:', error)
@@ -73,17 +66,16 @@ function openRing(coordinates) {
 /**
  * Which EDPs a boundary falls in. Like production, nutrient EDPs are whole
  * plans (one entry per EDP, not per catchment).
- * @returns {{ nutrient: string|null, gcn: string|null, intersections: Array, excludedAreas: Array }}
+ * @returns {{ nutrient: string|null, intersections: Array, excludedAreas: Array }}
  */
 function checkEDPIntersections(coordinates) {
   if (!coordinates || coordinates.length < 3) {
-    return { nutrient: null, gcn: null, intersections: [], excludedAreas: [] }
+    return { nutrient: null, intersections: [], excludedAreas: [] }
   }
   try {
     const boundaryPolygon = turf.polygon([closeRing(coordinates)])
     const intersections = []
     let nutrientIntersection = null
-    let gcnIntersection = null
 
     for (const edp of edpData.findIntersectingEdps(boundaryPolygon)) {
       intersections.push({
@@ -98,30 +90,14 @@ function checkEDPIntersections(coordinates) {
     }
     const excludedAreas = edpData.findIntersectingExcludedAreas(boundaryPolygon)
 
-    if (gcnEdpData && gcnEdpData.features) {
-      for (const feature of gcnEdpData.features) {
-        if (turf.booleanIntersects(boundaryPolygon, feature)) {
-          const name = feature.properties.NAME || 'GCN EDP Area'
-          intersections.push({
-            type: 'gcn',
-            name,
-            properties: feature.properties
-          })
-          if (!gcnIntersection) {
-            gcnIntersection = name
-          }
-        }
-      }
-    }
     return {
       nutrient: nutrientIntersection,
-      gcn: gcnIntersection,
       intersections,
       excludedAreas
     }
   } catch (error) {
     console.error('Error checking EDP intersections:', error)
-    return { nutrient: null, gcn: null, intersections: [], excludedAreas: [] }
+    return { nutrient: null, intersections: [], excludedAreas: [] }
   }
 }
 
@@ -397,7 +373,7 @@ function storeBoundary(data, geometry, boundaryGeojson) {
         .coordinates,
     coordinates,
     geometry,
-    intersections: { nutrient: results.nutrient, gcn: results.gcn },
+    intersections: { nutrient: results.nutrient },
     intersectingCatchment: results.nutrient,
     intersectingExcludedAreas: results.excludedAreas,
     boundaryGeojson: boundaryGeojson || null

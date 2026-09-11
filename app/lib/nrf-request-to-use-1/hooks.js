@@ -43,7 +43,7 @@ const FIXTURE_QUOTE = {
   redlineBoundaryPolygon: {
     center: [1.115, 52.565],
     coordinates: FIXTURE_RING,
-    intersections: { nutrient: EDP_NAME, gcn: null },
+    intersections: { nutrient: EDP_NAME },
     intersectingCatchment: EDP_NAME,
     intersectingExcludedAreas: []
   },
