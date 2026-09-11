@@ -11,6 +11,8 @@ ENV PORT=${PORT}
 COPY --chown=node:node package*.json ./
 RUN npm install
 COPY --chown=node:node ./app ./app
+# Content-driven journeys (content/<id>/journey.yaml + markdown) are read at runtime
+COPY --chown=node:node ./content ./content
 
 CMD [ "npm", "run", "dev" ]
 
@@ -30,6 +32,7 @@ ENV NODE_ENV=production
 
 COPY --from=development /home/node/package*.json ./
 COPY --from=development /home/node/app ./app/
+COPY --from=development /home/node/content ./content/
 
 # Copy MBTiles files - the COPY will fail if the source directory doesn't exist
 COPY --chown=node:node ./tileserver/data/mbtiles ./tileserver/data/mbtiles/
