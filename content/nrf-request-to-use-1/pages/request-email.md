@@ -87,7 +87,3 @@ Telephone: 00000000000\
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
 [Find out about call charges](https://www.gov.uk/call-charges)
-
-[View your application status](#)
-
-From Marine Management Organisation

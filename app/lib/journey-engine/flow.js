@@ -31,6 +31,22 @@ function isPageTarget(target, journey) {
   return Boolean(target) && !target.startsWith('/') && journey.byId.has(target)
 }
 
+/**
+ * The page id when `target` is an absolute path to a page of this journey
+ * (`/nrf-request-to-use-1/have-nrl-reference` seen from that journey),
+ * otherwise null.
+ */
+function ownPageId(target, journey) {
+  if (
+    !target ||
+    !journey.basePath ||
+    !target.startsWith(`${journey.basePath}/`)
+  ) {
+    return null
+  }
+  const id = target.slice(journey.basePath.length + 1)
+  return journey.byId.has(id) ? id : null
+}
 // An absolute path leaves this journey (usually for another journey's page)
 function isExternalTarget(target) {
   return Boolean(target) && target.startsWith('/')
@@ -372,10 +388,13 @@ function getEdges(journey) {
       }
     }
     for (const action of page.content.actions || []) {
-      if (isPageTarget(action.goto, journey)) {
+      // A shared page may link into this journey by absolute path (the
+      // Defra account guidance's button); that is a page here, not an exit
+      const ownPage = ownPageId(action.goto, journey)
+      if (isPageTarget(action.goto, journey) || ownPage) {
         add({
           fromId: page.id,
-          toId: action.goto,
+          toId: ownPage || action.goto,
           label: action.text,
           kind: 'link'
         })

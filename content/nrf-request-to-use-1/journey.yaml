@@ -225,6 +225,11 @@ pages:
         goto: /nrf-quote-7/planning-type
       - goto: have-nrl-reference
 
+  # Guidance linked from the start page; outside the main flow for now
+  - id: creating-defra-account
+    shared: true
+    back: start
+
   # Without a reference there is no quote to use: get one first
   - id: have-nrl-reference
     field: has-nrl-reference

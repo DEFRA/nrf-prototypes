@@ -116,11 +116,18 @@ test.describe('journey tools show exits to other journeys', () => {
     const response = await request.get(`/tools/journeys/${quote.id}/flow.json`)
     expect(response.status()).toBe(200)
     const flow = await response.json()
+    // The funnel question branches there; the Defra account guidance's
+    // button links there
     expect(flow.transitions.offPage).toEqual([
       expect.objectContaining({
         fromId: 'what-would-you-like-to-do',
         toPath: requestToUseEntry,
         kind: 'next'
+      }),
+      expect.objectContaining({
+        fromId: 'creating-defra-account',
+        toPath: requestToUseEntry,
+        kind: 'link'
       })
     ])
     // The exit is not a screen of this journey
@@ -132,11 +139,15 @@ test.describe('journey tools show exits to other journeys', () => {
     await expect(
       page.locator('#flow-diagram[data-rendered="true"]')
     ).toHaveCount(1, { timeout: 20000 })
+    // The diagram draws one exit box per path left to; the wall has one
+    // placeholder card per page that leaves (the funnel question and the
+    // Defra account guidance both go to the request-to-use entry)
     await expect(page.locator('.flow-node--external')).toHaveCount(1)
-    await expect(page.locator('.wall-card--external')).toHaveCount(1)
-    await expect(page.locator('.wall-card--external')).toContainText(
+    await expect(page.locator('.wall-card--external')).toHaveCount(2)
+    await expect(page.locator('.wall-card--external')).toContainText([
+      requestToUseEntry,
       requestToUseEntry
-    )
+    ])
     // Placeholder cards carry no iframe, so the wall still has one per page
     // (plus one per preview variant)
     const cards = quote.pages.reduce(

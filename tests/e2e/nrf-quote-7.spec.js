@@ -133,6 +133,27 @@ test.describe('nrf-quote-7 happy path', () => {
     await expect(page.locator('.govuk-phase-banner')).toHaveCount(0)
     await expect(page.locator('.govuk-back-link')).toHaveCount(0)
     await expect(page.locator('main')).toContainText('NRL-')
+
+    // The email links to the shared Defra account guidance, which keeps the
+    // critical account-type advice visible and folds the rest into details
+    await page
+      .getByRole('link', { name: 'Find out how to create your Defra account' })
+      .click()
+    await expect(page).toHaveURL(/\/nrf-quote-7\/creating-defra-account$/)
+    await expect(page.locator('h1')).toHaveText('Creating a Defra account')
+    await expect(page.locator('.govuk-warning-text')).toContainText(
+      'will not be valid'
+    )
+    await expect(page.locator('details.govuk-details')).toHaveCount(2)
+    await expect(page.locator('.govuk-back-link')).toHaveAttribute(
+      'href',
+      '/nrf-quote-7/estimate-email-content'
+    )
+    await expect(
+      page.getByRole('button', {
+        name: 'Request to use the nature restoration levy'
+      })
+    ).toHaveAttribute('href', '/nrf-request-to-use-1/have-nrl-reference')
   })
 
   test('uploads a boundary file, sees it checked and previewed', async ({
@@ -367,12 +388,13 @@ test.describe('journey tools', () => {
     const width = await svg.evaluate((el) => el.getBoundingClientRect().width)
     expect(width).toBeGreaterThan(100)
     // Nodes are sized from labels measured at load; a hidden tab must not
-    // collapse them to nothing
+    // collapse them to nothing. The diagram is scaled to fit its container,
+    // so the guard is generous: a collapsed node measures a few pixels
     const node = await page
       .locator('.flow-node')
       .first()
       .evaluate((el) => el.getBoundingClientRect())
-    expect(node.width).toBeGreaterThan(50)
+    expect(node.width).toBeGreaterThan(20)
     expect(node.height).toBeGreaterThan(10)
   })
 
