@@ -12,10 +12,10 @@ const {
   loadJourney,
   getJourneyIds,
   getEdges,
-  layoutLevels,
+  journeySections,
+  exportSections,
   toMermaid,
   toFlowJson,
-  toFlowGraph,
   isQuestionType,
   previewVariants,
   captureScreens,
@@ -46,14 +46,43 @@ function pageView(page, journey, via) {
 }
 
 // A branch that leaves the journey for an absolute path: no screen here,
-// just a card saying where it goes
+// just a card saying where it goes. Inside a group's section the same card
+// stands for a page of the journey outside the group.
 function externalView(entry) {
   return {
     via: entry.via || '',
     id: entry.id,
     path: entry.path,
+    heading: entry.heading,
     external: true
   }
+}
+
+// A group folded into one card on the main wall, pointing at its section
+function groupView(page, via) {
+  return {
+    via: via || '',
+    id: page.id,
+    path: page.path,
+    title: page.groupTitle,
+    count: page.groupCount,
+    group: true
+  }
+}
+
+function levelViews(levels, journey) {
+  return levels.map((row) => ({
+    unreachable: Boolean(row.unreachable),
+    pages: row.pages.map((entry) => {
+      if (entry.external) {
+        return externalView(entry)
+      }
+      const page = journey.byId.get(entry.id)
+      return page.type === 'group'
+        ? groupView(page, entry.via)
+        : pageView(page, journey, entry.via)
+    })
+  }))
 }
 
 function loadOr404(req, res) {
@@ -95,15 +124,48 @@ router.get('/tools/journeys/:journey', (req, res) => {
   if (!journey) {
     return
   }
-  const levels = layoutLevels(journey).map((row) => ({
-    unreachable: Boolean(row.unreachable),
-    pages: row.pages.map((entry) =>
-      entry.external
-        ? externalView(entry)
-        : pageView(journey.byId.get(entry.id), journey, entry.via)
-    )
+  // The main journey with each group (sign in, account creation) folded
+  // into one card and one node, then a section per group
+  const sections = journeySections(journey)
+  const collapsed = { byId: new Map() }
+  for (const row of sections.main.levels) {
+    for (const entry of row.pages) {
+      if (!entry.external && !collapsed.byId.has(entry.id)) {
+        collapsed.byId.set(entry.id, journey.byId.get(entry.id))
+      }
+    }
+  }
+  for (const page of sections.main.graph.nodes) {
+    if (page.kind === 'group') {
+      collapsed.byId.set(page.id, {
+        id: page.id,
+        path: page.path,
+        type: 'group',
+        groupTitle: sections.groups.find((g) => `group:${g.id}` === page.id)
+          .title,
+        groupCount: sections.groups.find((g) => `group:${g.id}` === page.id)
+          .count
+      })
+    }
+  }
+  const levels = levelViews(sections.main.levels, collapsed)
+  const groups = sections.groups.map((group) => ({
+    id: group.id,
+    title: group.title,
+    anchor: group.anchor.slice(1),
+    count: group.count,
+    levels: levelViews(group.levels, journey)
   }))
+  const graphs = {
+    main: sections.main.graph,
+    groups: sections.groups.map((group) => ({
+      id: group.id,
+      anchor: group.anchor.slice(1),
+      graph: group.graph
+    }))
+  }
   res.render('tools/journey', {
+    exportSections: exportSections(journey),
     journey: {
       id: journey.id,
       name: journey.name,
@@ -115,9 +177,10 @@ router.get('/tools/journeys/:journey', (req, res) => {
     // Playwright is a dev dependency, so the export is local-only
     canExportScreens: canExportScreens(),
     levels,
+    groups,
     edges: getEdges(journey),
     // Inlined in a <script> tag, so keep "</" out of the JSON
-    graphJson: JSON.stringify(toFlowGraph(journey)).replace(/</g, '\\u003c')
+    graphJson: JSON.stringify(graphs).replace(/</g, '\\u003c')
   })
 })
 
@@ -141,7 +204,9 @@ router.get('/tools/journeys/:journey/flow.mmd', (req, res) => {
 // URLs, so it takes a little while and needs Playwright installed.
 // ?viewport=mobile captures at phone width (see VIEWPORTS in screenshots.js)
 // ?errors=1 also captures each form's error state; leave it off for a
-// quicker export with fewer files to drag onto a whiteboard
+// quicker export with fewer files to drag onto a whiteboard.
+// ?section=main&section=one-login picks which parts to export (the main
+// journey and each group); everything when left out
 router.get('/tools/journeys/:journey/screens.zip', async (req, res) => {
   const journey = loadOr404(req, res)
   if (!journey) {
@@ -151,14 +216,32 @@ router.get('/tools/journeys/:journey/screens.zip', async (req, res) => {
     ? req.query.viewport
     : 'desktop'
   const includeErrors = req.query.errors === '1'
-  const folder =
-    viewport === 'desktop' ? journey.id : `${journey.id}-${viewport}`
+  const available = exportSections(journey).map((section) => section.id)
+  const chosen = []
+    .concat(req.query.section === undefined ? available : req.query.section)
+    .filter((id) => available.includes(id))
+  if (!chosen.length) {
+    res
+      .status(400)
+      .type('text/plain')
+      .send('Tick at least one section to export')
+    return
+  }
+  const partial = chosen.length < available.length
+  const folder = [
+    journey.id,
+    viewport === 'desktop' ? '' : viewport,
+    partial ? chosen.join('+') : ''
+  ]
+    .filter(Boolean)
+    .join('-')
   let screens
   try {
     screens = await captureScreens(journey, {
       baseUrl: `${req.protocol}://${req.get('host')}`,
       viewport,
-      includeErrors
+      includeErrors,
+      sections: chosen
     })
   } catch (error) {
     res.status(500).type('text/plain').send(error.message)

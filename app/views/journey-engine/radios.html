@@ -38,5 +38,7 @@
   {% endif %}
 
   {% include "journey-engine/_question-actions.html" %}
+
+  {{ content.htmlAfter | safe }}
 </form>
 {% endblock %}

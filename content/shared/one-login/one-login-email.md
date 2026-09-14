@@ -1,6 +1,6 @@
 ---
 # Mock GOV.UK One Login, step 1. Shared by every journey that signs the user
-# in: list it with `shared: true` and decide where it leads in journey.yaml.
+# in: list it with `shared: one-login` and decide where it leads in journey.yaml.
 # The email decides the mock account type in the journey's hooks.
 type: email
 layout: one-login

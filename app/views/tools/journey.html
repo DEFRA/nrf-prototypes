@@ -22,6 +22,10 @@
   .flow-node--main { fill: #d2e2f1; stroke: #1d70b8; }
   .flow-node--exit { fill: #f3f2f1; stroke: #505a5f; }
   .flow-node--external { fill: #ffffff; stroke: #505a5f; stroke-dasharray: 4 4; }
+  .flow-node--group { fill: #efe6f7; stroke: #4c2c92; stroke-width: 2; }
+  .tools-section { margin-top: 30px; }
+  .tools-section__heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+  .tools-section__count { font-family: "GDS Transport", arial, sans-serif; font-size: 16px; color: #505a5f; }
   .flow-node__label { box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; text-align: center; padding: 8px 10px; min-height: 100%; font-family: "GDS Transport", arial, sans-serif; font-size: 13px; line-height: 1.3; color: #0b0c0c; overflow-wrap: anywhere; }
   .flow-node__text--start .flow-node__label, .flow-node__text--confirmation .flow-node__label { color: #ffffff; }
   .flow-node__text { pointer-events: none; }
@@ -52,6 +56,9 @@
   .wall-card__external { font-family: "GDS Transport", arial, sans-serif; font-size: 16px; line-height: 1.4; color: #505a5f; text-align: center; overflow-wrap: anywhere; }
   .wall-card__external code { display: block; margin-top: 10px; font-size: 14px; color: #0b0c0c; }
   .wall-card--custom { --wall-height: 900px; }
+  .wall-card--group .wall-card__frame { display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; border: 2px solid #4c2c92; box-shadow: none; background: #efe6f7; }
+  .wall-card__group { font-family: "GDS Transport", arial, sans-serif; font-size: 19px; font-weight: 700; line-height: 1.3; color: #0b0c0c; text-align: center; }
+  .wall-card__group small { display: block; margin-top: 10px; font-size: 16px; font-weight: 400; color: #505a5f; }
   .tools-tabs .govuk-tabs__panel { padding-left: 0; padding-right: 0; border-left: 0; border-right: 0; border-bottom: 0; }
   .tools-legend { font-family: "GDS Transport", arial, sans-serif; font-size: 14px; color: #505a5f; margin: 0 0 10px; }
   .tools-legend--inline { margin: 0; }
@@ -60,10 +67,13 @@
   .tools-controls--export .govuk-details__summary, .tools-controls--export .govuk-details__text { font-size: 16px; }
   .tools-controls--export .govuk-details__text { padding-top: 10px; padding-bottom: 10px; }
   .tools-controls--export form { display: flex; flex-wrap: wrap; align-items: center; gap: 15px; }
+  .tools-controls__break { flex-basis: 100%; height: 0; margin: -15px 0 0; }
   .tools-controls--export .govuk-form-group { margin-bottom: 0; }
   .tools-controls--export .govuk-radios__item { margin-bottom: 0; }
   .tools-controls--export .govuk-checkboxes__item { margin-bottom: 0; }
   .tools-controls--export .govuk-checkboxes__label { white-space: nowrap; }
+  .tools-controls--export .govuk-fieldset__legend--s { font-size: 16px; }
+  .tools-controls--export .govuk-checkboxes--inline { display: flex; flex-wrap: wrap; gap: 0 15px; }
   .tools-controls--export .govuk-radios__label { white-space: nowrap; }
   .wall-card__copy { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; margin: 0 6px 0 -4px; padding: 0; border: 0; border-radius: 3px; background: transparent; color: #1d70b8; cursor: pointer; vertical-align: middle; }
   .wall-card__copy svg { width: 16px; height: 16px; }
@@ -76,6 +86,89 @@
   .wall-card__copy--failed::after { background: #d4351c; }
 </style>
 {% endblock %}
+
+{#
+  One wall: a row per page on the default path, each followed by the
+  screens that branch off it. Group cards stand for a section further down;
+  external cards for another journey (or, inside a group's section, the
+  rest of this journey).
+#}
+{% macro wallLevels(levels, publicBaseUrl) %}
+{% for level in levels %}
+<div class="wall-level">
+  <p class="wall-level__label">{% if level.unreachable %}Not reached{% else %}Step {{ loop.index }}{% endif %}</p>
+  <div class="wall-level__cards">
+  {% for page in level.pages %}
+  {% if page.group %}
+  <div class="wall-card{% if not loop.first %} wall-card--branch{% endif %} wall-card--group">
+    <div class="wall-card__head">
+      <span class="wall-card__id">{{ page.title }}</span>
+      <span class="wall-card__type">· {{ page.count }} screens</span><br>
+      <span class="wall-card__links">
+        <a class="govuk-link" href="{{ page.path }}">See the section below</a>
+      </span>
+    </div>
+    <a class="wall-card__frame" href="{{ page.path }}">
+      <span class="wall-card__group">{{ page.title }}<small>{{ page.count }} screens, drawn in their own section below</small></span>
+    </a>
+    {% if page.via %}<p class="wall-card__via">&#8627; {{ page.via }}</p>{% endif %}
+  </div>
+  {% elif page.external %}
+  <div class="wall-card wall-card--branch wall-card--external">
+    <div class="wall-card__head">
+      <span class="wall-card__id">Exit</span>
+      <span class="wall-card__type">· {% if page.heading == "Back in the journey" %}rest of the journey{% else %}another journey{% endif %}</span><br>
+      <span class="wall-card__links">
+        <button type="button" class="wall-card__copy" data-copy-url="{{ publicBaseUrl }}{{ page.path }}" data-feedback="" title="Copy link" aria-label="Copy link to {{ page.path }}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
+        <a class="govuk-link" href="{{ page.path }}?preview=1" target="_blank" rel="noopener">Open</a>
+      </span>
+    </div>
+    <div class="wall-card__frame">
+      <p class="wall-card__external">{{ page.heading or "Continues in another journey" }}<code>{{ page.path }}</code></p>
+    </div>
+    {% if page.via %}<p class="wall-card__via">&#8627; {{ page.via }}</p>{% endif %}
+  </div>
+  {% else %}
+  <div class="wall-card{% if not loop.first %} wall-card--branch{% endif %}{% if page.isExit %} wall-card--exit{% endif %}{% if page.isCustom %} wall-card--custom{% endif %}">
+    <div class="wall-card__head">
+      <span class="wall-card__id">{{ page.id }}</span>
+      <span class="wall-card__type">· {{ page.type }}</span><br>
+      <span class="wall-card__links">
+        <button type="button" class="wall-card__copy" data-copy-url="{{ publicBaseUrl }}{{ page.path }}" data-feedback="" title="Copy link" aria-label="Copy link to {{ page.id }}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
+        <a class="govuk-link" href="{{ page.path }}?preview=1" target="_blank" rel="noopener">Open</a>
+        {% if page.isQuestion or page.isCustom %}<a class="govuk-link" href="{{ page.path }}?preview=1&error=1" target="_blank" rel="noopener">Error state</a>{% endif %}
+        <span class="wall-card__type" title="{{ page.contentFile }}">{% if page.shared %}{{ page.contentFile | replace("content/", "") }}{% else %}{{ page.id }}.md{% endif %}</span>
+      </span>
+    </div>
+    <div class="wall-card__frame">
+      <iframe src="{{ page.path }}?preview=1" loading="lazy" title="{{ page.heading }}" tabindex="-1"></iframe>
+      <a class="wall-card__shield" href="{{ page.path }}?preview=1" target="_blank" rel="noopener" aria-label="Open {{ page.heading }} in a new tab"></a>
+    </div>
+    {% if page.via %}<p class="wall-card__via">&#8627; {{ page.via }}</p>{% endif %}
+  </div>
+  {% for variant in page.variants %}
+  <div class="wall-card wall-card--branch wall-card--variant{% if page.isCustom %} wall-card--custom{% endif %}">
+    <div class="wall-card__head">
+      <span class="wall-card__id">{{ page.id }}</span>
+      <span class="wall-card__type">· {{ variant.label }}</span><br>
+      <span class="wall-card__links">
+        <a class="govuk-link" href="{{ page.path }}?preview=1&variant={{ variant.id }}" target="_blank" rel="noopener">Open</a>
+        <span class="wall-card__type">variant: {{ variant.id }}</span>
+      </span>
+    </div>
+    <div class="wall-card__frame">
+      <iframe src="{{ page.path }}?preview=1&variant={{ variant.id }}" loading="lazy" title="{{ page.heading }} ({{ variant.label }})" tabindex="-1"></iframe>
+      <a class="wall-card__shield" href="{{ page.path }}?preview=1&variant={{ variant.id }}" target="_blank" rel="noopener" aria-label="Open {{ page.heading }} ({{ variant.label }}) in a new tab"></a>
+    </div>
+    <p class="wall-card__via">&#8627; {{ variant.label }}</p>
+  </div>
+  {% endfor %}
+  {% endif %}
+  {% endfor %}
+  </div>
+</div>
+{% endfor %}
+{% endmacro %}
 
 {% block main %}
 <main class="govuk-main-wrapper tools-wrap" id="main-content">
@@ -94,18 +187,27 @@
   </p>
 
   {% set flowPanel %}
-  <p class="tools-legend">Solid arrows are form submissions. Dotted arrows are links, change links and returns to check your answers. Dashed boxes are exits to another journey. Click a node to open the screen with sample data.</p>
+  <p class="tools-legend">Solid arrows are form submissions. Dotted arrows are links, change links and returns to check your answers. Dashed boxes are exits to another journey. Click a node to open the screen with sample data.{% if groups | length %} Purple boxes are groups of screens (sign in, account creation) with a diagram of their own below; inside those, dashed boxes are the rest of this journey.{% endif %}</p>
   <div class="tools-controls">
     <label for="flow-scale">Zoom</label>
     <input type="range" id="flow-scale" min="0.1" max="1" step="0.05" value="1">
     <span id="flow-scale-value">100%</span>
   </div>
   <div class="flow-diagram" id="flow-diagram"></div>
+  {% for group in groups %}
+  <div class="tools-section" id="flow-{{ group.anchor }}">
+    <div class="tools-section__heading">
+      <h2 class="govuk-heading-m govuk-!-margin-bottom-0">{{ group.title }}</h2>
+      <span class="tools-section__count">{{ group.count }} screens</span>
+    </div>
+    <div class="flow-diagram" id="flow-diagram-{{ group.anchor }}"></div>
+  </div>
+  {% endfor %}
   <script type="application/json" id="flow-data">{{ graphJson | safe }}</script>
   {% endset %}
 
   {% set screensPanel %}
-  <p class="tools-legend">Every screen rendered live with the sample data from <code>journey.yaml → preview</code>. Each row is a page on the default path, followed by the screens that branch off it and how you reach them. Click a screen to open it in a new tab.</p>
+  <p class="tools-legend">Every screen rendered live with the sample data from <code>journey.yaml → preview</code>. Each row is a page on the default path, followed by the screens that branch off it and how you reach them. Click a screen to open it in a new tab.{% if groups | length %} Purple cards stand for a group of screens (sign in, account creation) shown in its own section below.{% endif %}</p>
 
   <div class="tools-controls">
     <label for="wall-scale">Zoom</label>
@@ -126,7 +228,22 @@
           { value: "mobile", text: "Mobile (375px)" }
         ]
       }) }}
+      {% if exportSections | length > 1 %}
+      {% set sectionItems = [] %}
+      {% for section in exportSections %}
+        {% set sectionItems = (sectionItems.push({ value: section.id, text: section.title, checked: true }), sectionItems) %}
+      {% endfor %}
       {{ govukCheckboxes({
+        name: "section",
+        idPrefix: "wall-section",
+        classes: "govuk-checkboxes--small govuk-checkboxes--inline",
+        fieldset: { legend: { text: "Sections to export", classes: "govuk-fieldset__legend--s govuk-!-margin-bottom-1" } },
+        items: sectionItems
+      }) }}
+      {% endif %}
+      {# The form is a flex row, so a line break needs a full-width item #}
+      <span class="tools-controls__break" aria-hidden="true"></span>
+       {{ govukCheckboxes({
         name: "errors",
         idPrefix: "wall-errors",
         classes: "govuk-checkboxes--small",
@@ -136,11 +253,11 @@
         ]
       }) }}
       {{ govukButton({
-        text: "Export all screens as JPG",
+        text: "Export screens as JPG",
         classes: "govuk-button--secondary govuk-!-margin-bottom-0",
         attributes: { id: "wall-export", "data-busy-text": "Exporting…" }
       }) }}
-      <span class="tools-legend tools-legend--inline">Captures each screen at the chosen width with the sample data into a zip. Untick error states for a quicker export with fewer files to drag onto a whiteboard.</span>
+      <span class="tools-legend tools-legend--inline">Captures each screen at the chosen width with the sample data into a zip. Untick error states for a quicker export with fewer files to drag onto a whiteboard.{% if exportSections | length > 1 %} Untick sections to leave them out: the main journey on its own, or just one of the sign-in groups. Each section gets a folder in the zip.{% endif %}</span>
     </form>
   {% endset %}
   <div class="tools-controls tools-controls--export">
@@ -156,68 +273,23 @@
 
   <div class="screen-wall" id="screen-wall">
     <div class="screen-wall__inner">
-    {% for level in levels %}
-    <div class="wall-level">
-      <p class="wall-level__label">{% if level.unreachable %}Not reached{% else %}Step {{ loop.index }}{% endif %}</p>
-      <div class="wall-level__cards">
-      {% for page in level.pages %}
-      {% if page.external %}
-      <div class="wall-card wall-card--branch wall-card--external">
-        <div class="wall-card__head">
-          <span class="wall-card__id">Exit</span>
-          <span class="wall-card__type">· another journey</span><br>
-          <span class="wall-card__links">
-            <button type="button" class="wall-card__copy" data-copy-url="{{ publicBaseUrl }}{{ page.path }}" data-feedback="" title="Copy link" aria-label="Copy link to {{ page.path }}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
-            <a class="govuk-link" href="{{ page.path }}?preview=1" target="_blank" rel="noopener">Open</a>
-          </span>
-        </div>
-        <div class="wall-card__frame">
-          <p class="wall-card__external">Continues in another journey<code>{{ page.path }}</code></p>
-        </div>
-        {% if page.via %}<p class="wall-card__via">&#8627; {{ page.via }}</p>{% endif %}
-      </div>
-      {% else %}
-      <div class="wall-card{% if not loop.first %} wall-card--branch{% endif %}{% if page.isExit %} wall-card--exit{% endif %}{% if page.isCustom %} wall-card--custom{% endif %}">
-        <div class="wall-card__head">
-          <span class="wall-card__id">{{ page.id }}</span>
-          <span class="wall-card__type">· {{ page.type }}</span><br>
-          <span class="wall-card__links">
-            <button type="button" class="wall-card__copy" data-copy-url="{{ publicBaseUrl }}{{ page.path }}" data-feedback="" title="Copy link" aria-label="Copy link to {{ page.id }}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
-            <a class="govuk-link" href="{{ page.path }}?preview=1" target="_blank" rel="noopener">Open</a>
-            {% if page.isQuestion or page.isCustom %}<a class="govuk-link" href="{{ page.path }}?preview=1&error=1" target="_blank" rel="noopener">Error state</a>{% endif %}
-            <span class="wall-card__type" title="{{ page.contentFile }}">{% if page.shared %}shared/{% endif %}{{ page.id }}.md</span>
-          </span>
-        </div>
-        <div class="wall-card__frame">
-          <iframe src="{{ page.path }}?preview=1" loading="lazy" title="{{ page.heading }}" tabindex="-1"></iframe>
-          <a class="wall-card__shield" href="{{ page.path }}?preview=1" target="_blank" rel="noopener" aria-label="Open {{ page.heading }} in a new tab"></a>
-        </div>
-        {% if page.via %}<p class="wall-card__via">&#8627; {{ page.via }}</p>{% endif %}
-      </div>
-      {% for variant in page.variants %}
-      <div class="wall-card wall-card--branch wall-card--variant{% if page.isCustom %} wall-card--custom{% endif %}">
-        <div class="wall-card__head">
-          <span class="wall-card__id">{{ page.id }}</span>
-          <span class="wall-card__type">· {{ variant.label }}</span><br>
-          <span class="wall-card__links">
-            <a class="govuk-link" href="{{ page.path }}?preview=1&variant={{ variant.id }}" target="_blank" rel="noopener">Open</a>
-            <span class="wall-card__type">variant: {{ variant.id }}</span>
-          </span>
-        </div>
-        <div class="wall-card__frame">
-          <iframe src="{{ page.path }}?preview=1&variant={{ variant.id }}" loading="lazy" title="{{ page.heading }} ({{ variant.label }})" tabindex="-1"></iframe>
-          <a class="wall-card__shield" href="{{ page.path }}?preview=1&variant={{ variant.id }}" target="_blank" rel="noopener" aria-label="Open {{ page.heading }} ({{ variant.label }}) in a new tab"></a>
-        </div>
-        <p class="wall-card__via">&#8627; {{ variant.label }}</p>
-      </div>
-      {% endfor %}
-      {% endif %}
-      {% endfor %}
-      </div>
-    </div>
-    {% endfor %}
+    {{ wallLevels(levels, publicBaseUrl) }}
     </div>
   </div>
+
+  {% for group in groups %}
+  <div class="tools-section" id="{{ group.anchor }}">
+    <div class="tools-section__heading">
+      <h2 class="govuk-heading-m govuk-!-margin-bottom-0">{{ group.title }}</h2>
+      <span class="tools-section__count">{{ group.count }} screens · shared with other journeys from <code>content/shared/{{ group.id }}/</code></span>
+    </div>
+    <div class="screen-wall">
+      <div class="screen-wall__inner">
+      {{ wallLevels(group.levels, publicBaseUrl) }}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
   {% endset %}
 
   {{ govukTabs({

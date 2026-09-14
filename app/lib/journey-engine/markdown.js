@@ -9,11 +9,18 @@
  *   :::warning               → govuk-warning-text
  *   :::panel Title           → govuk-panel--confirmation
  *   :::button Start now      → start button posting to the current page
+ *   :::notification Title    → govuk-notification-banner
  *   :::map [key]             → the saved red line boundary drawn on a small
  *                              map (key defaults to redlineBoundaryPolygon)
+ *   :::after-button          → everything inside renders below the page's
+ *                              button (a "Get help" link, a details block)
  *   :::if key                → conditional block (see expressions.js)
  *   :::if key equals value
  *   :::if not key
+ *
+ * A link whose target starts with `./` names a page of the current journey
+ * (`[Create sign in details](./government-gateway-email)`), so a shared page
+ * can point at a sibling without knowing which journey it is mounted in.
  *
  * `{{ key }}` placeholders are substituted after rendering and HTML-escaped.
  * Supported forms: `{{ a.b }}`, `{{ key | lower }}`, `{{ key or "fallback" }}`.
@@ -30,6 +37,8 @@ const MARK = '\u0000'
 const IF_OPEN = `${MARK}IF:`
 const IF_CLOSE = `${MARK}ENDIF${MARK}`
 const ifOpen = (keep) => `${IF_OPEN}${keep ? '1' : '0'}${MARK}`
+// Where `:::after-button` starts: renderParts() splits the html here
+const AFTER_MARK = `${MARK}AFTER${MARK}`
 
 function escapeHtml(value) {
   return String(value)
@@ -293,6 +302,12 @@ function createMarkdown() {
     '<hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">\n'
   md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
     addClass(tokens, idx, 'govuk-link')
+    // `./page-id` is a page of the journey this page is rendered in
+    const href = tokens[idx].attrGet('href') || ''
+    const journey = env.ctx && env.ctx.journey
+    if (href.startsWith('./') && journey && journey.basePath) {
+      tokens[idx].attrSet('href', `${journey.basePath}/${href.slice(2)}`)
+    }
     const next = tokens[idx + 1]
     if (
       next &&
@@ -402,6 +417,32 @@ function createMarkdown() {
     }
   })
 
+  md.use(container, 'notification', {
+    render: (tokens, idx) => {
+      if (tokens[idx].nesting === 1) {
+        const title = escapeHtml(
+          params(tokens[idx], 'notification') || 'Important'
+        )
+        return (
+          '<div class="govuk-notification-banner" role="region" ' +
+          'aria-labelledby="govuk-notification-banner-title" ' +
+          'data-module="govuk-notification-banner">\n' +
+          '<div class="govuk-notification-banner__header">\n' +
+          '<h2 class="govuk-notification-banner__title" id="govuk-notification-banner-title">' +
+          `${title}</h2>\n</div>\n` +
+          '<div class="govuk-notification-banner__content">\n'
+        )
+      }
+      return '</div>\n</div>\n'
+    }
+  })
+
+  // The block itself is a marker; renderParts() moves what follows it below
+  // the button
+  md.use(container, 'after-button', {
+    render: (tokens, idx) => (tokens[idx].nesting === 1 ? AFTER_MARK : '')
+  })
+
   md.use(container, 'map', {
     render: (tokens, idx, options, env) => {
       if (tokens[idx].nesting === 1) {
@@ -462,6 +503,15 @@ function createRenderer() {
   }
 
   /**
+   * Render markdown split at `:::after-button`: `html` goes where the body
+   * usually does, `after` below the page's button.
+   */
+  function renderParts(markdown, ctx = {}) {
+    const [html, ...rest] = render(markdown, ctx).split(AFTER_MARK)
+    return { html, after: rest.join('') }
+  }
+
+  /**
    * Render a one-line markdown string (bold, links) without a wrapping <p>.
    */
   function renderInline(markdown, ctx = {}) {
@@ -472,7 +522,7 @@ function createRenderer() {
     return interpolate(md.renderInline(String(markdown), env), ctx.data)
   }
 
-  return { render, renderInline, interpolate, extractHeading }
+  return { render, renderParts, renderInline, interpolate, extractHeading }
 }
 
 module.exports = {

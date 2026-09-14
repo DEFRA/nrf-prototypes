@@ -1,3 +1,9 @@
+{#
+  `type: input | number | email`. Usually the question is the input's label.
+  With `label:` in the frontmatter the heading is an h1, the body copy
+  follows it and the input carries the label ("Check your email" with
+  "Enter the 6 digit code"). `:::after-button` copy renders below the button.
+#}
 {% extends "journey-engine/_page.html" %}
 
 {% block pageBody %}
@@ -8,6 +14,11 @@
   {% set inputType = content.inputType or ("email" if page.type == "email" else ("number" if page.type == "number" else "text")) %}
   {% set inputClasses = ("govuk-input--width-" + content.width) if content.width else "" %}
 
+  {% if content.label %}
+    <h1 class="govuk-heading-l">{% include "journey-engine/_caption.html" %}{{ content.heading }}</h1>
+    {{ content.html | safe }}
+  {% endif %}
+
   {{ govukInput({
     id: page.field,
     name: page.field,
@@ -16,7 +27,7 @@
     autocomplete: content.autocomplete or ("email" if page.type == "email" else undefined),
     spellcheck: false if page.type == "email" else content.spellcheck,
     classes: inputClasses,
-    label: {
+    label: { text: content.label } if content.label else {
       text: content.heading,
       classes: "govuk-label--l",
       isPageHeading: true
@@ -26,8 +37,12 @@
     errorMessage: { text: error } if error
   }) }}
 
-  {{ content.html | safe }}
+  {% if not content.label %}
+    {{ content.html | safe }}
+  {% endif %}
 
-  {{ govukButton({ text: content.button }) }}
+  {% include "journey-engine/_question-actions.html" %}
+
+  {{ content.htmlAfter | safe }}
 </form>
 {% endblock %}

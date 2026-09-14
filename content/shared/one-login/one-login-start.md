@@ -1,13 +1,15 @@
 ---
 # Mock GOV.UK One Login, step 0: create an account or sign in. Shared by
-# every journey that signs the user in: list it with `shared: true` and send
-# both buttons on to one-login-email in journey.yaml (the prototype never
-# tells the two apart).
+# every journey that signs the user in: list it with `shared: one-login`.
+# "Create" links to the create flow (one-login-create-email onwards, which
+# the journey must list too); "Sign in" submits and follows `next` in
+# journey.yaml (one-login-email).
 type: content
 layout: one-login
 actions:
   - text: Create your GOV.UK One Login
     kind: submit
+    goto: one-login-create-email
   - text: Sign in
     kind: secondary
 ---

@@ -3,6 +3,8 @@
 // Lays out the graph from journey.yaml with ELK and draws it as SVG. Main
 // chain edges get a high straightness priority so the default path through
 // the journey stays on a single row, with branches and exits hanging below.
+// The main diagram folds each group of screens (sign in, account creation)
+// into one node; every group then gets a diagram of its own further down.
 ;(function () {
   const dataEl = document.getElementById('flow-data')
   const container = document.getElementById('flow-diagram')
@@ -10,7 +12,7 @@
     return
   }
 
-  const graph = JSON.parse(dataEl.textContent)
+  const graphs = JSON.parse(dataEl.textContent)
   const NODE_WIDTH = 170
   const LABEL_WIDTH = 180
   const SVG_NS = 'http://www.w3.org/2000/svg'
@@ -28,7 +30,7 @@
     const label = document.createElement('div')
     label.className = 'flow-node__label'
     const id = document.createElement('b')
-    id.textContent = node.id
+    id.textContent = node.anchor ? node.id.replace(/^group:/, '') : node.id
     label.appendChild(id)
     label.appendChild(document.createElement('br'))
     label.appendChild(document.createTextNode(node.heading))
@@ -47,7 +49,7 @@
   }
 
   // ELK needs sizes up front, so render every label off-screen and measure it
-  function measure() {
+  function measure(graph) {
     const probe = document.createElement('div')
     probe.className = 'flow-measure'
     // Measure on the body, not in the container: the Flow tab can be hidden
@@ -84,7 +86,7 @@
     return { nodeHeight, edgeSize }
   }
 
-  function buildElkGraph(sizes) {
+  function buildElkGraph(graph, sizes) {
     return {
       id: 'root',
       layoutOptions: {
@@ -165,7 +167,7 @@
       .join(' ')
   }
 
-  function render(layout, sizes) {
+  function render(container, graph, layout, sizes) {
     graph.edges.forEach(function (edge) {
       edge.size = sizes.edgeSize[edge.id]
     })
@@ -238,11 +240,14 @@
     const nodesGroup = el('g', { class: 'flow-nodes' })
     ;(layout.children || []).forEach(function (child) {
       const node = byId[child.id]
-      const link = el('a', {
-        href: node.path + '?preview=1',
-        target: '_blank',
-        rel: 'noopener'
-      })
+      // A group node jumps to its section on this page
+      const link = node.anchor
+        ? el('a', { href: node.path })
+        : el('a', {
+            href: node.path + '?preview=1',
+            target: '_blank',
+            rel: 'noopener'
+          })
       link.appendChild(
         el('rect', {
           x: child.x,
@@ -275,22 +280,31 @@
     return svg
   }
 
-  function setupZoom(svg) {
+  // One zoom slider for every diagram on the page; the initial value fits
+  // the widest one
+  function setupZoom(svgs) {
     const slider = document.getElementById('flow-scale')
     const label = document.getElementById('flow-scale-value')
-    if (!slider) {
+    if (!slider || !svgs.length) {
       return
     }
     // The rendered width comes from the SVG's own attribute, not from
     // getBoundingClientRect(): inside a hidden tab the rect is 0 wide, which
     // would pin the diagram to 0px at every zoom level
-    const fullWidth =
-      parseFloat(svg.getAttribute('width')) || svg.getBoundingClientRect().width
+    const widths = svgs.map(function (svg) {
+      return (
+        parseFloat(svg.getAttribute('width')) ||
+        svg.getBoundingClientRect().width
+      )
+    })
+    const fullWidth = Math.max.apply(null, widths)
     const STORAGE_KEY = 'journey-tools-flow-scale'
 
     function apply(value) {
       const scale = parseFloat(value)
-      svg.style.width = fullWidth * scale + 'px'
+      svgs.forEach(function (svg, i) {
+        svg.style.width = widths[i] * scale + 'px'
+      })
       if (label) {
         label.textContent = Math.round(scale * 100) + '%'
       }
@@ -328,15 +342,30 @@
     })
   }
 
-  const sizes = measure()
-  const elk = new window.ELK()
-  elk
-    .layout(buildElkGraph(sizes))
-    .then(function (layout) {
-      setupZoom(render(layout, sizes))
-      container.dataset.rendered = 'true'
-    })
-    .catch(function (error) {
-      container.textContent = 'Could not lay out the flow: ' + error.message
-    })
+  function draw(target, graph) {
+    const sizes = measure(graph)
+    const elk = new window.ELK()
+    return elk
+      .layout(buildElkGraph(graph, sizes))
+      .then(function (layout) {
+        const svg = render(target, graph, layout, sizes)
+        target.dataset.rendered = 'true'
+        return svg
+      })
+      .catch(function (error) {
+        target.textContent = 'Could not lay out the flow: ' + error.message
+        return null
+      })
+  }
+
+  const jobs = [draw(container, graphs.main)]
+  ;(graphs.groups || []).forEach(function (group) {
+    const target = document.getElementById('flow-diagram-' + group.anchor)
+    if (target) {
+      jobs.push(draw(target, group.graph))
+    }
+  })
+  Promise.all(jobs).then(function (svgs) {
+    setupZoom(svgs.filter(Boolean))
+  })
 })()

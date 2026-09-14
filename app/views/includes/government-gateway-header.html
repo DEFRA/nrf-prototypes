@@ -1,0 +1,14 @@
+{#
+  Government Gateway look for the mock sign-in and "create sign in details"
+  pages: the bare crown header with a "Government Gateway" service
+  navigation bar and no links.
+#}
+{{ govukHeader({
+  homepageUrl: "https://www.gov.uk/",
+  classes: "app-header",
+  containerClasses: "govuk-width-container"
+}) }}
+{{ govukServiceNavigation({
+  serviceName: "Government Gateway",
+  serviceUrl: "#"
+}) }}

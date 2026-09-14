@@ -8,6 +8,9 @@ content/
     pages/
       start.md        screens shared by more than one journey (content)
       what-would-you-like-to-do.md
+    one-login/        the mock GOV.UK One Login (sign in, create an account)
+    government-gateway/  the mock Government Gateway (sign in, create sign in details)
+    defra-id/         the mock Defra ID registration
   nrf-quote-7/
     journey.yaml      order of pages, branching, what is remembered (logic)
     pages/
@@ -84,7 +87,23 @@ NRF reference: {{ nrfReference }}
 :::
 ```
 
+```markdown
+:::notification Keeping your information secure
+Do not share your Government Gateway user ID and password with anyone else.
+:::
+
+:::after-button
+
+[Get help with this page](#)
+
+:::
+```
+
 `:::map` draws the saved red line boundary on a small read-only map (used on the commitment certificate). The name after `map` is the answer holding the boundary and can be left out.
+
+`:::notification Title` is the blue notification banner. `:::after-button` moves everything from that line to the end of the file below the page's button: a "Get help with this page" link, or a details block that sits under Continue. When the block holds another block (a details, say), open and close it with four colons (`::::after-button` … `::::`) so the inner `:::` lines do not end it early.
+
+A link written as `[text](./page-id)` points at a page of whichever journey the file is used in, so a shared page can link to a sibling page (the Government Gateway sign in page links to `./government-gateway-email`).
 
 `:::if key` shows a block only when an answer exists, and `:::if key equals value` only when it matches:
 
@@ -114,7 +133,7 @@ Write the answer's name in double curly braces: `{{ estimateEmail }}`. The names
 | `content`       | `title`, `actions`                                                                                               |
 | `radios`        | `hint`, `options` (each with optional `hint`), `errors`, `button`, `bodyFirst` (body copy above the options)     |
 | `checkboxes`    | as radios                                                                                                        |
-| `input`         | `hint`, `errors`, `button`, `width`                                                                              |
+| `input`         | `hint`, `errors`, `button`, `width`, `label` (see "A label under the heading")                                   |
 | `number`        | as input                                                                                                         |
 | `email`         | as input                                                                                                         |
 | `password`      | `hint`, `errors`, `button`; has a Show/Hide toggle, never stored                                                 |
@@ -126,13 +145,29 @@ Write the answer's name in double curly braces: `{{ estimateEmail }}`. The names
 | `document`      | `title`; a full-width document with no banner or back link                                                       |
 | `custom`        | a developer-built screen; `hint`, `errors` and `text:` (named strings the template renders) still come from here |
 
-Every page can also set `layout` to change its chrome: `default` (the prototype header and banner), `one-login` (the GOV.UK One Login look used by the shared sign-in pages), `defra-id` (the Defra ID look: bare header with a Sign out bar and the Defra footer, used by the mock "register a Defra account" pages), `defra-account` (as `defra-id` with the "Your Defra account" bar showing the user's name, Manage account and Sign out) or `document` (bare crown header, full width, no banner or back link; `type: document` pages get this automatically).
+Every page can also set `layout` to change its chrome: `default` (the prototype header and banner), `one-login` (the GOV.UK One Login look used by the shared sign-in pages), `government-gateway` (the Government Gateway look: a "Government Gateway" bar, the language toggle, no banner), `defra-id` (the Defra ID look: bare header with a Sign out bar and the Defra footer, used by the mock "register a Defra account" pages), `defra-account` (as `defra-id` with the "Your Defra account" bar showing the user's name, Manage account and Sign out) or `document` (bare crown header, full width, no banner or back link; `type: document` pages get this automatically).
 
 A `caption` ("Register Defra account", say) shows in grey above the heading of content, radios, form, select and check your answers pages.
 
+### A label under the heading
+
+An `input`, `number` or `email` page normally uses its heading as the label of the box. Add `label:` when the page has copy between the heading and the box, or the box needs its own name:
+
+```markdown
+---
+type: input
+label: Enter the 6 digit code
+width: 10
+---
+
+# Check your email
+
+We have sent an email to: **{{ signInEmail }}**
+```
+
 ### Several fields on one page
 
-`type: form` puts more than one text input on a page, an address for example. List the inputs under `fields:`; each has a `name` (kebab-case), a `label` and optionally `hint`, `optional: true`, `width` (a number of characters, or `two-thirds`, `one-half`...), `autocomplete`, `type` (`text` unless you say `tel`, `email` or `textarea`; a `textarea` with a `maxLength` shows how many characters are left) and its own `errors`. The answers are remembered together as one object under the page's `sessionKey` in `journey.yaml`, so `{{ developerDetails.postcode }}` shows one of them.
+`type: form` puts more than one text input on a page, an address for example. List the inputs under `fields:`; each has a `name` (kebab-case), a `label` and optionally `hint`, `optional: true`, `width` (a number of characters, or `two-thirds`, `one-half`...), `autocomplete`, `type` (`text` unless you say `tel`, `email`, `textarea` or `password`; a `textarea` with a `maxLength` shows how many characters are left, a `password` gets a Show/Hide button and is never shown again) and its own `errors`. A page whose fields are all passwords sets `remember: false` and names them starting with `_` (see the create password pages) so nothing is kept. The answers are remembered together as one object under the page's `sessionKey` in `journey.yaml`, so `{{ developerDetails.postcode }}` shows one of them.
 
 ```markdown
 ---
@@ -212,7 +247,7 @@ Kinds: `submit`, `secondary` (grey button, submits the same form), `warning` (re
 
 ## Pages shared by more than one journey
 
-The quote and request-to-use journeys both begin with the same start page and the same "What would you like to do?" question, and the mock GOV.UK One Login pages (`one-login-start`, `one-login-email`, `one-login-password`) are shared the same way so any journey can sign the user in. That copy lives once, in `content/shared/pages/`, and each journey lists the page with `shared: true`:
+The quote and request-to-use journeys both begin with the same start page and the same "What would you like to do?" question. That copy lives once, in `content/shared/pages/`, and each journey lists the page with `shared: true`:
 
 ```yaml
 pages:
@@ -228,9 +263,35 @@ pages:
       - goto: planning-type
 ```
 
+The mock identity providers are shared the same way, each in its own folder so `shared/pages/` stays small: `content/shared/one-login/` (create or sign in, email, password, and the "Create your GOV.UK One Login" flow), `content/shared/government-gateway/` (sign in and "Create sign in details") and `content/shared/defra-id/` (register a Defra account). A journey lists those pages with the folder name instead of `true`:
+
+```yaml
+- id: one-login-start
+  shared: one-login
+  next: one-login-email
+
+- id: defra-register
+  shared: defra-id
+  next: defra-terms
+```
+
+The page ids keep their provider prefix (`one-login-`, `government-gateway-`, `defra-`) because they become URLs in every journey that uses them. The flow between the pages (which button leads where, the guards, what is remembered) is still each journey's own, in its `journey.yaml`; the request-to-use journey is the worked example. A shared page whose button links to another page (`goto:` in its `actions`, or a `[text](./page-id)` link) needs that page listed in the journey too.
+
 The page keeps the journey's own URL (`/nrf-quote-7/start` and `/nrf-request-to-use-1/start` are the same words), so the homepage cards, the smoke test and the screen wall work as usual. To change the shared copy, edit the file in `content/shared/pages/`; every journey that uses it updates at once. A shared question page carries its own `type`, `field`, `sessionKey`, `options` and `errors` in its frontmatter, so the journeys only decide where each answer goes. A page can also set `serviceName` in its frontmatter (or in `journey.yaml`) to replace the journey's service name in the header and `<title>` on that page alone: the shared pages say "Manage the nature restoration levy" and the journey's own name takes over from the next page.
 
 A `goto` that starts with `/` is an exit to another journey. The engine does not check that the page exists there, so **when a newer version becomes the target (say `nrf-quote-8`), update the path in the other journey's `journey.yaml`**. Exits show in the flow diagram as dashed boxes, on the screen wall as a placeholder card, and in `flow.json` under `transitions.offPage`. A page cannot be both shared and have a file of the same name in the journey's own `pages/`; the loader refuses to guess which one you meant.
+
+### Groups on the tools page
+
+The flow diagram and screen wall at `/tools/journeys/<id>` fold each shared provider folder into one purple box ("GOV.UK One Login, 11 screens") on the main journey, and draw the group's own screens and flow in a section of their own further down the page. Nothing needs setting up for that: a page listed with `shared: one-login` belongs to the `one-login` group. To put any other page in a group, give its entry `group: <name>` in `journey.yaml`; to change a group's title, add a `groups:` block:
+
+```yaml
+groups:
+  one-login:
+    title: GOV.UK One Login
+```
+
+Inside a group's section, a dashed box is a page of the journey outside the group ("Back in the journey"). The JPG export numbers the screens in the same order, the main journey first, then each group, with a folder per section in the zip; tick or untick sections on the export form to get the main journey on its own, or just one group.
 
 ## Borrowing a page from another journey
 
@@ -266,7 +327,7 @@ For this to work the borrowed page needs `changeable: true` and a `$navFromSumma
 - Changing where an answer leads (`journey.yaml → next`).
 - Changing what a page remembers (`journey.yaml → session`).
 - New kinds of block or component.
-- The map page's behaviour (`app/lib/nrf-quote-7/hooks.js`; the request-to-use journey borrows that page rather than having its own), the mock quote store, sign-in accounts and Defra ID registration (`app/lib/nrf-request-to-use-1/hooks.js`; a sign-in email containing `new` registers a Defra account first). Changes to hooks, or to `basePath` in `journey.yaml`, need `npm run dev` restarting.
+- The map page's behaviour (`app/lib/nrf-quote-7/hooks.js`; the request-to-use journey borrows that page rather than having its own), the mock quote store, sign-in accounts and Defra ID registration (`app/lib/nrf-request-to-use-1/hooks.js`; a sign-in email or Government Gateway user ID containing `new` registers a Defra account first, `company` or `individual` picks that account type, anything else is an agent). Changes to hooks, or to `basePath` in `journey.yaml`, need `npm run dev` restarting.
 
 ## Adding a new journey
 
@@ -306,13 +367,13 @@ pages:
 
 Condition operators: `equals`, `notEquals`, `in`, `notIn`, `gt`, `gte`, `lt`, `lte`, `between`, `truthy`, `falsy`, `isSet`. Combine with `all:`, `any:`, `not:`. Engine values: `$navFromSummary`, `$isChange`, `$preview`.
 
-Other page keys: `shared: true` (copy comes from `content/shared/pages/<id>.md`, see "Pages shared by more than one journey"), `back` (page id, absolute path, or a rule list), `guard` (condition plus `redirect`), `store` (map radio labels to stored values), `set` (write values on submit; also allowed on a rule), `clears` (list of keys, or `$session`), `handler: custom` (page has hooks), `template` (a hand-written view for `type: custom`), `layout` (`default`, `one-login`, `defra-id`, `defra-account` or `document`), `remember: false` (never write the answer to the session; pair it with a field name starting `_` so the kit's own auto-store skips it too, as the password page does), `accept` and `maxSize` for uploads, `min` and `max` for numbers.
+Other page keys: `shared: true` (copy comes from `content/shared/pages/<id>.md`) or `shared: <folder>` (from `content/shared/<folder>/<id>.md`, see "Pages shared by more than one journey"), `back` (page id, absolute path, or a rule list), `guard` (condition plus `redirect`), `store` (map radio labels to stored values), `set` (write values on submit; also allowed on a rule), `clears` (list of keys, or `$session`), `handler: custom` (page has hooks), `template` (a hand-written view for `type: custom`), `layout` (`default`, `one-login`, `government-gateway`, `defra-id`, `defra-account` or `document`), `remember: false` (never write the answer to the session; pair it with a field name starting `_` so the kit's own auto-store skips it too, as the password page does), `accept` and `maxSize` for uploads, `min` and `max` for numbers.
 
 A `next` rule or an action whose `goto` leaves for another journey can add `return: <summary page id>` so that journey's page comes back here (see "Borrowing a page from another journey"). `$summary` is allowed wherever a `goto` is: `next`, `back` and `actions`.
 
 Journey keys: `id`, `name`, `serviceName`, `start`, `summaryPage` or `summaryPages` (every page with Change links; a rule's `goto: $summary` returns to whichever one the user came from, which may be in another journey when the page is borrowed), `signedIn` (a condition; while it holds the header shows a Sign out link, pointing at the `SIGN_OUT` route a hook registers, and agents see the organisation they act for), `session`, `preview.data` (sample answers for `?preview=1` and the screen wall; a page can add its own `preview:` block with `data:` to override them, and `variants:` — a list of `{ id, label, data }` — to show other states of the same screen on the wall and in the JPG export, opened with `?preview=1&variant=<id>`), `homepage` (the homepage card: `family`, `version`, `status`, `title`, `description`, `changes`; see "Adding a new journey"). `serviceName` is used in every page `<title>` and, prefixed "PROTOTYPE - ", in the service navigation bar under the header (`app/views/includes/service-header.html`).
 
-Hooks (`app/lib/<journey>/hooks.js`) are per journey, so a shared page such as `one-login-password` only does something in the journeys that give it a hook. A `load(ctx)` hook runs before a page is built and may put data in the session (the request-to-use journey fills in the retrieved quote this way); `get(ctx, model)` runs after and can add to the render model.
+Hooks (`app/lib/<journey>/hooks.js`) are per journey, so a shared page such as `one-login-password` only does something in the journeys that give it a hook. An action of kind `submit` or `secondary` with a `goto` renders as a button that links there instead of submitting (the "Create your GOV.UK One Login" button). A `load(ctx)` hook runs before a page is built and may put data in the session (the request-to-use journey fills in the retrieved quote this way); `get(ctx, model)` runs after and can add to the render model.
 
 `?errors=false` on any page turns server-side validation off for the session (the kit keeps the flag in session data as `errors`); blank answers are then filled from `preview.data`, so keep the sample answers complete enough for every guard to pass. `?errors=true` turns validation back on.
 

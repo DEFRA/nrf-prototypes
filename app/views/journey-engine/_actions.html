@@ -1,6 +1,8 @@
 {#
 Renders `actions` from a page's frontmatter inside a form posting to the
 page. Kinds: submit (default), secondary, warning, start, link, destructive.
+A submit or secondary action with a `goto` is a button that links there
+instead of submitting (the "Create your GOV.UK One Login" button).
 #}
 {% if content.actions | length %}
 <form action="{{ page.path }}" method="post" novalidate>
@@ -14,11 +16,11 @@ page. Kinds: submit (default), secondary, warning, start, link, destructive.
       {% elif action.kind == 'warning' %}
         {{ govukButton({ text: action.text, classes: "govuk-button--warning" }) }}
       {% elif action.kind == 'secondary' %}
-        {{ govukButton({ text: action.text, classes: "govuk-button--secondary" }) }}
+        {{ govukButton({ text: action.text, href: action.href, classes: "govuk-button--secondary" }) }}
       {% elif action.kind == 'start' %}
         {{ govukButton({ text: action.text, isStartButton: true }) }}
       {% else %}
-        {{ govukButton({ text: action.text }) }}
+        {{ govukButton({ text: action.text, href: action.href }) }}
       {% endif %}
     {% endfor %}
   </div>

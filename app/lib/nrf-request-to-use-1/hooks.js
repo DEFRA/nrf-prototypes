@@ -7,8 +7,12 @@
  *     the session already holds a quote made in nrf-quote-7
  *   - "levy increased" and the levy amount, recalculated when units change
  *   - a mock GOV.UK One Login: the sign-in email decides the account type
- *     (company@… company, individual@… individual, anything else an agent)
- *   - a mock Defra ID registration for emails containing "new"
+ *     (company@… company, individual@… individual, anything else an agent),
+ *     whether the user signs in or has just created the account
+ *   - a mock Government Gateway: the user ID typed at sign in works the same
+ *     way (company, individual, new-company…); creating sign in details
+ *     mints a 12 digit user ID and signs in with the email given
+ *   - a mock Defra ID registration for emails (or user IDs) containing "new"
  *     (new-individual@, new-company@, new@ for an agent): the business or
  *     individual answer on the registration pages decides the account type
  *   - sign out, the NRL reference and certificate dates on submission
@@ -107,8 +111,9 @@ function emailLocalPart(email) {
 }
 
 /**
- * Which mock account an email address signs in to. An email containing
- * "new" has no Defra account yet, so the journey registers one first.
+ * Which mock account an email address (or a Government Gateway user ID,
+ * which has no @) signs in to. One containing "new" has no Defra account
+ * yet, so the journey registers one first.
  */
 function accountFor(email) {
   const local = emailLocalPart(email)
@@ -219,6 +224,10 @@ const SIGN_IN_KEYS = [
   'account',
   'signInEmail',
   'signInMethod',
+  'securityCodeMethod',
+  'mobileNumber',
+  'governmentGatewayName',
+  'governmentGatewayUserId',
   'defraAccountType',
   'defraName',
   'defraTelephone',
@@ -247,13 +256,54 @@ const signInMethod = {
   }
 }
 
-const oneLoginPassword = {
+// Signing in with a password, or finishing creating a One Login: the email
+// decides the account
+const oneLoginSignIn = {
   process(ctx) {
     const { data } = ctx
     // The password field is named _password so the kit never stores it; make
     // sure of that here too
     delete data._password
     data.account = accountFor(data.signInEmail)
+  }
+}
+
+// Government Gateway sign in: the user ID stands in for the email. Nothing
+// typed on the page is kept (remember: false), so it arrives as `value`,
+// keyed by the field name `_user-id` in camelCase.
+const governmentGatewaySignIn = {
+  process(ctx, value) {
+    ctx.data.account = accountFor((value && value._userId) || '')
+  }
+}
+
+/**
+ * A Government Gateway user ID: 12 digits shown in pairs ("43 93 78 15 57 40")
+ */
+function mintGatewayUserId() {
+  const digits = []
+  for (let i = 0; i < 12; i += 1) {
+    digits.push(Math.floor(Math.random() * 10))
+  }
+  return digits.join('').match(/\d{2}/g).join(' ')
+}
+
+// Creating Government Gateway sign in details ends on the user ID page:
+// the ID is minted when the page opens and Continue signs in with the email
+// given, under the name given
+const governmentGatewayUserId = {
+  load(ctx) {
+    const { data } = ctx
+    if (!ctx.preview && !data.governmentGatewayUserId) {
+      data.governmentGatewayUserId = mintGatewayUserId()
+    }
+  },
+  process(ctx) {
+    const { data } = ctx
+    data.account = accountFor(data.signInEmail)
+    if (data.governmentGatewayName) {
+      data.account.fullName = String(data.governmentGatewayName).trim()
+    }
   }
 }
 
@@ -309,7 +359,10 @@ module.exports = {
   'original-reference': originalReference,
   'review-quote-details': reviewQuoteDetails,
   'sign-in-method': signInMethod,
-  'one-login-password': oneLoginPassword,
+  'one-login-password': oneLoginSignIn,
+  'one-login-created': oneLoginSignIn,
+  'government-gateway-sign-in': governmentGatewaySignIn,
+  'government-gateway-user-id': governmentGatewayUserId,
   'defra-select-address': defraSelectAddress,
   'defra-address-manual': defraAddressManual,
   'defra-check-answers': completeRegistration,
@@ -318,6 +371,7 @@ module.exports = {
   // For tests
   accountFor,
   registeredAccount,
+  mintGatewayUserId,
   FIXTURE_BUSINESS,
   loadQuote,
   levyFor,

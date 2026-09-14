@@ -19,6 +19,9 @@ const { createJourneyRouter, previewData } = require('./router')
 const { watchContent } = require('./watch')
 const {
   getEdges,
+  journeyGroups,
+  journeySections,
+  exportSections,
   layoutLevels,
   mainChain,
   exportScreens,
@@ -41,6 +44,9 @@ module.exports = {
   previewData,
   watchContent,
   getEdges,
+  journeyGroups,
+  journeySections,
+  exportSections,
   layoutLevels,
   mainChain,
   exportScreens,

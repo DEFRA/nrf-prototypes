@@ -5,6 +5,8 @@ Journey engine base page. Every generic page type extends this and fills
 `page.layout` picks the chrome:
   default        prototype crown header + service navigation, Prototype banner
   one-login      the GOV.UK One Login look for the mock sign-in pages
+  government-gateway  the Government Gateway look: bare header with a
+                 "Government Gateway" bar, language toggle, no banner
   defra-id       the Defra ID look for the mock "register a Defra account"
                  pages: bare header with a Sign out bar, Defra footer
   defra-account  as defra-id with the "Your Defra account" bar and the
@@ -20,12 +22,14 @@ Journey engine base page. Every generic page type extends this and fills
 {% endblock %}
 
 {% block pageTitle %}
-{% if error %}Error: {% endif %}{{ content.title }} - {% if page.layout == 'one-login' %}GOV.UK One Login{% elif page.layout == 'defra-id' or page.layout == 'defra-account' %}Defra account - GOV.UK{% else %}{{ journey.serviceName }} - GOV.UK{% endif %}
+{% if error %}Error: {% endif %}{{ content.title }} - {% if page.layout == 'one-login' %}GOV.UK One Login{% elif page.layout == 'government-gateway' %}GOV.UK{% elif page.layout == 'defra-id' or page.layout == 'defra-account' %}Defra account - GOV.UK{% else %}{{ journey.serviceName }} - GOV.UK{% endif %}
 {% endblock %}
 
 {% block header %}
 {% if page.layout == 'one-login' %}
   {% include "includes/one-login-header.html" %}
+{% elif page.layout == 'government-gateway' %}
+  {% include "includes/government-gateway-header.html" %}
 {% elif page.layout == 'defra-id' %}
   {% include "includes/defra-id-header.html" %}
 {% elif page.layout == 'defra-account' %}
@@ -44,6 +48,11 @@ Journey engine base page. Every generic page type extends this and fills
 {% block beforeContent %}
 {% if page.layout == 'one-login' %}
   {% include "includes/one-login-banner.html" %}
+{% elif page.layout == 'government-gateway' %}
+  {# Government Gateway: the language toggle alone, no phase banner #}
+  <div class="app-one-login-banner app-one-login-banner--toggle-only">
+    {% include "includes/language-toggle.html" %}
+  </div>
 {% elif page.layout == 'defra-id' or page.layout == 'defra-account' %}
   {# Defra ID shows no phase banner #}
 {% elif page.layout != 'document' %}
@@ -69,8 +78,9 @@ Journey engine base page. Every generic page type extends this and fills
 {% block footer %}
 {% if page.layout == 'one-login' %}
   {% include "includes/one-login-footer.html" %}
-{% elif page.layout == 'defra-id' or page.layout == 'defra-account' %}
-  {% include "includes/defra-id-footer.html" %}
+{% elif page.layout in ['government-gateway', 'defra-id', 'defra-account'] %}
+  {# Defra ID runs on Government Gateway, so both share its footer #}
+  {% include "includes/government-gateway-footer.html" %}
 {% else %}
   {{ super() }}
 {% endif %}

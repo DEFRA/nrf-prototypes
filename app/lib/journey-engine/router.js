@@ -337,6 +337,7 @@ function renderContent(page, ctx) {
   const c = page.content
   const plain = (text) => renderer.interpolate(text, data, { escape: false })
   const rows = (c.rows || []).map((row) => resolveRow(row, ctx))
+  const body = renderer.renderParts(c.body, ctx)
   return {
     title: plain(c.title),
     heading: plain(c.heading),
@@ -346,7 +347,9 @@ function renderContent(page, ctx) {
     hint: c.hint ? plain(c.hint) : undefined,
     label: c.label ? plain(c.label) : undefined,
     placeholder: c.placeholder ? plain(c.placeholder) : undefined,
-    html: renderer.render(c.body, ctx),
+    html: body.html,
+    // Copy inside `:::after-button`, shown below the button
+    htmlAfter: body.after,
     button: c.button,
     inputType: c.inputType,
     width: c.width,

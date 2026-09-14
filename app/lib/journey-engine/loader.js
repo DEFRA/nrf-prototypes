@@ -14,9 +14,12 @@ const { validateCondition } = require('./expressions')
 const { extractHeading } = require('./markdown')
 
 const CONTENT_DIR = path.join(__dirname, '../../../content')
-// Pages marked `shared: true` in journey.yaml read their copy from here, so
-// several journeys can start on the same page without duplicating it
-const SHARED_PAGES_DIR = path.join(CONTENT_DIR, 'shared', 'pages')
+// Pages marked `shared: true` in journey.yaml read their copy from
+// shared/pages/, so several journeys can start on the same page without
+// duplicating it. `shared: <folder>` names another folder under shared/ (the
+// mock identity providers: one-login, government-gateway, defra-id).
+const SHARED_DIR = path.join(CONTENT_DIR, 'shared')
+const SHARED_PAGES_DIR = path.join(SHARED_DIR, 'pages')
 
 const TYPES = [
   'start',
@@ -66,7 +69,8 @@ const TEMPLATE_BY_TYPE = {
 }
 
 // How a page is dressed: the prototype header and phase banner (default), the
-// GOV.UK One Login look for the mock sign-in pages, the Defra ID look for the
+// GOV.UK One Login look for the mock sign-in pages, the Government Gateway
+// look (a "Government Gateway" bar, no banner), the Defra ID look for the
 // mock "register a Defra account" pages (defra-id: a bare Sign out bar;
 // defra-account: the "Your Defra account" bar with the user's name), or a
 // full-width document with a bare crown header and no banner or back link
@@ -74,6 +78,7 @@ const TEMPLATE_BY_TYPE = {
 const LAYOUTS = [
   'default',
   'one-login',
+  'government-gateway',
   'defra-id',
   'defra-account',
   'document'
@@ -120,10 +125,23 @@ function journeyDir(journeyId) {
   return path.join(CONTENT_DIR, journeyId)
 }
 
+/**
+ * Every folder under content/shared/ (pages, one-login, ...).
+ */
+function sharedDirs() {
+  if (!fs.existsSync(SHARED_DIR)) {
+    return []
+  }
+  return fs
+    .readdirSync(SHARED_DIR, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => path.join(SHARED_DIR, entry.name))
+}
+
 function signatureFor(dir) {
   const files = [path.join(dir, 'journey.yaml')]
   // Shared pages count for every journey, so an edit to one reloads them all
-  for (const pagesDir of [path.join(dir, 'pages'), SHARED_PAGES_DIR]) {
+  for (const pagesDir of [path.join(dir, 'pages'), ...sharedDirs()]) {
     if (fs.existsSync(pagesDir)) {
       for (const name of fs.readdirSync(pagesDir)) {
         files.push(path.join(pagesDir, name))
@@ -175,9 +193,11 @@ function normaliseRules(raw, where, problems) {
  * rows, errors }; the answers are stored together as one object under the
  * page's sessionKey, keyed by `key` (camelCase of the field name). `type` is
  * text by default; `tel` and `email` set the input type, `textarea` (with an
- * optional `maxLength`, which adds a character count) gives a bigger box.
+ * optional `maxLength`, which adds a character count) gives a bigger box and
+ * `password` a Show/Hide input whose value is never echoed back (pair it with
+ * `remember: false` on the page and a field name starting `_`).
  */
-const FIELD_TYPES = ['text', 'tel', 'email', 'textarea']
+const FIELD_TYPES = ['text', 'tel', 'email', 'textarea', 'password']
 
 function buildFields(raw, type, where, problems) {
   if (type !== 'form') {
@@ -231,9 +251,15 @@ function buildFields(raw, type, where, problems) {
 function buildPage(entry, journey, problems) {
   const id = entry.id
   const where = `pages.${id}`
-  const shared = Boolean(entry.shared)
+  // `shared: true` reads shared/pages/<id>.md; `shared: <folder>` reads
+  // shared/<folder>/<id>.md. `page.shared` keeps the value as written.
+  const shared =
+    typeof entry.shared === 'string' ? entry.shared : Boolean(entry.shared)
+  const sharedFolder = shared === true ? 'pages' : shared
   const localFile = path.join(journeyDir(journey.id), 'pages', `${id}.md`)
-  const pageFile = shared ? path.join(SHARED_PAGES_DIR, `${id}.md`) : localFile
+  const pageFile = shared
+    ? path.join(SHARED_DIR, sharedFolder, `${id}.md`)
+    : localFile
   const contentFile = path.relative(path.dirname(CONTENT_DIR), pageFile)
   let frontmatter = {}
   let body = ''
@@ -245,7 +271,9 @@ function buildPage(entry, journey, problems) {
     frontmatter = parsed.frontmatter
     body = parsed.body
   } else if (shared) {
-    problems.push(`${where}: missing shared content file shared/pages/${id}.md`)
+    problems.push(
+      `${where}: missing shared content file shared/${sharedFolder}/${id}.md`
+    )
   } else {
     problems.push(`${where}: missing content file pages/${id}.md`)
   }
@@ -293,7 +321,7 @@ function buildPage(entry, journey, problems) {
     entry.sessionKey ||
     frontmatter.sessionKey ||
     (field ? camelCase(field) : undefined)
-  if (type === 'form' && !sessionKey) {
+  if (type === 'form' && !sessionKey && remember) {
     problems.push(
       `${where}: 'form' pages need a 'sessionKey' to store their answers under`
     )
@@ -345,6 +373,10 @@ function buildPage(entry, journey, problems) {
     id,
     path: `${journey.basePath}/${id}`,
     shared,
+    // Pages of the same group are drawn as one box on the tools page, with
+    // their own section below: every shared provider folder is a group, and
+    // `group: <name>` puts any other page in one
+    group: entry.group || (typeof shared === 'string' ? shared : undefined),
     contentFile,
     serviceName: entry.serviceName || frontmatter.serviceName,
     type,
@@ -502,6 +534,9 @@ function build(journeyId) {
     // Homepage card metadata (family, version, status, description, changes).
     // Read by app/config/shared/journeys.js; the engine itself ignores it.
     homepage: raw.homepage || {},
+    // Titles for the groups the tools page carves out (`groups: { one-login:
+    // { title: GOV.UK One Login } }`); see flow.js journeyGroups()
+    groups: raw.groups || {},
     pages: [],
     byId: new Map(),
     routes: {}
@@ -628,6 +663,7 @@ function getRouteConstants(journeyId) {
 
 module.exports = {
   CONTENT_DIR,
+  SHARED_DIR,
   SHARED_PAGES_DIR,
   TYPES,
   QUESTION_TYPES,

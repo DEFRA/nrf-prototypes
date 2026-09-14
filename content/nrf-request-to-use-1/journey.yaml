@@ -4,11 +4,16 @@
 # answer leads and what is remembered in the session. See content/README.md.
 #
 # A developer with a quote retrieves it with their NRL reference, reviews and
-# amends the development details, accepts the levy amount, signs in with the
-# mock GOV.UK One Login and confirms who the developer is. On submission they
-# get an email and a commitment certificate to give to their local planning
-# authority. Behaviour that needs code (the mock quote store, sign-in accounts,
-# the NRL reference) is in app/lib/nrf-request-to-use-1/hooks.js.
+# amends the development details, accepts the levy amount, signs in (or
+# creates an account) with the mock GOV.UK One Login or Government Gateway
+# and confirms who the developer is. On submission they get an email and a
+# commitment certificate to give to their local planning authority.
+# Behaviour that needs code (the mock quote store, sign-in accounts, the NRL
+# reference) is in app/lib/nrf-request-to-use-1/hooks.js.
+#
+# The sign-in, account creation and Defra ID registration pages are shared
+# with any other journey that signs users in: their copy lives in
+# content/shared/one-login, government-gateway and defra-id.
 #
 # The development details (planning type, housing, units, the map) and the
 # delete flow are the quote journey's own pages, borrowed rather than copied:
@@ -53,6 +58,8 @@ homepage:
     - Levy increased and not enough capacity branches, driven by the number of units
     - Variation to an existing planning application, then whether the original application was committed to using the levy
     - Mock GOV.UK One Login sign in (create or sign in, email, then password), shared with other journeys
+    - Mock "Create your GOV.UK One Login" flow (email, security code, password, security codes by text message or authenticator app)
+    - Mock Government Gateway sign in and "Create sign in details" flow (email, confirmation code, name, password, user ID)
     - Agent, company and individual account types decided by the sign-in email (agent by default)
     - Mock Defra ID registration for sign-in emails containing "new" (new-individual@, new-company@, new@ for an agent), as an individual or a business; the registration answer decides the account type
     - Developer details or your address, review, check your answers, confirmation
@@ -87,6 +94,10 @@ session:
   - originalReference
   - signInMethod
   - signInEmail
+  - securityCodeMethod
+  - mobileNumber
+  - governmentGatewayName
+  - governmentGatewayUserId
   - account
   - developerDetails
   - yourAddress
@@ -143,6 +154,10 @@ preview:
     originalReference: NRL-654321
     signInMethod: one-login
     signInEmail: agent@example.com
+    securityCodeMethod: app
+    mobileNumber: 07700 900123
+    governmentGatewayName: John Smith
+    governmentGatewayUserId: 43 93 78 15 57 40
     account:
       accountType: agent
       fullName: Name Name
@@ -322,7 +337,6 @@ pages:
         goto: $summary
       - goto: sign-in-method
 
-  # Both options go to the mock GOV.UK One Login for now
   - id: sign-in-method
     field: sign-in-method
     sessionKey: signInMethod
@@ -330,47 +344,140 @@ pages:
     store:
       Sign in with GOV.UK One Login: one-login
       Sign in with Government Gateway: government-gateway
-    next: one-login-start
+    next:
+      - when: { key: signInMethod, equals: government-gateway }
+        goto: government-gateway-sign-in
+      - goto: one-login-start
 
-  # Mock GOV.UK One Login, shared with other journeys (content/shared/pages/).
-  # Create and Sign in both lead to the email page.
+  # Mock GOV.UK One Login, shared with other journeys
+  # (content/shared/one-login/). "Sign in" leads to the email page; the
+  # "Create your GOV.UK One Login" button links to one-login-create-email.
   - id: one-login-start
-    shared: true
+    shared: one-login
     next: one-login-email
 
   - id: one-login-email
-    shared: true
+    shared: one-login
     next: one-login-password
 
-  # A sign-in email containing "new" has no Defra account yet and registers
-  # one first (new-individual@, new-company@, new@ for an agent)
+  # Signing in, or finishing creating an account, decides the account type
+  # from the email. A sign-in email containing "new" has no Defra account yet
+  # and registers one first (new-individual@, new-company@, new@ for an agent)
   - id: one-login-password
-    shared: true
+    shared: one-login
     handler: custom # decides the account type from the email, see hooks.js
-    next:
+    next: &signed-in
       - when: { key: account.needsDefraAccount, truthy: true }
         goto: defra-register
       - when: { key: account.accountType, in: [company, individual] }
         goto: your-address
       - goto: developer-details
 
-  # Mock Defra ID: register a Defra account. The business or individual
-  # answer picks the screens and, on the check your answers page, the account
-  # type for the rest of the journey (see hooks.js). Every page needs the
-  # One Login sign in first.
+  # Creating a GOV.UK One Login: email, code from the email, password, then
+  # security codes by text message (two pages) or authenticator app (one)
+  - id: one-login-create-email
+    shared: one-login
+    next: one-login-check-email
+
+  - id: one-login-check-email
+    shared: one-login
+    guard: { key: signInEmail, isSet: true, redirect: one-login-create-email }
+    next: one-login-create-password
+
+  - id: one-login-create-password
+    shared: one-login
+    guard: { key: signInEmail, isSet: true, redirect: one-login-create-email }
+    next: one-login-security-codes
+
+  - id: one-login-security-codes
+    shared: one-login
+    guard: { key: signInEmail, isSet: true, redirect: one-login-create-email }
+    next:
+      - when: { key: securityCodeMethod, equals: sms }
+        goto: one-login-phone-number
+      - goto: one-login-authenticator
+
+  - id: one-login-phone-number
+    shared: one-login
+    guard: { key: securityCodeMethod, equals: sms, redirect: one-login-security-codes }
+    next: one-login-check-phone
+
+  - id: one-login-check-phone
+    shared: one-login
+    guard: { key: mobileNumber, isSet: true, redirect: one-login-phone-number }
+    next: one-login-created
+
+  - id: one-login-authenticator
+    shared: one-login
+    guard: { key: signInEmail, isSet: true, redirect: one-login-create-email }
+    next: one-login-created
+
+  - id: one-login-created
+    shared: one-login
+    guard: { key: signInEmail, isSet: true, redirect: one-login-create-email }
+    handler: custom # signs in with the new account, see hooks.js
+    next: *signed-in
+
+  # Mock Government Gateway, shared with other journeys
+  # (content/shared/government-gateway/). Signing in reads the user ID the
+  # way One Login reads the email (company, individual, new-...); "Create
+  # sign in details" on the page links to government-gateway-email.
+  - id: government-gateway-sign-in
+    shared: government-gateway
+    handler: custom # decides the account type from the user ID, see hooks.js
+    next: *signed-in
+
+  - id: government-gateway-email
+    shared: government-gateway
+    next: government-gateway-confirm-email
+
+  - id: government-gateway-confirm-email
+    shared: government-gateway
+    guard: { key: signInEmail, isSet: true, redirect: government-gateway-email }
+    next: government-gateway-email-confirmed
+
+  - id: government-gateway-email-confirmed
+    shared: government-gateway
+    guard: { key: signInEmail, isSet: true, redirect: government-gateway-email }
+    next: government-gateway-name
+
+  - id: government-gateway-name
+    shared: government-gateway
+    guard: { key: signInEmail, isSet: true, redirect: government-gateway-email }
+    next: government-gateway-create-password
+
+  - id: government-gateway-create-password
+    shared: government-gateway
+    guard: { key: governmentGatewayName, isSet: true, redirect: government-gateway-name }
+    next: government-gateway-user-id
+
+  - id: government-gateway-user-id
+    shared: government-gateway
+    guard: { key: governmentGatewayName, isSet: true, redirect: government-gateway-name }
+    handler: custom # mints the user ID and signs in with the new account, see hooks.js
+    next: *signed-in
+
+  # Mock Defra ID: register a Defra account (content/shared/defra-id/). The
+  # business or individual answer picks the screens and, on the check your
+  # answers page, the account type for the rest of the journey (see
+  # hooks.js). Every page needs the sign in first.
   - id: defra-register
+    shared: defra-id
     guard: { key: account, isSet: true, redirect: sign-in-method }
     next: defra-terms
 
   - id: defra-terms
+    shared: defra-id
     guard: { key: account, isSet: true, redirect: sign-in-method }
     next: defra-what-we-need
 
   - id: defra-what-we-need
+    shared: defra-id
     guard: { key: account, isSet: true, redirect: sign-in-method }
     next: defra-registration-type
 
   - id: defra-registration-type
+    shared: defra-id
     field: registration-type
     sessionKey: defraAccountType
     changeable: true
@@ -385,6 +492,7 @@ pages:
 
   # Individual: name, telephone, address (found or entered), memorable word
   - id: defra-name
+    shared: defra-id
     sessionKey: defraName
     changeable: true
     guard: { key: account, isSet: true, redirect: sign-in-method }
@@ -394,6 +502,7 @@ pages:
       - goto: defra-telephone
 
   - id: defra-telephone
+    shared: defra-id
     sessionKey: defraTelephone
     changeable: true
     guard: { key: account, isSet: true, redirect: sign-in-method }
@@ -405,12 +514,14 @@ pages:
   # Find address: the postcode leads to a fixed list; the links on both pages
   # go to the manual address form
   - id: defra-postcode
+    shared: defra-id
     sessionKey: defraPostcode
     changeable: true
     guard: { key: account, isSet: true, redirect: sign-in-method }
     next: defra-select-address
 
   - id: defra-select-address
+    shared: defra-id
     field: address
     sessionKey: defraAddress
     changeable: true
@@ -422,6 +533,7 @@ pages:
       - goto: defra-memorable-word
 
   - id: defra-address-manual
+    shared: defra-id
     sessionKey: defraAddressManual
     changeable: true
     handler: custom # joins the lines into the address, see hooks.js
@@ -436,6 +548,7 @@ pages:
       - goto: defra-memorable-word
 
   - id: defra-memorable-word
+    shared: defra-id
     sessionKey: defraMemorableWord
     changeable: true
     guard: { key: account, isSet: true, redirect: sign-in-method }
@@ -445,6 +558,7 @@ pages:
       - goto: defra-check-answers
 
   - id: defra-check-answers
+    shared: defra-id
     guard: { key: account, isSet: true, redirect: sign-in-method }
     handler: custom # completes the registration and sets the account type, see hooks.js
     next:
@@ -456,6 +570,7 @@ pages:
   # House fixture), contact details. "No" answers carry on: not trading in
   # the UK still asks for the number; no number skips to the contact details.
   - id: defra-trading-uk
+    shared: defra-id
     field: trading-uk
     sessionKey: defraTradingUk
     changeable: true
@@ -466,6 +581,7 @@ pages:
       - goto: defra-has-crn
 
   - id: defra-has-crn
+    shared: defra-id
     field: has-crn
     sessionKey: defraHasCrn
     changeable: true
@@ -476,12 +592,14 @@ pages:
       - goto: defra-crn
 
   - id: defra-crn
+    shared: defra-id
     sessionKey: defraCrn
     changeable: true
     guard: { key: defraHasCrn, equals: 'Yes', redirect: defra-has-crn }
     next: defra-confirm-business
 
   - id: defra-confirm-business
+    shared: defra-id
     guard: { key: defraCrn, isSet: true, redirect: defra-crn }
     next:
       - when: { key: $navFromSummary, truthy: true }
@@ -489,6 +607,7 @@ pages:
       - goto: defra-business-contact
 
   - id: defra-business-contact
+    shared: defra-id
     sessionKey: defraBusinessContact
     changeable: true
     guard: { key: account, isSet: true, redirect: sign-in-method }
@@ -498,6 +617,7 @@ pages:
       - goto: defra-business-check-answers
 
   - id: defra-business-check-answers
+    shared: defra-id
     guard: { key: account, isSet: true, redirect: sign-in-method }
     handler: custom # completes the registration and sets the account type, see hooks.js
     preview:

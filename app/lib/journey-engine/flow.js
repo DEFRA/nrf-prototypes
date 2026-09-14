@@ -36,7 +36,251 @@ function isExternalTarget(target) {
   return Boolean(target) && target.startsWith('/')
 }
 
+// Inside a group drawn on its own (see groupScope), a page of the journey
+// outside the group is an exit too
+function isExitTarget(target, journey) {
+  return (
+    Boolean(target) &&
+    Boolean(journey.exitPaths) &&
+    journey.exitPaths.has(target)
+  )
+}
+
+// A rule's edge label: its condition, or the label a collapsed group gave it
+function ruleLabel(rule) {
+  if (rule.label !== undefined && rule.label !== '') {
+    return rule.label
+  }
+  return rule.when ? describeCondition(rule.when) : ''
+}
+
 const EXTERNAL_HEADING = 'Continues in another journey'
+
+// Default titles for the groups made from the shared provider folders
+const GROUP_TITLES = {
+  'one-login': 'GOV.UK One Login',
+  'government-gateway': 'Government Gateway',
+  'defra-id': 'Defra ID'
+}
+
+function groupId(name) {
+  return `group:${name}`
+}
+
+function groupAnchor(name) {
+  return `#group-${name}`
+}
+
+/**
+ * The groups of a journey: every distinct `page.group` (a shared provider
+ * folder, or `group:` on a page entry), in order of first appearance, with
+ * a title from journey.yaml `groups:`, the defaults above, or the name.
+ * Returns [{ id, title, pages: [ids] }].
+ */
+function journeyGroups(journey) {
+  const groups = new Map()
+  for (const page of journey.pages) {
+    if (!page.group) {
+      continue
+    }
+    if (!groups.has(page.group)) {
+      const custom = (journey.groups || {})[page.group] || {}
+      groups.set(page.group, {
+        id: page.group,
+        title:
+          custom.title ||
+          GROUP_TITLES[page.group] ||
+          page.group.replace(/-/g, ' '),
+        pages: []
+      })
+    }
+    groups.get(page.group).pages.push(page.id)
+  }
+  return [...groups.values()]
+}
+
+/**
+ * The journey with each group folded into one synthetic page, so the main
+ * flow and screen wall show "GOV.UK One Login" once instead of every screen
+ * of it. Rules of grouped pages that lead out of the group become the
+ * synthetic page's rules, labelled with the page they come from. A journey
+ * without groups comes back unchanged.
+ */
+function collapseGroups(journey) {
+  const groups = journeyGroups(journey)
+  if (!groups.length) {
+    return journey
+  }
+  const groupOf = new Map()
+  for (const group of groups) {
+    for (const id of group.pages) {
+      groupOf.set(id, group.id)
+    }
+  }
+  const mapTarget = (target) =>
+    groupOf.has(target) ? groupId(groupOf.get(target)) : target
+  const mapRules = (rules) =>
+    (rules || []).map((rule) => ({ ...rule, goto: mapTarget(rule.goto) }))
+  const mapChange = (change) =>
+    typeof change === 'string' ? mapTarget(change) : mapRules(change)
+
+  const pages = []
+  const placed = new Set()
+  for (const page of journey.pages) {
+    if (!page.group) {
+      pages.push({
+        ...page,
+        next: mapRules(page.next),
+        content: {
+          ...page.content,
+          rows: (page.content.rows || []).map((row) => ({
+            ...row,
+            change: row.change === undefined ? undefined : mapChange(row.change)
+          })),
+          actions: (page.content.actions || []).map((action) => ({
+            ...action,
+            goto: action.goto ? mapTarget(action.goto) : action.goto
+          }))
+        }
+      })
+      continue
+    }
+    if (placed.has(page.group)) {
+      continue
+    }
+    placed.add(page.group)
+    const group = groups.find((g) => g.id === page.group)
+    const own = groupId(group.id)
+    const next = []
+    const actions = []
+    const seenNext = new Set()
+    const seenActions = new Set()
+    for (const id of group.pages) {
+      const member = journey.byId.get(id)
+      for (const rule of member.next || []) {
+        const goto = mapTarget(rule.goto)
+        if (goto === own || rule.goto === SUMMARY_TARGET) {
+          continue
+        }
+        const condition = rule.when ? describeCondition(rule.when) : ''
+        const key = `${goto}|${condition}`
+        if (seenNext.has(key)) {
+          continue
+        }
+        seenNext.add(key)
+        next.push({
+          goto,
+          when: rule.when,
+          label: condition ? `${condition} (via ${id})` : `via ${id}`
+        })
+      }
+      for (const action of member.content.actions || []) {
+        const goto = action.goto ? mapTarget(action.goto) : undefined
+        if (!goto || goto === own || goto === SUMMARY_TARGET) {
+          continue
+        }
+        if (seenActions.has(goto)) {
+          continue
+        }
+        seenActions.add(goto)
+        actions.push({ ...action, goto, text: `${action.text} (${id})` })
+      }
+    }
+    // One default rule at most, last as usual: the first default found (in
+    // page order) is the group's; other unconditional exits keep their
+    // label as the reason
+    const conditional = next.filter((rule) => rule.when)
+    const defaults = next.filter((rule) => !rule.when)
+    const ordered = [...conditional, ...defaults.slice(1)]
+    if (defaults.length) {
+      ordered.push({ ...defaults[0], label: '' })
+    }
+    pages.push({
+      id: own,
+      path: groupAnchor(group.id),
+      type: 'group',
+      group: group.id,
+      groupTitle: group.title,
+      groupCount: group.pages.length,
+      next: ordered,
+      content: { heading: group.title, rows: [], actions, body: '' }
+    })
+  }
+  const byId = new Map(pages.map((page) => [page.id, page]))
+  return {
+    ...journey,
+    pages,
+    byId,
+    start: mapTarget(journey.start),
+    summaryPages: journey.summaryPages.filter((id) => !groupOf.has(id)),
+    collapsed: true
+  }
+}
+
+const GROUP_EXIT_HEADING = 'Back in the journey'
+
+/**
+ * One group as a journey of its own: its pages, entered at the first page
+ * reached from outside, with every other page of the journey available as
+ * an exit (drawn like an exit to another journey, labelled "Back in the
+ * journey").
+ */
+function groupScope(journey, group) {
+  const members = new Set(group.pages)
+  const pages = journey.pages.filter((page) => members.has(page.id))
+  // Entered where a form submission or link from outside first lands
+  // (return edges to a summary page inside the group do not count)
+  const entered = getEdges(journey)
+    .filter(
+      (edge) =>
+        ['next', 'link'].includes(edge.kind) &&
+        !members.has(edge.fromId) &&
+        members.has(edge.toId)
+    )
+    .map((edge) => edge.toId)
+  const start = entered.length ? entered[0] : pages[0].id
+  const exitPaths = new Map()
+  for (const page of journey.pages) {
+    if (!members.has(page.id)) {
+      exitPaths.set(page.id, page.path)
+    }
+  }
+  return {
+    ...journey,
+    pages,
+    byId: new Map(pages.map((page) => [page.id, page])),
+    start,
+    summaryPages: journey.summaryPages.filter((id) => members.has(id)),
+    exitPaths,
+    exitHeading: GROUP_EXIT_HEADING,
+    scope: group.id
+  }
+}
+
+/**
+ * The tools page's sections: the main journey with groups collapsed, then
+ * one section per group with its own rows and flow graph.
+ */
+function journeySections(journey) {
+  const collapsed = collapseGroups(journey)
+  return {
+    main: {
+      levels: layoutLevels(collapsed),
+      graph: toFlowGraph(collapsed)
+    },
+    groups: journeyGroups(journey).map((group) => {
+      const scope = groupScope(journey, group)
+      return {
+        id: group.id,
+        title: group.title,
+        anchor: groupAnchor(group.id),
+        count: group.pages.length,
+        levels: layoutLevels(scope),
+        graph: toFlowGraph(scope)
+      }
+    })
+  }
+}
 
 /**
  * Edges: { fromId, toId, label, kind, external } where kind is
@@ -78,14 +322,22 @@ function getEdges(journey) {
         add({
           fromId: page.id,
           toId: rule.goto,
-          label: rule.when ? describeCondition(rule.when) : '',
+          label: ruleLabel(rule),
           kind: isReturn ? 'return' : 'next'
         })
       } else if (isExternalTarget(rule.goto)) {
         add({
           fromId: page.id,
           toId: rule.goto,
-          label: rule.when ? describeCondition(rule.when) : '',
+          label: ruleLabel(rule),
+          kind: 'next',
+          external: true
+        })
+      } else if (isExitTarget(rule.goto, journey)) {
+        add({
+          fromId: page.id,
+          toId: journey.exitPaths.get(rule.goto),
+          label: ruleLabel(rule),
           kind: 'next',
           external: true
         })
@@ -104,11 +356,14 @@ function getEdges(journey) {
             label: `Change ${row.key}`,
             kind: 'change'
           })
-        } else if (isExternalTarget(target)) {
-          // A Change link that borrows another journey's page
+        } else if (isExternalTarget(target) || isExitTarget(target, journey)) {
+          // A Change link that borrows another journey's page (or, inside a
+          // group, leaves the group)
           add({
             fromId: page.id,
-            toId: target,
+            toId: isExternalTarget(target)
+              ? target
+              : journey.exitPaths.get(target),
             label: `Change ${row.key}`,
             kind: 'change',
             external: true
@@ -124,19 +379,25 @@ function getEdges(journey) {
           label: action.text,
           kind: 'link'
         })
-      } else if (isExternalTarget(action.goto)) {
+      } else if (
+        isExternalTarget(action.goto) ||
+        isExitTarget(action.goto, journey)
+      ) {
         add({
           fromId: page.id,
-          toId: action.goto,
+          toId: isExternalTarget(action.goto)
+            ? action.goto
+            : journey.exitPaths.get(action.goto),
           label: action.text,
           kind: 'link',
           external: true
         })
       }
     }
-    // Links inside the markdown body to other pages in this journey
+    // Links inside the markdown body to other pages in this journey, by
+    // absolute path or by `./page-id`
     const linkPattern = new RegExp(
-      `\\]\\(${journey.basePath}/([a-z0-9-]+)\\)`,
+      `\\]\\((?:${journey.basePath}|\\.)/([a-z0-9-]+)\\)`,
       'g'
     )
     let match
@@ -161,7 +422,7 @@ function externalNodes(journey) {
       seen.add(edge.toId)
       nodes.push({
         id: edge.toId,
-        heading: EXTERNAL_HEADING,
+        heading: journey.exitHeading || EXTERNAL_HEADING,
         path: edge.toId,
         kind: 'external',
         external: true,
@@ -258,6 +519,7 @@ function layoutLevels(journey) {
     rows[rowIndex].pages.push({
       id: edge.toId,
       path: edge.toId,
+      heading: journey.exitHeading || EXTERNAL_HEADING,
       via: `From ${edge.fromId}${detail}`,
       external: true
     })
@@ -298,7 +560,7 @@ function toMermaid(journey, options = {}) {
   const externals = externalNodes(journey)
   const externalId = new Map(externals.map((node, i) => [node.id, `ext${i}`]))
   for (const node of externals) {
-    const label = mermaidLabel(`${node.path}\n${EXTERNAL_HEADING}`)
+    const label = mermaidLabel(`${node.path}\n${node.heading}`)
     lines.push(`  ${externalId.get(node.id)}["${label}"]`)
   }
   for (const edge of getEdges(journey)) {
@@ -374,7 +636,9 @@ function toFlowGraph(journey) {
   const nodeOf = (page) => {
     const isExit = !(page.next && page.next.length)
     let kind = 'main'
-    if (page.id === journey.start) {
+    if (page.type === 'group') {
+      kind = 'group'
+    } else if (page.id === journey.start) {
       kind = 'start'
     } else if (page.type === 'confirmation') {
       kind = 'confirmation'
@@ -383,9 +647,14 @@ function toFlowGraph(journey) {
     }
     return {
       id: page.id,
-      heading: shortHeading(page),
+      heading:
+        page.type === 'group'
+          ? `${page.groupCount} screens, see below`
+          : shortHeading(page),
       path: page.path,
       kind,
+      // Group nodes link to their section on the page, not to a screen
+      anchor: page.type === 'group',
       onMainChain: position.has(page.id)
     }
   }
@@ -475,62 +744,82 @@ function previewVariants(page) {
     }))
 }
 
+// The section ids an export can pick from: the main journey and each group
+const MAIN_SECTION = 'main'
+
+function exportSections(journey) {
+  return [
+    { id: MAIN_SECTION, title: 'Main journey' },
+    ...journeyGroups(journey).map((group) => ({
+      id: group.id,
+      title: group.title
+    }))
+  ]
+}
+
 /**
  * Every screen to capture for a JPG export, in screen-wall order (each
- * main-chain page followed by its branches, unreached pages last). Question
- * and custom pages get a second entry showing their error state unless
+ * main-chain page followed by its branches, unreached pages last): the main
+ * journey with its groups folded, then each group. Question and custom
+ * pages get a second entry showing their error state unless
  * `includeErrors` is false, and a page with `preview.variants` gets one
- * entry per variant.
+ * entry per variant. `sections` picks which parts to export ('main' and
+ * group ids; all by default). A journey with groups files each section in
+ * a folder of its own; one without keeps a flat list.
  *
  * @param {object} journey  loaded journey definition
- * @param {object} options  { includeErrors } (true by default)
- * @returns [{ id, type, path, url, file, error, variant }]
+ * @param {object} options  { includeErrors, sections }
+ * @returns [{ id, section, type, path, url, file, error, variant }]
  */
 function exportScreens(journey, options = {}) {
   const includeErrors = options.includeErrors !== false
+  const available = exportSections(journey).map((section) => section.id)
+  const wanted = Array.isArray(options.sections)
+    ? options.sections.filter((id) => available.includes(id))
+    : available
+  const layout = journeySections(journey)
+  const parts = [
+    { id: MAIN_SECTION, levels: layout.main.levels },
+    ...layout.groups.map((group) => ({ id: group.id, levels: group.levels }))
+  ].filter((part) => wanted.includes(part.id))
+  const inFolders = layout.groups.length > 0
   const screens = []
   let index = 0
-  for (const row of layoutLevels(journey)) {
-    for (const { id, external } of row.pages) {
-      if (external) {
-        continue
-      }
-      const page = journey.byId.get(id)
-      index += 1
-      const prefix = String(index).padStart(2, '0')
-      screens.push({
-        id,
-        type: page.type,
-        path: page.path,
-        url: `${page.path}?preview=1`,
-        file: `${prefix}-${id}.jpg`,
-        error: false,
-        variant: null
-      })
-      if (
-        includeErrors &&
-        (isQuestionType(page.type) || page.type === 'custom')
-      ) {
-        screens.push({
+  for (const part of parts) {
+    const folder = inFolders ? `${part.id}/` : ''
+    for (const row of part.levels) {
+      for (const { id, external } of row.pages) {
+        if (external || id.startsWith('group:')) {
+          continue
+        }
+        const page = journey.byId.get(id)
+        index += 1
+        const prefix = String(index).padStart(2, '0')
+        const entry = (suffix, url, extra) => ({
           id,
+          section: part.id,
           type: page.type,
           path: page.path,
-          url: `${page.path}?preview=1&error=1`,
-          file: `${prefix}-${id}--error.jpg`,
-          error: true,
-          variant: null
-        })
-      }
-      for (const variant of previewVariants(page)) {
-        screens.push({
-          id,
-          type: page.type,
-          path: page.path,
-          url: `${page.path}?preview=1&variant=${variant.id}`,
-          file: `${prefix}-${id}--${variant.id}.jpg`,
+          url: `${page.path}?preview=1${url}`,
+          file: `${folder}${prefix}-${id}${suffix}.jpg`,
           error: false,
-          variant: variant.id
+          variant: null,
+          ...extra
         })
+        screens.push(entry('', '', {}))
+        if (
+          includeErrors &&
+          (isQuestionType(page.type) || page.type === 'custom')
+        ) {
+          screens.push(entry('--error', '&error=1', { error: true }))
+        }
+        for (const variant of previewVariants(page)) {
+          screens.push(
+            entry(`--${variant.id}`, `&variant=${variant.id}`, {
+              variant: variant.id
+            })
+          )
+        }
       }
     }
   }
@@ -539,6 +828,11 @@ function exportScreens(journey, options = {}) {
 
 module.exports = {
   previewVariants,
+  journeyGroups,
+  collapseGroups,
+  groupScope,
+  journeySections,
+  exportSections,
   getEdges,
   externalNodes,
   layoutLevels,

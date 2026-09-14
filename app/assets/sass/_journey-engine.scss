@@ -12,6 +12,11 @@
   &__phase {
     flex: 1 1 auto;
   }
+
+  // Government Gateway: the toggle alone, kept to the right
+  &--toggle-only {
+    justify-content: flex-end;
+  }
 }
 
 .app-language-toggle {

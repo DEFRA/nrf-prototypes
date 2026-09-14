@@ -1,5 +1,12 @@
 const { test, expect } = require('@playwright/test')
-const { loadJourney, toFlowGraph } = require('../../app/lib/journey-engine')
+const {
+  loadJourney,
+  toFlowGraph,
+  journeyGroups,
+  journeySections,
+  exportSections,
+  exportScreens
+} = require('../../app/lib/journey-engine')
 
 /**
  * nrf-request-to-use-1: retrieving a quote, accepting the levy, signing in
@@ -662,19 +669,303 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
 })
 
 test.describe('journey tools', () => {
-  test('flow and screen wall page lists every screen', async ({ page }) => {
+  // The sign-in and account pages come from the shared provider folders,
+  // so the tools page folds each provider into one card and one node and
+  // draws its screens in a section of its own
+  const groups = journeyGroups(journey)
+  const sections = journeySections(journey)
+
+  test('the shared provider folders are the groups', () => {
+    expect(groups.map((group) => group.id)).toEqual([
+      'one-login',
+      'government-gateway',
+      'defra-id'
+    ])
+    expect(groups.map((group) => group.title)).toEqual([
+      'GOV.UK One Login',
+      'Government Gateway',
+      'Defra ID'
+    ])
+    const grouped = groups.reduce((sum, group) => sum + group.pages.length, 0)
+    expect(grouped).toBe(
+      journey.pages.filter((page) => page.shared !== true && page.shared).length
+    )
+    // The main path goes through One Login as one step
+    expect(sections.main.graph.mainChain).toContain('group:one-login')
+    expect(sections.main.graph.mainChain).not.toContain('one-login-email')
+    // Each group starts where the journey enters it
+    expect(sections.groups.map((group) => group.levels[0].pages[0].id)).toEqual(
+      ['one-login-start', 'government-gateway-sign-in', 'defra-register']
+    )
+    for (const group of sections.groups) {
+      expect(group.levels.some((row) => row.unreachable)).toBe(false)
+    }
+  })
+
+  test('flow and screen wall page lists every screen once', async ({
+    page
+  }) => {
     const response = await page.goto(`/tools/journeys/${journey.id}`)
     expect(response.status()).toBe(200)
     await expect(page.locator('iframe')).toHaveCount(journey.pages.length)
+    await expect(page.locator('.wall-card--group')).toHaveCount(
+      sections.main.graph.nodes.filter((node) => node.kind === 'group').length
+    )
+    for (const group of groups) {
+      const section = page.locator(`#group-${group.id}`)
+      await expect(section.locator('h2')).toHaveText(group.title)
+      await expect(section.locator('iframe')).toHaveCount(group.pages.length)
+    }
+    // A group card links to its section
+    await expect(
+      page.locator('.wall-card--group a[href="#group-one-login"]').first()
+    ).toHaveCount(1)
   })
 
-  test('flow diagram renders every node', async ({ page }) => {
+  test('the JPG export can pick sections', async ({ request }) => {
+    expect(exportSections(journey).map((section) => section.id)).toEqual([
+      'main',
+      ...groups.map((group) => group.id)
+    ])
+    // Everything, once, filed by section
+    const all = exportScreens(journey, { includeErrors: false })
+    expect(all.map((screen) => screen.id).sort()).toEqual(
+      journey.pages.map((page) => page.id).sort()
+    )
+    expect(all[0].file).toBe('main/01-start.jpg')
+    // One group on its own, numbered from 1
+    const oneLogin = exportScreens(journey, {
+      includeErrors: false,
+      sections: ['one-login']
+    })
+    expect(oneLogin.map((screen) => screen.id).sort()).toEqual(
+      groups.find((group) => group.id === 'one-login').pages.sort()
+    )
+    expect(oneLogin[0].file).toBe('one-login/01-one-login-start.jpg')
+    // The form's checkboxes are there, all ticked; nothing ticked is refused
+    const response = await request.get(
+      `/tools/journeys/${journey.id}/screens.zip?section=nothing`
+    )
+    expect(response.status()).toBe(400)
+  })
+
+  test('flow diagrams render every node', async ({ page }) => {
     await page.goto(`/tools/journeys/${journey.id}`)
     await expect(
       page.locator('#flow-diagram[data-rendered="true"]')
     ).toHaveCount(1, { timeout: 20000 })
-    await expect(page.locator('.flow-node')).toHaveCount(
-      toFlowGraph(journey).nodes.length
+    for (const group of groups) {
+      await expect(
+        page.locator(`#flow-diagram-group-${group.id}[data-rendered="true"]`)
+      ).toHaveCount(1, { timeout: 20000 })
+    }
+    const expected =
+      sections.main.graph.nodes.length +
+      sections.groups.reduce((sum, group) => sum + group.graph.nodes.length, 0)
+    await expect(page.locator('.flow-node')).toHaveCount(expected)
+    await expect(page.locator('.flow-node--group')).toHaveCount(
+      sections.main.graph.nodes.filter((node) => node.kind === 'group').length
     )
+    // The full graph is still what flow.json and flow.mmd describe
+    expect(toFlowGraph(journey).nodes.length).toBeGreaterThan(
+      sections.main.graph.nodes.length
+    )
+  })
+})
+
+test.describe('nrf-request-to-use-1 creating an account', () => {
+  // The mock identity providers each live in their own shared folder
+  const providers = {
+    'one-login-': 'one-login',
+    'government-gateway-': 'government-gateway',
+    'defra-': 'defra-id'
+  }
+
+  test('the identity provider pages are shared from their own folders', () => {
+    for (const page of journey.pages) {
+      const prefix = Object.keys(providers).find((p) => page.id.startsWith(p))
+      if (!prefix) {
+        continue
+      }
+      const folder = providers[prefix]
+      expect(page.shared).toBe(folder)
+      expect(page.contentFile).toBe(`content/shared/${folder}/${page.id}.md`)
+    }
+    expect(journey.byId.get('defra-name').shared).toBe('defra-id')
+  })
+
+  test('the password pages keep nothing and need every field', async ({
+    page
+  }) => {
+    for (const id of [
+      'one-login-create-password',
+      'government-gateway-create-password',
+      'government-gateway-sign-in'
+    ]) {
+      const form = journey.byId.get(id)
+      expect(form.sessionKey).toBeUndefined()
+      expect(form.content.fields.length).toBeGreaterThan(1)
+      for (const field of form.content.fields) {
+        expect(field.name.startsWith('_')).toBe(true)
+      }
+      const response = await page.request.post(form.path, { form: {} })
+      expect(response.status()).toBe(200)
+      const html = await response.text()
+      expect(html).toContain('There is a problem')
+      for (const field of form.content.fields) {
+        expect(html).toContain(field.errors.required)
+      }
+    }
+  })
+
+  async function reachSignIn(page) {
+    await retrieveQuote(page)
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await page.getByLabel(/Yes, accept/).check()
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/variation`)
+    await page.getByLabel('No', { exact: true }).check()
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/sign-in-method`)
+  }
+
+  async function createOneLogin(page, email) {
+    await reachSignIn(page)
+    await page.getByLabel(/GOV.UK One Login/).check()
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/one-login-start`)
+    // The Create button is a link (role button) to the create flow; Sign in
+    // still submits
+    await page
+      .getByRole('button', { name: 'Create your GOV.UK One Login' })
+      .click()
+    await expect(page).toHaveURL(`${base}/one-login-create-email`)
+    await expect(page).toHaveTitle(/GOV.UK One Login$/)
+
+    await page.getByLabel('Enter your email address').fill(email)
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/one-login-check-email`)
+    await expect(page.locator('.govuk-inset-text')).toContainText(email)
+    await page.getByLabel('Enter the 6 digit code').fill('123456')
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/one-login-create-password`)
+
+    await page.getByLabel('Enter a password').fill('not-a-real-password1')
+    await page.getByLabel('Re-type password').fill('not-a-real-password1')
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/one-login-security-codes`)
+  }
+
+  test('creating a One Login with an authenticator app signs in', async ({
+    page
+  }) => {
+    await createOneLogin(page, 'agent@example.com')
+    await page.getByLabel('Authenticator app').check()
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/one-login-authenticator`)
+    await expect(page.locator('img[src$="one-login-qr-code.svg"]')).toHaveCount(
+      1
+    )
+    await expect(
+      page.getByRole('link', {
+        name: 'Choose another way to get security codes'
+      })
+    ).toHaveAttribute('href', `${base}/one-login-security-codes`)
+    await page.getByLabel('Enter the code').fill('123456')
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/one-login-created`)
+    await page.getByRole('button', { name: 'Continue' }).click()
+    // The email is an agent's, so on to the developer details, signed in
+    await expect(page).toHaveURL(`${base}/developer-details`)
+    await expect(
+      page.locator('.govuk-service-navigation').getByRole('link', {
+        name: 'Sign out'
+      })
+    ).toHaveCount(1)
+  })
+
+  test('security codes by text message ask for a phone number', async ({
+    page
+  }) => {
+    await createOneLogin(page, 'new-individual@example.com')
+    await page.getByLabel(/Text message/).check()
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/one-login-phone-number`)
+    await page.getByLabel('Enter your mobile phone number').fill('07700 900123')
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/one-login-check-phone`)
+    await expect(page.locator('main')).toContainText('07700 900123')
+    await page.getByLabel('Enter the 6 digit security code').fill('123456')
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/one-login-created`)
+    await page.getByRole('button', { name: 'Continue' }).click()
+    // An email containing "new" still registers a Defra account first
+    await expect(page).toHaveURL(`${base}/defra-register`)
+  })
+
+  async function reachGateway(page) {
+    await reachSignIn(page)
+    await page.getByLabel(/Government Gateway/).check()
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/government-gateway-sign-in`)
+    // Government Gateway chrome: its own bar, language toggle, no phase
+    // banner, the notification banner above the heading
+    await expect(
+      page.locator('.govuk-service-navigation__service-name')
+    ).toContainText('Government Gateway')
+    await expect(page.locator('.govuk-phase-banner')).toHaveCount(0)
+    await expect(
+      page.getByRole('link', { name: 'Cymraeg', exact: true })
+    ).toHaveCount(1)
+    await expect(page.locator('.govuk-notification-banner__title')).toHaveText(
+      'Keeping your information secure'
+    )
+    await expect(page).toHaveTitle(/Sign in using Government Gateway - GOV.UK$/)
+  }
+
+  test('signing in with Government Gateway reads the user ID', async ({
+    page
+  }) => {
+    await reachGateway(page)
+    await page.getByLabel('Government Gateway user ID').fill('company')
+    await page
+      .getByRole('textbox', { name: 'Password', exact: true })
+      .fill('not-a-real-password')
+    await page.getByRole('button', { name: 'Sign in' }).click()
+    // A company gives its own address
+    await expect(page).toHaveURL(`${base}/your-address`)
+  })
+
+  test('creating Government Gateway sign in details mints a user ID', async ({
+    page
+  }) => {
+    await reachGateway(page)
+    // A link written as ./government-gateway-email resolves to this journey
+    await page.getByRole('link', { name: 'Create sign in details' }).click()
+    await expect(page).toHaveURL(`${base}/government-gateway-email`)
+    await page.getByLabel('Email address').fill('agent@example.com')
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/government-gateway-confirm-email`)
+    await expect(page.locator('main')).toContainText('agent@example.com')
+    await page.getByLabel('Confirmation code').fill('DNCLRK')
+    await page.getByRole('button', { name: 'Confirm' }).click()
+    await expect(page).toHaveURL(`${base}/government-gateway-email-confirmed`)
+    await page.getByRole('button', { name: 'Confirm' }).click()
+    await expect(page).toHaveURL(`${base}/government-gateway-name`)
+    await page.getByLabel('What is your full name?').fill('Jane Agent')
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/government-gateway-create-password`)
+    await page
+      .getByRole('textbox', { name: 'Password', exact: true })
+      .fill('three random words')
+    await page.getByLabel('Confirm your password').fill('three random words')
+    await page.getByRole('button', { name: 'Confirm' }).click()
+    await expect(page).toHaveURL(`${base}/government-gateway-user-id`)
+    await expect(page.locator('.govuk-panel__body')).toHaveText(
+      /^\s*(\d\d ){5}\d\d\s*$/
+    )
+    await expect(page.locator('main')).toContainText('agent@example.com')
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/developer-details`)
   })
 })

@@ -2,7 +2,10 @@
   `type: form`: several text inputs on one page (an address, say). Fields come
   from the page's `fields:` frontmatter; answers are stored together as one
   object under the page's sessionKey. `values` holds what was just submitted
-  when validation failed, so nothing the user typed is lost.
+  when validation failed, so nothing the user typed is lost. A `password`
+  field gets the Show/Hide input and is never echoed back. When the body
+  starts with something other than the heading (a notification banner), the
+  h1 stays in the body.
 #}
 {% extends "journey-engine/_page.html" %}
 
@@ -11,7 +14,7 @@
   {% include "journey-engine/_change-inputs.html" %}
   {% include "journey-engine/_error-summary.html" %}
 
-  <h1 class="govuk-heading-l">{% include "journey-engine/_caption.html" %}{{ content.heading }}</h1>
+  {% if not content.headingInBody %}<h1 class="govuk-heading-l">{% include "journey-engine/_caption.html" %}{{ content.heading }}</h1>{% endif %}
   {% if content.hint %}<p class="govuk-body">{{ content.hint }}</p>{% endif %}
   {{ content.html | safe }}
 
@@ -23,7 +26,17 @@
     {% endfor %}
     {% set fieldValue = values[field.name] if values else saved[field.key] %}
     {% set fieldLabel = field.label + (" (optional)" if field.optional and not (" (optional)" in field.label) else "") %}
-    {% if field.type == 'textarea' %}
+    {% if field.type == 'password' %}
+      {{ govukPasswordInput({
+        id: field.name,
+        name: field.name,
+        classes: field.classes,
+        autocomplete: field.autocomplete,
+        label: { text: fieldLabel },
+        hint: { text: field.hint } if field.hint,
+        errorMessage: { text: fieldError } if fieldError
+      }) }}
+    {% elif field.type == 'textarea' %}
       {{ govukCharacterCount({
         id: field.name,
         name: field.name,
@@ -50,5 +63,7 @@
   {% endfor %}
 
   {% include "journey-engine/_question-actions.html" %}
+
+  {{ content.htmlAfter | safe }}
 </form>
 {% endblock %}
