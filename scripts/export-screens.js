@@ -6,11 +6,13 @@
  *   npm run screenshot:journey nrf-quote-7
  *   npm run screenshot:journey nrf-quote-7 -- --base-url http://localhost:3100
  *   npm run screenshot:journey nrf-quote-7 -- --mobile
+ *   npm run screenshot:journey nrf-quote-7 -- --no-errors
  *
  * The prototype must already be running. Files go to screenshots/<journey>/
  * (screenshots/<journey>-mobile/ with --mobile, which captures at phone width)
  * and use the same capture code as the "Export all screens as JPG" button on
- * /tools/journeys/<journey>.
+ * /tools/journeys/<journey>. --no-errors skips the error-state capture of
+ * each form, for a quicker export with fewer files.
  */
 
 const fs = require('fs')
@@ -26,7 +28,8 @@ function parseArgs(argv) {
   const options = {
     baseUrl: 'http://localhost:3000',
     outDir: 'screenshots',
-    viewport: 'desktop'
+    viewport: 'desktop',
+    includeErrors: true
   }
   const positional = []
   for (let i = 0; i < argv.length; i += 1) {
@@ -39,6 +42,8 @@ function parseArgs(argv) {
       i += 1
     } else if (arg === '--mobile') {
       options.viewport = 'mobile'
+    } else if (arg === '--no-errors') {
+      options.includeErrors = false
     } else {
       positional.push(arg)
     }
@@ -51,7 +56,7 @@ async function main() {
   const options = parseArgs(process.argv.slice(2))
   if (!options.journey) {
     console.error(
-      'Usage: npm run screenshot:journey <journey> [-- --base-url <url>] [--out <dir>] [--mobile]'
+      'Usage: npm run screenshot:journey <journey> [-- --base-url <url>] [--out <dir>] [--mobile] [--no-errors]'
     )
     console.error(`Journeys: ${getJourneyIds().join(', ')}`)
     process.exit(1)
@@ -71,6 +76,7 @@ async function main() {
   const results = await captureScreens(journey, {
     baseUrl: options.baseUrl,
     viewport: options.viewport,
+    includeErrors: options.includeErrors,
     onProgress: (screen, done, total) => {
       console.log(`  [${done}/${total}] ${screen.file}`)
     }

@@ -56,9 +56,14 @@
   .tools-legend { font-family: "GDS Transport", arial, sans-serif; font-size: 14px; color: #505a5f; margin: 0 0 10px; }
   .tools-legend--inline { margin: 0; }
   .tools-controls--export { margin-top: -10px; }
+  .tools-controls--export .govuk-details { margin-bottom: 10px; }
+  .tools-controls--export .govuk-details__summary, .tools-controls--export .govuk-details__text { font-size: 16px; }
+  .tools-controls--export .govuk-details__text { padding-top: 10px; padding-bottom: 10px; }
   .tools-controls--export form { display: flex; flex-wrap: wrap; align-items: center; gap: 15px; }
   .tools-controls--export .govuk-form-group { margin-bottom: 0; }
   .tools-controls--export .govuk-radios__item { margin-bottom: 0; }
+  .tools-controls--export .govuk-checkboxes__item { margin-bottom: 0; }
+  .tools-controls--export .govuk-checkboxes__label { white-space: nowrap; }
   .tools-controls--export .govuk-radios__label { white-space: nowrap; }
   .wall-card__copy { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; margin: 0 6px 0 -4px; padding: 0; border: 0; border-radius: 3px; background: transparent; color: #1d70b8; cursor: pointer; vertical-align: middle; }
   .wall-card__copy svg { width: 16px; height: 16px; }
@@ -109,7 +114,7 @@
   </div>
 
   {% if canExportScreens %}
-  <div class="tools-controls tools-controls--export">
+  {% set exportForm %}
     <form method="get" action="/tools/journeys/{{ journey.id }}/screens.zip">
       {{ govukRadios({
         name: "viewport",
@@ -121,13 +126,29 @@
           { value: "mobile", text: "Mobile (375px)" }
         ]
       }) }}
+      {{ govukCheckboxes({
+        name: "errors",
+        idPrefix: "wall-errors",
+        classes: "govuk-checkboxes--small",
+        fieldset: { legend: { text: "Error states", classes: "govuk-visually-hidden" } },
+        items: [
+          { value: "1", text: "Include error states", checked: true }
+        ]
+      }) }}
       {{ govukButton({
         text: "Export all screens as JPG",
         classes: "govuk-button--secondary govuk-!-margin-bottom-0",
         attributes: { id: "wall-export", "data-busy-text": "Exporting…" }
       }) }}
-      <span class="tools-legend tools-legend--inline">Captures each screen at the chosen width with the sample data, including error states, into a zip. Takes about 20 seconds.</span>
+      <span class="tools-legend tools-legend--inline">Captures each screen at the chosen width with the sample data into a zip. Untick error states for a quicker export with fewer files to drag onto a whiteboard.</span>
     </form>
+  {% endset %}
+  <div class="tools-controls tools-controls--export">
+    {{ govukDetails({
+      summaryText: "Export screens as JPG",
+      classes: "govuk-!-margin-bottom-0",
+      html: exportForm
+    }) }}
   </div>
   {% else %}
   <p class="tools-legend">The JPG export runs locally only: it drives a headless browser, which the deployed prototype does not have. Run the prototype on your machine to export the screens.</p>

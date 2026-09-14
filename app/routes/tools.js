@@ -140,6 +140,8 @@ router.get('/tools/journeys/:journey/flow.mmd', (req, res) => {
 // Every screen as a JPG, zipped. Drives headless Chromium over the preview
 // URLs, so it takes a little while and needs Playwright installed.
 // ?viewport=mobile captures at phone width (see VIEWPORTS in screenshots.js)
+// ?errors=1 also captures each form's error state; leave it off for a
+// quicker export with fewer files to drag onto a whiteboard
 router.get('/tools/journeys/:journey/screens.zip', async (req, res) => {
   const journey = loadOr404(req, res)
   if (!journey) {
@@ -148,13 +150,15 @@ router.get('/tools/journeys/:journey/screens.zip', async (req, res) => {
   const viewport = VIEWPORTS[req.query.viewport]
     ? req.query.viewport
     : 'desktop'
+  const includeErrors = req.query.errors === '1'
   const folder =
     viewport === 'desktop' ? journey.id : `${journey.id}-${viewport}`
   let screens
   try {
     screens = await captureScreens(journey, {
       baseUrl: `${req.protocol}://${req.get('host')}`,
-      viewport
+      viewport,
+      includeErrors
     })
   } catch (error) {
     res.status(500).type('text/plain').send(error.message)

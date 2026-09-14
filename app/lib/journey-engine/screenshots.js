@@ -47,8 +47,9 @@ function canExportScreens() {
  * Capture every screen of a journey as a JPEG.
  *
  * @param {object} journey  loaded journey definition
- * @param {object} options  { baseUrl, viewport, quality, onProgress }
- *   viewport is a key of VIEWPORTS ('desktop' by default)
+ * @param {object} options  { baseUrl, viewport, includeErrors, quality, onProgress }
+ *   viewport is a key of VIEWPORTS ('desktop' by default); includeErrors
+ *   (true by default) also captures each form's error state
  * @returns {Promise<Array<{ file: string, buffer: Buffer }>>}
  */
 async function captureScreens(journey, options = {}) {
@@ -60,7 +61,9 @@ async function captureScreens(journey, options = {}) {
   const quality = options.quality || 85
   const onProgress = options.onProgress || (() => {})
   const chromium = loadChromium()
-  const screens = exportScreens(journey)
+  const screens = exportScreens(journey, {
+    includeErrors: options.includeErrors !== false
+  })
   const results = []
 
   const browser = await chromium.launch({ headless: true })

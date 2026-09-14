@@ -462,14 +462,6 @@ function toFlowJson(journey) {
 }
 
 /**
- * Every screen to capture for a JPG export, in screen-wall order (each
- * main-chain page followed by its branches, unreached pages last). Question
- * and custom pages get a second entry showing their error state, and a page
- * with `preview.variants` gets one entry per variant.
- *
- * Returns [{ id, type, path, url, file, error, variant }].
- */
-/**
  * The named preview variants of a page (`preview.variants` in journey.yaml
  * or the page's frontmatter): [{ id, label }].
  */
@@ -483,7 +475,19 @@ function previewVariants(page) {
     }))
 }
 
-function exportScreens(journey) {
+/**
+ * Every screen to capture for a JPG export, in screen-wall order (each
+ * main-chain page followed by its branches, unreached pages last). Question
+ * and custom pages get a second entry showing their error state unless
+ * `includeErrors` is false, and a page with `preview.variants` gets one
+ * entry per variant.
+ *
+ * @param {object} journey  loaded journey definition
+ * @param {object} options  { includeErrors } (true by default)
+ * @returns [{ id, type, path, url, file, error, variant }]
+ */
+function exportScreens(journey, options = {}) {
+  const includeErrors = options.includeErrors !== false
   const screens = []
   let index = 0
   for (const row of layoutLevels(journey)) {
@@ -503,7 +507,10 @@ function exportScreens(journey) {
         error: false,
         variant: null
       })
-      if (isQuestionType(page.type) || page.type === 'custom') {
+      if (
+        includeErrors &&
+        (isQuestionType(page.type) || page.type === 'custom')
+      ) {
         screens.push({
           id,
           type: page.type,
