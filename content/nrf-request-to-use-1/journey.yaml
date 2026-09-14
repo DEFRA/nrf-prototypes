@@ -659,8 +659,14 @@ pages:
   - id: review-developer-details
     guard: { key: developerDetails, isSet: true, redirect: developer-details }
     next:
-      - goto: check-your-answers
+      - goto: placeholder
         set: { detailsConfirmed: 'Yes' }
+
+  # Placeholder for a page still to be designed, between confirming the
+  # developer details and checking your answers
+  - id: placeholder
+    guard: { key: developerDetails, isSet: true, redirect: developer-details }
+    next: check-your-answers
 
   - id: your-address
     sessionKey: yourAddress
