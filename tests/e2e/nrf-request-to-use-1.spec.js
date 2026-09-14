@@ -240,6 +240,8 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
       'A Developer'
     )
     await page.getByRole('button', { name: 'Confirm' }).click()
+    await expect(page).toHaveURL(`${base}/placeholder`)
+    await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page).toHaveURL(`${base}/check-your-answers`)
     await expect(page.locator('.govuk-summary-list').first()).toContainText(
       'NRL-000001'
@@ -681,6 +683,8 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
     await page.getByLabel('Postcode').fill('DV1 6RP')
     await page.getByRole('button', { name: 'Confirm' }).click()
     await page.getByRole('button', { name: 'Confirm' }).click()
+    await expect(page).toHaveURL(`${base}/placeholder`)
+    await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page).toHaveURL(`${base}/check-your-answers`)
 
     const cya = `${base}/check-your-answers`
