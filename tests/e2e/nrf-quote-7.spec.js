@@ -124,6 +124,15 @@ test.describe('nrf-quote-7 happy path', () => {
     await page.getByRole('button', { name: 'Confirm and submit' }).click()
     await expect(page).toHaveURL(/confirmation/)
     await expect(page.locator('.govuk-panel__body')).toContainText('NRL-')
+
+    // The email wears the bare crown header, not the service's chrome
+    await page.getByRole('link', { name: 'View the email content' }).click()
+    await expect(page).toHaveURL(/estimate-email-content/)
+    await expect(page.locator('.govuk-header')).toHaveCount(1)
+    await expect(page.locator('.govuk-service-navigation')).toHaveCount(0)
+    await expect(page.locator('.govuk-phase-banner')).toHaveCount(0)
+    await expect(page.locator('.govuk-back-link')).toHaveCount(0)
+    await expect(page.locator('main')).toContainText('NRL-')
   })
 
   test('uploads a boundary file, sees it checked and previewed', async ({

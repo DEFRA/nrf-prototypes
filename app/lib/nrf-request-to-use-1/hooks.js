@@ -3,8 +3,9 @@
  * (content/nrf-request-to-use-1). The engine (app/lib/journey-engine) renders
  * the pages and follows journey.yaml; this file adds the bits that need code:
  *
- *   - a mock quote store: the NRL reference retrieves a fixture quote, unless
- *     the session already holds a quote made in nrf-quote-7
+ *   - a mock quote store: the NRL reference typed retrieves the quote made in
+ *     nrf-quote-7 when it matches the reference that journey minted (kept in
+ *     the session, never shown in the box), otherwise a fixture quote
  *   - "levy increased" and the levy amount, recalculated when units change
  *   - a mock GOV.UK One Login: the sign-in email decides the account type
  *     (company@… company, individual@… individual, anything else an agent),
@@ -54,8 +55,7 @@ const FIXTURE_QUOTE = {
     intersectingCatchment: EDP_NAME,
     intersectingExcludedAreas: []
   },
-  intersectingCatchment: EDP_NAME,
-  estimateEmail: 'developer@example.com'
+  intersectingCatchment: EDP_NAME
 }
 
 // Mock accounts, keyed on the start of the sign-in email address
@@ -151,31 +151,37 @@ function registeredAccount(data) {
 }
 
 /**
- * Put the retrieved quote into the session. A quote made in nrf-quote-7 in
- * the same session is kept; otherwise the fixture stands in for the store.
- * The reference and email the user just typed always win.
+ * Put the retrieved quote into the session. The session stands in for the
+ * quote store: a quote made in nrf-quote-7 stays under the reference that
+ * journey minted (`nrfReference`), and typing that reference pulls it up.
+ * Any other reference retrieves the fixture quote. The reference and email
+ * typed here are kept apart from the quote's own, so neither box is ever
+ * filled in from a quote made in the same session.
  *
- * `quoteLoaded` holds the reference the quoted figures belong to. Deleting
- * the quote happens on the quote journey's pages, which clear only that
- * journey's keys, so a different reference (or the same one typed again
- * after a delete, when the quote itself is gone) starts the figures afresh.
+ * `quoteLoaded` holds the reference the quoted figures belong to, so coming
+ * back to the review page after amending on the quote journey's pages keeps
+ * the amended quote. Deleting the quote happens on those pages, which clear
+ * only that journey's keys, so the same reference typed again after a delete
+ * (when the quote itself is gone) starts the figures afresh.
  */
 function loadQuote(data) {
+  const reference = data.quoteReference
   const hasQuote =
     data.redlineBoundaryPolygon && data.residentialBuildingCount !== undefined
-  if (!hasQuote) {
-    const { estimateEmail, ...quote } = FIXTURE_QUOTE
-    Object.assign(data, JSON.parse(JSON.stringify(quote)))
-    data.estimateEmail = data.estimateEmail || estimateEmail
+  const matches =
+    hasQuote &&
+    (data.quoteLoaded === reference || data.nrfReference === reference)
+  if (!matches) {
+    Object.assign(data, JSON.parse(JSON.stringify(FIXTURE_QUOTE)))
     delete data.quoteLoaded
   }
-  if (data.quoteLoaded !== data.nrfReference) {
+  if (data.quoteLoaded !== reference) {
     data.quotedUnits = Number(data.residentialBuildingCount)
     data.quotedLevyAmount = levyFor(data.quotedUnits)
     data.levyAmount = data.quotedLevyAmount
     data.levyIncreased = false
     delete data.acceptLevy
-    data.quoteLoaded = data.nrfReference
+    data.quoteLoaded = reference
   }
   data.edpName =
     (data.redlineBoundaryPolygon &&

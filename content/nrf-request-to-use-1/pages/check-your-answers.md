@@ -77,7 +77,7 @@ rows:
     change: /nrf-quote-7/map
     changeHidden: red line boundary
   - key: Email address
-    value: '{{ estimateEmail }}'
+    value: '{{ retrievalEmail }}'
     change: email
     changeHidden: email address
 actions:

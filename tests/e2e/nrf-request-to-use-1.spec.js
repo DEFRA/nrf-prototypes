@@ -37,9 +37,20 @@ async function retrieveQuote(page, reference = 'NRL-123456') {
   await page.getByLabel(/email address/).fill('jane@example.com')
   await page.getByRole('button', { name: 'Continue' }).click()
   await expect(page).toHaveURL(`${base}/retrieve-email`)
+  await expectEmailChrome(page)
 
   await page.getByRole('link', { name: 'Retrieve the quote details' }).click()
   await expect(page).toHaveURL(`${base}/review-quote-details`)
+}
+
+// Emails wear the bare crown header, so they do not read as a page of the
+// service: no service navigation, phase banner or back link
+async function expectEmailChrome(page) {
+  await expect(page.locator('.govuk-header')).toHaveCount(1)
+  await expect(page.locator('.govuk-service-navigation')).toHaveCount(0)
+  await expect(page.locator('.govuk-phase-banner')).toHaveCount(0)
+  await expect(page.locator('.govuk-back-link')).toHaveCount(0)
+  await expect(page.locator('.govuk-grid-column-two-thirds')).toHaveCount(1)
 }
 
 async function signIn(page, email) {
@@ -174,6 +185,12 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
     await expect(page).toHaveURL(`${base}/confirmation`)
     await expect(page.locator('.govuk-panel__body')).toContainText('NRL-')
 
+    await page.getByRole('link', { name: 'View the email' }).click()
+    await expect(page).toHaveURL(`${base}/request-email`)
+    await expectEmailChrome(page)
+    await expect(page.locator('h1')).toContainText('requested to use')
+
+    await page.goBack()
     await page
       .getByRole('link', { name: 'View the commitment certificate' })
       .click()
@@ -583,6 +600,69 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
     await expect(page).toHaveURL(`${base}/accept-levy`)
     await expect(page.locator('main')).toContainText('£25,000')
     await expect(page.getByLabel(/No, delete/)).not.toBeChecked()
+  })
+
+  test('a quote made in the same session fills nothing in, but its reference pulls it up', async ({
+    page
+  }) => {
+    // Make a quote of 120 units (the fixture quote has 100) with direct
+    // requests: a map page left open in the browser keeps fetching tiles,
+    // and each of those rewrites the session file
+    const coordinates = [
+      [1.11, 52.56],
+      [1.12, 52.56],
+      [1.12, 52.57],
+      [1.11, 52.57]
+    ]
+    const answers = [
+      ['planning-type', { 'planning-type': 'Full planning permission' }],
+      ['housing', { housing: 'Yes' }],
+      ['units', { 'unit-count': '120' }],
+      ['redline-map', { 'has-redline-boundary-file': 'Draw on a map' }],
+      [
+        'map',
+        {
+          'boundary-data': JSON.stringify({
+            coordinates,
+            center: coordinates[0]
+          })
+        }
+      ],
+      ['estimate-email', { email: 'jane@example.com' }]
+    ]
+    for (const [id, form] of answers) {
+      const response = await page.request.post(`${quote}/${id}`, {
+        form,
+        maxRedirects: 0
+      })
+      expect(response.status(), id).toBe(303)
+    }
+    await page.goto(`${quote}/check-your-answers`)
+    await expect(page.locator('.govuk-summary-list')).toContainText('Added')
+    await page.getByRole('button', { name: 'Confirm and submit' }).click()
+    await expect(page).toHaveURL(`${quote}/confirmation`)
+    const minted = (await page.locator('.govuk-panel__body').innerText()).match(
+      /NRL-\d{6}/
+    )[0]
+
+    // The user comes to request to use afresh: nothing is filled in
+    await page.goto(`${base}/have-nrl-reference`)
+    await page.getByLabel('Yes', { exact: true }).check()
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/quote-reference`)
+    await expect(page.getByLabel(/NRL reference/)).toHaveValue('')
+    await page.getByLabel(/NRL reference/).fill(minted)
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/email`)
+    await expect(page.getByLabel(/email address/)).toHaveValue('')
+
+    // Typing the minted reference pulls that quote up
+    await retrieveQuote(page, minted)
+    await expect(page.locator('.govuk-summary-list')).toContainText('120')
+
+    // Any other reference retrieves the fixture quote instead
+    await retrieveQuote(page, 'NRL-000001')
+    await expect(page.locator('.govuk-summary-list')).toContainText('100')
   })
 
   test('the delete link on check your answers also comes back here', async ({

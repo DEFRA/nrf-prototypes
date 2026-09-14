@@ -72,16 +72,18 @@ const TEMPLATE_BY_TYPE = {
 // GOV.UK One Login look for the mock sign-in pages, the Government Gateway
 // look (a "Government Gateway" bar, no banner), the Defra ID look for the
 // mock "register a Defra account" pages (defra-id: a bare Sign out bar;
-// defra-account: the "Your Defra account" bar with the user's name), or a
+// defra-account: the "Your Defra account" bar with the user's name), a
 // full-width document with a bare crown header and no banner or back link
-// (certificates, letters)
+// (certificates, letters), or an email: the same bare chrome at reading
+// width, so it reads as something sent rather than a page of the service
 const LAYOUTS = [
   'default',
   'one-login',
   'government-gateway',
   'defra-id',
   'defra-account',
-  'document'
+  'document',
+  'email'
 ]
 
 // A `goto` of `$summary` returns to whichever summary page the user came from

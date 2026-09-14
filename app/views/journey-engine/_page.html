@@ -13,6 +13,8 @@ Journey engine base page. Every generic page type extends this and fills
                  user's name (the business registration pages)
   document       full-width document (certificate, letter): bare header, no
                  banner, no back link
+  email          an email the service sent: bare header, no banner, no back
+                 link, at the usual reading width
 #}
 {% extends "layouts/main.html" %}
 
@@ -34,7 +36,7 @@ Journey engine base page. Every generic page type extends this and fills
   {% include "includes/defra-id-header.html" %}
 {% elif page.layout == 'defra-account' %}
   {% include "includes/defra-account-header.html" %}
-{% elif page.layout == 'document' %}
+{% elif page.layout in ['document', 'email'] %}
   {{ govukHeader({
     homepageUrl: "https://www.gov.uk/",
     classes: "app-header",
@@ -55,11 +57,11 @@ Journey engine base page. Every generic page type extends this and fills
   </div>
 {% elif page.layout == 'defra-id' or page.layout == 'defra-account' %}
   {# Defra ID shows no phase banner #}
-{% elif page.layout != 'document' %}
+{% elif page.layout not in ['document', 'email'] %}
   {% include "includes/prototype-phase-banner.html" %}
   {% include "journey-engine/_signed-in-bar.html" %}
 {% endif %}
-{% if backLink and page.layout != 'document' %}
+{% if backLink and page.layout not in ['document', 'email'] %}
 {{ govukBackLink({
   text: "Back",
   href: backLink

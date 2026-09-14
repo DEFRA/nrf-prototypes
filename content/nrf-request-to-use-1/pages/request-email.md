@@ -1,10 +1,11 @@
 ---
 type: content
+layout: email
 title: Email sent from the Nature Restoration Fund service
 ---
 
 :::inset
-**To:** {{ estimateEmail or "email@email.com" }}
+**To:** {{ retrievalEmail or "email@email.com" }}
 
 **Subject:** Nature restoration levy – quote
 :::

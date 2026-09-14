@@ -1,5 +1,6 @@
 ---
 type: content
+layout: email
 title: Email sent from the Nature Restoration Fund service
 ---
 

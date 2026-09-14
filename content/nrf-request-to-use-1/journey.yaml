@@ -68,10 +68,15 @@ homepage:
 
 # Every session key this journey writes. `clears: $session` expands to this,
 # so the quote keys are included: deleting the quote details here also removes
-# a quote made in the same session.
+# a quote made in the same session. `nrfReference` is the reference the quote
+# journey minted, kept so typing it pulls that quote up; `quoteReference` and
+# `retrievalEmail` are what the user types here (the quote's own
+# `estimateEmail` stays in the cache untouched).
 session:
   - journeyType
   - hasNrlReference
+  - quoteReference
+  - retrievalEmail
   - nrfReference
   - estimateEmail
   - planningType
@@ -124,7 +129,8 @@ preview:
   data:
     journeyType: request-to-use
     hasNrlReference: 'Yes'
-    nrfReference: NRL-123456
+    quoteReference: NRL-123456
+    retrievalEmail: developer@example.com
     estimateEmail: developer@example.com
     planningType: Full planning permission
     isHousing: 'Yes'
@@ -228,9 +234,12 @@ pages:
         goto: /nrf-quote-7/planning-type
       - goto: quote-reference
 
+  # Stored apart from the quote journey's `nrfReference` so a quote made in
+  # the same session never fills the box in: the user arrives afresh and types
+  # the reference from their email, which pulls the cached quote up
   - id: quote-reference
     field: nrf-reference
-    sessionKey: nrfReference
+    sessionKey: quoteReference
     changeable: true
     handler: custom # checks the reference format, see hooks.js
     next:
@@ -238,9 +247,10 @@ pages:
         goto: $summary
       - goto: email
 
+  # The email the retrieval link goes to, typed afresh like the reference
   - id: email
     field: email
-    sessionKey: estimateEmail
+    sessionKey: retrievalEmail
     changeable: true
     next:
       - when: { key: $navFromSummary, truthy: true }
@@ -252,7 +262,7 @@ pages:
     next: review-quote-details
 
   - id: review-quote-details
-    guard: { key: nrfReference, isSet: true, redirect: quote-reference }
+    guard: { key: quoteReference, isSet: true, redirect: quote-reference }
     handler: custom # loads the quote, recalculates the levy, see hooks.js
     next:
       - when: { key: residentialBuildingCount, gt: 15000 }
