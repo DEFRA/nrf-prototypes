@@ -80,6 +80,9 @@
   .wall-card__copy:hover { color: #003078; background: #f3f2f1; }
   .wall-card__copy:focus-visible { outline: 3px solid transparent; background: #ffdd00; box-shadow: 0 -2px #ffdd00, 0 4px #0b0c0c; color: #0b0c0c; }
   .wall-card__copy::after { content: attr(data-feedback); position: absolute; left: calc(100% + 4px); top: 50%; transform: translateY(-50%); z-index: 2; padding: 3px 8px; border-radius: 3px; background: #0b0c0c; color: #fff; font-family: "GDS Transport", arial, sans-serif; font-size: 13px; line-height: 1.3; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.15s; }
+  a.wall-card__copy { text-decoration: none; }
+  .wall-card__copy--busy { color: #505a5f; cursor: progress; }
+  .wall-card__copy--busy::after { opacity: 1; background: #505a5f; }
   .wall-card__copy--copied { color: #00703c; }
   .wall-card__copy--copied::after, .wall-card__copy--failed::after { opacity: 1; }
   .wall-card__copy--copied::after { background: #00703c; }
@@ -93,7 +96,7 @@
   external cards for another journey (or, inside a group's section, the
   rest of this journey).
 #}
-{% macro wallLevels(levels, publicBaseUrl) %}
+{% macro wallLevels(levels, publicBaseUrl, journey, canExportScreens) %}
 {% for level in levels %}
 <div class="wall-level">
   <p class="wall-level__label">{% if level.unreachable %}Not reached{% else %}Step {{ loop.index }}{% endif %}</p>
@@ -135,6 +138,7 @@
       <span class="wall-card__type">· {{ page.type }}</span><br>
       <span class="wall-card__links">
         <button type="button" class="wall-card__copy" data-copy-url="{{ publicBaseUrl }}{{ page.path }}" data-feedback="" title="Copy link" aria-label="Copy link to {{ page.id }}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
+        {% if canExportScreens %}<a class="wall-card__copy wall-card__export" href="/tools/journeys/{{ journey.id }}/screens/{{ page.id }}.jpg" download data-feedback="" title="Export screen as JPG" aria-label="Export {{ page.id }} as JPG"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a>{% endif %}
         <a class="govuk-link" href="{{ page.path }}?preview=1" target="_blank" rel="noopener">Open</a>
         {% if page.isQuestion or page.isCustom %}<a class="govuk-link" href="{{ page.path }}?preview=1&error=1" target="_blank" rel="noopener">Error state</a>{% endif %}
         <span class="wall-card__type" title="{{ page.contentFile }}">{% if page.shared %}{{ page.contentFile | replace("content/", "") }}{% else %}{{ page.id }}.md{% endif %}</span>
@@ -152,6 +156,7 @@
       <span class="wall-card__id">{{ page.id }}</span>
       <span class="wall-card__type">· {{ variant.label }}</span><br>
       <span class="wall-card__links">
+        {% if canExportScreens %}<a class="wall-card__copy wall-card__export" href="/tools/journeys/{{ journey.id }}/screens/{{ page.id }}.jpg?variant={{ variant.id }}" download data-feedback="" title="Export screen as JPG" aria-label="Export {{ page.id }} ({{ variant.label }}) as JPG"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a>{% endif %}
         <a class="govuk-link" href="{{ page.path }}?preview=1&variant={{ variant.id }}" target="_blank" rel="noopener">Open</a>
         <span class="wall-card__type">variant: {{ variant.id }}</span>
       </span>
@@ -273,7 +278,7 @@
 
   <div class="screen-wall" id="screen-wall">
     <div class="screen-wall__inner">
-    {{ wallLevels(levels, publicBaseUrl) }}
+    {{ wallLevels(levels, publicBaseUrl, journey, canExportScreens) }}
     </div>
   </div>
 
@@ -285,7 +290,7 @@
     </div>
     <div class="screen-wall">
       <div class="screen-wall__inner">
-      {{ wallLevels(group.levels, publicBaseUrl) }}
+      {{ wallLevels(group.levels, publicBaseUrl, journey, canExportScreens) }}
       </div>
     </div>
   </div>

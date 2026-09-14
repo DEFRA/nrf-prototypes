@@ -44,6 +44,48 @@ function canExportScreens() {
 }
 
 /**
+ * Open headless Chromium at the given viewport and hand a page to `run`,
+ * closing the browser afterwards whatever happens.
+ */
+async function withPage(viewportName, run) {
+  const viewport = VIEWPORTS[viewportName] || VIEWPORTS.desktop
+  const chromium = loadChromium()
+  const browser = await chromium.launch({ headless: true })
+  try {
+    const context = await browser.newContext({
+      viewport,
+      deviceScaleFactor: 2
+    })
+    return await run(await context.newPage())
+  } finally {
+    await browser.close()
+  }
+}
+
+/**
+ * Capture one preview URL on an open page. Map pages fetch tiles after
+ * load, so they get a moment and a viewport-only capture.
+ */
+async function shoot(page, baseUrl, screen, quality) {
+  const isCustom = screen.type === 'custom'
+  // Documents may carry a map, so give its tiles a moment too
+  const waitForMap = isCustom || screen.type === 'document'
+  await page.goto(baseUrl + screen.url, { waitUntil: 'networkidle' })
+  if (waitForMap) {
+    await page.waitForTimeout(CUSTOM_PAGE_WAIT_MS)
+  }
+  return page.screenshot({
+    type: 'jpeg',
+    quality,
+    fullPage: !isCustom
+  })
+}
+
+function trimBaseUrl(baseUrl) {
+  return (baseUrl || 'http://localhost:3000').replace(/\/$/, '')
+}
+
+/**
  * Capture every screen of a journey as a JPEG.
  *
  * @param {object} journey  loaded journey definition
@@ -54,47 +96,58 @@ function canExportScreens() {
  * @returns {Promise<Array<{ file: string, buffer: Buffer }>>}
  */
 async function captureScreens(journey, options = {}) {
-  const baseUrl = (options.baseUrl || 'http://localhost:3000').replace(
-    /\/$/,
-    ''
-  )
-  const viewport = VIEWPORTS[options.viewport] || VIEWPORTS.desktop
+  const baseUrl = trimBaseUrl(options.baseUrl)
   const quality = options.quality || 85
   const onProgress = options.onProgress || (() => {})
-  const chromium = loadChromium()
   const screens = exportScreens(journey, {
     includeErrors: options.includeErrors !== false,
     sections: options.sections
   })
-  const results = []
-
-  const browser = await chromium.launch({ headless: true })
-  try {
-    const context = await browser.newContext({
-      viewport,
-      deviceScaleFactor: 2
-    })
-    const page = await context.newPage()
+  return withPage(options.viewport, async (page) => {
+    const results = []
     for (const screen of screens) {
-      const isCustom = screen.type === 'custom'
-      // Documents may carry a map, so give its tiles a moment too
-      const waitForMap = isCustom || screen.type === 'document'
-      await page.goto(baseUrl + screen.url, { waitUntil: 'networkidle' })
-      if (waitForMap) {
-        await page.waitForTimeout(CUSTOM_PAGE_WAIT_MS)
-      }
-      const buffer = await page.screenshot({
-        type: 'jpeg',
-        quality,
-        fullPage: !isCustom
-      })
+      const buffer = await shoot(page, baseUrl, screen, quality)
       results.push({ file: screen.file, buffer })
       onProgress(screen, results.length, screens.length)
     }
-  } finally {
-    await browser.close()
-  }
-  return results
+    return results
+  })
 }
 
-module.exports = { captureScreens, canExportScreens, VIEWPORTS }
+/**
+ * Capture a single screen of a journey as a JPEG, for the export button on
+ * each card of the screen wall.
+ *
+ * @param {object} journey  loaded journey definition
+ * @param {object} options  { baseUrl, viewport, pageId, error, variant, quality }
+ *   error captures the page's error state; variant names one of the page's
+ *   preview variants
+ * @returns {Promise<{ file: string, buffer: Buffer }>}  or null when the
+ *   page (or the requested state of it) is not one the export knows about
+ */
+async function captureScreen(journey, options = {}) {
+  const baseUrl = trimBaseUrl(options.baseUrl)
+  const quality = options.quality || 85
+  const screen = exportScreens(journey).find(
+    (item) =>
+      item.id === options.pageId &&
+      item.error === Boolean(options.error) &&
+      item.variant === (options.variant || null)
+  )
+  if (!screen) {
+    return null
+  }
+  const buffer = await withPage(options.viewport, (page) =>
+    shoot(page, baseUrl, screen, quality)
+  )
+  // Drop the section folder and the ordering prefix: one file needs neither
+  const file = screen.file.split('/').pop().replace(/^\d+-/, '')
+  return { file, buffer }
+}
+
+module.exports = {
+  captureScreens,
+  captureScreen,
+  canExportScreens,
+  VIEWPORTS
+}

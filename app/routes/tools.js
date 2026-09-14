@@ -19,6 +19,7 @@ const {
   isQuestionType,
   previewVariants,
   captureScreens,
+  captureScreen,
   canExportScreens,
   VIEWPORTS
 } = require('../lib/journey-engine')
@@ -261,6 +262,39 @@ router.get('/tools/journeys/:journey/screens.zip', async (req, res) => {
     archive.append(buffer, { name: `${folder}/${file}` })
   }
   archive.finalize()
+})
+
+// One screen as a JPG, for the export button on each card of the wall.
+// Always desktop width; ?error=1 captures the form's error state and
+// ?variant=<id> one of the page's preview variants
+router.get('/tools/journeys/:journey/screens/:page.jpg', async (req, res) => {
+  const journey = loadOr404(req, res)
+  if (!journey) {
+    return
+  }
+  let screen
+  try {
+    screen = await captureScreen(journey, {
+      baseUrl: `${req.protocol}://${req.get('host')}`,
+      viewport: 'desktop',
+      pageId: req.params.page,
+      error: req.query.error === '1',
+      variant: req.query.variant ? String(req.query.variant) : null
+    })
+  } catch (error) {
+    res.status(500).type('text/plain').send(error.message)
+    return
+  }
+  if (!screen) {
+    res.status(404).type('text/plain').send('No such screen to export')
+    return
+  }
+  res.setHeader('Content-Type', 'image/jpeg')
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename="${journey.id}-${screen.file}"`
+  )
+  res.send(screen.buffer)
 })
 
 module.exports = router
