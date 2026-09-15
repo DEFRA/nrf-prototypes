@@ -137,19 +137,20 @@ function buildContext(req, res, journey, page, options = {}) {
   const preview =
     !options.isPost && ['1', 'true'].includes(String(query.preview))
   const isChange = query.change === 'true' || body.isChange === 'true'
-  // The summary page to return to (`?nav=...` or the hidden input a form
-  // carries forward), or false: the id of one of this journey's summary
-  // pages, or the absolute path of another journey's summary page when this
-  // page has been borrowed by that journey (a Change link on its summary
-  // page pointing here). A bare `true` from an older form means the
-  // journey's first summary page. Anything else is ignored, so `nav` can
-  // never redirect outside the mounted journeys.
+  // The page to return to (`?nav=...` or the hidden input a form carries
+  // forward), or false: the id of a page of this journey (usually a summary
+  // page), or the absolute path of another journey's page when this page
+  // has been borrowed by that journey (a Change link on its summary page
+  // pointing here, or a Delete link whose Cancel comes back). A bare `true`
+  // from an older form means the journey's first summary page. Anything
+  // else is ignored, so `nav` can never redirect outside the mounted
+  // journeys.
   const nav = query.nav || body.navFromSummary
   let navFromSummary = false
   let returnJourney = null
   if (nav === 'true' && journey.summaryPage) {
     navFromSummary = journey.summaryPage
-  } else if (nav && journey.summaryPages.includes(nav)) {
+  } else if (nav && journey.byId.has(nav)) {
     navFromSummary = nav
   } else if (nav && String(nav).startsWith('/')) {
     const found = resolveSummaryPath(String(nav))

@@ -183,9 +183,29 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
       '53 Business Lane'
     )
     await page.getByRole('button', { name: 'Confirm' }).click()
+    // Everyone agrees to the terms before checking their answers; the box
+    // is required and the Delete link is the way out
+    await expect(page).toHaveURL(`${base}/agreement`)
+    await expect(
+      page.getByRole('link', { name: /Delete.*quote details/ })
+    ).toHaveAttribute('href', `/nrf-quote-7/delete-quote?nav=${base}/agreement`)
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/agreement`)
+    await expect(page.locator('.govuk-error-summary')).toContainText(
+      'Select the box to confirm you agree to the terms'
+    )
+    await page.getByLabel(/I confirm that I have read/).check()
+    await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page).toHaveURL(`${base}/check-your-answers`)
     await expect(page.locator('main')).toContainText('Details confirmed')
     await expect(page.locator('main')).toContainText('Development details')
+    await expect(page.locator('main')).toContainText('Agreed to the terms')
+    await expect(
+      page.getByRole('link', { name: /Change.*agree to the terms/ })
+    ).toHaveAttribute(
+      'href',
+      `${base}/agreement?change=true&nav=check-your-answers`
+    )
 
     await page.getByRole('button', { name: 'Confirm and submit' }).click()
     await expect(page).toHaveURL(`${base}/confirmation`)
@@ -246,7 +266,8 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
       'A Developer'
     )
     await page.getByRole('button', { name: 'Confirm' }).click()
-    await expect(page).toHaveURL(`${base}/placeholder`)
+    await expect(page).toHaveURL(`${base}/agreement`)
+    await page.getByLabel(/I confirm that I have read/).check()
     await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page).toHaveURL(`${base}/check-your-answers`)
     await expect(page.locator('.govuk-summary-list').first()).toContainText(
@@ -754,7 +775,16 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
     await page.getByLabel('Postcode').fill('DV1 6RP')
     await page.getByRole('button', { name: 'Confirm' }).click()
     await page.getByRole('button', { name: 'Confirm' }).click()
-    await expect(page).toHaveURL(`${base}/placeholder`)
+    await expect(page).toHaveURL(`${base}/agreement`)
+    // Not agreeing: the Delete link leaves for the quote journey's delete
+    // page, whose Cancel comes back to the agreement page
+    await page.getByRole('link', { name: /Delete.*quote details/ }).click()
+    await expect(page).toHaveURL(
+      `/nrf-quote-7/delete-quote?nav=${base}/agreement`
+    )
+    await page.getByRole('link', { name: 'Cancel' }).click()
+    await expect(page).toHaveURL(`${base}/agreement`)
+    await page.getByLabel(/I confirm that I have read/).check()
     await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page).toHaveURL(`${base}/check-your-answers`)
 

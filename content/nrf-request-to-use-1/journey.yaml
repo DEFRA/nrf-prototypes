@@ -108,6 +108,7 @@ session:
   - developerDetails
   - yourAddress
   - detailsConfirmed
+  - agreedToTerms
   - nrlReference
   - certificate
   # Defra ID registration (sign-in emails containing "new")
@@ -186,6 +187,7 @@ preview:
       county: ''
       postcode: LP1 7RF
     detailsConfirmed: 'Yes'
+    agreedToTerms: 'Yes'
     defraAccountType: individual
     defraName:
       firstName: John
@@ -702,14 +704,27 @@ pages:
   - id: review-developer-details
     guard: { key: developerDetails, isSet: true, redirect: developer-details }
     next:
-      - goto: placeholder
+      - goto: agreement
         set: { detailsConfirmed: 'Yes' }
 
-  # Placeholder for a page still to be designed, between confirming the
-  # developer details and checking your answers
-  - id: placeholder
-    guard: { key: developerDetails, isSet: true, redirect: developer-details }
-    next: check-your-answers
+  # Everyone agrees to the terms before checking their answers. The wording
+  # is still a placeholder; the Delete link on the page is the way out for
+  # anyone who does not agree
+  - id: agreement
+    field: agreement
+    sessionKey: agreedToTerms
+    changeable: true
+    store:
+      'I confirm that I have read and agree to these terms': 'Yes'
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    back:
+      - when: { key: account.accountType, equals: agent }
+        goto: review-developer-details
+      - goto: review-your-details
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: check-your-answers
 
   - id: your-address
     sessionKey: yourAddress
@@ -735,7 +750,7 @@ pages:
         businessName: Developer Ltd
         email: company@example.com
     next:
-      - goto: check-your-answers
+      - goto: agreement
         set: { detailsConfirmed: 'Yes' }
 
   - id: check-your-answers

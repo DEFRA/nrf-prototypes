@@ -445,17 +445,16 @@ function validateTargets(journey, problems) {
       problems.push(`${where}: unknown page '${target}'`)
     }
   }
-  // `return: <summary page>` on a rule or action that leaves for another
-  // journey: the borrowed page comes back here (see "Borrowing a page from
-  // another journey" in content/README.md)
+  // `return: <page>` on a rule or action that leaves for another journey:
+  // the borrowed page comes back here, usually to a summary page but a
+  // Delete link can bring its Cancel back to the page it was on (see
+  // "Borrowing a page from another journey" in content/README.md)
   const checkReturn = (rule, where) => {
     if (!rule || rule.return === undefined) {
       return
     }
-    if (!journey.summaryPages.includes(rule.return)) {
-      problems.push(
-        `${where}.return: '${rule.return}' is not one of summaryPages`
-      )
+    if (!ids.has(rule.return)) {
+      problems.push(`${where}.return: unknown page '${rule.return}'`)
     }
     if (!rule.goto || !rule.goto.startsWith('/')) {
       problems.push(
@@ -623,9 +622,10 @@ function getJourneyIds() {
 
 /**
  * The journey and page an absolute path names, provided that page is one of
- * the journey's summary pages. This is how a `nav` that points into another
+ * a mounted journey's pages. This is how a `nav` that points into another
  * journey is checked before it is ever used as a redirect or back link: a
- * path that is not a mounted journey's summary page resolves to null.
+ * path that is not a mounted journey's page resolves to null, so `nav` can
+ * never send the user outside the mounted journeys.
  */
 function resolveSummaryPath(target) {
   if (typeof target !== 'string' || !target.startsWith('/')) {
@@ -642,7 +642,7 @@ function resolveSummaryPath(target) {
       continue
     }
     const pageId = target.slice(journey.basePath.length + 1)
-    if (journey.summaryPages.includes(pageId)) {
+    if (journey.byId.has(pageId)) {
       return { journey, page: journey.byId.get(pageId) }
     }
   }
