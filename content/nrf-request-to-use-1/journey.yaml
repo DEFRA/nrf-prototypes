@@ -57,10 +57,11 @@ homepage:
     - Retrieve a quote by NRL reference and email, review and amend the details on the quote journey's own pages (borrowed, not copied)
     - Levy increased and not enough capacity branches, driven by the number of units
     - Variation to an existing planning application, then whether the original application was committed to using the levy
+    - Who the Defra account is for (an individual, the organisation they work for, or a client they act for as an agent), with guidance tailored to that answer before signing in
     - Mock GOV.UK One Login sign in (create or sign in, email, then password), shared with other journeys
     - Mock "Create your GOV.UK One Login" flow (email, security code, password, security codes by text message or authenticator app)
     - Mock Government Gateway sign in and "Create sign in details" flow (email, confirmation code, name, password, user ID)
-    - Agent, company and individual account types decided by the sign-in email (agent by default)
+    - Agent, company and individual account types decided by who the Defra account is for (the sign-in email still decides it when that question was skipped)
     - Mock Defra ID registration for sign-in emails containing "new" (new-individual@, new-company@, new@ for an agent), as an individual or a business; the registration answer decides the account type
     - Defra account registration emails for an individual, a business and an invited employee (new-employee@ gives their own details only), each with a Contact Support ID and a "Sign in to your account" link that carries on to the service
     - Developer details or your address, review, check your answers, confirmation
@@ -98,6 +99,7 @@ session:
   - isVariation
   - originalCommitted
   - originalReference
+  - defraUserType
   - signInMethod
   - signInEmail
   - securityCodeMethod
@@ -161,6 +163,7 @@ preview:
     isVariation: 'Yes'
     originalCommitted: 'Yes'
     originalReference: NRL-654321
+    defraUserType: agent
     signInMethod: one-login
     signInEmail: agent@example.com
     securityCodeMethod: app
@@ -229,11 +232,6 @@ pages:
       - when: { key: journeyType, equals: quote }
         goto: /nrf-quote-7/planning-type
       - goto: have-nrl-reference
-
-  # Guidance linked from the start page; outside the main flow for now
-  - id: creating-defra-account
-    shared: true
-    back: start
 
   # Without a reference there is no quote to use: get one first
   - id: have-nrl-reference
@@ -333,7 +331,7 @@ pages:
         goto: original-committed
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
-      - goto: sign-in-method
+      - goto: defra-account
 
   - id: original-committed
     field: original-committed
@@ -345,7 +343,7 @@ pages:
         goto: original-reference
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
-      - goto: sign-in-method
+      - goto: defra-account
 
   - id: original-reference
     field: original-reference
@@ -355,9 +353,68 @@ pages:
     next:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
+      - goto: defra-account
+
+  # Before signing in, the user says who the Defra account is for and reads
+  # the guidance for that kind of user. The answer decides the account type
+  # once they sign in (see accountFor in hooks.js): an individual, a company
+  # for the organisation they work for, or an agent acting for a client. The
+  # sign-in email still decides whether they register a Defra account first.
+  - id: defra-account
+    back:
+      - when: { key: originalCommitted, equals: 'Yes' }
+        goto: original-reference
+      - when: { key: isVariation, equals: 'Yes' }
+        goto: original-committed
+      - goto: variation
+    next: defra-account-user-type
+
+  - id: defra-account-user-type
+    field: defra-account-user-type
+    sessionKey: defraUserType
+    changeable: true
+    store:
+      Yourself, as an individual: individual
+      The business or organisation you work for: organisation
+      A client you act for as an agent or third party: agent
+    next:
+      - when: { key: defraUserType, equals: individual }
+        goto: defra-account-individual
+      - when: { key: defraUserType, equals: organisation }
+        goto: defra-account-organisation
+      - goto: defra-account-agent
+
+  - id: defra-account-individual
+    guard: { key: defraUserType, equals: individual, redirect: defra-account-user-type }
+    back: defra-account-user-type
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: sign-in-method
+
+  - id: defra-account-organisation
+    guard: { key: defraUserType, equals: organisation, redirect: defra-account-user-type }
+    back: defra-account-user-type
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: sign-in-method
+
+  - id: defra-account-agent
+    guard: { key: defraUserType, equals: agent, redirect: defra-account-user-type }
+    back: defra-account-user-type
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
       - goto: sign-in-method
 
   - id: sign-in-method
+    back:
+      - when: { key: defraUserType, equals: individual }
+        goto: defra-account-individual
+      - when: { key: defraUserType, equals: organisation }
+        goto: defra-account-organisation
+      - goto: defra-account-agent
     field: sign-in-method
     sessionKey: signInMethod
     handler: custom # registers the sign-out route, see hooks.js

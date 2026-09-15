@@ -53,6 +53,19 @@ async function expectEmailChrome(page) {
   await expect(page.locator('.govuk-grid-column-two-thirds')).toHaveCount(1)
 }
 
+// After the variation questions: who the Defra account is for, then the
+// guidance for that kind of user, then on to sign in
+async function chooseDefraUserType(page, option) {
+  await expect(page).toHaveURL(`${base}/defra-account`)
+  await expect(page.locator('h1')).toHaveText('You need a Defra account')
+  await page.getByRole('button', { name: 'Continue' }).click()
+  await expect(page).toHaveURL(`${base}/defra-account-user-type`)
+  await page.getByLabel(option).check()
+  await page.getByRole('button', { name: 'Continue' }).click()
+  await expect(page).toHaveURL(new RegExp(`${base}/defra-account-`))
+  await page.getByRole('button', { name: 'Continue' }).click()
+}
+
 async function signIn(page, email) {
   await expect(page).toHaveURL(`${base}/sign-in-method`)
   await page.getByLabel(/GOV.UK One Login/).check()
@@ -167,6 +180,7 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
 
     await page.getByLabel('No', { exact: true }).check()
     await page.getByRole('button', { name: 'Continue' }).click()
+    await chooseDefraUserType(page, /business or organisation you work for/)
     await signIn(page, 'company@example.com')
     await expect(page).toHaveURL(`${base}/your-address`)
     await expect(page.locator('main')).toContainText('company address')
@@ -247,7 +261,32 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
     await page.getByLabel(/NRL reference/).fill('NRL-000001')
     await page.getByRole('button', { name: 'Continue' }).click()
 
-    await signIn(page, 'agent@example.com')
+    // Who the Defra account is for comes after the variation questions and
+    // walks back through them
+    await expect(page).toHaveURL(`${base}/defra-account`)
+    await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
+      'href',
+      `${base}/original-reference`
+    )
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/defra-account-user-type`)
+    // The answer is required
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page.locator('.govuk-error-summary')).toContainText(
+      'Select who the Defra account is for'
+    )
+    await page.getByLabel(/client you act for/).check()
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/defra-account-agent`)
+    await expect(page.locator('h1')).toContainText('agent or third party')
+    await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
+      'href',
+      `${base}/defra-account-user-type`
+    )
+    await page.getByRole('button', { name: 'Continue' }).click()
+
+    // The account type follows the answer, not the email
+    await signIn(page, 'company@example.com')
     await expect(page).toHaveURL(`${base}/developer-details`)
     await expect(page.locator('.app-organisation-bar')).toContainText(
       'Organisation name'
@@ -275,6 +314,29 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
     await expect(page.locator('.govuk-summary-list').first()).toContainText(
       'NRL-000001'
     )
+    await expect(page.locator('.govuk-summary-list').first()).toContainText(
+      'A client you act for as an agent or third party'
+    )
+
+    // Changing who the account is for goes through the guidance and back,
+    // and moves the signed-in account to the new type
+    await page
+      .getByRole('link', { name: /Change.*who the Defra account is for/ })
+      .click()
+    await expect(page).toHaveURL(
+      `${base}/defra-account-user-type?change=true&nav=check-your-answers`
+    )
+    await page.getByLabel(/Yourself, as an individual/).check()
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(
+      `${base}/defra-account-individual?change=true&nav=check-your-answers`
+    )
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/check-your-answers`)
+    await expect(page.locator('.govuk-summary-list').first()).toContainText(
+      'Yourself, as an individual'
+    )
+    await expect(page.locator('.app-organisation-bar')).toHaveCount(0)
 
     await page
       .locator('.govuk-service-navigation')
@@ -309,8 +371,9 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
 
 test.describe('nrf-request-to-use-1 Defra ID registration', () => {
   // Sign-in emails containing "new" register a Defra account first; the
-  // business or individual answer then decides the account type
-  async function reachSignIn(page) {
+  // business or individual answer then decides the account type, with who
+  // the Defra account is for deciding between a company and an agent
+  async function reachSignIn(page, userType = /client you act for/) {
     await retrieveQuote(page)
     await page.getByRole('button', { name: 'Continue' }).click()
     await page.getByLabel(/Yes, accept/).check()
@@ -318,10 +381,11 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
     await expect(page).toHaveURL(`${base}/variation`)
     await page.getByLabel('No', { exact: true }).check()
     await page.getByRole('button', { name: 'Continue' }).click()
+    await chooseDefraUserType(page, userType)
   }
 
-  async function registerStart(page, email) {
-    await reachSignIn(page)
+  async function registerStart(page, email, userType) {
+    await reachSignIn(page, userType)
     await signIn(page, email)
     await expect(page).toHaveURL(`${base}/defra-register`)
     // Defra ID chrome: Sign out bar, no phase banner, Defra footer
@@ -354,7 +418,11 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
   test('an individual registers, finds their address and continues', async ({
     page
   }) => {
-    await registerStart(page, 'new-individual@example.com')
+    await registerStart(
+      page,
+      'new-individual@example.com',
+      /Yourself, as an individual/
+    )
     await atRegistrationType(page)
     await page.getByLabel(/No, as an individual/).check()
     await page.getByRole('button', { name: 'Continue' }).click()
@@ -431,10 +499,14 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
     )
   })
 
-  test('a business registers and becomes a company when the email says so', async ({
+  test('a business registers and becomes a company for the organisation they work for', async ({
     page
   }) => {
-    await registerStart(page, 'new-company@example.com')
+    await registerStart(
+      page,
+      'new-company@example.com',
+      /business or organisation you work for/
+    )
     await atRegistrationType(page)
     await page.getByLabel(/Yes, and I have permission/).check()
     await page.getByRole('button', { name: 'Continue' }).click()
@@ -481,10 +553,10 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
     await expect(page.locator('main')).toContainText('company address')
   })
 
-  test('a business with no registration number is an agent by default', async ({
+  test('a business registered by an agent is an agent account', async ({
     page
   }) => {
-    await registerStart(page, 'new@example.com')
+    await registerStart(page, 'new@example.com', /client you act for/)
     await atRegistrationType(page)
     await page.getByLabel(/Yes, and I have permission/).check()
     await page.getByRole('button', { name: 'Continue' }).click()
@@ -509,7 +581,11 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
   test('an invited employee gives their own details and acts for the business', async ({
     page
   }) => {
-    await registerStart(page, 'new-employee@example.com')
+    await registerStart(
+      page,
+      'new-employee@example.com',
+      /business or organisation you work for/
+    )
     // No business or individual question: straight to their own details
     await expect(page).toHaveURL(`${base}/defra-name`)
     await page.getByLabel('First name').fill('Fabien')
@@ -561,9 +637,20 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
   })
 
   test('other emails skip registration', async ({ page }) => {
-    await reachSignIn(page)
+    await reachSignIn(page, /Yourself, as an individual/)
     await signIn(page, 'individual@example.com')
     await expect(page).toHaveURL(`${base}/your-address`)
+  })
+
+  test('who the Defra account is for decides the account type', async ({
+    page
+  }) => {
+    // An individual's email, but the account is for the organisation they
+    // work for: a company, which gives its own address
+    await reachSignIn(page, /business or organisation you work for/)
+    await signIn(page, 'individual@example.com')
+    await expect(page).toHaveURL(`${base}/your-address`)
+    await expect(page.locator('main')).toContainText('company address')
   })
 })
 
@@ -598,6 +685,13 @@ test.describe('nrf-request-to-use-1 with errors switched off', () => {
     await expect(page).toHaveURL(`${base}/original-committed`)
     await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page).toHaveURL(`${base}/original-reference`)
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/defra-account`)
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/defra-account-user-type`)
+    // The sample answer says the account is for a client
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/defra-account-agent`)
     await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page).toHaveURL(`${base}/sign-in-method`)
     await page.getByRole('button', { name: 'Continue' }).click()
@@ -770,6 +864,7 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
     await page.getByRole('button', { name: 'Continue' }).click()
     await page.getByLabel('No', { exact: true }).check()
     await page.getByRole('button', { name: 'Continue' }).click()
+    await chooseDefraUserType(page, /client you act for/)
     await signIn(page, 'agent@example.com')
     await page.getByLabel('Full name').fill('A Developer')
     await page.getByLabel('Address line 1').fill('Development Road')
@@ -970,6 +1065,12 @@ test.describe('nrf-request-to-use-1 creating an account', () => {
 
   test('the identity provider pages are shared from their own folders', () => {
     for (const page of journey.pages) {
+      // The "who is the Defra account for" pages before sign in are the
+      // journey's own, not the mock Defra ID
+      if (page.id.startsWith('defra-account')) {
+        expect(page.shared).toBeFalsy()
+        continue
+      }
       const prefix = Object.keys(providers).find((p) => page.id.startsWith(p))
       if (!prefix) {
         continue
@@ -1013,6 +1114,7 @@ test.describe('nrf-request-to-use-1 creating an account', () => {
     await expect(page).toHaveURL(`${base}/variation`)
     await page.getByLabel('No', { exact: true }).check()
     await page.getByRole('button', { name: 'Continue' }).click()
+    await chooseDefraUserType(page, /client you act for/)
     await expect(page).toHaveURL(`${base}/sign-in-method`)
   }
 
@@ -1119,8 +1221,9 @@ test.describe('nrf-request-to-use-1 creating an account', () => {
       .getByRole('textbox', { name: 'Password', exact: true })
       .fill('not-a-real-password')
     await page.getByRole('button', { name: 'Sign in' }).click()
-    // A company gives its own address
-    await expect(page).toHaveURL(`${base}/your-address`)
+    // The account is for a client, so an agent enters the developer details
+    // whatever the user ID says
+    await expect(page).toHaveURL(`${base}/developer-details`)
   })
 
   test('creating Government Gateway sign in details mints a user ID', async ({
