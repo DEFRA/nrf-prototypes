@@ -59,7 +59,11 @@ const STREETS_STYLE = {
  * @param {{ hasOsKey?: boolean }} [params]
  */
 export function getMapStyles({ hasOsKey = false } = {}) {
-  return hasOsKey
+  const styles = hasOsKey
     ? [SATELLITE_STYLE, ...OS_STYLES, STREETS_STYLE]
     : [SATELLITE_STYLE, STREETS_STYLE]
+
+  // interactive-map hides the copyright at its mobile breakpoint by default;
+  // the OS and Esri terms require it on every device
+  return styles.map((style) => ({ ...style, showAttributionOnMobile: true }))
 }
