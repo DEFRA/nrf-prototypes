@@ -102,6 +102,8 @@ function levyFor(units) {
 
 // The business every company registration number finds (a fixture)
 const FIXTURE_BUSINESS = 'ACME LTD'
+// The administrator who invited an employee to the business's Defra account
+const FIXTURE_ADMINISTRATOR = 'Name Name'
 
 function emailLocalPart(email) {
   return String(email || '')
@@ -121,31 +123,59 @@ function accountFor(email) {
   return {
     ...ACCOUNTS[type || 'agent'],
     email: String(email || '').trim(),
-    needsDefraAccount: local.includes('new')
+    needsDefraAccount: local.includes('new'),
+    // An employee invited to a business's account (new-employee@) registers
+    // with their own details only and is told the administrator will finish
+    // setting them up
+    invitedEmployee: local.includes('employee')
   }
+}
+
+/**
+ * A Defra account Contact Support ID, quoted on the registration emails:
+ * "BA202609-R9-2509-K0-0410" (BA, the year and month, then letter-digit and
+ * four-digit blocks)
+ */
+function mintContactSupportId(now = new Date()) {
+  const letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ'
+  const pick = (chars) => chars[Math.floor(Math.random() * chars.length)]
+  const digits = (n) =>
+    Array.from({ length: n }, () => pick('0123456789')).join('')
+  const block = () => `${pick(letters)}${digits(1)}`
+  const month = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`
+  return `BA${month}-${block()}-${digits(4)}-${block()}-${digits(4)}`
 }
 
 /**
  * The account once a Defra account is registered. The business or individual
  * answer wins over the email: an individual is an individual; a business is a
- * company when the email says so, otherwise an agent (the assumed path).
+ * company when the email says so, otherwise an agent (the assumed path). An
+ * invited employee gave their own details and acts for the business, so they
+ * get a company account under the business's name.
  */
 function registeredAccount(data) {
   const email = (data.account && data.account.email) || data.signInEmail
+  const employee = Boolean(data.account && data.account.invitedEmployee)
   const business = data.defraAccountType === 'business'
-  const type = !business
-    ? 'individual'
-    : emailLocalPart(email).includes('company')
-      ? 'company'
-      : 'agent'
+  const type = employee
+    ? 'company'
+    : !business
+      ? 'individual'
+      : emailLocalPart(email).includes('company')
+        ? 'company'
+        : 'agent'
   const name = data.defraName || {}
   const fullName = [name.firstName, name.lastName].filter(Boolean).join(' ')
   const account = { ...ACCOUNTS[type], email: String(email || '').trim() }
   if (fullName) {
     account.fullName = fullName
   }
-  if (business) {
+  if (business || employee) {
     account.businessName = FIXTURE_BUSINESS
+  }
+  if (employee) {
+    account.invitedEmployee = true
+    account.administratorName = FIXTURE_ADMINISTRATOR
   }
   return account
 }
@@ -245,7 +275,8 @@ const SIGN_IN_KEYS = [
   'defraHasCrn',
   'defraCrn',
   'defraBusinessContact',
-  'defraAccountCreated'
+  'defraAccountCreated',
+  'defraContactSupportId'
 ]
 
 const signInMethod = {
@@ -343,6 +374,7 @@ const completeRegistration = {
     const { data } = ctx
     data.account = registeredAccount(data)
     data.defraAccountCreated = 'Yes'
+    data.defraContactSupportId = mintContactSupportId()
   }
 }
 
@@ -378,7 +410,9 @@ module.exports = {
   accountFor,
   registeredAccount,
   mintGatewayUserId,
+  mintContactSupportId,
   FIXTURE_BUSINESS,
+  FIXTURE_ADMINISTRATOR,
   loadQuote,
   levyFor,
   FIXTURE_QUOTE,

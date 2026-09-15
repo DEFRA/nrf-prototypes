@@ -21,6 +21,9 @@
  * A link whose target starts with `./` names a page of the current journey
  * (`[Create sign in details](./government-gateway-email)`), so a shared page
  * can point at a sibling without knowing which journey it is mounted in.
+ * `./$next` follows the page's own `next` rules for the current session, so
+ * an email whose link continues the journey (the "Sign in to your account"
+ * link on the Defra account emails) needs no page names in its copy.
  *
  * `{{ key }}` placeholders are substituted after rendering and HTML-escaped.
  * Supported forms: `{{ a.b }}`, `{{ key | lower }}`, `{{ key or "fallback" }}`.
@@ -28,7 +31,11 @@
 
 const MarkdownIt = require('markdown-it')
 const container = require('markdown-it-container')
-const { evaluate, getPath, isSet } = require('./expressions')
+const { evaluate, firstMatch, getPath, isSet } = require('./expressions')
+const { toPath } = require('./back-link')
+
+// A link target that follows the page's `next` rules
+const NEXT_TARGET = './$next'
 
 // Conditional blocks are marked in the rendered HTML with NUL-delimited
 // tokens that applyConditionals() strips out again. NUL never appears in
@@ -100,6 +107,16 @@ function interpolate(text, data, options = {}) {
       return escape ? escapeHtml(value) : String(value)
     }
   )
+}
+
+/**
+ * Where the page's `next` rules lead for this session (the target of a
+ * `./$next` link). A rule's `set` is not applied: a link is a GET.
+ */
+function nextPath(ctx) {
+  const page = ctx.page || {}
+  const rule = firstMatch(page.next || [], ctx)
+  return rule ? toPath(rule.goto, ctx.journey, ctx) : null
 }
 
 /**
@@ -305,7 +322,12 @@ function createMarkdown() {
     // `./page-id` is a page of the journey this page is rendered in
     const href = tokens[idx].attrGet('href') || ''
     const journey = env.ctx && env.ctx.journey
-    if (href.startsWith('./') && journey && journey.basePath) {
+    if (href === NEXT_TARGET && journey) {
+      tokens[idx].attrSet(
+        'href',
+        nextPath(env.ctx) || (env.page && env.page.path) || '#'
+      )
+    } else if (href.startsWith('./') && journey && journey.basePath) {
       tokens[idx].attrSet('href', `${journey.basePath}/${href.slice(2)}`)
     }
     const next = tokens[idx + 1]

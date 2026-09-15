@@ -82,8 +82,14 @@ test.describe('nrf-request-to-use-1 preview mode', () => {
           : page.type === 'custom'
             ? 'body'
             : 'h1'
+      // Up to the first placeholder: a heading may carry an answer
+      // ("Your registration for {{ account.businessName }} is complete")
       await expect(browser.locator(headingSelector).first()).toContainText(
-        page.content.heading.replace(/\s+/g, ' ').slice(0, 40)
+        page.content.heading
+          .split('{{')[0]
+          .replace(/\s+/g, ' ')
+          .trim()
+          .slice(0, 40)
       )
     })
   }
@@ -312,6 +318,10 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
     await page.getByRole('button', { name: 'Accept and Continue' }).click()
     await expect(page).toHaveURL(`${base}/defra-what-we-need`)
     await page.getByRole('button', { name: 'Continue' }).click()
+  }
+
+  // Everyone but an invited employee is asked business or individual next
+  async function atRegistrationType(page) {
     await expect(page).toHaveURL(`${base}/defra-registration-type`)
     await expect(page.locator('.govuk-caption-l')).toContainText(
       'Register Defra account'
@@ -322,6 +332,7 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
     page
   }) => {
     await registerStart(page, 'new-individual@example.com')
+    await atRegistrationType(page)
     await page.getByLabel(/No, as an individual/).check()
     await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page).toHaveURL(`${base}/defra-name`)
@@ -377,6 +388,14 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
     await page
       .getByRole('button', { name: 'Confirm and complete registration' })
       .click()
+    // The registration email for an individual, then signing in carries on
+    await expect(page).toHaveURL(`${base}/defra-registered-individual`)
+    await expect(page.locator('main')).toContainText('Hello John,')
+    await expect(page.locator('main')).toContainText(
+      /Contact Support ID is BA\d{6}-[A-Z]\d-\d{4}-[A-Z]\d-\d{4}\./
+    )
+    await expect(page.locator('main')).not.toContainText('on behalf of')
+    await page.getByRole('link', { name: 'Sign in to your account' }).click()
     await expect(page).toHaveURL(`${base}/your-address`)
     await expect(page.locator('main')).not.toContainText('company address')
     await page.getByLabel('Address line 1').fill('53 Business Lane')
@@ -393,6 +412,7 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
     page
   }) => {
     await registerStart(page, 'new-company@example.com')
+    await atRegistrationType(page)
     await page.getByLabel(/Yes, and I have permission/).check()
     await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page).toHaveURL(`${base}/defra-trading-uk`)
@@ -427,6 +447,13 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
     await expect(page.locator('main')).toContainText('hello@acme.com')
 
     await page.getByRole('button', { name: 'Accept and continue' }).click()
+    // The registration email for a business names the company
+    await expect(page).toHaveURL(`${base}/defra-registered-business`)
+    await expect(page.locator('main')).toContainText(
+      'registered to use Defra online services on behalf of ACME LTD'
+    )
+    await expect(page.locator('main')).toContainText('Contact Support ID')
+    await page.getByRole('link', { name: 'Sign in to your account' }).click()
     await expect(page).toHaveURL(`${base}/your-address`)
     await expect(page.locator('main')).toContainText('company address')
   })
@@ -435,6 +462,7 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
     page
   }) => {
     await registerStart(page, 'new@example.com')
+    await atRegistrationType(page)
     await page.getByLabel(/Yes, and I have permission/).check()
     await page.getByRole('button', { name: 'Continue' }).click()
     await page.getByLabel('No', { exact: true }).check()
@@ -449,8 +477,51 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
     await expect(page).toHaveURL(`${base}/defra-business-check-answers`)
     await expect(page.locator('main')).toContainText('Not provided')
     await page.getByRole('button', { name: 'Accept and continue' }).click()
+    await expect(page).toHaveURL(`${base}/defra-registered-business`)
+    await page.getByRole('link', { name: 'Sign in to your account' }).click()
     await expect(page).toHaveURL(`${base}/developer-details`)
     await expect(page.locator('.app-organisation-bar')).toHaveCount(1)
+  })
+
+  test('an invited employee gives their own details and acts for the business', async ({
+    page
+  }) => {
+    await registerStart(page, 'new-employee@example.com')
+    // No business or individual question: straight to their own details
+    await expect(page).toHaveURL(`${base}/defra-name`)
+    await page.getByLabel('First name').fill('Fabien')
+    await page.getByLabel('Last name').fill('Saujot')
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await page.getByLabel('Telephone number').fill('07387 202019')
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await page.getByLabel('Postcode').fill('SK11 8BD')
+    await page.getByRole('button', { name: 'Find address' }).click()
+    await page.getByLabel('Select your address').selectOption({
+      label: '84 Hobson Street, Macclesfield, Cheshire, SK11 8BD'
+    })
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await page.getByLabel('Memorable word').fill('sundance')
+    await page.getByLabel('Hint question').fill('First school?')
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(`${base}/defra-check-answers`)
+    await page
+      .getByRole('button', { name: 'Confirm and complete registration' })
+      .click()
+
+    // The employee email: the administrator finishes setting them up
+    await expect(page).toHaveURL(`${base}/defra-registered-employee`)
+    await expect(page.locator('main')).toContainText(
+      'Your registration for ACME LTD is complete'
+    )
+    await expect(page.locator('main')).toContainText('Hello Fabien,')
+    await expect(page.locator('main')).toContainText('What happens next?')
+    await expect(page.locator('main')).toContainText(
+      'tasks you can perform on behalf of ACME LTD'
+    )
+    // They act for the business, so they get the company's pages
+    await page.getByRole('link', { name: 'Sign in to your account' }).click()
+    await expect(page).toHaveURL(`${base}/your-address`)
+    await expect(page.locator('main')).toContainText('company address')
   })
 
   test('signing out from a Defra page forgets the registration', async ({

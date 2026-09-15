@@ -62,6 +62,7 @@ homepage:
     - Mock Government Gateway sign in and "Create sign in details" flow (email, confirmation code, name, password, user ID)
     - Agent, company and individual account types decided by the sign-in email (agent by default)
     - Mock Defra ID registration for sign-in emails containing "new" (new-individual@, new-company@, new@ for an agent), as an individual or a business; the registration answer decides the account type
+    - Defra account registration emails for an individual, a business and an invited employee (new-employee@ gives their own details only), each with a Contact Support ID and a "Sign in to your account" link that carries on to the service
     - Developer details or your address, review, check your answers, confirmation
     - Email and commitment certificate with the red line boundary on a map
     - Built from content files, so copy and flow can change without code
@@ -122,6 +123,7 @@ session:
   - defraCrn
   - defraBusinessContact
   - defraAccountCreated
+  - defraContactSupportId
 
 # Sample answers used when a page is opened with ?preview=1 and on the
 # screen wall at /tools/journeys/nrf-request-to-use-1. Never written to the session.
@@ -196,6 +198,7 @@ preview:
     defraMemorableWord:
       memorableWord: sundance
       hintQuestion: What is the name of my first school?
+    defraContactSupportId: BA202609-R9-2509-K0-0410
     defraTradingUk: 'Yes'
     defraHasCrn: 'Yes'
     defraCrn:
@@ -486,10 +489,15 @@ pages:
     guard: { key: account, isSet: true, redirect: sign-in-method }
     next: defra-what-we-need
 
+  # An invited employee (new-employee@) is not asked whether they register a
+  # business: they give their own details, as an individual does
   - id: defra-what-we-need
     shared: defra-id
     guard: { key: account, isSet: true, redirect: sign-in-method }
-    next: defra-registration-type
+    next:
+      - when: { key: account.invitedEmployee, truthy: true }
+        goto: defra-name
+      - goto: defra-registration-type
 
   - id: defra-registration-type
     shared: defra-id
@@ -572,14 +580,15 @@ pages:
         goto: $summary
       - goto: defra-check-answers
 
+  # Completing the registration sends the email for the kind of user
   - id: defra-check-answers
     shared: defra-id
     guard: { key: account, isSet: true, redirect: sign-in-method }
     handler: custom # completes the registration and sets the account type, see hooks.js
     next:
-      - when: { key: account.accountType, in: [company, individual] }
-        goto: your-address
-      - goto: developer-details
+      - when: { key: account.invitedEmployee, truthy: true }
+        goto: defra-registered-employee
+      - goto: defra-registered-individual
 
   # Business: registered to trade, company registration number (Companies
   # House fixture), contact details. "No" answers carry on: not trading in
@@ -640,10 +649,44 @@ pages:
         accountType: agent
         fullName: John Smith
         email: new@example.com
-    next:
-      - when: { key: account.accountType, in: [company, individual] }
-        goto: your-address
-      - goto: developer-details
+    next: defra-registered-business
+
+  # The registration emails (content/shared/defra-id/). Their "Sign in to
+  # your account" link (`./$next`) carries on to wherever signing in leads
+  # for the account type, the same rules as the sign-in pages
+  - id: defra-registered-individual
+    shared: defra-id
+    guard: { key: defraAccountCreated, equals: 'Yes', redirect: defra-register }
+    preview:
+      account:
+        accountType: individual
+        fullName: John Smith
+        email: new-individual@example.com
+    next: *signed-in
+
+  - id: defra-registered-business
+    shared: defra-id
+    guard: { key: defraAccountCreated, equals: 'Yes', redirect: defra-register }
+    preview:
+      account:
+        accountType: company
+        fullName: Name Name
+        businessName: ACME LTD
+        email: new-company@example.com
+    next: *signed-in
+
+  - id: defra-registered-employee
+    shared: defra-id
+    guard: { key: defraAccountCreated, equals: 'Yes', redirect: defra-register }
+    preview:
+      account:
+        accountType: company
+        fullName: John Smith
+        businessName: ACME LTD
+        administratorName: Name Name
+        invitedEmployee: true
+        email: new-employee@example.com
+    next: *signed-in
 
   # Agents enter the developer they act for; companies and individuals give
   # their own address (their name comes from the account)
