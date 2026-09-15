@@ -20,6 +20,6 @@ actions:
 By requesting to use the nature restoration levy, you agree that:
 
 - the information I have provided is true and correct to the best of my knowledge
-- I will inform Natural England if any of the details I have provide change
+- I will inform Natural England if any of the details I have provided change
 
 If you do not agree and confirm, you can delete your quote details.
