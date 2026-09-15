@@ -3,9 +3,9 @@ type: checkboxes
 # The terms sit between the heading and the checkbox
 bodyFirst: true
 options:
-  - label: I confirm that I have read and agree to these terms
+  - label: I confirm that I have read and agree to the terms of this declaration
 errors:
-  required: Select the box to confirm you agree to the terms
+  required: Tick the box to confirm you agree to the declaration
 button: Continue
 actions:
   - text: Delete quote
@@ -15,11 +15,11 @@ actions:
     hidden: quote details
 ---
 
-# Agree to the terms of using the nature restoration levy
+# Declaration
 
 By requesting to use the nature restoration levy, you agree that:
 
-- test
-- test
+- the information I have provided is true and correct to the best of my knowledge
+- I will inform Natural England if any of the details I have provide change
 
-If you do not agree, you can delete your quote details instead.
+If you do not agree and confirm, you can delete your quote details.
