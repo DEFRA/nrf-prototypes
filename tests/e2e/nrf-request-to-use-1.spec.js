@@ -183,8 +183,8 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
       '53 Business Lane'
     )
     await page.getByRole('button', { name: 'Confirm' }).click()
-    // Everyone agrees to the terms before checking their answers; the box
-    // is required and the Delete link is the way out
+    // Everyone agrees to the declaration before checking their answers; the
+    // box is required and the Delete link is the way out
     await expect(page).toHaveURL(`${base}/agreement`)
     await expect(
       page.getByRole('link', { name: /Delete.*quote details/ })
@@ -192,16 +192,18 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
     await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page).toHaveURL(`${base}/agreement`)
     await expect(page.locator('.govuk-error-summary')).toContainText(
-      'Select the box to confirm you agree to the terms'
+      'Tick the box to confirm you agree to the declaration'
     )
     await page.getByLabel(/I confirm that I have read/).check()
     await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page).toHaveURL(`${base}/check-your-answers`)
     await expect(page.locator('main')).toContainText('Details confirmed')
     await expect(page.locator('main')).toContainText('Development details')
-    await expect(page.locator('main')).toContainText('Agreed to the terms')
+    await expect(page.locator('main')).toContainText(
+      'Agreed to the declaration'
+    )
     await expect(
-      page.getByRole('link', { name: /Change.*agree to the terms/ })
+      page.getByRole('link', { name: /Change.*agree to the declaration/ })
     ).toHaveAttribute(
       'href',
       `${base}/agreement?change=true&nav=check-your-answers`

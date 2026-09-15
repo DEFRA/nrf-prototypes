@@ -80,11 +80,11 @@ rows:
     value: '{{ retrievalEmail }}'
     change: email
     changeHidden: email address
-  - heading: Agreement
-  - key: Agreed to the terms
+  - heading: Declaration
+  - key: Agreed to the declaration
     value: '{{ agreedToTerms }}'
     change: agreement
-    changeHidden: whether you agree to the terms
+    changeHidden: whether you agree to the declaration
 actions:
   - text: Confirm and submit
     kind: submit
