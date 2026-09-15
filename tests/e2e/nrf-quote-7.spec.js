@@ -134,12 +134,11 @@ test.describe('nrf-quote-7 happy path', () => {
     await expect(page.locator('.govuk-back-link')).toHaveCount(0)
     await expect(page.locator('main')).toContainText('NRL-')
 
-    // The email links to the shared Defra account guidance, which keeps the
+    // The email no longer links to the shared Defra account guidance (the
+    // content designer wants nothing unconfirmed in the email); the page is
+    // still reachable from the start page and the screens page. It keeps the
     // critical account-type advice visible and folds the rest into details
-    await page
-      .getByRole('link', { name: 'Find out how to create your Defra account' })
-      .click()
-    await expect(page).toHaveURL(/\/nrf-quote-7\/creating-defra-account$/)
+    await page.goto('/nrf-quote-7/creating-defra-account')
     await expect(page.locator('h1')).toHaveText('Creating a Defra account')
     await expect(page.locator('.govuk-warning-text')).toContainText(
       'will not be valid'

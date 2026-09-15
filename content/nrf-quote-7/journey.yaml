@@ -304,8 +304,8 @@ pages:
   - id: estimate-email-content
     back: confirmation
 
-  # Guidance linked from the quote email and the start page; outside the
-  # main flow for now
+  # Guidance linked from the start page (the quote email no longer links
+  # here); outside the main flow for now
   - id: creating-defra-account
     shared: true
     back: estimate-email-content

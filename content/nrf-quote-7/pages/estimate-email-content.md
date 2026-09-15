@@ -50,8 +50,6 @@ Keep this email for your records.
 
 When you are ready to start the planning and development process, you can [request to use the nature restoration levy](/nrf-request-to-use-1/have-nrl-reference). Once your request is accepted, you will receive a commitment certificate. You can submit this alongside your planning application.
 
-To request to use the nature restoration levy, you'll need to create a Defra account. [Find out how to create your Defra account](/nrf-quote-7/creating-defra-account).
-
 ## How your nature restoration levy was calculated
 
 Your levy has been calculated from the details you submitted and the charging schedule for the EDP. [Read about the charging schedule for the EDP](#).
