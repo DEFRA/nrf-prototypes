@@ -71,7 +71,7 @@ Journey engine base page. Every generic page type extends this and fills
 
 {% block content %}
 <div class="govuk-grid-row">
-  <div class="{% if page.layout == 'document' %}govuk-grid-column-full app-document{% else %}govuk-grid-column-two-thirds{% endif %}">
+  <div class="{% if page.layout == 'document' %}govuk-grid-column-full app-document{% elif page.layout == 'email' %}govuk-grid-column-two-thirds app-email{% else %}govuk-grid-column-two-thirds{% endif %}">
     {% block pageBody %}{% endblock %}
   </div>
 </div>
@@ -83,6 +83,9 @@ Journey engine base page. Every generic page type extends this and fills
 {% elif page.layout in ['government-gateway', 'defra-id', 'defra-account'] %}
   {# Defra ID runs on Government Gateway, so both share its footer #}
   {% include "includes/government-gateway-footer.html" %}
+{% elif page.layout == 'email' %}
+  {# An email has no GOV.UK footer: a plain grey band instead #}
+  {% include "includes/email-footer.html" %}
 {% else %}
   {{ super() }}
 {% endif %}

@@ -85,6 +85,35 @@
   }
 }
 
+// Emails are read in a mail client, not on GOV.UK, so they use the system
+// sans-serif that Notify emails render in rather than GDS Transport
+.app-email {
+  &,
+  [class^='govuk-'],
+  [class*=' govuk-'] {
+    font-family: Helvetica, Arial, sans-serif;
+  }
+}
+
+// The mock emails end in a plain grey band instead of the GOV.UK footer
+.app-email-footer {
+  padding: govuk-spacing(6) 0;
+  border-top: 1px solid $govuk-border-colour;
+  background: govuk-colour('light-grey');
+  font-family: Helvetica, Arial, sans-serif;
+
+  &__text {
+    @include govuk-font($size: 16);
+    margin: 0 0 govuk-spacing(2);
+    font-family: inherit;
+    color: $govuk-secondary-text-colour;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
 // Documents (certificates) print without the site chrome
 @media print {
   .app-document ~ *,
