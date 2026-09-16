@@ -112,16 +112,34 @@ function emailLocalPart(email) {
     .split('@')[0]
 }
 
+// The account type for each answer to "Who is the Defra account for?"
+const USER_TYPE_ACCOUNTS = {
+  individual: 'individual',
+  organisation: 'company',
+  agent: 'agent'
+}
+
+/**
+ * The account type from the sign-in email address alone: "company" or
+ * "individual" in it, otherwise an agent
+ */
+function accountTypeFromEmail(email) {
+  const local = emailLocalPart(email)
+  return ['company', 'individual'].find((t) => local.includes(t)) || 'agent'
+}
+
 /**
  * Which mock account an email address (or a Government Gateway user ID,
- * which has no @) signs in to. One containing "new" has no Defra account
- * yet, so the journey registers one first.
+ * which has no @) signs in to. The answer to "Who is the Defra account for?"
+ * decides the account type; the email decides it only when that question
+ * was skipped. An email containing "new" has no Defra account yet, so the
+ * journey registers one first.
  */
-function accountFor(email) {
+function accountFor(email, userType) {
   const local = emailLocalPart(email)
-  const type = ['company', 'individual'].find((t) => local.includes(t))
+  const type = USER_TYPE_ACCOUNTS[userType] || accountTypeFromEmail(email)
   return {
-    ...ACCOUNTS[type || 'agent'],
+    ...ACCOUNTS[type],
     email: String(email || '').trim(),
     needsDefraAccount: local.includes('new'),
     // An employee invited to a business's account (new-employee@) registers
@@ -148,22 +166,25 @@ function mintContactSupportId(now = new Date()) {
 
 /**
  * The account once a Defra account is registered. The business or individual
- * answer wins over the email: an individual is an individual; a business is a
- * company when the email says so, otherwise an agent (the assumed path). An
- * invited employee gave their own details and acts for the business, so they
- * get a company account under the business's name.
+ * answer wins: an individual is an individual; a business is a company or an
+ * agent according to who they said the Defra account is for (falling back to
+ * the email, agent by default). An invited employee gave their own details
+ * and acts for the business, so they get a company account under the
+ * business's name.
  */
 function registeredAccount(data) {
   const email = (data.account && data.account.email) || data.signInEmail
   const employee = Boolean(data.account && data.account.invitedEmployee)
   const business = data.defraAccountType === 'business'
-  const type = employee
-    ? 'company'
-    : !business
-      ? 'individual'
-      : emailLocalPart(email).includes('company')
+  const businessType =
+    data.defraUserType === 'agent'
+      ? 'agent'
+      : data.defraUserType === 'organisation'
         ? 'company'
-        : 'agent'
+        : accountTypeFromEmail(email) === 'company'
+          ? 'company'
+          : 'agent'
+  const type = employee ? 'company' : !business ? 'individual' : businessType
   const name = data.defraName || {}
   const fullName = [name.firstName, name.lastName].filter(Boolean).join(' ')
   const account = { ...ACCOUNTS[type], email: String(email || '').trim() }
@@ -293,15 +314,28 @@ const signInMethod = {
   }
 }
 
-// Signing in with a password, or finishing creating a One Login: the email
-// decides the account
+// Changing who the Defra account is for after signing in (from check your
+// answers) moves the signed-in account to the matching type
+const defraAccountUserType = {
+  process(ctx) {
+    const { data } = ctx
+    if (data.account && !data.account.needsDefraAccount) {
+      const { fullName } = data.account
+      data.account = accountFor(data.account.email, data.defraUserType)
+      data.account.fullName = fullName
+    }
+  }
+}
+
+// Signing in with a password, or finishing creating a One Login: who the
+// Defra account is for (or the email) decides the account
 const oneLoginSignIn = {
   process(ctx) {
     const { data } = ctx
     // The password field is named _password so the kit never stores it; make
     // sure of that here too
     delete data._password
-    data.account = accountFor(data.signInEmail)
+    data.account = accountFor(data.signInEmail, data.defraUserType)
   }
 }
 
@@ -310,7 +344,10 @@ const oneLoginSignIn = {
 // keyed by the field name `_user-id` in camelCase.
 const governmentGatewaySignIn = {
   process(ctx, value) {
-    ctx.data.account = accountFor((value && value._userId) || '')
+    ctx.data.account = accountFor(
+      (value && value._userId) || '',
+      ctx.data.defraUserType
+    )
   }
 }
 
@@ -337,7 +374,7 @@ const governmentGatewayUserId = {
   },
   process(ctx) {
     const { data } = ctx
-    data.account = accountFor(data.signInEmail)
+    data.account = accountFor(data.signInEmail, data.defraUserType)
     if (data.governmentGatewayName) {
       data.account.fullName = String(data.governmentGatewayName).trim()
     }
@@ -396,6 +433,7 @@ module.exports = {
   'quote-reference': quoteReference,
   'original-reference': originalReference,
   'review-quote-details': reviewQuoteDetails,
+  'defra-account-user-type': defraAccountUserType,
   'sign-in-method': signInMethod,
   'one-login-password': oneLoginSignIn,
   'one-login-created': oneLoginSignIn,

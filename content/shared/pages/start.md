@@ -47,7 +47,7 @@ To request to use nature restoration levy you will need to:
 - confirm the details of your development
 - review and agree the cost of the levy
 - confirm if it is a variation
-- create a Defra ID account [Learn more about creating a Defra ID account (opens in new tab)](./creating-defra-account)
+- create a Defra ID account
 - review your company details
 - submit your details to receive a commitment certificate
 

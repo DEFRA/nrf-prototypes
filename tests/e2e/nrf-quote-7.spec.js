@@ -134,25 +134,9 @@ test.describe('nrf-quote-7 happy path', () => {
     await expect(page.locator('.govuk-back-link')).toHaveCount(0)
     await expect(page.locator('main')).toContainText('NRL-')
 
-    // The email no longer links to the shared Defra account guidance (the
-    // content designer wants nothing unconfirmed in the email); the page is
-    // still reachable from the start page and the screens page. It keeps the
-    // critical account-type advice visible and folds the rest into details
-    await page.goto('/nrf-quote-7/creating-defra-account')
-    await expect(page.locator('h1')).toHaveText('Creating a Defra account')
-    await expect(page.locator('.govuk-warning-text')).toContainText(
-      'will not be valid'
-    )
-    await expect(page.locator('details.govuk-details')).toHaveCount(2)
-    await expect(page.locator('.govuk-back-link')).toHaveAttribute(
-      'href',
-      '/nrf-quote-7/estimate-email-content'
-    )
-    await expect(
-      page.getByRole('button', {
-        name: 'Request to use the nature restoration levy'
-      })
-    ).toHaveAttribute('href', '/nrf-request-to-use-1/have-nrl-reference')
+    // The Defra account guidance now lives in the request-to-use journey,
+    // after the variation questions: nothing here links to it any more
+    await expect(page.locator('main')).not.toContainText('Defra account')
   })
 
   test('uploads a boundary file, sees it checked and previewed', async ({

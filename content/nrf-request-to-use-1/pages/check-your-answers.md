@@ -30,6 +30,16 @@ rows:
       - when: { key: originalCommitted, equals: 'Yes' }
         goto: original-reference
     changeHidden: the NRL reference for the original planning application
+  - key: Defra account is for
+    value:
+      when: { key: defraUserType, equals: individual }
+      then: Yourself, as an individual
+      else:
+        when: { key: defraUserType, equals: organisation }
+        then: The business or organisation you work for
+        else: A client you act for as an agent or third party
+    change: defra-account-user-type
+    changeHidden: who the Defra account is for
   - key: Full name
     value: '{{ developerDetails.fullName or account.fullName }}'
     change:

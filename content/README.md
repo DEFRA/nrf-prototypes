@@ -230,7 +230,7 @@ rows:
     value: '{{ planningType }}'
 ```
 
-A `value` can also be a choice, `{ when: <condition>, then: Added, else: Not added }`, and `change` can be a list of rules so the link goes to a different page depending on an answer (a rule list with no default shows no link when nothing matches).
+A `value` can also be a choice, `{ when: <condition>, then: Added, else: Not added }`, whose `else` may be another choice when there are three or more possibilities, and `change` can be a list of rules so the link goes to a different page depending on an answer (a rule list with no default shows no link when nothing matches).
 
 ### Buttons and links at the bottom of a page
 

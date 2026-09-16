@@ -259,11 +259,14 @@ function resolveRow(row, ctx) {
       .filter((line) => line.trim() !== '')
     result.value = { html: lines.join('<br>') }
   } else if (row.value && typeof row.value === 'object') {
-    const chosen = evaluate(row.value.when, ctx)
-      ? row.value.then
-      : row.value.else
+    // `when`/`then`/`else`; an `else` may itself be another rule, so a row
+    // can pick between three or more values
+    let chosen = row.value
+    while (chosen && typeof chosen === 'object') {
+      chosen = evaluate(chosen.when, ctx) ? chosen.then : chosen.else
+    }
     result.value = {
-      text: renderer.interpolate(chosen, data, { escape: false })
+      text: renderer.interpolate(chosen || '', data, { escape: false })
     }
   } else {
     result.value = {
