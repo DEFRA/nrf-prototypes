@@ -2,7 +2,8 @@ const { expect } = require('@playwright/test')
 const {
   loadJourney,
   interpolate,
-  evaluate
+  evaluate,
+  answerLabels
 } = require('../../../app/lib/journey-engine')
 
 /**
@@ -23,6 +24,9 @@ const {
 function copyOf(journeyId) {
   const journey = loadJourney(journeyId)
   const base = journey.basePath
+  // Option labels by session key, so a `{{ planningType }}` placeholder
+  // fills in as the option the user chose, the way the engine shows it
+  const labels = answerLabels()
 
   function pageOf(id) {
     const page = journey.byId.get(id)
@@ -36,7 +40,7 @@ function copyOf(journeyId) {
   // the answers, otherwise cut at the first one; whitespace collapsed
   function plain(text, data) {
     const filled = data
-      ? interpolate(text, data, { escape: false })
+      ? interpolate(text, data, { escape: false, labels })
       : String(text || '').split('{{')[0]
     return filled.replace(/\s+/g, ' ').trim()
   }
@@ -266,6 +270,11 @@ function copyOf(journeyId) {
     return page.getByLabel(answerLabel(id), { exact: true })
   }
 
+  // One box of a form page, by the field's `name`
+  function fieldBox(page, id, name) {
+    return page.getByLabel(fieldLabel(id, name), { exact: true })
+  }
+
   async function fillField(page, id, name, value) {
     await page.getByLabel(fieldLabel(id, name), { exact: true }).fill(value)
   }
@@ -376,6 +385,7 @@ function copyOf(journeyId) {
     optionLocator,
     fillAnswer,
     answerBox,
+    fieldBox,
     fillField,
     submit,
     actionLocator,

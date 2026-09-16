@@ -14,12 +14,22 @@ rows:
     change: /nrf-quote-7/units
     changeHidden: number of housing units
   - key: Red line boundary
+    # The uploaded file's name, or "Added" for a drawn boundary (as quote-7)
     value:
-      when: { key: redlineBoundaryPolygon, truthy: true }
-      then: Added
-      else: Not added
-    change: /nrf-quote-7/map
-    changeHidden: red line boundary
+      when: { key: hasRedlineBoundaryFile, truthy: true }
+      then: '{{ redlineFile or "Uploaded" }}'
+      else:
+        when: { key: redlineBoundaryPolygon, truthy: true }
+        then: Added
+        else: Not added
+    change:
+      - when: { key: hasRedlineBoundaryFile, truthy: true }
+        goto: /nrf-quote-7/file-preview
+      - goto: /nrf-quote-7/map
+    changeHidden:
+      when: { key: hasRedlineBoundaryFile, truthy: true }
+      then: uploaded red line boundary
+      else: drawn red line boundary
   - key: Email address
     value: '{{ retrievalEmail }}'
     change: email

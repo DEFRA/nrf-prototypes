@@ -3,7 +3,9 @@ type: check-answers
 rows:
   - heading: Your details
   - key: Full name
-    value: '{{ account.fullName }}'
+    value: '{{ yourAddress.fullName or account.fullName }}'
+    change: your-address
+    changeHidden: full name
   - key: Business name
     value: '{{ account.businessName or "Not applicable" }}'
   - key: Address

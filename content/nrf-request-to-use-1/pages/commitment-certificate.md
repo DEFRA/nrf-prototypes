@@ -4,7 +4,7 @@ type: document
 
 # Nature restoration levy – commitment certificate
 
-**Full name:** {{ developerDetails.fullName or account.fullName }}\
+**Full name:** {{ developerDetails.fullName or yourAddress.fullName or account.fullName }}\
 **Address:** {{ developerDetails.addressLine1 or yourAddress.addressLine1 }}, {{ developerDetails.town or yourAddress.town }}, {{ developerDetails.postcode or yourAddress.postcode }}\
 **NRL Ref:** {{ nrlReference }}\
 **Date of issue:** {{ certificate.issueDate }}\

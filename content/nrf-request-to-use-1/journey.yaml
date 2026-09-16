@@ -64,7 +64,7 @@ homepage:
     - Agent, company and individual account types decided by who the user is requesting to use the levy for (the sign-in email still decides it when that question was skipped)
     - Mock Defra ID registration for sign-in emails containing "new" (new-individual@, new-company@, new@ for an agent), as an individual or a business; the registration answer decides the account type
     - Defra account registration emails for an individual, a business and an invited employee (new-employee@ gives their own details only), each with a Contact Support ID and a "Sign in to your account" link that carries on to the service
-    - Developer details or your address, review, check your answers, confirmation
+    - Developer details or your name and address, review, check your answers, confirmation
     - Email and commitment certificate with the red line boundary on a map
     - Built from content files, so copy and flow can change without code
 
@@ -184,6 +184,7 @@ preview:
       county: ''
       postcode: DV1 6RP
     yourAddress:
+      fullName: Jane Smith
       addressLine1: 53 Business Lane
       addressLine2: ''
       town: Business
@@ -730,7 +731,8 @@ pages:
     next: *signed-in
 
   # Agents enter the developer they act for; companies and individuals give
-  # their own address (their name comes from the account)
+  # their own name and address (the name is filled in from the account when
+  # it was given at registration, see hooks.js)
   - id: developer-details
     sessionKey: developerDetails
     changeable: true

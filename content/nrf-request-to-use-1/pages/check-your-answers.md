@@ -31,20 +31,16 @@ rows:
         goto: original-reference
     changeHidden: the NRL reference for the original planning application
   - key: Requesting to use the levy for
-    value:
-      when: { key: defraUserType, equals: individual }
-      then: Yourself, as an individual
-      else:
-        when: { key: defraUserType, equals: organisation }
-        then: The business or organisation you work for
-        else: A client you act for as an agent or third party
+    # The option chosen on defra-account-user-type.md, shown as its label
+    value: '{{ defraUserType }}'
     change: defra-account-user-type
     changeHidden: who you are requesting to use the levy for
   - key: Full name
-    value: '{{ developerDetails.fullName or account.fullName }}'
+    value: '{{ developerDetails.fullName or yourAddress.fullName or account.fullName }}'
     change:
       - when: { key: account.accountType, equals: agent }
         goto: developer-details
+      - goto: your-address
     changeHidden: full name
   - key: Address
     value:
@@ -80,12 +76,22 @@ rows:
     change: /nrf-quote-7/units
     changeHidden: number of housing units
   - key: Red line boundary
+    # The uploaded file's name, or "Added" for a drawn boundary (as quote-7)
     value:
-      when: { key: redlineBoundaryPolygon, truthy: true }
-      then: Added
-      else: Not added
-    change: /nrf-quote-7/map
-    changeHidden: red line boundary
+      when: { key: hasRedlineBoundaryFile, truthy: true }
+      then: '{{ redlineFile or "Uploaded" }}'
+      else:
+        when: { key: redlineBoundaryPolygon, truthy: true }
+        then: Added
+        else: Not added
+    change:
+      - when: { key: hasRedlineBoundaryFile, truthy: true }
+        goto: /nrf-quote-7/file-preview
+      - goto: /nrf-quote-7/map
+    changeHidden:
+      when: { key: hasRedlineBoundaryFile, truthy: true }
+      then: uploaded red line boundary
+      else: drawn red line boundary
   - key: Email address
     value: '{{ retrievalEmail }}'
     change: email

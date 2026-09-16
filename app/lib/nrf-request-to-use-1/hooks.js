@@ -58,21 +58,26 @@ const FIXTURE_QUOTE = {
   intersectingCatchment: EDP_NAME
 }
 
+// The stand-in name of a mock account: signing in never asks for one, so
+// the journey asks companies and individuals for theirs (your-address) and
+// only fills the box in from a name the user really gave
+const MOCK_NAME = 'Name Name'
+
 // Mock accounts, keyed on the start of the sign-in email address
 const ACCOUNTS = {
   company: {
     accountType: 'company',
-    fullName: 'Name Name',
+    fullName: MOCK_NAME,
     businessName: 'Developer Ltd'
   },
   individual: {
     accountType: 'individual',
-    fullName: 'Name Name',
+    fullName: MOCK_NAME,
     businessName: ''
   },
   agent: {
     accountType: 'agent',
-    fullName: 'Name Name',
+    fullName: MOCK_NAME,
     businessName: 'Agent Ltd',
     organisationName: 'Organisation name'
   }
@@ -103,7 +108,7 @@ function levyFor(units) {
 // The business every company registration number finds (a fixture)
 const FIXTURE_BUSINESS = 'ACME LTD'
 // The administrator who invited an employee to the business's Defra account
-const FIXTURE_ADMINISTRATOR = 'Name Name'
+const FIXTURE_ADMINISTRATOR = MOCK_NAME
 
 function emailLocalPart(email) {
   return String(email || '')
@@ -405,6 +410,24 @@ const defraAddressManual = {
   }
 }
 
+// "What are your details?": the full name box starts with the name given
+// when the Defra account or Government Gateway sign in was created, never
+// the mock account's stand-in. The page's copy of the data is filled in,
+// not the session, so the review page's guard waits for the form
+const yourAddress = {
+  get(ctx, model) {
+    const { data } = ctx
+    const known = data.account && data.account.fullName
+    const typed = data.yourAddress && data.yourAddress.fullName
+    if (!ctx.preview && known && known !== MOCK_NAME && !typed) {
+      model.data = {
+        ...data,
+        yourAddress: { ...(data.yourAddress || {}), fullName: known }
+      }
+    }
+  }
+}
+
 // Both Defra ID check your answers pages (individual and business)
 const completeRegistration = {
   process(ctx) {
@@ -441,6 +464,7 @@ module.exports = {
   'government-gateway-user-id': governmentGatewayUserId,
   'defra-select-address': defraSelectAddress,
   'defra-address-manual': defraAddressManual,
+  'your-address': yourAddress,
   'defra-check-answers': completeRegistration,
   'defra-business-check-answers': completeRegistration,
   'check-your-answers': checkYourAnswers,
@@ -451,6 +475,7 @@ module.exports = {
   mintContactSupportId,
   FIXTURE_BUSINESS,
   FIXTURE_ADMINISTRATOR,
+  MOCK_NAME,
   loadQuote,
   levyFor,
   FIXTURE_QUOTE,

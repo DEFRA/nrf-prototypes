@@ -47,7 +47,9 @@ const {
   heading,
   notificationTitle,
   rowKey,
-  rowValue
+  rowValue,
+  fieldBox,
+  expectFieldError
 } = requestToUse
 
 // The development details are the quote journey's own pages, borrowed
@@ -162,11 +164,26 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
     await expect(page).toHaveURL(`${base}/your-address`)
     await expectBodyCopy(page, 'your-address', 'company address')
 
+    // Signing in never gave a name, so the box is empty (never "Name Name")
+    await expect(fieldBox(page, 'your-address', 'full-name')).toHaveValue('')
+    await fillField(page, 'your-address', 'full-name', 'Jane Smith')
     await fillField(page, 'your-address', 'address-line-1', '53 Business Lane')
     await fillField(page, 'your-address', 'town', 'Business')
     await fillField(page, 'your-address', 'postcode', 'LP1 7RF')
     await submit(page, 'your-address')
     await expect(page).toHaveURL(`${base}/review-your-details`)
+    await expect(page.locator('.govuk-summary-list')).toContainText(
+      'Jane Smith'
+    )
+    await expect(page.locator('.govuk-summary-list')).not.toContainText(
+      'Name Name'
+    )
+    await expect(
+      changeLink(page, 'review-your-details', 'your-address')
+    ).toHaveAttribute(
+      'href',
+      `${base}/your-address?change=true&nav=review-your-details`
+    )
     await expect(page.locator('.govuk-summary-list')).toContainText(
       'Developer Ltd'
     )
@@ -189,6 +206,8 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
     await expect(page.locator('main')).toContainText(
       rowKey('check-your-answers', 'review-your-details')
     )
+    await expect(page.locator('main')).toContainText('Jane Smith')
+    await expect(page.locator('main')).not.toContainText('Name Name')
     await expect(page.locator('main')).toContainText(
       rowKey('check-your-answers', 'agreement')
     )
@@ -214,7 +233,7 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
     await expectHeading(page, 'commitment-certificate')
     await expect(page.locator('.app-boundary-map')).toHaveCount(1)
     await expect(page.locator('.govuk-phase-banner')).toHaveCount(0)
-    await expect(page.locator('main')).toContainText('Name Name')
+    await expect(page.locator('main')).toContainText('Jane Smith')
     await expect(page.locator('main')).toContainText('53 Business Lane')
   })
 
@@ -465,6 +484,10 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
     await followLink(page, 'defra-registered-individual', './$next')
     await expect(page).toHaveURL(`${base}/your-address`)
     await expect(page.locator('main')).not.toContainText('company address')
+    // The name given at registration is already filled in
+    await expect(fieldBox(page, 'your-address', 'full-name')).toHaveValue(
+      'John Smith'
+    )
     await fillField(page, 'your-address', 'address-line-1', '53 Business Lane')
     await fillField(page, 'your-address', 'town', 'Business')
     await fillField(page, 'your-address', 'postcode', 'LP1 7RF')
@@ -645,10 +668,17 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
     await expect(page).toHaveURL(`${base}/sign-in-method`)
   })
 
-  test('other emails skip registration', async ({ page }) => {
+  test('other emails skip registration and are asked for their name', async ({
+    page
+  }) => {
     await reachSignIn(page, 'individual')
     await signIn(page, 'individual@example.com')
     await expect(page).toHaveURL(`${base}/your-address`)
+    // Nothing is known about them: the name box is empty and required
+    await expect(fieldBox(page, 'your-address', 'full-name')).toHaveValue('')
+    await submit(page, 'your-address')
+    await expect(page).toHaveURL(`${base}/your-address`)
+    await expectFieldError(page, 'your-address', 'full-name')
   })
 
   test('who the levy is requested for decides the account type', async ({
@@ -854,6 +884,72 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
     await expect(page.locator('.govuk-summary-list')).toContainText('100')
   })
 
+  test('a quote with an uploaded boundary shows the file name', async ({
+    page
+  }) => {
+    // Make the quote on nrf-quote-7 by uploading (no file: the sample
+    // boundary is plotted under a stand-in file name)
+    const answers = [
+      ['planning-type', { 'planning-type': 'full' }],
+      ['housing', { housing: 'Yes' }],
+      ['units', { 'unit-count': '120' }],
+      ['redline-map', { 'has-redline-boundary-file': 'upload' }],
+      ['upload-redline', {}],
+      ['estimate-email', { email: 'jane@example.com' }]
+    ]
+    for (const [id, form] of answers) {
+      const response = await page.request.post(`${quotePath}/${id}`, {
+        form,
+        maxRedirects: 0
+      })
+      expect(response.status(), id).toBe(303)
+    }
+    await page.goto(`${quotePath}/check-your-answers`)
+    await quote.submit(page, 'check-your-answers')
+    await expect(page).toHaveURL(`${quotePath}/confirmation`)
+    const minted = (await page.locator('.govuk-panel__body').innerText()).match(
+      /NRL-\d{6}/
+    )[0]
+
+    const uploaded = {
+      hasRedlineBoundaryFile: true,
+      redlineFile: 'red-line-boundary.geojson'
+    }
+    const filePreview = `${quotePath}/file-preview`
+    await retrieveQuote(page, minted)
+    await expect(page.locator('.govuk-summary-list')).toContainText(
+      rowValue('review-quote-details', filePreview, uploaded)
+    )
+    await expect(
+      changeLink(page, 'review-quote-details', filePreview)
+    ).toHaveAttribute(
+      'href',
+      `${filePreview}?change=true&nav=${base}/review-quote-details`
+    )
+
+    await acceptAndSkipVariation(page)
+    await chooseDefraUserType(page, 'individual')
+    await signIn(page, 'individual@example.com')
+    await fillField(page, 'your-address', 'full-name', 'Jane Smith')
+    await fillField(page, 'your-address', 'address-line-1', '53 Business Lane')
+    await fillField(page, 'your-address', 'town', 'Business')
+    await fillField(page, 'your-address', 'postcode', 'LP1 7RF')
+    await submit(page, 'your-address')
+    await submit(page, 'review-your-details')
+    await answer(page, 'agreement', 'Yes')
+    await submit(page, 'agreement')
+    await expect(page).toHaveURL(`${base}/check-your-answers`)
+    await expect(page.locator('main')).toContainText(
+      rowValue('check-your-answers', filePreview, uploaded)
+    )
+    await expect(
+      changeLink(page, 'check-your-answers', filePreview)
+    ).toHaveAttribute(
+      'href',
+      `${filePreview}?change=true&nav=${base}/check-your-answers`
+    )
+  })
+
   test('the delete link on check your answers also comes back here', async ({
     page
   }) => {
@@ -945,6 +1041,7 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
     const borrowed = graph.nodes.filter((node) => node.external)
     expect(borrowed.map((node) => node.path).sort()).toEqual([
       `${quotePath}/delete-quote`,
+      `${quotePath}/file-preview`,
       `${quotePath}/housing`,
       `${quotePath}/map`,
       `${quotePath}/planning-type`,
