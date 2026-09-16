@@ -3,9 +3,13 @@ type: radios
 hint: Options below include any variations to an existing permission.
 options:
   - label: Full planning permission
+    value: full
   - label: Outline planning permission
+    value: outline
   - label: Hybrid planning permission
+    value: hybrid
   - label: Other
+    value: other
 errors:
   required: Select a planning application type
 button: Continue

@@ -1,84 +1,62 @@
 const { test, expect } = require('@playwright/test')
 const {
-  loadJourney,
   toFlowGraph,
   journeyGroups,
   journeySections,
   exportSections,
   exportScreens
 } = require('../../app/lib/journey-engine')
+const { copyOf } = require('./helpers/journey')
+const {
+  requestToUse,
+  retrieveQuote,
+  expectEmailChrome,
+  acceptAndSkipVariation,
+  chooseDefraUserType,
+  signIn,
+  reachSignIn
+} = require('./helpers/request-to-use')
 
 /**
  * nrf-request-to-use-1: retrieving a quote, accepting the levy, signing in
  * with the mock GOV.UK One Login and getting a commitment certificate.
  *
- * Page list, headings and error text come from content/nrf-request-to-use-1
- * so these tests stay in step with the journey definition.
+ * Page list, headings, labels, links and error text come from
+ * content/nrf-request-to-use-1 through the helpers, so these tests follow
+ * the journey definition and survive a reword.
  */
 
-const journey = loadJourney('nrf-request-to-use-1')
-const base = journey.basePath
+const {
+  journey,
+  base,
+  answer,
+  optionLocator,
+  fillAnswer,
+  answerBox,
+  fillField,
+  submit,
+  act,
+  actionLocator,
+  link,
+  followLink,
+  changeLink,
+  expectHeading,
+  expectError,
+  expectBodyCopy,
+  caption,
+  heading,
+  notificationTitle,
+  rowKey,
+  rowValue
+} = requestToUse
 
-async function retrieveQuote(page, reference = 'NRL-123456') {
-  await page.goto(`${base}/start`)
-  await page.getByRole('button', { name: 'Start now' }).click()
-  await page.getByLabel(/request to use/).check()
-  await page.getByRole('button', { name: 'Continue' }).click()
-  await expect(page).toHaveURL(`${base}/have-nrl-reference`)
+// The development details are the quote journey's own pages, borrowed
+// with the way back in `nav` (see content/README.md)
+const quote = copyOf('nrf-quote-7')
+const quotePath = quote.base
 
-  await page.getByLabel('Yes', { exact: true }).check()
-  await page.getByRole('button', { name: 'Continue' }).click()
-  await expect(page).toHaveURL(`${base}/quote-reference`)
-
-  await page.getByLabel(/NRL reference/).fill(reference)
-  await page.getByRole('button', { name: 'Continue' }).click()
-  await expect(page).toHaveURL(`${base}/email`)
-
-  await page.getByLabel(/email address/).fill('jane@example.com')
-  await page.getByRole('button', { name: 'Continue' }).click()
-  await expect(page).toHaveURL(`${base}/retrieve-email`)
-  await expectEmailChrome(page)
-
-  await page.getByRole('link', { name: 'Retrieve the quote details' }).click()
-  await expect(page).toHaveURL(`${base}/review-quote-details`)
-}
-
-// Emails wear the bare crown header, so they do not read as a page of the
-// service: no service navigation, phase banner or back link
-async function expectEmailChrome(page) {
-  await expect(page.locator('.govuk-header')).toHaveCount(1)
-  await expect(page.locator('.govuk-service-navigation')).toHaveCount(0)
-  await expect(page.locator('.govuk-phase-banner')).toHaveCount(0)
-  await expect(page.locator('.govuk-back-link')).toHaveCount(0)
-  await expect(page.locator('.govuk-grid-column-two-thirds')).toHaveCount(1)
-}
-
-// After the variation questions: who the user is requesting to use the levy
-// for, then the Defra account guidance for that kind of user, then on to
-// sign in
-async function chooseDefraUserType(page, option) {
-  await expect(page).toHaveURL(`${base}/defra-account-user-type`)
-  await page.getByLabel(option).check()
-  await page.getByRole('button', { name: 'Continue' }).click()
-  await expect(page).toHaveURL(new RegExp(`${base}/defra-account-`))
-  await page.getByRole('button', { name: 'Continue' }).click()
-}
-
-async function signIn(page, email) {
-  await expect(page).toHaveURL(`${base}/sign-in-method`)
-  await page.getByLabel(/GOV.UK One Login/).check()
-  await page.getByRole('button', { name: 'Continue' }).click()
-  await expect(page).toHaveURL(`${base}/one-login-start`)
-
-  await page.getByRole('button', { name: 'Sign in' }).click()
-  await expect(page).toHaveURL(`${base}/one-login-email`)
-
-  await page.getByLabel(/email address/).fill(email)
-  await page.getByRole('button', { name: 'Continue' }).click()
-  await expect(page).toHaveURL(`${base}/one-login-password`)
-
-  await page.getByLabel('Enter your password').fill('not-a-real-password')
-  await page.getByRole('button', { name: 'Continue' }).click()
+function escapeRegExp(text) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
 test.describe('nrf-request-to-use-1 preview mode', () => {
@@ -163,30 +141,31 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
     page
   }) => {
     await retrieveQuote(page)
+    // The fixture quote's answers show as their option labels
     const summary = page.locator('.govuk-summary-list')
-    await expect(summary).toContainText('Full planning permission')
+    await expect(summary).toContainText(quote.option('planning-type', 'full'))
     await expect(summary).toContainText('100')
     await expect(summary).toContainText('Added')
     await expect(summary).toContainText('jane@example.com')
 
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await submit(page, 'review-quote-details')
     await expect(page).toHaveURL(`${base}/accept-levy`)
     await expect(page.locator('main')).toContainText('£25,000')
-    await page.getByLabel(/Yes, accept/).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await answer(page, 'accept-levy', 'Yes')
+    await submit(page, 'accept-levy')
     await expect(page).toHaveURL(`${base}/variation`)
 
-    await page.getByLabel('No', { exact: true }).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await chooseDefraUserType(page, /business or organisation you work for/)
+    await answer(page, 'variation', 'No')
+    await submit(page, 'variation')
+    await chooseDefraUserType(page, 'organisation')
     await signIn(page, 'company@example.com')
     await expect(page).toHaveURL(`${base}/your-address`)
-    await expect(page.locator('main')).toContainText('company address')
+    await expectBodyCopy(page, 'your-address', 'company address')
 
-    await page.getByLabel('Address line 1').fill('53 Business Lane')
-    await page.getByLabel('Town or city').fill('Business')
-    await page.getByLabel('Postcode').fill('LP1 7RF')
-    await page.getByRole('button', { name: 'Confirm' }).click()
+    await fillField(page, 'your-address', 'address-line-1', '53 Business Lane')
+    await fillField(page, 'your-address', 'town', 'Business')
+    await fillField(page, 'your-address', 'postcode', 'LP1 7RF')
+    await submit(page, 'your-address')
     await expect(page).toHaveURL(`${base}/review-your-details`)
     await expect(page.locator('.govuk-summary-list')).toContainText(
       'Developer Ltd'
@@ -194,48 +173,45 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
     await expect(page.locator('.govuk-summary-list')).toContainText(
       '53 Business Lane'
     )
-    await page.getByRole('button', { name: 'Confirm' }).click()
+    await submit(page, 'review-your-details')
     // Everyone agrees to the declaration before checking their answers; the
     // box is required and the Delete link is the way out
     await expect(page).toHaveURL(`${base}/agreement`)
     await expect(
-      page.getByRole('link', { name: /Delete.*quote details/ })
-    ).toHaveAttribute('href', `/nrf-quote-7/delete-quote?nav=${base}/agreement`)
-    await page.getByRole('button', { name: 'Continue' }).click()
+      actionLocator(page, 'agreement', 'destructive')
+    ).toHaveAttribute('href', `${quotePath}/delete-quote?nav=${base}/agreement`)
+    await submit(page, 'agreement')
     await expect(page).toHaveURL(`${base}/agreement`)
-    await expect(page.locator('.govuk-error-summary')).toContainText(
-      'Tick the box to confirm you agree to the declaration'
-    )
-    await page.getByLabel(/I confirm that I have read/).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await expectError(page, 'agreement')
+    await answer(page, 'agreement', 'Yes')
+    await submit(page, 'agreement')
     await expect(page).toHaveURL(`${base}/check-your-answers`)
-    await expect(page.locator('main')).toContainText('Details confirmed')
-    await expect(page.locator('main')).toContainText('Development details')
     await expect(page.locator('main')).toContainText(
-      'Agreed to the declaration'
+      rowKey('check-your-answers', 'review-your-details')
+    )
+    await expect(page.locator('main')).toContainText(
+      rowKey('check-your-answers', 'agreement')
     )
     await expect(
-      page.getByRole('link', { name: /Change.*agree to the declaration/ })
+      changeLink(page, 'check-your-answers', 'agreement')
     ).toHaveAttribute(
       'href',
       `${base}/agreement?change=true&nav=check-your-answers`
     )
 
-    await page.getByRole('button', { name: 'Confirm and submit' }).click()
+    await submit(page, 'check-your-answers')
     await expect(page).toHaveURL(`${base}/confirmation`)
     await expect(page.locator('.govuk-panel__body')).toContainText('NRL-')
 
-    await page.getByRole('link', { name: 'View the email' }).click()
+    await followLink(page, 'confirmation', 'request-email')
     await expect(page).toHaveURL(`${base}/request-email`)
     await expectEmailChrome(page)
-    await expect(page.locator('h1')).toContainText('requested to use')
+    await expectHeading(page, 'request-email')
 
     await page.goBack()
-    await page
-      .getByRole('link', { name: 'View the commitment certificate' })
-      .click()
+    await followLink(page, 'confirmation', 'commitment-certificate')
     await expect(page).toHaveURL(`${base}/commitment-certificate`)
-    await expect(page.locator('h1')).toContainText('commitment certificate')
+    await expectHeading(page, 'commitment-certificate')
     await expect(page.locator('.app-boundary-map')).toHaveCount(1)
     await expect(page.locator('.govuk-phase-banner')).toHaveCount(0)
     await expect(page.locator('main')).toContainText('Name Name')
@@ -246,45 +222,39 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
     page
   }) => {
     await retrieveQuote(page)
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await page.getByLabel(/Yes, accept/).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await submit(page, 'review-quote-details')
+    await answer(page, 'accept-levy', 'Yes')
+    await submit(page, 'accept-levy')
     await expect(page).toHaveURL(`${base}/variation`)
-    await page.getByLabel('Yes', { exact: true }).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await answer(page, 'variation', 'Yes')
+    await submit(page, 'variation')
     await expect(page).toHaveURL(`${base}/original-committed`)
-    await page.getByLabel('Yes', { exact: true }).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await answer(page, 'original-committed', 'Yes')
+    await submit(page, 'original-committed')
     await expect(page).toHaveURL(`${base}/original-reference`)
-    await page.getByLabel(/NRL reference/).fill('NRL-000001')
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await fillAnswer(page, 'original-reference', 'NRL-000001')
+    await submit(page, 'original-reference')
 
     // Who the levy is being requested for comes after the variation
     // questions and walks back through them
     await expect(page).toHaveURL(`${base}/defra-account-user-type`)
-    await expect(page.locator('h1')).toHaveText(
-      'Who are you requesting to use the nature restoration fund for?'
-    )
+    await expectHeading(page, 'defra-account-user-type')
     await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
       'href',
       `${base}/original-reference`
     )
     // The answer is required
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await expect(page.locator('.govuk-error-summary')).toContainText(
-      'Select who you are requesting to use the nature restoration levy for'
-    )
-    await page.getByLabel(/client you act for/).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await submit(page, 'defra-account-user-type')
+    await expectError(page, 'defra-account-user-type')
+    await answer(page, 'defra-account-user-type', 'agent')
+    await submit(page, 'defra-account-user-type')
     await expect(page).toHaveURL(`${base}/defra-account-agent`)
-    await expect(page.locator('h1')).toContainText(
-      'Your client will need to create a Defra account'
-    )
+    await expectHeading(page, 'defra-account-agent')
     await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
       'href',
       `${base}/defra-account-user-type`
     )
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await submit(page, 'defra-account-agent')
 
     // The account type follows the answer, not the email
     await signIn(page, 'company@example.com')
@@ -298,49 +268,56 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
       })
     ).toHaveCount(1)
 
-    await page.getByLabel('Full name').fill('A Developer')
-    await page.getByLabel('Address line 1').fill('Development Road')
-    await page.getByLabel('Town or city').fill('Development')
-    await page.getByLabel('Postcode').fill('DV1 6RP')
-    await page.getByRole('button', { name: 'Confirm' }).click()
+    await fillField(page, 'developer-details', 'full-name', 'A Developer')
+    await fillField(
+      page,
+      'developer-details',
+      'address-line-1',
+      'Development Road'
+    )
+    await fillField(page, 'developer-details', 'town', 'Development')
+    await fillField(page, 'developer-details', 'postcode', 'DV1 6RP')
+    await submit(page, 'developer-details')
     await expect(page).toHaveURL(`${base}/review-developer-details`)
     await expect(page.locator('.govuk-summary-list')).toContainText(
       'A Developer'
     )
-    await page.getByRole('button', { name: 'Confirm' }).click()
+    await submit(page, 'review-developer-details')
     await expect(page).toHaveURL(`${base}/agreement`)
-    await page.getByLabel(/I confirm that I have read/).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await answer(page, 'agreement', 'Yes')
+    await submit(page, 'agreement')
     await expect(page).toHaveURL(`${base}/check-your-answers`)
     await expect(page.locator('.govuk-summary-list').first()).toContainText(
       'NRL-000001'
     )
     await expect(page.locator('.govuk-summary-list').first()).toContainText(
-      'A client you act for as an agent or third party'
+      rowValue('check-your-answers', 'defra-account-user-type', {
+        defraUserType: 'agent'
+      })
     )
 
     // Changing who the levy is for goes through the guidance and back, and
     // moves the signed-in account to the new type
-    await page
-      .getByRole('link', {
-        name: /Change.*who you are requesting to use the levy for/
-      })
-      .click()
+    await changeLink(
+      page,
+      'check-your-answers',
+      'defra-account-user-type'
+    ).click()
     await expect(page).toHaveURL(
       `${base}/defra-account-user-type?change=true&nav=check-your-answers`
     )
-    await page.getByLabel(/Yourself, as an individual/).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await answer(page, 'defra-account-user-type', 'individual')
+    await submit(page, 'defra-account-user-type')
     await expect(page).toHaveURL(
       `${base}/defra-account-individual?change=true&nav=check-your-answers`
     )
-    await expect(page.locator('h1')).toHaveText(
-      "You'll need to create or sign in to a Defra account as an individual"
-    )
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await expectHeading(page, 'defra-account-individual')
+    await submit(page, 'defra-account-individual')
     await expect(page).toHaveURL(`${base}/check-your-answers`)
     await expect(page.locator('.govuk-summary-list').first()).toContainText(
-      'Yourself, as an individual'
+      rowValue('check-your-answers', 'defra-account-user-type', {
+        defraUserType: 'individual'
+      })
     )
     await expect(page.locator('.app-organisation-bar')).toHaveCount(0)
 
@@ -356,12 +333,14 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
   test('the One Login pages look like One Login', async ({ page }) => {
     await page.goto(`${base}/one-login-start`)
     await expect(page.locator('.govuk-service-navigation')).toHaveCount(0)
-    await expect(
-      page.getByRole('button', { name: 'Create your GOV.UK One Login' })
-    ).toHaveCount(1)
-    await expect(page.getByRole('button', { name: 'Sign in' })).toHaveClass(
-      /govuk-button--secondary/
+    // The Create button is a link (role button) to the create flow; Sign in
+    // is the page's own, secondary, button
+    await expect(actionLocator(page, 'one-login-start', 'submit')).toHaveCount(
+      1
     )
+    await expect(
+      actionLocator(page, 'one-login-start', 'secondary')
+    ).toHaveClass(/govuk-button--secondary/)
     await page.goto(`${base}/one-login-email`)
     await expect(page.locator('.govuk-service-navigation')).toHaveCount(0)
     await expect(page.locator('.govuk-phase-banner .govuk-tag')).toHaveText(
@@ -379,18 +358,7 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
   // Sign-in emails containing "new" register a Defra account first; the
   // business or individual answer then decides the account type, with who
   // the levy is being requested for deciding between a company and an agent
-  async function reachSignIn(page, userType = /client you act for/) {
-    await retrieveQuote(page)
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await page.getByLabel(/Yes, accept/).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await expect(page).toHaveURL(`${base}/variation`)
-    await page.getByLabel('No', { exact: true }).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await chooseDefraUserType(page, userType)
-  }
-
-  async function registerStart(page, email, userType) {
+  async function registerStart(page, email, userType = 'agent') {
     await reachSignIn(page, userType)
     await signIn(page, email)
     await expect(page).toHaveURL(`${base}/defra-register`)
@@ -404,101 +372,103 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
     await expect(page.getByRole('link', { name: 'Help' })).toHaveCount(1)
     await expect(page).toHaveTitle(/Defra account - GOV.UK$/)
 
-    await page
-      .getByRole('button', { name: 'Continue Registering for a Defra Account' })
-      .click()
+    await submit(page, 'defra-register')
     await expect(page).toHaveURL(`${base}/defra-terms`)
-    await page.getByRole('button', { name: 'Accept and Continue' }).click()
+    await submit(page, 'defra-terms')
     await expect(page).toHaveURL(`${base}/defra-what-we-need`)
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await submit(page, 'defra-what-we-need')
   }
 
   // Everyone but an invited employee is asked business or individual next
   async function atRegistrationType(page) {
     await expect(page).toHaveURL(`${base}/defra-registration-type`)
     await expect(page.locator('.govuk-caption-l')).toContainText(
-      'Register Defra account'
+      caption('defra-registration-type')
     )
   }
 
   test('an individual registers, finds their address and continues', async ({
     page
   }) => {
-    await registerStart(
-      page,
-      'new-individual@example.com',
-      /Yourself, as an individual/
-    )
+    await registerStart(page, 'new-individual@example.com', 'individual')
     await atRegistrationType(page)
-    await page.getByLabel(/No, as an individual/).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await answer(page, 'defra-registration-type', 'individual')
+    await submit(page, 'defra-registration-type')
     await expect(page).toHaveURL(`${base}/defra-name`)
 
-    await page.getByLabel('First name').fill('John')
-    await page.getByLabel('Last name').fill('Smith')
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await fillField(page, 'defra-name', 'first-name', 'John')
+    await fillField(page, 'defra-name', 'last-name', 'Smith')
+    await submit(page, 'defra-name')
     await expect(page).toHaveURL(`${base}/defra-telephone`)
-    await page.getByLabel('Telephone number').fill('07387 202019')
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await fillField(page, 'defra-telephone', 'telephone-number', '07387 202019')
+    await submit(page, 'defra-telephone')
     await expect(page).toHaveURL(`${base}/defra-postcode`)
 
-    await page.getByLabel('Postcode').fill('SK11 8BD')
-    await page.getByRole('button', { name: 'Find address' }).click()
+    await fillField(page, 'defra-postcode', 'postcode', 'SK11 8BD')
+    await submit(page, 'defra-postcode')
     await expect(page).toHaveURL(`${base}/defra-select-address`)
     await expect(page.locator('main')).toContainText('SK11 8BD')
     // Nothing selected is an error
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await expect(page.locator('.govuk-error-summary')).toContainText(
-      'Select your address'
-    )
-    await page.getByLabel('Select your address').selectOption({
-      label: '84 Hobson Street, Macclesfield, Cheshire, SK11 8BD'
-    })
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await submit(page, 'defra-select-address')
+    await expectError(page, 'defra-select-address')
+    await answer(page, 'defra-select-address', 0)
+    await submit(page, 'defra-select-address')
     await expect(page).toHaveURL(`${base}/defra-memorable-word`)
 
-    await page.getByLabel('Memorable word').fill('sundance')
-    await page.getByLabel('Hint question').fill('First school?')
+    await fillField(page, 'defra-memorable-word', 'memorable-word', 'sundance')
+    await fillField(
+      page,
+      'defra-memorable-word',
+      'hint-question',
+      'First school?'
+    )
     await expect(page.locator('.govuk-character-count__status')).toContainText(
       'characters remaining'
     )
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await submit(page, 'defra-memorable-word')
     await expect(page).toHaveURL(`${base}/defra-check-answers`)
     const summary = page.locator('.govuk-summary-list')
-    await expect(summary.first()).toContainText('Individual')
+    await expect(summary.first()).toContainText(
+      rowValue('defra-check-answers', 'defra-registration-type')
+    )
     await expect(summary.last()).toContainText('John Smith')
     await expect(summary.last()).toContainText('84 Hobson Street')
     await expect(summary.last()).toContainText('sundance')
 
     // Changing the address by hand comes back here
-    await page.getByRole('link', { name: /Change.*address/ }).click()
+    await changeLink(page, 'defra-check-answers', 'defra-postcode').click()
     await expect(page).toHaveURL(/defra-postcode\?change=true/)
-    await page.getByRole('link', { name: 'Enter the address manually' }).click()
+    await act(page, 'defra-postcode', 'link')
     await expect(page).toHaveURL(/defra-address-manual/)
-    await page.getByLabel('Address line 1').fill('1 Manual Street')
-    await page.getByLabel('Town or city').fill('Macclesfield')
-    await page.getByLabel('Postcode').fill('SK11 8BD')
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await fillField(
+      page,
+      'defra-address-manual',
+      'address-line-1',
+      '1 Manual Street'
+    )
+    await fillField(page, 'defra-address-manual', 'town', 'Macclesfield')
+    await fillField(page, 'defra-address-manual', 'postcode', 'SK11 8BD')
+    await submit(page, 'defra-address-manual')
     await expect(page).toHaveURL(`${base}/defra-check-answers`)
     await expect(summary.last()).toContainText('1 Manual Street, Macclesfield')
 
-    await page
-      .getByRole('button', { name: 'Confirm and complete registration' })
-      .click()
+    await submit(page, 'defra-check-answers')
     // The registration email for an individual, then signing in carries on
     await expect(page).toHaveURL(`${base}/defra-registered-individual`)
-    await expect(page.locator('main')).toContainText('Hello John,')
+    await expectBodyCopy(page, 'defra-registered-individual', 'Hello John,', {
+      defraName: { firstName: 'John' }
+    })
     await expect(page.locator('main')).toContainText(
       /Contact Support ID is BA\d{6}-[A-Z]\d-\d{4}-[A-Z]\d-\d{4}\./
     )
     await expect(page.locator('main')).not.toContainText('on behalf of')
-    await page.getByRole('link', { name: 'Sign in to your account' }).click()
+    await followLink(page, 'defra-registered-individual', './$next')
     await expect(page).toHaveURL(`${base}/your-address`)
     await expect(page.locator('main')).not.toContainText('company address')
-    await page.getByLabel('Address line 1').fill('53 Business Lane')
-    await page.getByLabel('Town or city').fill('Business')
-    await page.getByLabel('Postcode').fill('LP1 7RF')
-    await page.getByRole('button', { name: 'Confirm' }).click()
+    await fillField(page, 'your-address', 'address-line-1', '53 Business Lane')
+    await fillField(page, 'your-address', 'town', 'Business')
+    await fillField(page, 'your-address', 'postcode', 'LP1 7RF')
+    await submit(page, 'your-address')
     await expect(page).toHaveURL(`${base}/review-your-details`)
     await expect(page.locator('.govuk-summary-list')).toContainText(
       'John Smith'
@@ -508,14 +478,10 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
   test('a business registers and becomes a company for the organisation they work for', async ({
     page
   }) => {
-    await registerStart(
-      page,
-      'new-company@example.com',
-      /business or organisation you work for/
-    )
+    await registerStart(page, 'new-company@example.com', 'organisation')
     await atRegistrationType(page)
-    await page.getByLabel(/Yes, and I have permission/).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await answer(page, 'defra-registration-type', 'business')
+    await submit(page, 'defra-registration-type')
     await expect(page).toHaveURL(`${base}/defra-trading-uk`)
     // The business pages wear the "Your Defra account" bar
     await expect(
@@ -525,61 +491,93 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
       page.getByRole('link', { name: 'Manage account' })
     ).toHaveCount(1)
     await expect(page.locator('.govuk-caption-l')).toContainText(
-      'Register new Defra account'
+      caption('defra-trading-uk')
     )
 
-    await page.getByLabel('Yes', { exact: true }).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await answer(page, 'defra-trading-uk', 'Yes')
+    await submit(page, 'defra-trading-uk')
     await expect(page).toHaveURL(`${base}/defra-has-crn`)
-    await page.getByLabel('Yes', { exact: true }).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await answer(page, 'defra-has-crn', 'Yes')
+    await submit(page, 'defra-has-crn')
     await expect(page).toHaveURL(`${base}/defra-crn`)
-    await page.getByLabel('Company registration number').fill('09084488')
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await fillField(
+      page,
+      'defra-crn',
+      'company-registration-number',
+      '09084488'
+    )
+    await submit(page, 'defra-crn')
     await expect(page).toHaveURL(`${base}/defra-confirm-business`)
     await expect(page.locator('.govuk-inset-text')).toContainText('ACME LTD')
-    await page.getByRole('button', { name: 'Confirm and continue' }).click()
+    await submit(page, 'defra-confirm-business')
     await expect(page).toHaveURL(`${base}/defra-business-contact`)
-    await page.getByLabel('Telephone number').fill('07387 202019')
-    await page.getByLabel('Email address').fill('hello@acme.com')
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await fillField(
+      page,
+      'defra-business-contact',
+      'telephone-number',
+      '07387 202019'
+    )
+    await fillField(
+      page,
+      'defra-business-contact',
+      'email-address',
+      'hello@acme.com'
+    )
+    await submit(page, 'defra-business-contact')
     await expect(page).toHaveURL(`${base}/defra-business-check-answers`)
     await expect(page.locator('main')).toContainText('09084488')
     await expect(page.locator('main')).toContainText('hello@acme.com')
 
-    await page.getByRole('button', { name: 'Accept and continue' }).click()
+    await submit(page, 'defra-business-check-answers')
     // The registration email for a business names the company
     await expect(page).toHaveURL(`${base}/defra-registered-business`)
-    await expect(page.locator('main')).toContainText(
-      'registered to use Defra online services on behalf of ACME LTD'
+    await expectBodyCopy(
+      page,
+      'defra-registered-business',
+      'registered to use Defra online services on behalf of ACME LTD',
+      { account: { businessName: 'ACME LTD' } }
     )
-    await expect(page.locator('main')).toContainText('Contact Support ID')
-    await page.getByRole('link', { name: 'Sign in to your account' }).click()
+    await expectBodyCopy(
+      page,
+      'defra-registered-business',
+      'Contact Support ID'
+    )
+    await followLink(page, 'defra-registered-business', './$next')
     await expect(page).toHaveURL(`${base}/your-address`)
-    await expect(page.locator('main')).toContainText('company address')
+    await expectBodyCopy(page, 'your-address', 'company address')
   })
 
   test('a business registered by an agent is an agent account', async ({
     page
   }) => {
-    await registerStart(page, 'new@example.com', /client you act for/)
+    await registerStart(page, 'new@example.com', 'agent')
     await atRegistrationType(page)
-    await page.getByLabel(/Yes, and I have permission/).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await page.getByLabel('No', { exact: true }).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await answer(page, 'defra-registration-type', 'business')
+    await submit(page, 'defra-registration-type')
+    await answer(page, 'defra-trading-uk', 'No')
+    await submit(page, 'defra-trading-uk')
     await expect(page).toHaveURL(`${base}/defra-has-crn`)
-    await page.getByLabel('No', { exact: true }).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await answer(page, 'defra-has-crn', 'No')
+    await submit(page, 'defra-has-crn')
     await expect(page).toHaveURL(`${base}/defra-business-contact`)
-    await page.getByLabel('Telephone number').fill('07387 202019')
-    await page.getByLabel('Email address').fill('hello@acme.com')
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await fillField(
+      page,
+      'defra-business-contact',
+      'telephone-number',
+      '07387 202019'
+    )
+    await fillField(
+      page,
+      'defra-business-contact',
+      'email-address',
+      'hello@acme.com'
+    )
+    await submit(page, 'defra-business-contact')
     await expect(page).toHaveURL(`${base}/defra-business-check-answers`)
     await expect(page.locator('main')).toContainText('Not provided')
-    await page.getByRole('button', { name: 'Accept and continue' }).click()
+    await submit(page, 'defra-business-check-answers')
     await expect(page).toHaveURL(`${base}/defra-registered-business`)
-    await page.getByRole('link', { name: 'Sign in to your account' }).click()
+    await followLink(page, 'defra-registered-business', './$next')
     await expect(page).toHaveURL(`${base}/developer-details`)
     await expect(page.locator('.app-organisation-bar')).toHaveCount(1)
   })
@@ -587,46 +585,51 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
   test('an invited employee gives their own details and acts for the business', async ({
     page
   }) => {
-    await registerStart(
-      page,
-      'new-employee@example.com',
-      /business or organisation you work for/
-    )
+    await registerStart(page, 'new-employee@example.com', 'organisation')
     // No business or individual question: straight to their own details
     await expect(page).toHaveURL(`${base}/defra-name`)
-    await page.getByLabel('First name').fill('Fabien')
-    await page.getByLabel('Last name').fill('Saujot')
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await page.getByLabel('Telephone number').fill('07387 202019')
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await page.getByLabel('Postcode').fill('SK11 8BD')
-    await page.getByRole('button', { name: 'Find address' }).click()
-    await page.getByLabel('Select your address').selectOption({
-      label: '84 Hobson Street, Macclesfield, Cheshire, SK11 8BD'
-    })
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await page.getByLabel('Memorable word').fill('sundance')
-    await page.getByLabel('Hint question').fill('First school?')
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await fillField(page, 'defra-name', 'first-name', 'Fabien')
+    await fillField(page, 'defra-name', 'last-name', 'Saujot')
+    await submit(page, 'defra-name')
+    await fillField(page, 'defra-telephone', 'telephone-number', '07387 202019')
+    await submit(page, 'defra-telephone')
+    await fillField(page, 'defra-postcode', 'postcode', 'SK11 8BD')
+    await submit(page, 'defra-postcode')
+    await answer(page, 'defra-select-address', 0)
+    await submit(page, 'defra-select-address')
+    await fillField(page, 'defra-memorable-word', 'memorable-word', 'sundance')
+    await fillField(
+      page,
+      'defra-memorable-word',
+      'hint-question',
+      'First school?'
+    )
+    await submit(page, 'defra-memorable-word')
     await expect(page).toHaveURL(`${base}/defra-check-answers`)
-    await page
-      .getByRole('button', { name: 'Confirm and complete registration' })
-      .click()
+    await submit(page, 'defra-check-answers')
 
     // The employee email: the administrator finishes setting them up
     await expect(page).toHaveURL(`${base}/defra-registered-employee`)
-    await expect(page.locator('main')).toContainText(
-      'Your registration for ACME LTD is complete'
+    const business = { account: { businessName: 'ACME LTD' } }
+    await expectHeading(page, 'defra-registered-employee', business)
+    await expectBodyCopy(page, 'defra-registered-employee', 'Hello Fabien,', {
+      defraName: { firstName: 'Fabien' }
+    })
+    await expectBodyCopy(
+      page,
+      'defra-registered-employee',
+      'What happens next?'
     )
-    await expect(page.locator('main')).toContainText('Hello Fabien,')
-    await expect(page.locator('main')).toContainText('What happens next?')
-    await expect(page.locator('main')).toContainText(
-      'tasks you can perform on behalf of ACME LTD'
+    await expectBodyCopy(
+      page,
+      'defra-registered-employee',
+      'tasks you can perform on behalf of ACME LTD',
+      business
     )
     // They act for the business, so they get the company's pages
-    await page.getByRole('link', { name: 'Sign in to your account' }).click()
+    await followLink(page, 'defra-registered-employee', './$next')
     await expect(page).toHaveURL(`${base}/your-address`)
-    await expect(page.locator('main')).toContainText('company address')
+    await expectBodyCopy(page, 'your-address', 'company address')
   })
 
   test('signing out from a Defra page forgets the registration', async ({
@@ -643,7 +646,7 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
   })
 
   test('other emails skip registration', async ({ page }) => {
-    await reachSignIn(page, /Yourself, as an individual/)
+    await reachSignIn(page, 'individual')
     await signIn(page, 'individual@example.com')
     await expect(page).toHaveURL(`${base}/your-address`)
   })
@@ -653,10 +656,10 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
   }) => {
     // An individual's email, but the account is for the organisation they
     // work for: a company, which gives its own address
-    await reachSignIn(page, /business or organisation you work for/)
+    await reachSignIn(page, 'organisation')
     await signIn(page, 'individual@example.com')
     await expect(page).toHaveURL(`${base}/your-address`)
-    await expect(page.locator('main')).toContainText('company address')
+    await expectBodyCopy(page, 'your-address', 'company address')
   })
 })
 
@@ -670,43 +673,43 @@ test.describe('nrf-request-to-use-1 with errors switched off', () => {
     await expect(
       page.getByRole('link', { name: 'Turn errors on' })
     ).toHaveCount(1)
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await submit(page, 'have-nrl-reference')
     await expect(page).toHaveURL(`${base}/quote-reference`)
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await submit(page, 'quote-reference')
     await expect(page).toHaveURL(`${base}/email`)
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await submit(page, 'email')
     await expect(page).toHaveURL(`${base}/retrieve-email`)
-    await page.getByRole('link', { name: 'Retrieve the quote details' }).click()
+    await followLink(page, 'retrieve-email', 'review-quote-details')
     await expect(page).toHaveURL(`${base}/review-quote-details`)
     // Blanks were filled from the sample answers
     await expect(page.locator('.govuk-summary-list')).toContainText(
       'developer@example.com'
     )
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await submit(page, 'review-quote-details')
     await expect(page).toHaveURL(`${base}/accept-levy`)
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await submit(page, 'accept-levy')
     await expect(page).toHaveURL(`${base}/variation`)
     // The sample answers say it is a variation of a committed application
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await submit(page, 'variation')
     await expect(page).toHaveURL(`${base}/original-committed`)
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await submit(page, 'original-committed')
     await expect(page).toHaveURL(`${base}/original-reference`)
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await submit(page, 'original-reference')
     await expect(page).toHaveURL(`${base}/defra-account-user-type`)
     // The sample answer says the levy is for a client
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await submit(page, 'defra-account-user-type')
     await expect(page).toHaveURL(`${base}/defra-account-agent`)
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await submit(page, 'defra-account-agent')
     await expect(page).toHaveURL(`${base}/sign-in-method`)
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await submit(page, 'sign-in-method')
     await expect(page).toHaveURL(`${base}/one-login-start`)
-    await page.getByRole('button', { name: 'Sign in' }).click()
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await submit(page, 'one-login-start')
+    await submit(page, 'one-login-email')
     await expect(page).toHaveURL(`${base}/one-login-password`)
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await submit(page, 'one-login-password')
     // The sample sign-in email is an agent's
     await expect(page).toHaveURL(`${base}/developer-details`)
-    await page.getByRole('button', { name: 'Confirm' }).click()
+    await submit(page, 'developer-details')
     await expect(page).toHaveURL(`${base}/review-developer-details`)
     await expect(page.locator('.govuk-summary-list')).toContainText(
       'Development Road'
@@ -716,16 +719,13 @@ test.describe('nrf-request-to-use-1 with errors switched off', () => {
     await page.goto(`${base}/quote-reference`)
     await page.getByRole('link', { name: 'Turn errors on' }).click()
     await expect(page).toHaveURL(`${base}/quote-reference?errors=true`)
-    await page.getByLabel(/NRL reference/).fill('')
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await fillAnswer(page, 'quote-reference', '')
+    await submit(page, 'quote-reference')
     await expect(page.locator('.govuk-error-summary')).toBeVisible()
   })
 })
 
 test.describe('nrf-request-to-use-1 amending the quote', () => {
-  // The development details are the quote journey's own pages, borrowed
-  // with the way back in `nav` (see content/README.md)
-  const quote = '/nrf-quote-7'
   const review = `${base}/review-quote-details`
   const serviceNav = '.govuk-service-navigation__service-name'
 
@@ -733,10 +733,8 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
     page
   }) => {
     await retrieveQuote(page)
-    await page
-      .getByRole('link', { name: /Change.*number of housing units/ })
-      .click()
-    await expect(page).toHaveURL(`${quote}/units?change=true&nav=${review}`)
+    await changeLink(page, 'review-quote-details', `${quotePath}/units`).click()
+    await expect(page).toHaveURL(`${quotePath}/units?change=true&nav=${review}`)
     // The borrowed page wears the request-to-use header
     await expect(page.locator(serviceNav)).toContainText(
       `PROTOTYPE - ${journey.serviceName}`
@@ -745,12 +743,12 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
       'href',
       review
     )
-    await page.getByLabel(/maximum number of units/).fill('120')
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await quote.fillAnswer(page, 'units', '120')
+    await quote.submit(page, 'units')
     await expect(page).toHaveURL(review)
     await expect(page.locator('.govuk-summary-list')).toContainText('120')
 
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await submit(page, 'review-quote-details')
     await expect(page).toHaveURL(`${base}/levy-increased`)
     await expect(page.locator('.govuk-hint')).toContainText('£30,000')
   })
@@ -759,17 +757,15 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
     page
   }) => {
     await retrieveQuote(page)
-    await page
-      .getByRole('link', { name: /Change.*number of housing units/ })
-      .click()
-    await page.getByLabel(/maximum number of units/).fill('120')
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await changeLink(page, 'review-quote-details', `${quotePath}/units`).click()
+    await quote.fillAnswer(page, 'units', '120')
+    await quote.submit(page, 'units')
+    await submit(page, 'review-quote-details')
     await expect(page).toHaveURL(`${base}/levy-increased`)
 
-    await page.getByLabel(/No, delete/).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await expect(page).toHaveURL(`${quote}/delete-quote?nav=${review}`)
+    await answer(page, 'levy-increased', 'No')
+    await submit(page, 'levy-increased')
+    await expect(page).toHaveURL(`${quotePath}/delete-quote?nav=${review}`)
     await expect(page.locator(serviceNav)).toContainText(
       `PROTOTYPE - ${journey.serviceName}`
     )
@@ -777,23 +773,22 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
       'href',
       review
     )
-    await expect(page.getByRole('link', { name: 'Cancel' })).toHaveAttribute(
-      'href',
-      review
-    )
+    await expect(
+      quote.actionLocator(page, 'delete-quote', 'link')
+    ).toHaveAttribute('href', review)
 
-    await page.getByRole('button', { name: 'Delete' }).click()
-    await expect(page).toHaveURL(`${quote}/delete-confirmation`)
-    await expect(page.locator('.govuk-panel__title')).toContainText('deleted')
+    await quote.submit(page, 'delete-quote')
+    await expect(page).toHaveURL(`${quotePath}/delete-confirmation`)
+    await quote.expectHeading(page, 'delete-confirmation')
 
     // Retrieving again, even with the same reference, gives the quoted
     // figures afresh rather than the amended ones
     await retrieveQuote(page)
     await expect(page.locator('.govuk-summary-list')).toContainText('100')
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await submit(page, 'review-quote-details')
     await expect(page).toHaveURL(`${base}/accept-levy`)
     await expect(page.locator('main')).toContainText('£25,000')
-    await expect(page.getByLabel(/No, delete/)).not.toBeChecked()
+    await expect(optionLocator(page, 'accept-levy', 'No')).not.toBeChecked()
   })
 
   test('a quote made in the same session fills nothing in, but its reference pulls it up', async ({
@@ -809,10 +804,10 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
       [1.11, 52.57]
     ]
     const answers = [
-      ['planning-type', { 'planning-type': 'Full planning permission' }],
+      ['planning-type', { 'planning-type': 'full' }],
       ['housing', { housing: 'Yes' }],
       ['units', { 'unit-count': '120' }],
-      ['redline-map', { 'has-redline-boundary-file': 'Draw on a map' }],
+      ['redline-map', { 'has-redline-boundary-file': 'draw' }],
       [
         'map',
         {
@@ -825,30 +820,30 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
       ['estimate-email', { email: 'jane@example.com' }]
     ]
     for (const [id, form] of answers) {
-      const response = await page.request.post(`${quote}/${id}`, {
+      const response = await page.request.post(`${quotePath}/${id}`, {
         form,
         maxRedirects: 0
       })
       expect(response.status(), id).toBe(303)
     }
-    await page.goto(`${quote}/check-your-answers`)
+    await page.goto(`${quotePath}/check-your-answers`)
     await expect(page.locator('.govuk-summary-list')).toContainText('Added')
-    await page.getByRole('button', { name: 'Confirm and submit' }).click()
-    await expect(page).toHaveURL(`${quote}/confirmation`)
+    await quote.submit(page, 'check-your-answers')
+    await expect(page).toHaveURL(`${quotePath}/confirmation`)
     const minted = (await page.locator('.govuk-panel__body').innerText()).match(
       /NRL-\d{6}/
     )[0]
 
     // The user comes to request to use afresh: nothing is filled in
     await page.goto(`${base}/have-nrl-reference`)
-    await page.getByLabel('Yes', { exact: true }).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await answer(page, 'have-nrl-reference', 'Yes')
+    await submit(page, 'have-nrl-reference')
     await expect(page).toHaveURL(`${base}/quote-reference`)
-    await expect(page.getByLabel(/NRL reference/)).toHaveValue('')
-    await page.getByLabel(/NRL reference/).fill(minted)
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(answerBox(page, 'quote-reference')).toHaveValue('')
+    await fillAnswer(page, 'quote-reference', minted)
+    await submit(page, 'quote-reference')
     await expect(page).toHaveURL(`${base}/email`)
-    await expect(page.getByLabel(/email address/)).toHaveValue('')
+    await expect(answerBox(page, 'email')).toHaveValue('')
 
     // Typing the minted reference pulls that quote up
     await retrieveQuote(page, minted)
@@ -863,38 +858,42 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
     page
   }) => {
     await retrieveQuote(page)
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await page.getByLabel(/Yes, accept/).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await page.getByLabel('No', { exact: true }).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await chooseDefraUserType(page, /client you act for/)
+    await acceptAndSkipVariation(page)
+    await chooseDefraUserType(page, 'agent')
     await signIn(page, 'agent@example.com')
-    await page.getByLabel('Full name').fill('A Developer')
-    await page.getByLabel('Address line 1').fill('Development Road')
-    await page.getByLabel('Town or city').fill('Development')
-    await page.getByLabel('Postcode').fill('DV1 6RP')
-    await page.getByRole('button', { name: 'Confirm' }).click()
-    await page.getByRole('button', { name: 'Confirm' }).click()
+    await fillField(page, 'developer-details', 'full-name', 'A Developer')
+    await fillField(
+      page,
+      'developer-details',
+      'address-line-1',
+      'Development Road'
+    )
+    await fillField(page, 'developer-details', 'town', 'Development')
+    await fillField(page, 'developer-details', 'postcode', 'DV1 6RP')
+    await submit(page, 'developer-details')
+    await submit(page, 'review-developer-details')
     await expect(page).toHaveURL(`${base}/agreement`)
     // Not agreeing: the Delete link leaves for the quote journey's delete
     // page, whose Cancel comes back to the agreement page
-    await page.getByRole('link', { name: /Delete.*quote details/ }).click()
+    await act(page, 'agreement', 'destructive')
     await expect(page).toHaveURL(
-      `/nrf-quote-7/delete-quote?nav=${base}/agreement`
+      `${quotePath}/delete-quote?nav=${base}/agreement`
     )
-    await page.getByRole('link', { name: 'Cancel' }).click()
+    await quote.act(page, 'delete-quote', 'link')
     await expect(page).toHaveURL(`${base}/agreement`)
-    await page.getByLabel(/I confirm that I have read/).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await answer(page, 'agreement', 'Yes')
+    await submit(page, 'agreement')
     await expect(page).toHaveURL(`${base}/check-your-answers`)
 
     const cya = `${base}/check-your-answers`
     await expect(
-      page.getByRole('link', { name: /Change.*planning permission type/ })
-    ).toHaveAttribute('href', `${quote}/planning-type?change=true&nav=${cya}`)
-    await page.getByRole('link', { name: /Delete.*quote details/ }).click()
-    await expect(page).toHaveURL(`${quote}/delete-quote?nav=${cya}`)
+      changeLink(page, 'check-your-answers', `${quotePath}/planning-type`)
+    ).toHaveAttribute(
+      'href',
+      `${quotePath}/planning-type?change=true&nav=${cya}`
+    )
+    await act(page, 'check-your-answers', 'destructive')
+    await expect(page).toHaveURL(`${quotePath}/delete-quote?nav=${cya}`)
     // Signed in as an agent: the borrowed page keeps the organisation bar
     await expect(page.locator('.app-organisation-bar')).toContainText(
       'Organisation name'
@@ -902,33 +901,33 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
     await expect(
       page.getByRole('link', { name: 'Change organisation' })
     ).toHaveAttribute('href', `${base}/sign-in-method`)
-    await page.getByRole('link', { name: 'Cancel' }).click()
+    await quote.act(page, 'delete-quote', 'link')
     await expect(page).toHaveURL(cya)
   })
 
   test('too many units means not enough capacity', async ({ page }) => {
     await retrieveQuote(page)
-    await page
-      .getByRole('link', { name: /Change.*number of housing units/ })
-      .click()
-    await page.getByLabel(/maximum number of units/).fill('16000')
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await changeLink(page, 'review-quote-details', `${quotePath}/units`).click()
+    await quote.fillAnswer(page, 'units', '16000')
+    await quote.submit(page, 'units')
     await expect(page).toHaveURL(review)
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await submit(page, 'review-quote-details')
     await expect(page).toHaveURL(`${base}/not-enough-capacity`)
+    // The way out is the Habitat Regulations guidance
     await expect(
-      page.getByRole('link', { name: /Habitat Regulations/ })
-    ).toHaveAttribute(
-      'href',
-      'https://www.gov.uk/guidance/habitats-regulations-assessments-protecting-a-european-site'
-    )
+      link(
+        page,
+        'not-enough-capacity',
+        'https://www.gov.uk/guidance/habitats-regulations-assessments-protecting-a-european-site'
+      )
+    ).toHaveCount(1)
   })
 
   test('no reference sends the user to get a quote', async ({ page }) => {
     await page.goto(`${base}/have-nrl-reference`)
-    await page.getByLabel('No', { exact: true }).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await expect(page).toHaveURL('/nrf-quote-7/planning-type')
+    await answer(page, 'have-nrl-reference', 'No')
+    await submit(page, 'have-nrl-reference')
+    await expect(page).toHaveURL(`${quotePath}/planning-type`)
   })
 
   test('the journey has no copies of the quote pages', () => {
@@ -945,11 +944,11 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
     const graph = toFlowGraph(journey)
     const borrowed = graph.nodes.filter((node) => node.external)
     expect(borrowed.map((node) => node.path).sort()).toEqual([
-      '/nrf-quote-7/delete-quote',
-      '/nrf-quote-7/housing',
-      '/nrf-quote-7/map',
-      '/nrf-quote-7/planning-type',
-      '/nrf-quote-7/units'
+      `${quotePath}/delete-quote`,
+      `${quotePath}/housing`,
+      `${quotePath}/map`,
+      `${quotePath}/planning-type`,
+      `${quotePath}/units`
     ])
   })
 })
@@ -967,6 +966,7 @@ test.describe('journey tools', () => {
       'government-gateway',
       'defra-id'
     ])
+    // The engine's default titles for the provider folders
     expect(groups.map((group) => group.title)).toEqual([
       'GOV.UK One Login',
       'Government Gateway',
@@ -1110,42 +1110,38 @@ test.describe('nrf-request-to-use-1 creating an account', () => {
     }
   })
 
-  async function reachSignIn(page) {
-    await retrieveQuote(page)
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await page.getByLabel(/Yes, accept/).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await expect(page).toHaveURL(`${base}/variation`)
-    await page.getByLabel('No', { exact: true }).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await chooseDefraUserType(page, /client you act for/)
-    await expect(page).toHaveURL(`${base}/sign-in-method`)
-  }
-
   async function createOneLogin(page, email) {
     await reachSignIn(page)
-    await page.getByLabel(/GOV.UK One Login/).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await answer(page, 'sign-in-method', 'one-login')
+    await submit(page, 'sign-in-method')
     await expect(page).toHaveURL(`${base}/one-login-start`)
     // The Create button is a link (role button) to the create flow; Sign in
     // still submits
-    await page
-      .getByRole('button', { name: 'Create your GOV.UK One Login' })
-      .click()
+    await act(page, 'one-login-start', 'submit')
     await expect(page).toHaveURL(`${base}/one-login-create-email`)
     await expect(page).toHaveTitle(/GOV.UK One Login$/)
 
-    await page.getByLabel('Enter your email address').fill(email)
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await fillAnswer(page, 'one-login-create-email', email)
+    await submit(page, 'one-login-create-email')
     await expect(page).toHaveURL(`${base}/one-login-check-email`)
     await expect(page.locator('.govuk-inset-text')).toContainText(email)
-    await page.getByLabel('Enter the 6 digit code').fill('123456')
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await fillAnswer(page, 'one-login-check-email', '123456')
+    await submit(page, 'one-login-check-email')
     await expect(page).toHaveURL(`${base}/one-login-create-password`)
 
-    await page.getByLabel('Enter a password').fill('not-a-real-password1')
-    await page.getByLabel('Re-type password').fill('not-a-real-password1')
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await fillField(
+      page,
+      'one-login-create-password',
+      '_password',
+      'not-a-real-password1'
+    )
+    await fillField(
+      page,
+      'one-login-create-password',
+      '_password-confirm',
+      'not-a-real-password1'
+    )
+    await submit(page, 'one-login-create-password')
     await expect(page).toHaveURL(`${base}/one-login-security-codes`)
   }
 
@@ -1153,21 +1149,19 @@ test.describe('nrf-request-to-use-1 creating an account', () => {
     page
   }) => {
     await createOneLogin(page, 'agent@example.com')
-    await page.getByLabel('Authenticator app').check()
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await answer(page, 'one-login-security-codes', 'app')
+    await submit(page, 'one-login-security-codes')
     await expect(page).toHaveURL(`${base}/one-login-authenticator`)
     await expect(page.locator('img[src$="one-login-qr-code.svg"]')).toHaveCount(
       1
     )
     await expect(
-      page.getByRole('link', {
-        name: 'Choose another way to get security codes'
-      })
+      actionLocator(page, 'one-login-authenticator', 'link')
     ).toHaveAttribute('href', `${base}/one-login-security-codes`)
-    await page.getByLabel('Enter the code').fill('123456')
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await fillAnswer(page, 'one-login-authenticator', '123456')
+    await submit(page, 'one-login-authenticator')
     await expect(page).toHaveURL(`${base}/one-login-created`)
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await submit(page, 'one-login-created')
     // The email is an agent's, so on to the developer details, signed in
     await expect(page).toHaveURL(`${base}/developer-details`)
     await expect(
@@ -1181,25 +1175,25 @@ test.describe('nrf-request-to-use-1 creating an account', () => {
     page
   }) => {
     await createOneLogin(page, 'new-individual@example.com')
-    await page.getByLabel(/Text message/).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await answer(page, 'one-login-security-codes', 'sms')
+    await submit(page, 'one-login-security-codes')
     await expect(page).toHaveURL(`${base}/one-login-phone-number`)
-    await page.getByLabel('Enter your mobile phone number').fill('07700 900123')
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await fillAnswer(page, 'one-login-phone-number', '07700 900123')
+    await submit(page, 'one-login-phone-number')
     await expect(page).toHaveURL(`${base}/one-login-check-phone`)
     await expect(page.locator('main')).toContainText('07700 900123')
-    await page.getByLabel('Enter the 6 digit security code').fill('123456')
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await fillAnswer(page, 'one-login-check-phone', '123456')
+    await submit(page, 'one-login-check-phone')
     await expect(page).toHaveURL(`${base}/one-login-created`)
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await submit(page, 'one-login-created')
     // An email containing "new" still registers a Defra account first
     await expect(page).toHaveURL(`${base}/defra-register`)
   })
 
   async function reachGateway(page) {
     await reachSignIn(page)
-    await page.getByLabel(/Government Gateway/).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await answer(page, 'sign-in-method', 'government-gateway')
+    await submit(page, 'sign-in-method')
     await expect(page).toHaveURL(`${base}/government-gateway-sign-in`)
     // Government Gateway chrome: its own bar, language toggle, no phase
     // banner, the notification banner above the heading
@@ -1211,20 +1205,27 @@ test.describe('nrf-request-to-use-1 creating an account', () => {
       page.getByRole('link', { name: 'Cymraeg', exact: true })
     ).toHaveCount(1)
     await expect(page.locator('.govuk-notification-banner__title')).toHaveText(
-      'Keeping your information secure'
+      notificationTitle('government-gateway-sign-in')
     )
-    await expect(page).toHaveTitle(/Sign in using Government Gateway - GOV.UK$/)
+    await expect(page).toHaveTitle(
+      new RegExp(
+        `${escapeRegExp(heading('government-gateway-sign-in'))} - GOV.UK$`
+      )
+    )
   }
 
   test('signing in with Government Gateway reads the user ID', async ({
     page
   }) => {
     await reachGateway(page)
-    await page.getByLabel('Government Gateway user ID').fill('company')
-    await page
-      .getByRole('textbox', { name: 'Password', exact: true })
-      .fill('not-a-real-password')
-    await page.getByRole('button', { name: 'Sign in' }).click()
+    await fillField(page, 'government-gateway-sign-in', '_user-id', 'company')
+    await fillField(
+      page,
+      'government-gateway-sign-in',
+      '_password',
+      'not-a-real-password'
+    )
+    await submit(page, 'government-gateway-sign-in')
     // The account is for a client, so an agent enters the developer details
     // whatever the user ID says
     await expect(page).toHaveURL(`${base}/developer-details`)
@@ -1235,31 +1236,43 @@ test.describe('nrf-request-to-use-1 creating an account', () => {
   }) => {
     await reachGateway(page)
     // A link written as ./government-gateway-email resolves to this journey
-    await page.getByRole('link', { name: 'Create sign in details' }).click()
+    await followLink(
+      page,
+      'government-gateway-sign-in',
+      './government-gateway-email'
+    )
     await expect(page).toHaveURL(`${base}/government-gateway-email`)
-    await page.getByLabel('Email address').fill('agent@example.com')
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await fillAnswer(page, 'government-gateway-email', 'agent@example.com')
+    await submit(page, 'government-gateway-email')
     await expect(page).toHaveURL(`${base}/government-gateway-confirm-email`)
     await expect(page.locator('main')).toContainText('agent@example.com')
-    await page.getByLabel('Confirmation code').fill('DNCLRK')
-    await page.getByRole('button', { name: 'Confirm' }).click()
+    await fillAnswer(page, 'government-gateway-confirm-email', 'DNCLRK')
+    await submit(page, 'government-gateway-confirm-email')
     await expect(page).toHaveURL(`${base}/government-gateway-email-confirmed`)
-    await page.getByRole('button', { name: 'Confirm' }).click()
+    await submit(page, 'government-gateway-email-confirmed')
     await expect(page).toHaveURL(`${base}/government-gateway-name`)
-    await page.getByLabel('What is your full name?').fill('Jane Agent')
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await fillAnswer(page, 'government-gateway-name', 'Jane Agent')
+    await submit(page, 'government-gateway-name')
     await expect(page).toHaveURL(`${base}/government-gateway-create-password`)
-    await page
-      .getByRole('textbox', { name: 'Password', exact: true })
-      .fill('three random words')
-    await page.getByLabel('Confirm your password').fill('three random words')
-    await page.getByRole('button', { name: 'Confirm' }).click()
+    await fillField(
+      page,
+      'government-gateway-create-password',
+      '_password',
+      'three random words'
+    )
+    await fillField(
+      page,
+      'government-gateway-create-password',
+      '_password-confirm',
+      'three random words'
+    )
+    await submit(page, 'government-gateway-create-password')
     await expect(page).toHaveURL(`${base}/government-gateway-user-id`)
     await expect(page.locator('.govuk-panel__body')).toHaveText(
       /^\s*(\d\d ){5}\d\d\s*$/
     )
     await expect(page.locator('main')).toContainText('agent@example.com')
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await submit(page, 'government-gateway-user-id')
     await expect(page).toHaveURL(`${base}/developer-details`)
   })
 })

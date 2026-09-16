@@ -33,6 +33,28 @@ These tests catch:
 - `npm run test:e2e:ui` - Open interactive test runner
 - `npm run test:e2e:debug` - Run with debugger
 
+## Tests must not hard-code journey copy
+
+The content designer rewords pages in `content/` without running the tests, so a test that spells out a heading, an error message or an option label breaks on every reword. Instead, the specs for the content-driven journeys (`nrf-quote-7`, `nrf-request-to-use-1`) read the copy from the content files through `tests/e2e/helpers/journey.js`:
+
+```js
+const { copyOf } = require('./helpers/journey')
+const { answer, fillAnswer, fillField, submit, expectHeading, expectError } =
+  copyOf('nrf-request-to-use-1')
+
+await answer(page, 'defra-account-user-type', 'agent') // an option by its value
+await fillField(page, 'your-address', 'postcode', 'LP1 7RF') // a form field by name
+await submit(page, 'your-address') // the page's own button text
+await expectHeading(page, 'check-your-answers')
+await expectError(page, 'agreement') // the page's `required` error
+```
+
+Pages are named by id, options by their `value` and form fields by their `name`: the identifiers the journey's logic already depends on. `followLink(page, id, target)` finds a body link by where it goes, `changeLink(page, id, target)` a summary row's Change link by the page it changes, and `expectBodyCopy(page, id, phrase)` keeps a prose assertion literal but fails naming the content file when the phrase is gone. `tests/e2e/helpers/request-to-use.js` holds the walkthroughs the request-to-use specs share.
+
+Literals are fine for design-system chrome (`Continue`, `Back`, `Sign out`, `There is a problem`) and for fixture data (`NRL-000001`, `ACME LTD`). `tests/e2e/test-conventions.spec.js` scans the specs and fails on the idioms that used to break: a heading or error summary asserted against a literal string, and `getByLabel(/regex/)`. End a statement with `// copy-ok` if it really must keep one.
+
+Branching options carry an explicit `value:` in their page file, and the loader refuses a `journey.yaml` that compares an answer with a value none of the page's options can store (see `content/README.md`), so a reword can no longer send the journey the wrong way either.
+
 ## What's Tested
 
 **Current smoke tests:**

@@ -4,7 +4,9 @@ type: radios
 bodyFirst: true
 options:
   - label: Yes, accept this amount
+    value: 'Yes'
   - label: No, delete my quote details
+    value: 'No'
 errors:
   required: Select yes if you accept your nature restoration levy amount
 button: Continue

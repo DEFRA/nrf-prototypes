@@ -11,7 +11,7 @@ const fs = require('fs')
 const path = require('path')
 const yaml = require('js-yaml')
 const { validateCondition } = require('./expressions')
-const { extractHeading } = require('./markdown')
+const { extractHeading, parseIfParams } = require('./markdown')
 
 const CONTENT_DIR = path.join(__dirname, '../../../content')
 // Pages marked `shared: true` in journey.yaml read their copy from
@@ -502,6 +502,151 @@ function validateTargets(journey, problems) {
   }
 }
 
+/**
+ * The answers a journey branches on must be answers its pages can give.
+ *
+ * Copy lives in the page files and logic in journey.yaml, so a reworded
+ * option label must never change where the journey goes. Every option on a
+ * radios or checkboxes page stores its `value` (through `store:` when there
+ * is one), and here every condition that compares such an answer with a
+ * literal (`equals`, `notEquals`, `in`, `notIn`) is checked against the
+ * values those pages can store, along with `store:` keys, `set:` values and
+ * the preview's sample answers. Keys no choice page writes (hooks, `set:`
+ * only, `$` engine values, dotted paths into objects) are left alone, as are
+ * `select` pages: their lists are fixtures (addresses), not branches.
+ */
+const CHOICE_TYPES = ['radios', 'checkboxes']
+const VALUE_OPERATORS = ['equals', 'notEquals', 'in', 'notIn']
+
+function validateChoiceValues(journey, problems) {
+  const list = (values) => [...values].map((v) => `'${v}'`).join(', ')
+  const storedValue = (page, value) =>
+    page.store && Object.prototype.hasOwnProperty.call(page.store, value)
+      ? page.store[value]
+      : value
+
+  // sessionKey -> { values: Set<string>, pages: [id] }
+  const choices = new Map()
+  for (const page of journey.pages) {
+    if (!CHOICE_TYPES.includes(page.type) || !page.sessionKey) {
+      continue
+    }
+    const entry = choices.get(page.sessionKey) || {
+      values: new Set(),
+      pages: []
+    }
+    entry.pages.push(page.id)
+    for (const option of page.content.options) {
+      entry.values.add(String(storedValue(page, option.value)))
+    }
+    choices.set(page.sessionKey, entry)
+
+    const optionValues = page.content.options.map((o) => String(o.value))
+    for (const key of Object.keys(page.store || {})) {
+      if (!optionValues.includes(String(key))) {
+        problems.push(
+          `pages.${page.id}.store: '${key}' matches no option in ${page.contentFile} (the options' values are ${list(optionValues)})`
+        )
+      }
+    }
+  }
+
+  // `set:` on a page or a rule can put other values in a tracked key
+  for (const page of journey.pages) {
+    const sets = [page.set, ...(page.next || []).map((rule) => rule.set)]
+    for (const set of sets) {
+      for (const [key, value] of Object.entries(set || {})) {
+        if (choices.has(key)) {
+          choices.get(key).values.add(String(value))
+        }
+      }
+    }
+  }
+
+  const check = (condition, where) => {
+    if (!condition || typeof condition !== 'object') {
+      return
+    }
+    for (const comb of ['all', 'any']) {
+      if (Array.isArray(condition[comb])) {
+        condition[comb].forEach((c, i) => check(c, `${where}.${comb}[${i}]`))
+        return
+      }
+    }
+    if (condition.not) {
+      check(condition.not, `${where}.not`)
+      return
+    }
+    const key = condition.key
+    if (
+      typeof key !== 'string' ||
+      key.startsWith('$') ||
+      key.includes('.') ||
+      !choices.has(key)
+    ) {
+      return
+    }
+    const { values, pages } = choices.get(key)
+    for (const op of VALUE_OPERATORS) {
+      if (condition[op] === undefined) {
+        continue
+      }
+      for (const literal of [].concat(condition[op])) {
+        if (!values.has(String(literal))) {
+          problems.push(
+            `${where}: '${key}' is compared with '${literal}' but no option on ${pages.join(', ')} can store it (the options store ${list(values)})`
+          )
+        }
+      }
+    }
+  }
+
+  for (const page of journey.pages) {
+    const where = `pages.${page.id}`
+    ;(page.next || []).forEach((rule, i) =>
+      check(rule.when, `${where}.next[${i}].when`)
+    )
+    if (Array.isArray(page.back)) {
+      page.back.forEach((rule, i) =>
+        check(rule.when, `${where}.back[${i}].when`)
+      )
+    }
+    if (page.guard) {
+      const { redirect, ...condition } = page.guard
+      check(condition, `${where}.guard`)
+    }
+    page.content.rows.forEach((row, i) => {
+      let value = row.value
+      while (value && typeof value === 'object' && value.when) {
+        check(value.when, `${where}.rows[${i}].value.when`)
+        value = value.else
+      }
+      if (Array.isArray(row.change)) {
+        row.change.forEach((rule, j) =>
+          check(rule.when, `${where}.rows[${i}].change[${j}].when`)
+        )
+      }
+      if (row.changeHidden && typeof row.changeHidden === 'object') {
+        check(row.changeHidden.when, `${where}.rows[${i}].changeHidden.when`)
+      }
+    })
+    for (const match of page.content.body.matchAll(/^:{3,}if\s+(.+)$/gm)) {
+      check(parseIfParams(match[1]), `${page.contentFile} ':::if ${match[1]}'`)
+    }
+  }
+
+  // The sample answers stand in for real ones in preview and ?errors=false
+  const sample = (journey.preview && journey.preview.data) || {}
+  for (const [key, value] of Object.entries(sample)) {
+    if (choices.has(key) && !choices.get(key).values.has(String(value))) {
+      const { values, pages } = choices.get(key)
+      problems.push(
+        `preview.data.${key}: '${value}' is not an answer ${pages.join(', ')} can store (the options store ${list(values)})`
+      )
+    }
+  }
+}
+
 function build(journeyId) {
   const dir = journeyDir(journeyId)
   const yamlFile = path.join(dir, 'journey.yaml')
@@ -563,6 +708,7 @@ function build(journeyId) {
   }
 
   validateTargets(journey, problems)
+  validateChoiceValues(journey, problems)
 
   const pagesDir = path.join(dir, 'pages')
   if (fs.existsSync(pagesDir)) {
@@ -606,6 +752,35 @@ function loadJourney(journeyId) {
 /**
  * Ids of every journey directory under content/ that has a journey.yaml.
  */
+/**
+ * The option labels of every choice answer, across every journey (a page
+ * borrowed from another journey shows that journey's answers):
+ * { planningType: { full: 'Full planning permission', … }, … }. The copy
+ * renderer uses it so `{{ planningType }}` reads as the option the user
+ * chose rather than the short value the session stores.
+ */
+function answerLabels() {
+  const labels = {}
+  for (const id of getJourneyIds()) {
+    for (const page of loadJourney(id).pages) {
+      if (!CHOICE_TYPES.includes(page.type) || !page.sessionKey) {
+        continue
+      }
+      const forKey = labels[page.sessionKey] || {}
+      for (const option of page.content.options) {
+        const stored =
+          page.store &&
+          Object.prototype.hasOwnProperty.call(page.store, option.value)
+            ? page.store[option.value]
+            : option.value
+        forKey[String(stored)] = option.label
+      }
+      labels[page.sessionKey] = forKey
+    }
+  }
+  return labels
+}
+
 function getJourneyIds() {
   if (!fs.existsSync(CONTENT_DIR)) {
     return []
@@ -678,5 +853,7 @@ module.exports = {
   loadJourney,
   getJourneyIds,
   resolveSummaryPath,
-  getRouteConstants
+  getRouteConstants,
+  validateChoiceValues,
+  answerLabels
 }

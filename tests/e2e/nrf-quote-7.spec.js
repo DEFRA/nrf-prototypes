@@ -2,20 +2,34 @@ const { test, expect } = require('@playwright/test')
 const fs = require('fs')
 const path = require('path')
 const turf = require('@turf/turf')
-const {
-  loadJourney,
-  toFlowGraph,
-  previewVariants
-} = require('../../app/lib/journey-engine')
+const { toFlowGraph, previewVariants } = require('../../app/lib/journey-engine')
+const { copyOf } = require('./helpers/journey')
 
 /**
  * nrf-quote-7: the content-driven port of nrf-quote-6.
  *
- * Page list, headings and error text come from content/nrf-quote-7 so these
- * tests stay in step with the journey definition.
+ * Page list, headings, labels, links and error text come from
+ * content/nrf-quote-7 through the helpers, so these tests follow the
+ * journey definition and survive a reword.
  */
 
-const journey = loadJourney('nrf-quote-7')
+const {
+  journey,
+  base,
+  answer,
+  fillAnswer,
+  submit,
+  act,
+  actionLocator,
+  link,
+  followLink,
+  changeLink,
+  expectHeading,
+  error,
+  option,
+  text
+} = copyOf('nrf-quote-7')
+
 // The wall shows one card per page plus one per preview variant
 const wallCardCount = journey.pages.reduce(
   (count, page) => count + 1 + previewVariants(page).length,
@@ -54,6 +68,21 @@ test.describe('nrf-quote-7 validation', () => {
   })
 })
 
+// The first questions of the quote, up to the boundary page
+async function answerDevelopmentDetails(page, planningType = 'full') {
+  await answer(page, 'planning-type', planningType)
+  await submit(page, 'planning-type')
+  await expect(page).toHaveURL(/housing/)
+
+  await answer(page, 'housing', 'Yes')
+  await submit(page, 'housing')
+  await expect(page).toHaveURL(/units/)
+
+  await fillAnswer(page, 'units', '100')
+  await submit(page, 'units')
+  await expect(page).toHaveURL(/redline-map/)
+}
+
 test.describe('nrf-quote-7 happy path', () => {
   test('draws a boundary and reaches confirmation', async ({ page }) => {
     // Pick a point inside the first nutrient catchment so the map check passes
@@ -77,29 +106,19 @@ test.describe('nrf-quote-7 happy path', () => {
       [lng - d, lat - d]
     ]
 
-    await page.goto(`${journey.basePath}/start`)
+    await page.goto(`${base}/start`)
     await page.getByRole('button', { name: 'Start now' }).click()
     await expect(page).toHaveURL(/what-would-you-like-to-do/)
 
     // The shared funnel page: the quote answer stays in this journey
-    await page.getByLabel(/I want a quote/).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await answer(page, 'what-would-you-like-to-do', 'quote')
+    await submit(page, 'what-would-you-like-to-do')
     await expect(page).toHaveURL(/planning-type/)
 
-    await page.getByLabel('Full planning permission').check()
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await expect(page).toHaveURL(/housing/)
+    await answerDevelopmentDetails(page)
 
-    await page.getByLabel('Yes', { exact: true }).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await expect(page).toHaveURL(/units/)
-
-    await page.getByLabel(/maximum number of units/).fill('100')
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await expect(page).toHaveURL(/redline-map/)
-
-    await page.getByLabel('Draw on a map').check()
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await answer(page, 'redline-map', 'draw')
+    await submit(page, 'redline-map')
     await expect(page).toHaveURL(/\/map$/)
 
     // Bypass the drawing UI: set the hidden boundary field and submit the form
@@ -111,22 +130,23 @@ test.describe('nrf-quote-7 happy path', () => {
     }, square)
     await expect(page).toHaveURL(/estimate-email$/)
 
-    await page.getByLabel(/email address/).fill('jane.smith@example.com')
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await fillAnswer(page, 'estimate-email', 'jane.smith@example.com')
+    await submit(page, 'estimate-email')
     await expect(page).toHaveURL(/check-your-answers/)
 
+    // The summary shows the option's label, not the stored value
     const summary = page.locator('.govuk-summary-list')
-    await expect(summary).toContainText('Full planning permission')
+    await expect(summary).toContainText(option('planning-type', 'full'))
     await expect(summary).toContainText('100')
     await expect(summary).toContainText('Added')
     await expect(summary).toContainText('jane.smith@example.com')
 
-    await page.getByRole('button', { name: 'Confirm and submit' }).click()
+    await submit(page, 'check-your-answers')
     await expect(page).toHaveURL(/confirmation/)
     await expect(page.locator('.govuk-panel__body')).toContainText('NRL-')
 
     // The email wears the bare crown header, not the service's chrome
-    await page.getByRole('link', { name: 'View the email content' }).click()
+    await followLink(page, 'confirmation', 'estimate-email-content')
     await expect(page).toHaveURL(/estimate-email-content/)
     await expect(page.locator('.govuk-header')).toHaveCount(1)
     await expect(page.locator('.govuk-service-navigation')).toHaveCount(0)
@@ -159,15 +179,10 @@ test.describe('nrf-quote-7 happy path', () => {
         })
       )
 
-    await page.goto(`${journey.basePath}/planning-type`)
-    await page.getByLabel('Full planning permission').check()
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await page.getByLabel('Yes', { exact: true }).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await page.getByLabel(/maximum number of units/).fill('100')
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await page.getByLabel('Upload a file').check()
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await page.goto(`${base}/planning-type`)
+    await answerDevelopmentDetails(page)
+    await answer(page, 'redline-map', 'upload')
+    await submit(page, 'redline-map')
     await expect(page).toHaveURL(/upload-redline$/)
 
     await page.locator('input[type="file"]').setInputFiles({
@@ -175,17 +190,13 @@ test.describe('nrf-quote-7 happy path', () => {
       mimeType: 'application/geo+json',
       buffer: geojson(ring)
     })
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await submit(page, 'upload-redline')
 
     // The spinner page moves on by itself
     await expect(page).toHaveURL(/checking-file$/)
-    await expect(page.getByRole('heading', { level: 1 })).toContainText(
-      'Checking your file'
-    )
+    await expectHeading(page, 'checking-file')
     await expect(page).toHaveURL(/file-preview$/, { timeout: 10000 })
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-      'Your uploaded red line boundary file'
-    )
+    await expectHeading(page, 'file-preview')
     await expect(page.locator('.govuk-list--bullet')).toContainText(
       'Broads SAC, Broadland Ramsar and River Wensum SAC'
     )
@@ -193,40 +204,36 @@ test.describe('nrf-quote-7 happy path', () => {
       '(100% of boundary)'
     )
     await expect(page.locator('#boundary-map')).toBeAttached()
-    await page.getByRole('button', { name: 'Save and continue' }).click()
+    await submit(page, 'file-preview')
     await expect(page).toHaveURL(/estimate-email$/)
     await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
       'href',
-      `${journey.basePath}/file-preview`
+      `${base}/file-preview`
     )
 
     // Nothing is checked: a file that is not GeoJSON still reaches the
     // preview, plotted with the sample boundary
-    await page.goto(`${journey.basePath}/upload-redline`)
+    await page.goto(`${base}/upload-redline`)
     await page.locator('input[type="file"]').setInputFiles({
       name: 'site.kml',
       mimeType: 'application/vnd.google-earth.kml+xml',
       buffer: Buffer.from('<kml></kml>')
     })
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await submit(page, 'upload-redline')
     await expect(page).toHaveURL(/file-preview$/, { timeout: 10000 })
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-      'Your uploaded red line boundary file'
-    )
+    await expectHeading(page, 'file-preview')
 
     // Continuing without choosing a file is not an error: the preview shows
     // the sample boundary
-    await page.goto(`${journey.basePath}/upload-redline`)
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await page.goto(`${base}/upload-redline`)
+    await submit(page, 'upload-redline')
     await expect(page).toHaveURL(/file-preview$/, { timeout: 10000 })
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-      'Your uploaded red line boundary file'
-    )
+    await expectHeading(page, 'file-preview')
     await expect(page.locator('.govuk-error-summary')).toHaveCount(0)
 
     // A GeoJSON polygon outside every EDP still reaches the preview, with
     // the sample boundary standing in
-    await page.goto(`${journey.basePath}/upload-redline`)
+    await page.goto(`${base}/upload-redline`)
     await page.locator('input[type="file"]').setInputFiles({
       name: 'nottingham.geojson',
       mimeType: 'application/geo+json',
@@ -238,70 +245,70 @@ test.describe('nrf-quote-7 happy path', () => {
         [-1.1544, 52.9518]
       ])
     })
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await submit(page, 'upload-redline')
     await expect(page).toHaveURL(/file-preview$/, { timeout: 10000 })
     await expect(page.locator('.govuk-list--bullet')).toContainText(
       'Broads SAC, Broadland Ramsar and River Wensum SAC'
     )
 
     // The error states live on the screen wall as preview variants
-    await page.goto(
-      `${journey.basePath}/file-preview?preview=1&variant=overlapping`
-    )
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-      'Your red line boundary file contains an error'
+    await page.goto(`${base}/file-preview?preview=1&variant=overlapping`)
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(
+      text('file-preview', 'errorHeading')
     )
     await expect(page.locator('main')).toContainText(
-      'The red line boundary is overlapping itself.'
+      error('file-preview', 'selfIntersecting')
     )
     await expect(
-      page.getByRole('link', { name: 'Upload a new file or draw on a map' })
-    ).toHaveAttribute('href', `${journey.basePath}/redline-map`)
+      page.getByRole('link', { name: text('file-preview', 'uploadAgain') })
+    ).toHaveAttribute('href', `${base}/redline-map`)
     await expect(
-      page.getByRole('button', { name: 'Save and continue' })
+      page.getByRole('button', {
+        name: journey.byId.get('file-preview').content.button
+      })
     ).toHaveCount(0)
   })
 
   test('changing an answer returns to check your answers', async ({ page }) => {
-    await page.goto(`${journey.basePath}/start`)
+    await page.goto(`${base}/start`)
     await page.getByRole('button', { name: 'Start now' }).click()
-    await page.getByLabel(/I want a quote/).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await page.getByLabel('Hybrid planning permission').check()
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await page.getByLabel('Yes', { exact: true }).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await page.getByLabel(/maximum number of units/).fill('12')
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await answer(page, 'what-would-you-like-to-do', 'quote')
+    await submit(page, 'what-would-you-like-to-do')
+    await answer(page, 'planning-type', 'hybrid')
+    await submit(page, 'planning-type')
+    await answer(page, 'housing', 'Yes')
+    await submit(page, 'housing')
+    await fillAnswer(page, 'units', '12')
+    await submit(page, 'units')
 
     // Jump straight to email (the guard only needs an email to show CYA)
-    await page.goto(`${journey.basePath}/estimate-email`)
-    await page.getByLabel(/email address/).fill('a@b.com')
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await page.goto(`${base}/estimate-email`)
+    await fillAnswer(page, 'estimate-email', 'a@b.com')
+    await submit(page, 'estimate-email')
     await expect(page).toHaveURL(/check-your-answers/)
 
-    await page.getByRole('link', { name: /Change.*number of units/ }).click()
+    await changeLink(page, 'check-your-answers', 'units').click()
     await expect(page).toHaveURL(/units\?change=true&nav=check-your-answers/)
     await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
       'href',
-      `${journey.basePath}/check-your-answers`
+      `${base}/check-your-answers`
     )
-    await page.getByLabel(/maximum number of units/).fill('25')
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await fillAnswer(page, 'units', '25')
+    await submit(page, 'units')
     await expect(page).toHaveURL(/check-your-answers$/)
     await expect(page.locator('.govuk-summary-list')).toContainText('25')
 
     // The delete page's Back and Cancel still mean check your answers here
     // (`$summary` with no `nav` from another journey)
-    await page.getByRole('link', { name: /Delete/ }).click()
-    await expect(page).toHaveURL(`${journey.basePath}/delete-quote`)
+    await act(page, 'check-your-answers', 'destructive')
+    await expect(page).toHaveURL(`${base}/delete-quote`)
     await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
       'href',
-      `${journey.basePath}/check-your-answers`
+      `${base}/check-your-answers`
     )
-    await expect(page.getByRole('link', { name: 'Cancel' })).toHaveAttribute(
+    await expect(actionLocator(page, 'delete-quote', 'link')).toHaveAttribute(
       'href',
-      `${journey.basePath}/check-your-answers`
+      `${base}/check-your-answers`
     )
     await expect(
       page.locator('.govuk-service-navigation__service-name')
@@ -399,7 +406,7 @@ test.describe('journey tools', () => {
     // The map preview focuses its boundary panel heading once the saved
     // boundary check completes; that must not drag the wall down to it
     const mapFrame = page.frameLocator(
-      'iframe[title="Draw your boundary on a map"]'
+      `iframe[title="${journey.byId.get('map').content.title}"]`
     )
     await expect(
       mapFrame.locator('[data-boundary-info-results]:not([hidden])')

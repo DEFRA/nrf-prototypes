@@ -13,6 +13,8 @@ const {
   getJourneyIds,
   getRouteConstants,
   isQuestionType,
+  validateChoiceValues,
+  answerLabels,
   TYPES
 } = require('./loader')
 const { createJourneyRouter, previewData } = require('./router')
@@ -44,6 +46,8 @@ module.exports = {
   getJourneyIds,
   getRouteConstants,
   isQuestionType,
+  validateChoiceValues,
+  answerLabels,
   TYPES,
   createJourneyRouter,
   previewData,

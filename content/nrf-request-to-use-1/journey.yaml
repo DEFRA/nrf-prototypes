@@ -137,7 +137,7 @@ preview:
     quoteReference: NRL-123456
     retrievalEmail: developer@example.com
     estimateEmail: developer@example.com
-    planningType: Full planning permission
+    planningType: full
     isHousing: 'Yes'
     residentialBuildingCount: 120
     hasRedlineBoundaryFile: false
@@ -294,9 +294,6 @@ pages:
     field: accept-levy
     sessionKey: acceptLevy
     changeable: true
-    store:
-      'Yes, accept the new amount': 'Yes'
-      'No, delete my quote details': 'No'
     next:
       - when: { key: acceptLevy, equals: 'No' }
         goto: /nrf-quote-7/delete-quote
@@ -309,9 +306,6 @@ pages:
     field: accept-levy
     sessionKey: acceptLevy
     changeable: true
-    store:
-      'Yes, accept this amount': 'Yes'
-      'No, delete my quote details': 'No'
     next:
       - when: { key: acceptLevy, equals: 'No' }
         goto: /nrf-quote-7/delete-quote
@@ -371,10 +365,6 @@ pages:
     field: defra-account-user-type
     sessionKey: defraUserType
     changeable: true
-    store:
-      Yourself, as an individual: individual
-      The business or organisation you work for: organisation
-      A client you act for as an agent or third party: agent
     next:
       - when: { key: defraUserType, equals: individual }
         goto: defra-account-individual
@@ -416,9 +406,6 @@ pages:
     field: sign-in-method
     sessionKey: signInMethod
     handler: custom # registers the sign-out route, see hooks.js
-    store:
-      Sign in with GOV.UK One Login: one-login
-      Sign in with Government Gateway: government-gateway
     next:
       - when: { key: signInMethod, equals: government-gateway }
         goto: government-gateway-sign-in
@@ -562,9 +549,6 @@ pages:
     sessionKey: defraAccountType
     changeable: true
     guard: { key: account, isSet: true, redirect: sign-in-method }
-    store:
-      Yes, and I have permission to create an account: business
-      No, as an individual for personal use: individual
     next:
       - when: { key: defraAccountType, equals: individual }
         goto: defra-name
@@ -764,13 +748,11 @@ pages:
 
   # Everyone agrees to the declaration before checking their answers; the
   # Delete link on the page is the way out for anyone who does not agree.
-  # Keep the `store` key in step with the checkbox label in agreement.md
+  # The checkbox stores 'Yes' (its `value` in agreement.md)
   - id: agreement
     field: agreement
     sessionKey: agreedToTerms
     changeable: true
-    store:
-      'I confirm that I have read and agree to the terms of this declaration': 'Yes'
     guard: { key: account, isSet: true, redirect: sign-in-method }
     back:
       - when: { key: account.accountType, equals: agent }

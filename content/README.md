@@ -44,6 +44,20 @@ button: Continue
 
 The first `# Heading` is the page's question or title. Everything after it is body copy.
 
+### Labels and values
+
+An option has a `label` and, where the journey branches on the answer, a short `value`:
+
+```yaml
+options:
+  - label: Full planning permission
+    value: full
+  - label: Other
+    value: other
+```
+
+The label is copy: reword it whenever you like. The value is the answer's short name, the one `journey.yaml` uses (`when: { key: planningType, equals: other }`), so leave it alone when you change the label. Wherever the answer is shown back to the user (`{{ planningType }}` on a check your answers page, in an email or a certificate) the label appears, not the value. A page whose answer nothing branches on needs no values at all. The app refuses to start a journey whose `journey.yaml` compares an answer with a value none of the page's options has, naming the page and the option, so a mismatch shows up straight away rather than as a wrong turn in the journey.
+
 ### Markdown you can use
 
 | Write                          | You get                       |
@@ -119,7 +133,7 @@ Leave a blank line before a closing `:::` when the block ends with a list, other
 
 ### Showing an answer the user gave
 
-Write the answer's name in double curly braces: `{{ estimateEmail }}`. The names are listed under `session:` in `journey.yaml`. Useful variations:
+Write the answer's name in double curly braces: `{{ estimateEmail }}`. The names are listed under `session:` in `journey.yaml`. An answer to a radios or checkboxes question shows as the option's label (see "Labels and values"). Useful variations:
 
 - `{{ planningType | lower }}` lower-case
 - `{{ estimateEmail or "user@example.com" }}` fallback when there is no answer yet
@@ -367,7 +381,7 @@ pages:
 
 Condition operators: `equals`, `notEquals`, `in`, `notIn`, `gt`, `gte`, `lt`, `lte`, `between`, `truthy`, `falsy`, `isSet`. Combine with `all:`, `any:`, `not:`. Engine values: `$navFromSummary`, `$isChange`, `$preview`.
 
-Other page keys: `shared: true` (copy comes from `content/shared/pages/<id>.md`) or `shared: <folder>` (from `content/shared/<folder>/<id>.md`, see "Pages shared by more than one journey"), `back` (page id, absolute path, or a rule list), `guard` (condition plus `redirect`), `store` (map radio labels to stored values), `set` (write values on submit; also allowed on a rule), `clears` (list of keys, or `$session`), `handler: custom` (page has hooks), `template` (a hand-written view for `type: custom`), `layout` (`default`, `one-login`, `government-gateway`, `defra-id`, `defra-account`, `document` or `email`), `remember: false` (never write the answer to the session; pair it with a field name starting `_` so the kit's own auto-store skips it too, as the password page does), `accept` and `maxSize` for uploads, `min` and `max` for numbers.
+Other page keys: `shared: true` (copy comes from `content/shared/pages/<id>.md`) or `shared: <folder>` (from `content/shared/<folder>/<id>.md`, see "Pages shared by more than one journey"), `back` (page id, absolute path, or a rule list), `guard` (condition plus `redirect`), `store` (map an option's `value` to what the session stores, for booleans and the like; prefer a `value` on the option in the page file), `set` (write values on submit; also allowed on a rule), `clears` (list of keys, or `$session`), `handler: custom` (page has hooks), `template` (a hand-written view for `type: custom`), `layout` (`default`, `one-login`, `government-gateway`, `defra-id`, `defra-account`, `document` or `email`), `remember: false` (never write the answer to the session; pair it with a field name starting `_` so the kit's own auto-store skips it too, as the password page does), `accept` and `maxSize` for uploads, `min` and `max` for numbers.
 
 A `next` rule or an action whose `goto` leaves for another journey can add `return: <page id>` so that journey's page comes back here (see "Borrowing a page from another journey"). `$summary` is allowed wherever a `goto` is: `next`, `back` and `actions`.
 

@@ -55,7 +55,7 @@ session:
 preview:
   data:
     journeyType: quote
-    planningType: Full planning permission
+    planningType: full
     isHousing: 'Yes'
     residentialBuildingCount: 120
     hasRedlineBoundaryFile: false
@@ -104,10 +104,7 @@ pages:
     next:
       - when:
           key: planningType
-          notIn:
-            - Full planning permission
-            - Outline planning permission
-            - Hybrid planning permission
+          notIn: [full, outline, hybrid]
         goto: wrong-permission
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
@@ -145,10 +142,10 @@ pages:
   - id: redline-map
     field: has-redline-boundary-file
     sessionKey: hasRedlineBoundaryFile
-    # The radio values are labels; store booleans in the session instead
+    # The options' values (see redline-map.md) become booleans in the session
     store:
-      'Upload a file': true
-      'Draw on a map': false
+      upload: true
+      draw: false
     next:
       - when: { key: hasRedlineBoundaryFile, truthy: true }
         goto: upload-redline

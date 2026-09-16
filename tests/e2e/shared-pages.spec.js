@@ -1,5 +1,6 @@
 const { test, expect } = require('@playwright/test')
-const { loadJourney, previewVariants } = require('../../app/lib/journey-engine')
+const { previewVariants } = require('../../app/lib/journey-engine')
+const { copyOf } = require('./helpers/journey')
 
 /**
  * Shared pages: the quote and request-to-use journeys both start on the
@@ -8,9 +9,9 @@ const { loadJourney, previewVariants } = require('../../app/lib/journey-engine')
  * other leaves for the sibling journey's first question.
  */
 
-const quote = loadJourney('nrf-quote-7')
-const requestToUse = loadJourney('nrf-request-to-use-1')
-const funnel = quote.byId.get('what-would-you-like-to-do')
+const quote = copyOf('nrf-quote-7')
+const requestToUse = copyOf('nrf-request-to-use-1')
+const funnel = quote.journey.byId.get('what-would-you-like-to-do')
 // Where the funnel sends "request to use" answers: the request-to-use
 // journey's first question, read from the rule so the test follows the YAML
 const requestToUseEntry = funnel.next.find((rule) => rule.when).goto
@@ -18,7 +19,7 @@ const requestToUseEntryId = requestToUseEntry.split('/').pop()
 
 test.describe('shared start page', () => {
   test('both journeys are marked as sharing the same content file', () => {
-    for (const journey of [quote, requestToUse]) {
+    for (const { journey } of [quote, requestToUse]) {
       expect(journey.start).toBe('start')
       for (const id of ['start', 'what-would-you-like-to-do']) {
         const page = journey.byId.get(id)
@@ -30,34 +31,34 @@ test.describe('shared start page', () => {
 
   test('both journeys render the same start page heading', async ({ page }) => {
     const headings = []
-    for (const journey of [quote, requestToUse]) {
+    for (const { journey } of [quote, requestToUse]) {
       const response = await page.goto(`${journey.basePath}/start`)
       expect(response.status()).toBe(200)
       headings.push((await page.locator('h1').first().textContent()).trim())
     }
-    expect(headings[0]).toBe(quote.byId.get('start').content.heading)
+    expect(headings[0]).toBe(quote.heading('start'))
     expect(headings[1]).toBe(headings[0])
   })
 
   test('the shared pages carry their own service name', async ({ page }) => {
     const serviceNav = page.locator('.govuk-service-navigation__service-name')
-    for (const journey of [quote, requestToUse]) {
+    for (const { journey, serviceName } of [quote, requestToUse]) {
       for (const id of ['start', 'what-would-you-like-to-do']) {
         await page.goto(journey.byId.get(id).path)
-        await expect(serviceNav).toContainText(
-          'PROTOTYPE - Manage the nature restoration levy'
-        )
+        await expect(serviceNav).toContainText(`PROTOTYPE - ${serviceName(id)}`)
         await expect(page).toHaveTitle(
-          /Manage the nature restoration levy - GOV.UK$/
+          new RegExp(`${serviceName(id)} - GOV.UK$`)
         )
       }
     }
     // The journey's own name takes over from its first question
-    await page.goto(quote.byId.get('planning-type').path)
-    await expect(serviceNav).toContainText(`PROTOTYPE - ${quote.serviceName}`)
-    await page.goto(requestToUse.byId.get(requestToUseEntryId).path)
+    await page.goto(quote.journey.byId.get('planning-type').path)
     await expect(serviceNav).toContainText(
-      `PROTOTYPE - ${requestToUse.serviceName}`
+      `PROTOTYPE - ${quote.journey.serviceName}`
+    )
+    await page.goto(requestToUse.journey.byId.get(requestToUseEntryId).path)
+    await expect(serviceNav).toContainText(
+      `PROTOTYPE - ${requestToUse.journey.serviceName}`
     )
   })
 
@@ -72,39 +73,43 @@ test.describe('shared start page', () => {
 
 test.describe('funnel between journeys', () => {
   test('choosing request to use leaves the quote journey', async ({ page }) => {
-    await page.goto(`${quote.basePath}/start`)
+    await page.goto(`${quote.base}/start`)
     await page.getByRole('button', { name: 'Start now' }).click()
-    await expect(page).toHaveURL(`${quote.basePath}/what-would-you-like-to-do`)
+    await expect(page).toHaveURL(`${quote.base}/what-would-you-like-to-do`)
 
-    await page.getByLabel(/request to use/).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await quote.answer(page, 'what-would-you-like-to-do', 'request-to-use')
+    await quote.submit(page, 'what-would-you-like-to-do')
     await expect(page).toHaveURL(requestToUseEntry)
 
     // The back link stays inside the journey we landed in, on its own copy
     // of the shared funnel page, with the answer still selected
     await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
       'href',
-      `${requestToUse.basePath}/what-would-you-like-to-do`
+      `${requestToUse.base}/what-would-you-like-to-do`
     )
     await page.getByRole('link', { name: 'Back' }).click()
-    await expect(page.getByLabel(/request to use/)).toBeChecked()
+    await expect(
+      requestToUse.optionLocator(
+        page,
+        'what-would-you-like-to-do',
+        'request-to-use'
+      )
+    ).toBeChecked()
   })
 
   test('choosing a quote leaves the request-to-use journey', async ({
     page
   }) => {
-    await page.goto(`${requestToUse.basePath}/start`)
+    await page.goto(`${requestToUse.base}/start`)
     await page.getByRole('button', { name: 'Start now' }).click()
-    await expect(
-      page.locator('h1, .govuk-fieldset__legend').first()
-    ).toContainText('What would you like to do?')
+    await requestToUse.expectHeading(page, 'what-would-you-like-to-do')
 
-    await page.getByLabel(/I want a quote/).check()
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await expect(page).toHaveURL(`${quote.basePath}/planning-type`)
+    await requestToUse.answer(page, 'what-would-you-like-to-do', 'quote')
+    await requestToUse.submit(page, 'what-would-you-like-to-do')
+    await expect(page).toHaveURL(`${quote.base}/planning-type`)
     await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
       'href',
-      `${quote.basePath}/what-would-you-like-to-do`
+      `${quote.base}/what-would-you-like-to-do`
     )
   })
 })
@@ -113,7 +118,9 @@ test.describe('journey tools show exits to other journeys', () => {
   test('flow.json lists the exit as an off-page transition', async ({
     request
   }) => {
-    const response = await request.get(`/tools/journeys/${quote.id}/flow.json`)
+    const response = await request.get(
+      `/tools/journeys/${quote.journey.id}/flow.json`
+    )
     expect(response.status()).toBe(200)
     const flow = await response.json()
     // The funnel question branches there
@@ -125,11 +132,11 @@ test.describe('journey tools show exits to other journeys', () => {
       })
     ])
     // The exit is not a screen of this journey
-    expect(flow.screens).toHaveLength(quote.pages.length)
+    expect(flow.screens).toHaveLength(quote.journey.pages.length)
   })
 
   test('the flow diagram and screen wall show the exit', async ({ page }) => {
-    await page.goto(`/tools/journeys/${quote.id}`)
+    await page.goto(`/tools/journeys/${quote.journey.id}`)
     await expect(
       page.locator('#flow-diagram[data-rendered="true"]')
     ).toHaveCount(1, { timeout: 20000 })
@@ -143,7 +150,7 @@ test.describe('journey tools show exits to other journeys', () => {
     ])
     // Placeholder cards carry no iframe, so the wall still has one per page
     // (plus one per preview variant)
-    const cards = quote.pages.reduce(
+    const cards = quote.journey.pages.reduce(
       (count, page) => count + 1 + previewVariants(page).length,
       0
     )
@@ -151,7 +158,9 @@ test.describe('journey tools show exits to other journeys', () => {
   })
 
   test('flow.mmd gives the exit a valid node id', async ({ request }) => {
-    const response = await request.get(`/tools/journeys/${quote.id}/flow.mmd`)
+    const response = await request.get(
+      `/tools/journeys/${quote.journey.id}/flow.mmd`
+    )
     expect(response.status()).toBe(200)
     const source = await response.text()
     expect(source).toContain(

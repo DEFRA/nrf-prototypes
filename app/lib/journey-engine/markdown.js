@@ -66,11 +66,28 @@ const FILTERS = {
 }
 
 /**
+ * An answer to a radios or checkboxes question is stored as the option's
+ * `value` (a short name such as `full`); shown back to the user it becomes
+ * the option's label. `labels` maps each such session key to its values'
+ * labels: { planningType: { full: 'Full planning permission', … } }.
+ */
+function toLabel(value, labelsForKey) {
+  if (!labelsForKey) {
+    return value
+  }
+  const one = (v) =>
+    Object.prototype.hasOwnProperty.call(labelsForKey, String(v))
+      ? labelsForKey[String(v)]
+      : v
+  return Array.isArray(value) ? value.map(one) : one(value)
+}
+
+/**
  * Resolve a single placeholder expression against the data.
  * Grammar: term ( 'or' term )* ( '|' filter )*
  * where term is a dotted key or a quoted string.
  */
-function resolveExpression(expression, data) {
+function resolveExpression(expression, data, labels) {
   const [termsPart, ...filterParts] = expression.split('|').map((s) => s.trim())
   const terms = termsPart.split(/\s+or\s+/).map((s) => s.trim())
   let value
@@ -78,6 +95,9 @@ function resolveExpression(expression, data) {
     const quoted = term.match(/^(?:"|&quot;|')(.*)(?:"|&quot;|')$/)
     value = quoted ? quoted[1] : getPath(data, term)
     if (isSet(value)) {
+      if (!quoted && labels) {
+        value = toLabel(value, labels[term])
+      }
       break
     }
   }
@@ -93,7 +113,8 @@ function resolveExpression(expression, data) {
 }
 
 /**
- * Substitute `{{ ... }}` placeholders in a string.
+ * Substitute `{{ ... }}` placeholders in a string. `options.labels` (see
+ * toLabel) shows a choice's label rather than its stored value.
  */
 function interpolate(text, data, options = {}) {
   if (text === undefined || text === null) {
@@ -103,7 +124,7 @@ function interpolate(text, data, options = {}) {
   return String(text).replace(
     /\{\{\s*([^}]+?)\s*\}\}/g,
     (match, expression) => {
-      const value = resolveExpression(expression, data || {})
+      const value = resolveExpression(expression, data || {}, options.labels)
       return escape ? escapeHtml(value) : String(value)
     }
   )
@@ -508,8 +529,18 @@ function extractHeading(markdown) {
   return { heading, body: lines.join('\n') }
 }
 
-function createRenderer() {
+/**
+ * A renderer for page copy. `options.labels` is a function returning the
+ * option labels of every choice answer (see toLabel), read afresh on each
+ * render so edits to the page files show up without a restart.
+ */
+function createRenderer(options = {}) {
   const md = createMarkdown()
+  const labels = () => (options.labels ? options.labels() : undefined)
+
+  function fill(text, data, more = {}) {
+    return interpolate(text, data, { labels: labels(), ...more })
+  }
 
   /**
    * Render markdown to GOV.UK HTML.
@@ -521,7 +552,7 @@ function createRenderer() {
     }
     const env = { ctx, page: ctx.page, inPanel: false }
     const html = md.render(String(markdown), env)
-    return interpolate(mergeAdjacentLists(applyConditionals(html)), ctx.data)
+    return fill(mergeAdjacentLists(applyConditionals(html)), ctx.data)
   }
 
   /**
@@ -541,10 +572,16 @@ function createRenderer() {
       return ''
     }
     const env = { ctx, page: ctx.page }
-    return interpolate(md.renderInline(String(markdown), env), ctx.data)
+    return fill(md.renderInline(String(markdown), env), ctx.data)
   }
 
-  return { render, renderParts, renderInline, interpolate, extractHeading }
+  return {
+    render,
+    renderParts,
+    renderInline,
+    interpolate: fill,
+    extractHeading
+  }
 }
 
 module.exports = {

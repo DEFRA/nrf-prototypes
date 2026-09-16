@@ -4,6 +4,7 @@ type: checkboxes
 bodyFirst: true
 options:
   - label: I confirm that I have read and agree to the terms of this declaration
+    value: 'Yes'
 errors:
   required: Tick the box to confirm you agree to the declaration
 button: Continue

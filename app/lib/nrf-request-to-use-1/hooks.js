@@ -43,7 +43,7 @@ const FIXTURE_RING = [
 ]
 
 const FIXTURE_QUOTE = {
-  planningType: 'Full planning permission',
+  planningType: 'full',
   isHousing: 'Yes',
   residentialBuildingCount: 100,
   hasRedlineBoundaryFile: false,

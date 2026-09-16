@@ -3,9 +3,10 @@ const fs = require('fs')
 const path = require('path')
 const { test, expect } = require('@playwright/test')
 const turf = require('@turf/turf')
+const { copyOf } = require('./helpers/journey')
 
-const BASE = '/nrf-quote-7'
-const CHECK_URL = `${BASE}/api/boundary/check`
+const { base, answer, fillAnswer, submit } = copyOf('nrf-quote-7')
+const CHECK_URL = `${base}/api/boundary/check`
 
 // A small square inside the first nutrient catchment, as a closed ring
 function squareInsideFirstCatchment() {
@@ -50,7 +51,7 @@ test.describe('nrf-quote-7 production map', () => {
       }
     })
 
-    const response = await page.goto(`${BASE}/map?preview=1`)
+    const response = await page.goto(`${base}/map?preview=1`)
     expect(response?.status()).toBe(200)
 
     await expect(page.locator('#draw-boundary-map')).toBeAttached()
@@ -120,18 +121,18 @@ test.describe('nrf-quote-7 production map', () => {
       })
       const payload = await check.json()
 
-      await page.goto(`${BASE}/start`)
+      await page.goto(`${base}/start`)
       await page.getByRole('button', { name: 'Start now' }).click()
-      await page.getByLabel(/I want a quote/).check()
-      await page.getByRole('button', { name: 'Continue' }).click()
-      await page.getByLabel('Full planning permission').check()
-      await page.getByRole('button', { name: 'Continue' }).click()
-      await page.getByLabel('Yes', { exact: true }).check()
-      await page.getByRole('button', { name: 'Continue' }).click()
-      await page.getByLabel(/maximum number of units/).fill('100')
-      await page.getByRole('button', { name: 'Continue' }).click()
-      await page.getByLabel('Draw on a map').check()
-      await page.getByRole('button', { name: 'Continue' }).click()
+      await answer(page, 'what-would-you-like-to-do', 'quote')
+      await submit(page, 'what-would-you-like-to-do')
+      await answer(page, 'planning-type', 'full')
+      await submit(page, 'planning-type')
+      await answer(page, 'housing', 'Yes')
+      await submit(page, 'housing')
+      await fillAnswer(page, 'units', '100')
+      await submit(page, 'units')
+      await answer(page, 'redline-map', 'draw')
+      await submit(page, 'redline-map')
       await expect(page).toHaveURL(/\/map$/)
 
       await page.locator('#boundary-data').waitFor({ state: 'attached' })

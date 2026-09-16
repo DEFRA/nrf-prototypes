@@ -2,7 +2,9 @@
 type: radios
 options:
   - label: 'Yes'
+    value: 'Yes'
   - label: 'No'
+    value: 'No'
 errors:
   required: Select yes if the development is a variation (section 73 amendment) to a planning application
 button: Continue

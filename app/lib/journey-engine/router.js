@@ -26,10 +26,12 @@ const {
   loadJourney,
   resolveSummaryPath,
   isQuestionType,
+  answerLabels,
   SUMMARY_TARGET
 } = require('./loader')
 
-const renderer = createRenderer()
+// Copy shows a choice's label, not the short value the session stores
+const renderer = createRenderer({ labels: answerLabels })
 
 // Query and hidden-input names the engine uses for control flow. The kit's
 // autoStoreData copies every query param and body field into the session,
