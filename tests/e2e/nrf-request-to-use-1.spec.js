@@ -263,7 +263,7 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
     // questions and walks back through them
     await expect(page).toHaveURL(`${base}/defra-account-user-type`)
     await expect(page.locator('h1')).toHaveText(
-      'Who are you requesting to use the nature restoration levy for?'
+      'Who are you requesting to use the nature restoration fund for?'
     )
     await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
       'href',
@@ -335,7 +335,7 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
       `${base}/defra-account-individual?change=true&nav=check-your-answers`
     )
     await expect(page.locator('h1')).toHaveText(
-      "You'll need to create a Defra account as an individual"
+      "You'll need to create or sign in to a Defra account as an individual"
     )
     await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page).toHaveURL(`${base}/check-your-answers`)
