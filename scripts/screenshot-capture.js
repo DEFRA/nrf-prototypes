@@ -586,10 +586,10 @@ const PROTOTYPE_JOURNEYS = {
       { path: '/estimate-email-content', name: 'estimate-email-content', title: 'Email content' }
     ],
     formData: {
-      'planning-type': 'Full planning permission',
+      'planning-type': 'full',
       housing: 'Yes',
       'unit-count': '10',
-      'has-redline-boundary-file': 'Draw on a map',
+      'has-redline-boundary-file': 'draw',
       email: 'test@example.com',
       'confirm-delete-quote': 'No'
     }
