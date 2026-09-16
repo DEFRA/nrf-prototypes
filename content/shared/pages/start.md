@@ -61,10 +61,10 @@ Once your planning application is approved and you are ready to start developmen
 
 ## Get help with the nature restoration levy
 
-If you need help with the nature restoration levy, contact XXXX.
+If you need help with the nature restoration levy, contact Natural England.
 
-Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)\
-Telephone: 00000000000\
+Email: [enquiries@naturalengland.org.uk](mailto:enquiries@naturalengland.org.uk)\
+Telephone: 0300 060 3900\
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
 [Find out about call charges (opens in new tab)](https://www.gov.uk/call-charges)

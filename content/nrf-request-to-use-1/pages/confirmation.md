@@ -14,13 +14,13 @@ The commitment certificate will disapply the relevant environmental obligations 
 
 ## Get help with the nature restoration levy
 
-If you need help with the nature restoration levy, contact XXXX and give the NRL reference number.
+If you need help with the nature restoration levy, contact Natural England and give the NRL reference number.
 
-Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)\
-Telephone: 00000000000\
+Email: [enquiries@naturalengland.org.uk](mailto:enquiries@naturalengland.org.uk)\
+Telephone: 0300 060 3900\
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
-[Find out about call charges](https://www.gov.uk/call-charges)
+[Find out about call charges (opens in new tab)](https://www.gov.uk/call-charges)
 
 [What did you think of this service?](#) (takes 30 seconds)
 

@@ -87,11 +87,11 @@ In accordance with the requirements of the Environmental Delivery Plan(s) the lo
 
 ## Get help with the nature restoration levy
 
-If you need help with the nature restoration levy, contact XXXX.
+If you need help with the nature restoration levy, contact Natural England.
 
-Email: [xxxxx@defra.gov.uk](mailto:xxxxx@defra.gov.uk)\
-Telephone: 00000000000\
+Email: [enquiries@naturalengland.org.uk](mailto:enquiries@naturalengland.org.uk)\
+Telephone: 0300 060 3900\
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
-[Find out about call charges](https://www.gov.uk/call-charges)
+[Find out about call charges (opens in new tab)](https://www.gov.uk/call-charges)
 
