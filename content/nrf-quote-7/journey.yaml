@@ -161,7 +161,7 @@ pages:
     accept: ['.geojson', '.json', '.kml', '.zip']
     maxSize: 2MB
     changeable: true
-    handler: custom # plots the file (or a sample boundary), see hooks.js
+    handler: custom # plots the file (or a sample boundary); no file is fine, see hooks.js
     next: checking-file
 
   # Production polls the uploader here; the prototype shows the spinner for

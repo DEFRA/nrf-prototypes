@@ -14,7 +14,7 @@
  */
 
 const turf = require('@turf/turf')
-const { message } = require('../journey-engine/validation')
+const { message, validatePage } = require('../journey-engine/validation')
 const edpData = require('../map/edp-data')
 
 // ============================================================================
@@ -498,14 +498,30 @@ const map = {
   }
 }
 
+// "Upload a red line boundary file": choosing no file is not an error in
+// the prototype. An empty submit is plotted with the sample boundary under a
+// stand-in file name, so the checking and preview pages still follow.
+const SAMPLE_FILE_NAME = 'red-line-boundary.geojson'
+
 const uploadRedline = {
+  validate(ctx) {
+    if (!ctx.file && !ctx.req.multerError) {
+      return { ok: true, value: undefined }
+    }
+    return validatePage(ctx.page, ctx.body, ctx.file, ctx.req.multerError)
+  },
   process(ctx, file) {
     const { data } = ctx
-    data.redlineFile = file.originalname
+    data.redlineFile = file ? file.originalname : SAMPLE_FILE_NAME
     data.hasRedlineBoundaryFile = true
     data.mapReferrer = 'upload-redline'
     delete data.boundaryFailureReason
-    const { geometry, boundaryGeojson } = uploadedBoundary(file)
+    const { geometry, boundaryGeojson } = file
+      ? uploadedBoundary(file)
+      : {
+          geometry: SAMPLE_BOUNDARY,
+          boundaryGeojson: checkBoundary(SAMPLE_BOUNDARY)
+        }
     storeBoundary(data, geometry, boundaryGeojson)
   }
 }

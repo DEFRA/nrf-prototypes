@@ -214,6 +214,16 @@ test.describe('nrf-quote-7 happy path', () => {
       'Your uploaded red line boundary file'
     )
 
+    // Continuing without choosing a file is not an error: the preview shows
+    // the sample boundary
+    await page.goto(`${journey.basePath}/upload-redline`)
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page).toHaveURL(/file-preview$/, { timeout: 10000 })
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+      'Your uploaded red line boundary file'
+    )
+    await expect(page.locator('.govuk-error-summary')).toHaveCount(0)
+
     // A GeoJSON polygon outside every EDP still reaches the preview, with
     // the sample boundary standing in
     await page.goto(`${journey.basePath}/upload-redline`)
