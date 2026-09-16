@@ -57,11 +57,11 @@ homepage:
     - Retrieve a quote by NRL reference and email, review and amend the details on the quote journey's own pages (borrowed, not copied)
     - Levy increased and not enough capacity branches, driven by the number of units
     - Variation to an existing planning application, then whether the original application was committed to using the levy
-    - Who the Defra account is for (an individual, the organisation they work for, or a client they act for as an agent), with guidance tailored to that answer before signing in
+    - Who the user is requesting to use the levy for (themselves as an individual, the organisation they work for, or a client they act for as an agent), with Defra account guidance tailored to that answer before signing in
     - Mock GOV.UK One Login sign in (create or sign in, email, then password), shared with other journeys
     - Mock "Create your GOV.UK One Login" flow (email, security code, password, security codes by text message or authenticator app)
     - Mock Government Gateway sign in and "Create sign in details" flow (email, confirmation code, name, password, user ID)
-    - Agent, company and individual account types decided by who the Defra account is for (the sign-in email still decides it when that question was skipped)
+    - Agent, company and individual account types decided by who the user is requesting to use the levy for (the sign-in email still decides it when that question was skipped)
     - Mock Defra ID registration for sign-in emails containing "new" (new-individual@, new-company@, new@ for an agent), as an individual or a business; the registration answer decides the account type
     - Defra account registration emails for an individual, a business and an invited employee (new-employee@ gives their own details only), each with a Contact Support ID and a "Sign in to your account" link that carries on to the service
     - Developer details or your address, review, check your answers, confirmation
@@ -331,7 +331,7 @@ pages:
         goto: original-committed
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
-      - goto: defra-account
+      - goto: defra-account-user-type
 
   - id: original-committed
     field: original-committed
@@ -343,7 +343,7 @@ pages:
         goto: original-reference
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
-      - goto: defra-account
+      - goto: defra-account-user-type
 
   - id: original-reference
     field: original-reference
@@ -353,23 +353,21 @@ pages:
     next:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
-      - goto: defra-account
+      - goto: defra-account-user-type
 
-  # Before signing in, the user says who the Defra account is for and reads
-  # the guidance for that kind of user. The answer decides the account type
-  # once they sign in (see accountFor in hooks.js): an individual, a company
-  # for the organisation they work for, or an agent acting for a client. The
-  # sign-in email still decides whether they register a Defra account first.
-  - id: defra-account
+  # Before signing in, the user says who they are requesting to use the levy
+  # for and reads the Defra account guidance for that kind of user. The answer
+  # decides the account type once they sign in (see accountFor in hooks.js):
+  # an individual, a company for the organisation they work for, or an agent
+  # acting for a client. The sign-in email still decides whether they register
+  # a Defra account first.
+  - id: defra-account-user-type
     back:
       - when: { key: originalCommitted, equals: 'Yes' }
         goto: original-reference
       - when: { key: isVariation, equals: 'Yes' }
         goto: original-committed
       - goto: variation
-    next: defra-account-user-type
-
-  - id: defra-account-user-type
     field: defra-account-user-type
     sessionKey: defraUserType
     changeable: true

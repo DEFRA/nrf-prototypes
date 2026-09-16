@@ -53,12 +53,10 @@ async function expectEmailChrome(page) {
   await expect(page.locator('.govuk-grid-column-two-thirds')).toHaveCount(1)
 }
 
-// After the variation questions: who the Defra account is for, then the
-// guidance for that kind of user, then on to sign in
+// After the variation questions: who the user is requesting to use the levy
+// for, then the Defra account guidance for that kind of user, then on to
+// sign in
 async function chooseDefraUserType(page, option) {
-  await expect(page).toHaveURL(`${base}/defra-account`)
-  await expect(page.locator('h1')).toHaveText('You need a Defra account')
-  await page.getByRole('button', { name: 'Continue' }).click()
   await expect(page).toHaveURL(`${base}/defra-account-user-type`)
   await page.getByLabel(option).check()
   await page.getByRole('button', { name: 'Continue' }).click()
@@ -261,24 +259,27 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
     await page.getByLabel(/NRL reference/).fill('NRL-000001')
     await page.getByRole('button', { name: 'Continue' }).click()
 
-    // Who the Defra account is for comes after the variation questions and
-    // walks back through them
-    await expect(page).toHaveURL(`${base}/defra-account`)
+    // Who the levy is being requested for comes after the variation
+    // questions and walks back through them
+    await expect(page).toHaveURL(`${base}/defra-account-user-type`)
+    await expect(page.locator('h1')).toHaveText(
+      'Who are you requesting to use the nature restoration levy for?'
+    )
     await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
       'href',
       `${base}/original-reference`
     )
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await expect(page).toHaveURL(`${base}/defra-account-user-type`)
     // The answer is required
     await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page.locator('.govuk-error-summary')).toContainText(
-      'Select who the Defra account is for'
+      'Select who you are requesting to use the nature restoration levy for'
     )
     await page.getByLabel(/client you act for/).check()
     await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page).toHaveURL(`${base}/defra-account-agent`)
-    await expect(page.locator('h1')).toContainText('agent or third party')
+    await expect(page.locator('h1')).toContainText(
+      'Your client will need to create a Defra account'
+    )
     await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
       'href',
       `${base}/defra-account-user-type`
@@ -318,10 +319,12 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
       'A client you act for as an agent or third party'
     )
 
-    // Changing who the account is for goes through the guidance and back,
-    // and moves the signed-in account to the new type
+    // Changing who the levy is for goes through the guidance and back, and
+    // moves the signed-in account to the new type
     await page
-      .getByRole('link', { name: /Change.*who the Defra account is for/ })
+      .getByRole('link', {
+        name: /Change.*who you are requesting to use the levy for/
+      })
       .click()
     await expect(page).toHaveURL(
       `${base}/defra-account-user-type?change=true&nav=check-your-answers`
@@ -330,6 +333,9 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
     await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page).toHaveURL(
       `${base}/defra-account-individual?change=true&nav=check-your-answers`
+    )
+    await expect(page.locator('h1')).toHaveText(
+      "You'll need to create a Defra account as an individual"
     )
     await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page).toHaveURL(`${base}/check-your-answers`)
@@ -372,7 +378,7 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
 test.describe('nrf-request-to-use-1 Defra ID registration', () => {
   // Sign-in emails containing "new" register a Defra account first; the
   // business or individual answer then decides the account type, with who
-  // the Defra account is for deciding between a company and an agent
+  // the levy is being requested for deciding between a company and an agent
   async function reachSignIn(page, userType = /client you act for/) {
     await retrieveQuote(page)
     await page.getByRole('button', { name: 'Continue' }).click()
@@ -642,7 +648,7 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
     await expect(page).toHaveURL(`${base}/your-address`)
   })
 
-  test('who the Defra account is for decides the account type', async ({
+  test('who the levy is requested for decides the account type', async ({
     page
   }) => {
     // An individual's email, but the account is for the organisation they
@@ -686,10 +692,8 @@ test.describe('nrf-request-to-use-1 with errors switched off', () => {
     await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page).toHaveURL(`${base}/original-reference`)
     await page.getByRole('button', { name: 'Continue' }).click()
-    await expect(page).toHaveURL(`${base}/defra-account`)
-    await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page).toHaveURL(`${base}/defra-account-user-type`)
-    // The sample answer says the account is for a client
+    // The sample answer says the levy is for a client
     await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page).toHaveURL(`${base}/defra-account-agent`)
     await page.getByRole('button', { name: 'Continue' }).click()
@@ -1065,8 +1069,8 @@ test.describe('nrf-request-to-use-1 creating an account', () => {
 
   test('the identity provider pages are shared from their own folders', () => {
     for (const page of journey.pages) {
-      // The "who is the Defra account for" pages before sign in are the
-      // journey's own, not the mock Defra ID
+      // The "who are you requesting to use the levy for" pages before sign
+      // in are the journey's own, not the mock Defra ID
       if (page.id.startsWith('defra-account')) {
         expect(page.shared).toBeFalsy()
         continue

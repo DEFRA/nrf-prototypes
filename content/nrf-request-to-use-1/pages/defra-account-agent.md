@@ -1,12 +1,14 @@
 ---
 type: content
-title: Using a Defra account as an agent or third party
+title: Your client will need to create a Defra account and invite you as an agent or third party
 actions:
   - text: Continue
     kind: submit
 ---
 
-# Using a Defra account as an agent or third party
+# Your client will need to create a Defra account and invite you as an agent or third party
+
+You need a Defra account to request to use the nature restoration levy and to view your commitment certificate. A Defra account lets you register with a range of online services from Defra and related organisations. You sign in to it with GOV.UK One Login or Government Gateway.
 
 You cannot create a Defra account as an agent or third party working on behalf of someone else.
 

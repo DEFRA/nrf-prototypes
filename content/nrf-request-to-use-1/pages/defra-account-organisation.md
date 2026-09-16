@@ -1,12 +1,14 @@
 ---
 type: content
-title: Creating a Defra account for a business or organisation
+title: You'll need to create a Defra account for your business or organisation
 actions:
   - text: Continue
     kind: submit
 ---
 
-# Creating a Defra account for a business or organisation
+# You'll need to create a Defra account for your business or organisation
+
+You need a Defra account to request to use the nature restoration levy and to view your commitment certificate. A Defra account lets you register with a range of online services from Defra and related organisations. You sign in to it with GOV.UK One Login or Government Gateway.
 
 If you are creating a Defra account for the organisation you work for, you need to create an organisation account.
 

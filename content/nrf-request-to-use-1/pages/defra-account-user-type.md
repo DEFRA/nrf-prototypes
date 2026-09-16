@@ -9,8 +9,8 @@ options:
   - label: A client you act for as an agent or third party
     hint: You are requesting to use the levy on behalf of someone else
 errors:
-  required: Select who the Defra account is for
+  required: Select who you are requesting to use the nature restoration levy for
 button: Continue
 ---
 
-# Who is the Defra account for?
+# Who are you requesting to use the nature restoration levy for?

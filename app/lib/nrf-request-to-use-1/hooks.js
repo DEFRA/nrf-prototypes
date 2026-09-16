@@ -112,7 +112,7 @@ function emailLocalPart(email) {
     .split('@')[0]
 }
 
-// The account type for each answer to "Who is the Defra account for?"
+// The account type for each answer to "Who are you requesting to use the nature restoration levy for?"
 const USER_TYPE_ACCOUNTS = {
   individual: 'individual',
   organisation: 'company',
@@ -130,7 +130,7 @@ function accountTypeFromEmail(email) {
 
 /**
  * Which mock account an email address (or a Government Gateway user ID,
- * which has no @) signs in to. The answer to "Who is the Defra account for?"
+ * which has no @) signs in to. The answer to "Who are you requesting to use the levy for?"
  * decides the account type; the email decides it only when that question
  * was skipped. An email containing "new" has no Defra account yet, so the
  * journey registers one first.
