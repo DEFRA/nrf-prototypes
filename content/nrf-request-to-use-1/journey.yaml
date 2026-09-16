@@ -58,6 +58,7 @@ homepage:
     - Levy increased and not enough capacity branches, driven by the number of units
     - Variation to an existing planning application, then whether the original application was committed to using the levy
     - Who the user is requesting to use the levy for (themselves as an individual, the organisation they work for, or a client they act for as an agent), with Defra account guidance tailored to that answer before signing in
+    - Agents then see the invitation email their client's Defra account sends them, addressed to the email they gave, before signing in
     - Mock GOV.UK One Login sign in (create or sign in, email, then password), shared with other journeys
     - Mock "Create your GOV.UK One Login" flow (email, security code, password, security codes by text message or authenticator app)
     - Mock Government Gateway sign in and "Create sign in details" flow (email, confirmation code, name, password, user ID)
@@ -389,13 +390,21 @@ pages:
         goto: $summary
       - goto: sign-in-method
 
+  # An agent then sees the invitation email their client's Defra account
+  # sends them (addressed to the email they gave to retrieve the quote, from
+  # a made-up client). Its "Start your secure registration process" link
+  # (`./$next`) carries on to signing in.
   - id: defra-account-agent
     guard: { key: defraUserType, equals: agent, redirect: defra-account-user-type }
     back: defra-account-user-type
     next:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
-      - goto: sign-in-method
+      - goto: defra-account-agent-email
+
+  - id: defra-account-agent-email
+    guard: { key: defraUserType, equals: agent, redirect: defra-account-user-type }
+    next: sign-in-method
 
   - id: sign-in-method
     back:
@@ -403,7 +412,7 @@ pages:
         goto: defra-account-individual
       - when: { key: defraUserType, equals: organisation }
         goto: defra-account-organisation
-      - goto: defra-account-agent
+      - goto: defra-account-agent-email
     field: sign-in-method
     sessionKey: signInMethod
     handler: custom # registers the sign-out route, see hooks.js

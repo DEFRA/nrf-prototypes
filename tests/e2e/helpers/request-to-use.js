@@ -66,6 +66,12 @@ async function chooseDefraUserType(page, userType) {
   await submit(page, 'defra-account-user-type')
   await expect(page).toHaveURL(`${base}/defra-account-${userType}`)
   await submit(page, `defra-account-${userType}`)
+  if (userType === 'agent') {
+    // Agents read the invitation email from their client's Defra account
+    // and follow its link to sign in
+    await expect(page).toHaveURL(`${base}/defra-account-agent-email`)
+    await followLink(page, 'defra-account-agent-email', './$next')
+  }
 }
 
 async function signIn(page, email) {

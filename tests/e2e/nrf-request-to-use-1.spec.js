@@ -275,6 +275,24 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
     )
     await submit(page, 'defra-account-agent')
 
+    // The invitation email from the client's Defra account, addressed to
+    // the email given to retrieve the quote, then its link carries on to
+    // signing in
+    await expect(page).toHaveURL(`${base}/defra-account-agent-email`)
+    await expectHeading(page, 'defra-account-agent-email')
+    await expectBodyCopy(
+      page,
+      'defra-account-agent-email',
+      'using the email address jane@example.com',
+      { retrievalEmail: 'jane@example.com' }
+    )
+    await followLink(page, 'defra-account-agent-email', './$next')
+    await expect(page).toHaveURL(`${base}/sign-in-method`)
+    await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
+      'href',
+      `${base}/defra-account-agent-email`
+    )
+
     // The account type follows the answer, not the email
     await signIn(page, 'company@example.com')
     await expect(page).toHaveURL(`${base}/developer-details`)
@@ -730,6 +748,8 @@ test.describe('nrf-request-to-use-1 with errors switched off', () => {
     await submit(page, 'defra-account-user-type')
     await expect(page).toHaveURL(`${base}/defra-account-agent`)
     await submit(page, 'defra-account-agent')
+    await expect(page).toHaveURL(`${base}/defra-account-agent-email`)
+    await followLink(page, 'defra-account-agent-email', './$next')
     await expect(page).toHaveURL(`${base}/sign-in-method`)
     await submit(page, 'sign-in-method')
     await expect(page).toHaveURL(`${base}/one-login-start`)
