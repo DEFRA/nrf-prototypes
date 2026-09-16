@@ -10,7 +10,7 @@ actions:
 
 You need a Defra account to request to use the nature restoration levy and to view your commitment certificate. A Defra account lets you register with a range of online services from Defra and related organisations. You sign in to it with GOV.UK One Login or Government Gateway.
 
-You cannot create a Defra account as an agent or third party working on behalf of someone else.
+You cannot create a Defra account as an agent or third party working on behalf of someone else. You need to get the organisation you’re representing to create the account, if they do not already have one, and invite you to it as an intermediary. 
 
 :::warning
 The Defra account must belong to the organisation you are representing. If you create the account yourself, the commitment certificate will be registered to you rather than your client and will not be valid.

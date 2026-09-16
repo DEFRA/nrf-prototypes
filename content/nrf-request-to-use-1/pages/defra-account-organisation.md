@@ -1,19 +1,17 @@
 ---
 type: content
-title: You'll need to create a Defra account for your business or organisation
+title: You'll need to create or join a Defra account for your business or organisation
 actions:
   - text: Continue
     kind: submit
 ---
 
-# You'll need to create a Defra account for your business or organisation
+# You'll need to create or join a Defra account for your business or organisation
 
 You need a Defra account to request to use the nature restoration levy and to view your commitment certificate. A Defra account lets you register with a range of online services from Defra and related organisations. You sign in to it with GOV.UK One Login or Government Gateway.
 
-If you are creating a Defra account for the organisation you work for, you need to create an organisation account.
-
 :::warning
-If you create the account as an individual it will be set up incorrectly, as it will be registered to you personally rather than to the organisation you work for. Your commitment certificate would then not be valid.
+If you are creating a Defra account for the organisation you work for, you need to create an organisation account.
 :::
 
 ## If your organisation already has a Defra account
