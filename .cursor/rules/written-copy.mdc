@@ -1,0 +1,25 @@
+---
+description: Written copy (content/**/*.md, prompts/**/*.md) is owned by the content designer – never change it without explicit instruction
+globs: "content/**/*.md,prompts/**/*.md"
+alwaysApply: true
+---
+
+# Written copy is owned by the content designer
+
+The markdown files under `content/` (page copy, shared pages, mock identity-provider pages) and `prompts/` (journey specifications) are the content designer's words. They are the source of truth for what users read on screen and are reviewed word by word.
+
+## The rule
+
+- **Do not edit any `.md` file under `content/` or `prompts/` unless the user has explicitly asked for that specific change in the current conversation.** "Make the flow work", "fix the tests", "tidy this up" and similar are not permission to reword copy.
+- This covers everything in those files: headings, body text, hints, option labels, error messages, button text, links, punctuation, line breaks, capitalisation and spelling. A "harmless" wording tweak is still a copy change.
+- If a code, routing or test change seems to need a copy change, **stop and propose the exact before/after wording** and wait for a yes. Prefer changing the code or the test to match the copy, not the other way round.
+- Adding a brand-new page file is allowed when the user asked for that page, but write it from copy they supplied or from the journey prompt, never from your own invention.
+- `journey.yaml` (flow, branching, remembered fields) is not copy and is not covered by this rule. Nunjucks views under `app/views/` are not covered either, but apply the same restraint to any user-facing wording inside them.
+
+## Enforcement
+
+A Claude Code hook (`.claude/hooks/guard-written-copy.sh`, wired in `.claude/settings.json`) turns every Edit, Write or mutating shell command that targets one of these files into a permission prompt, even in accept-edits or auto mode. When the prompt appears, the user should approve only if they asked for the change.
+
+## Why
+
+A code change once altered `content/shared/pages/start.md` as a side effect and the content designer had to catch it in review. Copy changes must be deliberate and visible, never incidental.

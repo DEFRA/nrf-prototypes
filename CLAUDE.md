@@ -8,7 +8,13 @@ A **GOV.UK Prototype Kit 13** app (Node.js/Express, Nunjucks, govuk-frontend 5.1
 
 ## Read the Cursor rules first
 
-`.cursor/rules/*.mdc` are the authoritative, always-on project conventions (there is a `read-rules-first` rule). Read the relevant ones before touching `app/`. The most important are `project.mdc`, `core-development.mdc`, `journeys-and-routes.mdc`, `views-and-templates.mdc`, `validation-and-errors.mdc`, and `mapping-components.mdc`. The detail below summarises them; defer to the rule files on conflict.
+`.cursor/rules/*.mdc` are the authoritative, always-on project conventions (there is a `read-rules-first` rule). Read the relevant ones before touching `app/`. The most important are `project.mdc`, `core-development.mdc`, `journeys-and-routes.mdc`, `views-and-templates.mdc`, `validation-and-errors.mdc`, `mapping-components.mdc` and `written-copy.mdc`. The detail below summarises them; defer to the rule files on conflict.
+
+## Written copy is off limits without explicit instruction
+
+**Never edit a `.md` file under `content/` or `prompts/` unless the user has explicitly asked for that specific copy change in the current conversation.** These files are the content designer's words (page copy, shared pages such as `content/shared/pages/start.md`, mock sign-in pages, journey specifications). A code, routing or test task is not permission to reword, reformat or "tidy" them; if a change seems to need it, propose the exact before/after wording and wait. `journey.yaml` is flow logic, not copy, and is not covered. See `.cursor/rules/written-copy.mdc`.
+
+This is enforced: `.claude/settings.json` runs `.claude/hooks/guard-written-copy.sh` before every Edit/Write/Bash call and turns any write to those files into a permission prompt, even in accept-edits or auto mode.
 
 ## Commands
 
