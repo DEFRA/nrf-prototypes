@@ -29,7 +29,7 @@ const {
 // Where the prototype is published, for the "copy link" buttons on the wall
 const PUBLIC_BASE_URL = (
   process.env.PUBLIC_BASE_URL ||
-  'https://nrf-prototypes.ext-test.cdp-int.defra.cloud'
+  'https://nrf-prototypes.ext-test.cdp.defra.gov.uk'
 ).replace(/\/$/, '')
 
 function pageView(page, journey, via) {
