@@ -334,6 +334,7 @@ function buildPage(entry, journey, problems) {
       : frontmatter.remember !== false
 
   const fields = buildFields(frontmatter.fields, type, where, problems)
+  const research = buildResearchLinks(entry.research, journey, where, problems)
   let sessionKey =
     entry.sessionKey ||
     frontmatter.sessionKey ||
@@ -416,6 +417,7 @@ function buildPage(entry, journey, problems) {
     min: entry.min !== undefined ? entry.min : frontmatter.min,
     max: entry.max !== undefined ? entry.max : frontmatter.max,
     preview: entry.preview || frontmatter.preview || {},
+    research,
     content: {
       title: frontmatter.title || heading || bodyHeading || id,
       heading: heading || bodyHeading || frontmatter.title || id,
@@ -446,6 +448,43 @@ function buildPage(entry, journey, problems) {
       body: bodyMarkdown
     }
   }
+}
+
+/**
+ * `research:` on a page lists user research aids: links the footer shows
+ * in their own "User research" section, under the crown, that open in a
+ * new tab. They are facilitator shortcuts (the quote email a participant
+ * would have received), not part of the flow, so the tools page ignores
+ * them. An `href` is a page of this journey (`estimate-email-content`,
+ * with any query string), a path into another journey (`/nrf-quote-7/...`)
+ * or a full URL.
+ *
+ *   research:
+ *     - text: Quote email
+ *       href: /nrf-quote-7/estimate-email-content?preview=1
+ */
+function buildResearchLinks(entries, journey, where, problems) {
+  if (entries === undefined) {
+    return []
+  }
+  if (!Array.isArray(entries)) {
+    problems.push(`${where}.research: expected a list of { text, href }`)
+    return []
+  }
+  return entries.flatMap((link, i) => {
+    if (!link || typeof link !== 'object' || !link.text || !link.href) {
+      problems.push(`${where}.research[${i}]: needs 'text' and 'href'`)
+      return []
+    }
+    const href = String(link.href)
+    const absolute = href.startsWith('/') || /^https?:\/\//.test(href)
+    return [
+      {
+        text: String(link.text),
+        href: absolute ? href : `${journey.basePath}/${href}`
+      }
+    ]
+  })
 }
 
 function validateTargets(journey, problems) {

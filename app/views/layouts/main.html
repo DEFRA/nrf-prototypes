@@ -17,7 +17,35 @@ https://prototype-kit.service.gov.uk/docs/how-to-use-layouts
     href: (currentPath or "/") + ("?errors=true" if errorsOff else "?errors=false"),
     text: "Turn errors on" if errorsOff else "Turn errors off"
   } %}
+  {#
+    User research aids: a page's `research:` links in journey.yaml (see
+    app/lib/journey-engine/loader.js) form a "User research" section at the
+    top of the footer, under the crown, styled apart from the service's
+    own links (app/assets/sass/_research-links.scss). Every link opens in a
+    new tab so the participant keeps their place.
+
+    `?research=false` hides the section for the rest of the session (the kit
+    keeps the flag in session data as `data.research`); `?research=true`
+    shows it again. Preview renders (the screen wall, screenshots and the
+    JPG export) never show it.
+  #}
+  {% set researchHidden = preview or (data and (data.research == 'false' or data.research == false)) %}
+  {% set researchLinks = page.research if page and page.research and not researchHidden else [] %}
+  {% set researchNavigation = [] %}
+  {% if researchLinks | length %}
+    {% set researchItems = [] %}
+    {% for link in researchLinks %}
+      {% set researchItems = (researchItems.push({
+        href: link.href,
+        text: link.text + " (opens in new tab)",
+        attributes: { target: "_blank", rel: "noopener" }
+      }), researchItems) %}
+    {% endfor %}
+    {% set researchNavigation = [{ title: "User research", items: researchItems }] %}
+  {% endif %}
   {{ govukFooter({
+    classes: "app-footer--research" if researchLinks | length,
+    navigation: researchNavigation,
     meta: {
       items: (footerItems or []).concat([errorsToggle]),
       visuallyHiddenTitle: "Footer links"

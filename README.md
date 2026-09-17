@@ -216,6 +216,10 @@ The answer to "Are you registering as a business or organisation?" wins over the
 
 Use the "Turn errors off" link in the footer, next to Clear data, or add `?errors=false` to any page of a content-driven journey. Validation is then switched off for the rest of the browser session: every Continue works even with nothing entered or selected. Anything the participant does type is kept; a blank answer is filled in from the journey's sample answers, so later pages still show sensible details (the sample sign-in email is an agent's, so a blank email signs in as an agent). "Turn errors on" in the footer (or `?errors=true`) turns validation back on; Clear data resets it too.
 
+### Research aids in the footer
+
+A page can list shortcuts for the facilitator under `research:` in its `journey.yaml` entry (text and href, one per link). They appear in a "User research" section at the top of the footer, under the crown, and open in a new tab. On "What would you like to do?" this is the quote email, filled with the sample quote, so a participant can see the NRL reference they will be asked for. Add `?research=false` to any page to hide the section for the rest of the browser session (`?research=true` shows it again; Clear data resets it too). Preview renders, the screen wall and screenshots never show it.
+
 ### Seeing any screen without walking the journey
 
 Add `?preview=1` to any page of a content-driven journey to render it with sample answers (`&error=1` shows its error state), or open `/tools/journeys/<journey id>` for the flow diagram and every screen side by side. The sample answers live under `preview` in `content/<journey id>/journey.yaml`; see `content/README.md` for how the journeys are written.

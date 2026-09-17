@@ -448,7 +448,9 @@ function buildModel(ctx, extra = {}) {
       field: page.field,
       sessionKey: page.sessionKey,
       changeable: page.changeable,
-      accept: page.accept
+      accept: page.accept,
+      // User research aids shown in the footer, see loader.js
+      research: page.research || []
     },
     data: ctx.data,
     content: renderContent(page, ctx),

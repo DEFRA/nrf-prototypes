@@ -89,6 +89,12 @@ pages:
 
   - id: what-would-you-like-to-do
     shared: true
+    # User research aid in the footer: the quote email, filled with the
+    # sample quote, so a participant choosing "request to use" can see the
+    # NRL reference they will be asked for
+    research:
+      - text: Quote email
+        href: estimate-email-content?preview=1
     next:
       - when: { key: journeyType, equals: request-to-use }
         goto: /nrf-request-to-use-1/have-nrl-reference

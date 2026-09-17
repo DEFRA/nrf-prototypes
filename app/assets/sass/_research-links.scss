@@ -1,0 +1,40 @@
+// "User research" section at the top of the footer (layouts/main.html).
+// Facilitator shortcuts a page lists under `research:` in its journey.yaml.
+// Styled as prototype chrome, like the Prototype tag in the header, so
+// nobody mistakes the links for part of the service.
+
+.app-footer--research {
+  // The navigation row's negative gutters would push the panel past the
+  // crown: keep it flush with the rest of the footer
+  .govuk-footer__navigation {
+    margin: 0 0 govuk-spacing(4);
+  }
+
+  .govuk-footer__section {
+    padding: govuk-spacing(3) govuk-spacing(3) govuk-spacing(1);
+    border: 1px dashed govuk-colour('dark-grey');
+    border-left: govuk-spacing(1) solid govuk-colour('purple');
+    background: govuk-colour('white');
+  }
+
+  // The section heading wears the tag style: a purple label, not a heading
+  .govuk-footer__heading {
+    @include govuk-font($size: 16, $weight: bold);
+    display: inline-block;
+    margin-bottom: govuk-spacing(2);
+    padding: govuk-spacing(1) govuk-spacing(2);
+    border-bottom: 0;
+    color: govuk-colour('purple');
+    background: govuk-tint(govuk-colour('purple'), 85%);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .govuk-footer__list {
+    margin-bottom: 0;
+  }
+
+  .govuk-footer__list-item {
+    @include govuk-font($size: 16);
+  }
+}
