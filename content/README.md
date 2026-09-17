@@ -343,6 +343,25 @@ For this to work the borrowed page needs `changeable: true` and a `$navFromSumma
 - New kinds of block or component.
 - The map page's behaviour (`app/lib/nrf-quote-7/hooks.js`; the request-to-use journey borrows that page rather than having its own), the mock quote store, sign-in accounts and Defra ID registration (`app/lib/nrf-request-to-use-1/hooks.js`; a sign-in email or Government Gateway user ID containing `new` registers a Defra account first, `company` or `individual` picks that account type, anything else is an agent). Changes to hooks, or to `basePath` in `journey.yaml`, need `npm run dev` restarting.
 
+## Handing pages to development
+
+There is no "ready for dev" button. When a page's design is ready to build, put the date on its entry in `journey.yaml`:
+
+```yaml
+- id: upload-redline
+  handoff: 2026-09-17
+```
+
+That one line is the handoff. Anyone can add it, in an editor or on GitHub, and it is fine to hand over one page while the rest of the journey is still moving. A shared page (the start page, "What would you like to do?") is stamped on the journey handing it over.
+
+What happens next:
+
+- The journey's tools page (`/tools/journeys/<id>`) lists the handed-over pages at the top of the Screens tab and tags each screen **Ready for dev**. The homepage card shows how many pages are ready.
+- When the page's copy is edited after the handoff, the tag turns yellow, **Changed since handoff**, on its own: the prototype asks git whether the markdown moved after the commit that added the date. Put today's date on the page to hand the change over. Changes to the page's rules in `journey.yaml` (`next`, `guard`, `set`) are not spotted this way, so tell the developer about those.
+- When the date lands on `main`, the Publish workflow tags that commit `handoff/<journey>/<date>`. QA and BAs can link to the copy as handed over on GitHub (the "Copy at handoff" link on the tools page), and developers can diff two handoffs: `git diff handoff/nrf-quote-7/2026-09-01 handoff/nrf-quote-7/2026-09-17 -- content/`.
+
+Developers looking for what to build can search the content for `handoff:`.
+
 ## Adding a new journey
 
 1. Create `content/<id>/journey.yaml` and `content/<id>/pages/` with at least a start page. Copy `content/nrf-request-to-use-1/` for the smallest working example.
@@ -381,7 +400,7 @@ pages:
 
 Condition operators: `equals`, `notEquals`, `in`, `notIn`, `gt`, `gte`, `lt`, `lte`, `between`, `truthy`, `falsy`, `isSet`. Combine with `all:`, `any:`, `not:`. Engine values: `$navFromSummary`, `$isChange`, `$preview`.
 
-Other page keys: `shared: true` (copy comes from `content/shared/pages/<id>.md`) or `shared: <folder>` (from `content/shared/<folder>/<id>.md`, see "Pages shared by more than one journey"), `back` (page id, absolute path, or a rule list), `guard` (condition plus `redirect`), `store` (map an option's `value` to what the session stores, for booleans and the like; prefer a `value` on the option in the page file), `set` (write values on submit; also allowed on a rule), `clears` (list of keys, or `$session`), `handler: custom` (page has hooks), `template` (a hand-written view for `type: custom`), `layout` (`default`, `one-login`, `government-gateway`, `defra-id`, `defra-account`, `document` or `email`), `remember: false` (never write the answer to the session; pair it with a field name starting `_` so the kit's own auto-store skips it too, as the password page does), `accept` and `maxSize` for uploads, `min` and `max` for numbers.
+Other page keys: `handoff: YYYY-MM-DD` (the page's design was handed to development on that date; see "Handing pages to development"), `shared: true` (copy comes from `content/shared/pages/<id>.md`) or `shared: <folder>` (from `content/shared/<folder>/<id>.md`, see "Pages shared by more than one journey"), `back` (page id, absolute path, or a rule list), `guard` (condition plus `redirect`), `store` (map an option's `value` to what the session stores, for booleans and the like; prefer a `value` on the option in the page file), `set` (write values on submit; also allowed on a rule), `clears` (list of keys, or `$session`), `handler: custom` (page has hooks), `template` (a hand-written view for `type: custom`), `layout` (`default`, `one-login`, `government-gateway`, `defra-id`, `defra-account`, `document` or `email`), `remember: false` (never write the answer to the session; pair it with a field name starting `_` so the kit's own auto-store skips it too, as the password page does), `accept` and `maxSize` for uploads, `min` and `max` for numbers.
 
 A `next` rule or an action whose `goto` leaves for another journey can add `return: <page id>` so that journey's page comes back here (see "Borrowing a page from another journey"). `$summary` is allowed wherever a `goto` is: `next`, `back` and `actions`.
 

@@ -22,6 +22,30 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v4
+        with:
+          # Full history: the handoff steps below ask git when each
+          # handed-over page last changed
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Tags each new `handoff: <date>` in content/*/journey.yaml as
+      # handoff/<journey>/<date>, so the copy as handed over stays linkable
+      - name: Tag design handoffs
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: node scripts/handoff-tags.js --push
+
+      # The image has no .git folder, so answer "has this page changed since
+      # it was handed over?" now and ship the answer in app/data/
+      - name: Build handoff history for the deployed prototype
+        run: npm run handoff:manifest
 
       - name: Build and Publish
         uses: DEFRA/cdp-build-action/build@main

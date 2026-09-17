@@ -24,6 +24,7 @@ const {
   getJourneyIds,
   CONTENT_DIR
 } = require('../../lib/journey-engine/loader')
+const { journeyHandoffs } = require('../../lib/journey-engine/history')
 
 const REGISTRY_FILE = path.join(__dirname, 'journeys.yaml')
 const STATUSES = ['tested', 'in-progress', 'spike']
@@ -137,6 +138,9 @@ function normaliseEntry(raw, source, extra = {}) {
     entryUrl: `${basePath}${entryPath}` || '/',
     hasStartPage: entryPath === '/start',
     toolsUrl: extra.toolsUrl,
+    // Pages marked `handoff:` in journey.yaml (content journeys only):
+    // how many, and how many have changed since. See journey-engine/history.js
+    handoff: extra.handoff || null,
     mount: raw.mount !== false,
     error: extra.error
   }
@@ -155,13 +159,20 @@ function contentJourney(id) {
   try {
     const journey = loadJourney(id)
     const homepage = journey.homepage || {}
+    const handoffs = journeyHandoffs(journey)
     return normaliseEntry(
       { ...homepage, id, name: homepage.name || journey.name },
       'content',
       {
         basePath: journey.basePath,
         entryPath: `/${journey.start}`,
-        toolsUrl: `/tools/journeys/${id}`
+        toolsUrl: `/tools/journeys/${id}`,
+        handoff: handoffs.length
+          ? {
+              count: handoffs.length,
+              changed: handoffs.filter((page) => page.changed).length
+            }
+          : null
       }
     )
   } catch (error) {

@@ -39,6 +39,7 @@ const {
   VIEWPORTS
 } = require('./screenshots')
 const { createRenderer, interpolate } = require('./markdown')
+const { pageHandoff, journeyHandoffs } = require('./history')
 const { evaluate, firstMatch, describeCondition } = require('./expressions')
 
 module.exports = {
@@ -69,6 +70,8 @@ module.exports = {
   toFlowGraph,
   createRenderer,
   interpolate,
+  pageHandoff,
+  journeyHandoffs,
   evaluate,
   firstMatch,
   describeCondition

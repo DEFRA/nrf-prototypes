@@ -21,7 +21,9 @@ const {
   captureScreens,
   captureScreen,
   canExportScreens,
-  VIEWPORTS
+  VIEWPORTS,
+  pageHandoff,
+  journeyHandoffs
 } = require('../lib/journey-engine')
 
 // Where the prototype is published, for the "copy link" buttons on the wall
@@ -42,7 +44,9 @@ function pageView(page, journey, via) {
     isExit: !(page.next && page.next.length),
     variants: previewVariants(page),
     shared: page.shared,
-    contentFile: page.contentFile
+    contentFile: page.contentFile,
+    // `handoff: <date>` in journey.yaml: ready for dev, or changed since
+    handoff: pageHandoff(journey, page)
   }
 }
 
@@ -81,7 +85,7 @@ function levelViews(levels, journey) {
       const page = journey.byId.get(entry.id)
       return page.type === 'group'
         ? groupView(page, entry.via)
-        : pageView(page, journey, entry.via)
+        : pageView(page, journey.source || journey, entry.via)
     })
   }))
 }
@@ -128,7 +132,9 @@ router.get('/tools/journeys/:journey', (req, res) => {
   // The main journey with each group (sign in, account creation) folded
   // into one card and one node, then a section per group
   const sections = journeySections(journey)
-  const collapsed = { byId: new Map() }
+  // `source` is the real journey, for the handoff lookup (git blames its
+  // journey.yaml); `byId` is the collapsed view of its pages
+  const collapsed = { byId: new Map(), source: journey }
   for (const row of sections.main.levels) {
     for (const entry of row.pages) {
       if (!entry.external && !collapsed.byId.has(entry.id)) {
@@ -177,6 +183,8 @@ router.get('/tools/journeys/:journey', (req, res) => {
     publicBaseUrl: PUBLIC_BASE_URL,
     // Playwright is a dev dependency, so the export is local-only
     canExportScreens: canExportScreens(),
+    // Pages handed to development, newest first
+    handoffs: journeyHandoffs(journey),
     levels,
     groups,
     edges: getEdges(journey),

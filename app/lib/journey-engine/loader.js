@@ -12,6 +12,7 @@ const path = require('path')
 const yaml = require('js-yaml')
 const { validateCondition } = require('./expressions')
 const { extractHeading, parseIfParams } = require('./markdown')
+const { isHandoffDate } = require('./history')
 
 const CONTENT_DIR = path.join(__dirname, '../../../content')
 // Pages marked `shared: true` in journey.yaml read their copy from
@@ -297,6 +298,20 @@ function buildPage(entry, journey, problems) {
     )
   }
 
+  // `handoff: YYYY-MM-DD` marks the page as handed to development on that
+  // date; history.js works out whether the copy moved since
+  const handoff =
+    entry.handoff === undefined || entry.handoff === null
+      ? null
+      : entry.handoff instanceof Date
+        ? entry.handoff.toISOString().slice(0, 10)
+        : String(entry.handoff)
+  if (handoff !== null && !isHandoffDate(handoff)) {
+    problems.push(
+      `${where}: handoff '${handoff}' should be a date written YYYY-MM-DD`
+    )
+  }
+
   const field = entry.field || frontmatter.field
   if (isQuestionType(type) && type !== 'form' && !field) {
     problems.push(`${where}: '${type}' pages need a 'field'`)
@@ -380,6 +395,7 @@ function buildPage(entry, journey, problems) {
     // `group: <name>` puts any other page in one
     group: entry.group || (typeof shared === 'string' ? shared : undefined),
     contentFile,
+    handoff,
     serviceName: entry.serviceName || frontmatter.serviceName,
     type,
     layout,

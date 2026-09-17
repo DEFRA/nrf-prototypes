@@ -24,3 +24,7 @@ playwright/.cache/
 
 # JPG exports from npm run screenshot:journey
 screenshots/
+
+# Built by scripts/content-history.js in CI so the deployed prototype
+# can tell which handed-over pages changed without a .git folder
+app/data/content-history.json

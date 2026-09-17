@@ -56,6 +56,16 @@
   .wall-card__external { font-family: "GDS Transport", arial, sans-serif; font-size: 16px; line-height: 1.4; color: #505a5f; text-align: center; overflow-wrap: anywhere; }
   .wall-card__external code { display: block; margin-top: 10px; font-size: 14px; color: #0b0c0c; }
   .wall-card--custom { --wall-height: 900px; }
+  .wall-card__handoff { display: inline-block; margin-left: 6px; vertical-align: middle; }
+  .wall-card__handoff .govuk-tag { font-size: 12px; line-height: 1; padding: 4px 6px 3px; margin: 0; white-space: nowrap; }
+  .wall-card--handoff .wall-card__frame { border-top: 4px solid #28a197; }
+  .wall-card--handoff-changed .wall-card__frame { border-top: 4px solid #ffdd00; }
+  .handoffs { margin-bottom: 20px; }
+  .handoffs .govuk-details__summary, .handoffs .govuk-details__text { font-size: 16px; }
+  .handoffs .govuk-details__text { padding-top: 10px; padding-bottom: 0; }
+  .handoffs .govuk-table { font-size: 16px; margin-bottom: 10px; }
+  .handoffs .govuk-table__cell, .handoffs .govuk-table__header { padding-top: 8px; padding-bottom: 8px; }
+  .handoffs .govuk-tag { white-space: nowrap; }
   .wall-card--group .wall-card__frame { display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; border: 2px solid #4c2c92; box-shadow: none; background: #efe6f7; }
   .wall-card__group { font-family: "GDS Transport", arial, sans-serif; font-size: 19px; font-weight: 700; line-height: 1.3; color: #0b0c0c; text-align: center; }
   .wall-card__group small { display: block; margin-top: 10px; font-size: 16px; font-weight: 400; color: #505a5f; }
@@ -132,10 +142,13 @@
     {% if page.via %}<p class="wall-card__via">&#8627; {{ page.via }}</p>{% endif %}
   </div>
   {% else %}
-  <div class="wall-card{% if not loop.first %} wall-card--branch{% endif %}{% if page.isExit %} wall-card--exit{% endif %}{% if page.isCustom %} wall-card--custom{% endif %}">
+  <div class="wall-card{% if not loop.first %} wall-card--branch{% endif %}{% if page.isExit %} wall-card--exit{% endif %}{% if page.isCustom %} wall-card--custom{% endif %}{% if page.handoff %} wall-card--handoff{% if page.handoff.changed %} wall-card--handoff-changed{% endif %}{% endif %}" id="screen-{{ page.id }}">
     <div class="wall-card__head">
       <span class="wall-card__id">{{ page.id }}</span>
-      <span class="wall-card__type">· {{ page.type }}</span><br>
+      <span class="wall-card__type">· {{ page.type }}</span>
+      {%- if page.handoff %}
+      <span class="wall-card__handoff" title="Handed to development on {{ page.handoff.on }}{% if page.handoff.changed %}; the copy has changed since{% if page.handoff.uncommitted %} (uncommitted){% endif %}{% endif %}. Tag {{ page.handoff.tag }}">{{ govukTag({ text: page.handoff.label, classes: "govuk-tag--yellow" if page.handoff.changed else "govuk-tag--turquoise" }) }}</span>
+      {%- endif %}<br>
       <span class="wall-card__links">
         <button type="button" class="wall-card__copy" data-copy-url="{{ publicBaseUrl }}{{ page.path }}" data-feedback="" title="Copy link" aria-label="Copy link to {{ page.id }}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
         {% if canExportScreens %}<a class="wall-card__copy wall-card__export" href="/tools/journeys/{{ journey.id }}/screens/{{ page.id }}.jpg" download data-feedback="" title="Export screen as JPG" aria-label="Export {{ page.id }} as JPG"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a>{% endif %}
@@ -212,7 +225,50 @@
   {% endset %}
 
   {% set screensPanel %}
-  <p class="tools-legend">Every screen rendered live with the sample data from <code>journey.yaml → preview</code>. Each row is a page on the default path, followed by the screens that branch off it and how you reach them. Click a screen to open it in a new tab.{% if groups | length %} Purple cards stand for a group of screens (sign in, account creation) shown in its own section below.{% endif %}</p>
+  {% if handoffs | length %}
+  {% set handoffHtml %}
+    <p class="tools-legend">Pages marked <code>handoff: &lt;date&gt;</code> in <code>journey.yaml</code>. A page turns yellow when its copy changes after the handoff; re-stamp it to hand the change over. Each handoff is tagged in git as <code>handoff/{{ journey.id }}/&lt;date&gt;</code> when it lands on main, so the copy as handed over stays linkable.</p>
+    {% set handoffRows = [] %}
+    {% for item in handoffs %}
+      {% set statusHtml %}
+        {{ govukTag({ text: item.label, classes: "govuk-tag--yellow" if item.changed else "govuk-tag--turquoise" }) }}
+        {% if item.changed and item.lastChanged %}<br><span class="tools-section__count">{% if item.uncommitted %}uncommitted edits{% else %}changed {{ item.lastChangedOn }}{% endif %}</span>{% endif %}
+      {% endset %}
+      {% set linksHtml %}
+        <a class="govuk-link" href="#screen-{{ item.id }}">See screen</a> ·
+        <a class="govuk-link" href="{{ item.path }}?preview=1" target="_blank" rel="noopener">Open</a> ·
+        <a class="govuk-link" href="{{ item.fileUrl }}" target="_blank" rel="noopener">Copy at handoff</a>
+      {% endset %}
+      {% set _ = handoffRows.push([
+        { html: '<span class="wall-card__id">' ~ item.id ~ '</span>' },
+        { text: item.on },
+        { html: statusHtml },
+        { html: '<code>' ~ item.tag ~ '</code>' },
+        { html: linksHtml }
+      ]) %}
+    {% endfor %}
+    {{ govukTable({
+      classes: "handoffs__table",
+      firstCellIsHeader: false,
+      head: [
+        { text: "Page" },
+        { text: "Handed over" },
+        { text: "Status" },
+        { text: "Git tag" },
+        { text: "Links" }
+      ],
+      rows: handoffRows
+    }) }}
+  {% endset %}
+  <div class="handoffs" id="handoffs">
+    {{ govukDetails({
+      summaryText: "Ready for dev (" ~ (handoffs | length) ~ (" screen" if handoffs | length == 1 else " screens") ~ ")",
+      html: handoffHtml,
+      classes: "govuk-!-margin-bottom-0"
+    }) }}
+  </div>
+  {% endif %}
+  <p class="tools-legend">Every screen rendered live with the sample data from <code>journey.yaml → preview</code>. Each row is a page on the default path, followed by the screens that branch off it and how you reach them. Click a screen to open it in a new tab.{% if groups | length %} Purple cards stand for a group of screens (sign in, account creation) shown in its own section below.{% endif %}{% if handoffs | length %} A turquoise tag means the page has been handed to development; yellow means its copy has changed since.{% endif %}</p>
 
   <div class="tools-controls">
     <label for="wall-scale">Zoom</label>
