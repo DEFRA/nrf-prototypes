@@ -400,7 +400,19 @@ pages:
 
 Condition operators: `equals`, `notEquals`, `in`, `notIn`, `gt`, `gte`, `lt`, `lte`, `between`, `truthy`, `falsy`, `isSet`. Combine with `all:`, `any:`, `not:`. Engine values: `$navFromSummary`, `$isChange`, `$preview`.
 
-Other page keys: `handoff: YYYY-MM-DD` (the page's design was handed to development on that date; see "Handing pages to development"), `shared: true` (copy comes from `content/shared/pages/<id>.md`) or `shared: <folder>` (from `content/shared/<folder>/<id>.md`, see "Pages shared by more than one journey"), `back` (page id, absolute path, or a rule list), `guard` (condition plus `redirect`), `store` (map an option's `value` to what the session stores, for booleans and the like; prefer a `value` on the option in the page file), `set` (write values on submit; also allowed on a rule), `clears` (list of keys, or `$session`), `handler: custom` (page has hooks), `template` (a hand-written view for `type: custom`), `layout` (`default`, `one-login`, `government-gateway`, `defra-id`, `defra-account`, `document` or `email`), `remember: false` (never write the answer to the session; pair it with a field name starting `_` so the kit's own auto-store skips it too, as the password page does), `accept` and `maxSize` for uploads, `min` and `max` for numbers.
+Other page keys: `handoff: YYYY-MM-DD` (the page's design was handed to development on that date; see "Handing pages to development"), `shared: true` (copy comes from `content/shared/pages/<id>.md`) or `shared: <folder>` (from `content/shared/<folder>/<id>.md`, see "Pages shared by more than one journey"), `back` (page id, absolute path, or a rule list), `guard` (condition plus `redirect`), `store` (map an option's `value` to what the session stores, for booleans and the like; prefer a `value` on the option in the page file), `set` (write values on submit; also allowed on a rule), `clears` (list of keys, or `$session`), `handler: custom` (page has hooks), `template` (a hand-written view for `type: custom`), `layout` (`default`, `one-login`, `government-gateway`, `defra-id`, `defra-account`, `document` or `email`), `remember: false` (never write the answer to the session; pair it with a field name starting `_` so the kit's own auto-store skips it too, as the password page does), `accept` and `maxSize` for uploads, `min` and `max` for numbers, `research` (see below).
+
+`research` lists shortcuts for the research facilitator, shown in a "User research" section at the top of the page's footer, under the crown, each opening in a new tab. They are not part of the flow, so the tools page ignores them. An `href` is a page of this journey (a query string is fine), a path into another journey when it starts with `/`, or a full URL:
+
+```yaml
+- id: what-would-you-like-to-do
+  shared: true
+  research:
+    - text: Quote email
+      href: /nrf-quote-7/estimate-email-content?preview=1
+```
+
+`?research=false` on any page hides the section for the session (`?research=true` shows it again); preview renders, the screen wall and screenshots never show it.
 
 A `next` rule or an action whose `goto` leaves for another journey can add `return: <page id>` so that journey's page comes back here (see "Borrowing a page from another journey"). `$summary` is allowed wherever a `goto` is: `next`, `back` and `actions`.
 

@@ -13,8 +13,14 @@ set -euo pipefail
 input=$(cat)
 tool=$(printf '%s' "$input" | jq -r '.tool_name // empty')
 
-# Paths that count as written copy (relative to the repo root).
+# Paths that count as written copy (relative to the repo root). READMEs in
+# those folders are developer documentation, not copy, and pass through.
 copy_regex='(^|/)(content|prompts)/[^[:space:]]*\.md$'
+readme_regex='(^|/)README\.md$'
+
+is_copy() {
+  printf '%s' "$1" | grep -Eq "$copy_regex" && ! printf '%s' "$1" | grep -Eiq "$readme_regex"
+}
 
 reason() {
   local path="$1"
@@ -30,7 +36,7 @@ reason() {
 case "$tool" in
   Edit|Write|MultiEdit|NotebookEdit)
     path=$(printf '%s' "$input" | jq -r '.tool_input.file_path // .tool_input.notebook_path // empty')
-    if [[ -n "$path" ]] && printf '%s' "$path" | grep -Eq "$copy_regex"; then
+    if [[ -n "$path" ]] && is_copy "$path"; then
       reason "$path"
     fi
     ;;
@@ -41,7 +47,7 @@ case "$tool" in
     mutating='(>|>>|\bsed[[:space:]]+-[a-zA-Z]*i|\bperl[[:space:]]+-[a-zA-Z]*i|\bmv\b|\bcp\b|\brm\b|\btee\b|\btruncate\b|\bgit[[:space:]]+(checkout|restore|revert|reset|stash|apply|cherry-pick)\b|\bpatch\b)'
     if printf '%s' "$cmd" | grep -Eq "$mutating"; then
       path=$(printf '%s' "$cmd" | grep -Eo '(^|[[:space:]"'"'"'=])[^[:space:]"'"'"']*(content|prompts)/[^[:space:]"'"'"']*\.md' | head -n1 | sed -E 's/^[[:space:]"'"'"'=]//')
-      if [[ -n "$path" ]]; then
+      if [[ -n "$path" ]] && is_copy "$path"; then
         reason "$path"
       fi
     fi

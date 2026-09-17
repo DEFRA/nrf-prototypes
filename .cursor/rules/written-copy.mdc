@@ -14,7 +14,7 @@ The markdown files under `content/` (page copy, shared pages, mock identity-prov
 - This covers everything in those files: headings, body text, hints, option labels, error messages, button text, links, punctuation, line breaks, capitalisation and spelling. A "harmless" wording tweak is still a copy change.
 - If a code, routing or test change seems to need a copy change, **stop and propose the exact before/after wording** and wait for a yes. Prefer changing the code or the test to match the copy, not the other way round.
 - Adding a brand-new page file is allowed when the user asked for that page, but write it from copy they supplied or from the journey prompt, never from your own invention.
-- `journey.yaml` (flow, branching, remembered fields) is not copy and is not covered by this rule. Nunjucks views under `app/views/` are not covered either, but apply the same restraint to any user-facing wording inside them.
+- `journey.yaml` (flow, branching, remembered fields) is not copy and is not covered by this rule, and neither is a `README.md` in those folders (developer documentation). Nunjucks views under `app/views/` are not covered either, but apply the same restraint to any user-facing wording inside them.
 
 ## Enforcement
 
