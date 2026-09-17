@@ -223,6 +223,37 @@ function copyOf(journeyId) {
     return plain(found[1].replace(/\*+/g, ''))
   }
 
+  // The footer's user research link on page `id` whose href is `target`
+  // (a page id or a full path, query string ignored), by the name the
+  // footer renders (with "(opens in new tab)" unless the journey says
+  // `newTab: false`)
+  function researchLink(page, id, target) {
+    const def = pageOf(id)
+    const links = def.research || []
+    const found = links.find(({ href }) => {
+      const path = href.replace(/[?#].*$/, '')
+      return path === target || path.endsWith(`/${target}`)
+    })
+    if (!found) {
+      throw new Error(
+        `${id} has no research link to '${target}' (links: ${links.map(({ href }) => href).join(', ')})`
+      )
+    }
+    const name = found.newTab ? `${found.text} (opens in new tab)` : found.text
+    return page
+      .locator('.app-footer--research')
+      .getByRole('link', { name, exact: true })
+  }
+
+  // Open the research link's page in this tab (the footer would open a new
+  // one), having checked the link is there
+  async function followResearchLink(page, id, target) {
+    const locator = researchLink(page, id, target)
+    await expect(locator).toHaveCount(1)
+    const href = await locator.getAttribute('href')
+    await page.goto(href)
+  }
+
   function notificationTitle(id) {
     const page = pageOf(id)
     const match = page.content.body.match(/^:{3,}notification\s+(.+)$/m)
@@ -378,6 +409,8 @@ function copyOf(journeyId) {
     rowValue,
     changeLinkName,
     linkTo,
+    researchLink,
+    followResearchLink,
     notificationTitle,
     text,
     serviceName,

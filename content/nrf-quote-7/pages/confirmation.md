@@ -25,5 +25,3 @@ Telephone: 0300 060 3900\
 Monday to Friday, 8:30am to 5pm, except bank holidays
 
 [Find out about call charges (opens in new tab)](https://www.gov.uk/call-charges)
-
-[View the email content](/nrf-quote-7/estimate-email-content)

@@ -173,6 +173,9 @@ function buildContext(req, res, journey, page, options = {}) {
     file: req.file,
     query,
     preview,
+    // A preview rendered inside something else (the screen wall's iframes,
+    // the JPG export, screenshots): no user research footer
+    embed: preview && ['1', 'true'].includes(String(query.embed)),
     previewError: preview && ['1', 'true'].includes(String(query.error)),
     variant: preview && query.variant ? String(query.variant) : null,
     isChange,
@@ -465,6 +468,7 @@ function buildModel(ctx, extra = {}) {
     isChange: ctx.isChange,
     navFromSummary: ctx.navFromSummary,
     preview: ctx.preview,
+    embed: ctx.embed,
     variant: ctx.variant,
     routes: journey.routes,
     ...extra

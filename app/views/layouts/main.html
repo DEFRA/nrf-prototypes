@@ -27,10 +27,11 @@ https://prototype-kit.service.gov.uk/docs/how-to-use-layouts
 
     `?research=false` hides the section for the rest of the session (the kit
     keeps the flag in session data as `data.research`); `?research=true`
-    shows it again. Preview renders (the screen wall, screenshots and the
-    JPG export) never show it.
+    shows it again. Embedded previews (`?preview=1&embed=1`: the screen
+    wall's iframes, screenshots and the JPG export) never show it; a page
+    opened from the screen wall (`?preview=1`) does.
   #}
-  {% set researchHidden = preview or (data and (data.research == 'false' or data.research == false)) %}
+  {% set researchHidden = embed or (data and (data.research == 'false' or data.research == false)) %}
   {% set researchLinks = page.research if page and page.research and not researchHidden else [] %}
   {% set researchNavigation = [] %}
   {% if researchLinks | length %}

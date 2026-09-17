@@ -23,7 +23,3 @@ Monday to Friday, 8:30am to 5pm, except bank holidays
 [Find out about call charges (opens in new tab)](https://www.gov.uk/call-charges)
 
 [What did you think of this service?](#) (takes 30 seconds)
-
-[View the email](/nrf-request-to-use-1/request-email)
-
-[View the commitment certificate](/nrf-request-to-use-1/commitment-certificate)

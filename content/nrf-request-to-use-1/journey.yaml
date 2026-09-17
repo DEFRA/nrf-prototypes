@@ -837,7 +837,14 @@ pages:
     handler: custom # mints the NRL reference and certificate dates, see hooks.js
     next: confirmation
 
+  # User research aids in the footer: the email and the commitment
+  # certificate the submission sends
   - id: confirmation
+    research:
+      - text: View the email
+        href: request-email
+      - text: View the commitment certificate
+        href: commitment-certificate
 
   - id: request-email
     back: confirmation

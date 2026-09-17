@@ -158,7 +158,7 @@
       </span>
     </div>
     <div class="wall-card__frame">
-      <iframe src="{{ page.path }}?preview=1" loading="lazy" title="{{ page.heading }}" tabindex="-1"></iframe>
+      <iframe src="{{ page.path }}?preview=1&embed=1" loading="lazy" title="{{ page.heading }}" tabindex="-1"></iframe>
       <a class="wall-card__shield" href="{{ page.path }}?preview=1" target="_blank" rel="noopener" aria-label="Open {{ page.heading }} in a new tab"></a>
     </div>
     {% if page.via %}<p class="wall-card__via">&#8627; {{ page.via }}</p>{% endif %}
@@ -175,7 +175,7 @@
       </span>
     </div>
     <div class="wall-card__frame">
-      <iframe src="{{ page.path }}?preview=1&variant={{ variant.id }}" loading="lazy" title="{{ page.heading }} ({{ variant.label }})" tabindex="-1"></iframe>
+      <iframe src="{{ page.path }}?preview=1&embed=1&variant={{ variant.id }}" loading="lazy" title="{{ page.heading }} ({{ variant.label }})" tabindex="-1"></iframe>
       <a class="wall-card__shield" href="{{ page.path }}?preview=1&variant={{ variant.id }}" target="_blank" rel="noopener" aria-label="Open {{ page.heading }} ({{ variant.label }}) in a new tab"></a>
     </div>
     <p class="wall-card__via">&#8627; {{ variant.label }}</p>

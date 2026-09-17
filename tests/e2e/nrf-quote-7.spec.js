@@ -23,6 +23,7 @@ const {
   actionLocator,
   link,
   followLink,
+  followResearchLink,
   changeLink,
   expectHeading,
   error,
@@ -145,8 +146,9 @@ test.describe('nrf-quote-7 happy path', () => {
     await expect(page).toHaveURL(/confirmation/)
     await expect(page.locator('.govuk-panel__body')).toContainText('NRL-')
 
-    // The email wears the bare crown header, not the service's chrome
-    await followLink(page, 'confirmation', 'estimate-email-content')
+    // The email, a user research link in the footer, wears the bare crown
+    // header, not the service's chrome
+    await followResearchLink(page, 'confirmation', 'estimate-email-content')
     await expect(page).toHaveURL(/estimate-email-content/)
     await expect(page.locator('.govuk-header')).toHaveCount(1)
     await expect(page.locator('.govuk-service-navigation')).toHaveCount(0)
@@ -333,7 +335,7 @@ test.describe('journey tools', () => {
     )
     await expect(
       page.locator('.wall-card--variant iframe').first()
-    ).toHaveAttribute('src', /file-preview\?preview=1&variant=/)
+    ).toHaveAttribute('src', /file-preview\?preview=1&embed=1&variant=/)
   })
 
   test('screen wall places branch screens beside the page they branch from', async ({

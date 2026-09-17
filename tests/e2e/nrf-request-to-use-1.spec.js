@@ -39,6 +39,7 @@ const {
   actionLocator,
   link,
   followLink,
+  followResearchLink,
   changeLink,
   expectHeading,
   expectError,
@@ -240,13 +241,14 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
     await expect(page).toHaveURL(`${base}/confirmation`)
     await expect(page.locator('.govuk-panel__body')).toContainText('NRL-')
 
-    await followLink(page, 'confirmation', 'request-email')
+    // The email and certificate are user research links in the footer
+    await followResearchLink(page, 'confirmation', 'request-email')
     await expect(page).toHaveURL(`${base}/request-email`)
     await expectEmailChrome(page)
     await expectHeading(page, 'request-email')
 
     await page.goBack()
-    await followLink(page, 'confirmation', 'commitment-certificate')
+    await followResearchLink(page, 'confirmation', 'commitment-certificate')
     await expect(page).toHaveURL(`${base}/commitment-certificate`)
     await expectHeading(page, 'commitment-certificate')
     await expect(page.locator('.app-boundary-map')).toHaveCount(1)
@@ -1151,6 +1153,16 @@ test.describe('journey tools', () => {
     const response = await page.goto(`/tools/journeys/${journey.id}`)
     expect(response.status()).toBe(200)
     await expect(page.locator('iframe')).toHaveCount(journey.pages.length)
+    // Thumbnails are embedded previews (no user research footer); the Open
+    // links are plain previews, which show it
+    await expect(page.locator('iframe').first()).toHaveAttribute(
+      'src',
+      /\?preview=1&embed=1$/
+    )
+    await expect(page.locator('.wall-card__shield').first()).toHaveAttribute(
+      'href',
+      /\?preview=1$/
+    )
     await expect(page.locator('.wall-card--group')).toHaveCount(
       sections.main.graph.nodes.filter((node) => node.kind === 'group').length
     )

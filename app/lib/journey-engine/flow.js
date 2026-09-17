@@ -828,7 +828,7 @@ function exportScreens(journey, options = {}) {
           section: part.id,
           type: page.type,
           path: page.path,
-          url: `${page.path}?preview=1${url}`,
+          url: `${page.path}?preview=1&embed=1${url}`,
           file: `${folder}${prefix}-${id}${suffix}.jpg`,
           error: false,
           variant: null,

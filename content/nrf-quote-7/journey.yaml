@@ -313,7 +313,11 @@ pages:
 
   - id: delete-confirmation
 
+  # User research aid in the footer: the quote email the submission sends
   - id: confirmation
+    research:
+      - text: View the email content
+        href: estimate-email-content
 
   - id: estimate-email-content
     back: confirmation
