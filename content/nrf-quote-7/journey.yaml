@@ -229,6 +229,11 @@ pages:
             boundaryFailureReason: unsupportedGeometry
             redlineBoundaryPolygon: null
     next:
+      # An excluded area (the designated site itself) makes the boundary
+      # ineligible for the EDP, so it outranks the no-EDP route, as production
+      - when:
+          { key: redlineBoundaryPolygon.intersectingExcludedAreas, truthy: true }
+        goto: exclusion
       - when:
           { key: redlineBoundaryPolygon.intersections.nutrient, falsy: true }
         goto: no-edp
@@ -250,6 +255,11 @@ pages:
         goto: upload-redline
       - goto: redline-map
     next:
+      # An excluded area (the designated site itself) makes the boundary
+      # ineligible for the EDP, so it outranks the no-EDP route, as production
+      - when:
+          { key: redlineBoundaryPolygon.intersectingExcludedAreas, truthy: true }
+        goto: exclusion
       - when:
           { key: redlineBoundaryPolygon.intersections.nutrient, falsy: true }
         goto: no-edp

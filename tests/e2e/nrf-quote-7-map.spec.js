@@ -31,6 +31,30 @@ function squareInsideFirstCatchment() {
   ]
 }
 
+// A small square on the first excluded area (a designated site inside the
+// live EDP), as a closed ring
+function squareOnFirstExcludedArea() {
+  const excludedAreas = JSON.parse(
+    fs.readFileSync(
+      path.join(
+        __dirname,
+        '../../app/assets/map-layers/edp_excluded_areas.geojson'
+      ),
+      'utf8'
+    )
+  )
+  const [lon, lat] = turf.pointOnFeature(excludedAreas.features[0]).geometry
+    .coordinates
+  const d = 0.002
+  return [
+    [lon - d, lat - d],
+    [lon + d, lat - d],
+    [lon + d, lat + d],
+    [lon - d, lat + d],
+    [lon - d, lat - d]
+  ]
+}
+
 // A square in the North Sea, well away from any EDP
 const SEA_SQUARE = [
   [2.5, 53.5],
@@ -102,6 +126,26 @@ test.describe('nrf-quote-7 production map', () => {
     expect(payload.intersectingExcludedAreas).toEqual([])
   })
 
+  test('boundary check API reports an excluded area and no EDPs, like the impact assessor', async ({
+    request
+  }) => {
+    const response = await request.post(CHECK_URL, {
+      data: {
+        geometry: {
+          type: 'Polygon',
+          coordinates: [squareOnFirstExcludedArea()]
+        }
+      }
+    })
+    expect(response.status()).toBe(200)
+
+    const payload = await response.json()
+    expect(payload.intersectingExcludedAreas.length).toBeGreaterThan(0)
+    expect(typeof payload.intersectingExcludedAreas[0].label).toBe('string')
+    // The panel shows "An area not supported by an EDP" when this is empty
+    expect(payload.intersectingEdps).toEqual([])
+  })
+
   test('boundary check API rejects a non-polygon', async ({ request }) => {
     const response = await request.post(CHECK_URL, {
       data: { geometry: { type: 'Point', coordinates: [1, 52] } }
@@ -148,6 +192,9 @@ test.describe('nrf-quote-7 production map', () => {
 
     await saveBoundary(SEA_SQUARE)
     await expect(page).toHaveURL(/no-edp$/)
+
+    await saveBoundary(squareOnFirstExcludedArea())
+    await expect(page).toHaveURL(/exclusion$/)
   })
 
   test('map proxies answer sensibly without an OS key', async ({ request }) => {

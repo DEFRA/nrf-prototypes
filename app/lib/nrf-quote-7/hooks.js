@@ -198,6 +198,11 @@ function buildBoundaryMetadata(geometry) {
  */
 function checkBoundary(geometry) {
   const results = checkEDPIntersections(geometry.coordinates[0])
+  // A boundary touching an excluded area (the designated site itself) is not
+  // eligible for the EDP. Production's impact assessor skips the EDP query in
+  // that case and returns no EDPs, which is what makes the map panel say
+  // "An area not supported by an EDP", so mirror that here.
+  const intersectsExcludedArea = results.excludedAreas.length > 0
   return {
     boundaryGeometryWgs84: geometry,
     boundaryGeometryOriginal: geometry,
@@ -205,14 +210,16 @@ function checkBoundary(geometry) {
     // Nutrient EDPs only, one entry per plan, as production's panel expects.
     // The file preview page also shows how much of the boundary each EDP
     // covers, like production's impact assessor response.
-    intersectingEdps: results.intersections
-      .filter((intersection) => intersection.type === 'nutrient')
-      .map((intersection) => ({
-        id: intersection.id,
-        label: intersection.name,
-        live: intersection.live,
-        ...edpOverlap(geometry, intersection.id)
-      })),
+    intersectingEdps: intersectsExcludedArea
+      ? []
+      : results.intersections
+          .filter((intersection) => intersection.type === 'nutrient')
+          .map((intersection) => ({
+            id: intersection.id,
+            label: intersection.name,
+            live: intersection.live,
+            ...edpOverlap(geometry, intersection.id)
+          })),
     intersectingExcludedAreas: results.excludedAreas
   }
 }
@@ -332,7 +339,10 @@ const SAMPLE_BOUNDARY = {
 function uploadedBoundary(file) {
   const geometry = uploadedGeometry(file)
   const result = checkBoundary(geometry)
-  if (result.intersectingEdps.length) {
+  if (
+    result.intersectingEdps.length ||
+    result.intersectingExcludedAreas.length
+  ) {
     return { geometry, boundaryGeojson: result }
   }
   return {
