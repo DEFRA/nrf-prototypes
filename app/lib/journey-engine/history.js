@@ -41,6 +41,12 @@ function tagFor(journeyId, on) {
   return `handoff/${journeyId}/${on}`
 }
 
+// The URL of the frozen copy of a page: the journey as handed over on that
+// date, served by app/routes/handoffs.js from a snapshot of the commit
+function frozenUrlFor(journeyId, on, pageId) {
+  return `/handoffs/${journeyId}/${on}/${pageId}`
+}
+
 function git(args, options = {}) {
   const exec = options.exec || execFileSync
   try {
@@ -174,6 +180,48 @@ function readManifest(options = {}) {
   }
 }
 
+/**
+ * The commit the tag handoff/<journey>/<date> points at, or null when there
+ * is no such tag (not pushed yet, or the date was never handed over). The
+ * deployed manifest carries the tags; locally git is asked.
+ */
+function tagCommit(journeyId, on, options = {}) {
+  const tag = tagFor(journeyId, on)
+  const manifest = readManifest(options)
+  if (manifest && manifest.tags) {
+    return manifest.tags[tag] || null
+  }
+  if (!hasGit(options)) {
+    return null
+  }
+  return (
+    git(
+      ['rev-parse', '--verify', '--quiet', `refs/tags/${tag}^{commit}`],
+      options
+    ) || null
+  )
+}
+
+/**
+ * Every handoff tag in the repository: { 'handoff/<journey>/<date>': sha }.
+ * An annotated tag resolves to the commit it points at.
+ */
+function collectTags() {
+  const out = git([
+    'for-each-ref',
+    '--format=%(refname:short) %(objectname) %(*objectname)',
+    'refs/tags/handoff/'
+  ])
+  const tags = {}
+  for (const line of (out || '').split('\n')) {
+    const [tag, object, target] = line.trim().split(/\s+/)
+    if (tag && object) {
+      tags[tag] = target || object
+    }
+  }
+  return tags
+}
+
 function history(journey, page, options) {
   const key = `${journey.id}/${page.id}`
   const manifest = readManifest(options)
@@ -221,6 +269,11 @@ function pageHandoff(journey, page, options = {}) {
     tag,
     tagUrl: `${REPO_URL}/tree/${tag}`,
     fileUrl: `${REPO_URL}/blob/${tag}/${page.contentFile}`,
+    // The page rendered from the copy at the handoff commit; nothing to
+    // freeze until the date is committed
+    frozenUrl: detail.stampCommit
+      ? frozenUrlFor(journey.id, page.handoff, page.id)
+      : null,
     label: detail.changed ? LABELS.changed : LABELS.ready,
     lastChangedOn: detail.lastChanged ? detail.lastChanged.slice(0, 10) : null,
     ...detail
@@ -261,7 +314,7 @@ function collectHistory(journeys) {
       }
     }
   }
-  return { generatedAt: new Date().toISOString(), pages }
+  return { generatedAt: new Date().toISOString(), pages, tags: collectTags() }
 }
 
 module.exports = {
@@ -271,7 +324,11 @@ module.exports = {
   LABELS,
   isHandoffDate,
   tagFor,
+  frozenUrlFor,
+  git,
+  hasGit,
   handoffLine,
+  tagCommit,
   pageHandoff,
   journeyHandoffs,
   collectHistory

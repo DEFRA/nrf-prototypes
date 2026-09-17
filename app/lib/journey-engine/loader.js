@@ -21,6 +21,9 @@ const CONTENT_DIR = path.join(__dirname, '../../../content')
 // mock identity providers: one-login, government-gateway, defra-id).
 const SHARED_DIR = path.join(CONTENT_DIR, 'shared')
 const SHARED_PAGES_DIR = path.join(SHARED_DIR, 'pages')
+// A journey normally loads from content/, but a frozen copy of a handoff
+// loads the same layout from a snapshot folder (see snapshots.js), so every
+// path below derives from the `contentDir` a journey was loaded with.
 
 const TYPES = [
   'start',
@@ -124,27 +127,29 @@ function parseMarkdownFile(source, file) {
   return { frontmatter, body: match[2] }
 }
 
-function journeyDir(journeyId) {
-  return path.join(CONTENT_DIR, journeyId)
+function journeyDir(journeyId, contentDir = CONTENT_DIR) {
+  return path.join(contentDir, journeyId)
 }
 
 /**
  * Every folder under content/shared/ (pages, one-login, ...).
  */
-function sharedDirs() {
-  if (!fs.existsSync(SHARED_DIR)) {
+function sharedDirs(contentDir = CONTENT_DIR) {
+  const sharedDir = path.join(contentDir, 'shared')
+  if (!fs.existsSync(sharedDir)) {
     return []
   }
   return fs
-    .readdirSync(SHARED_DIR, { withFileTypes: true })
+    .readdirSync(sharedDir, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
-    .map((entry) => path.join(SHARED_DIR, entry.name))
+    .map((entry) => path.join(sharedDir, entry.name))
 }
 
-function signatureFor(dir) {
+function signatureFor(journeyId, contentDir = CONTENT_DIR) {
+  const dir = journeyDir(journeyId, contentDir)
   const files = [path.join(dir, 'journey.yaml')]
   // Shared pages count for every journey, so an edit to one reloads them all
-  for (const pagesDir of [path.join(dir, 'pages'), ...sharedDirs()]) {
+  for (const pagesDir of [path.join(dir, 'pages'), ...sharedDirs(contentDir)]) {
     if (fs.existsSync(pagesDir)) {
       for (const name of fs.readdirSync(pagesDir)) {
         files.push(path.join(pagesDir, name))
@@ -259,11 +264,18 @@ function buildPage(entry, journey, problems) {
   const shared =
     typeof entry.shared === 'string' ? entry.shared : Boolean(entry.shared)
   const sharedFolder = shared === true ? 'pages' : shared
-  const localFile = path.join(journeyDir(journey.id), 'pages', `${id}.md`)
+  const contentDir = journey.contentDir || CONTENT_DIR
+  const localFile = path.join(
+    journeyDir(journey.id, contentDir),
+    'pages',
+    `${id}.md`
+  )
   const pageFile = shared
-    ? path.join(SHARED_DIR, sharedFolder, `${id}.md`)
+    ? path.join(contentDir, 'shared', sharedFolder, `${id}.md`)
     : localFile
-  const contentFile = path.relative(path.dirname(CONTENT_DIR), pageFile)
+  // Relative to the folder holding content/, so a snapshot's pages keep the
+  // same `content/<journey>/pages/<id>.md` name git knows them by
+  const contentFile = path.relative(path.dirname(contentDir), pageFile)
   let frontmatter = {}
   let body = ''
   if (fs.existsSync(pageFile)) {
@@ -708,8 +720,9 @@ function validateChoiceValues(journey, problems) {
   }
 }
 
-function build(journeyId) {
-  const dir = journeyDir(journeyId)
+function build(journeyId, options = {}) {
+  const contentDir = options.contentDir || CONTENT_DIR
+  const dir = journeyDir(journeyId, contentDir)
   const yamlFile = path.join(dir, 'journey.yaml')
   if (!fs.existsSync(yamlFile)) {
     throw new Error(`Journey '${journeyId}' not found (no ${yamlFile})`)
@@ -728,7 +741,10 @@ function build(journeyId) {
 
   const journey = {
     id: raw.id || journeyId,
-    basePath: raw.basePath || `/${raw.id || journeyId}`,
+    // A frozen copy is mounted somewhere other than the journey's own path
+    basePath: options.basePath || raw.basePath || `/${raw.id || journeyId}`,
+    // Where this definition was read from (content/, or a snapshot folder)
+    contentDir,
     name: raw.name || journeyId,
     serviceName: raw.serviceName || raw.name || journeyId,
     start: raw.start || 'start',
@@ -792,21 +808,27 @@ function build(journeyId) {
 }
 
 /**
- * Load (and cache) a journey definition.
+ * Load (and cache) a journey definition. `options.contentDir` reads the
+ * journey from another folder laid out like content/ (a handoff snapshot)
+ * and `options.basePath` mounts it somewhere other than its own path; both
+ * are left out for the live journey.
  */
-function loadJourney(journeyId) {
-  const signature = signatureFor(journeyDir(journeyId))
-  const cached = cache.get(journeyId)
+function loadJourney(journeyId, options = {}) {
+  const contentDir = options.contentDir || CONTENT_DIR
+  const signature = signatureFor(journeyId, contentDir)
+  // Two handoff dates can share a commit, so the mount path is in the key
+  const key = `${contentDir}::${options.basePath || ''}::${journeyId}`
+  const cached = cache.get(key)
   if (cached && cached.signature === signature) {
     return cached.journey
   }
-  const journey = build(journeyId)
+  const journey = build(journeyId, { contentDir, basePath: options.basePath })
   // Preserve routes registered by hooks across content reloads
   if (cached) {
     Object.assign(journey.routes, cached.journey.hookRoutes || {})
     journey.hookRoutes = cached.journey.hookRoutes
   }
-  cache.set(journeyId, { signature, journey })
+  cache.set(key, { signature, journey })
   return journey
 }
 

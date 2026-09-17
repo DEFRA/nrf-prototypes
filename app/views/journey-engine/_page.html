@@ -48,6 +48,7 @@ Journey engine base page. Every generic page type extends this and fills
 {% endblock %}
 
 {% block beforeContent %}
+{% include "journey-engine/_frozen-banner.html" %}
 {% if page.layout == 'one-login' %}
   {% include "includes/one-login-banner.html" %}
 {% elif page.layout == 'government-gateway' %}

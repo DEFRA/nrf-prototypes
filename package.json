@@ -14,6 +14,7 @@
     "screenshot:journey": "node scripts/export-screens.js",
     "handoff:manifest": "node scripts/content-history.js",
     "handoff:tags": "node scripts/handoff-tags.js",
+    "handoff:snapshots": "node scripts/handoff-snapshots.js",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui",

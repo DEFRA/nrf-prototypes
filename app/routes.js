@@ -18,6 +18,7 @@ const vtsMapRoutes = require('./routes/vts-maps.js')
 const mapTilesRoutes = require('./routes/map-tiles.js')
 const osBaseMapRoutes = require('./routes/os-base-map.js')
 const toolsRoutes = require('./routes/tools.js')
+const handoffsRoutes = require('./routes/handoffs.js')
 
 // The footer's "Turn errors off/on" link reloads the current page with
 // ?errors=false or ?errors=true (see layouts/main.html)
@@ -79,6 +80,12 @@ JOURNEYS.filter(
     console.warn(`  Error: ${error.message}`)
   }
 })
+
+// Frozen copies of design handoffs: /handoffs/<journey>/<date>/<page>
+// serves a journey from the content as handed over (see
+// app/lib/journey-engine/snapshots.js). Mounted after the journeys so a
+// journey at that path would still win.
+router.use('/', handoffsRoutes)
 
 setMountedIds(mounted)
 

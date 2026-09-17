@@ -47,6 +47,12 @@ jobs:
       - name: Build handoff history for the deployed prototype
         run: npm run handoff:manifest
 
+      # /handoffs/<journey>/<date>/... serves the content as handed over from
+      # a snapshot of that commit; without git in the image they are
+      # extracted now into app/data/handoffs/
+      - name: Snapshot the content of every handoff
+        run: npm run handoff:snapshots
+
       - name: Build and Publish
         uses: DEFRA/cdp-build-action/build@main
         with:

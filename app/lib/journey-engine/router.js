@@ -471,6 +471,9 @@ function buildModel(ctx, extra = {}) {
     embed: ctx.embed,
     variant: ctx.variant,
     routes: journey.routes,
+    // Set on a frozen copy of a handoff (see snapshots.js): the date, the
+    // commit and where the live page is, for the banner
+    frozen: journey.frozen || null,
     ...extra
   }
 }
@@ -632,6 +635,31 @@ async function handlePost(req, res, journey, page, hooks) {
 }
 
 /**
+ * Serve one request against a journey definition mounted at `basePath`:
+ * find the page the path names, then GET renders it and POST submits it.
+ * Anything that is not a page of the journey falls through to `next()`.
+ * Shared by the live mount below and the frozen handoff copies
+ * (app/routes/handoffs.js).
+ */
+async function dispatch(journey, basePath, hooks, req, res, next) {
+  try {
+    const page = pageForRequest(journey, basePath, req)
+    if (!page) {
+      return next()
+    }
+    if (req.method === 'GET' || req.method === 'HEAD') {
+      return await handleGet(req, res, journey, page, hooks)
+    }
+    if (req.method === 'POST' && hasPost(page)) {
+      return await handlePost(req, res, journey, page, hooks)
+    }
+    next()
+  } catch (error) {
+    next(error)
+  }
+}
+
+/**
  * Mount the journey on `router`: hook routes once, then a single dispatcher
  * under basePath that resolves the page from the current definition on
  * every request.
@@ -653,23 +681,14 @@ function createJourneyRouter(router, journeyOrId, hooks = {}) {
     }
   }
 
-  router.use(basePath, async (req, res, next) => {
+  router.use(basePath, (req, res, next) => {
+    let journey
     try {
-      const journey = loadJourney(journeyId)
-      const page = pageForRequest(journey, basePath, req)
-      if (!page) {
-        return next()
-      }
-      if (req.method === 'GET' || req.method === 'HEAD') {
-        return await handleGet(req, res, journey, page, hooks)
-      }
-      if (req.method === 'POST' && hasPost(page)) {
-        return await handlePost(req, res, journey, page, hooks)
-      }
-      next()
+      journey = loadJourney(journeyId)
     } catch (error) {
-      next(error)
+      return next(error)
     }
+    return dispatch(journey, basePath, hooks, req, res, next)
   })
 
   return router
@@ -677,6 +696,7 @@ function createJourneyRouter(router, journeyOrId, hooks = {}) {
 
 module.exports = {
   createJourneyRouter,
+  dispatch,
   buildContext,
   buildModel,
   renderContent,

@@ -1,0 +1,17 @@
+{#
+  Shown when /handoffs/<journey>/<date>/... names a handoff that does not
+  exist or cannot be served (see app/routes/handoffs.js).
+#}
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}No frozen copy - GOV.UK{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <h1 class="govuk-heading-l">No frozen copy for {{ date }}</h1>
+    <p class="govuk-body">{{ message }}</p>
+    <p class="govuk-body">A page gets a frozen copy once its <code>handoff: {{ date }}</code> line in <code>content/{{ journeyId }}/journey.yaml</code> is committed. The handoffs of this journey are listed on its <a class="govuk-link" href="{{ toolsPath }}#handoffs">tools page</a>.</p>
+  </div>
+</div>
+{% endblock %}

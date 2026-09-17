@@ -147,7 +147,7 @@
       <span class="wall-card__id">{{ page.id }}</span>
       <span class="wall-card__type">· {{ page.type }}</span>
       {%- if page.handoff %}
-      <span class="wall-card__handoff" title="Handed to development on {{ page.handoff.on }}{% if page.handoff.changed %}; the copy has changed since{% if page.handoff.uncommitted %} (uncommitted){% endif %}{% endif %}. Tag {{ page.handoff.tag }}">{{ govukTag({ text: page.handoff.label, classes: "govuk-tag--yellow" if page.handoff.changed else "govuk-tag--turquoise" }) }}</span>
+      <span class="wall-card__handoff" title="Handed to development on {{ page.handoff.on }}{% if page.handoff.changed %}; the copy has changed since{% if page.handoff.uncommitted %} (uncommitted){% endif %}{% endif %}. Tag {{ page.handoff.tag }}{% if page.handoff.frozenUrl %}. Frozen copy at {{ page.handoff.frozenUrl }}{% endif %}">{{ govukTag({ text: page.handoff.label, classes: "govuk-tag--yellow" if page.handoff.changed else "govuk-tag--turquoise" }) }}</span>
       {%- endif %}<br>
       <span class="wall-card__links">
         <button type="button" class="wall-card__copy" data-copy-url="{{ publicBaseUrl }}{{ page.path }}" data-feedback="" title="Copy link" aria-label="Copy link to {{ page.id }}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
@@ -227,7 +227,7 @@
   {% set screensPanel %}
   {% if handoffs | length %}
   {% set handoffHtml %}
-    <p class="tools-legend">Pages marked <code>handoff: &lt;date&gt;</code> in <code>journey.yaml</code>. A page turns yellow when its copy changes after the handoff; re-stamp it to hand the change over. Each handoff is tagged in git as <code>handoff/{{ journey.id }}/&lt;date&gt;</code> when it lands on main, so the copy as handed over stays linkable.</p>
+    <p class="tools-legend">Pages marked <code>handoff: &lt;date&gt;</code> in <code>journey.yaml</code>. A page turns yellow when its copy changes after the handoff; re-stamp it to hand the change over. Each handoff is tagged in git as <code>handoff/{{ journey.id }}/&lt;date&gt;</code> when it lands on main, so the copy as handed over stays linkable. "Frozen page" opens the page as handed over, however much the live copy moves after; the link appears once the date is committed.</p>
     {% set handoffRows = [] %}
     {% for item in handoffs %}
       {% set statusHtml %}
@@ -237,7 +237,8 @@
       {% set linksHtml %}
         <a class="govuk-link" href="#screen-{{ item.id }}">See screen</a> ·
         <a class="govuk-link" href="{{ item.path }}?preview=1" target="_blank" rel="noopener">Open</a> ·
-        <a class="govuk-link" href="{{ item.fileUrl }}" target="_blank" rel="noopener">Copy at handoff</a>
+        <a class="govuk-link" href="{{ item.fileUrl }}" target="_blank" rel="noopener">Copy at handoff</a> ·
+        {% if item.frozenUrl %}<a class="govuk-link handoffs__frozen" href="{{ item.frozenUrl }}?preview=1" target="_blank" rel="noopener" title="{{ publicBaseUrl }}{{ item.frozenUrl }}">Frozen page</a>{% else %}<span class="tools-section__count">commit to freeze</span>{% endif %}
       {% endset %}
       {% set _ = handoffRows.push([
         { html: '<span class="wall-card__id">' ~ item.id ~ '</span>' },

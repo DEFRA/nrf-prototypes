@@ -17,7 +17,7 @@ const {
   answerLabels,
   TYPES
 } = require('./loader')
-const { createJourneyRouter, previewData } = require('./router')
+const { createJourneyRouter, dispatch, previewData } = require('./router')
 const { watchContent } = require('./watch')
 const {
   getEdges,
@@ -39,7 +39,14 @@ const {
   VIEWPORTS
 } = require('./screenshots')
 const { createRenderer, interpolate } = require('./markdown')
-const { pageHandoff, journeyHandoffs } = require('./history')
+const { pageHandoff, journeyHandoffs, isHandoffDate } = require('./history')
+const {
+  loadFrozenJourney,
+  resolveHandoffCommit,
+  extractSnapshot,
+  snapshotDir,
+  MOUNT: HANDOFFS_MOUNT
+} = require('./snapshots')
 const { evaluate, firstMatch, describeCondition } = require('./expressions')
 
 module.exports = {
@@ -51,6 +58,7 @@ module.exports = {
   answerLabels,
   TYPES,
   createJourneyRouter,
+  dispatch,
   previewData,
   watchContent,
   getEdges,
@@ -72,6 +80,12 @@ module.exports = {
   interpolate,
   pageHandoff,
   journeyHandoffs,
+  isHandoffDate,
+  loadFrozenJourney,
+  resolveHandoffCommit,
+  extractSnapshot,
+  snapshotDir,
+  HANDOFFS_MOUNT,
   evaluate,
   firstMatch,
   describeCondition
