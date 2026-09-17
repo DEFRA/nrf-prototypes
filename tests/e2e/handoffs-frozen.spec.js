@@ -82,6 +82,14 @@ test.describe('frozen copy of a handoff', () => {
     await expect(
       row.getByRole('link', { name: 'Frozen page' })
     ).toHaveAttribute('href', `${frozen.frozenUrl}?preview=1`)
+
+    // The screen's copy-link button shares the frozen page too
+    await expect(
+      page.locator(`#screen-${frozen.id} .wall-card__copy[data-copy-url]`)
+    ).toHaveAttribute(
+      'data-copy-url',
+      new RegExp(`${frozen.frozenUrl}\\?preview=1$`)
+    )
   })
 })
 
