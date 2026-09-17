@@ -63,7 +63,8 @@ homepage:
     - Mock "Create your GOV.UK One Login" flow (email, security code, password, security codes by text message or authenticator app)
     - Mock Government Gateway sign in and "Create sign in details" flow (email, confirmation code, name, password, user ID)
     - Agent, company and individual account types decided by who the user is requesting to use the levy for (the sign-in email still decides it when that question was skipped)
-    - Mock Defra ID registration for sign-in emails containing "new" (new-individual@, new-company@, new@ for an agent), as an individual or a business; the registration answer decides the account type
+    - Mock Defra ID registration for everyone requesting to use the levy for themselves as an individual or as their organisation's account admin, and for agents whose sign-in email contains "new" (new@), as an individual or a business; the registration answer decides the account type
+    - Employee invitation email as a user research link on the organisation guidance page; opening it makes the user an invited employee, who skips the Defra account registration
     - Defra account registration emails for an individual, a business and an invited employee (new-employee@ gives their own details only), each with a Contact Support ID and a "Sign in to your account" link that carries on to the service
     - Developer details or your name and address, review, check your answers, confirmation
     - Email and commitment certificate with the red line boundary on a map
@@ -101,6 +102,7 @@ session:
   - originalCommitted
   - originalReference
   - defraUserType
+  - employeeInvited
   - signInMethod
   - signInEmail
   - securityCodeMethod
@@ -361,8 +363,10 @@ pages:
   # for and reads the Defra account guidance for that kind of user. The answer
   # decides the account type once they sign in (see accountFor in hooks.js):
   # an individual, a company for the organisation they work for, or an agent
-  # acting for a client. The sign-in email still decides whether they register
-  # a Defra account first.
+  # acting for a client. An individual, or an organisation's account admin,
+  # always registers a Defra account after signing in; an employee who opened
+  # the invitation email skips it; for an agent the sign-in email decides
+  # (see one-login-password).
   - id: defra-account-user-type
     back:
       - when: { key: originalCommitted, equals: 'Yes' }
@@ -388,13 +392,31 @@ pages:
         goto: $summary
       - goto: sign-in-method
 
+  # Whoever continues from here is taken to be the organisation's account
+  # admin and registers a Defra account after signing in. User research aid
+  # in the footer: the invitation email an admin's Defra account sends an
+  # employee, opened in this tab in place of Continue. Opening it marks the
+  # user as an invited employee (see hooks.js), so signing in skips the
+  # registration.
   - id: defra-account-organisation
     guard: { key: defraUserType, equals: organisation, redirect: defra-account-user-type }
     back: defra-account-user-type
+    research:
+      - text: Employee invitation email
+        href: defra-account-employee-email
+        newTab: false
     next:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: sign-in-method
+
+  # The same email as the agent's for now, in its own file so the copy can
+  # diverge. Its "Start your secure registration process" link (`./$next`)
+  # carries on to signing in.
+  - id: defra-account-employee-email
+    guard: { key: defraUserType, equals: organisation, redirect: defra-account-user-type }
+    handler: custom # remembers the invitation was opened, see hooks.js
+    next: sign-in-method
 
   # An agent then sees the invitation email their client's Defra account
   # sends them (addressed to the email they gave to retrieve the quote, from
@@ -438,9 +460,12 @@ pages:
     shared: one-login
     next: one-login-password
 
-  # Signing in, or finishing creating an account, decides the account type
-  # from the email. A sign-in email containing "new" has no Defra account yet
-  # and registers one first (new-individual@, new-company@, new@ for an agent)
+  # Signing in, or finishing creating an account, decides the account type.
+  # Anyone requesting to use the levy for themselves as an individual, or
+  # for their organisation as its account admin, has no Defra account yet
+  # and registers one first, whatever their email; an employee who opened
+  # the invitation email has been invited to the organisation's account and
+  # skips it; for an agent a sign-in email containing "new" registers
   - id: one-login-password
     shared: one-login
     handler: custom # decides the account type from the email, see hooks.js

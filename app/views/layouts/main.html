@@ -21,8 +21,9 @@ https://prototype-kit.service.gov.uk/docs/how-to-use-layouts
     User research aids: a page's `research:` links in journey.yaml (see
     app/lib/journey-engine/loader.js) form a "User research" section at the
     top of the footer, under the crown, styled apart from the service's
-    own links (app/assets/sass/_research-links.scss). Every link opens in a
-    new tab so the participant keeps their place.
+    own links (app/assets/sass/_research-links.scss). A link opens in a
+    new tab so the participant keeps their place, unless the journey says
+    `newTab: false` (one the participant follows instead of the button).
 
     `?research=false` hides the section for the rest of the session (the kit
     keeps the flag in session data as `data.research`); `?research=true`
@@ -35,11 +36,15 @@ https://prototype-kit.service.gov.uk/docs/how-to-use-layouts
   {% if researchLinks | length %}
     {% set researchItems = [] %}
     {% for link in researchLinks %}
-      {% set researchItems = (researchItems.push({
-        href: link.href,
-        text: link.text + " (opens in new tab)",
-        attributes: { target: "_blank", rel: "noopener" }
-      }), researchItems) %}
+      {% if link.newTab %}
+        {% set researchItems = (researchItems.push({
+          href: link.href,
+          text: link.text + " (opens in new tab)",
+          attributes: { target: "_blank", rel: "noopener" }
+        }), researchItems) %}
+      {% else %}
+        {% set researchItems = (researchItems.push({ href: link.href, text: link.text }), researchItems) %}
+      {% endif %}
     {% endfor %}
     {% set researchNavigation = [{ title: "User research", items: researchItems }] %}
   {% endif %}

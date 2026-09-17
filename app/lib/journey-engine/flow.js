@@ -413,6 +413,15 @@ function getEdges(journey) {
         })
       }
     }
+    // User research links (`research:` in journey.yaml) to pages of this
+    // journey, so a page only opened that way still hangs off the page
+    // that offers it; links elsewhere are facilitator shortcuts, not flow
+    for (const link of page.research || []) {
+      const ownPage = ownPageId(link.href.replace(/[?#].*$/, ''), journey)
+      if (ownPage) {
+        add({ fromId: page.id, toId: ownPage, label: link.text, kind: 'link' })
+      }
+    }
     // Links inside the markdown body to other pages in this journey, by
     // absolute path or by `./page-id`
     const linkPattern = new RegExp(

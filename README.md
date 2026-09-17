@@ -179,23 +179,23 @@ The content-driven journeys (`nrf-quote-7` and `nrf-request-to-use-1`) have no h
 
 Signing in to "Request to use the nature restoration levy" goes through a mock GOV.UK One Login: "Create your GOV.UK One Login" and "Sign in" both lead to the email page, and any password is accepted (the "Sign in with Government Gateway" option goes to the same mock for now). The part of the email address before the `@` decides who the participant is:
 
-| Email contains                      | Account    | What they see after signing in                                                       |
-| ----------------------------------- | ---------- | ------------------------------------------------------------------------------------ |
-| `company` (e.g. `company@test.com`) | Company    | "What is your address?", then review your details                                    |
-| `individual`                        | Individual | "What is your address?", then review your details                                    |
-| anything else (e.g. `agent@…`)      | Agent      | "What are the developer details?", with the organisation bar and Change organisation |
+| Email contains                      | Account    | What they see after signing in                                                            |
+| ----------------------------------- | ---------- | ----------------------------------------------------------------------------------------- |
+| `company` (e.g. `company@test.com`) | Company    | Defra account registration first unless invited (see below), then "What is your address?" |
+| `individual`                        | Individual | Defra account registration first (see below), then "What is your address?"                |
+| anything else (e.g. `agent@…`)      | Agent      | "What are the developer details?", with the organisation bar and Change organisation      |
 
 Case does not matter, and the domain is ignored. Sign out (in the header) forgets the account so another email can be tried in the same browser.
 
 #### Registering a Defra account first
 
-An email whose local part contains `new` has no Defra account yet, so after the One Login password the participant is taken through the Defra ID "register a Defra account" screens before the journey continues:
+Anyone who answers "Yourself, as an individual" to "Who are you requesting to use the nature restoration fund for?" has no Defra account yet, whatever email they sign in with. Anyone who answers "The business or organisation you work for" is taken to be the organisation's account admin and has none either, unless they follow the **Employee invitation email** link in the footer of the next page instead of Continue: an invited employee has been added to the organisation's account already and skips the registration. For an agent, an email whose local part contains `new` has no account. Either way, after the One Login password the participant is taken through the Defra ID "register a Defra account" screens before the journey continues:
 
-| Email                  | Registration screens                                          | Account afterwards |
-| ---------------------- | ------------------------------------------------------------- | ------------------ |
-| `new-individual@…`     | individual (name, telephone, address, memorable word)         | Individual         |
-| `new-company@…`        | business (trading in the UK, company number, contact details) | Company            |
-| `new@…`, `new-agent@…` | business                                                      | Agent              |
+| Who the levy is for, email                                      | Registration screens                                          | Account afterwards |
+| --------------------------------------------------------------- | ------------------------------------------------------------- | ------------------ |
+| an individual, any email                                        | individual (name, telephone, address, memorable word)         | Individual         |
+| an organisation (admin, invitation email not opened), any email | business (trading in the UK, company number, contact details) | Company            |
+| an agent, `new@…`, `new-agent@…`                                | business                                                      | Agent              |
 
 The answer to "Are you registering as a business or organisation?" wins over the email: choosing "No, as an individual" always produces an individual, and choosing "Yes" produces a company only when the email contains `company`, otherwise an agent. Inside the registration:
 
@@ -218,7 +218,7 @@ Use the "Turn errors off" link in the footer, next to Clear data, or add `?error
 
 ### Research aids in the footer
 
-A page can list shortcuts for the facilitator under `research:` in its `journey.yaml` entry (text and href, one per link). They appear in a "User research" section at the top of the footer, under the crown, and open in a new tab. On "What would you like to do?" this is the quote email, filled with the sample quote, so a participant can see the NRL reference they will be asked for. Add `?research=false` to any page to hide the section for the rest of the browser session (`?research=true` shows it again; Clear data resets it too). Preview renders, the screen wall and screenshots never show it.
+A page can list shortcuts for the facilitator under `research:` in its `journey.yaml` entry (text and href, one per link). They appear in a "User research" section at the top of the footer, under the crown, and open in a new tab unless the journey says otherwise. On "What would you like to do?" this is the quote email, filled with the sample quote, so a participant can see the NRL reference they will be asked for. On "You'll need to create or join a Defra account for your business or organisation" it is the employee invitation email, and opening it changes the path (see "Registering a Defra account first"). Add `?research=false` to any page to hide the section for the rest of the browser session (`?research=true` shows it again; Clear data resets it too). Preview renders, the screen wall and screenshots never show it.
 
 ### Seeing any screen without walking the journey
 

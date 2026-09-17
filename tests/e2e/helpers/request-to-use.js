@@ -59,12 +59,26 @@ async function acceptAndSkipVariation(page) {
 
 // After the variation questions: who the user is requesting to use the levy
 // for (an option value: individual, organisation or agent), then the Defra
-// account guidance for that kind of user, then on to sign in
+// account guidance for that kind of user, then on to sign in. 'employee'
+// answers organisation and then opens the employee invitation email (the
+// user research link on the guidance page) and follows its link to sign in,
+// as an invited employee does; 'organisation' presses Continue instead, as
+// the account admin does.
 async function chooseDefraUserType(page, userType) {
+  const answerValue = userType === 'employee' ? 'organisation' : userType
   await expect(page).toHaveURL(`${base}/defra-account-user-type`)
-  await answer(page, 'defra-account-user-type', userType)
+  await answer(page, 'defra-account-user-type', answerValue)
   await submit(page, 'defra-account-user-type')
-  await expect(page).toHaveURL(`${base}/defra-account-${userType}`)
+  await expect(page).toHaveURL(`${base}/defra-account-${answerValue}`)
+  if (userType === 'employee') {
+    await page
+      .locator('.app-footer--research')
+      .getByRole('link', { name: 'Employee invitation email' })
+      .click()
+    await expect(page).toHaveURL(`${base}/defra-account-employee-email`)
+    await followLink(page, 'defra-account-employee-email', './$next')
+    return
+  }
   await submit(page, `defra-account-${userType}`)
   if (userType === 'agent') {
     // Agents read the invitation email from their client's Defra account

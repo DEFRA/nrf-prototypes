@@ -13,8 +13,11 @@
  *   - a mock Government Gateway: the user ID typed at sign in works the same
  *     way (company, individual, new-company…); creating sign in details
  *     mints a 12 digit user ID and signs in with the email given
- *   - a mock Defra ID registration for emails (or user IDs) containing "new"
- *     (new-individual@, new-company@, new@ for an agent): the business or
+ *   - a mock Defra ID registration for anyone requesting to use the levy
+ *     for themselves as an individual or for their organisation as its
+ *     account admin (an employee who opened the invitation email, a user
+ *     research link on the organisation guidance page, skips it), and for
+ *     agents whose email (or user ID) contains "new": the business or
  *     individual answer on the registration pages decides the account type
  *   - sign out, the NRL reference and certificate dates on submission
  *
@@ -137,16 +140,22 @@ function accountTypeFromEmail(email) {
  * Which mock account an email address (or a Government Gateway user ID,
  * which has no @) signs in to. The answer to "Who are you requesting to use the levy for?"
  * decides the account type; the email decides it only when that question
- * was skipped. An email containing "new" has no Defra account yet, so the
- * journey registers one first.
+ * was skipped. Anyone requesting to use the levy for themselves as an
+ * individual, or for their organisation as its account admin, has no Defra
+ * account yet, so the journey registers one first. An employee who opened
+ * the invitation email (`employeeInvited`) has been invited to the
+ * organisation's account and skips it. For anyone else an email containing
+ * "new" registers.
  */
-function accountFor(email, userType) {
+function accountFor(email, userType, employeeInvited = false) {
   const local = emailLocalPart(email)
   const type = USER_TYPE_ACCOUNTS[userType] || accountTypeFromEmail(email)
+  const invited = userType === 'organisation' && Boolean(employeeInvited)
+  const admin = userType === 'individual' || userType === 'organisation'
   return {
     ...ACCOUNTS[type],
     email: String(email || '').trim(),
-    needsDefraAccount: local.includes('new'),
+    needsDefraAccount: !invited && (admin || local.includes('new')),
     // An employee invited to a business's account (new-employee@) registers
     // with their own details only and is told the administrator will finish
     // setting them up
@@ -284,6 +293,7 @@ const reviewQuoteDetails = {
 
 const SIGN_IN_KEYS = [
   'account',
+  'employeeInvited',
   'signInEmail',
   'signInMethod',
   'securityCodeMethod',
@@ -320,14 +330,38 @@ const signInMethod = {
 }
 
 // Changing who the Defra account is for after signing in (from check your
-// answers) moves the signed-in account to the matching type
+// answers) moves the signed-in account to the matching type. They stay
+// signed in: becoming an individual here never sends them back to register.
+// An employee invitation only counts for an organisation, so another answer
+// forgets it.
 const defraAccountUserType = {
   process(ctx) {
     const { data } = ctx
+    if (data.defraUserType !== 'organisation') {
+      delete data.employeeInvited
+    }
     if (data.account && !data.account.needsDefraAccount) {
       const { fullName } = data.account
-      data.account = accountFor(data.account.email, data.defraUserType)
+      data.account = accountFor(
+        data.account.email,
+        data.defraUserType,
+        data.employeeInvited
+      )
       data.account.fullName = fullName
+      data.account.needsDefraAccount = false
+    }
+  }
+}
+
+// Opening the employee invitation email (the user research link on the
+// organisation guidance page) makes the user an invited employee: they
+// have been invited to the organisation's Defra account, so signing in
+// skips the registration. Continuing without opening it makes them the
+// account admin, who registers.
+const defraAccountEmployeeEmail = {
+  load(ctx) {
+    if (!ctx.preview) {
+      ctx.data.employeeInvited = true
     }
   }
 }
@@ -340,7 +374,11 @@ const oneLoginSignIn = {
     // The password field is named _password so the kit never stores it; make
     // sure of that here too
     delete data._password
-    data.account = accountFor(data.signInEmail, data.defraUserType)
+    data.account = accountFor(
+      data.signInEmail,
+      data.defraUserType,
+      data.employeeInvited
+    )
   }
 }
 
@@ -351,7 +389,8 @@ const governmentGatewaySignIn = {
   process(ctx, value) {
     ctx.data.account = accountFor(
       (value && value._userId) || '',
-      ctx.data.defraUserType
+      ctx.data.defraUserType,
+      ctx.data.employeeInvited
     )
   }
 }
@@ -379,7 +418,11 @@ const governmentGatewayUserId = {
   },
   process(ctx) {
     const { data } = ctx
-    data.account = accountFor(data.signInEmail, data.defraUserType)
+    data.account = accountFor(
+      data.signInEmail,
+      data.defraUserType,
+      data.employeeInvited
+    )
     if (data.governmentGatewayName) {
       data.account.fullName = String(data.governmentGatewayName).trim()
     }
@@ -457,6 +500,7 @@ module.exports = {
   'original-reference': originalReference,
   'review-quote-details': reviewQuoteDetails,
   'defra-account-user-type': defraAccountUserType,
+  'defra-account-employee-email': defraAccountEmployeeEmail,
   'sign-in-method': signInMethod,
   'one-login-password': oneLoginSignIn,
   'one-login-created': oneLoginSignIn,

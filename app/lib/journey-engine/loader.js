@@ -454,14 +454,19 @@ function buildPage(entry, journey, problems) {
  * `research:` on a page lists user research aids: links the footer shows
  * in their own "User research" section, under the crown, that open in a
  * new tab. They are facilitator shortcuts (the quote email a participant
- * would have received), not part of the flow, so the tools page ignores
- * them. An `href` is a page of this journey (`estimate-email-content`,
+ * would have received), not part of the flow: the tools page draws one to
+ * a page of this journey as a dashed link and ignores the rest. An `href`
+ * is a page of this journey (`estimate-email-content`,
  * with any query string), a path into another journey (`/nrf-quote-7/...`)
- * or a full URL.
+ * or a full URL. Links open in a new tab unless `newTab: false`, for one
+ * the participant is meant to follow in place of the page's own button.
  *
  *   research:
  *     - text: Quote email
  *       href: /nrf-quote-7/estimate-email-content?preview=1
+ *     - text: Employee invitation email
+ *       href: defra-account-employee-email
+ *       newTab: false
  */
 function buildResearchLinks(entries, journey, where, problems) {
   if (entries === undefined) {
@@ -481,7 +486,8 @@ function buildResearchLinks(entries, journey, where, problems) {
     return [
       {
         text: String(link.text),
-        href: absolute ? href : `${journey.basePath}/${href}`
+        href: absolute ? href : `${journey.basePath}/${href}`,
+        newTab: link.newTab !== false
       }
     ]
   })

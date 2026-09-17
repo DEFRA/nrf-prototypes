@@ -159,7 +159,25 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
 
     await answer(page, 'variation', 'No')
     await submit(page, 'variation')
-    await chooseDefraUserType(page, 'organisation')
+    // The organisation guidance offers the employee invitation email as a
+    // user research link, followed in this tab instead of Continue
+    await answer(page, 'defra-account-user-type', 'organisation')
+    await submit(page, 'defra-account-user-type')
+    await expect(page).toHaveURL(`${base}/defra-account-organisation`)
+    const invitation = page
+      .locator('.app-footer--research')
+      .getByRole('link', { name: 'Employee invitation email' })
+    await expect(invitation).toHaveAttribute(
+      'href',
+      `${base}/defra-account-employee-email`
+    )
+    await expect(invitation).not.toHaveAttribute('target', '_blank')
+    // Opening it makes them an invited employee: signing in skips the
+    // Defra account registration
+    await invitation.click()
+    await expect(page).toHaveURL(`${base}/defra-account-employee-email`)
+    await expect(page.locator('main')).toContainText('jane@example.com')
+    await followLink(page, 'defra-account-employee-email', './$next')
     await signIn(page, 'company@example.com')
     await expect(page).toHaveURL(`${base}/your-address`)
     await expectBodyCopy(page, 'your-address', 'company address')
@@ -334,7 +352,8 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
     )
 
     // Changing who the levy is for goes through the guidance and back, and
-    // moves the signed-in account to the new type
+    // moves the signed-in account to the new type (still signed in: becoming
+    // an individual here does not send them back to register)
     await changeLink(
       page,
       'check-your-answers',
@@ -392,9 +411,10 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
 })
 
 test.describe('nrf-request-to-use-1 Defra ID registration', () => {
-  // Sign-in emails containing "new" register a Defra account first; the
-  // business or individual answer then decides the account type, with who
-  // the levy is being requested for deciding between a company and an agent
+  // Anyone requesting the levy for themselves as an individual, and sign-in
+  // emails containing "new", register a Defra account first; the business or
+  // individual answer then decides the account type, with who the levy is
+  // being requested for deciding between a company and an agent
   async function registerStart(page, email, userType = 'agent') {
     await reachSignIn(page, userType)
     await signIn(page, email)
@@ -686,11 +706,31 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
     await expect(page).toHaveURL(`${base}/sign-in-method`)
   })
 
-  test('other emails skip registration and are asked for their name', async ({
+  test('an individual always registers, whatever their email', async ({
     page
   }) => {
     await reachSignIn(page, 'individual')
     await signIn(page, 'individual@example.com')
+    await expect(page).toHaveURL(`${base}/defra-register`)
+  })
+
+  test('an organisation admin registers, whatever their email', async ({
+    page
+  }) => {
+    await reachSignIn(page, 'organisation')
+    await signIn(page, 'company@example.com')
+    await expect(page).toHaveURL(`${base}/defra-register`)
+    await submit(page, 'defra-register')
+    await submit(page, 'defra-terms')
+    await submit(page, 'defra-what-we-need')
+    await atRegistrationType(page)
+  })
+
+  test('an invited employee skips registration and is asked for their name', async ({
+    page
+  }) => {
+    await reachSignIn(page, 'employee')
+    await signIn(page, 'company@example.com')
     await expect(page).toHaveURL(`${base}/your-address`)
     // Nothing is known about them: the name box is empty and required
     await expect(fieldBox(page, 'your-address', 'full-name')).toHaveValue('')
@@ -704,7 +744,7 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
   }) => {
     // An individual's email, but the account is for the organisation they
     // work for: a company, which gives its own address
-    await reachSignIn(page, 'organisation')
+    await reachSignIn(page, 'employee')
     await signIn(page, 'individual@example.com')
     await expect(page).toHaveURL(`${base}/your-address`)
     await expectBodyCopy(page, 'your-address', 'company address')
@@ -948,8 +988,8 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
     )
 
     await acceptAndSkipVariation(page)
-    await chooseDefraUserType(page, 'individual')
-    await signIn(page, 'individual@example.com')
+    await chooseDefraUserType(page, 'employee')
+    await signIn(page, 'company@example.com')
     await fillField(page, 'your-address', 'full-name', 'Jane Smith')
     await fillField(page, 'your-address', 'address-line-1', '53 Business Lane')
     await fillField(page, 'your-address', 'town', 'Business')
