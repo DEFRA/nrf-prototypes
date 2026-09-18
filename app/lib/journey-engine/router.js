@@ -185,7 +185,10 @@ function buildContext(req, res, journey, page, options = {}) {
     navFromSummary,
     // The journey that borrowed this page, when navFromSummary is a path
     // into another journey; its header is shown instead of this journey's
-    returnJourney
+    returnJourney,
+    // `$borrowed` in a condition: this page was opened from another
+    // journey's summary page
+    borrowed: Boolean(returnJourney)
   }
 }
 

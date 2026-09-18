@@ -541,7 +541,18 @@ const uploadRedline = {
 // the spinner for a moment and then continues.
 const checkingFile = {
   get(ctx, model) {
-    model.continueUrl = ctx.journey.byId.get('file-preview').path
+    const { journey, isChange, navFromSummary } = ctx
+    // A change detour from check your answers (via the draw-or-upload
+    // choice) keeps its way back, so the preview returns to the summary
+    const params = []
+    if (navFromSummary) {
+      if (isChange) {
+        params.push('change=true')
+      }
+      params.push(`nav=${navFromSummary}`)
+    }
+    const suffix = params.length ? `?${params.join('&')}` : ''
+    model.continueUrl = `${journey.byId.get('file-preview').path}${suffix}`
     model.refreshSeconds = 3
   }
 }

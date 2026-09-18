@@ -294,6 +294,60 @@ test.describe('nrf-quote-7 happy path', () => {
     await submit(page, 'estimate-email')
     await expect(page).toHaveURL(/check-your-answers/)
 
+    // The boundary's Change link goes back to the draw-or-upload choice, so
+    // the user can switch method
+    await expect(
+      changeLink(page, 'check-your-answers', 'redline-map')
+    ).toHaveAttribute(
+      'href',
+      `${base}/redline-map?change=true&nav=check-your-answers`
+    )
+    await changeLink(page, 'check-your-answers', 'redline-map').click()
+    await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
+      'href',
+      `${base}/check-your-answers`
+    )
+    // Drawing instead steps back to the choice, not straight to the summary
+    await answer(page, 'redline-map', 'draw')
+    await submit(page, 'redline-map')
+    await expect(page).toHaveURL(/map\?change=true&nav=check-your-answers/)
+    await expect(page.locator('#draw-boundary-config')).toHaveAttribute(
+      'data-back-link-path',
+      `${base}/redline-map`
+    )
+    await page.goto(`${base}/redline-map?change=true&nav=check-your-answers`)
+
+    // Switching to upload keeps the way back through the spinner page
+    await answer(page, 'redline-map', 'upload')
+    await submit(page, 'redline-map')
+    await expect(page).toHaveURL(
+      /upload-redline\?change=true&nav=check-your-answers/
+    )
+    await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
+      'href',
+      `${base}/redline-map`
+    )
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'site.geojson',
+      mimeType: 'application/geo+json',
+      buffer: Buffer.from('{}')
+    })
+    await submit(page, 'upload-redline')
+    await expect(page).toHaveURL(/checking-file\?change=true&nav=/)
+    await expect(page).toHaveURL(
+      /file-preview\?change=true&nav=check-your-answers/,
+      { timeout: 10000 }
+    )
+    await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
+      'href',
+      `${base}/upload-redline`
+    )
+    await submit(page, 'file-preview')
+    await expect(page).toHaveURL(/check-your-answers$/)
+    await expect(page.locator('.govuk-summary-list')).toContainText(
+      'site.geojson'
+    )
+
     await changeLink(page, 'check-your-answers', 'units').click()
     await expect(page).toHaveURL(/units\?change=true&nav=check-your-answers/)
     await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(

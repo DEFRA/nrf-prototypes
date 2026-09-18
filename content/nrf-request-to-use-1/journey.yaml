@@ -369,6 +369,8 @@ pages:
   # (see one-login-password).
   - id: defra-account-user-type
     back:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
       - when: { key: originalCommitted, equals: 'Yes' }
         goto: original-reference
       - when: { key: isVariation, equals: 'Yes' }

@@ -17,10 +17,8 @@ rows:
       when: { key: hasRedlineBoundaryFile, truthy: true }
       then: '{{ redlineFile or "Uploaded" }}'
       else: Added
-    change:
-      - when: { key: hasRedlineBoundaryFile, truthy: true }
-        goto: file-preview
-      - goto: map
+    # Back to the draw-or-upload choice, so the user can switch method
+    change: redline-map
     changeHidden:
       when: { key: hasRedlineBoundaryFile, truthy: true }
       then: uploaded red line boundary
