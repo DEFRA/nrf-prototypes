@@ -166,7 +166,7 @@ pages:
         set: { mapReferrer: redline-map }
 
   - id: upload-redline
-    handoff: 2026-09-18
+    handoff: 2026-09-18 # handed over again the same day: details copy corrected
     field: redline-file
     sessionKey: redlineFile
     accept: ['.geojson', '.json', '.kml', '.zip']
