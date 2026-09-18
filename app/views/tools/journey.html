@@ -56,6 +56,24 @@
   .wall-card__external { font-family: "GDS Transport", arial, sans-serif; font-size: 16px; line-height: 1.4; color: #505a5f; text-align: center; overflow-wrap: anywhere; }
   .wall-card__external code { display: block; margin-top: 10px; font-size: 14px; color: #0b0c0c; }
   .wall-card--custom { --wall-height: 900px; }
+  .wall-card__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
+  .wall-card__title { min-width: 0; }
+  .wall-card__menu { position: relative; flex: 0 0 auto; }
+  .wall-card__menu-button { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; margin: -3px 0 0; border-radius: 3px; color: #505a5f; cursor: pointer; list-style: none; }
+  .wall-card__menu-button::-webkit-details-marker { display: none; }
+  .wall-card__menu-button svg { width: 18px; height: 18px; }
+  .wall-card__menu-button:hover { color: #0b0c0c; background: #f3f2f1; }
+  .wall-card__menu-button:focus-visible { outline: 3px solid transparent; background: #ffdd00; box-shadow: 0 -2px #ffdd00, 0 4px #0b0c0c; color: #0b0c0c; }
+  .wall-card__menu[open] .wall-card__menu-button { color: #0b0c0c; background: #f3f2f1; }
+  .wall-card__panel { position: absolute; right: 0; top: calc(100% + 4px); z-index: 6; width: 260px; padding: 12px 14px; background: #fff; border: 1px solid #b1b4b6; border-radius: 4px; box-shadow: 0 4px 12px rgba(11, 12, 12, 0.15); font-family: "GDS Transport", arial, sans-serif; font-size: 14px; line-height: 1.4; }
+  .wall-card__views { margin: 0 0 10px; padding: 0 0 10px; border: 0; border-bottom: 1px solid #b1b4b6; }
+  .wall-card__views legend { padding: 0; margin-bottom: 4px; font-weight: 700; color: #0b0c0c; }
+  .wall-card__views label { display: flex; align-items: center; gap: 8px; padding: 3px 0; cursor: pointer; }
+  .wall-card__views input { margin: 0; width: 16px; height: 16px; accent-color: #0b0c0c; }
+  .wall-card__actions { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin: 0 0 10px; }
+  .wall-card__actions .govuk-link { font-size: 14px; }
+  .wall-card__file { margin: 0; color: #505a5f; word-break: break-all; }
+  .wall-card__showing { position: absolute; right: 8px; top: 8px; z-index: 1; padding: 3px 8px; border-radius: 3px; background: #0b0c0c; color: #fff; font-family: "GDS Transport", arial, sans-serif; font-size: 13px; line-height: 1.3; pointer-events: none; }
   .wall-card__handoff { display: inline-block; margin-left: 6px; vertical-align: middle; }
   .wall-card__handoff .govuk-tag { font-size: 12px; line-height: 1; padding: 4px 6px 3px; margin: 0; white-space: nowrap; }
   .wall-card--handoff .wall-card__frame { border-top: 4px solid #28a197; }
@@ -87,6 +105,8 @@
   .tools-controls--export .govuk-radios__label { white-space: nowrap; }
   .wall-card__copy { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; margin: 0 6px 0 -4px; padding: 0; border: 0; border-radius: 3px; background: transparent; color: #1d70b8; cursor: pointer; vertical-align: middle; }
   .wall-card__copy svg { width: 16px; height: 16px; }
+  .wall-card__copy--text { width: auto; height: auto; margin: 0; padding: 2px 4px 2px 0; gap: 6px; font-family: "GDS Transport", arial, sans-serif; font-size: 14px; line-height: 1.4; color: #1d70b8; text-decoration: underline; text-underline-offset: 2px; }
+  .wall-card__copy--text:hover { color: #003078; background: none; }
   .wall-card__copy:hover { color: #003078; background: #f3f2f1; }
   .wall-card__copy:focus-visible { outline: 3px solid transparent; background: #ffdd00; box-shadow: 0 -2px #ffdd00, 0 4px #0b0c0c; color: #0b0c0c; }
   .wall-card__copy::after { content: attr(data-feedback); position: absolute; left: calc(100% + 4px); top: 50%; transform: translateY(-50%); z-index: 2; padding: 3px 8px; border-radius: 3px; background: #0b0c0c; color: #fff; font-family: "GDS Transport", arial, sans-serif; font-size: 13px; line-height: 1.3; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.15s; }
@@ -129,12 +149,19 @@
   {% elif page.external %}
   <div class="wall-card wall-card--branch wall-card--external">
     <div class="wall-card__head">
-      <span class="wall-card__id">Exit</span>
-      <span class="wall-card__type">· {% if page.heading == "Back in the journey" %}rest of the journey{% else %}another journey{% endif %}</span><br>
-      <span class="wall-card__links">
-        <button type="button" class="wall-card__copy" data-copy-url="{{ publicBaseUrl }}{{ page.path }}" data-feedback="" title="Copy link" aria-label="Copy link to {{ page.path }}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
-        <a class="govuk-link" href="{{ page.path }}?preview=1" target="_blank" rel="noopener">Open</a>
+      <span class="wall-card__title">
+        <span class="wall-card__id">Exit</span>
+        <span class="wall-card__type">· {% if page.heading == "Back in the journey" %}rest of the journey{% else %}another journey{% endif %}</span>
       </span>
+      <details class="wall-card__menu">
+        <summary class="wall-card__menu-button" title="Options"><span class="govuk-visually-hidden">Options for the exit to {{ page.path }}</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="19" cy="12" r="2.2"/></svg></summary>
+        <div class="wall-card__panel">
+          <p class="wall-card__actions">
+            <a class="govuk-link wall-card__open" href="{{ page.path }}?preview=1" target="_blank" rel="noopener">Open in new tab</a>
+            <button type="button" class="wall-card__copy wall-card__copy--text" data-copy-url="{{ publicBaseUrl }}{{ page.path }}" data-feedback="" title="Copy link" aria-label="Copy link to {{ page.path }}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Copy link</button>
+          </p>
+        </div>
+      </details>
     </div>
     <div class="wall-card__frame">
       <p class="wall-card__external">{{ page.heading or "Continues in another journey" }}<code>{{ page.path }}</code></p>
@@ -144,36 +171,65 @@
   {% else %}
   <div class="wall-card{% if not loop.first %} wall-card--branch{% endif %}{% if page.isExit %} wall-card--exit{% endif %}{% if page.isCustom %} wall-card--custom{% endif %}{% if page.handoff %} wall-card--handoff{% if page.handoff.changed %} wall-card--handoff-changed{% endif %}{% endif %}" id="screen-{{ page.id }}">
     <div class="wall-card__head">
-      <span class="wall-card__id">{{ page.id }}</span>
-      <span class="wall-card__type">· {{ page.type }}</span>
-      {%- if page.handoff %}
-      <span class="wall-card__handoff" title="Handed to development on {{ page.handoff.on }}{% if page.handoff.changed %}; the copy has changed since{% if page.handoff.uncommitted %} (uncommitted){% endif %}{% endif %}. Tag {{ page.handoff.tag }}{% if page.handoff.frozenUrl %}. Frozen copy at {{ page.handoff.frozenUrl }}{% endif %}">{{ govukTag({ text: page.handoff.label, classes: "govuk-tag--yellow" if page.handoff.changed else "govuk-tag--turquoise" }) }}</span>
-      {%- endif %}<br>
-      <span class="wall-card__links">
-        {#- A handed-over page's link is its frozen copy, so what is shared stays what was handed over -#}
-        <button type="button" class="wall-card__copy" data-copy-url="{{ publicBaseUrl }}{% if page.handoff and page.handoff.frozenUrl %}{{ page.handoff.frozenUrl }}?preview=1{% else %}{{ page.path }}{% endif %}" data-feedback="" title="{% if page.handoff and page.handoff.frozenUrl %}Copy link to the frozen page{% else %}Copy link{% endif %}" aria-label="Copy link to {{ page.id }}{% if page.handoff and page.handoff.frozenUrl %} as handed over{% endif %}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
-        {% if canExportScreens %}<a class="wall-card__copy wall-card__export" href="/tools/journeys/{{ journey.id }}/screens/{{ page.id }}.jpg" download data-feedback="" title="Export screen as JPG" aria-label="Export {{ page.id }} as JPG"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a>{% endif %}
-        <a class="govuk-link" href="{{ page.path }}?preview=1" target="_blank" rel="noopener">Open</a>
-        {% if page.isQuestion or page.isCustom %}<a class="govuk-link" href="{{ page.path }}?preview=1&error=1" target="_blank" rel="noopener">Error state</a>{% endif %}
-        <span class="wall-card__type" title="{{ page.contentFile }}">{% if page.shared %}{{ page.contentFile | replace("content/", "") }}{% else %}{{ page.id }}.md{% endif %}</span>
+      <span class="wall-card__title">
+        <span class="wall-card__id">{{ page.id }}</span>
+        <span class="wall-card__type">· {{ page.type }}</span>
+        {%- if page.handoff %}
+        <span class="wall-card__handoff" title="Handed to development on {{ page.handoff.on }}{% if page.handoff.changed %}; the copy has changed since{% if page.handoff.uncommitted %} (uncommitted){% endif %}{% endif %}. Tag {{ page.handoff.tag }}{% if page.handoff.frozenUrl %}. Frozen copy at {{ page.handoff.frozenUrl }}{% endif %}">{{ govukTag({ text: page.handoff.label, classes: "govuk-tag--yellow" if page.handoff.changed else "govuk-tag--turquoise" }) }}</span>
+        {%- endif %}
       </span>
+      {#- One control per card: a menu with what to show in the preview
+          (live, error state, the copy as handed over) and the actions, which
+          follow the chosen view. See screen-wall.js -#}
+      {% set exportBase = "/tools/journeys/" + journey.id + "/screens/" + page.id + ".jpg" %}
+      <details class="wall-card__menu">
+        <summary class="wall-card__menu-button" title="Options"><span class="govuk-visually-hidden">Options for {{ page.id }}</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="19" cy="12" r="2.2"/></svg></summary>
+        <div class="wall-card__panel">
+          {% if page.isQuestion or page.isCustom or (page.handoff and page.handoff.frozenUrl) %}
+          <fieldset class="wall-card__views">
+            <legend>Show</legend>
+            <label><input type="radio" name="view-{{ page.id }}" value="live" checked data-url="{{ page.path }}?preview=1" data-copy="{{ publicBaseUrl }}{{ page.path }}" data-export="{{ exportBase }}" data-label=""> Live</label>
+            {% if page.isQuestion or page.isCustom %}
+            <label><input type="radio" name="view-{{ page.id }}" value="error" data-url="{{ page.path }}?preview=1&error=1" data-copy="{{ publicBaseUrl }}{{ page.path }}?preview=1&error=1" data-export="{{ exportBase }}?error=1" data-label="Error state"> Error state</label>
+            {% endif %}
+            {% if page.handoff and page.handoff.frozenUrl %}
+            <label><input type="radio" name="view-{{ page.id }}" value="handoff" data-url="{{ page.handoff.frozenUrl }}?preview=1" data-copy="{{ publicBaseUrl }}{{ page.handoff.frozenUrl }}?preview=1" data-export="{{ exportBase }}?handoff=1" data-label="As handed over on {{ page.handoff.on }}"> As handed over on {{ page.handoff.on }}</label>
+            {% endif %}
+          </fieldset>
+          {% endif %}
+          <p class="wall-card__actions">
+            <a class="govuk-link wall-card__open" href="{{ page.path }}?preview=1" target="_blank" rel="noopener">Open in new tab</a>
+            <button type="button" class="wall-card__copy wall-card__copy--text" data-copy-url="{{ publicBaseUrl }}{{ page.path }}" data-feedback="" title="Copy link" aria-label="Copy link to {{ page.id }}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Copy link</button>
+            {% if canExportScreens %}<a class="wall-card__copy wall-card__copy--text wall-card__export" href="{{ exportBase }}" download data-feedback="" title="Export screen as JPG" aria-label="Export {{ page.id }} as JPG"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export JPG</a>{% endif %}
+          </p>
+          <p class="wall-card__file" title="{{ page.contentFile }}">{% if page.shared %}{{ page.contentFile | replace("content/", "") }}{% else %}{{ page.id }}.md{% endif %}</p>
+        </div>
+      </details>
     </div>
     <div class="wall-card__frame">
       <iframe src="{{ page.path }}?preview=1&embed=1" loading="lazy" title="{{ page.heading }}" tabindex="-1"></iframe>
       <a class="wall-card__shield" href="{{ page.path }}?preview=1" target="_blank" rel="noopener" aria-label="Open {{ page.heading }} in a new tab"></a>
+      <span class="wall-card__showing" hidden></span>
     </div>
     {% if page.via %}<p class="wall-card__via">&#8627; {{ page.via }}</p>{% endif %}
   </div>
   {% for variant in page.variants %}
   <div class="wall-card wall-card--branch wall-card--variant{% if page.isCustom %} wall-card--custom{% endif %}">
     <div class="wall-card__head">
-      <span class="wall-card__id">{{ page.id }}</span>
-      <span class="wall-card__type">· {{ variant.label }}</span><br>
-      <span class="wall-card__links">
-        {% if canExportScreens %}<a class="wall-card__copy wall-card__export" href="/tools/journeys/{{ journey.id }}/screens/{{ page.id }}.jpg?variant={{ variant.id }}" download data-feedback="" title="Export screen as JPG" aria-label="Export {{ page.id }} ({{ variant.label }}) as JPG"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a>{% endif %}
-        <a class="govuk-link" href="{{ page.path }}?preview=1&variant={{ variant.id }}" target="_blank" rel="noopener">Open</a>
-        <span class="wall-card__type">variant: {{ variant.id }}</span>
+      <span class="wall-card__title">
+        <span class="wall-card__id">{{ page.id }}</span>
+        <span class="wall-card__type">· {{ variant.label }}</span>
       </span>
+      <details class="wall-card__menu">
+        <summary class="wall-card__menu-button" title="Options"><span class="govuk-visually-hidden">Options for {{ page.id }} ({{ variant.label }})</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="19" cy="12" r="2.2"/></svg></summary>
+        <div class="wall-card__panel">
+          <p class="wall-card__actions">
+            <a class="govuk-link wall-card__open" href="{{ page.path }}?preview=1&variant={{ variant.id }}" target="_blank" rel="noopener">Open in new tab</a>
+            {% if canExportScreens %}<a class="wall-card__copy wall-card__copy--text wall-card__export" href="/tools/journeys/{{ journey.id }}/screens/{{ page.id }}.jpg?variant={{ variant.id }}" download data-feedback="" title="Export screen as JPG" aria-label="Export {{ page.id }} ({{ variant.label }}) as JPG"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export JPG</a>{% endif %}
+          </p>
+          <p class="wall-card__file">variant: {{ variant.id }}</p>
+        </div>
+      </details>
     </div>
     <div class="wall-card__frame">
       <iframe src="{{ page.path }}?preview=1&embed=1&variant={{ variant.id }}" loading="lazy" title="{{ page.heading }} ({{ variant.label }})" tabindex="-1"></iframe>
@@ -270,7 +326,7 @@
     }) }}
   </div>
   {% endif %}
-  <p class="tools-legend">Every screen rendered live with the sample data from <code>journey.yaml → preview</code>. Each row is a page on the default path, followed by the screens that branch off it and how you reach them. Click a screen to open it in a new tab.{% if groups | length %} Purple cards stand for a group of screens (sign in, account creation) shown in its own section below.{% endif %}{% if handoffs | length %} A turquoise tag means the page has been handed to development; yellow means its copy has changed since.{% endif %}</p>
+  <p class="tools-legend">Every screen rendered live with the sample data from <code>journey.yaml → preview</code>. Each row is a page on the default path, followed by the screens that branch off it and how you reach them. Click a screen to open it in a new tab; the ⋯ menu on a card can show its error state or the copy as handed over instead, and copy, open or export whichever is showing.{% if groups | length %} Purple cards stand for a group of screens (sign in, account creation) shown in its own section below.{% endif %}{% if handoffs | length %} A turquoise tag means the page has been handed to development; yellow means its copy has changed since.{% endif %}</p>
 
   <div class="tools-controls">
     <label for="wall-scale">Zoom</label>
@@ -281,11 +337,24 @@
   {% if canExportScreens %}
   {% set exportForm %}
     <form method="get" action="/tools/journeys/{{ journey.id }}/screens.zip">
+      {% if handoffs | length %}
+      {{ govukRadios({
+        name: "screens",
+        idPrefix: "wall-screens",
+        classes: "govuk-radios--small govuk-radios--inline",
+        fieldset: { legend: { text: "Which copy", classes: "govuk-fieldset__legend--s govuk-!-margin-bottom-1" } },
+        items: [
+          { value: "live", text: "Live (every screen)", checked: true },
+          { value: "handoff", text: "As handed over (ready for dev screens only)" }
+        ]
+      }) }}
+      <span class="tools-controls__break" aria-hidden="true"></span>
+      {% endif %}
       {{ govukRadios({
         name: "viewport",
         idPrefix: "wall-viewport",
         classes: "govuk-radios--small govuk-radios--inline",
-        fieldset: { legend: { text: "Screen size", classes: "govuk-visually-hidden" } },
+        fieldset: { legend: { text: "Screen size", classes: "govuk-fieldset__legend--s govuk-!-margin-bottom-1" } },
         items: [
           { value: "desktop", text: "Desktop (1000px)", checked: true },
           { value: "mobile", text: "Mobile (375px)" }
@@ -320,7 +389,7 @@
         classes: "govuk-button--secondary govuk-!-margin-bottom-0",
         attributes: { id: "wall-export", "data-busy-text": "Exporting…" }
       }) }}
-      <span class="tools-legend tools-legend--inline">Captures each screen at the chosen width with the sample data into a zip. Untick error states for a quicker export with fewer files to drag onto a whiteboard.{% if exportSections | length > 1 %} Untick sections to leave them out: the main journey on its own, or just one of the sign-in groups. Each section gets a folder in the zip.{% endif %}</span>
+      <span class="tools-legend tools-legend--inline">Captures each screen at the chosen width with the sample data into a zip. Untick error states for a quicker export with fewer files to drag onto a whiteboard.{% if handoffs | length %} "As handed over" captures only the screens handed to development, each from its frozen copy, with <code>--handoff</code> in the file name.{% endif %}{% if exportSections | length > 1 %} Untick sections to leave them out: the main journey on its own, or just one of the sign-in groups. Each section gets a folder in the zip.{% endif %}</span>
     </form>
   {% endset %}
   <div class="tools-controls tools-controls--export">

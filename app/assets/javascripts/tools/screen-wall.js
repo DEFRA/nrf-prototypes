@@ -181,11 +181,70 @@
     const page = parts[parts.length - 1].replace(/\.jpg$/, '')
     const variant = url.searchParams.get('variant')
     const error = url.searchParams.get('error') === '1'
+    const handoff = url.searchParams.get('handoff') === '1'
     return (
-      [journey, page, variant, error ? 'error' : ''].filter(Boolean).join('-') +
-      '.jpg'
+      [journey, page, variant, error ? 'error' : '', handoff ? 'handoff' : '']
+        .filter(Boolean)
+        .join('-') + '.jpg'
     )
   }
+
+  // A card's menu offers what to show in its preview: the live page, its
+  // error state or the copy as handed over. The preview swaps in place and
+  // Open, Copy link and Export follow the chosen view
+  function showView(input) {
+    const card = input.closest('.wall-card')
+    if (!card) {
+      return
+    }
+    const url = input.getAttribute('data-url')
+    const frame = card.querySelector('.wall-card__frame iframe')
+    const shield = card.querySelector('.wall-card__shield')
+    const open = card.querySelector('.wall-card__open')
+    const copy = card.querySelector('.wall-card__copy[data-copy-url]')
+    const exportLink = card.querySelector('.wall-card__export')
+    const showing = card.querySelector('.wall-card__showing')
+    if (frame && url) {
+      frame.src = url + '&embed=1'
+    }
+    if (shield && url) {
+      shield.href = url
+    }
+    if (open && url) {
+      open.href = url
+    }
+    if (copy) {
+      copy.setAttribute('data-copy-url', input.getAttribute('data-copy') || '')
+    }
+    if (exportLink) {
+      exportLink.href = input.getAttribute('data-export') || exportLink.href
+    }
+    if (showing) {
+      const label = input.getAttribute('data-label') || ''
+      showing.textContent = label
+      showing.hidden = !label
+    }
+    card.setAttribute('data-view', input.value)
+  }
+
+  document.addEventListener('change', function (event) {
+    const input = event.target
+    if (input.matches && input.matches('.wall-card__views input[type=radio]')) {
+      showView(input)
+    }
+  })
+
+  // One menu open at a time, and a click anywhere else closes it
+  document.addEventListener('click', function (event) {
+    const inside = event.target.closest('.wall-card__menu')
+    document
+      .querySelectorAll('.wall-card__menu[open]')
+      .forEach(function (menu) {
+        if (menu !== inside) {
+          menu.removeAttribute('open')
+        }
+      })
+  })
 
   // Group sections have walls of their own below the main one, so listen
   // on the document rather than the main wall

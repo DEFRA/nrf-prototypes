@@ -7,6 +7,7 @@
  */
 
 const { exportScreens } = require('./flow')
+const { pageHandoff } = require('./history')
 
 // Capture sizes. Non-map pages are captured full length, so the height only
 // sets the initial viewport
@@ -89,7 +90,7 @@ function trimBaseUrl(baseUrl) {
  * Capture every screen of a journey as a JPEG.
  *
  * @param {object} journey  loaded journey definition
- * @param {object} options  { baseUrl, viewport, includeErrors, sections, quality, onProgress }
+ * @param {object} options  { baseUrl, viewport, includeErrors, sections, handoff, quality, onProgress }
  *   viewport is a key of VIEWPORTS ('desktop' by default); includeErrors
  *   (true by default) also captures each form's error state; sections
  *   ('main' and group ids, all by default) picks which parts to capture
@@ -99,10 +100,13 @@ async function captureScreens(journey, options = {}) {
   const baseUrl = trimBaseUrl(options.baseUrl)
   const quality = options.quality || 85
   const onProgress = options.onProgress || (() => {})
-  const screens = exportScreens(journey, {
+  let screens = exportScreens(journey, {
     includeErrors: options.includeErrors !== false,
     sections: options.sections
   })
+  if (options.handoff) {
+    screens = asHandedOver(journey, screens)
+  }
   return withPage(options.viewport, async (page) => {
     const results = []
     for (const screen of screens) {
@@ -115,25 +119,62 @@ async function captureScreens(journey, options = {}) {
 }
 
 /**
+ * The screens as handed over: only the pages with a frozen copy (see
+ * snapshots.js), each captured from that copy in the same state, with
+ * `--handoff` on the file name.
+ *
+ * @param {object} journey  loaded journey definition
+ * @param {Array} screens  entries from exportScreens
+ * @returns {Array}  the entries that have a frozen copy, pointed at it
+ */
+function asHandedOver(journey, screens) {
+  const frozen = new Map()
+  return screens.flatMap((screen) => {
+    if (!frozen.has(screen.id)) {
+      const handoff = pageHandoff(journey, journey.byId.get(screen.id))
+      frozen.set(
+        screen.id,
+        handoff && handoff.frozenUrl ? handoff.frozenUrl : null
+      )
+    }
+    const url = frozen.get(screen.id)
+    if (!url) {
+      return []
+    }
+    return [
+      {
+        ...screen,
+        url: screen.url.replace(screen.path, url),
+        file: screen.file.replace(/\.jpg$/, '--handoff.jpg')
+      }
+    ]
+  })
+}
+
+/**
  * Capture a single screen of a journey as a JPEG, for the export button on
  * each card of the screen wall.
  *
  * @param {object} journey  loaded journey definition
- * @param {object} options  { baseUrl, viewport, pageId, error, variant, quality }
+ * @param {object} options  { baseUrl, viewport, pageId, error, variant, handoff, quality }
  *   error captures the page's error state; variant names one of the page's
- *   preview variants
+ *   preview variants; handoff captures the page's frozen copy, as handed
+ *   over (see snapshots.js), in the same state
  * @returns {Promise<{ file: string, buffer: Buffer }>}  or null when the
  *   page (or the requested state of it) is not one the export knows about
  */
 async function captureScreen(journey, options = {}) {
   const baseUrl = trimBaseUrl(options.baseUrl)
   const quality = options.quality || 85
-  const screen = exportScreens(journey).find(
+  let screen = exportScreens(journey).find(
     (item) =>
       item.id === options.pageId &&
       item.error === Boolean(options.error) &&
       item.variant === (options.variant || null)
   )
+  if (screen && options.handoff) {
+    screen = asHandedOver(journey, [screen])[0] || null
+  }
   if (!screen) {
     return null
   }
@@ -148,6 +189,7 @@ async function captureScreen(journey, options = {}) {
 module.exports = {
   captureScreens,
   captureScreen,
+  asHandedOver,
   canExportScreens,
   VIEWPORTS
 }

@@ -216,6 +216,8 @@ router.get('/tools/journeys/:journey/flow.mmd', (req, res) => {
 // quicker export with fewer files to drag onto a whiteboard.
 // ?section=main&section=one-login picks which parts to export (the main
 // journey and each group); everything when left out
+// ?screens=handoff exports only the pages handed to development, each from
+// its frozen copy (see snapshots.js), instead of every page live
 router.get('/tools/journeys/:journey/screens.zip', async (req, res) => {
   const journey = loadOr404(req, res)
   if (!journey) {
@@ -236,9 +238,11 @@ router.get('/tools/journeys/:journey/screens.zip', async (req, res) => {
       .send('Tick at least one section to export')
     return
   }
+  const handoff = req.query.screens === 'handoff'
   const partial = chosen.length < available.length
   const folder = [
     journey.id,
+    handoff ? 'handoff' : '',
     viewport === 'desktop' ? '' : viewport,
     partial ? chosen.join('+') : ''
   ]
@@ -250,10 +254,18 @@ router.get('/tools/journeys/:journey/screens.zip', async (req, res) => {
       baseUrl: `${req.protocol}://${req.get('host')}`,
       viewport,
       includeErrors,
-      sections: chosen
+      sections: chosen,
+      handoff
     })
   } catch (error) {
     res.status(500).type('text/plain').send(error.message)
+    return
+  }
+  if (!screens.length) {
+    res
+      .status(404)
+      .type('text/plain')
+      .send('No page of this journey has a frozen copy to export yet')
     return
   }
   res.setHeader('Content-Type', 'application/zip')
@@ -273,8 +285,9 @@ router.get('/tools/journeys/:journey/screens.zip', async (req, res) => {
 })
 
 // One screen as a JPG, for the export button on each card of the wall.
-// Always desktop width; ?error=1 captures the form's error state and
-// ?variant=<id> one of the page's preview variants
+// Always desktop width; ?error=1 captures the form's error state,
+// ?variant=<id> one of the page's preview variants and ?handoff=1 the frozen
+// copy of the page as handed over
 router.get('/tools/journeys/:journey/screens/:page.jpg', async (req, res) => {
   const journey = loadOr404(req, res)
   if (!journey) {
@@ -287,7 +300,8 @@ router.get('/tools/journeys/:journey/screens/:page.jpg', async (req, res) => {
       viewport: 'desktop',
       pageId: req.params.page,
       error: req.query.error === '1',
-      variant: req.query.variant ? String(req.query.variant) : null
+      variant: req.query.variant ? String(req.query.variant) : null,
+      handoff: req.query.handoff === '1'
     })
   } catch (error) {
     res.status(500).type('text/plain').send(error.message)

@@ -343,6 +343,23 @@ test.describe('journey tools', () => {
     ).toHaveAttribute('src', /file-preview\?preview=1&embed=1&variant=/)
   })
 
+  test('a card menu can show the error state in place', async ({ page }) => {
+    await page.goto(`/tools/journeys/${journey.id}`)
+    await page.getByRole('tab', { name: 'Screens' }).click()
+    const card = page.locator('#screen-planning-type')
+    await card.locator('.wall-card__menu-button').click()
+    await card.locator('.wall-card__views input[value=error]').check()
+    await expect(card.locator('iframe')).toHaveAttribute(
+      'src',
+      /planning-type\?preview=1&error=1&embed=1$/
+    )
+    await expect(card.locator('.wall-card__showing')).toHaveText('Error state')
+    await expect(card.locator('.wall-card__open')).toHaveAttribute(
+      'href',
+      /planning-type\?preview=1&error=1$/
+    )
+  })
+
   test('screen wall places branch screens beside the page they branch from', async ({
     page
   }) => {

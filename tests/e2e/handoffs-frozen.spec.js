@@ -132,13 +132,73 @@ test.describe('frozen copy of a handoff', () => {
       row.getByRole('link', { name: 'Frozen page' })
     ).toHaveAttribute('href', `${frozen.frozenUrl}?preview=1`)
 
-    // The screen's copy-link button shares the frozen page too
+    // The screen's menu can show the frozen copy in place; Open, Copy link
+    // and Export then follow it
+    const card = page.locator(`#screen-${frozen.id}`)
+    await card.locator('.wall-card__menu-button').click()
+    await card.locator('.wall-card__views input[value=handoff]').check()
+    await expect(card.locator('iframe')).toHaveAttribute(
+      'src',
+      `${frozen.frozenUrl}?preview=1&embed=1`
+    )
+    await expect(card.locator('.wall-card__showing')).toBeVisible()
+    await expect(card.locator('.wall-card__open')).toHaveAttribute(
+      'href',
+      `${frozen.frozenUrl}?preview=1`
+    )
     await expect(
-      page.locator(`#screen-${frozen.id} .wall-card__copy[data-copy-url]`)
+      card.locator('.wall-card__copy[data-copy-url]')
     ).toHaveAttribute(
       'data-copy-url',
       new RegExp(`${frozen.frozenUrl}\\?preview=1$`)
     )
+    const exportLink = card.locator('.wall-card__export')
+    if (await exportLink.count()) {
+      await expect(exportLink).toHaveAttribute('href', /\?handoff=1$/)
+    }
+
+    // Back to live, and the copy link is the live page again
+    await card.locator('.wall-card__views input[value=live]').check()
+    await expect(card.locator('iframe')).toHaveAttribute(
+      'src',
+      `${journey.basePath}/${frozen.id}?preview=1&embed=1`
+    )
+    await expect(card.locator('.wall-card__showing')).toBeHidden()
+  })
+
+  test('the bulk export as handed over keeps only frozen pages', () => {
+    const { asHandedOver } = require('../../app/lib/journey-engine/screenshots')
+    const { exportScreens } = require('../../app/lib/journey-engine/flow')
+    const screens = asHandedOver(journey, exportScreens(journey))
+    const withCopy = journeyHandoffs(journey)
+      .filter((item) => item.frozenUrl)
+      .map((item) => item.id)
+    expect(screens.length).toBeGreaterThan(0)
+    for (const screen of screens) {
+      expect(withCopy).toContain(screen.id)
+      expect(screen.url).toMatch(
+        new RegExp(
+          `^/handoffs/${journeyId}/latest/${screen.id}\\?preview=1&embed=1`
+        )
+      )
+      expect(screen.file).toMatch(/--handoff\.jpg$/)
+    }
+    expect(new Set(screens.map((screen) => screen.id)).size).toBe(
+      withCopy.length
+    )
+  })
+
+  test('the export of a page with no frozen copy is not found', async ({
+    request
+  }) => {
+    const other = journey.pages.find(
+      (item) => !item.handoff && item.type !== 'custom'
+    )
+    test.skip(!other, 'every page has been handed over')
+    const response = await request.get(
+      `/tools/journeys/${journeyId}/screens/${other.id}.jpg?handoff=1`
+    )
+    expect(response.status()).toBe(404)
   })
 })
 
