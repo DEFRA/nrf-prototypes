@@ -159,8 +159,8 @@ preview:
     edpName: Broads SAC, Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2026 to 2036)
     quoteLoaded: NRL-123456
     quotedUnits: 100
-    quotedLevyAmount: '25,000'
-    levyAmount: '30,000'
+    quotedLevyAmount: 'X,XXX'
+    levyAmount: 'X,XXX'
     levyIncreased: true
     acceptLevy: 'Yes'
     isVariation: 'Yes'

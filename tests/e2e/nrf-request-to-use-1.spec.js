@@ -7,6 +7,7 @@ const {
   exportScreens
 } = require('../../app/lib/journey-engine')
 const { copyOf } = require('./helpers/journey')
+const { LEVY_AMOUNT } = require('../../app/lib/nrf-request-to-use-1/hooks')
 const {
   requestToUse,
   retrieveQuote,
@@ -153,7 +154,7 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
 
     await submit(page, 'review-quote-details')
     await expect(page).toHaveURL(`${base}/accept-levy`)
-    await expect(page.locator('main')).toContainText('£25,000')
+    await expect(page.locator('main')).toContainText(`£${LEVY_AMOUNT}`)
     await answer(page, 'accept-levy', 'Yes')
     await submit(page, 'accept-levy')
     await expect(page).toHaveURL(`${base}/variation`)
@@ -842,7 +843,7 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
 
     await submit(page, 'review-quote-details')
     await expect(page).toHaveURL(`${base}/levy-increased`)
-    await expect(page.locator('.govuk-hint')).toContainText('£30,000')
+    await expect(page.locator('.govuk-hint')).toContainText(`£${LEVY_AMOUNT}`)
   })
 
   test('deleting the quote details uses the quote journey and starts afresh', async ({
@@ -879,7 +880,7 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
     await expect(page.locator('.govuk-summary-list')).toContainText('100')
     await submit(page, 'review-quote-details')
     await expect(page).toHaveURL(`${base}/accept-levy`)
-    await expect(page.locator('main')).toContainText('£25,000')
+    await expect(page.locator('main')).toContainText(`£${LEVY_AMOUNT}`)
     await expect(optionLocator(page, 'accept-levy', 'No')).not.toBeChecked()
   })
 

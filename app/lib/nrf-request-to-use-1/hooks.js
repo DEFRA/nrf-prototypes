@@ -6,7 +6,8 @@
  *   - a mock quote store: the NRL reference typed retrieves the quote made in
  *     nrf-quote-7 when it matches the reference that journey minted (kept in
  *     the session, never shown in the box), otherwise a fixture quote
- *   - "levy increased" and the levy amount, recalculated when units change
+ *   - "levy increased" when the units grow; the levy amount itself is the
+ *     £X,XXX placeholder every journey shows until a rate is agreed
  *   - a mock GOV.UK One Login: the sign-in email decides the account type
  *     (company@… company, individual@… individual, anything else an agent),
  *     whether the user signs in or has just created the account
@@ -35,8 +36,9 @@ const { message } = require('../journey-engine/validation')
 
 const EDP_NAME =
   'Broads SAC, Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2026 to 2036)'
-// Indicative charge per housing unit for the prototype's levy amounts
-const LEVY_PER_UNIT = 250
+// No levy rate is agreed yet, so every amount is the placeholder the quote
+// journey's email shows (content/nrf-quote-7)
+const LEVY_AMOUNT = 'X,XXX'
 // Quote references from either service: NRF-123456 or NRL-123456
 const REFERENCE = /^(NRF|NRL)-\d{6}$/i
 // An open ring ([lng, lat]) near Wymondham, inside the Broads/Wensum EDP and
@@ -130,10 +132,6 @@ function withParticipant(account, data) {
   return account
 }
 
-function formatMoney(amount) {
-  return Math.round(Number(amount) || 0).toLocaleString('en-GB')
-}
-
 function formatDate(date) {
   return new Intl.DateTimeFormat('en-GB', {
     day: 'numeric',
@@ -148,8 +146,9 @@ function addMonths(date, months) {
   return result
 }
 
-function levyFor(units) {
-  return formatMoney(Number(units) * LEVY_PER_UNIT)
+// The levy amount for any number of units: the placeholder, until a rate exists
+function levyFor() {
+  return LEVY_AMOUNT
 }
 
 // The business every company registration number finds (a fixture)
@@ -295,7 +294,7 @@ function loadQuote(data) {
   }
   if (data.quoteLoaded !== reference) {
     data.quotedUnits = Number(data.residentialBuildingCount)
-    data.quotedLevyAmount = levyFor(data.quotedUnits)
+    data.quotedLevyAmount = levyFor()
     data.levyAmount = data.quotedLevyAmount
     data.levyIncreased = false
     delete data.acceptLevy
@@ -335,7 +334,7 @@ const reviewQuoteDetails = {
     const units = Number(data.residentialBuildingCount)
     const quoted = Number(data.quotedUnits)
     data.levyIncreased = Number.isFinite(quoted) && units > quoted
-    data.levyAmount = levyFor(units)
+    data.levyAmount = levyFor()
     data.edpName =
       (data.redlineBoundaryPolygon &&
         data.redlineBoundaryPolygon.intersectingCatchment) ||
@@ -578,7 +577,7 @@ const checkYourAnswers = {
       issueDate: formatDate(issued),
       expiryDate: formatDate(addMonths(issued, 6))
     }
-    data.levyAmount = data.levyAmount || levyFor(data.residentialBuildingCount)
+    data.levyAmount = data.levyAmount || levyFor()
     data.edpName = data.edpName || EDP_NAME
   }
 }
@@ -614,6 +613,7 @@ module.exports = {
   MOCK_NAME,
   loadQuote,
   levyFor,
+  LEVY_AMOUNT,
   FIXTURE_QUOTE,
   EDP_NAME
 }

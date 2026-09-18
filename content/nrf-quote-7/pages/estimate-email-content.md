@@ -34,11 +34,11 @@ You told us the relevant development is planned to have:
 
 Your relevant development is planned in {{ redlineBoundaryPolygon.intersectingCatchment or intersectingCatchment }} Environmental Delivery Plan (EDP) addressing nutrient pollution.
 
-### Provisional nature restoration levy amount £X.XXX (plus VAT charged at 20%)
+### Provisional nature restoration levy amount £X,XXX (plus VAT charged at 20%)
 
 The amount is calculated from the charging schedule in the relevant EDP.
 
-### Inflation-adjusted nature restoration levy amount: £X.XXX (plus VAT charged at 20%)
+### Inflation-adjusted nature restoration levy amount: £X,XXX (plus VAT charged at 20%)
 
 This shows the indicative levy amount for the year the quote was issued. The amount includes annual inflation in line with the Royal Institute of Chartered Surveyors (RICS) Community Infrastructure Levy (CIL) Index, published on 1 November and applied on 1 January for the following calendar year. This quote is indicative and subject to annual inflation. It shows the amount you may need to pay if you request to use the nature restoration levy.
 
