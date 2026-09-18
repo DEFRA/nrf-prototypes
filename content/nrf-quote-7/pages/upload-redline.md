@@ -14,5 +14,5 @@ button: Continue
 # Upload a red line boundary file
 
 ::: details My file is in a different format
-You'll need to re-export the shape from the tool was used to create it originally. If you don't have access to the file types listed, you can draw on a map instead. [Learn more about telling us where your development is (opens in a new tab)](*)
+You'll need to re-export the shape from the tool used to create it originally. If you don't have access to the file types listed, you can draw on a map instead. [Learn more about telling us where your development is (opens in a new tab)](*)
 :::
