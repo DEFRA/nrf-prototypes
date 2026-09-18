@@ -19,6 +19,7 @@ const mapTilesRoutes = require('./routes/map-tiles.js')
 const osBaseMapRoutes = require('./routes/os-base-map.js')
 const toolsRoutes = require('./routes/tools.js')
 const handoffsRoutes = require('./routes/handoffs.js')
+const researchRoutes = require('./routes/research.js')
 
 // The footer's "Turn errors off/on" link reloads the current page with
 // ?errors=false or ?errors=true (see layouts/main.html)
@@ -28,6 +29,7 @@ router.use((req, res, next) => {
 })
 
 // Use non-journey routes
+router.use('/', researchRoutes) // ?participant flag and the participant details box
 router.use('/', tileserverProxyRoutes) // Add tileserver proxy first
 router.use('/', mapTilesRoutes) // Add generic map tiles endpoint
 router.use('/', osBaseMapRoutes) // Production-style OS basemap + names proxies

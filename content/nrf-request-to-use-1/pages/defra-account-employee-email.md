@@ -14,7 +14,7 @@ title: Email sent by Defra account
 
 Hello,
 
-James Bloggs has invited you to access online services from Defra and related organisations on behalf of Bloggs Developers.
+James Bloggs has invited you to access online services from Defra and related organisations on behalf of {{ researchParticipant.organisation or "Bloggs Developers" }}.
 
 To access these services, you need to:
 
@@ -28,7 +28,7 @@ To access these services, you need to:
 
 ## What happens next?
 
-James Bloggs will choose which information you can see and which tasks you can perform on behalf of Bloggs Developers. We'll let you know when everything is ready.
+James Bloggs will choose which information you can see and which tasks you can perform on behalf of {{ researchParticipant.organisation or "Bloggs Developers" }}. We'll let you know when everything is ready.
 
 **If you do not register within 30 days, we'll delete your information.**
 

@@ -14,7 +14,7 @@ actions:
 # Is this the business?
 
 :::inset
-**ACME LTD**\
+**{{ researchParticipant.organisation or "ACME LTD" }}**\
 1 Church Street, London, SW1A 1AA, United Kingdom
 :::
 

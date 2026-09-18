@@ -20,6 +20,9 @@
  *     agents whose email (or user ID) contains "new": the business or
  *     individual answer on the registration pages decides the account type
  *   - sign out, the NRL reference and certificate dates on submission
+ *   - the research participant's own name and organisation, typed by the
+ *     facilitator into the footer's "Participant details" box
+ *     (app/routes/research.js), in place of the stand-in names above
  *
  * The development details and the delete flow are the quote journey's own
  * pages (content/nrf-quote-7), borrowed with the way back in `nav`, so the
@@ -86,6 +89,47 @@ const ACCOUNTS = {
   }
 }
 
+/**
+ * The research participant, as the facilitator described them in the
+ * footer's "Participant details" box (session key `researchParticipant`):
+ * blank strings when nothing was given
+ */
+function participantOf(data) {
+  const given = (data && data.researchParticipant) || {}
+  const firstName = String(given.firstName || '').trim()
+  const lastName = String(given.lastName || '').trim()
+  return {
+    firstName,
+    lastName,
+    fullName: [firstName, lastName].filter(Boolean).join(' '),
+    organisation: String(given.organisation || '').trim()
+  }
+}
+
+/**
+ * A mock account wearing the participant's details: their name in place of
+ * the stand-in (never over a name the user typed in the journey) and their
+ * organisation or client in place of every business name the prototype
+ * would otherwise make up (the company's business, the agent's firm and
+ * the organisation the agent acts for). An individual has no business.
+ */
+function withParticipant(account, data) {
+  const participant = participantOf(data)
+  if (
+    participant.fullName &&
+    (!account.fullName || account.fullName === MOCK_NAME)
+  ) {
+    account.fullName = participant.fullName
+  }
+  if (participant.organisation && account.accountType !== 'individual') {
+    account.businessName = participant.organisation
+    if (account.accountType === 'agent') {
+      account.organisationName = participant.organisation
+    }
+  }
+  return account
+}
+
 function formatMoney(amount) {
   return Math.round(Number(amount) || 0).toLocaleString('en-GB')
 }
@@ -145,14 +189,15 @@ function accountTypeFromEmail(email) {
  * account yet, so the journey registers one first. An employee who opened
  * the invitation email (`employeeInvited`) has been invited to the
  * organisation's account and skips it. For anyone else an email containing
- * "new" registers.
+ * "new" registers. `data` is the session, for the research participant's
+ * own name and organisation (see withParticipant).
  */
-function accountFor(email, userType, employeeInvited = false) {
+function accountFor(email, userType, employeeInvited = false, data = {}) {
   const local = emailLocalPart(email)
   const type = USER_TYPE_ACCOUNTS[userType] || accountTypeFromEmail(email)
   const invited = userType === 'organisation' && Boolean(employeeInvited)
   const admin = userType === 'individual' || userType === 'organisation'
-  return {
+  const account = {
     ...ACCOUNTS[type],
     email: String(email || '').trim(),
     needsDefraAccount: !invited && (admin || local.includes('new')),
@@ -161,6 +206,7 @@ function accountFor(email, userType, employeeInvited = false) {
     // setting them up
     invitedEmployee: local.includes('employee')
   }
+  return withParticipant(account, data)
 }
 
 /**
@@ -184,7 +230,8 @@ function mintContactSupportId(now = new Date()) {
  * agent according to who they said the Defra account is for (falling back to
  * the email, agent by default). An invited employee gave their own details
  * and acts for the business, so they get a company account under the
- * business's name.
+ * business's name. The research participant's name and organisation stand
+ * in for the mock name and the fixture business when they were given.
  */
 function registeredAccount(data) {
   const email = (data.account && data.account.email) || data.signInEmail
@@ -201,12 +248,18 @@ function registeredAccount(data) {
   const type = employee ? 'company' : !business ? 'individual' : businessType
   const name = data.defraName || {}
   const fullName = [name.firstName, name.lastName].filter(Boolean).join(' ')
+  const participant = participantOf(data)
   const account = { ...ACCOUNTS[type], email: String(email || '').trim() }
   if (fullName) {
     account.fullName = fullName
+  } else if (participant.fullName) {
+    account.fullName = participant.fullName
   }
   if (business || employee) {
-    account.businessName = FIXTURE_BUSINESS
+    account.businessName = participant.organisation || FIXTURE_BUSINESS
+  }
+  if (type === 'agent' && participant.organisation) {
+    account.organisationName = participant.organisation
   }
   if (employee) {
     account.invitedEmployee = true
@@ -345,7 +398,8 @@ const defraAccountUserType = {
       data.account = accountFor(
         data.account.email,
         data.defraUserType,
-        data.employeeInvited
+        data.employeeInvited,
+        data
       )
       data.account.fullName = fullName
       data.account.needsDefraAccount = false
@@ -377,7 +431,8 @@ const oneLoginSignIn = {
     data.account = accountFor(
       data.signInEmail,
       data.defraUserType,
-      data.employeeInvited
+      data.employeeInvited,
+      data
     )
   }
 }
@@ -390,7 +445,8 @@ const governmentGatewaySignIn = {
     ctx.data.account = accountFor(
       (value && value._userId) || '',
       ctx.data.defraUserType,
-      ctx.data.employeeInvited
+      ctx.data.employeeInvited,
+      ctx.data
     )
   }
 }
@@ -421,10 +477,42 @@ const governmentGatewayUserId = {
     data.account = accountFor(
       data.signInEmail,
       data.defraUserType,
-      data.employeeInvited
+      data.employeeInvited,
+      data
     )
     if (data.governmentGatewayName) {
       data.account.fullName = String(data.governmentGatewayName).trim()
+    }
+  }
+}
+
+// The name pages start with the research participant's name, until the
+// participant types one: "What's your name?" on the Defra ID registration
+// and the Government Gateway's "What is your full name?". The page's copy
+// of the data is filled in, not the session, so the answer is only kept
+// once the form is submitted
+const defraName = {
+  get(ctx, model) {
+    const { data } = ctx
+    const participant = participantOf(data)
+    if (!ctx.preview && !data.defraName && participant.fullName) {
+      model.data = {
+        ...data,
+        defraName: {
+          firstName: participant.firstName,
+          lastName: participant.lastName
+        }
+      }
+    }
+  }
+}
+
+const governmentGatewayName = {
+  get(ctx, model) {
+    const { data } = ctx
+    const participant = participantOf(data)
+    if (!ctx.preview && !data.governmentGatewayName && participant.fullName) {
+      model.data = { ...data, governmentGatewayName: participant.fullName }
     }
   }
 }
@@ -506,6 +594,8 @@ module.exports = {
   'one-login-created': oneLoginSignIn,
   'government-gateway-sign-in': governmentGatewaySignIn,
   'government-gateway-user-id': governmentGatewayUserId,
+  'government-gateway-name': governmentGatewayName,
+  'defra-name': defraName,
   'defra-select-address': defraSelectAddress,
   'defra-address-manual': defraAddressManual,
   'your-address': yourAddress,
@@ -515,6 +605,8 @@ module.exports = {
   // For tests
   accountFor,
   registeredAccount,
+  participantOf,
+  withParticipant,
   mintGatewayUserId,
   mintContactSupportId,
   FIXTURE_BUSINESS,

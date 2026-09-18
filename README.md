@@ -175,6 +175,17 @@ The conversion script processes GeoJSON files from `app/assets/map-layers/` and 
 
 The content-driven journeys (`nrf-quote-7` and `nrf-request-to-use-1`) have no hidden switches. What a participant types decides the path they take, so a facilitator can steer a session with the email address or the numbers they hand over. Nothing is stored between sessions and no password is ever checked.
 
+### Use the participant's own name
+
+**Participant details** in the footer of every page (next to Clear data) opens a box, styled apart from the service, for the participant's first name, last name and the organisation or client they are acting for. Opening any page with `?participant` on the URL (for example `/nrf-request-to-use-1/start?participant`) shows the same box, so a facilitator can set the details up from a bookmark before the session starts. A blank box keeps the prototype's usual stand-in; "Forget them" clears the details, as Clear data does. They last for the browser session and survive Sign out.
+
+Wherever the request-to-use journey would otherwise make a name up, it uses these instead:
+
+- the name fills in "What's your name?" on the Defra account registration and the Government Gateway's "What is your full name?", is shown on the "Your Defra account" bar, greets the participant in the registration emails and is the full name on "What are your details?" and the certificate
+- the organisation or client is the business the participant registers a Defra account for and the company on their emails, and for an agent it is the organisation they act for (the bar under the Prototype banner, "Change organisation")
+
+The details never override a name typed on a page of the journey. The participant details box itself is prototype chrome (`app/routes/research.js`, `app/views/includes/research-participant.html`), so nothing about it appears on the screen wall or in screenshots.
+
 ### Sign in as different kinds of user
 
 Signing in to "Request to use the nature restoration levy" goes through a mock GOV.UK One Login: "Create your GOV.UK One Login" and "Sign in" both lead to the email page, and any password is accepted (the "Sign in with Government Gateway" option goes to the same mock for now). The part of the email address before the `@` decides who the participant is:

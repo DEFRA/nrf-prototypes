@@ -18,6 +18,17 @@ https://prototype-kit.service.gov.uk/docs/how-to-use-layouts
     text: "Turn errors on" if errorsOff else "Turn errors off"
   } %}
   {#
+    "Participant details" opens the box in includes/research-participant.html
+    (rendered at the end of the body, below): the participant's name and
+    organisation, which the mock accounts use in place of their stand-ins.
+    Without JavaScript the link reloads the page with ?participant instead.
+  #}
+  {% set participantLink = {
+    href: (currentPath or "/") + "?participant",
+    text: "Participant details",
+    attributes: { "data-participant-open": "true" }
+  } %}
+  {#
     User research aids: a page's `research:` links in journey.yaml (see
     app/lib/journey-engine/loader.js) form a "User research" section at the
     top of the footer, under the crown, styled apart from the service's
@@ -53,7 +64,7 @@ https://prototype-kit.service.gov.uk/docs/how-to-use-layouts
     classes: "app-footer--research" if researchLinks | length,
     navigation: researchNavigation,
     meta: {
-      items: (footerItems or []).concat([errorsToggle]),
+      items: (footerItems or []).concat([participantLink, errorsToggle]),
       visuallyHiddenTitle: "Footer links"
     }
   }) }}
@@ -61,4 +72,13 @@ https://prototype-kit.service.gov.uk/docs/how-to-use-layouts
 
 {% block pageScripts %}
 <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
+{% endblock %}
+
+{# The participant details box, on every page but an embedded preview (the
+   screen wall's iframes, screenshots and the JPG export) #}
+{% block bodyEnd %}
+  {{ super() }}
+  {% if not embed %}
+    {% include "includes/research-participant.html" %}
+  {% endif %}
 {% endblock %}
