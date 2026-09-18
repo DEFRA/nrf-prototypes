@@ -35,23 +35,72 @@ test.describe('frozen copy of a handoff', () => {
   test.skip(!frozen, 'no committed handoff to freeze')
 
   test('serves the page as handed over, with a banner', async ({ page }) => {
-    const result = loadFrozenJourney(journeyId, frozen.on, frozen.id)
+    expect(frozen.frozenUrl).toBe(`/handoffs/${journeyId}/latest/${frozen.id}`)
+    const result = loadFrozenJourney(journeyId, 'latest', frozen.id)
     expect(result.error).toBeUndefined()
     const copy = result.journey
-    expect(copy.basePath).toBe(`/handoffs/${journeyId}/${frozen.on}`)
+    expect(copy.basePath).toBe(`/handoffs/${journeyId}/latest`)
     expect(copy.frozen.commit).toBe(frozen.stampCommit)
 
     const response = await page.goto(`${frozen.frozenUrl}?preview=1`)
     expect(response.status()).toBe(200)
     const banner = page.locator('.app-frozen-banner')
     await expect(banner).toBeVisible()
-    await expect(banner).toContainText(copy.frozen.onText)
+    await expect(banner).toContainText(
+      `handed over on ${copy.frozen.pages[frozen.id].onText}`
+    )
     await expect(
       banner.getByRole('link', { name: 'Live page' })
     ).toHaveAttribute('href', `${journey.basePath}/${frozen.id}`)
     await expect(page.locator('h1').first()).toContainText(
       plain(copy.byId.get(frozen.id).content.heading)
     )
+  })
+
+  test('the dated URL pins the same copy', async ({ page }) => {
+    expect(frozen.datedUrl).toBe(
+      `/handoffs/${journeyId}/${frozen.on}/${frozen.id}`
+    )
+    const copy = loadFrozenJourney(journeyId, frozen.on, frozen.id).journey
+    expect(copy.basePath).toBe(`/handoffs/${journeyId}/${frozen.on}`)
+    expect(copy.frozen.commit).toBe(frozen.stampCommit)
+
+    await page.goto(`${frozen.datedUrl}?preview=1`)
+    const banner = page.locator('.app-frozen-banner')
+    await expect(banner).toContainText(`handed over on ${copy.frozen.onText}`)
+  })
+
+  test('a page that was never handed over says so', async ({ page }) => {
+    const other = journey.pages.find(
+      (item) => !item.handoff && item.type !== 'custom'
+    )
+    test.skip(!other, 'every page has been handed over')
+
+    for (const slug of ['latest', frozen.on]) {
+      const copy = loadFrozenJourney(journeyId, slug, other.id).journey
+      expect(copy.frozen.pages[other.id]).toBeUndefined()
+      // Under `latest` an unstamped page is the live content
+      expect(copy.frozen.commit).toBe(
+        slug === 'latest' ? null : frozen.stampCommit
+      )
+
+      await page.goto(`${copy.basePath}/${other.id}?preview=1`)
+      const banner = page.locator('.app-frozen-banner')
+      await expect(banner).toBeVisible()
+      await expect(banner).toContainText('Not handed over')
+      await expect(banner).not.toContainText('Copy as handed over')
+      await expect(
+        banner.getByRole('link', { name: 'Live page' })
+      ).toHaveAttribute('href', `${journey.basePath}/${other.id}`)
+    }
+  })
+
+  test('the mount root of latest goes to the start page', async ({ page }) => {
+    await page.goto(`/handoffs/${journeyId}/latest`)
+    await expect(page).toHaveURL(
+      new RegExp(`/handoffs/${journeyId}/latest/${journey.start}$`)
+    )
+    await expect(page.locator('.app-frozen-banner')).toBeVisible()
   })
 
   test('the snapshot is the file at the handoff commit', () => {
@@ -101,8 +150,8 @@ test.describe('frozen copy that does not exist', () => {
     await expect(page.locator('h1')).toContainText('2000-01-01') // copy-ok
   })
 
-  test('anything but a date falls through', async ({ page }) => {
-    const response = await page.goto(`/handoffs/${journeyId}/latest/start`)
+  test('anything but a date or latest falls through', async ({ page }) => {
+    const response = await page.goto(`/handoffs/${journeyId}/newest/start`)
     expect(response.status()).toBe(404)
     await expect(page.locator('.app-frozen-banner')).toHaveCount(0)
   })

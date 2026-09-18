@@ -48,6 +48,8 @@ Journey engine base page. Every generic page type extends this and fills
 {% endblock %}
 
 {% block beforeContent %}
+{# A frozen copy of a handoff wears its own banner in place of the Prototype
+   one, on every layout #}
 {% include "journey-engine/_frozen-banner.html" %}
 {% if page.layout == 'one-login' %}
   {% include "includes/one-login-banner.html" %}
@@ -59,7 +61,9 @@ Journey engine base page. Every generic page type extends this and fills
 {% elif page.layout == 'defra-id' or page.layout == 'defra-account' %}
   {# Defra ID shows no phase banner #}
 {% elif page.layout not in ['document', 'email'] %}
-  {% include "includes/prototype-phase-banner.html" %}
+  {% if not frozen %}
+    {% include "includes/prototype-phase-banner.html" %}
+  {% endif %}
   {% include "journey-engine/_signed-in-bar.html" %}
 {% endif %}
 {% if backLink and page.layout not in ['document', 'email'] %}

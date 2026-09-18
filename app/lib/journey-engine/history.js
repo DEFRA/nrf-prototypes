@@ -41,9 +41,17 @@ function tagFor(journeyId, on) {
   return `handoff/${journeyId}/${on}`
 }
 
-// The URL of the frozen copy of a page: the journey as handed over on that
-// date, served by app/routes/handoffs.js from a snapshot of the commit
-function frozenUrlFor(journeyId, on, pageId) {
+// The frozen copies of a page, served by app/routes/handoffs.js from a
+// snapshot of the handoff commit. `latest` is the one to share: each page
+// under it shows its own most recent handoff, so the link stays put when
+// the page is handed over again. The dated form pins one handoff for good.
+const LATEST = 'latest'
+
+function frozenUrlFor(journeyId, pageId) {
+  return `/handoffs/${journeyId}/${LATEST}/${pageId}`
+}
+
+function datedUrlFor(journeyId, on, pageId) {
   return `/handoffs/${journeyId}/${on}/${pageId}`
 }
 
@@ -271,8 +279,9 @@ function pageHandoff(journey, page, options = {}) {
     fileUrl: `${REPO_URL}/blob/${tag}/${page.contentFile}`,
     // The page rendered from the copy at the handoff commit; nothing to
     // freeze until the date is committed
-    frozenUrl: detail.stampCommit
-      ? frozenUrlFor(journey.id, page.handoff, page.id)
+    frozenUrl: detail.stampCommit ? frozenUrlFor(journey.id, page.id) : null,
+    datedUrl: detail.stampCommit
+      ? datedUrlFor(journey.id, page.handoff, page.id)
       : null,
     label: detail.changed ? LABELS.changed : LABELS.ready,
     lastChangedOn: detail.lastChanged ? detail.lastChanged.slice(0, 10) : null,
@@ -324,7 +333,9 @@ module.exports = {
   LABELS,
   isHandoffDate,
   tagFor,
+  LATEST,
   frozenUrlFor,
+  datedUrlFor,
   git,
   hasGit,
   handoffLine,

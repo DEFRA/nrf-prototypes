@@ -134,17 +134,4 @@
 
 // Strip above a frozen copy of a handoff (/handoffs/<journey>/<date>/...),
 // see journey-engine/_frozen-banner.html
-.app-frozen-banner {
-  background: govuk-colour('light-grey');
-  border-bottom: 1px solid govuk-colour('mid-grey');
 
-  &__text {
-    margin: 0;
-    padding: govuk-spacing(2) 0;
-  }
-
-  &__tag {
-    margin-right: govuk-spacing(1);
-    vertical-align: middle;
-  }
-}

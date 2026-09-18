@@ -228,7 +228,7 @@
   {% set screensPanel %}
   {% if handoffs | length %}
   {% set handoffHtml %}
-    <p class="tools-legend">Pages marked <code>handoff: &lt;date&gt;</code> in <code>journey.yaml</code>. A page turns yellow when its copy changes after the handoff; re-stamp it to hand the change over. Each handoff is tagged in git as <code>handoff/{{ journey.id }}/&lt;date&gt;</code> when it lands on main, so the copy as handed over stays linkable. "Frozen page" opens the page as handed over, however much the live copy moves after; the link appears once the date is committed.</p>
+    <p class="tools-legend">Pages marked <code>handoff: &lt;date&gt;</code> in <code>journey.yaml</code>. A page turns yellow when its copy changes after the handoff; re-stamp it to hand the change over. Each handoff is tagged in git as <code>handoff/{{ journey.id }}/&lt;date&gt;</code> when it lands on main, so the copy as handed over stays linkable. "Frozen page" opens the page as handed over, however much the live copy moves after; the link appears once the date is committed. It points at <code>/handoffs/{{ journey.id }}/latest/&lt;page&gt;</code>, which follows each page's newest handoff, so it is the one to put on a story; the dated form in its tooltip pins one handoff for good.</p>
     {% set handoffRows = [] %}
     {% for item in handoffs %}
       {% set statusHtml %}
@@ -239,7 +239,7 @@
         <a class="govuk-link" href="#screen-{{ item.id }}">See screen</a> ·
         <a class="govuk-link" href="{{ item.path }}?preview=1" target="_blank" rel="noopener">Open</a> ·
         <a class="govuk-link" href="{{ item.fileUrl }}" target="_blank" rel="noopener">Copy at handoff</a> ·
-        {% if item.frozenUrl %}<a class="govuk-link handoffs__frozen" href="{{ item.frozenUrl }}?preview=1" target="_blank" rel="noopener" title="{{ publicBaseUrl }}{{ item.frozenUrl }}">Frozen page</a>{% else %}<span class="tools-section__count">commit to freeze</span>{% endif %}
+        {% if item.frozenUrl %}<a class="govuk-link handoffs__frozen" href="{{ item.frozenUrl }}?preview=1" target="_blank" rel="noopener" title="{{ publicBaseUrl }}{{ item.frozenUrl }} (pinned: {{ publicBaseUrl }}{{ item.datedUrl }})">Frozen page</a>{% else %}<span class="tools-section__count">commit to freeze</span>{% endif %}
       {% endset %}
       {% set _ = handoffRows.push([
         { html: '<span class="wall-card__id">' ~ item.id ~ '</span>' },

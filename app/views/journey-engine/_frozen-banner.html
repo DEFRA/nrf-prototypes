@@ -1,18 +1,34 @@
 {#
-  A strip above a frozen copy of a handoff (/handoffs/<journey>/<date>/...)
-  saying which handoff it shows and where the live page is. `frozen` comes
+  A phase banner on a frozen copy of a handoff (/handoffs/<journey>/latest/...
+  or /handoffs/<journey>/<date>/...) in place of the Prototype one, saying
+  when the page was handed over and where the live page is. `frozen` comes
   from snapshots.js via the render model; nothing is shown on live pages.
+
+  The whole journey works under the mount so Continue and Back keep going,
+  so a page that was never handed over says so instead.
 #}
 {% if frozen %}
-<div class="app-frozen-banner" role="region" aria-label="Frozen copy notice">
-  <div class="govuk-width-container">
-    <p class="govuk-body-s app-frozen-banner__text">
-      <strong class="govuk-tag govuk-tag--turquoise app-frozen-banner__tag">Frozen</strong>
-      Copy as handed over on {{ frozen.onText }}{% if preview %}, showing sample answers{% endif %}.
-      <a class="govuk-link" href="{{ frozen.liveBasePath }}/{{ page.id }}">Live page</a> ·
-      <a class="govuk-link" href="{{ frozen.commitUrl }}" target="_blank" rel="noopener">Commit {{ frozen.commit | truncate(7, true, '') }}</a> ·
-      <a class="govuk-link" href="{{ frozen.toolsPath }}#handoffs">Handoffs</a>
-    </p>
-  </div>
-</div>
+{% set own = frozen.pages[page.id] %}
+{% set frozenLinks %}
+  <a class="govuk-link" href="{{ frozen.liveBasePath }}/{{ page.id }}">Live page</a>
+  {%- if frozen.commitUrl %} ·
+  <a class="govuk-link" href="{{ frozen.commitUrl }}" target="_blank" rel="noopener">Commit {{ frozen.commit | truncate(7, true, '') }}</a>
+  {%- endif %} ·
+  <a class="govuk-link" href="{{ frozen.toolsPath }}#handoffs">Handoffs</a>
+{% endset %}
+{% if own %}
+  {{ govukPhaseBanner({
+    classes: "app-frozen-banner",
+    tag: { text: "Frozen", classes: "govuk-tag--turquoise" },
+    html: "Copy as handed over on " + own.onText + (", showing sample answers" if preview else "") + ". " + frozenLinks,
+    attributes: { role: "region", "aria-label": "Frozen copy notice" }
+  }) }}
+{% else %}
+  {{ govukPhaseBanner({
+    classes: "app-frozen-banner",
+    tag: { text: "Not handed over", classes: "govuk-tag--grey" },
+    html: ("This page was not part of the handoff on " + frozen.onText if frozen.on else "This page has not been handed over yet") + " and is not ready for development. " + frozenLinks,
+    attributes: { role: "region", "aria-label": "Frozen copy notice" }
+  }) }}
+{% endif %}
 {% endif %}

@@ -1,9 +1,11 @@
 //
-// Frozen copies of design handoffs: /handoffs/<journey>/<date>/<page>
+// Frozen copies of design handoffs: /handoffs/<journey>/latest/<page> shows
+// each page from its own most recent handoff; /handoffs/<journey>/<date>/<page>
+// pins the whole journey to one handoff's commit.
 //
-// Serves a journey from the content as handed over on that date (see
-// app/lib/journey-engine/snapshots.js) with the same dispatcher as the live
-// journey, so Back, Continue and Change links all stay inside the copy.
+// Serves the journey from the snapshot (see app/lib/journey-engine/snapshots.js)
+// with the same dispatcher as the live journey, so Back, Continue and Change
+// links all stay inside the copy.
 //
 
 const fs = require('fs')
@@ -15,7 +17,8 @@ const {
   getJourneyIds,
   isHandoffDate,
   loadFrozenJourney,
-  HANDOFFS_MOUNT
+  HANDOFFS_MOUNT,
+  LATEST
 } = require('../lib/journey-engine')
 
 // The same lookup as app/routes.js (not imported from there: it requires
@@ -27,7 +30,10 @@ function hooksFor(id) {
 
 router.use(`${HANDOFFS_MOUNT}/:journeyId/:date`, (req, res, next) => {
   const { journeyId, date } = req.params
-  if (!isHandoffDate(date) || !getJourneyIds().includes(journeyId)) {
+  if (
+    (date !== LATEST && !isHandoffDate(date)) ||
+    !getJourneyIds().includes(journeyId)
+  ) {
     return next()
   }
   // The page the visit starts on decides which handoff commit is shown

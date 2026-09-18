@@ -30,7 +30,8 @@ const {
   tagFor,
   hasGit,
   tagCommit,
-  journeyHandoffs
+  journeyHandoffs,
+  LATEST
 } = require('./history')
 
 const BAKED_ROOT = path.join(REPO_ROOT, 'app/data/handoffs')
@@ -167,12 +168,19 @@ function longDate(on) {
 }
 
 /**
- * The journey as handed over on `date`, mounted at /handoffs/<journey>/<date>,
- * or { error, status } when there is nothing to show. `journey.frozen`
- * carries what the banner says.
+ * A frozen copy of the journey, mounted at /handoffs/<journey>/<date>, or
+ * { error, status } when there is nothing to show. `journey.frozen` carries
+ * what the banner says.
+ *
+ * `date` is either a handoff date, which shows the whole journey as it was
+ * in that handoff's commit, or `latest`, which shows the page being visited
+ * from its own most recent handoff commit, and a page never handed over
+ * from the live content. Either way the whole journey works under the
+ * mount, so Back and Continue stay inside the copy.
  */
 function loadFrozenJourney(journeyId, date, pageId, options = {}) {
-  if (!isHandoffDate(date)) {
+  const latest = date === LATEST
+  if (!latest && !isHandoffDate(date)) {
     return { error: `${date} is not a date written YYYY-MM-DD`, status: 404 }
   }
   let live
@@ -181,25 +189,37 @@ function loadFrozenJourney(journeyId, date, pageId, options = {}) {
   } catch (error) {
     return { error: error.message, status: 404 }
   }
-  const resolved = resolveHandoffCommit(journeyId, date, pageId, options)
-  if (!resolved) {
-    return {
-      error: `No page of ${journeyId} was handed over on ${date}`,
-      status: 404
+  const stamps = journeyHandoffs(live, options).filter(
+    (item) => item.stampCommit
+  )
+  let resolved
+  if (latest) {
+    const own = stamps.find((item) => item.id === (pageId || live.start))
+    resolved = own ? { commit: own.stampCommit, via: 'page' } : null
+  } else {
+    resolved = resolveHandoffCommit(journeyId, date, pageId, options)
+    if (!resolved) {
+      return {
+        error: `No page of ${journeyId} was handed over on ${date}`,
+        status: 404
+      }
     }
   }
-  const dir = ensureSnapshot(resolved.commit)
-  if (!dir) {
-    return {
-      error: `The copy handed over on ${date} (commit ${resolved.commit.slice(0, 7)}) is not available here`,
-      status: 404
+  let dir = null
+  if (resolved) {
+    dir = ensureSnapshot(resolved.commit)
+    if (!dir) {
+      return {
+        error: `The copy handed over on ${date} (commit ${resolved.commit.slice(0, 7)}) is not available here`,
+        status: 404
+      }
     }
   }
   const basePath = basePathFor(journeyId, date)
   let journey
   try {
     journey = loadJourney(journeyId, {
-      contentDir: path.join(dir, 'content'),
+      contentDir: dir ? path.join(dir, 'content') : undefined,
       basePath
     })
   } catch (error) {
@@ -212,17 +232,29 @@ function loadFrozenJourney(journeyId, date, pageId, options = {}) {
   // live journey; the frozen copy points at the same ones
   Object.assign(journey.routes, live.hookRoutes || {})
   journey.hookRoutes = live.hookRoutes
-  const tag = tagFor(journeyId, date)
+  // Which pages were handed over, and when, for the banner: under a date,
+  // the stamps in that snapshot; under `latest`, the stamps on main
+  const pages = {}
+  for (const page of latest ? stamps : journey.pages) {
+    const on = latest ? page.on : page.handoff
+    if (on) {
+      pages[page.id] = { on, onText: longDate(on) }
+    }
+  }
+  const tag = latest ? null : tagFor(journeyId, date)
+  const commit = resolved ? resolved.commit : null
   journey.frozen = {
-    on: date,
-    onText: longDate(date),
-    commit: resolved.commit,
-    via: resolved.via,
+    latest,
+    on: latest ? null : date,
+    onText: latest ? null : longDate(date),
+    commit,
+    via: resolved ? resolved.via : null,
     tag,
-    tagUrl: `${REPO_URL}/tree/${tag}`,
-    commitUrl: `${REPO_URL}/commit/${resolved.commit}`,
+    tagUrl: tag ? `${REPO_URL}/tree/${tag}` : null,
+    commitUrl: commit ? `${REPO_URL}/commit/${commit}` : null,
     liveBasePath: live.basePath,
-    toolsPath: `/tools/journeys/${journeyId}`
+    toolsPath: `/tools/journeys/${journeyId}`,
+    pages
   }
   return { journey }
 }

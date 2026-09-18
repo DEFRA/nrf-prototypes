@@ -39,7 +39,12 @@ const {
   VIEWPORTS
 } = require('./screenshots')
 const { createRenderer, interpolate } = require('./markdown')
-const { pageHandoff, journeyHandoffs, isHandoffDate } = require('./history')
+const {
+  pageHandoff,
+  journeyHandoffs,
+  isHandoffDate,
+  LATEST
+} = require('./history')
 const {
   loadFrozenJourney,
   resolveHandoffCommit,
@@ -81,6 +86,7 @@ module.exports = {
   pageHandoff,
   journeyHandoffs,
   isHandoffDate,
+  LATEST,
   loadFrozenJourney,
   resolveHandoffCommit,
   extractSnapshot,

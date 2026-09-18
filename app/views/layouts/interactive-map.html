@@ -35,7 +35,11 @@
    flex column above the map, since this layout has no beforeContent. #}
 {% block header %}
   {% include "includes/service-header.html" %}
-  {% include "journey-engine/_frozen-banner.html" %}
+  {% if frozen %}
+    <div class="govuk-width-container">
+      {% include "journey-engine/_frozen-banner.html" %}
+    </div>
+  {% endif %}
 {% endblock %}
 
 {% block bodyStart %}
