@@ -162,6 +162,7 @@ function validatePage(page, body = {}, file, multerError) {
     case 'select':
       return validateRadios(page, body)
     case 'checkboxes':
+    case 'check-answers':
       return validateCheckboxes(page, body)
     case 'input':
     case 'password':

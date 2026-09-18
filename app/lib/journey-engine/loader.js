@@ -110,6 +110,19 @@ function isQuestionType(type) {
 }
 
 /**
+ * A check-your-answers page can carry a confirmation checkbox (`options`
+ * plus a `field`). It is not a question type, so other CYA pages stay as
+ * they are; this is only the declaration box before submit.
+ */
+function hasCheckAnswersCheckboxes(page) {
+  return (
+    page.type === 'check-answers' &&
+    Boolean(page.field) &&
+    ((page.content && page.content.options) || []).length > 0
+  )
+}
+
+/**
  * Split a markdown file into { frontmatter, body }. Frontmatter is an
  * optional leading block delimited by `---` lines and parsed as YAML.
  */
@@ -327,6 +340,15 @@ function buildPage(entry, journey, problems) {
   const field = entry.field || frontmatter.field
   if (isQuestionType(type) && type !== 'form' && !field) {
     problems.push(`${where}: '${type}' pages need a 'field'`)
+  }
+  if (
+    type === 'check-answers' &&
+    (frontmatter.options || []).length &&
+    !field
+  ) {
+    problems.push(
+      `${where}: check-answers pages with options need a 'field'`
+    )
   }
 
   const layout =
@@ -930,6 +952,7 @@ module.exports = {
   LAYOUTS,
   SUMMARY_TARGET,
   isQuestionType,
+  hasCheckAnswersCheckboxes,
   camelCase,
   upperSnake,
   parseMarkdownFile,

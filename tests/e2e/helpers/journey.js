@@ -130,7 +130,10 @@ function copyOf(journeyId) {
   // a content page's first submit-style action
   function button(id) {
     const page = pageOf(id)
-    if (page.content.fields.length || page.content.options.length) {
+    if (
+      page.type !== 'check-answers' &&
+      (page.content.fields.length || page.content.options.length)
+    ) {
       return page.content.button
     }
     const submitting = page.content.actions.find(

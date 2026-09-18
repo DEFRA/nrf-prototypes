@@ -1,6 +1,7 @@
 {% extends "journey-engine/_page.html" %}
 
 {% block pageBody %}
+{% include "journey-engine/_error-summary.html" %}
 <h1 class="govuk-heading-l">{% include "journey-engine/_caption.html" %}{{ content.heading }}</h1>
 
 {# `- heading:` entries in rows: split the list into titled groups #}
@@ -16,5 +17,25 @@
 
 {{ content.html | safe }}
 
+{% if content.items | length %}
+<form action="{{ page.path }}" method="post" novalidate>
+  {% include "journey-engine/_change-inputs.html" %}
+  {{ govukCheckboxes({
+    name: page.field,
+    idPrefix: page.field,
+    fieldset: {
+      legend: {
+        text: content.heading,
+        classes: "govuk-visually-hidden"
+      }
+    },
+    items: content.items,
+    errorMessage: { text: error } if error
+  }) }}
+  {% set actionsOnly = true %}
+  {% include "journey-engine/_actions.html" %}
+</form>
+{% else %}
 {% include "journey-engine/_actions.html" %}
+{% endif %}
 {% endblock %}

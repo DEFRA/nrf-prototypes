@@ -239,6 +239,10 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
     )
 
     await submit(page, 'check-your-answers')
+    await expect(page).toHaveURL(`${base}/check-your-answers`)
+    await expectError(page, 'check-your-answers')
+    await answer(page, 'check-your-answers', 'Yes')
+    await submit(page, 'check-your-answers')
     await expect(page).toHaveURL(`${base}/confirmation`)
     await expect(page.locator('.govuk-panel__body')).toContainText('NRL-')
 

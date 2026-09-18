@@ -114,6 +114,7 @@ session:
   - yourAddress
   - detailsConfirmed
   - agreedToTerms
+  - informationConfirmed
   - nrlReference
   - certificate
   # Defra ID registration (sign-in emails containing "new")
@@ -195,6 +196,7 @@ preview:
       postcode: LP1 7RF
     detailsConfirmed: 'Yes'
     agreedToTerms: 'Yes'
+    informationConfirmed: 'Yes'
     defraAccountType: individual
     defraName:
       firstName: John
@@ -833,6 +835,8 @@ pages:
         set: { detailsConfirmed: 'Yes' }
 
   - id: check-your-answers
+    field: confirm-information
+    sessionKey: informationConfirmed
     guard: { key: account, isSet: true, redirect: sign-in-method }
     handler: custom # mints the NRL reference and certificate dates, see hooks.js
     next: confirmation

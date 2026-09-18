@@ -96,11 +96,11 @@ rows:
     value: '{{ retrievalEmail }}'
     change: email
     changeHidden: email address
-  - heading: Declaration
-  - key: Agreed to the declaration
-    value: '{{ agreedToTerms }}'
-    change: agreement
-    changeHidden: whether you agree to the declaration
+options:
+  - label: I confirm that, to the best of my knowledge and belief, the information provided in the application is true, accurate and complete.
+    value: 'Yes'
+errors:
+  required: Tick the box to confirm the information is true, accurate and complete
 actions:
   - text: Confirm and submit
     kind: submit
@@ -117,11 +117,7 @@ actions:
 Make sure the details of your development match your planning application. Updates may result in a recalculation of available capacity and the levy amount.
 :::
 
-## Requesting to use the nature restoration levy
-
-By confirming and submitting these details, you are requesting to use the nature restoration levy.
-
-The details you are submitting must be accurate and correct.
+## Commitment certificate
 
 Once Natural England accepts your request to use this levy, you will be issued a commitment certificate that you can use in your planning application.
 
@@ -144,3 +140,8 @@ The levy has been calculated from the details you submitted and the charging sch
 ## Assuming liability to pay the nature restoration levy
 
 Once your planning application is approved and you are ready to start development, you must assume liability to pay the levy. [Learn more about paying the nature restoration levy (opens in new tab)](#)
+
+## Requesting to use the nature restoration levy
+By confirming and submitting these details, you are requesting to use the nature restoration levy.
+
+

@@ -5,8 +5,10 @@ A submit or secondary action with a `goto` is a button that links there
 instead of submitting (the "Create your GOV.UK One Login" button).
 #}
 {% if content.actions | length %}
+{% if not actionsOnly %}
 <form action="{{ page.path }}" method="post" novalidate>
   {% include "journey-engine/_change-inputs.html" %}
+{% endif %}
   <div class="govuk-button-group">
     {% for action in content.actions %}
       {% if action.kind == 'link' %}
@@ -24,5 +26,7 @@ instead of submitting (the "Create your GOV.UK One Login" button).
       {% endif %}
     {% endfor %}
   </div>
+{% if not actionsOnly %}
 </form>
+{% endif %}
 {% endif %}

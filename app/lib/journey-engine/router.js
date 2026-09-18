@@ -26,6 +26,7 @@ const {
   loadJourney,
   resolveSummaryPath,
   isQuestionType,
+  hasCheckAnswersCheckboxes,
   answerLabels,
   SUMMARY_TARGET
 } = require('./loader')
@@ -108,7 +109,9 @@ function lenientValue(journey, page, body) {
     .concat(raw === undefined ? [] : raw)
     .filter((v) => v && v !== '_unchecked' && String(v).trim())
   if (typed.length) {
-    return page.type === 'checkboxes' ? typed : String(typed[0]).trim()
+    return page.type === 'checkboxes' || hasCheckAnswersCheckboxes(page)
+      ? typed
+      : String(typed[0]).trim()
   }
   return stored
 }
@@ -562,7 +565,7 @@ async function handlePost(req, res, journey, page, hooks) {
   let result = { ok: true }
   if (typeof hook.validate === 'function') {
     result = await hook.validate(ctx)
-  } else if (isQuestionType(page.type)) {
+  } else if (isQuestionType(page.type) || hasCheckAnswersCheckboxes(page)) {
     result = validatePage(page, ctx.body, ctx.file, req.multerError)
   }
   if (!result.ok) {
@@ -580,7 +583,7 @@ async function handlePost(req, res, journey, page, hooks) {
   }
 
   if (
-    isQuestionType(page.type) &&
+    (isQuestionType(page.type) || hasCheckAnswersCheckboxes(page)) &&
     page.sessionKey &&
     result.value !== undefined
   ) {
