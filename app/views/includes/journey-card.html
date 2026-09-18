@@ -69,5 +69,10 @@
       <span class="govuk-!-margin-left-3"><a href="{{ card.toolsUrl }}" class="govuk-link">View flow and screen wall<span class="govuk-visually-hidden">: {{ card.title }}</span></a></span>
       {% endif %}
     </p>
+    {% if card.handoff and card.handoff.url %}
+    <p class="govuk-body">
+      <a href="{{ card.handoff.url }}" class="govuk-link journey-card__ready">Ready for dev journey<span class="govuk-visually-hidden">: {{ card.title }}</span></a>
+    </p>
+    {% endif %}
   {% endif %}
 </div>

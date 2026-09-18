@@ -49,7 +49,11 @@ router.use(`${HANDOFFS_MOUNT}/:journeyId/:date`, (req, res, next) => {
   }
   const { journey } = result
   if (!pageId) {
-    return res.redirect(`${journey.basePath}/${journey.start}`)
+    // Keep ?preview=1 so the homepage's link shows sample answers
+    const query = req.url.includes('?')
+      ? req.url.slice(req.url.indexOf('?'))
+      : ''
+    return res.redirect(`${journey.basePath}/${journey.start}${query}`)
   }
   return dispatch(
     journey,

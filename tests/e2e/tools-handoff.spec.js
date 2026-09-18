@@ -85,6 +85,20 @@ test.describe('design handoff', () => {
       ).toContainText('ready for dev')
     }
   })
+
+  test('homepage card starts the journey in handoff mode', async ({ page }) => {
+    const committed = journeyHandoffs(journey).some((item) => item.frozenUrl)
+    test.skip(!committed, 'no committed handoff to freeze')
+    await page.goto('/')
+    const card = page
+      .locator('div', { has: page.locator(`code:text-is("${journeyId}")`) })
+      .first()
+    await card.locator('.journey-card__ready').click()
+    await expect(page).toHaveURL(
+      new RegExp(`/handoffs/${journeyId}/latest/${journey.start}\\?preview=1$`)
+    )
+    await expect(page.locator('.app-frozen-banner')).toBeVisible()
+  })
 })
 
 test.describe('handoff history', () => {

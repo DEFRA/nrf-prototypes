@@ -170,7 +170,12 @@ function contentJourney(id) {
         handoff: handoffs.length
           ? {
               count: handoffs.length,
-              changed: handoffs.filter((page) => page.changed).length
+              changed: handoffs.filter((page) => page.changed).length,
+              // The journey in handoff mode (every page from its newest
+              // handoff, see snapshots.js), once a stamp is committed
+              url: handoffs.some((page) => page.frozenUrl)
+                ? `/handoffs/${id}/latest?preview=1`
+                : null
             }
           : null
       }
