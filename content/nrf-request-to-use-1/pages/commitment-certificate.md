@@ -67,7 +67,7 @@ Other environmental obligations not covered above will continue to apply.
 
 There are planning condition requirements to meet this commitment; a statutory pre-commencement condition requiring payment prior to commencement, and additional conditions to impose as conservation measures.
 
-### Part B – Planning condition requirements
+### Planning condition requirements
 
 In accordance with the requirements of Regulation 5 of the nature restoration levy Regulations ("Levy Regulations") 2026, the local planning authority must impose the statutory pre-commencement planning condition, requiring payment of the levy in full or the first instalment prior to commencement. This applies to any grant of permission relying on a commitment to pay the nature restoration levy.
 
@@ -76,7 +76,7 @@ In accordance with the requirements of the Environmental Delivery Plan(s) the lo
 | Planning condition                              | Condition to be imposed\*                                                                                                                                                                                                                                                                                                    |
 | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Statutory Nature Restoration Levy Condition** | Development must not begin before either: liability to pay the levy is discharged, or if the levy is to be paid by instalments, liability to pay the first instalment is discharged.                                                                                                                                         |
-| **Non-mains drainage**                          | The development shall not be occupied unless a package treatment plant is installed on the site and operational to manage foul water; with operating efficiency rates achieving a discharge concentration of 5mg/l for Total Phosphorus and 27 mg/l for Total Nitrogen or lower, that will be maintained thereafter for the lifetime of the development. |
+| **Non-mains drainage (where relevant)**                          | The development shall not be occupied unless a package treatment plant is installed on the site and operational to manage foul water; with operating efficiency rates achieving a discharge concentration of 5mg/l for Total Phosphorus and 27 mg/l for Total Nitrogen or lower, that will be maintained thereafter for the lifetime of the development. |
 
 \*Planning decision-makers may make limited and reasonable amendments to planning conditions (with the exception of the statutory pre-commencement condition), to ensure conditions are operable for specific developments providing the intended outcome is maintained.
 
