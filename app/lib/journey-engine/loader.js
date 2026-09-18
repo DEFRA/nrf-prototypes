@@ -346,9 +346,7 @@ function buildPage(entry, journey, problems) {
     (frontmatter.options || []).length &&
     !field
   ) {
-    problems.push(
-      `${where}: check-answers pages with options need a 'field'`
-    )
+    problems.push(`${where}: check-answers pages with options need a 'field'`)
   }
 
   const layout =

@@ -142,6 +142,5 @@ The levy has been calculated from the details you submitted and the charging sch
 Once your planning application is approved and you are ready to start development, you must assume liability to pay the levy. [Learn more about paying the nature restoration levy (opens in new tab)](#)
 
 ## Requesting to use the nature restoration levy
+
 By confirming and submitting these details, you are requesting to use the nature restoration levy.
-
-

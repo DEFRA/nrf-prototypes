@@ -211,33 +211,21 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
       '53 Business Lane'
     )
     await submit(page, 'review-your-details')
-    // Everyone agrees to the declaration before checking their answers; the
-    // box is required and the Delete link is the way out
-    await expect(page).toHaveURL(`${base}/agreement`)
-    await expect(
-      actionLocator(page, 'agreement', 'destructive')
-    ).toHaveAttribute('href', `${quotePath}/delete-quote?nav=${base}/agreement`)
-    await submit(page, 'agreement')
-    await expect(page).toHaveURL(`${base}/agreement`)
-    await expectError(page, 'agreement')
-    await answer(page, 'agreement', 'Yes')
-    await submit(page, 'agreement')
     await expect(page).toHaveURL(`${base}/check-your-answers`)
     await expect(page.locator('main')).toContainText(
       rowKey('check-your-answers', 'review-your-details')
     )
     await expect(page.locator('main')).toContainText('Jane Smith')
     await expect(page.locator('main')).not.toContainText('Name Name')
-    await expect(page.locator('main')).toContainText(
-      rowKey('check-your-answers', 'agreement')
-    )
+
+    // Everyone confirms the declaration box before submitting; it is
+    // required and the Delete link is the way out
     await expect(
-      changeLink(page, 'check-your-answers', 'agreement')
+      actionLocator(page, 'check-your-answers', 'destructive')
     ).toHaveAttribute(
       'href',
-      `${base}/agreement?change=true&nav=check-your-answers`
+      `${quotePath}/delete-quote?nav=${base}/check-your-answers`
     )
-
     await submit(page, 'check-your-answers')
     await expect(page).toHaveURL(`${base}/check-your-answers`)
     await expectError(page, 'check-your-answers')
@@ -345,9 +333,6 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
       'A Developer'
     )
     await submit(page, 'review-developer-details')
-    await expect(page).toHaveURL(`${base}/agreement`)
-    await answer(page, 'agreement', 'Yes')
-    await submit(page, 'agreement')
     await expect(page).toHaveURL(`${base}/check-your-answers`)
     await expect(page.locator('.govuk-summary-list').first()).toContainText(
       'NRL-000001'
@@ -1003,8 +988,6 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
     await fillField(page, 'your-address', 'postcode', 'LP1 7RF')
     await submit(page, 'your-address')
     await submit(page, 'review-your-details')
-    await answer(page, 'agreement', 'Yes')
-    await submit(page, 'agreement')
     await expect(page).toHaveURL(`${base}/check-your-answers`)
     await expect(page.locator('main')).toContainText(
       rowValue('check-your-answers', filePreview, uploaded)
@@ -1035,17 +1018,6 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
     await fillField(page, 'developer-details', 'postcode', 'DV1 6RP')
     await submit(page, 'developer-details')
     await submit(page, 'review-developer-details')
-    await expect(page).toHaveURL(`${base}/agreement`)
-    // Not agreeing: the Delete link leaves for the quote journey's delete
-    // page, whose Cancel comes back to the agreement page
-    await act(page, 'agreement', 'destructive')
-    await expect(page).toHaveURL(
-      `${quotePath}/delete-quote?nav=${base}/agreement`
-    )
-    await quote.act(page, 'delete-quote', 'link')
-    await expect(page).toHaveURL(`${base}/agreement`)
-    await answer(page, 'agreement', 'Yes')
-    await submit(page, 'agreement')
     await expect(page).toHaveURL(`${base}/check-your-answers`)
 
     const cya = `${base}/check-your-answers`
