@@ -1,5 +1,6 @@
 import { getMapStyles } from './styles.js'
 import { createMapDatasetsPlugin } from './datasets.js'
+import { enableAttributionToggle } from './attribution.js'
 
 /**
  * @param {{ hasOsKey?: boolean }} [params]
@@ -12,6 +13,7 @@ export function createCommonMapPlugins({ hasOsKey = false } = {}) {
   } = window.defra
 
   const mapStyles = getMapStyles({ hasOsKey })
+  enableAttributionToggle()
   const datasetsPlugin = createMapDatasetsPlugin()
   // The datasets plugin no longer renders a key itself; map-key reads the
   // datasets registry and renders one (list it after datasetsPlugin).
