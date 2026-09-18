@@ -38,8 +38,19 @@ const SATELLITE_STYLE = {
   label: 'Satellite',
   url: `${VTS_STYLE_BASE_URL}/ESRI_World_Imagery.json`,
   thumbnail: `${VTS_THUMBNAIL_BASE_URL}/aerial-map-thumb.jpg`,
+  // Spike: trying the Bluesky aerial imagery notice (not Esri's) to see how a
+  // long, two-part copyright reads on one line. Most recent period first.
+  // The button truncates on mobile and expands on tap, one statement per
+  // line; see .app-map-attribution in app/assets/sass/_interactive-map.scss
+  // and attribution.js
   attribution:
-    'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and others',
+    '<button type="button" class="app-map-attribution" aria-expanded="false">' +
+    '<span class="app-map-attribution__statement">' +
+    '&copy; Bluesky International Limited 2021 and onwards</span>' +
+    '<span class="app-map-attribution__separator"> | </span>' +
+    '<span class="app-map-attribution__statement">' +
+    '&copy; Bluesky International Limited and Getmapping Limited 1999-2020' +
+    '</span></button>',
   mapColorScheme: 'dark'
 }
 
