@@ -1,7 +1,7 @@
 {#
   A phase banner on a frozen copy of a handoff (/handoffs/<journey>/latest/...
   or /handoffs/<journey>/<date>/...) in place of the Prototype one, saying
-  when the page was handed over and where the live page is. `frozen` comes
+  when the page was handed over and where the latest page is. `frozen` comes
   from snapshots.js via the render model; nothing is shown on live pages.
 
   The whole journey works under the mount so Continue and Back keep going,
@@ -10,7 +10,7 @@
 {% if frozen %}
 {% set own = frozen.pages[page.id] %}
 {% set frozenLinks %}
-  <a class="govuk-link" href="{{ frozen.liveBasePath }}/{{ page.id }}">Live page</a>
+  <a class="govuk-link" href="{{ frozen.liveBasePath }}/{{ page.id }}">Latest page</a>
   {%- if frozen.commitUrl %} ·
   <a class="govuk-link" href="{{ frozen.commitUrl }}" target="_blank" rel="noopener">Commit {{ frozen.commit | truncate(7, true, '') }}</a>
   {%- endif %} ·

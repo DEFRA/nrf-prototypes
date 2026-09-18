@@ -179,7 +179,7 @@
         {%- endif %}
       </span>
       {#- One control per card: a menu with what to show in the preview
-          (live, error state, the copy as handed over) and the actions, which
+          (latest, error state, the copy as handed over) and the actions, which
           follow the chosen view. See screen-wall.js -#}
       {% set exportBase = "/tools/journeys/" + journey.id + "/screens/" + page.id + ".jpg" %}
       <details class="wall-card__menu">
@@ -188,7 +188,7 @@
           {% if page.isQuestion or page.isCustom or (page.handoff and page.handoff.frozenUrl) %}
           <fieldset class="wall-card__views">
             <legend>Show</legend>
-            <label><input type="radio" name="view-{{ page.id }}" value="live" checked data-url="{{ page.path }}?preview=1" data-copy="{{ publicBaseUrl }}{{ page.path }}" data-export="{{ exportBase }}" data-label=""> Live</label>
+            <label><input type="radio" name="view-{{ page.id }}" value="live" checked data-url="{{ page.path }}?preview=1" data-copy="{{ publicBaseUrl }}{{ page.path }}" data-export="{{ exportBase }}" data-label=""> Latest</label>
             {% if page.isQuestion or page.isCustom %}
             <label><input type="radio" name="view-{{ page.id }}" value="error" data-url="{{ page.path }}?preview=1&error=1" data-copy="{{ publicBaseUrl }}{{ page.path }}?preview=1&error=1" data-export="{{ exportBase }}?error=1" data-label="Error state"> Error state</label>
             {% endif %}
@@ -344,7 +344,7 @@
         classes: "govuk-radios--small govuk-radios--inline",
         fieldset: { legend: { text: "Which copy", classes: "govuk-fieldset__legend--s govuk-!-margin-bottom-1" } },
         items: [
-          { value: "live", text: "Live (every screen)", checked: true },
+          { value: "live", text: "Latest (every screen)", checked: true },
           { value: "handoff", text: "As handed over (ready for dev screens only)" }
         ]
       }) }}
