@@ -50,7 +50,7 @@ test.describe('frozen copy of a handoff', () => {
       `handed over on ${copy.frozen.pages[frozen.id].onText}`
     )
     await expect(
-      banner.getByRole('link', { name: 'Latest page' })
+      banner.getByRole('link', { name: 'Working copy' })
     ).toHaveAttribute('href', `${journey.basePath}/${frozen.id}`)
     await expect(page.locator('h1').first()).toContainText(
       plain(copy.byId.get(frozen.id).content.heading)
@@ -76,12 +76,18 @@ test.describe('frozen copy of a handoff', () => {
     )
     test.skip(!other, 'every page has been handed over')
 
+    // Under a date, an unstamped page comes from the newest commit that
+    // handed a page over on that date (one date can span several commits)
+    const newestOfDate = journeyHandoffs(journey)
+      .filter((item) => item.on === frozen.on && item.stampCommit)
+      .sort((a, b) => (b.stampedAt || '').localeCompare(a.stampedAt || ''))[0]
+
     for (const slug of ['latest', frozen.on]) {
       const copy = loadFrozenJourney(journeyId, slug, other.id).journey
       expect(copy.frozen.pages[other.id]).toBeUndefined()
       // Under `latest` an unstamped page is the live content
       expect(copy.frozen.commit).toBe(
-        slug === 'latest' ? null : frozen.stampCommit
+        slug === 'latest' ? null : newestOfDate.stampCommit
       )
 
       await page.goto(`${copy.basePath}/${other.id}?preview=1`)
@@ -90,7 +96,7 @@ test.describe('frozen copy of a handoff', () => {
       await expect(banner).toContainText('Not handed over')
       await expect(banner).not.toContainText('Copy as handed over')
       await expect(
-        banner.getByRole('link', { name: 'Latest page' })
+        banner.getByRole('link', { name: 'Working copy' })
       ).toHaveAttribute('href', `${journey.basePath}/${other.id}`)
     }
   })
@@ -223,28 +229,30 @@ test.describe('which commit a handoff resolves to', () => {
   const sha = 'a'.repeat(40)
   const tagSha = 'b'.repeat(40)
   const manifestWith = (pages, tags = {}) => ({ pages, tags })
+  // Every page handed over on the same date, all from one pretend commit: a
+  // page the manifest leaves out is answered from git, which would win
+  const sameDate = Object.fromEntries(
+    journey.pages
+      .filter((page) => page.handoff === stamped.handoff)
+      .map((page) => [
+        `${journeyId}/${page.id}`,
+        {
+          on: page.handoff,
+          stampCommit: sha,
+          stampedAt: '2026-09-17T09:00:00Z'
+        }
+      ])
+  )
 
   test('the page stamped with the date wins', () => {
-    const manifest = manifestWith({
-      [`${journeyId}/${stamped.id}`]: {
-        on: stamped.handoff,
-        stampCommit: sha,
-        stampedAt: '2026-09-17T09:00:00Z'
-      }
-    })
+    const manifest = manifestWith(sameDate)
     expect(
       resolveHandoffCommit(journeyId, stamped.handoff, stamped.id, { manifest })
     ).toEqual({ commit: sha, via: 'page' })
   })
 
   test('another page starts from the newest handoff of that date', () => {
-    const manifest = manifestWith({
-      [`${journeyId}/${stamped.id}`]: {
-        on: stamped.handoff,
-        stampCommit: sha,
-        stampedAt: '2026-09-17T09:00:00Z'
-      }
-    })
+    const manifest = manifestWith(sameDate)
     expect(
       resolveHandoffCommit(journeyId, stamped.handoff, other.id, { manifest })
     ).toEqual({ commit: sha, via: 'date' })
