@@ -124,6 +124,11 @@ test.describe('nrf-quote-7 happy path', () => {
 
     // Bypass the drawing UI: set the hidden boundary field and submit the form
     await page.locator('#boundary-data').waitFor({ state: 'attached' })
+    // Let the map's module scripts finish loading before submitting. Each
+    // one carries the session cookie, and the kit's file-backed session
+    // store deletes a session whose file it catches mid-write, so a form
+    // POST that overlaps them can lose every earlier answer (seen in CI).
+    await page.waitForLoadState('networkidle')
     await page.evaluate((coordinates) => {
       const input = document.getElementById('boundary-data')
       input.value = JSON.stringify({ coordinates, center: coordinates[0] })

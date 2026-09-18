@@ -180,6 +180,11 @@ test.describe('nrf-quote-7 production map', () => {
       await expect(page).toHaveURL(/\/map$/)
 
       await page.locator('#boundary-data').waitFor({ state: 'attached' })
+      // Let the map's module scripts finish loading before submitting. Each
+      // one carries the session cookie, and the kit's file-backed session
+      // store deletes a session whose file it catches mid-write, so a form
+      // POST that overlaps them can lose every earlier answer (seen in CI).
+      await page.waitForLoadState('networkidle')
       await page.evaluate((value) => {
         const input = document.getElementById('boundary-data')
         input.value = JSON.stringify(value)
