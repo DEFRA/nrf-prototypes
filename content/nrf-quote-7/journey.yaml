@@ -105,6 +105,7 @@ pages:
   # in `nav`); `goto: $summary` returns to whichever summary page sent the
   # user, in either journey
   - id: planning-type
+    handoff: 2026-09-18
     field: planning-type
     sessionKey: planningType
     changeable: true
@@ -118,11 +119,13 @@ pages:
       - goto: housing
 
   - id: wrong-permission
+    handoff: 2026-09-18
 
   # Only the request-to-use journey changes this answer (from its review
   # page), so the return rule matters there rather than on the quote's own
   # check your answers
   - id: housing
+    handoff: 2026-09-18
     field: housing
     sessionKey: isHousing
     changeable: true
@@ -134,8 +137,10 @@ pages:
       - goto: units
 
   - id: not-housing
+    handoff: 2026-09-18
 
   - id: units
+    handoff: 2026-09-18
     field: unit-count
     sessionKey: residentialBuildingCount
     min: 1
@@ -147,6 +152,7 @@ pages:
       - goto: redline-map
 
   - id: redline-map
+    handoff: 2026-09-18
     field: has-redline-boundary-file
     sessionKey: hasRedlineBoundaryFile
     # The options' values (see redline-map.md) become booleans in the session
@@ -160,6 +166,7 @@ pages:
         set: { mapReferrer: redline-map }
 
   - id: upload-redline
+    handoff: 2026-09-18
     field: redline-file
     sessionKey: redlineFile
     accept: ['.geojson', '.json', '.kml', '.zip']
@@ -171,6 +178,7 @@ pages:
   # Production polls the uploader here; the prototype shows the spinner for
   # a moment and moves on (a meta refresh in the template)
   - id: checking-file
+    handoff: 2026-09-18
     template: nrf-quote-7/checking-file
     handler: custom # where to continue to, see hooks.js
     guard: { key: redlineFile, isSet: true, redirect: upload-redline }
@@ -181,6 +189,7 @@ pages:
   # one inside the live EDP); the error states below exist for the screen
   # wall only.
   - id: file-preview
+    handoff: 2026-09-18
     template: nrf-quote-7/file-preview
     handler: custom # boundary, EDP list and error, see hooks.js
     changeable: true
@@ -253,6 +262,7 @@ pages:
       - goto: estimate-email
 
   - id: map
+    handoff: 2026-09-18
     template: nrf-quote-7/map
     field: boundary-data
     handler: custom # EDP intersection check, see hooks.js
@@ -279,13 +289,17 @@ pages:
       - goto: estimate-email
 
   - id: no-edp
+    handoff: 2026-09-18
 
   - id: exclusion
+    handoff: 2026-09-18
 
   - id: no-capacity
+    handoff: 2026-09-18
     back: units
 
   - id: estimate-email
+    handoff: 2026-09-18
     field: email
     sessionKey: estimateEmail
     changeable: true
@@ -296,6 +310,7 @@ pages:
     next: check-your-answers
 
   - id: check-your-answers
+    handoff: 2026-09-18
     guard: { key: estimateEmail, isSet: true, redirect: estimate-email }
     handler: custom # mints the NRL reference, see hooks.js
     next: confirmation
@@ -304,6 +319,7 @@ pages:
   # which arrives with the way back in `nav`; Back and Cancel then return to
   # its review page instead of check your answers
   - id: delete-quote
+    handoff: 2026-09-18
     back:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
@@ -312,9 +328,11 @@ pages:
     next: delete-confirmation
 
   - id: delete-confirmation
+    handoff: 2026-09-18
 
   # User research aid in the footer: the quote email the submission sends
   - id: confirmation
+    handoff: 2026-09-18
     research:
       - text: View the email content
         href: estimate-email-content

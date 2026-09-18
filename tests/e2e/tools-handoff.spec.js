@@ -64,7 +64,11 @@ test.describe('design handoff', () => {
     const table = page.locator('#handoffs table')
     await expect(table.locator('tbody tr')).toHaveCount(stamped.length)
     for (const item of journeyHandoffs(journey)) {
-      const row = table.locator('tbody tr', { hasText: item.id })
+      // By the "See screen" anchor, not the id as text: "housing" is also
+      // part of "not-housing"
+      const row = table.locator('tbody tr', {
+        has: page.locator(`a[href="#screen-${item.id}"]`)
+      })
       await expect(row).toContainText(item.on)
       await expect(row).toContainText(item.tag)
       await expect(
