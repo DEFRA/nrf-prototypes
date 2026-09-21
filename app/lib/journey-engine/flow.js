@@ -512,17 +512,27 @@ function layoutLevels(journey) {
     walk(chainId, 0)
   })
   // Pass 2: pages only reached by change links or in-page links join the
-  // row of whichever placed page links to them
+  // row of the placed page that links to them. When several do, the one
+  // furthest along the flow wins, so a research shortcut offered early on
+  // (the quote email from the funnel page) does not pull the page up from
+  // where it naturally follows (the confirmation)
   let placed = true
   while (placed) {
     placed = false
+    const best = new Map()
     for (const edge of edges) {
       if (rowOf.has(edge.fromId) && !rowOf.has(edge.toId)) {
-        const detail =
-          edge.label && edge.label !== 'link' ? ` (${edge.label})` : ''
-        place(edge.toId, rowOf.get(edge.fromId), `From ${edge.fromId}${detail}`)
-        placed = true
+        const current = best.get(edge.toId)
+        if (!current || rowOf.get(edge.fromId) > rowOf.get(current.fromId)) {
+          best.set(edge.toId, edge)
+        }
       }
+    }
+    for (const edge of best.values()) {
+      const detail =
+        edge.label && edge.label !== 'link' ? ` (${edge.label})` : ''
+      place(edge.toId, rowOf.get(edge.fromId), `From ${edge.fromId}${detail}`)
+      placed = true
     }
   }
   const unreachable = journey.pages

@@ -497,6 +497,24 @@ test.describe('journey tools', () => {
     )
   })
 
+  test('a page reached only by research links sits beside the last page that offers it', async ({
+    page
+  }) => {
+    // The quote email is offered as a facilitator shortcut on the funnel
+    // page and again from the confirmation; it belongs with the latter
+    await page.goto(`/tools/journeys/${journey.id}`)
+    await page.getByRole('tab', { name: 'Screens' }).click()
+    const row = page.locator('.wall-level', {
+      has: page.locator('#screen-confirmation')
+    })
+    await expect(
+      row.locator('.wall-card__id', { hasText: 'estimate-email-content' })
+    ).toHaveCount(1)
+    await expect(
+      row.locator('#screen-estimate-email-content .wall-card__via')
+    ).toContainText('From confirmation')
+  })
+
   test('flow diagram keeps the default path on one row', async ({ page }) => {
     await page.goto(`/tools/journeys/${journey.id}`)
     // ELK is loaded from a CDN, so give the layout a moment
