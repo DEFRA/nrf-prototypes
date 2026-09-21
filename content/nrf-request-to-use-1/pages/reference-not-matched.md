@@ -2,6 +2,10 @@
 type: content
 ---
 
-# The NRL reference you have supplied does not match an existing quote
+# The NRL reference you gave us does not match an existing quote
 
-Check the link in your email and try again. If the problem continues, you may need to request a new quote.
+You can find your NRL reference on the email you were sent. 
+
+If you don't have a quote, or want to get another one, you can get a quote at any time. 
+
+[Get a quote](/nrf-quote-7/planning-type)
