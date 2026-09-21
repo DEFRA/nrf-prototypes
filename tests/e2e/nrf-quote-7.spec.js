@@ -58,6 +58,33 @@ test.describe('nrf-quote-7 preview mode', () => {
   }
 })
 
+test.describe('nrf-quote-7 error previews', () => {
+  // A page with several errors can show each of them: ?error=1 is the
+  // required one, ?error=<key> any other in its `errors:` block
+  const units = journey.byId.get('units')
+  for (const key of Object.keys(units.content.errors)) {
+    test(`units previews its '${key}' error`, async ({ page }) => {
+      const query = key === 'required' ? '1' : key
+      await page.goto(`${units.path}?preview=1&error=${query}`)
+      await expect(page.locator('.govuk-error-summary')).toContainText(
+        error('units', key)
+      )
+      await expect(page.locator('.govuk-error-message')).toContainText(
+        error('units', key)
+      )
+    })
+  }
+
+  test('a key the page does not define shows the required error', async ({
+    page
+  }) => {
+    await page.goto(`${units.path}?preview=1&error=no-such-error`)
+    await expect(page.locator('.govuk-error-summary')).toContainText(
+      error('units', 'required')
+    )
+  })
+})
+
 test.describe('nrf-quote-7 validation', () => {
   test('empty submission re-renders with the page error', async ({ page }) => {
     const planningType = journey.byId.get('planning-type')
@@ -411,6 +438,40 @@ test.describe('journey tools', () => {
     await expect(card.locator('.wall-card__open')).toHaveAttribute(
       'href',
       /planning-type\?preview=1&error=1$/
+    )
+  })
+
+  test('a card menu picks which error to show from a select', async ({
+    page
+  }) => {
+    const units = journey.byId.get('units')
+    const keys = Object.keys(units.content.errors)
+    expect(keys.length).toBeGreaterThan(1)
+    await page.goto(`/tools/journeys/${journey.id}`)
+    await page.getByRole('tab', { name: 'Screens' }).click()
+    const card = page.locator('#screen-units')
+    await card.locator('.wall-card__menu-button').click()
+    // One "Error state" view, with a select for which of the page's errors
+    await expect(
+      card.locator('.wall-card__views input[value=error]')
+    ).toHaveCount(1)
+    const pick = card.locator('.wall-card__error-pick')
+    await expect(pick.locator('option')).toHaveCount(keys.length)
+    await expect(pick.locator('option[value=max]')).toContainText(
+      error('units', 'max')
+    )
+    await pick.selectOption('max')
+    await expect(
+      card.locator('.wall-card__views input[value=error]')
+    ).toBeChecked()
+    await expect(card.locator('iframe')).toHaveAttribute(
+      'src',
+      /units\?preview=1&error=max&embed=1$/
+    )
+    await expect(card.locator('.wall-card__showing')).toHaveText('Error: max')
+    await expect(card.locator('.wall-card__export')).toHaveAttribute(
+      'href',
+      /screens\/units\.jpg\?error=max$/
     )
   })
 

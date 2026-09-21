@@ -119,10 +119,22 @@ function validateForm(page, body) {
 }
 
 /**
- * Error list shown when a form page is previewed with ?error=1.
+ * Error list shown when a form page is previewed with ?error=1 (every
+ * required field's `required` message) or ?error=<key> (the fields whose
+ * errors name that key, falling back to the required list when none do).
  */
-function previewErrors(page) {
-  return (page.content.fields || [])
+function previewErrors(page, key = 'required') {
+  const fields = page.content.fields || []
+  if (key !== 'required') {
+    const named = fields.filter((field) => field.errors && field.errors[key])
+    if (named.length) {
+      return named.map((field) => ({
+        field: field.name,
+        message: fieldMessage(field, key)
+      }))
+    }
+  }
+  return fields
     .filter((field) => !field.optional)
     .map((field) => ({
       field: field.name,

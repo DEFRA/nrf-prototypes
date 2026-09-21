@@ -227,10 +227,35 @@
     card.setAttribute('data-view', input.value)
   }
 
+  // Picking an error in the select under "Error state" moves that radio's
+  // links to the chosen error and shows it
+  function pickError(select) {
+    const option = select.options[select.selectedIndex]
+    const radio = select
+      .closest('.wall-card__views')
+      .querySelector('input[type=radio][value=error]')
+    if (!option || !radio) {
+      return
+    }
+    ;['url', 'copy', 'export', 'label'].forEach(function (name) {
+      radio.setAttribute(
+        'data-' + name,
+        option.getAttribute('data-' + name) || ''
+      )
+    })
+    radio.checked = true
+    showView(radio)
+  }
+
   document.addEventListener('change', function (event) {
     const input = event.target
-    if (input.matches && input.matches('.wall-card__views input[type=radio]')) {
+    if (!input.matches) {
+      return
+    }
+    if (input.matches('.wall-card__views input[type=radio]')) {
       showView(input)
+    } else if (input.matches('.wall-card__error-pick')) {
+      pickError(input)
     }
   })
 

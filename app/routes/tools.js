@@ -18,6 +18,7 @@ const {
   toFlowJson,
   isQuestionType,
   previewVariants,
+  previewErrorStates,
   captureScreens,
   captureScreen,
   canExportScreens,
@@ -43,6 +44,8 @@ function pageView(page, journey, via) {
     isCustom: page.type === 'custom',
     isExit: !(page.next && page.next.length),
     variants: previewVariants(page),
+    // Every error the page can show, for the card's Show menu
+    errorStates: previewErrorStates(page),
     shared: page.shared,
     contentFile: page.contentFile,
     // `handoff: <date>` in journey.yaml: ready for dev, or changed since
@@ -285,7 +288,8 @@ router.get('/tools/journeys/:journey/screens.zip', async (req, res) => {
 })
 
 // One screen as a JPG, for the export button on each card of the wall.
-// Always desktop width; ?error=1 captures the form's error state,
+// Always desktop width; ?error=1 captures the form's error state (or
+// ?error=<key> one of its other errors, such as max),
 // ?variant=<id> one of the page's preview variants and ?handoff=1 the frozen
 // copy of the page as handed over
 router.get('/tools/journeys/:journey/screens/:page.jpg', async (req, res) => {
@@ -299,7 +303,7 @@ router.get('/tools/journeys/:journey/screens/:page.jpg', async (req, res) => {
       baseUrl: `${req.protocol}://${req.get('host')}`,
       viewport: 'desktop',
       pageId: req.params.page,
-      error: req.query.error === '1',
+      error: req.query.error ? String(req.query.error) : null,
       variant: req.query.variant ? String(req.query.variant) : null,
       handoff: req.query.handoff === '1'
     })

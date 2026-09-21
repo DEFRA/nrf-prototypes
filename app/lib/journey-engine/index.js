@@ -28,6 +28,8 @@ const {
   mainChain,
   exportScreens,
   previewVariants,
+  previewErrorKey,
+  previewErrorStates,
   toMermaid,
   toFlowJson,
   toFlowGraph
@@ -74,6 +76,8 @@ module.exports = {
   mainChain,
   exportScreens,
   previewVariants,
+  previewErrorKey,
+  previewErrorStates,
   captureScreens,
   captureScreen,
   canExportScreens,

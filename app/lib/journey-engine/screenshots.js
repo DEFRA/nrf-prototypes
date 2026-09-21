@@ -6,7 +6,7 @@
  * prototype renders with the sample data in journey.yaml.
  */
 
-const { exportScreens } = require('./flow')
+const { exportScreens, previewErrorKey } = require('./flow')
 const { pageHandoff } = require('./history')
 
 // Capture sizes. Non-map pages are captured full length, so the height only
@@ -157,7 +157,8 @@ function asHandedOver(journey, screens) {
  *
  * @param {object} journey  loaded journey definition
  * @param {object} options  { baseUrl, viewport, pageId, error, variant, handoff, quality }
- *   error captures the page's error state; variant names one of the page's
+ *   error captures the page's error state (`1` or `required` for the default
+ *   one, or a key of its `errors:` block such as `max`); variant names one of the page's
  *   preview variants; handoff captures the page's frozen copy, as handed
  *   over (see snapshots.js), in the same state
  * @returns {Promise<{ file: string, buffer: Buffer }>}  or null when the
@@ -166,10 +167,11 @@ function asHandedOver(journey, screens) {
 async function captureScreen(journey, options = {}) {
   const baseUrl = trimBaseUrl(options.baseUrl)
   const quality = options.quality || 85
+  const errorKey = previewErrorKey(options.error)
   let screen = exportScreens(journey).find(
     (item) =>
       item.id === options.pageId &&
-      item.error === Boolean(options.error) &&
+      (item.error || null) === errorKey &&
       item.variant === (options.variant || null)
   )
   if (screen && options.handoff) {

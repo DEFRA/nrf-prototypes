@@ -772,6 +772,71 @@ function previewVariants(page) {
     }))
 }
 
+// The error a preview shows when asked for one without saying which
+const DEFAULT_ERROR = 'required'
+
+/**
+ * The value of `?error=` as an error key: `1` or `true` (the original
+ * "show the error state" switch) means `required`; anything else names a
+ * key of the page's `errors:` block, such as `max`. Nothing when absent.
+ */
+function previewErrorKey(value) {
+  if (
+    value === undefined ||
+    value === null ||
+    value === '' ||
+    value === false
+  ) {
+    return null
+  }
+  const key = String(value)
+  return ['1', 'true'].includes(key) ? DEFAULT_ERROR : key
+}
+
+/**
+ * The error states a page can be previewed in (`?preview=1&error=<id>`):
+ * one per key of its `errors:` block, and on a form page one per key any
+ * of its fields defines. A page whose copy names no errors still has the
+ * default state, so every question can show "There is a problem".
+ * [{ id, label, message }], `required` first when the page has it.
+ */
+function previewErrorStates(page) {
+  const content = page.content || {}
+  const states = new Map()
+  const add = (errors) => {
+    for (const [key, text] of Object.entries(errors || {})) {
+      if (!states.has(key)) {
+        states.set(key, String(text))
+      }
+    }
+  }
+  add(content.errors)
+  for (const field of content.fields || []) {
+    add(field.errors)
+  }
+  if (!states.size) {
+    states.set(DEFAULT_ERROR, '')
+  }
+  const keys = [...states.keys()].sort((a, b) => {
+    if (a === DEFAULT_ERROR) {
+      return -1
+    }
+    if (b === DEFAULT_ERROR) {
+      return 1
+    }
+    return 0
+  })
+  return keys.map((id) => ({
+    id,
+    label: id === DEFAULT_ERROR ? 'Error state' : `Error: ${id}`,
+    // The wording, so the tools page can show it on hover
+    message: states.get(id),
+    // `?error=1` still opens the default state, so links made before a page
+    // had more than one error keep working
+    query: id === DEFAULT_ERROR ? '1' : id
+  }))
+}
+
 // The section ids an export can pick from: the main journey and each group
 const MAIN_SECTION = 'main'
 
@@ -830,6 +895,7 @@ function exportScreens(journey, options = {}) {
           path: page.path,
           url: `${page.path}?preview=1&embed=1${url}`,
           file: `${folder}${prefix}-${id}${suffix}.jpg`,
+          // The error key shown (`required`, `max`...), or false for none
           error: false,
           variant: null,
           ...extra
@@ -839,7 +905,15 @@ function exportScreens(journey, options = {}) {
           includeErrors &&
           (isQuestionType(page.type) || page.type === 'custom')
         ) {
-          screens.push(entry('--error', '&error=1', { error: true }))
+          // One screen per error the page's copy names: `--error` for the
+          // default (required) state, `--error-max` and so on for the rest
+          for (const state of previewErrorStates(page)) {
+            const suffix =
+              state.id === DEFAULT_ERROR ? '--error' : `--error-${state.id}`
+            screens.push(
+              entry(suffix, `&error=${state.query}`, { error: state.id })
+            )
+          }
         }
         for (const variant of previewVariants(page)) {
           screens.push(
@@ -856,6 +930,9 @@ function exportScreens(journey, options = {}) {
 
 module.exports = {
   previewVariants,
+  previewErrorKey,
+  previewErrorStates,
+  DEFAULT_ERROR,
   journeyGroups,
   collapseGroups,
   groupScope,

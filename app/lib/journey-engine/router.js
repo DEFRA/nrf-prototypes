@@ -20,6 +20,7 @@
 const multer = require('multer')
 const { evaluate, firstMatch, isTruthy } = require('./expressions')
 const { validatePage, previewErrors, message } = require('./validation')
+const { previewErrorKey } = require('./flow')
 const { resolveBackLink, toPath } = require('./back-link')
 const { createRenderer } = require('./markdown')
 const {
@@ -179,7 +180,9 @@ function buildContext(req, res, journey, page, options = {}) {
     // A preview rendered inside something else (the screen wall's iframes,
     // the JPG export, screenshots): no user research footer
     embed: preview && ['1', 'true'].includes(String(query.embed)),
-    previewError: preview && ['1', 'true'].includes(String(query.error)),
+    // `?error=1` shows the page's required error; `?error=<key>` any other
+    // message of its `errors:` block (see previewErrorKey)
+    previewError: preview ? previewErrorKey(query.error) : null,
     variant: preview && query.variant ? String(query.variant) : null,
     isChange,
     navFromSummary,
@@ -424,12 +427,12 @@ function buildModel(ctx, extra = {}) {
   // message every other question type shows
   let errors = extra.errors
   if (!errors && ctx.previewError && page.type === 'form') {
-    errors = previewErrors(page)
+    errors = previewErrors(page, ctx.previewError)
   }
   const error =
     extra.error ||
     (errors && errors.length ? errors[0].message : undefined) ||
-    (ctx.previewError ? message(page, 'required') : undefined)
+    (ctx.previewError ? message(page, ctx.previewError) : undefined)
   // A page borrowed by another journey (reached from its summary page with
   // the way back in `nav`) wears that journey's header: its service name and
   // signed-in state, so the user does not see the service change under them.
