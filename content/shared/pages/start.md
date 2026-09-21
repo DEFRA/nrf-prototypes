@@ -18,7 +18,9 @@ If you choose not to use the nature restoration levy, you will still need to [me
 :::button Start now
 :::
 
-## Getting a quote
+## What you need to do
+
+### Getting a quote
 
 To get a quote you will need to tell us:
 
@@ -27,11 +29,7 @@ To get a quote you will need to tell us:
 - the number of units of housing
 - where the development is planned – you can use a red line boundary file or draw a red line boundary
 
-You will need to upload a red line boundary file to tell us where your relevant development is planned. Upload a GeoJSON file (.geojson or .json), keyhole markup language file (.kml) or a shapefile (.shp). Shapefiles (.shp) must be .zip files and must contain at least the .shp, .shx, .dbf and .prj files.
-
-If you don't have access to these file types, you will be able to draw on a map instead. [Learn more about telling us where your development is (opens in a new tab)](*)
-
-When we have all your details confirmed, you will be sent a quote email with a NRL reference and the amount of the levy. You can get as many quotes as you like.
+You will be sent a quote email with a NRL reference and the amount of the levy. You can get as many quotes as you like.
 
 ### What to do with your quote
 
@@ -47,17 +45,13 @@ To request to use nature restoration levy you will need to:
 - confirm the details of your development
 - review and agree the cost of the levy
 - confirm if it is a variation
-- create a Defra ID account [Learn more about creating a Defra ID account (opens in new tab)](#)
+- create a Defra ID account
 - review your company details
 - submit your details to receive a commitment certificate
 
 ### What to do with your commitment certificate
 
 You will receive a commitment certificate that you can submit with your planning application.
-
-## Assuming liability to pay the nature restoration levy
-
-Once your planning application is approved and you are ready to start development, you must assume liability to pay the levy.
 
 ## Get help with the nature restoration levy
 

@@ -84,7 +84,7 @@ pages:
   # newer request-to-use version becomes the target.
   - id: start
     shared: true
-    handoff: 2026-09-18
+    handoff: 2026-09-21
     next: what-would-you-like-to-do
 
   - id: what-would-you-like-to-do

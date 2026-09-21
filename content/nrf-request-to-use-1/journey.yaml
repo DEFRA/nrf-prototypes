@@ -228,6 +228,7 @@ pages:
   # target.
   - id: start
     shared: true
+    handoff: 2026-09-21
     next: what-would-you-like-to-do
 
   - id: what-would-you-like-to-do
