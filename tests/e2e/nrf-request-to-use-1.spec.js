@@ -1062,7 +1062,25 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
     await page.goto(`${base}/have-nrl-reference`)
     await answer(page, 'have-nrl-reference', 'No')
     await submit(page, 'have-nrl-reference')
+    await expect(page).toHaveURL(`${base}/no-nrl-reference`)
+    await expectHeading(page, 'no-nrl-reference')
+    await followLink(page, 'no-nrl-reference', `${quotePath}/planning-type`)
     await expect(page).toHaveURL(`${quotePath}/planning-type`)
+  })
+
+  test('the stand-in reference NRL-000000 does not match a quote', async ({
+    page
+  }) => {
+    await page.goto(`${base}/quote-reference`)
+    await fillAnswer(page, 'quote-reference', 'NRL-000000')
+    await submit(page, 'quote-reference')
+    await expect(page).toHaveURL(`${base}/email`)
+    await fillAnswer(page, 'email', 'jane@example.com')
+    await submit(page, 'email')
+    await expect(page).toHaveURL(`${base}/reference-not-matched`)
+    await expectHeading(page, 'reference-not-matched')
+    await page.getByRole('link', { name: 'Back' }).click()
+    await expect(page).toHaveURL(`${base}/email`)
   })
 
   test('the journey has no copies of the quote pages', () => {
