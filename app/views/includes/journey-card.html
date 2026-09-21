@@ -8,7 +8,7 @@
 {% set headingClass = "govuk-heading-s" if compact else "govuk-heading-m" %}
 {% set captionClass = "govuk-caption-s" if compact else "govuk-caption-m" %}
 
-<div class="govuk-!-margin-bottom-6">
+<div class="journey-card govuk-!-margin-bottom-6">
   {{ govukTag({ text: tag.text, classes: "govuk-tag--" + tag.colour }) }}
   {% if card.source == "content" and not card.mounted %}
     {{ govukTag({ text: "Restart to mount", classes: "govuk-tag--grey" }) }}

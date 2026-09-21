@@ -80,7 +80,9 @@ test.describe('design handoff', () => {
   test('homepage card counts the pages ready for dev', async ({ page }) => {
     await page.goto('/')
     const card = page
-      .locator('div', { has: page.locator(`code:text-is("${journeyId}")`) })
+      .locator('.journey-card', {
+        has: page.locator(`code:text-is("${journeyId}")`)
+      })
       .first()
     const ready = journeyHandoffs(journey).filter((item) => !item.changed)
     if (ready.length) {
@@ -95,7 +97,9 @@ test.describe('design handoff', () => {
     test.skip(!committed, 'no committed handoff to freeze')
     await page.goto('/')
     const card = page
-      .locator('div', { has: page.locator(`code:text-is("${journeyId}")`) })
+      .locator('.journey-card', {
+        has: page.locator(`code:text-is("${journeyId}")`)
+      })
       .first()
     await card.locator('.journey-card__ready').click()
     await expect(page).toHaveURL(
