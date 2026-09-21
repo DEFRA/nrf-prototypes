@@ -341,14 +341,15 @@ pages:
     next: delete-confirmation
 
   - id: delete-confirmation
-    handoff: 2026-09-18
+    handoff: 2026-09-21
 
   # User research aid in the footer: the quote email the submission sends
   - id: confirmation
-    handoff: 2026-09-18
+    handoff: 2026-09-21
     research:
       - text: View the email content
         href: estimate-email-content
 
   - id: estimate-email-content
+    handoff: 2026-09-21
     back: confirmation

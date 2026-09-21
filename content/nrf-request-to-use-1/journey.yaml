@@ -277,6 +277,7 @@ pages:
 
   # The email with the retrieval link. Following the link loads the quote.
   - id: retrieve-email
+    handoff: 2026-09-21
     next: review-quote-details
 
   - id: review-quote-details
@@ -834,6 +835,7 @@ pages:
   # User research aids in the footer: the email and the commitment
   # certificate the submission sends
   - id: confirmation
+    handoff: 2026-09-21
     research:
       - text: View the email
         href: request-email
@@ -841,7 +843,9 @@ pages:
         href: commitment-certificate
 
   - id: request-email
+    handoff: 2026-09-21
     back: confirmation
 
   - id: commitment-certificate
+    handoff: 2026-09-21
     back: confirmation
