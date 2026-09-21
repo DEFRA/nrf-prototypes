@@ -4,6 +4,8 @@ type: content
 
 # You need a quote before you can request to use the levy
 
-[PLACEHOLDER] This page explains that a NRL reference comes with a quote, and that the user should get a quote first.
+If you have already received a quote, you can find your NRL reference on the email you were sent. 
 
-[Get a new quote](/nrf-quote-7/planning-type)
+If you don't already have a quote, or want to get another one, you can get a quote at any time. 
+
+[Get a quote](/nrf-quote-7/planning-type)
