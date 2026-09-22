@@ -782,6 +782,20 @@ function previewVariants(page) {
     }))
 }
 
+/**
+ * The copy variants of a page (`pages/<id>~<variant>.md` beside its file,
+ * see loader.js buildCopyVariants): [{ id, label, contentFile }]. Not to be
+ * confused with preview variants, which change the sample data, not the
+ * copy.
+ */
+function copyVariants(page) {
+  return (page.copyVariants || []).map(({ id, label, contentFile }) => ({
+    id,
+    label,
+    contentFile
+  }))
+}
+
 // The error a preview shows when asked for one without saying which
 const DEFAULT_ERROR = 'required'
 
@@ -865,14 +879,14 @@ function exportSections(journey) {
  * main-chain page followed by its branches, unreached pages last): the main
  * journey with its groups folded, then each group. Question and custom
  * pages get a second entry showing their error state unless
- * `includeErrors` is false, and a page with `preview.variants` gets one
- * entry per variant. `sections` picks which parts to export ('main' and
+ * `includeErrors` is false, and a page with `preview.variants` or copy
+ * variants gets one entry per variant. `sections` picks which parts to export ('main' and
  * group ids; all by default). A journey with groups files each section in
  * a folder of its own; one without keeps a flat list.
  *
  * @param {object} journey  loaded journey definition
  * @param {object} options  { includeErrors, sections }
- * @returns [{ id, section, type, path, url, file, error, variant }]
+ * @returns [{ id, section, type, path, url, file, error, variant, copy }]
  */
 function exportScreens(journey, options = {}) {
   const includeErrors = options.includeErrors !== false
@@ -908,6 +922,8 @@ function exportScreens(journey, options = {}) {
           // The error key shown (`required`, `max`...), or false for none
           error: false,
           variant: null,
+          // The copy variant shown (`b` for pages/<id>~b.md), or null
+          copy: null,
           ...extra
         })
         screens.push(entry('', '', {}))
@@ -932,6 +948,13 @@ function exportScreens(journey, options = {}) {
             })
           )
         }
+        // `_copy` rather than `copy`: the kit never stores a query key that
+        // starts with `_`, so the capture leaves the session's choice alone
+        for (const copy of copyVariants(page)) {
+          screens.push(
+            entry(`~${copy.id}`, `&_copy=${copy.id}`, { copy: copy.id })
+          )
+        }
       }
     }
   }
@@ -940,6 +963,7 @@ function exportScreens(journey, options = {}) {
 
 module.exports = {
   previewVariants,
+  copyVariants,
   previewErrorKey,
   previewErrorStates,
   DEFAULT_ERROR,

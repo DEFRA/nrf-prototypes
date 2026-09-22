@@ -83,6 +83,7 @@
   .wall-card__handoff .govuk-tag { font-size: 12px; line-height: 1; padding: 4px 6px 3px; margin: 0; white-space: nowrap; }
   .wall-card--handoff .wall-card__frame { border-top: 4px solid #28a197; }
   .wall-card--handoff-changed .wall-card__frame { border-top: 4px solid #ffdd00; }
+  .wall-card--copy .wall-card__frame { border-top: 4px solid #f47738; }
   .handoffs { margin-bottom: 20px; }
   .handoffs .govuk-details__summary, .handoffs .govuk-details__text { font-size: 16px; }
   .handoffs .govuk-details__text { padding-top: 10px; padding-bottom: 0; }
@@ -217,6 +218,7 @@
             <a class="govuk-link wall-card__open" href="{{ page.path }}?preview=1" target="_blank" rel="noopener">Open in new tab</a>
             <button type="button" class="wall-card__copy wall-card__copy--text" data-copy-url="{{ publicBaseUrl }}{{ page.path }}" data-feedback="" title="Copy link" aria-label="Copy link to {{ page.id }}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Copy link</button>
             {% if canExportScreens %}<a class="wall-card__copy wall-card__copy--text wall-card__export" href="{{ exportBase }}" download data-feedback="" title="Export screen as JPG" aria-label="Export {{ page.id }} as JPG"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export JPG</a>{% endif %}
+            {% if page.compareUrl %}<a class="govuk-link wall-card__compare" href="{{ page.compareUrl }}">Compare side by side</a>{% endif %}
           </p>
           <p class="wall-card__file" title="{{ page.contentFile }}">{% if page.shared %}{{ page.contentFile | replace("content/", "") }}{% else %}{{ page.id }}.md{% endif %}</p>
         </div>
@@ -229,6 +231,36 @@
     </div>
     {% if page.via %}<p class="wall-card__via">&#8627; {{ page.via }}</p>{% endif %}
   </div>
+  {#- Copy variants: the same page from pages/<id>~<variant>.md, right
+      beside it. The preview and Open use `_copy` (this request only) and
+      Copy link uses `copy`, which sticks for the session it is opened in -#}
+  {% for copy in page.copies %}
+  <div class="wall-card wall-card--branch wall-card--copy{% if page.isCustom %} wall-card--custom{% endif %}" id="screen-{{ page.id }}~{{ copy.id }}">
+    <div class="wall-card__head">
+      <span class="wall-card__title">
+        <span class="wall-card__id">{{ page.id }}</span>
+        <span class="wall-card__type">· copy: {{ copy.label }}</span>
+      </span>
+      <details class="wall-card__menu">
+        <summary class="wall-card__menu-button" title="Options"><span class="govuk-visually-hidden">Options for {{ page.id }} (copy: {{ copy.label }})</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="19" cy="12" r="2.2"/></svg></summary>
+        <div class="wall-card__panel">
+          <p class="wall-card__actions">
+            <a class="govuk-link wall-card__open" href="{{ page.path }}?preview=1&_copy={{ copy.id }}" target="_blank" rel="noopener">Open in new tab</a>
+            <button type="button" class="wall-card__copy wall-card__copy--text" data-copy-url="{{ publicBaseUrl }}{{ page.path }}?copy={{ copy.id }}" data-feedback="" title="Copy link (shows this copy for the whole session)" aria-label="Copy link to {{ page.id }} (copy: {{ copy.label }})"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Copy link</button>
+            {% if canExportScreens %}<a class="wall-card__copy wall-card__copy--text wall-card__export" href="/tools/journeys/{{ journey.id }}/screens/{{ page.id }}.jpg?copy={{ copy.id }}" download data-feedback="" title="Export screen as JPG" aria-label="Export {{ page.id }} (copy: {{ copy.label }}) as JPG"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export JPG</a>{% endif %}
+            <a class="govuk-link wall-card__compare" href="{{ page.compareUrl }}">Compare side by side</a>
+          </p>
+          <p class="wall-card__file" title="{{ copy.contentFile }}">{{ page.id }}~{{ copy.id }}.md</p>
+        </div>
+      </details>
+    </div>
+    <div class="wall-card__frame">
+      <iframe src="{{ page.path }}?preview=1&embed=1&_copy={{ copy.id }}" loading="lazy" title="{{ page.heading }} (copy: {{ copy.label }})" tabindex="-1"></iframe>
+      <a class="wall-card__shield" href="{{ page.path }}?preview=1&_copy={{ copy.id }}" target="_blank" rel="noopener" aria-label="Open {{ page.heading }} (copy: {{ copy.label }}) in a new tab"></a>
+    </div>
+    <p class="wall-card__via">&#8627; {{ copy.label }}</p>
+  </div>
+  {% endfor %}
   {% for variant in page.variants %}
   <div class="wall-card wall-card--branch wall-card--variant{% if page.isCustom %} wall-card--custom{% endif %}">
     <div class="wall-card__head">
@@ -342,7 +374,7 @@
     }) }}
   </div>
   {% endif %}
-  <p class="tools-legend">Every screen rendered live with the sample data from <code>journey.yaml → preview</code>. Each row is a page on the default path, followed by the screens that branch off it and how you reach them. Click a screen to open it in a new tab; the ⋯ menu on a card can show its error state or the copy as handed over instead, and copy, open or export whichever is showing.{% if groups | length %} Purple cards stand for a group of screens (sign in, account creation) shown in its own section below.{% endif %}{% if handoffs | length %} A turquoise tag means the page has been handed to development; yellow means its copy has changed since.{% endif %}</p>
+  <p class="tools-legend">Every screen rendered live with the sample data from <code>journey.yaml → preview</code>. Each row is a page on the default path, followed by the screens that branch off it and how you reach them. Click a screen to open it in a new tab; the ⋯ menu on a card can show its error state or the copy as handed over instead, and copy, open or export whichever is showing. An orange-topped card is an alternative copy of the page beside it, from a <code>&lt;page&gt;~&lt;name&gt;.md</code> file; its menu compares the copies side by side, and its Copy link shows that copy for a whole session.{% if groups | length %} Purple cards stand for a group of screens (sign in, account creation) shown in its own section below.{% endif %}{% if handoffs | length %} A turquoise tag means the page has been handed to development; yellow means its copy has changed since.{% endif %}</p>
 
   <div class="tools-controls">
     <label for="wall-scale">Zoom</label>

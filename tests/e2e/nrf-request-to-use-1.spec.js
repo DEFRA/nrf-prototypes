@@ -4,7 +4,8 @@ const {
   journeyGroups,
   journeySections,
   exportSections,
-  exportScreens
+  exportScreens,
+  copyVariants
 } = require('../../app/lib/journey-engine')
 const { copyOf } = require('./helpers/journey')
 const { LEVY_AMOUNT } = require('../../app/lib/nrf-request-to-use-1/hooks')
@@ -1147,7 +1148,12 @@ test.describe('journey tools', () => {
   }) => {
     const response = await page.goto(`/tools/journeys/${journey.id}`)
     expect(response.status()).toBe(200)
-    await expect(page.locator('iframe')).toHaveCount(journey.pages.length)
+    // One card per page, plus one per copy variant a page has
+    const cards = journey.pages.reduce(
+      (count, page) => count + 1 + copyVariants(page).length,
+      0
+    )
+    await expect(page.locator('iframe')).toHaveCount(cards)
     // Thumbnails are embedded previews (no user research footer); the Open
     // links are plain previews, which show it
     await expect(page.locator('iframe').first()).toHaveAttribute(
@@ -1177,10 +1183,19 @@ test.describe('journey tools', () => {
       'main',
       ...groups.map((group) => group.id)
     ])
-    // Everything, once, filed by section
+    // Everything, once, filed by section (a copy variant adds a screen of
+    // its own beside its page)
     const all = exportScreens(journey, { includeErrors: false })
-    expect(all.map((screen) => screen.id).sort()).toEqual(
-      journey.pages.map((page) => page.id).sort()
+    expect(
+      all
+        .filter((screen) => !screen.copy)
+        .map((screen) => screen.id)
+        .sort()
+    ).toEqual(journey.pages.map((page) => page.id).sort())
+    expect(
+      all.filter((screen) => screen.copy).map((screen) => screen.id)
+    ).toEqual(
+      journey.pages.flatMap((page) => copyVariants(page).map(() => page.id))
     )
     expect(all[0].file).toBe('main/01-start.jpg')
     // One group on its own, numbered from 1

@@ -1,5 +1,8 @@
 const { test, expect } = require('@playwright/test')
-const { previewVariants } = require('../../app/lib/journey-engine')
+const {
+  previewVariants,
+  copyVariants
+} = require('../../app/lib/journey-engine')
 const { copyOf } = require('./helpers/journey')
 
 /**
@@ -149,9 +152,10 @@ test.describe('journey tools show exits to other journeys', () => {
       requestToUseEntry
     ])
     // Placeholder cards carry no iframe, so the wall still has one per page
-    // (plus one per preview variant)
+    // (plus one per preview variant and one per copy variant)
     const cards = quote.journey.pages.reduce(
-      (count, page) => count + 1 + previewVariants(page).length,
+      (count, page) =>
+        count + 1 + previewVariants(page).length + copyVariants(page).length,
       0
     )
     await expect(page.locator('iframe')).toHaveCount(cards)

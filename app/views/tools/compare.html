@@ -1,0 +1,113 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+{{ page.id }} - compare copies - {{ journey.name }} - GOV.UK
+{% endblock %}
+
+{#
+  One page's copies side by side: its own copy and each copy variant
+  (pages/<id>~<variant>.md), rendered live with the sample data. The width
+  toggle shows every copy at desktop or mobile width; each column scales
+  its frame to fit (see the script at the end). Opened from the "Compare
+  side by side" link on the screen wall.
+#}
+
+{% block head %}
+{{ super() }}
+<style>
+  .tools-wrap { padding: 0 30px 60px; }
+  .compare-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 30px; margin: 0 0 20px; font-family: "GDS Transport", arial, sans-serif; font-size: 16px; }
+  .compare-controls fieldset { border: 0; padding: 0; margin: 0; display: flex; align-items: center; gap: 10px; }
+  .compare-controls legend { float: left; padding: 0; margin-right: 5px; font-weight: 700; }
+  .compare-controls label { display: inline-flex; align-items: center; gap: 5px; }
+  .compare-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; align-items: start; }
+  .compare-column { min-width: 0; }
+  .compare-column__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 5px 15px; margin-bottom: 8px; font-family: "GDS Transport", arial, sans-serif; font-size: 16px; line-height: 1.4; }
+  .compare-column__label { font-weight: 700; color: #0b0c0c; }
+  .compare-column__file { color: #505a5f; font-size: 14px; }
+  .compare-column--variant .compare-column__frame { border-top: 4px solid #f47738; }
+  .compare-column__frame { --compare-scale: 0.5; --compare-width: 1000px; --compare-height: 1100px; position: relative; width: calc(var(--compare-width) * var(--compare-scale)); height: calc(var(--compare-height) * var(--compare-scale)); overflow: hidden; border: 1px solid #b1b4b6; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.12); }
+  .compare-column__frame iframe { width: var(--compare-width); height: var(--compare-height); border: 0; transform: scale(var(--compare-scale)); transform-origin: 0 0; }
+  .compare-grid[data-width="375"] .compare-column__frame { --compare-width: 375px; --compare-height: 1400px; }
+  .compare-grid[data-custom] .compare-column__frame { --compare-height: 900px; }
+  .compare-hint { max-width: 40em; }
+</style>
+{% endblock %}
+
+{% block main %}
+<main class="govuk-main-wrapper tools-wrap" id="main-content">
+  {{ govukBackLink({ text: "Screen wall", href: wallUrl }) }}
+  <span class="govuk-caption-l">{{ journey.name }}</span>
+  <h1 class="govuk-heading-l">{{ page.id }}</h1>
+
+  {% if copies | length > 1 %}
+  <p class="govuk-body">{{ copies | length }} copies of this page, rendered live with the sample data. Open one in a new tab to click through it; its Continue and Back show the page's own copy unless the session was opened with <code>?copy=&lt;name&gt;</code>.</p>
+  {% else %}
+  <p class="govuk-body compare-hint">This page has no alternative copy yet. To try one, save a copy of <code>{{ page.folder }}/{{ page.file }}</code> as <code>{{ page.folder }}/{{ page.id }}~b.md</code> (any lower-case name after the <code>~</code>), reword it, and it appears here and on the screen wall without a restart.</p>
+  {% endif %}
+
+  <div class="compare-controls">
+    <fieldset>
+      <legend>Width</legend>
+      <label><input type="radio" name="compare-width" value="1000" checked> Desktop</label>
+      <label><input type="radio" name="compare-width" value="375"> Mobile</label>
+    </fieldset>
+    {% if errorQuery %}
+    <label><input type="checkbox" id="compare-error" value="{{ errorQuery }}"> Show error state</label>
+    {% endif %}
+  </div>
+
+  <div class="compare-grid" id="compare-grid" data-width="1000"{% if page.isCustom %} data-custom{% endif %}>
+    {% for copy in copies %}
+    <div class="compare-column{% if copy.id %} compare-column--variant{% endif %}">
+      <div class="compare-column__head">
+        <span class="compare-column__label">{{ copy.label }}</span>
+        <span class="compare-column__file">{{ copy.file }} · <a class="govuk-link" href="{{ page.path }}?preview=1{{ copy.query }}" target="_blank" rel="noopener">Open in new tab</a></span>
+      </div>
+      <div class="compare-column__frame">
+        <iframe data-src="{{ page.path }}?preview=1&embed=1{{ copy.query }}" src="{{ page.path }}?preview=1&embed=1{{ copy.query }}" title="{{ page.heading }} ({{ copy.label }})" tabindex="-1"></iframe>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</main>
+
+<script>
+  ;(function () {
+    var grid = document.getElementById('compare-grid')
+    var frames = grid.querySelectorAll('.compare-column__frame')
+    var errorBox = document.getElementById('compare-error')
+
+    // Each column scales its frame down to the column's width (never up)
+    function fit() {
+      var width = parseInt(grid.getAttribute('data-width'), 10) || 1000
+      frames.forEach(function (frame) {
+        var column = frame.parentNode
+        var scale = Math.min(1, column.clientWidth / width)
+        frame.style.setProperty('--compare-scale', scale)
+      })
+    }
+
+    function reload() {
+      var error = errorBox && errorBox.checked ? '&error=' + errorBox.value : ''
+      grid.querySelectorAll('iframe').forEach(function (frame) {
+        frame.src = frame.getAttribute('data-src') + error
+      })
+    }
+
+    document.querySelectorAll('input[name="compare-width"]').forEach(function (radio) {
+      radio.addEventListener('change', function () {
+        grid.setAttribute('data-width', radio.value)
+        fit()
+      })
+    })
+    if (errorBox) {
+      errorBox.addEventListener('change', reload)
+    }
+    window.addEventListener('resize', fit)
+    fit()
+  })()
+</script>
+{% endblock %}
+
+{% block footer %}{% endblock %}

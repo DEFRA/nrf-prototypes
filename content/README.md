@@ -60,16 +60,26 @@ The label is copy: reword it whenever you like. The value is the answer's short 
 
 ### Markdown you can use
 
-| Write                          | You get                       |
-| ------------------------------ | ----------------------------- |
-| `## Heading` / `### Heading`   | medium / small heading        |
-| blank line between lines       | new paragraph                 |
-| `- item`                       | bulleted list                 |
-| `1. item`                      | numbered list                 |
-| `[link text](https://...)`     | link                          |
-| `[text (opens in new tab)](…)` | link that opens a new tab     |
-| `**bold**`                     | bold                          |
-| `\` at the end of a line       | line break inside a paragraph |
+| Write                           | You get                       |
+| ------------------------------- | ----------------------------- |
+| `## Heading` / `### Heading`    | medium / small heading        |
+| blank line between lines        | new paragraph                 |
+| `- item`                        | bulleted list                 |
+| `1. item`                       | numbered list                 |
+| `[link text](https://...)`      | link                          |
+| `[text (opens in new tab)](…)`  | link that opens a new tab     |
+| `**bold**`                      | bold                          |
+| `\` at the end of a line        | line break inside a paragraph |
+| `\| Heading \| Heading \|` rows | table (see below)             |
+
+A table is written the markdown way, one row per line with `|` between the cells and a line of dashes under the headings, and comes out as a GOV.UK table. Two extras match the design system: a body row whose first cell is entirely bold (`| **Provisional** | £1,000 |`) makes that cell the row's header, and a column whose dashes end in a colon (`---:`) is a numeric column, aligned right.
+
+```markdown
+| Levy amount            | Amount (excluding VAT) |
+| ---------------------- | ---------------------: |
+| **Provisional**        |      £{{ levyAmount }} |
+| **Inflation-adjusted** |      £{{ levyAmount }} |
+```
 
 Do not write HTML or template code in these files. If you need something the list above cannot do, ask a developer to add a block type.
 
@@ -335,6 +345,42 @@ A Change link to another journey carries the way back on its own. For an exit fr
 
 For this to work the borrowed page needs `changeable: true` and a `$navFromSummary` rule ending in `goto: $summary` (not a hard-coded page id). `nav` is only honoured when it names a page of a mounted journey; anything else is ignored. The page still lives in the other journey, so **the same caveat as exits applies: update the paths when a newer version becomes the target.**
 
+## Trying out variations of a page
+
+To try different words or a different layout for a page without a branch, save a copy of its file beside it, with `~` and a short name after the page id, and reword the copy:
+
+```
+pages/planning-type.md      # the page
+pages/planning-type~b.md    # an alternative copy of it
+```
+
+```markdown
+---
+variant: Shorter heading # how the tools page labels this copy (the name after ~ if left out)
+type: radios
+hint: Options below include any variations to an existing permission.
+options:
+  - label: Full planning permission
+    value: full
+  # ...the same options, with the same values
+errors:
+  required: Select a planning application type
+---
+
+# Which type of planning application is it?
+```
+
+The name after the `~` uses lower-case letters, digits and hyphens. A variant is copy only: reword the heading, hint, body, labels, error messages and button as you like, but keep the page's `type`, the `value` of every option, the fields of a form and its `field` and `sessionKey`, because `journey.yaml` branches on those. The loader refuses a variant that changes them and says which file. A shared page varies the same way, with the file beside it in `content/shared/...`, in every journey that shares it.
+
+Seeing the variants:
+
+- On the screen wall at `/tools/journeys/<id>`, each variant is an orange-topped card right after the page it varies, labelled with its `variant:` name. The ⋯ menu on the page or on a variant has **Compare side by side**, which opens every copy of the page in columns at desktop or mobile width, in the error state if the page has one.
+- `?_copy=b` on the page's URL shows that copy once, for that request. The wall and the export use it, so looking at a variant never changes what anyone else sees.
+- `?copy=b` shows that copy for the rest of the session: every page that has a `~b` file shows it and the others show their own copy, so a research participant can be walked through variant B end to end. `?copy=default` goes back to the pages' own copy. The Copy link button on a variant's card gives that URL.
+- The JPG export saves each variant beside the page as `<page>~b.jpg`.
+
+Variants are for experiments, not handoffs. A variant never appears in a frozen handoff copy or in the "as handed over" export, and editing one does not turn the page's tag to **Changed since handoff**: only the page's own file counts. To keep a variant, move its words into the page's own file and delete the variant; to drop one, delete its file. Either shows up without a restart.
+
 ## Things that need a developer
 
 - Adding, removing or renaming a page (the file name is the page's URL). The running server picks the new page up without a restart.
@@ -359,7 +405,7 @@ What happens next:
 - The journey's tools page (`/tools/journeys/<id>`) lists the handed-over pages at the top of the Screens tab and tags each screen **Ready for dev**. The homepage card shows how many pages are ready.
 - When the page's copy is edited after the handoff, the tag turns yellow, **Changed since handoff**, on its own: the prototype asks git whether the markdown moved after the commit that added the date. Put today's date on the page to hand the change over (when the page was already handed over today, the date cannot change, so add a comment after it, `handoff: 2026-09-18 # copy corrected`, and commit: the handoff is the commit that last wrote that line). Changes to the page's rules in `journey.yaml` (`next`, `guard`, `set`) are not spotted this way, so tell the developer about those.
 - When the date lands on `main`, the Publish workflow tags that commit `handoff/<journey>/<date>`. QA and BAs can link to the copy as handed over on GitHub (the "Copy at handoff" link on the tools page), and developers can diff two handoffs: `git diff handoff/nrf-quote-7/2026-09-01 handoff/nrf-quote-7/2026-09-17 -- content/`.
-- Once the date is committed, the page has a frozen URL, `/handoffs/<journey>/latest/<page>` (the "Frozen page" link and the copy-link button on the tools page, for example `/handoffs/nrf-quote-7/latest/start?preview=1`). It shows the page as handed over however much the live copy moves afterwards, and the whole journey works under it, so Back and Continue stay in the frozen copy: every page under `latest` comes from its own most recent handoff, with a banner in place of the Prototype one saying **Frozen · Copy as handed over on <date>**, and a page never handed over shows the live copy under a grey **Not handed over** banner so nobody builds it. The link stays the same when the page is handed over again; `/handoffs/<journey>/<date>/<page>` pins the whole journey to that one handoff's commit if you ever need the copy exactly as it was. `?preview=1` shows it with sample answers, as the screen wall does; without it, pages guarded by earlier answers send you to the start. The copy comes from the commit that wrote the date (locally, git extracts it into `.tmp/handoffs/`; the Publish workflow bakes every handoff into `app/data/handoffs/` for the deployed prototype). Templates and behaviour are always today's: only the content is frozen.
+- Once the date is committed, the page has a frozen URL, `/handoffs/<journey>/latest/<page>` (the "Frozen page" link and the copy-link button on the tools page, for example `/handoffs/nrf-quote-7/latest/start?preview=1`). It shows the page as handed over however much the live copy moves afterwards, and the whole journey works under it, so Back and Continue stay in the frozen copy: every page under `latest` comes from its own most recent handoff, with a banner in place of the Prototype one saying **Frozen · Copy as handed over on <date>**, and a page never handed over shows the live copy under a grey **Not handed over** banner so nobody builds it. The link stays the same when the page is handed over again; `/handoffs/<journey>/<date>/<page>` pins the whole journey to that one handoff's commit if you ever need the copy exactly as it was. `?preview=1` shows it with sample answers, as the screen wall does; without it, pages guarded by earlier answers send you to the start. The copy comes from the commit that wrote the date (locally, git extracts it into `.tmp/handoffs/`; the Publish workflow bakes every handoff into `app/data/handoffs/` for the deployed prototype). Templates and behaviour are always today's: only the content is frozen, and a copy variant of a page (`<page>~<name>.md`, see "Trying out variations of a page") is never shown in a frozen copy.
 
 Developers looking for what to build can search the content for `handoff:`.
 
@@ -424,5 +470,7 @@ Hooks (`app/lib/<journey>/hooks.js`) are per journey, so a shared page such as `
 `?preview=1&error=1` shows a question page with its `required` error, as the "Error state" view on the screen wall does. A page whose `errors:` block names more than one message (a `number` page's `invalid`, `whole`, `min` and `max`, say) can show each of them with `?preview=1&error=<key>`, for example `/nrf-quote-7/units?preview=1&error=max`; on the screen wall the card's Show menu has a select under "Error state" listing each key with its wording, and the JPG export saves one screen per key (`units--error.jpg`, `units--error-max.jpg`). On a `form` page the key applies to every field whose `errors:` define it. A key the page does not define falls back to `required`.
 
 `?errors=false` on any page turns server-side validation off for the session (the kit keeps the flag in session data as `errors`); blank answers are then filled from `preview.data`, so keep the sample answers complete enough for every guard to pass. `?errors=true` turns validation back on.
+
+`?copy=<name>` shows the page's copy variant `pages/<id>~<name>.md` (see "Trying out variations of a page") for the session, the same way (the kit keeps it as `copy`; a page with no such variant shows its own copy, and `?copy=default` ends it). `?_copy=<name>` shows it for that request only: the kit never stores a query key that starts with `_`, which is why the screen wall, the compare page and the export use it. A frozen handoff copy ignores both. In the engine, `copyVariantFor` in `router.js` swaps the variant's page object in before the page is handled, so hooks, validation and rules see the page's own id, path and `next` with the variant's copy; `copyVariants(page)` in `flow.js` lists them for the tools page and the export (`<page>~<name>.jpg`, left out of the "as handed over" export).
 
 The definition is validated on load. A broken file fails loudly with every problem listed, both on `npm run dev` and at `/tools/journeys`.

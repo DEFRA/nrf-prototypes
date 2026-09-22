@@ -18,6 +18,7 @@ const {
   toFlowJson,
   isQuestionType,
   previewVariants,
+  copyVariants,
   previewErrorStates,
   captureScreens,
   captureScreen,
@@ -44,6 +45,12 @@ function pageView(page, journey, via) {
     isCustom: page.type === 'custom',
     isExit: !(page.next && page.next.length),
     variants: previewVariants(page),
+    // Alternative copy for the same page (pages/<id>~<variant>.md), each a
+    // card of its own beside the page and compared at compareUrl
+    copies: copyVariants(page),
+    compareUrl: copyVariants(page).length
+      ? `/tools/journeys/${journey.id}/compare/${page.id}`
+      : null,
     // Every error the page can show, for the card's Show menu
     errorStates: previewErrorStates(page),
     shared: page.shared,
@@ -287,11 +294,55 @@ router.get('/tools/journeys/:journey/screens.zip', async (req, res) => {
   archive.finalize()
 })
 
+// One page's copies side by side: its own copy and each copy variant
+// (pages/<id>~<variant>.md), at desktop or mobile width, in the error
+// state if wanted. Opened from the "Compare side by side" link on the wall
+router.get('/tools/journeys/:journey/compare/:page', (req, res) => {
+  const journey = loadOr404(req, res)
+  if (!journey) {
+    return
+  }
+  const page = journey.byId.get(req.params.page)
+  if (!page) {
+    res.status(404).type('text/plain').send('No such page to compare')
+    return
+  }
+  const showsErrors = isQuestionType(page.type) || page.type === 'custom'
+  const errorStates = showsErrors ? previewErrorStates(page) : []
+  const fileOf = (contentFile) => contentFile.split('/').pop()
+  res.render('tools/compare', {
+    journey: { id: journey.id, name: journey.name, basePath: journey.basePath },
+    page: {
+      id: page.id,
+      path: page.path,
+      type: page.type,
+      heading: page.content.heading,
+      isCustom: page.type === 'custom',
+      file: fileOf(page.contentFile),
+      folder: page.contentFile.replace(/\/[^/]+$/, '')
+    },
+    // The page's own copy first, then each variant; `query` picks the copy
+    // on the preview URL (`_copy`, so the session's choice is left alone)
+    copies: [
+      { id: null, label: 'Default', file: fileOf(page.contentFile), query: '' },
+      ...copyVariants(page).map((copy) => ({
+        id: copy.id,
+        label: copy.label,
+        file: fileOf(copy.contentFile),
+        query: `&_copy=${copy.id}`
+      }))
+    ],
+    errorQuery: errorStates.length ? errorStates[0].query : null,
+    wallUrl: `/tools/journeys/${journey.id}#screen-${page.id}`,
+    publicBaseUrl: PUBLIC_BASE_URL
+  })
+})
+
 // One screen as a JPG, for the export button on each card of the wall.
 // Always desktop width; ?error=1 captures the form's error state (or
 // ?error=<key> one of its other errors, such as max),
-// ?variant=<id> one of the page's preview variants and ?handoff=1 the frozen
-// copy of the page as handed over
+// ?variant=<id> one of the page's preview variants, ?copy=<id> one of its
+// copy variants and ?handoff=1 the frozen copy of the page as handed over
 router.get('/tools/journeys/:journey/screens/:page.jpg', async (req, res) => {
   const journey = loadOr404(req, res)
   if (!journey) {
@@ -305,6 +356,7 @@ router.get('/tools/journeys/:journey/screens/:page.jpg', async (req, res) => {
       pageId: req.params.page,
       error: req.query.error ? String(req.query.error) : null,
       variant: req.query.variant ? String(req.query.variant) : null,
+      copy: req.query.copy ? String(req.query.copy) : null,
       handoff: req.query.handoff === '1'
     })
   } catch (error) {

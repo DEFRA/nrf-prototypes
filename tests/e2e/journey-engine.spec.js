@@ -261,3 +261,187 @@ test.describe('journey engine: choice values', () => {
     ])
   })
 })
+
+/**
+ * Copy variants: `pages/<id>~<name>.md` beside a page is an alternative
+ * copy of it, built from the same journey.yaml entry. The loader lists it
+ * on the page and refuses one that would change what the page does. These
+ * tests load a copy of content/ from a temporary folder, so nothing under
+ * the real content/ is touched.
+ */
+const fs = require('fs')
+const os = require('os')
+const path = require('path')
+const { copyVariants } = require('../../app/lib/journey-engine')
+
+function withContentCopy(run) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'nrf-content-'))
+  const contentDir = path.join(dir, 'content')
+  fs.cpSync(path.join(__dirname, '../../content'), contentDir, {
+    recursive: true
+  })
+  try {
+    return run(contentDir)
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true })
+  }
+}
+
+const RADIOS = `---
+variant: Other words
+type: radios
+options:
+  - label: A full permission
+    value: full
+  - label: An outline permission
+    value: outline
+  - label: A hybrid permission
+    value: hybrid
+  - label: Something else
+    value: other
+errors:
+  required: Choose one
+---
+
+# Which one is it?
+`
+
+test.describe('journey engine: copy variants', () => {
+  test('a sibling <id>~<name>.md is listed on the page, copy only', () => {
+    withContentCopy((contentDir) => {
+      const pagesDir = path.join(contentDir, 'nrf-quote-7', 'pages')
+      fs.writeFileSync(path.join(pagesDir, 'planning-type~words.md'), RADIOS)
+      const journey = loadJourney('nrf-quote-7', { contentDir })
+      const page = journey.byId.get('planning-type')
+      const variant = page.copyVariants.find((item) => item.id === 'words')
+      expect(variant).toMatchObject({
+        id: 'words',
+        label: 'Other words',
+        contentFile: 'content/nrf-quote-7/pages/planning-type~words.md'
+      })
+      expect(variant.page.content.heading).toBe('Which one is it?')
+      expect(variant.page.content.options.map((o) => o.label)).toContain(
+        'Something else'
+      )
+      expect(variant.page.path).toBe(page.path)
+      expect(variant.page.next).toEqual(page.next)
+      expect(variant.page.copyVariant).toEqual({
+        id: 'words',
+        label: 'Other words'
+      })
+      // Only the page itself is a page of the journey
+      expect(
+        journey.pages.filter((item) => item.id === 'planning-type')
+      ).toHaveLength(1)
+      expect(copyVariants(page).map((item) => item.id)).toContain('words')
+      expect(copyVariants(variant.page)).toEqual([])
+    })
+  })
+
+  test('a variant that changes what the page does is refused', () => {
+    withContentCopy((contentDir) => {
+      const pagesDir = path.join(contentDir, 'nrf-quote-7', 'pages')
+      fs.writeFileSync(
+        path.join(pagesDir, 'planning-type~values.md'),
+        RADIOS.replace('value: other', 'value: something-else')
+      )
+      fs.writeFileSync(
+        path.join(pagesDir, 'planning-type~Type.md'),
+        '---\ntype: content\n---\n\n# Heading\n'
+      )
+      let message = ''
+      try {
+        loadJourney('nrf-quote-7', { contentDir })
+      } catch (error) {
+        message = error.message
+      }
+      expect(message).toContain(
+        "pages.planning-type~values: a variant keeps the options' values (full, hybrid, other, outline); reword the labels, not the values"
+      )
+      expect(message).toContain(
+        "pages.planning-type~Type: a variant keeps the page's type ('radios', not 'content')"
+      )
+      expect(message).toContain(
+        "pages.planning-type~Type: a variant's name (after the ~) uses lower-case letters, digits and hyphens only"
+      )
+    })
+  })
+
+  test('a shared page varies from the shared folder', () => {
+    withContentCopy((contentDir) => {
+      const source = fs.readFileSync(
+        path.join(contentDir, 'shared', 'pages', 'start.md'),
+        'utf8'
+      )
+      // Reword the heading, which is the first H1 after the frontmatter
+      // (the frontmatter has `# ` comments of its own)
+      const [frontmatter, body] = source.split(/\n---\n/).slice(0, 2)
+      fs.writeFileSync(
+        path.join(contentDir, 'shared', 'pages', 'start~b.md'),
+        `${frontmatter}\n---\n${body.replace(/^# .*$/m, '# Another start')}`
+      )
+      for (const id of ['nrf-quote-7', 'nrf-request-to-use-1']) {
+        const page = loadJourney(id, { contentDir }).byId.get('start')
+        expect(copyVariants(page)).toEqual([
+          {
+            id: 'b',
+            label: 'b',
+            contentFile: 'content/shared/pages/start~b.md'
+          }
+        ])
+        expect(page.copyVariants[0].page.content.heading).toBe('Another start')
+      }
+    })
+  })
+})
+
+/**
+ * Markdown tables: a GOV.UK table, with a bold first cell as the row's
+ * header and a right-aligned column as a numeric column, the way the
+ * design system's tables are marked up.
+ */
+const { createMarkdown } = require('../../app/lib/journey-engine/markdown')
+
+test.describe('journey engine: markdown tables', () => {
+  const html = (markdown) => createMarkdown().render(markdown)
+
+  test('a table gets the GOV.UK classes', () => {
+    const out = html('| A | B |\n| - | - |\n| one | two |\n')
+    expect(out).toContain('<table class="govuk-table">')
+    expect(out).toContain('<thead class="govuk-table__head">')
+    expect(out).toContain('<th class="govuk-table__header">A</th>')
+    expect(out).toContain('<tbody class="govuk-table__body">')
+    expect(out).toContain('<tr class="govuk-table__row">')
+    expect(out).toContain('<td class="govuk-table__cell">one</td>')
+  })
+
+  test('a bold first cell is the row header', () => {
+    const out = html('| A | B |\n| - | - |\n| **one** | **two** |\n')
+    expect(out).toContain(
+      '<th scope="row" class="govuk-table__header">one</th>'
+    )
+    // Only the first cell: other bold cells stay bold cells
+    expect(out).toContain(
+      '<td class="govuk-table__cell"><strong>two</strong></td>'
+    )
+  })
+
+  test('a partly bold first cell is an ordinary cell', () => {
+    const out = html('| A | B |\n| - | - |\n| **one** more | two |\n')
+    expect(out).toContain(
+      '<td class="govuk-table__cell"><strong>one</strong> more</td>'
+    )
+    expect(out).not.toContain('scope="row"')
+  })
+
+  test('a right-aligned column is numeric, without inline styles', () => {
+    const out = html('| A | B |\n| - | -: |\n| **one** | 2 |\n')
+    expect(out).toContain(
+      '<th class="govuk-table__header govuk-table__header--numeric">B</th>'
+    )
+    expect(out).toContain(
+      '<td class="govuk-table__cell govuk-table__cell--numeric">2</td>'
+    )
+    expect(out).not.toContain('style=')
+  })
+})

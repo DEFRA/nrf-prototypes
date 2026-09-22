@@ -269,9 +269,18 @@ function buildFields(raw, type, where, problems) {
   })
 }
 
-function buildPage(entry, journey, problems) {
+/**
+ * Build one page from its journey.yaml entry and its markdown file. With
+ * `from.file` and `from.variantId` set, the same entry is built from a
+ * copy variant's file instead (`pages/<id>~<variantId>.md`, see
+ * buildCopyVariants): the page keeps its id, path and rules and only the
+ * copy differs.
+ */
+function buildPage(entry, journey, problems, from = {}) {
   const id = entry.id
-  const where = `pages.${id}`
+  const variantId = from.variantId || null
+  const fileName = variantId ? `${id}~${variantId}.md` : `${id}.md`
+  const where = variantId ? `pages.${id}~${variantId}` : `pages.${id}`
   // `shared: true` reads shared/pages/<id>.md; `shared: <folder>` reads
   // shared/<folder>/<id>.md. `page.shared` keeps the value as written.
   const shared =
@@ -283,9 +292,11 @@ function buildPage(entry, journey, problems) {
     'pages',
     `${id}.md`
   )
-  const pageFile = shared
-    ? path.join(contentDir, 'shared', sharedFolder, `${id}.md`)
-    : localFile
+  const pageFile =
+    from.file ||
+    (shared
+      ? path.join(contentDir, 'shared', sharedFolder, `${id}.md`)
+      : localFile)
   // Relative to the folder holding content/, so a snapshot's pages keep the
   // same `content/<journey>/pages/<id>.md` name git knows them by
   const contentFile = path.relative(path.dirname(contentDir), pageFile)
@@ -305,7 +316,7 @@ function buildPage(entry, journey, problems) {
   } else {
     problems.push(`${where}: missing content file pages/${id}.md`)
   }
-  if (shared && fs.existsSync(localFile)) {
+  if (!variantId && shared && fs.existsSync(localFile)) {
     problems.push(
       `${where}: is marked shared but pages/${id}.md also exists; delete one of them`
     )
@@ -319,7 +330,7 @@ function buildPage(entry, journey, problems) {
   }
   if (frontmatter.type && entry.type && frontmatter.type !== entry.type) {
     problems.push(
-      `${where}: type '${entry.type}' in journey.yaml disagrees with '${frontmatter.type}' in pages/${id}.md`
+      `${where}: type '${entry.type}' in journey.yaml disagrees with '${frontmatter.type}' in pages/${fileName}`
     )
   }
 
@@ -419,7 +430,7 @@ function buildPage(entry, journey, problems) {
         }
   )
 
-  return {
+  const page = {
     id,
     path: `${journey.basePath}/${id}`,
     shared,
@@ -429,6 +440,17 @@ function buildPage(entry, journey, problems) {
     group: entry.group || (typeof shared === 'string' ? shared : undefined),
     contentFile,
     handoff,
+    // Set on a page built from a copy variant's file: which one, and the
+    // label the tools page shows for it (`variant:` in the frontmatter)
+    copyVariant: variantId
+      ? {
+          id: variantId,
+          label: frontmatter.variant ? String(frontmatter.variant) : variantId
+        }
+      : null,
+    // The page's copy variants, [{ id, label, contentFile, page }]; filled
+    // in below for the default copy, always empty on a variant
+    copyVariants: [],
     serviceName: entry.serviceName || frontmatter.serviceName,
     type,
     layout,
@@ -479,6 +501,93 @@ function buildPage(entry, journey, problems) {
       text: frontmatter.text || {},
       body: bodyMarkdown
     }
+  }
+  if (!variantId) {
+    page.copyVariants = buildCopyVariants(
+      entry,
+      journey,
+      problems,
+      page,
+      pageFile
+    )
+  }
+  return page
+}
+
+// What comes after `<id>~` in a copy variant's file name
+const COPY_VARIANT_ID = /^[a-z0-9-]+$/
+
+/**
+ * The copy variants of a page: sibling files named `<id>~<variant>.md` in
+ * the folder holding the page's own file (the journey's pages/, or the
+ * shared folder for a shared page, which then varies in every journey
+ * using it). Each is built from the same journey.yaml entry, so it keeps
+ * the page's id, path, rules and session key and only the copy differs;
+ * checkCopyOnly refuses a variant that would change the logic.
+ *
+ * @returns [{ id, label, contentFile, page }] in id order
+ */
+function buildCopyVariants(entry, journey, problems, page, pageFile) {
+  const dir = path.dirname(pageFile)
+  if (!fs.existsSync(dir)) {
+    return []
+  }
+  const prefix = `${entry.id}~`
+  return fs
+    .readdirSync(dir)
+    .filter((name) => name.startsWith(prefix) && name.endsWith('.md'))
+    .sort()
+    .map((name) => {
+      const variantId = name.slice(prefix.length, -'.md'.length)
+      const where = `pages.${entry.id}~${variantId}`
+      if (!COPY_VARIANT_ID.test(variantId)) {
+        problems.push(
+          `${where}: a variant's name (after the ~) uses lower-case letters, digits and hyphens only`
+        )
+      }
+      const variant = buildPage(entry, journey, problems, {
+        file: path.join(dir, name),
+        variantId
+      })
+      checkCopyOnly(page, variant, where, problems)
+      return {
+        id: variantId,
+        label: variant.copyVariant.label,
+        contentFile: variant.contentFile,
+        page: variant
+      }
+    })
+}
+
+/**
+ * A copy variant may reword anything but must not change what the page
+ * does: its type, the values its options store (journey.yaml rules compare
+ * against those), the fields a form has, or the field and session key its
+ * answer is kept under.
+ */
+function checkCopyOnly(page, variant, where, problems) {
+  const list = (items) => (items.length ? items.sort().join(', ') : 'none')
+  if (variant.type !== page.type) {
+    problems.push(
+      `${where}: a variant keeps the page's type ('${page.type}', not '${variant.type}')`
+    )
+  }
+  const values = (p) => p.content.options.map((option) => String(option.value))
+  if (list(values(variant)) !== list(values(page))) {
+    problems.push(
+      `${where}: a variant keeps the options' values (${list(values(page))}); reword the labels, not the values`
+    )
+  }
+  const names = (p) => (p.content.fields || []).map((field) => field.name)
+  if (list(names(variant)) !== list(names(page))) {
+    problems.push(
+      `${where}: a variant keeps the form's fields (${list(names(page))})`
+    )
+  }
+  if (variant.field !== page.field || variant.sessionKey !== page.sessionKey) {
+    problems.push(
+      `${where}: a variant keeps the page's field and sessionKey; set them in journey.yaml or the default file only`
+    )
   }
 }
 
@@ -810,8 +919,17 @@ function build(journeyId, options = {}) {
   const pagesDir = path.join(dir, 'pages')
   if (fs.existsSync(pagesDir)) {
     for (const name of fs.readdirSync(pagesDir)) {
+      if (!name.endsWith('.md')) {
+        continue
+      }
       const id = name.replace(/\.md$/, '')
-      if (name.endsWith('.md') && !journey.byId.has(id)) {
+      // `<id>~<variant>.md` is a copy variant of <id> (see buildCopyVariants)
+      const [base, variant] = id.split('~')
+      if (variant !== undefined && !journey.byId.has(base)) {
+        console.warn(
+          `⚠ journey '${journeyId}': pages/${name} varies a page that is not listed in journey.yaml`
+        )
+      } else if (variant === undefined && !journey.byId.has(id)) {
         console.warn(
           `⚠ journey '${journeyId}': pages/${name} is not listed in journey.yaml and has no route`
         )

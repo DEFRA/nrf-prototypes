@@ -2,7 +2,11 @@ const { test, expect } = require('@playwright/test')
 const fs = require('fs')
 const path = require('path')
 const turf = require('@turf/turf')
-const { toFlowGraph, previewVariants } = require('../../app/lib/journey-engine')
+const {
+  toFlowGraph,
+  previewVariants,
+  copyVariants
+} = require('../../app/lib/journey-engine')
 const { copyOf } = require('./helpers/journey')
 
 /**
@@ -31,9 +35,11 @@ const {
   text
 } = copyOf('nrf-quote-7')
 
-// The wall shows one card per page plus one per preview variant
+// The wall shows one card per page plus one per preview variant and one
+// per copy variant
 const wallCardCount = journey.pages.reduce(
-  (count, page) => count + 1 + previewVariants(page).length,
+  (count, page) =>
+    count + 1 + previewVariants(page).length + copyVariants(page).length,
   0
 )
 

@@ -378,12 +378,65 @@ function createMarkdown() {
     addClass(tokens, idx, 'govuk-table__row')
     return defaultRender(tokens, idx, options, env, self)
   }
+  // A column aligned right in the markdown (`---:` under its heading) is a
+  // numeric column: the design system's modifier class instead of the
+  // inline style markdown-it would write
+  function numericColumn(tokens, idx, base) {
+    const style = tokens[idx].attrGet('style') || ''
+    if (style.includes('right')) {
+      addClass(tokens, idx, `${base}--numeric`)
+    }
+    tokens[idx].attrSet('style', null)
+    tokens[idx].attrs = tokens[idx].attrs.filter(([name]) => name !== 'style')
+  }
   md.renderer.rules.th_open = (tokens, idx, options, env, self) => {
     addClass(tokens, idx, 'govuk-table__header')
+    numericColumn(tokens, idx, 'govuk-table__header')
     return defaultRender(tokens, idx, options, env, self)
   }
+  // The first cell of a body row written entirely in bold (`| **Name** |`)
+  // is that row's header: a `th scope="row"`, as the design system's tables
+  // have, rather than a bold `td`
+  // The cell's inline children without the blank text either side (the
+  // padding spaces markdown-it keeps as empty text tokens)
+  function cellChildren(tokens, idx) {
+    const inline = tokens[idx + 1]
+    const children = (inline && inline.children) || []
+    const blank = (child) => child.type === 'text' && !child.content.trim()
+    let start = 0
+    let end = children.length
+    while (start < end && blank(children[start])) {
+      start += 1
+    }
+    while (end > start && blank(children[end - 1])) {
+      end -= 1
+    }
+    return children.slice(start, end)
+  }
+  function isRowHeader(tokens, idx) {
+    const children = cellChildren(tokens, idx)
+    return (
+      tokens[idx - 1] &&
+      tokens[idx - 1].type === 'tr_open' &&
+      children.length > 2 &&
+      children[0].type === 'strong_open' &&
+      children[children.length - 1].type === 'strong_close' &&
+      children.filter((child) => child.type === 'strong_open').length === 1
+    )
+  }
   md.renderer.rules.td_open = (tokens, idx, options, env, self) => {
-    addClass(tokens, idx, 'govuk-table__cell')
+    if (isRowHeader(tokens, idx)) {
+      tokens[idx].tag = 'th'
+      tokens[idx].attrSet('scope', 'row')
+      addClass(tokens, idx, 'govuk-table__header')
+      numericColumn(tokens, idx, 'govuk-table__header')
+      // The bold marks the cell; the header's own weight does the rest
+      tokens[idx + 1].children = cellChildren(tokens, idx).slice(1, -1)
+      tokens[idx + 2].tag = 'th'
+    } else {
+      addClass(tokens, idx, 'govuk-table__cell')
+      numericColumn(tokens, idx, 'govuk-table__cell')
+    }
     return defaultRender(tokens, idx, options, env, self)
   }
 

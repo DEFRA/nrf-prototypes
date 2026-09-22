@@ -479,6 +479,9 @@ function buildModel(ctx, extra = {}) {
     preview: ctx.preview,
     embed: ctx.embed,
     variant: ctx.variant,
+    // The copy variant being shown (`b` for pages/<id>~b.md), or null for
+    // the page's own copy; see copyVariantFor
+    copy: page.copyVariant ? page.copyVariant.id : null,
     routes: journey.routes,
     // Set on a frozen copy of a handoff (see snapshots.js): the date, the
     // commit and where the live page is, for the banner
@@ -650,9 +653,42 @@ async function handlePost(req, res, journey, page, hooks) {
  * Shared by the live mount below and the frozen handoff copies
  * (app/routes/handoffs.js).
  */
+/**
+ * The page to serve: the page itself, or one of its copy variants
+ * (`pages/<id>~<variant>.md`, see loader.js buildCopyVariants) when the
+ * request asks for one. `?copy=<variant>` asks for the session: the kit
+ * keeps it in session data, so every page that has that variant shows it
+ * until `?copy=default` (or any name no page has). `?_copy=<variant>` asks
+ * for this request only, as the kit never stores a query key starting with
+ * `_`; the tools page uses that so looking at the wall or exporting a
+ * screen never changes what a research session shows. A frozen copy of a
+ * handoff never varies: the handoff is the confirmed design.
+ */
+function copyVariantFor(journey, page, req) {
+  if (!page || journey.frozen || !page.copyVariants.length) {
+    return page
+  }
+  const query = req.query || {}
+  const session = (req.session && req.session.data) || {}
+  const wanted =
+    query._copy !== undefined
+      ? query._copy
+      : query.copy !== undefined
+        ? query.copy
+        : session.copy
+  const found = wanted
+    ? page.copyVariants.find((variant) => variant.id === String(wanted))
+    : null
+  return found ? found.page : page
+}
+
 async function dispatch(journey, basePath, hooks, req, res, next) {
   try {
-    const page = pageForRequest(journey, basePath, req)
+    const page = copyVariantFor(
+      journey,
+      pageForRequest(journey, basePath, req),
+      req
+    )
     if (!page) {
       return next()
     }
@@ -706,6 +742,7 @@ function createJourneyRouter(router, journeyOrId, hooks = {}) {
 module.exports = {
   createJourneyRouter,
   dispatch,
+  copyVariantFor,
   buildContext,
   buildModel,
   renderContent,

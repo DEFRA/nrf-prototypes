@@ -173,17 +173,25 @@
   }
 
   // The route names the file in Content-Disposition, but a download from
-  // a blob URL needs a name of its own: use the journey, page and variant
+  // a blob URL needs a name of its own: use the journey, page, copy variant
+  // (page~b, as the file is named) and preview variant
   function fileName(href) {
     const url = new URL(href, window.location.href)
     const parts = url.pathname.split('/')
     const journey = parts[parts.length - 3]
     const page = parts[parts.length - 1].replace(/\.jpg$/, '')
+    const copy = url.searchParams.get('copy')
     const variant = url.searchParams.get('variant')
     const error = url.searchParams.get('error') === '1'
     const handoff = url.searchParams.get('handoff') === '1'
     return (
-      [journey, page, variant, error ? 'error' : '', handoff ? 'handoff' : '']
+      [
+        journey,
+        copy ? page + '~' + copy : page,
+        variant,
+        error ? 'error' : '',
+        handoff ? 'handoff' : ''
+      ]
         .filter(Boolean)
         .join('-') + '.jpg'
     )

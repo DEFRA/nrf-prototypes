@@ -121,7 +121,8 @@ async function captureScreens(journey, options = {}) {
 /**
  * The screens as handed over: only the pages with a frozen copy (see
  * snapshots.js), each captured from that copy in the same state, with
- * `--handoff` on the file name.
+ * `--handoff` on the file name. Copy variants are left out: a handoff is
+ * the confirmed design, and a frozen copy never varies.
  *
  * @param {object} journey  loaded journey definition
  * @param {Array} screens  entries from exportScreens
@@ -130,6 +131,9 @@ async function captureScreens(journey, options = {}) {
 function asHandedOver(journey, screens) {
   const frozen = new Map()
   return screens.flatMap((screen) => {
+    if (screen.copy) {
+      return []
+    }
     if (!frozen.has(screen.id)) {
       const handoff = pageHandoff(journey, journey.byId.get(screen.id))
       frozen.set(
@@ -156,10 +160,11 @@ function asHandedOver(journey, screens) {
  * each card of the screen wall.
  *
  * @param {object} journey  loaded journey definition
- * @param {object} options  { baseUrl, viewport, pageId, error, variant, handoff, quality }
+ * @param {object} options  { baseUrl, viewport, pageId, error, variant, copy, handoff, quality }
  *   error captures the page's error state (`1` or `required` for the default
  *   one, or a key of its `errors:` block such as `max`); variant names one of the page's
- *   preview variants; handoff captures the page's frozen copy, as handed
+ *   preview variants; copy one of its copy variants (`b` for
+ *   pages/<id>~b.md); handoff captures the page's frozen copy, as handed
  *   over (see snapshots.js), in the same state
  * @returns {Promise<{ file: string, buffer: Buffer }>}  or null when the
  *   page (or the requested state of it) is not one the export knows about
@@ -172,7 +177,8 @@ async function captureScreen(journey, options = {}) {
     (item) =>
       item.id === options.pageId &&
       (item.error || null) === errorKey &&
-      item.variant === (options.variant || null)
+      item.variant === (options.variant || null) &&
+      item.copy === (options.copy || null)
   )
   if (screen && options.handoff) {
     screen = asHandedOver(journey, [screen])[0] || null
