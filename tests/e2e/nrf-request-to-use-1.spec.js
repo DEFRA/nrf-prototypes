@@ -1060,13 +1060,20 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
   })
 
   test('no reference sends the user to get a quote', async ({ page }) => {
+    // Wherever in the quote journey the page's link points (the content
+    // decides: its start page today, the first question before that)
+    const body = journey.byId.get('no-nrl-reference').content.body
+    const target = [...body.matchAll(/\]\(([^)]+)\)/g)]
+      .map(([, href]) => href)
+      .find((href) => href.startsWith(`${quotePath}/`))
+    expect(target).toBeDefined()
     await page.goto(`${base}/have-nrl-reference`)
     await answer(page, 'have-nrl-reference', 'No')
     await submit(page, 'have-nrl-reference')
     await expect(page).toHaveURL(`${base}/no-nrl-reference`)
     await expectHeading(page, 'no-nrl-reference')
-    await followLink(page, 'no-nrl-reference', `${quotePath}/planning-type`)
-    await expect(page).toHaveURL(`${quotePath}/planning-type`)
+    await followLink(page, 'no-nrl-reference', target)
+    await expect(page).toHaveURL(target)
   })
 
   test('the stand-in reference NRL-000000 does not match a quote', async ({
