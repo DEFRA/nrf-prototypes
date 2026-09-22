@@ -65,6 +65,7 @@ homepage:
     - Agent, company and individual account types decided by who the user is requesting to use the levy for (the sign-in email still decides it when that question was skipped)
     - Mock Defra ID registration for everyone requesting to use the levy for themselves as an individual or as their organisation's account admin, and for agents whose sign-in email contains "new" (new@), as an individual or a business; the registration answer decides the account type
     - Employee invitation email as a user research link on the organisation guidance page; opening it makes the user an invited employee, who skips the Defra account registration
+    - Agents choose which organisation they represent after signing in (three made-up clients and the research participant's own organisation); the choice shows in the header
     - Defra account registration emails for an individual, a business and an invited employee (new-employee@ gives their own details only), each with a Contact Support ID and a "Sign in to your account" link that carries on to the service
     - Developer details or your name and address, review, check your answers, confirmation
     - Email and commitment certificate with the red line boundary on a map
@@ -110,6 +111,7 @@ session:
   - governmentGatewayName
   - governmentGatewayUserId
   - account
+  - representedOrganisation
   - developerDetails
   - yourAddress
   - detailsConfirmed
@@ -179,6 +181,7 @@ preview:
       businessName: Agent Ltd
       organisationName: Organisation name
       email: agent@example.com
+    representedOrganisation: participant
     developerDetails:
       fullName: A Developer
       addressLine1: Development Road
@@ -483,7 +486,8 @@ pages:
   # for their organisation as its account admin, has no Defra account yet
   # and registers one first, whatever their email; an employee who opened
   # the invitation email has been invited to the organisation's account and
-  # skips it; for an agent a sign-in email containing "new" registers
+  # skips it; for an agent a sign-in email containing "new" registers.
+  # An agent then chooses which organisation they represent (a Defra ID page).
   - id: one-login-password
     shared: one-login
     handler: custom # decides the account type from the email, see hooks.js
@@ -492,7 +496,7 @@ pages:
         goto: defra-register
       - when: { key: account.accountType, in: [company, individual] }
         goto: your-address
-      - goto: developer-details
+      - goto: defra-choose-organisation
 
   # Creating a GOV.UK One Login: email, code from the email, password, then
   # security codes by text message (two pages) or authenticator app (one)
@@ -787,6 +791,24 @@ pages:
         invitedEmployee: true
         email: new-employee@example.com
     next: *signed-in
+
+  # Defra ID's own "Who do you want to represent?": an agent's Defra account
+  # is linked to the organisations they act for, and once signed in they
+  # pick which one this request is for. The last option is the research
+  # participant's own organisation (the footer's "Participant details" box).
+  # The organisation chosen shows in the header and as the business name on
+  # the developer details review page, whose Change link comes back here.
+  - id: defra-choose-organisation
+    shared: defra-id
+    field: represent
+    sessionKey: representedOrganisation
+    changeable: true
+    guard: { key: account.accountType, equals: agent, redirect: sign-in-method }
+    handler: custom # puts the organisation chosen in the header, see hooks.js
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: developer-details
 
   # Agents enter the developer they act for; companies and individuals give
   # their own name and address (the name is filled in from the account when

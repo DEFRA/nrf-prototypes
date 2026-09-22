@@ -1,6 +1,10 @@
 const { test, expect } = require('@playwright/test')
 const { copyOf } = require('./helpers/journey')
-const { reachSignIn, signIn } = require('./helpers/request-to-use')
+const {
+  reachSignIn,
+  signIn,
+  chooseOrganisation
+} = require('./helpers/request-to-use')
 
 /**
  * The participant details box: a user research aid in the footer of every
@@ -17,6 +21,7 @@ const requestToUse = copyOf('nrf-request-to-use-1')
 const {
   base,
   answer,
+  optionLocator,
   submit,
   fillField,
   fieldBox,
@@ -237,9 +242,40 @@ test.describe('participant details', () => {
     await describeParticipant(page)
     await reachSignIn(page, 'agent')
     await signIn(page, 'agent@example.com')
+    // The organisation given is the last choice of who to represent
+    await expect(page).toHaveURL(`${base}/defra-choose-organisation`)
+    const participant = { researchParticipant: PARTICIPANT }
+    await expect(
+      optionLocator(
+        page,
+        'defra-choose-organisation',
+        'participant',
+        participant
+      )
+    ).toHaveCount(1)
+    await expect(page.locator('.govuk-radios')).toContainText(
+      'Analytical Engines Ltd'
+    )
+    await chooseOrganisation(page, 'participant', participant)
     await expect(page).toHaveURL(`${base}/developer-details`)
     await expect(page.locator('.app-organisation-bar')).toContainText(
       'Analytical Engines Ltd'
+    )
+  })
+
+  test('an agent choosing another organisation acts for that one', async ({
+    page
+  }) => {
+    await describeParticipant(page)
+    await reachSignIn(page, 'agent')
+    await signIn(page, 'agent@example.com')
+    await chooseOrganisation(page, 'greenfield')
+    await expect(page).toHaveURL(`${base}/developer-details`)
+    await expect(page.locator('.app-organisation-bar')).not.toContainText(
+      'Analytical Engines Ltd'
+    )
+    await expect(page.locator('.app-organisation-bar')).toContainText(
+      requestToUse.option('defra-choose-organisation', 'greenfield')
     )
   })
 })

@@ -105,6 +105,19 @@ async function signIn(page, email) {
   await submit(page, 'one-login-password')
 }
 
+// Signed in as an agent: which organisation they represent (an option
+// value; 'participant' is the research participant's own organisation,
+// whose label is filled in from `data`)
+async function chooseOrganisation(
+  page,
+  organisation = 'participant',
+  data = {}
+) {
+  await expect(page).toHaveURL(`${base}/defra-choose-organisation`)
+  await answer(page, 'defra-choose-organisation', organisation, data)
+  await submit(page, 'defra-choose-organisation')
+}
+
 // Retrieve the fixture quote and get as far as choosing how to sign in
 async function reachSignIn(page, userType = 'agent') {
   await retrieveQuote(page)
@@ -120,5 +133,6 @@ module.exports = {
   acceptAndSkipVariation,
   chooseDefraUserType,
   signIn,
+  chooseOrganisation,
   reachSignIn
 }

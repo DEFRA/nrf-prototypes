@@ -16,6 +16,7 @@ const {
   acceptAndSkipVariation,
   chooseDefraUserType,
   signIn,
+  chooseOrganisation,
   reachSignIn
 } = require('./helpers/request-to-use')
 
@@ -32,6 +33,7 @@ const {
   journey,
   base,
   answer,
+  option,
   optionLocator,
   fillAnswer,
   answerBox,
@@ -309,9 +311,32 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
 
     // The account type follows the answer, not the email
     await signIn(page, 'company@example.com')
+
+    // Signed in as an agent: which organisation they represent, before the
+    // developer details. The answer is required. The last option stands
+    // for the research participant's organisation: with none given it
+    // shows the stand-in, as the header does
+    await expect(page).toHaveURL(`${base}/defra-choose-organisation`)
+    await expectHeading(page, 'defra-choose-organisation')
+    // A Defra ID page: its own chrome, no organisation bar yet
+    await expect(page).toHaveTitle(/Defra account - GOV.UK$/)
+    await expect(page.locator('.app-organisation-bar')).toHaveCount(0)
+    await expect(
+      optionLocator(page, 'defra-choose-organisation', 'participant')
+    ).toHaveCount(1)
+    await submit(page, 'defra-choose-organisation')
+    await expectError(page, 'defra-choose-organisation')
+    await answer(page, 'defra-choose-organisation', 'oakwood')
+    await submit(page, 'defra-choose-organisation')
+
+    // The organisation chosen shows in the header from here on
     await expect(page).toHaveURL(`${base}/developer-details`)
+    await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
+      'href',
+      `${base}/defra-choose-organisation`
+    )
     await expect(page.locator('.app-organisation-bar')).toContainText(
-      'Organisation name'
+      option('defra-choose-organisation', 'oakwood')
     )
     await expect(
       page.locator('.govuk-service-navigation').getByRole('link', {
@@ -332,6 +357,31 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
     await expect(page).toHaveURL(`${base}/review-developer-details`)
     await expect(page.locator('.govuk-summary-list')).toContainText(
       'A Developer'
+    )
+    // The business name is the organisation chosen, and its Change link
+    // goes back to the Defra ID page and returns here
+    await expect(page.locator('.govuk-summary-list')).toContainText(
+      option('defra-choose-organisation', 'oakwood')
+    )
+    await changeLink(
+      page,
+      'review-developer-details',
+      'defra-choose-organisation'
+    ).click()
+    await expect(page).toHaveURL(
+      `${base}/defra-choose-organisation?change=true&nav=review-developer-details`
+    )
+    await expect(
+      optionLocator(page, 'defra-choose-organisation', 'oakwood')
+    ).toBeChecked()
+    await answer(page, 'defra-choose-organisation', 'riverside')
+    await submit(page, 'defra-choose-organisation')
+    await expect(page).toHaveURL(`${base}/review-developer-details`)
+    await expect(page.locator('.govuk-summary-list')).toContainText(
+      option('defra-choose-organisation', 'riverside')
+    )
+    await expect(page.locator('.app-organisation-bar')).toContainText(
+      option('defra-choose-organisation', 'riverside')
     )
     await submit(page, 'review-developer-details')
     await expect(page).toHaveURL(`${base}/check-your-answers`)
@@ -632,6 +682,7 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
     await submit(page, 'defra-business-check-answers')
     await expect(page).toHaveURL(`${base}/defra-registered-business`)
     await followLink(page, 'defra-registered-business', './$next')
+    await chooseOrganisation(page)
     await expect(page).toHaveURL(`${base}/developer-details`)
     await expect(page.locator('.app-organisation-bar')).toHaveCount(1)
   })
@@ -790,7 +841,10 @@ test.describe('nrf-request-to-use-1 with errors switched off', () => {
     await submit(page, 'one-login-email')
     await expect(page).toHaveURL(`${base}/one-login-password`)
     await submit(page, 'one-login-password')
-    // The sample sign-in email is an agent's
+    // The sample sign-in email is an agent's, and the sample answer picks
+    // the participant's organisation
+    await expect(page).toHaveURL(`${base}/defra-choose-organisation`)
+    await submit(page, 'defra-choose-organisation')
     await expect(page).toHaveURL(`${base}/developer-details`)
     await submit(page, 'developer-details')
     await expect(page).toHaveURL(`${base}/review-developer-details`)
@@ -1008,6 +1062,7 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
     await acceptAndSkipVariation(page)
     await chooseDefraUserType(page, 'agent')
     await signIn(page, 'agent@example.com')
+    await chooseOrganisation(page)
     await fillField(page, 'developer-details', 'full-name', 'A Developer')
     await fillField(
       page,
@@ -1348,7 +1403,9 @@ test.describe('nrf-request-to-use-1 creating an account', () => {
     await submit(page, 'one-login-authenticator')
     await expect(page).toHaveURL(`${base}/one-login-created`)
     await submit(page, 'one-login-created')
-    // The email is an agent's, so on to the developer details, signed in
+    // The email is an agent's, so on to choosing the organisation they
+    // represent and the developer details, signed in
+    await chooseOrganisation(page)
     await expect(page).toHaveURL(`${base}/developer-details`)
     await expect(
       page.locator('.govuk-service-navigation').getByRole('link', {
@@ -1412,8 +1469,10 @@ test.describe('nrf-request-to-use-1 creating an account', () => {
       'not-a-real-password'
     )
     await submit(page, 'government-gateway-sign-in')
-    // The account is for a client, so an agent enters the developer details
-    // whatever the user ID says
+    // The account is for a client, so an agent chooses the organisation
+    // they represent and enters the developer details whatever the user ID
+    // says
+    await chooseOrganisation(page)
     await expect(page).toHaveURL(`${base}/developer-details`)
   })
 
@@ -1459,6 +1518,7 @@ test.describe('nrf-request-to-use-1 creating an account', () => {
     )
     await expect(page.locator('main')).toContainText('agent@example.com')
     await submit(page, 'government-gateway-user-id')
+    await chooseOrganisation(page)
     await expect(page).toHaveURL(`${base}/developer-details`)
   })
 })

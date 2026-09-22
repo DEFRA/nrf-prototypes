@@ -244,17 +244,23 @@ const GROUP_EXIT_HEADING = 'Back in the journey'
 function groupScope(journey, group) {
   const members = new Set(group.pages)
   const pages = journey.pages.filter((page) => members.has(page.id))
-  // Entered where a form submission or link from outside first lands
-  // (return edges to a summary page inside the group do not count)
-  const entered = getEdges(journey)
-    .filter(
-      (edge) =>
-        ['next', 'link'].includes(edge.kind) &&
-        !members.has(edge.fromId) &&
-        members.has(edge.toId)
-    )
-    .map((edge) => edge.toId)
-  const start = entered.length ? entered[0] : pages[0].id
+  // Entered where a form submission or link from outside lands (return
+  // edges to a summary page inside the group do not count). When several
+  // pages are entered, the group starts at the first of them in journey.yaml
+  // order, so the Defra ID section starts at registration even though the
+  // default sign-in rule (listed first among the edges) lands on a later page
+  const entered = new Set(
+    getEdges(journey)
+      .filter(
+        (edge) =>
+          ['next', 'link'].includes(edge.kind) &&
+          !members.has(edge.fromId) &&
+          members.has(edge.toId)
+      )
+      .map((edge) => edge.toId)
+  )
+  const first = pages.find((page) => entered.has(page.id))
+  const start = first ? first.id : pages[0].id
   const exitPaths = new Map()
   for (const page of journey.pages) {
     if (!members.has(page.id)) {

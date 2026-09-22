@@ -116,8 +116,10 @@ function copyOf(journeyId) {
     return found
   }
 
-  function option(id, valueOrIndex) {
-    return optionOf(id, valueOrIndex).label
+  // An option's label as the browser shows it: a placeholder in it (the
+  // research participant's organisation, say) is filled in from `data`
+  function option(id, valueOrIndex, data = {}) {
+    return plain(optionOf(id, valueOrIndex).label, data)
   }
 
   // The label of a page with one input: `label:` when set, else the question
@@ -282,9 +284,9 @@ function copyOf(journeyId) {
 
   // ---- Playwright actions and assertions ----
 
-  async function answer(page, id, valueOrIndex) {
+  async function answer(page, id, valueOrIndex, data = {}) {
     const def = pageOf(id)
-    const label = option(id, valueOrIndex)
+    const label = option(id, valueOrIndex, data)
     if (def.type === 'select') {
       await page.getByLabel(answerLabel(id)).selectOption({ label })
       return
@@ -292,8 +294,8 @@ function copyOf(journeyId) {
     await page.getByLabel(label, { exact: true }).check()
   }
 
-  function optionLocator(page, id, valueOrIndex) {
-    return page.getByLabel(option(id, valueOrIndex), { exact: true })
+  function optionLocator(page, id, valueOrIndex, data = {}) {
+    return page.getByLabel(option(id, valueOrIndex, data), { exact: true })
   }
 
   async function fillAnswer(page, id, value) {

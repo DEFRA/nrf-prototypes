@@ -20,6 +20,8 @@
  *     research link on the organisation guidance page, skips it), and for
  *     agents whose email (or user ID) contains "new": the business or
  *     individual answer on the registration pages decides the account type
+ *   - an agent's choice of which organisation they represent, shown in the
+ *     header's organisation bar
  *   - sign out, the NRL reference and certificate dates on submission
  *   - the research participant's own name and organisation, typed by the
  *     facilitator into the footer's "Participant details" box
@@ -33,6 +35,7 @@
  */
 
 const { message } = require('../journey-engine/validation')
+const { interpolate } = require('../journey-engine/markdown')
 
 const EDP_NAME =
   'Broads SAC, Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2026 to 2036)'
@@ -558,6 +561,26 @@ const yourAddress = {
   }
 }
 
+// Defra ID's "Who do you want to represent?": the organisation an agent
+// picks goes into the header's organisation bar and the developer details
+// review page. The labels are the page's copy; the last option's label
+// names the research participant's organisation (or the stand-in), so
+// filling it in gives the name the page showed
+const chooseOrganisation = {
+  process(ctx, value) {
+    const { data, page } = ctx
+    const options = (page.content && page.content.options) || []
+    const chosen = options.find(
+      (option) => String(option.value) === String(value)
+    )
+    if (chosen && data.account) {
+      data.account.organisationName = interpolate(chosen.label, data, {
+        escape: false
+      }).trim()
+    }
+  }
+}
+
 // Both Defra ID check your answers pages (individual and business)
 const completeRegistration = {
   process(ctx) {
@@ -598,6 +621,7 @@ module.exports = {
   'defra-select-address': defraSelectAddress,
   'defra-address-manual': defraAddressManual,
   'your-address': yourAddress,
+  'defra-choose-organisation': chooseOrganisation,
   'defra-check-answers': completeRegistration,
   'defra-business-check-answers': completeRegistration,
   'check-your-answers': checkYourAnswers,
