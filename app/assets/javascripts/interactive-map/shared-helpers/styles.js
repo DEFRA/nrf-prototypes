@@ -44,10 +44,9 @@ const SATELLITE_STYLE = {
   thumbnail: `${VTS_THUMBNAIL_BASE_URL}/aerial-map-thumb.jpg`,
   // Spike: trying the Bluesky aerial imagery notice (not Esri's) to see how a
   // long, two-part copyright reads on one line. Most recent period first.
-  // On mobile it truncates with an ellipsis, so the full text also goes in
-  // a title attribute; see .app-map-attribution in
+  // On mobile it truncates with an ellipsis; see .app-map-attribution in
   // app/assets/sass/_interactive-map.scss
-  attribution: `<span class="app-map-attribution" title="${SATELLITE_COPYRIGHT}">${SATELLITE_COPYRIGHT}</span>`,
+  attribution: `<span class="app-map-attribution">${SATELLITE_COPYRIGHT}</span>`,
   mapColorScheme: 'dark'
 }
 
