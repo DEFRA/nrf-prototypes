@@ -51,7 +51,8 @@ session:
   - intersectingCatchment
 
 # Sample answers used when a page is opened with ?preview=1 and on the
-# screen wall at /tools/journeys/nrf-quote-7. Never written to the session.
+# screen wall at /tools/journeys/nrf-quote-7. Only a summary page
+# opened that way writes them to the session, so its Change links work.
 preview:
   data:
     journeyType: quote

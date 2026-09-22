@@ -541,8 +541,26 @@ function pageForRequest(journey, basePath, req) {
   return journey.pages.find((page) => page.path === fullPath)
 }
 
+/**
+ * A summary page opened with `?preview=1` (from the screen wall, a handoff
+ * link or a link someone shared) keeps its sample answers: they are copied
+ * into the session, so a Change link opens a page that already holds the
+ * answer and comes back to a summary page its guard lets through. No other
+ * page writes them, so the research aids that open a page with sample
+ * answers during a session (the quote email, say) leave a participant's
+ * answers alone; nor does an embedded preview (the wall's thumbnails,
+ * screenshots, the export).
+ */
+function keepSampleAnswers(ctx) {
+  const { journey, page, preview, embed, req } = ctx
+  if (preview && !embed && journey.summaryPages.includes(page.id)) {
+    Object.assign(req.session.data, ctx.data)
+  }
+}
+
 async function handleGet(req, res, journey, page, hooks) {
   const ctx = buildContext(req, res, journey, page)
+  keepSampleAnswers(ctx)
   if (!ctx.preview && page.guard && !evaluate(page.guard, ctx)) {
     return res.redirect(toPath(page.guard.redirect, journey))
   }

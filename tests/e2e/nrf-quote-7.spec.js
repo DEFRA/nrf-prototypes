@@ -4,6 +4,7 @@ const path = require('path')
 const turf = require('@turf/turf')
 const {
   toFlowGraph,
+  previewData,
   previewVariants,
   copyVariants
 } = require('../../app/lib/journey-engine')
@@ -25,6 +26,7 @@ const {
   submit,
   act,
   actionLocator,
+  answerBox,
   link,
   followLink,
   followResearchLink,
@@ -62,6 +64,47 @@ test.describe('nrf-quote-7 preview mode', () => {
       )
     })
   }
+
+  // A shared link to check your answers keeps its sample answers, so the
+  // Change links work as they would after answering the questions
+  test('check your answers keeps its sample answers for the Change links', async ({
+    page
+  }) => {
+    const summary = journey.byId.get('check-your-answers')
+    const sample = previewData(journey, summary)
+    await page.goto(`${summary.path}?preview=1`)
+    await changeLink(page, 'check-your-answers', 'units').click()
+    await expect(page).toHaveURL(/units\?change=true&nav=check-your-answers$/)
+    await expect(answerBox(page, 'units')).toHaveValue(
+      String(sample.residentialBuildingCount)
+    )
+    await fillAnswer(page, 'units', '130')
+    await submit(page, 'units')
+    await expect(page).toHaveURL(`${summary.path}`)
+    const rows = page.locator('.govuk-summary-list')
+    await expect(rows).toContainText('130')
+    await expect(rows).toContainText(sample.estimateEmail)
+  })
+
+  test('an embedded preview of check your answers leaves the session alone', async ({
+    page
+  }) => {
+    const summary = journey.byId.get('check-your-answers')
+    await page.goto(`${summary.path}?preview=1&embed=1`)
+    await expectHeading(page, 'check-your-answers')
+    // Without answers the guard sends the visit back to the email question
+    await page.goto(summary.path)
+    await expect(page).toHaveURL(journey.byId.get('estimate-email').path)
+  })
+
+  test('a preview of a question page leaves the session alone', async ({
+    page
+  }) => {
+    await page.goto(`${journey.byId.get('units').path}?preview=1`)
+    await expectHeading(page, 'units')
+    await page.goto(journey.byId.get('check-your-answers').path)
+    await expect(page).toHaveURL(journey.byId.get('estimate-email').path)
+  })
 })
 
 test.describe('nrf-quote-7 error previews', () => {

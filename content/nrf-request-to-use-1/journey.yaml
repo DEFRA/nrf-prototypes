@@ -134,7 +134,8 @@ session:
   - defraContactSupportId
 
 # Sample answers used when a page is opened with ?preview=1 and on the
-# screen wall at /tools/journeys/nrf-request-to-use-1. Never written to the session.
+# screen wall at /tools/journeys/nrf-request-to-use-1. Only a summary page
+# opened that way writes them to the session, so its Change links work.
 preview:
   data:
     journeyType: request-to-use
