@@ -108,6 +108,29 @@ test.describe('participant details', () => {
     ).toHaveCount(0)
   })
 
+  test('a previewed page comes back in preview once the details are given', async ({
+    page
+  }) => {
+    const quote = copyOf('nrf-quote-7')
+    const email = `${quote.base}/estimate-email-content`
+    // The footer link keeps the page's query string
+    await page.goto(`${base}/start?preview=1`)
+    await expect(
+      page
+        .locator('.govuk-footer')
+        .getByRole('link', { name: 'Participant details' })
+    ).toHaveAttribute('href', `${base}/start?preview=1&participant`)
+    // So does the box: the email preview shows its sample data again
+    await page.goto(`${email}?preview=1&participant`)
+    await expect(dialog(page)).toBeVisible()
+    await dialog(page).getByLabel('First name').fill(PARTICIPANT.firstName)
+    await dialog(page)
+      .getByRole('button', { name: 'Use these details' })
+      .click()
+    await expect(page).toHaveURL(`${email}?preview=1`)
+    await expect(dialog(page)).toBeHidden()
+  })
+
   test('an embedded preview has no box', async ({ page }) => {
     await page.goto(`${base}/start?preview=1&embed=1`)
     await expect(dialog(page)).toHaveCount(0)

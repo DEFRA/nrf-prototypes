@@ -19,7 +19,8 @@
 
   The markup is a macro because it is rendered in one of those two ways.
   Macros cannot see the template context in this nunjucks, so the
-  participant and the page path are passed in.
+  participant and the page's URL (query string and all, so a previewed
+  page comes back in preview) are passed in.
 #}
 {% macro participantDialog(participant, returnTo, open) %}
 <dialog class="app-participant" id="research-participant" aria-labelledby="research-participant-title" data-module="research-participant"{% if open %} open data-open="true"{% endif %}>
@@ -60,8 +61,8 @@
 {% endmacro %}
 {% set participant = data.researchParticipant if data and data.researchParticipant else {} %}
 {% if participantModal %}
-  {{ participantDialog(participant, currentPath or '/', true) }}
+  {{ participantDialog(participant, currentUrl or currentPath or '/', true) }}
 {% else %}
-  <template id="research-participant-template">{{ participantDialog(participant, currentPath or '/', false) }}</template>
+  <template id="research-participant-template">{{ participantDialog(participant, currentUrl or currentPath or '/', false) }}</template>
 {% endif %}
 <script src="/public/javascripts/research-participant.js"></script>

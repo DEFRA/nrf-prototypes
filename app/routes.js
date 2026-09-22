@@ -22,9 +22,17 @@ const handoffsRoutes = require('./routes/handoffs.js')
 const researchRoutes = require('./routes/research.js')
 
 // The footer's "Turn errors off/on" link reloads the current page with
-// ?errors=false or ?errors=true (see layouts/main.html)
+// ?errors=false or ?errors=true (see layouts/main.html). The participant
+// details box returns to the page it was opened on with its query string
+// intact (?preview=1, ?embed=1, an ?error= state), less its own
+// ?participant flag, so a previewed email keeps its sample data
 router.use((req, res, next) => {
   res.locals.currentPath = req.path
+  const query = new URLSearchParams(req.originalUrl.split('?')[1] || '')
+  query.delete('participant')
+  const rest = query.toString()
+  res.locals.currentUrl = req.path + (rest ? `?${rest}` : '')
+  res.locals.participantHref = `${req.path}?${rest ? `${rest}&` : ''}participant`
   next()
 })
 

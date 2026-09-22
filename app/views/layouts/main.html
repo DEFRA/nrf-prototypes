@@ -24,7 +24,7 @@ https://prototype-kit.service.gov.uk/docs/how-to-use-layouts
     Without JavaScript the link reloads the page with ?participant instead.
   #}
   {% set participantLink = {
-    href: (currentPath or "/") + "?participant",
+    href: participantHref or ((currentPath or "/") + "?participant"),
     text: "Participant details",
     attributes: { "data-participant-open": "true" }
   } %}
