@@ -323,7 +323,7 @@ pages:
     next: check-your-answers
 
   - id: check-your-answers
-    handoff: 2026-09-18
+    handoff: 2026-09-22 # handed over again: boundary Change link now returns to the draw-or-upload choice
     guard: { key: estimateEmail, isSet: true, redirect: estimate-email }
     handler: custom # mints the NRL reference, see hooks.js
     next: confirmation
