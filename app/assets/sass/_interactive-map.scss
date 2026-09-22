@@ -259,13 +259,13 @@
 // Spike: a long, two-part imagery copyright kept on one line. interactive-map
 // renders the style's attribution HTML into .im-c-attributions and, when the
 // text's natural width no longer fits beside the logo, drops it onto its own
-// full-width row. The button inside is ours (see shared-helpers/styles.js):
-// it never wraps, so on narrow screens it truncates with an ellipsis, and a
-// tap (attribution.js) expands it to wrap over as many lines as it needs.
+// full-width row. The span inside is ours (see shared-helpers/styles.js): it
+// never wraps, so on narrow screens it truncates with an ellipsis, and its
+// title attribute carries the full text.
 
 // interactive-map's row and the box inside it are flex items whose minimum
-// width defaults to their content, so a nowrap button inside would just push
-// them wider than the screen. Letting them shrink is what gives the button
+// width defaults to their content, so a nowrap span inside would just push
+// them wider than the screen. Letting them shrink is what gives the span
 // something to truncate against. The plugin still measures the text's
 // natural width from the box, which only shrinks once the row is narrower
 // than the text, so its own docked-or-stacked decision is unaffected.
@@ -277,49 +277,7 @@
 .app-map-attribution {
   display: block;
   max-width: 100%;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-align: inherit;
-  cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-
-  &:focus-visible {
-    outline: 3px solid $govuk-focus-colour;
-    outline-offset: 0;
-  }
-}
-
-// Expanded (mobile only, as that is the only layout where it truncates):
-// each statement takes a line of its own rather than the text wrapping
-// mid-statement, and the separator between them goes. The expanded state
-// sits on the plugin's wrapper, not the button; see
-// shared-helpers/attribution.js for why.
-.im-o-app--mobile .app-map-attribution--expanded .app-map-attribution {
-  white-space: normal;
-  overflow: visible;
-  text-overflow: clip;
-
-  .app-map-attribution__statement {
-    display: block;
-  }
-
-  .app-map-attribution__separator {
-    display: none;
-  }
-}
-
-// Keeps the scale bar clear of the Draw tools button once the notice has
-// grown; see shared-helpers/attribution.js for the plugin limitation this
-// works around. The extra ancestor outweighs the plugin's own rule, whose
-// stylesheet loads after this one.
-.im-o-app .im-o-app__right {
-  bottom: calc(
-    var(--right-offset-bottom) + var(--app-map-attribution-clearance, 0px)
-  );
 }

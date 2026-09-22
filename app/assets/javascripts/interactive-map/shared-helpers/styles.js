@@ -33,6 +33,10 @@ const OS_STYLES = [
 
 // Basemaps that need no API key. Satellite is the default, whether or not
 // OS styles are offered, as production defaults to aerial imagery
+const SATELLITE_COPYRIGHT =
+  '&copy; Bluesky International Limited 2021 and onwards | ' +
+  '&copy; Bluesky International Limited and Getmapping Limited 1999-2020'
+
 const SATELLITE_STYLE = {
   id: 'esri-tiles',
   label: 'Satellite',
@@ -40,17 +44,10 @@ const SATELLITE_STYLE = {
   thumbnail: `${VTS_THUMBNAIL_BASE_URL}/aerial-map-thumb.jpg`,
   // Spike: trying the Bluesky aerial imagery notice (not Esri's) to see how a
   // long, two-part copyright reads on one line. Most recent period first.
-  // The button truncates on mobile and expands on tap, one statement per
-  // line; see .app-map-attribution in app/assets/sass/_interactive-map.scss
-  // and attribution.js
-  attribution:
-    '<button type="button" class="app-map-attribution" aria-expanded="false">' +
-    '<span class="app-map-attribution__statement">' +
-    '&copy; Bluesky International Limited 2021 and onwards</span>' +
-    '<span class="app-map-attribution__separator"> | </span>' +
-    '<span class="app-map-attribution__statement">' +
-    '&copy; Bluesky International Limited and Getmapping Limited 1999-2020' +
-    '</span></button>',
+  // On mobile it truncates with an ellipsis, so the full text also goes in
+  // a title attribute; see .app-map-attribution in
+  // app/assets/sass/_interactive-map.scss
+  attribution: `<span class="app-map-attribution" title="${SATELLITE_COPYRIGHT}">${SATELLITE_COPYRIGHT}</span>`,
   mapColorScheme: 'dark'
 }
 
