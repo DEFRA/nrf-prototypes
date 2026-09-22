@@ -7,7 +7,7 @@ const {
   previewVariants,
   copyVariants
 } = require('../../app/lib/journey-engine')
-const { copyOf } = require('./helpers/journey')
+const { copyOf, gotoTools } = require('./helpers/journey')
 
 /**
  * nrf-quote-7: the content-driven port of nrf-quote-6.
@@ -412,13 +412,13 @@ test.describe('nrf-quote-7 happy path', () => {
 
 test.describe('journey tools', () => {
   test('flow and screen wall page lists every screen', async ({ page }) => {
-    const response = await page.goto(`/tools/journeys/${journey.id}`)
+    const response = await gotoTools(page, journey.id)
     expect(response.status()).toBe(200)
     await expect(page.locator('iframe')).toHaveCount(wallCardCount)
   })
 
   test('screen wall shows a card per preview variant', async ({ page }) => {
-    await page.goto(`/tools/journeys/${journey.id}`)
+    await gotoTools(page, journey.id)
     await page.getByRole('tab', { name: 'Screens' }).click()
     const variants = previewVariants(journey.byId.get('file-preview'))
     expect(variants.length).toBeGreaterThan(0)
@@ -431,7 +431,7 @@ test.describe('journey tools', () => {
   })
 
   test('a card menu can show the error state in place', async ({ page }) => {
-    await page.goto(`/tools/journeys/${journey.id}`)
+    await gotoTools(page, journey.id)
     await page.getByRole('tab', { name: 'Screens' }).click()
     const card = page.locator('#screen-planning-type')
     await card.locator('.wall-card__menu-button').click()
@@ -453,7 +453,7 @@ test.describe('journey tools', () => {
     const units = journey.byId.get('units')
     const keys = Object.keys(units.content.errors)
     expect(keys.length).toBeGreaterThan(1)
-    await page.goto(`/tools/journeys/${journey.id}`)
+    await gotoTools(page, journey.id)
     await page.getByRole('tab', { name: 'Screens' }).click()
     const card = page.locator('#screen-units')
     await card.locator('.wall-card__menu-button').click()
@@ -484,7 +484,7 @@ test.describe('journey tools', () => {
   test('screen wall places branch screens beside the page they branch from', async ({
     page
   }) => {
-    await page.goto(`/tools/journeys/${journey.id}`)
+    await gotoTools(page, journey.id)
     await page.getByRole('tab', { name: 'Screens' }).click()
     const rowWith = (id) =>
       page.locator('.wall-level', {
@@ -508,7 +508,7 @@ test.describe('journey tools', () => {
   }) => {
     // The quote email is offered as a facilitator shortcut on the funnel
     // page and again from the confirmation; it belongs with the latter
-    await page.goto(`/tools/journeys/${journey.id}`)
+    await gotoTools(page, journey.id)
     await page.getByRole('tab', { name: 'Screens' }).click()
     const row = page.locator('.wall-level', {
       has: page.locator('#screen-confirmation')
@@ -522,7 +522,7 @@ test.describe('journey tools', () => {
   })
 
   test('flow diagram keeps the default path on one row', async ({ page }) => {
-    await page.goto(`/tools/journeys/${journey.id}`)
+    await gotoTools(page, journey.id)
     // ELK is loaded from a CDN, so give the layout a moment
     await expect(
       page.locator('#flow-diagram[data-rendered="true"]')
@@ -541,7 +541,7 @@ test.describe('journey tools', () => {
   test('flow diagram is visible when the Flow tab is opened', async ({
     page
   }) => {
-    await page.goto(`/tools/journeys/${journey.id}`)
+    await gotoTools(page, journey.id)
     await expect(
       page.locator('#flow-diagram[data-rendered="true"]')
     ).toHaveCount(1, { timeout: 20000 })

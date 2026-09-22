@@ -2,6 +2,7 @@ const { test, expect } = require('@playwright/test')
 const fs = require('fs')
 const path = require('path')
 const yaml = require('js-yaml')
+const { gotoTools } = require('./helpers/journey')
 const { loadJourney } = require('../../app/lib/journey-engine/loader')
 const {
   handoffLine,
@@ -41,7 +42,7 @@ test.describe('design handoff', () => {
   test('screen wall tags every handed-over screen and no other', async ({
     page
   }) => {
-    await page.goto(`/tools/journeys/${journeyId}`)
+    await gotoTools(page, journeyId)
     await page.getByRole('tab', { name: 'Screens' }).click()
     for (const id of stamped) {
       const card = page.locator(`#screen-${id}`)
@@ -57,7 +58,7 @@ test.describe('design handoff', () => {
   test('screens tab lists the handoffs with their git tag', async ({
     page
   }) => {
-    await page.goto(`/tools/journeys/${journeyId}`)
+    await gotoTools(page, journeyId)
     await page.getByRole('tab', { name: 'Screens' }).click()
     // The list sits inside a details component, closed by default
     await page.locator('#handoffs summary').click()

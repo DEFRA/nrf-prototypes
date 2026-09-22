@@ -9,7 +9,7 @@ const {
 } = require('../../app/lib/journey-engine')
 const { parseMarkdownFile } = require('../../app/lib/journey-engine/loader')
 const { asHandedOver } = require('../../app/lib/journey-engine/screenshots')
-const { copyOf } = require('./helpers/journey')
+const { copyOf, gotoTools } = require('./helpers/journey')
 
 /**
  * Copy variants: a sibling file `pages/<id>~<name>.md` is an alternative
@@ -133,7 +133,7 @@ test.describe('copy variants', () => {
   test('the screen wall shows the variant beside the page', async ({
     page
   }) => {
-    await page.goto(`/tools/journeys/${journeyId}`)
+    await gotoTools(page, journeyId)
     await page.getByRole('tab', { name: 'Screens' }).click()
     const card = page.locator(`#screen-${pageId}\\~${variantId}`)
     await expect(card).toHaveClass(/wall-card--copy/)

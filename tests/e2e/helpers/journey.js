@@ -437,4 +437,20 @@ function copyOf(journeyId) {
   }
 }
 
-module.exports = { copyOf }
+/**
+ * Opens a journey's tools page (flow diagram and screen wall) with every
+ * embedded screen answered by an empty document. The wall embeds each page
+ * as a same-origin iframe, so once the Screens tab opens, dozens of preview
+ * pages (maps included, with their tiles and WebGL) load in the wall's own
+ * renderer process; on the CI runner that starves the wall's document until
+ * assertions time out. The tests read only each iframe's attributes, so
+ * nothing is lost. A test that must look inside a frame navigates itself.
+ */
+async function gotoTools(page, journeyId) {
+  await page.route(/[?&]embed=1(&|$)/, (route) =>
+    route.fulfill({ status: 200, contentType: 'text/html', body: '' })
+  )
+  return page.goto(`/tools/journeys/${journeyId}`)
+}
+
+module.exports = { copyOf, gotoTools }

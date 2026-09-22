@@ -7,7 +7,7 @@ const {
   exportScreens,
   copyVariants
 } = require('../../app/lib/journey-engine')
-const { copyOf } = require('./helpers/journey')
+const { copyOf, gotoTools } = require('./helpers/journey')
 const { LEVY_AMOUNT } = require('../../app/lib/nrf-request-to-use-1/hooks')
 const {
   requestToUse,
@@ -1153,7 +1153,7 @@ test.describe('journey tools', () => {
   test('flow and screen wall page lists every screen once', async ({
     page
   }) => {
-    const response = await page.goto(`/tools/journeys/${journey.id}`)
+    const response = await gotoTools(page, journey.id)
     expect(response.status()).toBe(200)
     // One card per page, plus one per copy variant a page has
     const cards = journey.pages.reduce(
@@ -1222,7 +1222,7 @@ test.describe('journey tools', () => {
   })
 
   test('flow diagrams render every node', async ({ page }) => {
-    await page.goto(`/tools/journeys/${journey.id}`)
+    await gotoTools(page, journey.id)
     await expect(
       page.locator('#flow-diagram[data-rendered="true"]')
     ).toHaveCount(1, { timeout: 20000 })

@@ -3,7 +3,7 @@ const {
   previewVariants,
   copyVariants
 } = require('../../app/lib/journey-engine')
-const { copyOf } = require('./helpers/journey')
+const { copyOf, gotoTools } = require('./helpers/journey')
 
 /**
  * Shared pages: the quote and request-to-use journeys both start on the
@@ -139,7 +139,7 @@ test.describe('journey tools show exits to other journeys', () => {
   })
 
   test('the flow diagram and screen wall show the exit', async ({ page }) => {
-    await page.goto(`/tools/journeys/${quote.journey.id}`)
+    await gotoTools(page, quote.journey.id)
     await expect(
       page.locator('#flow-diagram[data-rendered="true"]')
     ).toHaveCount(1, { timeout: 20000 })

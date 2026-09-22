@@ -9,6 +9,7 @@ const {
   resolveHandoffCommit,
   snapshotDir
 } = require('../../app/lib/journey-engine')
+const { gotoTools } = require('./helpers/journey')
 
 /**
  * Frozen copies of handoffs: /handoffs/<journey>/<date>/<page> serves the
@@ -130,7 +131,7 @@ test.describe('frozen copy of a handoff', () => {
   })
 
   test('the tools page links to it', async ({ page }) => {
-    await page.goto(`/tools/journeys/${journeyId}`)
+    await gotoTools(page, journeyId)
     await page.getByRole('tab', { name: 'Screens' }).click()
     await page.locator('#handoffs summary').click()
     const row = page.locator('#handoffs table tbody tr', { hasText: frozen.id })
