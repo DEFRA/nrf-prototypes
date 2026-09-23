@@ -25,7 +25,7 @@
     padding: govuk-spacing(1) govuk-spacing(2);
     border-bottom: 0;
     color: govuk-colour('purple');
-    background: govuk-tint(govuk-colour('purple'), 85%);
+    background: govuk-colour('purple', $variant: 'tint-80');
     text-transform: uppercase;
     letter-spacing: 1px;
   }
