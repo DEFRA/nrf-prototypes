@@ -106,7 +106,7 @@ pages:
   # in `nav`); `goto: $summary` returns to whichever summary page sent the
   # user, in either journey
   - id: planning-type
-    handoff: 2026-09-18
+    handoff: 2026-09-23
     field: planning-type
     sessionKey: planningType
     changeable: true

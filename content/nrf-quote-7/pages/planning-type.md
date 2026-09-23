@@ -4,10 +4,10 @@ hint: Options below include any variations to an existing permission.
 options:
   - label: Full planning permission
     value: full
-  - label: Outline planning permission
-    value: outline
   - label: Hybrid planning permission
     value: hybrid
+  - label: Outline planning permission
+    value: outline
   - label: Other
     value: other
 errors:
