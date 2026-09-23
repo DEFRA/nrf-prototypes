@@ -29,6 +29,6 @@ fields:
 button: Confirm
 ---
 
-# What is your address?
+# What is the business or organisation address?
 
 If you are an employee, volunteer or contractor of the business or organisation that is requesting to use the nature restoration levy, enter the address for the business or organisation.
