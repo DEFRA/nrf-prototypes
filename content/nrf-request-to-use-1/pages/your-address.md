@@ -1,11 +1,6 @@
 ---
 type: form
 fields:
-  - name: full-name
-    label: Full name
-    autocomplete: name
-    errors:
-      required: Enter your full name
   - name: address-line-1
     label: Address line 1
     autocomplete: address-line1
@@ -34,8 +29,6 @@ fields:
 button: Confirm
 ---
 
-# What are your details?
+# What is your address?
 
-:::if account.accountType equals company
 If you are working for a company for this development, use your company address.
-:::

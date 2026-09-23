@@ -1,14 +1,16 @@
 ---
-# The addresses are a fixture: any postcode finds the same three
+# The addresses are a made-up fixture: any postcode finds the same five
 type: select
 layout: defra-id
 caption: Register Defra account
 label: Select your address
-placeholder: 3 addresses found
+placeholder: 5 addresses found
 options:
-  - label: 84 Hobson Street, Macclesfield, Cheshire, SK11 8BD
-  - label: 86 Hobson Street, Macclesfield, Cheshire, SK11 8BD
-  - label: Flat 2, 88 Hobson Street, Macclesfield, Cheshire, SK11 8BD
+  - label: 1 Meadow Lane, Anytown, Countyshire, AN1 1AA
+  - label: 3 Meadow Lane, Anytown, Countyshire, AN1 1AA
+  - label: 5 Meadow Lane, Anytown, Countyshire, AN1 1AA
+  - label: Flat 1, 7 Meadow Lane, Anytown, Countyshire, AN1 1AA
+  - label: Flat 2, 7 Meadow Lane, Anytown, Countyshire, AN1 1AA
 errors:
   required: Select your address
 button: Continue

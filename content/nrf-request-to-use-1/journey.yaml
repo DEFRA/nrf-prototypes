@@ -191,7 +191,6 @@ preview:
       county: ''
       postcode: DV1 6RP
     yourAddress:
-      fullName: Jane Smith
       addressLine1: 53 Business Lane
       addressLine2: ''
       town: Business
@@ -812,8 +811,7 @@ pages:
       - goto: developer-details
 
   # Agents enter the developer they act for; companies and individuals give
-  # their own name and address (the name is filled in from the account when
-  # it was given at registration, see hooks.js)
+  # their own address (their name comes from the account)
   - id: developer-details
     sessionKey: developerDetails
     changeable: true

@@ -231,7 +231,7 @@ test.describe('journey engine: choice values', () => {
           id: 'address',
           type: 'select',
           sessionKey: 'address',
-          content: { options: options('84 Hobson Street') },
+          content: { options: options('1 Meadow Lane') },
           next: [
             { when: { key: 'address', equals: 'anywhere' }, goto: 'check' },
             { goto: 'check' }

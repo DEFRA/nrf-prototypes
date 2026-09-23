@@ -53,7 +53,6 @@ const {
   notificationTitle,
   rowKey,
   rowValue,
-  fieldBox,
   expectFieldError
 } = requestToUse
 
@@ -187,20 +186,14 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
     await expect(page).toHaveURL(`${base}/your-address`)
     await expectBodyCopy(page, 'your-address', 'company address')
 
-    // Signing in never gave a name, so the box is empty (never "Name Name")
-    await expect(fieldBox(page, 'your-address', 'full-name')).toHaveValue('')
-    await fillField(page, 'your-address', 'full-name', 'Jane Smith')
+    // Only the address is asked for: the name comes from the account
+    await expect(page.getByRole('textbox')).toHaveCount(5)
     await fillField(page, 'your-address', 'address-line-1', '53 Business Lane')
     await fillField(page, 'your-address', 'town', 'Business')
     await fillField(page, 'your-address', 'postcode', 'LP1 7RF')
     await submit(page, 'your-address')
     await expect(page).toHaveURL(`${base}/review-your-details`)
-    await expect(page.locator('.govuk-summary-list')).toContainText(
-      'Jane Smith'
-    )
-    await expect(page.locator('.govuk-summary-list')).not.toContainText(
-      'Name Name'
-    )
+    await expect(page.locator('.govuk-summary-list')).toContainText('Name Name')
     await expect(
       changeLink(page, 'review-your-details', 'your-address')
     ).toHaveAttribute(
@@ -218,8 +211,7 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
     await expect(page.locator('main')).toContainText(
       rowKey('check-your-answers', 'review-your-details')
     )
-    await expect(page.locator('main')).toContainText('Jane Smith')
-    await expect(page.locator('main')).not.toContainText('Name Name')
+    await expect(page.locator('main')).toContainText('Name Name')
 
     // Everyone confirms the declaration box before submitting; it is
     // required and the Delete link is the way out
@@ -249,7 +241,7 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
     await expectHeading(page, 'commitment-certificate')
     await expect(page.locator('.app-boundary-map')).toHaveCount(1)
     await expect(page.locator('.govuk-phase-banner')).toHaveCount(0)
-    await expect(page.locator('main')).toContainText('Jane Smith')
+    await expect(page.locator('main')).toContainText('Name Name')
     await expect(page.locator('main')).toContainText('53 Business Lane')
   })
 
@@ -504,10 +496,10 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
     await submit(page, 'defra-telephone')
     await expect(page).toHaveURL(`${base}/defra-postcode`)
 
-    await fillField(page, 'defra-postcode', 'postcode', 'SK11 8BD')
+    await fillField(page, 'defra-postcode', 'postcode', 'AN1 1AA')
     await submit(page, 'defra-postcode')
     await expect(page).toHaveURL(`${base}/defra-select-address`)
-    await expect(page.locator('main')).toContainText('SK11 8BD')
+    await expect(page.locator('main')).toContainText('AN1 1AA')
     // Nothing selected is an error
     await submit(page, 'defra-select-address')
     await expectError(page, 'defra-select-address')
@@ -532,7 +524,7 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
       rowValue('defra-check-answers', 'defra-registration-type')
     )
     await expect(summary.last()).toContainText('John Smith')
-    await expect(summary.last()).toContainText('84 Hobson Street')
+    await expect(summary.last()).toContainText('1 Meadow Lane')
     await expect(summary.last()).toContainText('sundance')
 
     // Changing the address by hand comes back here
@@ -547,7 +539,7 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
       '1 Manual Street'
     )
     await fillField(page, 'defra-address-manual', 'town', 'Macclesfield')
-    await fillField(page, 'defra-address-manual', 'postcode', 'SK11 8BD')
+    await fillField(page, 'defra-address-manual', 'postcode', 'AN1 1AA')
     await submit(page, 'defra-address-manual')
     await expect(page).toHaveURL(`${base}/defra-check-answers`)
     await expect(summary.last()).toContainText('1 Manual Street, Macclesfield')
@@ -564,19 +556,17 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
     await expect(page.locator('main')).not.toContainText('on behalf of')
     await followLink(page, 'defra-registered-individual', './$next')
     await expect(page).toHaveURL(`${base}/your-address`)
-    await expect(page.locator('main')).not.toContainText('company address')
-    // The name given at registration is already filled in
-    await expect(fieldBox(page, 'your-address', 'full-name')).toHaveValue(
-      'John Smith'
-    )
+    await expectBodyCopy(page, 'your-address', 'company address')
     await fillField(page, 'your-address', 'address-line-1', '53 Business Lane')
     await fillField(page, 'your-address', 'town', 'Business')
     await fillField(page, 'your-address', 'postcode', 'LP1 7RF')
     await submit(page, 'your-address')
     await expect(page).toHaveURL(`${base}/review-your-details`)
+    // The name given at registration, and no business name row
     await expect(page.locator('.govuk-summary-list')).toContainText(
       'John Smith'
     )
+    await expect(page.locator('.govuk-summary-list__row')).toHaveCount(2)
   })
 
   test('a business registers and becomes a company for the organisation they work for', async ({
@@ -698,7 +688,7 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
     await submit(page, 'defra-name')
     await fillField(page, 'defra-telephone', 'telephone-number', '07387 202019')
     await submit(page, 'defra-telephone')
-    await fillField(page, 'defra-postcode', 'postcode', 'SK11 8BD')
+    await fillField(page, 'defra-postcode', 'postcode', 'AN1 1AA')
     await submit(page, 'defra-postcode')
     await answer(page, 'defra-select-address', 0)
     await submit(page, 'defra-select-address')
@@ -770,17 +760,15 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
     await atRegistrationType(page)
   })
 
-  test('an invited employee skips registration and is asked for their name', async ({
+  test('an invited employee skips registration and is asked for their address', async ({
     page
   }) => {
     await reachSignIn(page, 'employee')
     await signIn(page, 'company@example.com')
     await expect(page).toHaveURL(`${base}/your-address`)
-    // Nothing is known about them: the name box is empty and required
-    await expect(fieldBox(page, 'your-address', 'full-name')).toHaveValue('')
     await submit(page, 'your-address')
     await expect(page).toHaveURL(`${base}/your-address`)
-    await expectFieldError(page, 'your-address', 'full-name')
+    await expectFieldError(page, 'your-address', 'address-line-1')
   })
 
   test('who the levy is requested for decides the account type', async ({
@@ -1037,7 +1025,6 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
     await acceptAndSkipVariation(page)
     await chooseDefraUserType(page, 'employee')
     await signIn(page, 'company@example.com')
-    await fillField(page, 'your-address', 'full-name', 'Jane Smith')
     await fillField(page, 'your-address', 'address-line-1', '53 Business Lane')
     await fillField(page, 'your-address', 'town', 'Business')
     await fillField(page, 'your-address', 'postcode', 'LP1 7RF')

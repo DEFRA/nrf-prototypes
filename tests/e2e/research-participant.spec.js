@@ -155,7 +155,7 @@ test.describe('participant details', () => {
     await submit(page, 'defra-name')
     await fillField(page, 'defra-telephone', 'telephone-number', '07387 202019')
     await submit(page, 'defra-telephone')
-    await fillField(page, 'defra-postcode', 'postcode', 'SK11 8BD')
+    await fillField(page, 'defra-postcode', 'postcode', 'AN1 1AA')
     await submit(page, 'defra-postcode')
     await answer(page, 'defra-select-address', 0)
     await submit(page, 'defra-select-address')
@@ -173,7 +173,11 @@ test.describe('participant details', () => {
     })
     await followLink(page, 'defra-registered-individual', './$next')
     await expect(page).toHaveURL(`${base}/your-address`)
-    await expect(fieldBox(page, 'your-address', 'full-name')).toHaveValue(
+    await fillField(page, 'your-address', 'address-line-1', '1 Church Street')
+    await fillField(page, 'your-address', 'town', 'London')
+    await fillField(page, 'your-address', 'postcode', 'SW1A 1AA')
+    await submit(page, 'your-address')
+    await expect(page.locator('.govuk-summary-list')).toContainText(
       'Ada Lovelace'
     )
   })

@@ -818,6 +818,7 @@ function validateChoiceValues(journey, problems) {
       check(condition, `${where}.guard`)
     }
     page.content.rows.forEach((row, i) => {
+      check(row.when, `${where}.rows[${i}].when`)
       let value = row.value
       while (value && typeof value === 'object' && value.when) {
         check(value.when, `${where}.rows[${i}].value.when`)

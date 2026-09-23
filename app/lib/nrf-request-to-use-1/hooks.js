@@ -69,9 +69,8 @@ const FIXTURE_QUOTE = {
   intersectingCatchment: EDP_NAME
 }
 
-// The stand-in name of a mock account: signing in never asks for one, so
-// the journey asks companies and individuals for theirs (your-address) and
-// only fills the box in from a name the user really gave
+// The stand-in name of a mock account, until the user gives a real one
+// (Defra ID registration, Government Gateway or the participant details)
 const MOCK_NAME = 'Name Name'
 
 // Mock accounts, keyed on the start of the sign-in email address
@@ -543,24 +542,6 @@ const defraAddressManual = {
   }
 }
 
-// "What are your details?": the full name box starts with the name given
-// when the Defra account or Government Gateway sign in was created, never
-// the mock account's stand-in. The page's copy of the data is filled in,
-// not the session, so the review page's guard waits for the form
-const yourAddress = {
-  get(ctx, model) {
-    const { data } = ctx
-    const known = data.account && data.account.fullName
-    const typed = data.yourAddress && data.yourAddress.fullName
-    if (!ctx.preview && known && known !== MOCK_NAME && !typed) {
-      model.data = {
-        ...data,
-        yourAddress: { ...(data.yourAddress || {}), fullName: known }
-      }
-    }
-  }
-}
-
 // Defra ID's "Who do you want to represent?": the organisation an agent
 // picks goes into the header's organisation bar and the developer details
 // review page. The labels are the page's copy; the last option's label
@@ -620,7 +601,6 @@ module.exports = {
   'defra-name': defraName,
   'defra-select-address': defraSelectAddress,
   'defra-address-manual': defraAddressManual,
-  'your-address': yourAddress,
   'defra-choose-organisation': chooseOrganisation,
   'defra-check-answers': completeRegistration,
   'defra-business-check-answers': completeRegistration,

@@ -3,11 +3,10 @@ type: check-answers
 rows:
   - heading: Your details
   - key: Full name
-    value: '{{ yourAddress.fullName or account.fullName }}'
-    change: your-address
-    changeHidden: full name
+    value: '{{ account.fullName }}'
   - key: Business name
-    value: '{{ account.businessName or "Not applicable" }}'
+    value: '{{ account.businessName }}'
+    when: { key: account.accountType, equals: company }
   - key: Address
     value:
       lines:

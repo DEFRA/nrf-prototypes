@@ -354,7 +354,10 @@ function renderContent(page, ctx) {
   const { data, journey } = ctx
   const c = page.content
   const plain = (text) => renderer.interpolate(text, data, { escape: false })
-  const rows = (c.rows || []).map((row) => resolveRow(row, ctx))
+  // A row with `when` shows only while its condition holds
+  const rows = (c.rows || [])
+    .filter((row) => !row.when || evaluate(row.when, ctx))
+    .map((row) => resolveRow(row, ctx))
   const body = renderer.renderParts(c.body, ctx)
   return {
     title: plain(c.title),

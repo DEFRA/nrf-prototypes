@@ -243,6 +243,9 @@ rows:
     changeHidden: number of housing units # read out by screen readers
   - key: Housing
     value: '{{ isHousing }}' # no `change` means no Change link
+  - key: Business name
+    value: '{{ account.businessName }}'
+    when: { key: account.accountType, equals: company } # row shown only then
   - key: Address
     value:
       lines: # several lines in one value; empty lines are dropped
