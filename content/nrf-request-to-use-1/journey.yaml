@@ -54,23 +54,24 @@ homepage:
     receive an email and a commitment certificate to submit with their
     planning application.
   changes:
-    - Retrieve a quote by NRL reference and email, review and amend the details on the quote journey's own pages (borrowed, not copied)
-    - Levy increased and not enough capacity branches, driven by the number of units
-    - Variation to an existing planning application, then whether the original application was committed to using the levy
-    - Who the user is requesting to use the levy for (themselves as an individual, the organisation they work for, or a client they act for as an agent), with Defra account guidance tailored to that answer before signing in
-    - Agents then see the invitation email their client's Defra account sends them, addressed to the email they gave, before signing in
-    - Mock GOV.UK One Login sign in (create or sign in, email, then password), shared with other journeys
-    - Mock "Create your GOV.UK One Login" flow (email, security code, password, security codes by text message or authenticator app)
-    - Mock Government Gateway sign in and "Create sign in details" flow (email, confirmation code, name, password, user ID)
-    - Agent, company and individual account types decided by who the user is requesting to use the levy for (the sign-in email still decides it when that question was skipped)
-    - Mock Defra ID registration for everyone requesting to use the levy for themselves as an individual or as their organisation's account admin, and for agents whose sign-in email contains "new" (new@), as an individual or a business; the registration answer decides the account type
-    - Employee invitation email as a user research link on the organisation guidance page; opening it makes the user an invited employee, who skips the Defra account registration
-    - Agents choose which organisation they represent after signing in (three made-up clients and the research participant's own organisation); the choice shows in the header
-    - Defra account registration emails for an individual, a business and an invited employee (new-employee@ gives their own details only), each with a Contact Support ID and a "Sign in to your account" link that carries on to the service
-    - Developer details or your address (a page each for organisations and individuals), review, check your answers, confirmation
-    - Email and commitment certificate with the red line boundary on a map
-    - Built from content files, so copy and flow can change without code
+    - quote journey and request to use journey - contact details updated throughout the journeys
+    - new start page content including request to use, Defra ID guidance links, information about file uploads, when to assume liability
+    - quote journey includes new details component with file upload guidance
+    - added branching page to quote or request to use
+    - retrieving a quote and reviewing the details
+    - accepting a quote amount
+    - variation to an existing planning application questions
+    - Defra account user type questions
+    - added Defra ID guidance pages to the journey based on the user type
+    - full Defra ID journey added
+    - fields for additional name and address details added based on the user type
+    - check your answers page with declaration tick box 
+    - Defra check answers page with declaration tick box 
+    - updated commitment certificate page with updated planning conditions
 
+    - 
+
+    - Added new pages for request to use journey: developer details, your address, org address, review your details, check your answers, defra check answers, defra business check answers, defra account user type, defra name, defra telephone, defra postcode, defra address, defra address manual, defra memorable word, defra trading uk, defra has crn, defra crn, defra business contact, defra account created, defra contact support id 
 # Every session key this journey writes. `clears: $session` expands to this,
 # so the quote keys are included: deleting the quote details here also removes
 # a quote made in the same session. `nrfReference` is the reference the quote
