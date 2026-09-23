@@ -1,0 +1,7 @@
+// Loaded by the Prototype Kit before GOV.UK Frontend.
+//
+// GOV.UK Frontend 6 deprecates the pre-rebrand colour names ('dark-grey',
+// 'light-grey', 'mid-grey') and the govuk-text-colour mixin. Our own styles
+// use the new names; these keys silence the warnings from the Prototype Kit's
+// own Sass (unbranded.scss, pagination, common templates), which we can't edit.
+$govuk-suppressed-warnings: ('pre-brand-colour', 'govuk-text-colour');

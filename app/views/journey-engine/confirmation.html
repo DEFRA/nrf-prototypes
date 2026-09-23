@@ -4,10 +4,11 @@
 {% if content.panel %}
 {{ govukPanel({
   titleText: content.panel.title,
-  text: content.panel.body
+  html: content.panel.bodyHtml,
+  classes: "govuk-!-margin-bottom-6"
 }) }}
 {% else %}
-{{ govukPanel({ titleText: content.heading }) }}
+{{ govukPanel({ titleText: content.heading, classes: "govuk-!-margin-bottom-6" }) }}
 {% endif %}
 
 {{ content.html | safe }}

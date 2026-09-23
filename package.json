@@ -36,7 +36,7 @@
     "better-sqlite3": "12.5.0",
     "dotenv": "17.2.1",
     "geojson-vt": "4.0.3",
-    "govuk-frontend": "5.11.1",
+    "govuk-frontend": "6.5.1",
     "govuk-prototype-kit": "13.17.0",
     "js-yaml": "4.3.2",
     "markdown-it": "14.3.1",

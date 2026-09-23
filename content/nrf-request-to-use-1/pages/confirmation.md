@@ -3,7 +3,7 @@ type: confirmation
 title: Your details have been submitted
 panel:
   title: Your details have been submitted
-  body: 'NRL reference: {{ nrlReference }}'
+  body: 'NRL reference: **{{ nrlReference }}**'
 ---
 
 ## What happens next

@@ -12,7 +12,7 @@
 
   .govuk-footer__section {
     padding: govuk-spacing(3) govuk-spacing(3) govuk-spacing(1);
-    border: 1px dashed govuk-colour('dark-grey');
+    border: 1px dashed govuk-colour('black', $variant: 'tint-25');
     border-left: govuk-spacing(1) solid govuk-colour('purple');
     background: govuk-colour('white');
   }

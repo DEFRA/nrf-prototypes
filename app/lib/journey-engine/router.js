@@ -419,7 +419,11 @@ function renderContent(page, ctx) {
       hidden: action.hidden
     })),
     panel: c.panel
-      ? { title: plain(c.panel.title), body: plain(c.panel.body) }
+      ? {
+          title: plain(c.panel.title),
+          // Inline markdown, so copy can bold the reference as production does
+          bodyHtml: renderer.renderInline(c.panel.body, ctx)
+        }
       : undefined
   }
 }
