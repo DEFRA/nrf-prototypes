@@ -43,8 +43,8 @@ const { answer, fillAnswer, fillField, submit, expectHeading, expectError } =
   copyOf('nrf-request-to-use-1')
 
 await answer(page, 'defra-account-user-type', 'agent') // an option by its value
-await fillField(page, 'your-address', 'postcode', 'LP1 7RF') // a form field by name
-await submit(page, 'your-address') // the page's own button text
+await fillField(page, 'org-address', 'postcode', 'LP1 7RF') // a form field by name
+await submit(page, 'org-address') // the page's own button text
 await expectHeading(page, 'check-your-answers')
 await expectError(page, 'agreement') // the page's `required` error
 ```

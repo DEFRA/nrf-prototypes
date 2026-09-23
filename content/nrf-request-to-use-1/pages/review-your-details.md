@@ -15,7 +15,10 @@ rows:
         - '{{ yourAddress.town }}'
         - '{{ yourAddress.county }}'
         - '{{ yourAddress.postcode }}'
-    change: your-address
+    change:
+      - when: { key: account.accountType, equals: individual }
+        goto: individual-address
+      - goto: org-address
     changeHidden: your address
 actions:
   - text: Confirm

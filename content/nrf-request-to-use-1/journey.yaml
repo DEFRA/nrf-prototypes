@@ -67,7 +67,7 @@ homepage:
     - Employee invitation email as a user research link on the organisation guidance page; opening it makes the user an invited employee, who skips the Defra account registration
     - Agents choose which organisation they represent after signing in (three made-up clients and the research participant's own organisation); the choice shows in the header
     - Defra account registration emails for an individual, a business and an invited employee (new-employee@ gives their own details only), each with a Contact Support ID and a "Sign in to your account" link that carries on to the service
-    - Developer details or your name and address, review, check your answers, confirmation
+    - Developer details or your address (a page each for organisations and individuals), review, check your answers, confirmation
     - Email and commitment certificate with the red line boundary on a map
     - Built from content files, so copy and flow can change without code
 
@@ -494,8 +494,10 @@ pages:
     next: &signed-in
       - when: { key: account.needsDefraAccount, truthy: true }
         goto: defra-register
-      - when: { key: account.accountType, in: [company, individual] }
-        goto: your-address
+      - when: { key: account.accountType, equals: individual }
+        goto: individual-address
+      - when: { key: account.accountType, equals: company }
+        goto: org-address
       - goto: defra-choose-organisation
 
   # Creating a GOV.UK One Login: email, code from the email, password, then
@@ -827,7 +829,9 @@ pages:
       - goto: check-your-answers
         set: { detailsConfirmed: 'Yes' }
 
-  - id: your-address
+  # Companies and individuals each have their own address page (the hint
+  # differs); both keep the address in yourAddress for the review page
+  - id: org-address
     sessionKey: yourAddress
     changeable: true
     guard: { key: account, isSet: true, redirect: sign-in-method }
@@ -842,8 +846,22 @@ pages:
         goto: $summary
       - goto: review-your-details
 
+  - id: individual-address
+    sessionKey: yourAddress
+    changeable: true
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    preview:
+      account:
+        accountType: individual
+        fullName: Name Name
+        email: individual@example.com
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: review-your-details
+
   - id: review-your-details
-    guard: { key: yourAddress, isSet: true, redirect: your-address }
+    guard: { key: yourAddress, isSet: true, redirect: org-address }
     preview:
       account:
         accountType: company

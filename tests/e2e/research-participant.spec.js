@@ -172,11 +172,16 @@ test.describe('participant details', () => {
       defraName: { firstName: 'Ada' }
     })
     await followLink(page, 'defra-registered-individual', './$next')
-    await expect(page).toHaveURL(`${base}/your-address`)
-    await fillField(page, 'your-address', 'address-line-1', '1 Church Street')
-    await fillField(page, 'your-address', 'town', 'London')
-    await fillField(page, 'your-address', 'postcode', 'SW1A 1AA')
-    await submit(page, 'your-address')
+    await expect(page).toHaveURL(`${base}/individual-address`)
+    await fillField(
+      page,
+      'individual-address',
+      'address-line-1',
+      '1 Church Street'
+    )
+    await fillField(page, 'individual-address', 'town', 'London')
+    await fillField(page, 'individual-address', 'postcode', 'SW1A 1AA')
+    await submit(page, 'individual-address')
     await expect(page.locator('.govuk-summary-list')).toContainText(
       'Ada Lovelace'
     )

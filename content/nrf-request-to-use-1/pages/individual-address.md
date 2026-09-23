@@ -31,10 +31,4 @@ button: Confirm
 
 # What is your address?
 
-:::if account.accountType equals individual
 If you are requesting to use the nature restoration levy for yourself, enter your own address.
-:::
-
-:::if account.accountType notEquals individual
-If you are an employee, volunteer or contractor of the business or organisation that is requesting to use the nature restoration levy, enter the address for the business or organisation.
-:::

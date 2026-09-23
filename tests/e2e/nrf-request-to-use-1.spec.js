@@ -183,22 +183,22 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
     await expect(page.locator('main')).toContainText('jane@example.com')
     await followLink(page, 'defra-account-employee-email', './$next')
     await signIn(page, 'company@example.com')
-    await expect(page).toHaveURL(`${base}/your-address`)
-    await expectBodyCopy(page, 'your-address', 'company address')
+    await expect(page).toHaveURL(`${base}/org-address`)
+    await expectBodyCopy(page, 'org-address', 'business or organisation')
 
     // Only the address is asked for: the name comes from the account
     await expect(page.getByRole('textbox')).toHaveCount(5)
-    await fillField(page, 'your-address', 'address-line-1', '53 Business Lane')
-    await fillField(page, 'your-address', 'town', 'Business')
-    await fillField(page, 'your-address', 'postcode', 'LP1 7RF')
-    await submit(page, 'your-address')
+    await fillField(page, 'org-address', 'address-line-1', '53 Business Lane')
+    await fillField(page, 'org-address', 'town', 'Business')
+    await fillField(page, 'org-address', 'postcode', 'LP1 7RF')
+    await submit(page, 'org-address')
     await expect(page).toHaveURL(`${base}/review-your-details`)
     await expect(page.locator('.govuk-summary-list')).toContainText('Name Name')
     await expect(
-      changeLink(page, 'review-your-details', 'your-address')
+      changeLink(page, 'review-your-details', 'org-address')
     ).toHaveAttribute(
       'href',
-      `${base}/your-address?change=true&nav=review-your-details`
+      `${base}/org-address?change=true&nav=review-your-details`
     )
     await expect(page.locator('.govuk-summary-list')).toContainText(
       'Developer Ltd'
@@ -555,12 +555,17 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
     )
     await expect(page.locator('main')).not.toContainText('on behalf of')
     await followLink(page, 'defra-registered-individual', './$next')
-    await expect(page).toHaveURL(`${base}/your-address`)
-    await expectBodyCopy(page, 'your-address', 'company address')
-    await fillField(page, 'your-address', 'address-line-1', '53 Business Lane')
-    await fillField(page, 'your-address', 'town', 'Business')
-    await fillField(page, 'your-address', 'postcode', 'LP1 7RF')
-    await submit(page, 'your-address')
+    await expect(page).toHaveURL(`${base}/individual-address`)
+    await expectBodyCopy(page, 'individual-address', 'your own address')
+    await fillField(
+      page,
+      'individual-address',
+      'address-line-1',
+      '53 Business Lane'
+    )
+    await fillField(page, 'individual-address', 'town', 'Business')
+    await fillField(page, 'individual-address', 'postcode', 'LP1 7RF')
+    await submit(page, 'individual-address')
     await expect(page).toHaveURL(`${base}/review-your-details`)
     // The name given at registration, and no business name row
     await expect(page.locator('.govuk-summary-list')).toContainText(
@@ -637,8 +642,8 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
       'Contact Support ID'
     )
     await followLink(page, 'defra-registered-business', './$next')
-    await expect(page).toHaveURL(`${base}/your-address`)
-    await expectBodyCopy(page, 'your-address', 'company address')
+    await expect(page).toHaveURL(`${base}/org-address`)
+    await expectBodyCopy(page, 'org-address', 'business or organisation')
   })
 
   test('a business registered by an agent is an agent account', async ({
@@ -723,8 +728,8 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
     )
     // They act for the business, so they get the company's pages
     await followLink(page, 'defra-registered-employee', './$next')
-    await expect(page).toHaveURL(`${base}/your-address`)
-    await expectBodyCopy(page, 'your-address', 'company address')
+    await expect(page).toHaveURL(`${base}/org-address`)
+    await expectBodyCopy(page, 'org-address', 'business or organisation')
   })
 
   test('signing out from a Defra page forgets the registration', async ({
@@ -765,10 +770,10 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
   }) => {
     await reachSignIn(page, 'employee')
     await signIn(page, 'company@example.com')
-    await expect(page).toHaveURL(`${base}/your-address`)
-    await submit(page, 'your-address')
-    await expect(page).toHaveURL(`${base}/your-address`)
-    await expectFieldError(page, 'your-address', 'address-line-1')
+    await expect(page).toHaveURL(`${base}/org-address`)
+    await submit(page, 'org-address')
+    await expect(page).toHaveURL(`${base}/org-address`)
+    await expectFieldError(page, 'org-address', 'address-line-1')
   })
 
   test('who the levy is requested for decides the account type', async ({
@@ -778,8 +783,8 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
     // work for: a company, which gives its own address
     await reachSignIn(page, 'employee')
     await signIn(page, 'individual@example.com')
-    await expect(page).toHaveURL(`${base}/your-address`)
-    await expectBodyCopy(page, 'your-address', 'company address')
+    await expect(page).toHaveURL(`${base}/org-address`)
+    await expectBodyCopy(page, 'org-address', 'business or organisation')
   })
 })
 
@@ -1025,10 +1030,10 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
     await acceptAndSkipVariation(page)
     await chooseDefraUserType(page, 'employee')
     await signIn(page, 'company@example.com')
-    await fillField(page, 'your-address', 'address-line-1', '53 Business Lane')
-    await fillField(page, 'your-address', 'town', 'Business')
-    await fillField(page, 'your-address', 'postcode', 'LP1 7RF')
-    await submit(page, 'your-address')
+    await fillField(page, 'org-address', 'address-line-1', '53 Business Lane')
+    await fillField(page, 'org-address', 'town', 'Business')
+    await fillField(page, 'org-address', 'postcode', 'LP1 7RF')
+    await submit(page, 'org-address')
     await submit(page, 'review-your-details')
     await expect(page).toHaveURL(`${base}/check-your-answers`)
     await expect(page.locator('main')).toContainText(

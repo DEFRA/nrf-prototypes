@@ -40,7 +40,9 @@ rows:
     change:
       - when: { key: account.accountType, equals: agent }
         goto: developer-details
-      - goto: your-address
+      - when: { key: account.accountType, equals: individual }
+        goto: individual-address
+      - goto: org-address
     changeHidden: full name
   - key: Address
     value:
@@ -53,7 +55,9 @@ rows:
     change:
       - when: { key: account.accountType, equals: agent }
         goto: developer-details
-      - goto: your-address
+      - when: { key: account.accountType, equals: individual }
+        goto: individual-address
+      - goto: org-address
     changeHidden: address
   - key: Details confirmed
     value: '{{ detailsConfirmed }}'
