@@ -129,7 +129,7 @@
   justify-content: space-between;
   gap: govuk-spacing(2);
   padding: govuk-spacing(2) 0;
-  border-bottom: 1px solid govuk-colour('mid-grey');
+  border-bottom: 1px solid govuk-colour('black', $variant: 'tint-80');
 }
 
 .app-boundary-info-panel__stats-row:first-child {
@@ -191,7 +191,7 @@
 
 .app-boundary-info-panel__edp-description {
   margin: govuk-spacing(1) 0 0;
-  color: govuk-colour('dark-grey');
+  color: govuk-colour('black', $variant: 'tint-25');
 }
 
 .app-boundary-info-panel__actions {

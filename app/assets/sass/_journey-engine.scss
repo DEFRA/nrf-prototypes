@@ -25,14 +25,14 @@
 
   &__separator {
     margin: 0 govuk-spacing(1);
-    color: govuk-colour('dark-grey');
+    color: govuk-colour('black', $variant: 'tint-25');
   }
 }
 
 // "Organisation name  Change organisation" line for signed-in agents
 .app-organisation-bar {
   padding: govuk-spacing(2) 0;
-  border-bottom: 1px solid govuk-colour('mid-grey');
+  border-bottom: 1px solid govuk-colour('black', $variant: 'tint-80');
   margin-bottom: govuk-spacing(3);
 
   &__change {
@@ -65,7 +65,7 @@
   height: 400px;
   margin: 0 0 govuk-spacing(6);
   border: 2px solid govuk-colour('black');
-  background: govuk-colour('light-grey');
+  background: govuk-colour('black', $variant: 'tint-95');
   overflow: hidden;
 
   &__svg,
@@ -99,7 +99,7 @@
 .app-email-footer {
   padding: govuk-spacing(6) 0;
   border-top: 1px solid $govuk-border-colour;
-  background: govuk-colour('light-grey');
+  background: govuk-colour('black', $variant: 'tint-95');
   font-family: Helvetica, Arial, sans-serif;
 
   &__text {
