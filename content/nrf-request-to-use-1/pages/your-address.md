@@ -31,4 +31,10 @@ button: Confirm
 
 # What is your address?
 
+:::if account.accountType equals individual
 If you are working for a company for this development, use your company address.
+:::
+
+:::if account.accountType notEquals individual
+If you are working for a company for this development, use your company address.
+:::
