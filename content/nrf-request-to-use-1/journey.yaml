@@ -68,10 +68,7 @@ homepage:
     - check your answers page with declaration tick box 
     - Defra check answers page with declaration tick box 
     - updated commitment certificate page with updated planning conditions
-
-    - 
-
-    - Added new pages for request to use journey: developer details, your address, org address, review your details, check your answers, defra check answers, defra business check answers, defra account user type, defra name, defra telephone, defra postcode, defra address, defra address manual, defra memorable word, defra trading uk, defra has crn, defra crn, defra business contact, defra account created, defra contact support id 
+    - "Added new pages for request to use journey: developer details, your address, org address, review your details, check your answers, defra check answers, defra business check answers, defra account user type, defra name, defra telephone, defra postcode, defra address, defra address manual, defra memorable word, defra trading uk, defra has crn, defra crn, defra business contact, defra account created, defra contact support id "
 # Every session key this journey writes. `clears: $session` expands to this,
 # so the quote keys are included: deleting the quote details here also removes
 # a quote made in the same session. `nrfReference` is the reference the quote
