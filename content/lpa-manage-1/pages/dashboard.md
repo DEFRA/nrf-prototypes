@@ -7,8 +7,10 @@ text:
   addRecord: Add a developer record
   searchLabel: Search commitments
   searchButton: Search
-  activeCount: Commitments with active planning applications
-  disputeCount: Commitments with planning applications in dispute
+  # The count cards, each under its number
+  forReviewCount: Commitment details for review
+  rejectedCount: Rejected commitment details
+  reviewedActiveCount: Reviewed commitments with active planning applications
   overdueCount: Overdue actions for commitments
   tableHeading: Table of certificates
   viewAll: View all certificates

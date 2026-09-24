@@ -106,7 +106,7 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(timeline).toContainText(text('view-record', 'timelineAdded'))
     await expect(timeline).toContainText(MOCK_OFFICER)
     // A new record's status is the first option
-    await expect(optionLocator(page, 'view-record', 'received')).toBeChecked()
+    await expect(optionLocator(page, 'view-record', 'for-review')).toBeChecked()
 
     // The new record leads the dashboard's table
     await actionLocator(page, 'view-record', 'secondary').click()
@@ -162,6 +162,17 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(page.locator('.govuk-notification-banner')).toHaveCount(0)
     await expect(page.locator('.app-timeline__item')).toHaveCount(entries)
 
+    // "Later" keeps the record For review in the tag, and its radio ticked
+    await answer(page, 'view-record', 'review-later')
+    await submit(page, 'view-record')
+    await expect(page.locator('h1 .govuk-tag')).toHaveText(
+      store.statuses['for-review'].label
+    )
+    await expect(
+      optionLocator(page, 'view-record', 'review-later')
+    ).toBeChecked()
+    await expect(page.locator('.app-timeline__item')).toHaveCount(entries + 1)
+
     // Rejecting asks for a comment and warns that it is final
     await answer(page, 'view-record', 'rejected')
     await expect(page.locator('.govuk-warning-text')).toContainText(
@@ -188,7 +199,7 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(latest).toContainText(
       'The boundary does not match the application'
     )
-    await expect(page.locator('.app-timeline__item')).toHaveCount(entries + 1)
+    await expect(page.locator('.app-timeline__item')).toHaveCount(entries + 2)
 
     // A rejected record's status cannot change: a warning replaces the
     // radios
@@ -207,19 +218,35 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expectHeading(page, 'dashboard')
 
     const records = allRecords({})
-    const overdue = records.filter((record) => record.overdue)
-    const inDispute = records.filter(
-      (record) => record.planningStage.value === 'in-dispute'
-    )
+    const counted = [
+      records.filter((r) => r.status.shown === 'for-review'),
+      records.filter((r) => r.status.shown === 'rejected'),
+      records.filter(
+        (r) =>
+          r.status.shown === 'reviewed' && r.planningStage.value === 'applied'
+      ),
+      records.filter((r) => r.overdue)
+    ]
+    const labels = [
+      'forReviewCount',
+      'rejectedCount',
+      'reviewedActiveCount',
+      'overdueCount'
+    ]
     const cards = page.locator('.app-staff-card')
-    await expect(cards.nth(1)).toContainText(String(inDispute.length))
-    await expect(cards.nth(2)).toContainText(String(overdue.length))
-    await expect(cards.nth(2)).toContainText(text('dashboard', 'overdueCount'))
+    await expect(cards).toHaveCount(4)
+    for (const [index, matching] of counted.entries()) {
+      await expect(cards.nth(index)).toContainText(String(matching.length))
+      await expect(cards.nth(index)).toContainText(
+        text('dashboard', labels[index])
+      )
+    }
 
-    await cards.nth(2).getByRole('link').click()
+    // Overdue actions: the table filtered to them
+    await cards.nth(3).getByRole('link').click()
     await expectHeading(page, 'records')
     const rows = page.locator('.app-staff-table tbody tr')
-    await expect(rows).toHaveCount(overdue.length)
+    await expect(rows).toHaveCount(counted[3].length)
 
     // The filter's summary counts the filters set; clearing them shows
     // every record again
@@ -232,11 +259,16 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(summary).toHaveText(text('records', 'filterSummary'))
     await expect(rows).toHaveCount(Math.min(records.length, RECORDS_PER_PAGE))
 
+    // Reviewed with active planning applications: two filters at once
     await page.goto(`${base}/dashboard`)
-    await cards.nth(1).getByRole('link').click()
-    await expect(rows).toHaveCount(inDispute.length)
+    await cards.nth(2).getByRole('link').click()
+    await expect(rows).toHaveCount(counted[2].length)
+    await expect(summary).toHaveText(`${text('records', 'filterSummary')} (2)`)
     await expect(
-      page.getByLabel(store.planningStages['in-dispute'], { exact: true })
+      page.getByLabel(store.statuses.reviewed.label, { exact: true })
+    ).toBeChecked()
+    await expect(
+      page.getByLabel(store.planningStages.applied, { exact: true })
     ).toBeChecked()
   })
 

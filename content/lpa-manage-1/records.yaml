@@ -12,9 +12,12 @@
 #                 permission type a commitment can have
 #   statuses      every status a record can have: its tag label and the
 #                 govuk-tag colour (grey, green, turquoise, blue, light-blue,
-#                 purple, pink, red, orange, yellow). `received` is the
-#                 status of a record an officer has just added. Every
-#                 value is an option of the radios on pages/view-record.md
+#                 purple, pink, red, orange, yellow), or `shownAs` another
+#                 status to look like it in the tables, tags and filter.
+#                 `for-review` is the status of a record an officer has
+#                 just added, and `rejected` is final. The radios on
+#                 pages/view-record.md offer some of them; the others
+#                 (withdrawn, cancelled) are set outside this prototype
 #   boundaries    named red line boundaries: open rings of [longitude,
 #                 latitude] pairs. A commitment names one (or gives its own
 #                 `coordinates`)
@@ -52,10 +55,13 @@ planningTypes:
   Reserved matters: Reserved
 
 statuses:
-  received: { label: Received, colour: light-blue }
-  confirmed: { label: Confirmed, colour: green }
-  review-later: { label: Awaiting review, colour: yellow }
+  for-review: { label: For review, colour: light-blue }
+  # "Review and confirm commitment details later": shown as For review
+  review-later: { shownAs: for-review }
+  reviewed: { label: Reviewed, colour: green }
   rejected: { label: Rejected, colour: red }
+  withdrawn: { label: Withdrawn, colour: purple }
+  cancelled: { label: Cancelled, colour: grey }
 
 edp: &edp Broads SAC, Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2026 to 2036)
 
@@ -155,7 +161,7 @@ commitments:
       planningStage: applied
       overdue: true
       officer: John Smith
-      status: received
+      status: for-review
       history:
         - event: added
           by: John Smith
@@ -175,13 +181,13 @@ commitments:
       planningReference: 2026/0388/FUL
       planningStage: applied
       officer: Priya Shah
-      status: confirmed
+      status: reviewed
       history:
         - event: added
           by: Priya Shah
           at: 2026-08-29T09:40
         - event: status
-          status: confirmed
+          status: reviewed
           by: Priya Shah
           at: 2026-09-02T14:05
 
@@ -200,15 +206,11 @@ commitments:
       planningStage: in-dispute
       overdue: true
       officer: Tom Barker
-      status: review-later
+      status: for-review
       history:
         - event: added
           by: Tom Barker
           at: 2026-08-21T11:20
-        - event: status
-          status: review-later
-          by: Tom Barker
-          at: 2026-09-01T16:45
 
   - reference: NRL-100619
     developer: Wensum Valley Estates
@@ -224,13 +226,13 @@ commitments:
       planningReference: 2026/0330/FUL
       planningStage: applied
       officer: John Smith
-      status: confirmed
+      status: reviewed
       history:
         - event: added
           by: John Smith
           at: 2026-08-15T10:02
         - event: status
-          status: confirmed
+          status: reviewed
           by: Aisha Khan
           at: 2026-08-19T09:15
 
@@ -272,7 +274,7 @@ commitments:
       planningReference: 2026/0287/FUL
       planningStage: applied
       officer: Priya Shah
-      status: received
+      status: for-review
       history:
         - event: added
           by: Priya Shah
@@ -292,13 +294,13 @@ commitments:
       planningReference: 2026/0264/OUT
       planningStage: applied
       officer: Tom Barker
-      status: confirmed
+      status: reviewed
       history:
         - event: added
           by: Tom Barker
           at: 2026-07-23T09:05
         - event: status
-          status: confirmed
+          status: reviewed
           by: Tom Barker
           at: 2026-07-28T11:50
 
@@ -317,15 +319,11 @@ commitments:
       planningStage: in-dispute
       overdue: true
       officer: John Smith
-      status: review-later
+      status: for-review
       history:
         - event: added
           by: John Smith
           at: 2026-07-11T14:25
-        - event: status
-          status: review-later
-          by: John Smith
-          at: 2026-07-18T10:00
 
   - reference: NRL-101178
     developer: Greenacre Living
@@ -341,13 +339,13 @@ commitments:
       planningReference: 2026/0211/FUL
       planningStage: applied
       officer: Aisha Khan
-      status: confirmed
+      status: reviewed
       history:
         - event: added
           by: Aisha Khan
           at: 2026-06-27T09:30
         - event: status
-          status: confirmed
+          status: reviewed
           by: Aisha Khan
           at: 2026-07-01T13:40
 
@@ -365,7 +363,7 @@ commitments:
       planningReference: 2026/0189/REM
       planningStage: in-dispute
       officer: Priya Shah
-      status: received
+      status: for-review
       history:
         - event: added
           by: Priya Shah
@@ -386,13 +384,13 @@ commitments:
       planningReference: 2026/0061/FUL
       planningStage: refused
       officer: Tom Barker
-      status: confirmed
+      status: reviewed
       history:
         - event: added
           by: Tom Barker
           at: 2026-02-21T10:10
         - event: status
-          status: confirmed
+          status: reviewed
           by: Tom Barker
           at: 2026-02-25T12:00
 
@@ -410,11 +408,15 @@ commitments:
       planningReference: 2026/0044/OUT
       planningStage: applied
       officer: John Smith
-      status: received
+      status: withdrawn
       history:
         - event: added
           by: John Smith
           at: 2026-02-07T09:50
+        - event: status
+          status: withdrawn
+          by: John Smith
+          at: 2026-03-02T11:15
 
   - reference: NRL-099188
     developer: Wensum Valley Estates
@@ -454,15 +456,19 @@ commitments:
       planningReference: 2025/1187/FUL
       planningStage: applied
       officer: Priya Shah
-      status: confirmed
+      status: cancelled
       history:
         - event: added
           by: Priya Shah
           at: 2026-01-09T10:00
         - event: status
-          status: confirmed
+          status: reviewed
           by: Priya Shah
           at: 2026-01-14T09:25
+        - event: status
+          status: cancelled
+          by: Priya Shah
+          at: 2026-05-20T15:40
 
 fallback:
   developer: Scarfolk Homes Ltd

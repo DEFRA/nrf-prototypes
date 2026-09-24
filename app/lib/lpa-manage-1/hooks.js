@@ -38,7 +38,7 @@ const DASHBOARD_ROWS = 6
 const RECORDS_PER_PAGE = 10
 // The status of a record an officer has just added, and the stage of its
 // planning application
-const ADDED_STATUS = 'received'
+const ADDED_STATUS = 'for-review'
 const ADDED_STAGE = 'applied'
 // The status that needs a comment, and the field the comment is in
 const REJECTED_STATUS = 'rejected'
@@ -184,12 +184,20 @@ function commitmentOf(entry, store) {
   }
 }
 
+/**
+ * A status as the pages show it. `value` is what the record stores (the
+ * radio it ticks); `shown` is the status of the tables, tags and filter,
+ * which differs for one with `shownAs` in records.yaml
+ */
 function statusOf(value, store) {
   const status = store.statuses[value] || {}
+  const shown = status.shownAs || value
+  const look = store.statuses[shown] || status
   return {
     value,
-    label: status.label || value,
-    colour: status.colour || 'grey'
+    shown,
+    label: look.label || shown,
+    colour: look.colour || 'grey'
   }
 }
 
@@ -365,10 +373,9 @@ const FILTERS = ['status', 'stage', 'type']
 function filterOptions(store) {
   const types = [...new Set(Object.values(store.planningTypes))]
   return {
-    status: Object.entries(store.statuses).map(([value, status]) => ({
-      value,
-      text: status.label || value
-    })),
+    status: Object.entries(store.statuses)
+      .filter(([, status]) => !status.shownAs)
+      .map(([value, status]) => ({ value, text: status.label || value })),
     stage: Object.entries(store.planningStages).map(([value, label]) => ({
       value,
       text: label
@@ -379,7 +386,7 @@ function filterOptions(store) {
 
 // What each filter compares a record by
 const FILTER_VALUES = {
-  status: (record) => record.status.value,
+  status: (record) => record.status.shown,
   stage: (record) => record.planningStage.value,
   type: (record) => record.planningTypeShort.toLowerCase()
 }
@@ -844,24 +851,26 @@ const dashboard = {
     const { text } = model.content
     const path = ctx.journey.routes.RECORDS
     const records = allRecords(ctx.data).sort(newestFirst)
-    const atStage = (stage) =>
-      records.filter((r) => r.planningStage.value === stage).length
+    // Each card counts the records the table shows with its filters set
+    const card = (label, filters, test) => ({
+      count: records.filter(test).length,
+      label,
+      href: hrefFor(path, blankQuery(), filters)
+    })
+    const isStatus = (status) => (r) => r.status.shown === status
     model.cards = [
-      {
-        count: atStage('applied'),
-        label: text.activeCount,
-        href: hrefFor(path, blankQuery(), { stage: ['applied'] })
-      },
-      {
-        count: atStage('in-dispute'),
-        label: text.disputeCount,
-        href: hrefFor(path, blankQuery(), { stage: ['in-dispute'] })
-      },
-      {
-        count: records.filter((r) => r.overdue).length,
-        label: text.overdueCount,
-        href: hrefFor(path, blankQuery(), { overdue: true })
-      }
+      card(
+        text.forReviewCount,
+        { status: ['for-review'] },
+        isStatus('for-review')
+      ),
+      card(text.rejectedCount, { status: ['rejected'] }, isStatus('rejected')),
+      card(
+        text.reviewedActiveCount,
+        { status: ['reviewed'], stage: ['applied'] },
+        (r) => isStatus('reviewed')(r) && r.planningStage.value === 'applied'
+      ),
+      card(text.overdueCount, { overdue: true }, (r) => r.overdue)
     ]
     model.table = tableFor(records.slice(0, DASHBOARD_ROWS), text, ctx.journey)
   }

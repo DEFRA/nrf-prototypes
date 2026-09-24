@@ -284,10 +284,14 @@ $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
   padding: 0;
   list-style: none;
 
-  // Side by side from desktop; stacked one above another below it, never
-  // two and one
+  // Four side by side from desktop, two by two on tablets, stacked on
+  // phones
+  @include govuk-media-query($from: tablet) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   @include govuk-media-query($from: desktop) {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: govuk-spacing(4);
   }
 }

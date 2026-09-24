@@ -2,7 +2,8 @@
 # A developer record (app/views/lpa-manage-1/view-record.html). The heading
 # is the record's NRL reference; `text:` holds the rest of the page's words.
 # The status radios sit at the bottom of the page and post back to it; the
-# first option is the status of a record just added (see records.yaml).
+# first option is the status of a record just added, and Rejected is final
+# (see records.yaml).
 type: custom
 rows:
   - heading: Commitment details
@@ -22,10 +23,10 @@ rows:
       then: '{{ record.reviewedBy }}'
       else: Not reviewed yet
 options:
-  - label: Received
-    value: received
+  - label: For review
+    value: for-review
   - label: Review and confirm commitment details
-    value: confirmed
+    value: reviewed
   - label: Review and confirm commitment details later
     value: review-later
   - label: Reject commitment details
