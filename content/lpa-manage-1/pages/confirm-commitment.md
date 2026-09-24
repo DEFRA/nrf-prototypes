@@ -1,7 +1,7 @@
 ---
 type: check-answers
 rows:
-  - include: commitment-details
+  - include: commitment-summary
 button: Confirm
 actions:
   - text: Confirm

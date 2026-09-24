@@ -7,10 +7,11 @@
 //                           and Menu toggles and their grey panels
 //                           (app/views/includes/staff-header.html)
 //   .app-staff-page-header  heading with a button to its right
-//   .app-staff-cards        the dashboard's count cards
-//   .app-staff-search       search box with its button, plus a sort select
+//   .app-staff-cards        the dashboard's count cards, each a link
+//   .app-staff-search       search box with its button
+//   .app-staff-filter       the records table's filter (a details)
+//   .app-staff-table--sortable  column headings that sort the table
 //   .app-timeline           audit history (after the MOJ timeline)
-//   .app-status-dialog      the Change status popover on a record
 
 $app-staff-max-width: 1440px;
 // Below this width the service name and the account and Menu toggles no
@@ -241,10 +242,12 @@ $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
 
 // ------------------------------------------------------ Page furniture
 
+// The button sits level with the heading's first line: their text shares a
+// baseline, however many lines the heading wraps onto
 .app-staff-page-header {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: baseline;
   justify-content: space-between;
   gap: govuk-spacing(3) govuk-spacing(6);
   margin-bottom: govuk-spacing(4);
@@ -261,12 +264,7 @@ $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
   }
 }
 
-// A record's page: the reference and its status tag, centred on one line,
-// with the Change status button level with them
-.app-staff-page-header--record {
-  align-items: center;
-}
-
+// A record's page: the reference and its status tag, centred on one line
 .app-staff-record__heading {
   display: flex;
   flex-wrap: wrap;
@@ -296,6 +294,12 @@ $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
 
 .app-staff-card {
   display: flex;
+}
+
+// The whole card is the link to the records it counts
+.app-staff-card__link {
+  display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -303,11 +307,32 @@ $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
   border: 1px solid govuk-colour('black', $variant: 'tint-80');
   border-bottom: 5px solid govuk-colour('blue');
   background: $app-staff-grey;
+  color: $app-staff-black;
   text-align: center;
+  text-decoration: none;
 
   @include govuk-media-query($from: desktop) {
     min-height: 160px;
     padding: govuk-spacing(4);
+  }
+
+  &:link,
+  &:visited {
+    color: $app-staff-black;
+  }
+
+  &:hover {
+    border-bottom-color: govuk-colour('blue', $variant: 'shade-50');
+    background: govuk-colour('black', $variant: 'tint-80');
+
+    .app-staff-card__label {
+      text-decoration: underline;
+      text-decoration-thickness: 3px;
+    }
+  }
+
+  &:focus {
+    @include govuk-focused-text;
   }
 }
 
@@ -318,7 +343,15 @@ $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
 }
 
 .app-staff-card__label {
-  @include govuk-font($size: 19);
+  color: govuk-colour('blue');
+  @include govuk-font($size: 19, $weight: bold);
+  text-decoration: underline;
+  text-underline-offset: 0.1578em;
+}
+
+.app-staff-card__link:focus .app-staff-card__label {
+  color: $app-staff-black;
+  text-decoration: none;
 }
 
 .app-staff-search {
@@ -383,6 +416,67 @@ $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
   }
 }
 
+// Sortable column headings (after the MOJ sortable table): the heading is
+// a link, with an arrow for the way the table is sorted, or a pair of them
+// on a column it is not sorted by
+.app-staff-table--sortable {
+  .app-sort-link {
+    display: inline-flex;
+    align-items: center;
+    gap: govuk-spacing(1);
+    @include govuk-link-common;
+    @include govuk-link-style-no-visited-state;
+    font-weight: $govuk-font-weight-bold;
+
+    &::after {
+      content: '';
+      flex-shrink: 0;
+      width: 0.6em;
+      height: 1em;
+      background: currentcolor;
+      // Both arrows
+      clip-path: polygon(
+        50% 0,
+        100% 40%,
+        0 40%,
+        50% 0,
+        50% 100%,
+        0 60%,
+        100% 60%,
+        50% 100%
+      );
+    }
+  }
+
+  [aria-sort='ascending'] .app-sort-link::after {
+    clip-path: polygon(50% 20%, 100% 70%, 0 70%);
+  }
+
+  [aria-sort='descending'] .app-sort-link::after {
+    clip-path: polygon(0 30%, 100% 30%, 50% 80%);
+  }
+}
+
+// The records table's filter: its checkbox groups side by side from tablet
+.app-staff-filter {
+  margin-bottom: govuk-spacing(4);
+
+  .govuk-details__text {
+    padding-top: govuk-spacing(3);
+  }
+}
+
+.app-staff-filter__groups {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0 govuk-spacing(6);
+
+  @include govuk-media-query($from: tablet) {
+    grid-template-columns: repeat(3, auto);
+    justify-content: start;
+  }
+}
+
 // Under the records table: "Showing 1 to 10 of 14 records" with the
 // pagination to its right (wrapping below it on narrow screens)
 .app-staff-table-footer {
@@ -435,32 +529,20 @@ $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
   }
 }
 
+.app-timeline__comment {
+  margin-top: govuk-spacing(2);
+  color: $app-staff-black;
+}
+
 .app-timeline__title {
   margin: 0 0 govuk-spacing(1);
   @include govuk-font($size: 19, $weight: bold);
 }
 
 .app-timeline__byline,
-.app-timeline__date {
+.app-timeline__date,
+.app-timeline__comment {
   margin: 0 0 govuk-spacing(1);
   color: govuk-colour('black', $variant: 'tint-25');
   @include govuk-font($size: 16);
-}
-
-// ------------------------------------------------ Change status dialog
-
-.app-status-dialog {
-  width: min(640px, calc(100vw - #{govuk-spacing(6)}));
-  max-height: calc(100vh - #{govuk-spacing(6)});
-  padding: govuk-spacing(6);
-  border: 5px solid $app-staff-black;
-  color: $app-staff-black;
-
-  &::backdrop {
-    background: rgba(11, 12, 12, 0.6);
-  }
-
-  .govuk-button-group {
-    margin-bottom: 0;
-  }
 }

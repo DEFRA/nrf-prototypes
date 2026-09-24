@@ -1,17 +1,19 @@
 ---
 # Every record the council has (app/views/lpa-manage-1/records.html),
-# searched and sorted.
+# searched, filtered and sorted by its column headings.
 type: custom
 text:
   addRecord: Add a developer record
   lede: Update planning permission statuses or cancel commitments.
   searchLabel: Search commitments
   searchButton: Search
-  sortLabel: Sort by
-  sortUpdated: Recently updated
-  sortExpires: Expiry date
-  sortReference: NRL reference
-  apply: Apply
+  filterSummary: Filter records
+  filterStatus: Status
+  filterStage: Planning application stage
+  filterType: Planning type
+  filterOverdue: Overdue actions only
+  applyFilters: Apply filters
+  clearFilters: Clear filters
   # {from}, {to} and {total} are filled in with the numbers
   showing: 'Showing {from} to {to} of {total} records'
   noResults: No records match your search.
@@ -19,6 +21,8 @@ text:
   columns:
     reference: NRL reference
     developer: Developer
+    stage: Planning application stage
+    planningType: Planning type
     officer: Officer
     lastModified: Last modified
     expires: Expires

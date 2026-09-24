@@ -6,11 +6,15 @@
 # Edits show on the next page load (no restart). The code that reads it is
 # app/lib/lpa-manage-1/hooks.js.
 #
+#   planningStages  the stages a planning application can be at, with
+#                 the label the pages show for each
+#   planningTypes   the short name the tables show for each planning
+#                 permission type a commitment can have
 #   statuses      every status a record can have: its tag label and the
 #                 govuk-tag colour (grey, green, turquoise, blue, light-blue,
 #                 purple, pink, red, orange, yellow). `received` is the
-#                 status of a record an officer has just added; the other
-#                 values are the options of pages/change-status.md
+#                 status of a record an officer has just added. Every
+#                 value is an option of the radios on pages/view-record.md
 #   boundaries    named red line boundaries: open rings of [longitude,
 #                 latitude] pairs. A commitment names one (or gives its own
 #                 `coordinates`)
@@ -25,13 +29,27 @@
 #
 # A record:
 #   planningReference  the planning application it belongs to
-#   planningStatus     active or in-dispute (the dashboard's count cards;
-#                      a commitment past its expiry date counts as expired)
+#   planningStage      applied, refused or in-dispute (one of the
+#                      planningStages below; the table's column and filter,
+#                      and the dashboard's first two count cards, which
+#                      leave out commitments past their expiry date)
+#   overdue            true when an action on the record is overdue (the
+#                      dashboard's third count card and the table's filter)
 #   officer            who added it (the table's Officer column)
 #   status             one of the statuses above
 #   history            the audit timeline, oldest first: `event: added` or
 #                      `event: status` (with the new `status`), `by` and `at`
 #                      (YYYY-MM-DDTHH:MM). The newest entry is "Last modified"
+
+planningStages:
+  applied: Applied
+  refused: Refused
+  in-dispute: In dispute
+
+planningTypes:
+  Full planning permission: Full
+  Outline planning permission: Outline
+  Reserved matters: Reserved
 
 statuses:
   received: { label: Received, colour: light-blue }
@@ -134,7 +152,8 @@ commitments:
     boundary: hethersett
     record:
       planningReference: 2026/0412/FUL
-      planningStatus: active
+      planningStage: applied
+      overdue: true
       officer: John Smith
       status: received
       history:
@@ -154,7 +173,7 @@ commitments:
     boundary: taverham
     record:
       planningReference: 2026/0388/FUL
-      planningStatus: active
+      planningStage: applied
       officer: Priya Shah
       status: confirmed
       history:
@@ -178,7 +197,8 @@ commitments:
     boundary: wymondham
     record:
       planningReference: 2026/0351/OUT
-      planningStatus: in-dispute
+      planningStage: in-dispute
+      overdue: true
       officer: Tom Barker
       status: review-later
       history:
@@ -202,7 +222,7 @@ commitments:
     boundary: reepham
     record:
       planningReference: 2026/0330/FUL
-      planningStatus: active
+      planningStage: applied
       officer: John Smith
       status: confirmed
       history:
@@ -226,7 +246,7 @@ commitments:
     boundary: dereham
     record:
       planningReference: 2026/0302/REM
-      planningStatus: in-dispute
+      planningStage: refused
       officer: Aisha Khan
       status: rejected
       history:
@@ -250,7 +270,7 @@ commitments:
     boundary: aylsham
     record:
       planningReference: 2026/0287/FUL
-      planningStatus: active
+      planningStage: applied
       officer: Priya Shah
       status: received
       history:
@@ -270,7 +290,7 @@ commitments:
     boundary: hethersett
     record:
       planningReference: 2026/0264/OUT
-      planningStatus: active
+      planningStage: applied
       officer: Tom Barker
       status: confirmed
       history:
@@ -294,7 +314,8 @@ commitments:
     boundary: taverham
     record:
       planningReference: 2026/0240/FUL
-      planningStatus: in-dispute
+      planningStage: in-dispute
+      overdue: true
       officer: John Smith
       status: review-later
       history:
@@ -318,7 +339,7 @@ commitments:
     boundary: wymondham
     record:
       planningReference: 2026/0211/FUL
-      planningStatus: active
+      planningStage: applied
       officer: Aisha Khan
       status: confirmed
       history:
@@ -342,7 +363,7 @@ commitments:
     boundary: reepham
     record:
       planningReference: 2026/0189/REM
-      planningStatus: in-dispute
+      planningStage: in-dispute
       officer: Priya Shah
       status: received
       history:
@@ -363,7 +384,7 @@ commitments:
     boundary: dereham
     record:
       planningReference: 2026/0061/FUL
-      planningStatus: active
+      planningStage: refused
       officer: Tom Barker
       status: confirmed
       history:
@@ -387,7 +408,7 @@ commitments:
     boundary: aylsham
     record:
       planningReference: 2026/0044/OUT
-      planningStatus: active
+      planningStage: applied
       officer: John Smith
       status: received
       history:
@@ -407,7 +428,7 @@ commitments:
     boundary: hethersett
     record:
       planningReference: 2026/0012/FUL
-      planningStatus: in-dispute
+      planningStage: in-dispute
       officer: Aisha Khan
       status: rejected
       history:
@@ -431,7 +452,7 @@ commitments:
     boundary: taverham
     record:
       planningReference: 2025/1187/FUL
-      planningStatus: active
+      planningStage: applied
       officer: Priya Shah
       status: confirmed
       history:

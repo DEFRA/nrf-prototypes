@@ -12,8 +12,10 @@
  *     made in nrf-request-to-use-1 this session, or the file's `fallback`
  *   - the records the officer adds, and every status they change, kept in
  *     the session (`lpaRecords`) over the file's own
- *   - the dashboard's counts and the records table, with search and sort
- *   - the record page's audit timeline and its Change status popover
+ *   - the dashboard's counts and the records table, with search, filters
+ *     and sortable columns
+ *   - the record page's audit timeline and its status radios, which post
+ *     back to the page, and the full certificate behind it
  *
  * Nothing here is real: no passwords are checked or stored.
  */
@@ -34,8 +36,13 @@ const MOCK_OFFICER = 'John Smith'
 // How many records the dashboard's table shows, and the full table per page
 const DASHBOARD_ROWS = 6
 const RECORDS_PER_PAGE = 10
-// The status of a record an officer has just added
+// The status of a record an officer has just added, and the stage of its
+// planning application
 const ADDED_STATUS = 'received'
+const ADDED_STAGE = 'applied'
+// The status that needs a comment, and the field the comment is in
+const REJECTED_STATUS = 'rejected'
+const COMMENT_FIELD = 'status-comment'
 const SESSION_KEYS = ['officer', 'signInEmail']
 
 // ------------------------------------------------------------ The data
@@ -51,7 +58,13 @@ function loadStore() {
   try {
     mtime = fs.statSync(RECORDS_FILE).mtimeMs
   } catch (error) {
-    return { statuses: {}, boundaries: {}, commitments: [] }
+    return {
+      statuses: {},
+      planningStages: {},
+      planningTypes: {},
+      boundaries: {},
+      commitments: []
+    }
   }
   if (!cached || cached.mtime !== mtime) {
     const raw = yaml.load(fs.readFileSync(RECORDS_FILE, 'utf8')) || {}
@@ -59,6 +72,8 @@ function loadStore() {
       mtime,
       store: {
         statuses: raw.statuses || {},
+        planningStages: raw.planningStages || {},
+        planningTypes: raw.planningTypes || {},
         boundaries: raw.boundaries || {},
         commitments: raw.commitments || [],
         fallback: raw.fallback || null
@@ -199,9 +214,19 @@ function allEntries(data) {
   return [...byReference.values()]
 }
 
+// "Full" for "Full planning permission": the tables' short name
+function planningTypeShort(planningType, store) {
+  return store.planningTypes[planningType] || planningType || ''
+}
+
+function planningStageOf(value, store) {
+  return { value, label: store.planningStages[value] || value }
+}
+
 /**
- * A record as the pages show it: its commitment, status tag, who added and
- * last reviewed it, and its audit timeline, newest first
+ * A record as the pages show it: its commitment, status tag, planning
+ * application stage, who added and last reviewed it, and its audit
+ * timeline, newest first
  */
 function recordOf({ entry, record }, store, today = new Date()) {
   const history = (record.history || []).map((event) => ({
@@ -216,7 +241,10 @@ function recordOf({ entry, record }, store, today = new Date()) {
     reference: entry.reference,
     developer: entry.developer,
     planningReference: record.planningReference,
-    planningStatus: record.planningStatus || 'active',
+    planningStage: planningStageOf(record.planningStage || ADDED_STAGE, store),
+    planningType: entry.planningType,
+    planningTypeShort: planningTypeShort(entry.planningType, store),
+    overdue: Boolean(record.overdue),
     officer: record.officer,
     status: statusOf(record.status || ADDED_STATUS, store),
     reviewedBy: lastReview ? lastReview.by : '',
@@ -229,6 +257,7 @@ function recordOf({ entry, record }, store, today = new Date()) {
       .map((event) => ({
         event: event.event,
         status: event.status ? statusOf(event.status, store) : null,
+        comment: event.comment || '',
         by: event.by,
         date: formatDate(event.date),
         time: formatTime(event.date)
@@ -309,19 +338,73 @@ function requestToUseEntry(data) {
 
 // ------------------------------------------------------- Tables and search
 
-// Rows of govukTable for the records, with the page's own column copy
-function tableFor(records, text, journey) {
+const byText = (field) => (a, b) =>
+  String(field(a) || '').localeCompare(String(field(b) || ''))
+const byDate = (field) => (a, b) => (field(a) || 0) - (field(b) || 0)
+
+// The tables' columns in order: each one's key in the page's `text.columns`
+// and how sorting by it compares two records (ascending)
+const COLUMNS = [
+  { key: 'reference', compare: byText((r) => r.reference) },
+  { key: 'developer', compare: byText((r) => r.developer) },
+  { key: 'stage', compare: byText((r) => r.planningStage.label) },
+  { key: 'planningType', compare: byText((r) => r.planningTypeShort) },
+  { key: 'officer', compare: byText((r) => r.officer) },
+  { key: 'lastModified', compare: byDate((r) => r.lastModified) },
+  { key: 'expires', compare: byDate((r) => r.expires) },
+  { key: 'status', compare: byText((r) => r.status.label) }
+]
+const DEFAULT_SORT = 'lastModified'
+const DEFAULT_DIR = 'desc'
+const newestFirst = (a, b) => (b.lastModified || 0) - (a.lastModified || 0)
+
+// The filters' checkbox groups: each one's query key and the values it can
+// take, with their labels, from records.yaml
+const FILTERS = ['status', 'stage', 'type']
+
+function filterOptions(store) {
+  const types = [...new Set(Object.values(store.planningTypes))]
+  return {
+    status: Object.entries(store.statuses).map(([value, status]) => ({
+      value,
+      text: status.label || value
+    })),
+    stage: Object.entries(store.planningStages).map(([value, label]) => ({
+      value,
+      text: label
+    })),
+    type: types.map((label) => ({ value: label.toLowerCase(), text: label }))
+  }
+}
+
+// What each filter compares a record by
+const FILTER_VALUES = {
+  status: (record) => record.status.value,
+  stage: (record) => record.planningStage.value,
+  type: (record) => record.planningTypeShort.toLowerCase()
+}
+
+function sortRecords(records, query) {
+  const column = COLUMNS.find((c) => c.key === query.sort)
+  // Newest first breaks ties (the sort is stable)
+  const sorted = records.slice().sort(newestFirst)
+  if (!column) {
+    return sorted
+  }
+  const sign = query.dir === 'asc' ? 1 : -1
+  return sorted.sort((a, b) => sign * column.compare(a, b))
+}
+
+// Rows of govukTable for the records, with the page's own column copy.
+// `headFor` makes a column heading sortable (the records page).
+function tableFor(records, text, journey, headFor) {
   const viewPath = journey.routes.VIEW_RECORD
   const columns = text.columns || {}
   return {
-    head: [
-      { text: columns.reference || 'NRL reference' },
-      { text: columns.developer || 'Developer' },
-      { text: columns.officer || 'Officer' },
-      { text: columns.lastModified || 'Last modified' },
-      { text: columns.expires || 'Expires' },
-      { text: columns.status || 'Status' }
-    ],
+    head: COLUMNS.map((column) => {
+      const label = columns[column.key] || column.key
+      return headFor ? headFor(column.key, label) : { text: label }
+    }),
     rows: records.map((record) => [
       {
         html:
@@ -330,6 +413,8 @@ function tableFor(records, text, journey) {
           `${escapeHtml(record.reference)}</a>`
       },
       { text: record.developer },
+      { text: record.planningStage.label },
+      { text: record.planningTypeShort },
       { text: record.officer },
       { text: record.lastModifiedShort },
       { text: record.expiresShort },
@@ -348,12 +433,6 @@ function escapeHtml(value) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
-}
-
-const SORTS = {
-  updated: (a, b) => (b.lastModified || 0) - (a.lastModified || 0),
-  expires: (a, b) => (a.expires || 0) - (b.expires || 0),
-  reference: (a, b) => a.reference.localeCompare(b.reference)
 }
 
 // Search matches the NRL reference, developer, planning reference or
@@ -376,49 +455,109 @@ function matches(record, query) {
   )
 }
 
-// ?_q=, ?_sort= and ?_page= (the kit never keeps a query key starting with
-// `_` in the session, so a search never follows the officer around)
-function searchOf(ctx) {
-  const query = ctx.query || {}
-  const page = parseInt(query._page, 10)
-  return {
-    q: String(query._q || '').trim(),
-    sort: SORTS[query._sort] ? String(query._sort) : 'updated',
-    page: Number.isFinite(page) && page > 0 ? page : 1
+function matchesFilters(record, query) {
+  if (query.overdue && !record.overdue) {
+    return false
   }
+  return FILTERS.every(
+    (name) =>
+      !query[name].length || query[name].includes(FILTER_VALUES[name](record))
+  )
+}
+
+// The records table with nothing searched, filtered or sorted
+function blankQuery() {
+  return {
+    q: '',
+    sort: DEFAULT_SORT,
+    dir: DEFAULT_DIR,
+    page: 1,
+    status: [],
+    stage: [],
+    type: [],
+    overdue: false
+  }
+}
+
+// ?_q=, ?_sort=, ?_dir=, ?_page=, ?_status=, ?_stage=, ?_type= and
+// ?_overdue= (the kit never keeps a query key starting with `_` in the
+// session, so a search never follows the officer around). Values no
+// filter offers are dropped.
+function queryOf(ctx, store) {
+  const raw = ctx.query || {}
+  const options = filterOptions(store)
+  const pick = (name) => {
+    const allowed = new Set(options[name].map((option) => option.value))
+    return [...new Set([].concat(raw[`_${name}`] || []).map(String))].filter(
+      (value) => allowed.has(value)
+    )
+  }
+  const page = parseInt(raw._page, 10)
+  const sort = COLUMNS.some((column) => column.key === raw._sort)
+    ? String(raw._sort)
+    : DEFAULT_SORT
+  const dir = ['asc', 'desc'].includes(raw._dir)
+    ? raw._dir
+    : sort === DEFAULT_SORT
+      ? DEFAULT_DIR
+      : 'asc'
+  return {
+    ...blankQuery(),
+    q: String(raw._q || '').trim(),
+    sort,
+    dir,
+    page: Number.isFinite(page) && page > 0 ? page : 1,
+    status: pick('status'),
+    stage: pick('stage'),
+    type: pick('type'),
+    overdue: [].concat(raw._overdue || []).includes('1')
+  }
+}
+
+// A link to the records table showing `query` with `changes` made to it
+function hrefFor(path, query, changes = {}) {
+  const next = { ...query, ...changes }
+  const params = new URLSearchParams()
+  if (next.q) {
+    params.set('_q', next.q)
+  }
+  for (const name of FILTERS) {
+    for (const value of next[name]) {
+      params.append(`_${name}`, value)
+    }
+  }
+  if (next.overdue) {
+    params.set('_overdue', '1')
+  }
+  if (next.sort !== DEFAULT_SORT || next.dir !== DEFAULT_DIR) {
+    params.set('_sort', next.sort)
+    params.set('_dir', next.dir)
+  }
+  if (next.page > 1) {
+    params.set('_page', String(next.page))
+  }
+  const search = params.toString()
+  return search ? `${path}?${search}` : path
 }
 
 /**
  * govukPagination for the records table: every page number when there are
  * few, otherwise the first, the last and those either side of the current
- * one with ellipses between. Each link keeps the search and sort.
+ * one with ellipses between. Each link keeps the search, filters and sort.
  */
-function paginationFor(search, pages, path) {
+function paginationFor(query, pages, path) {
   if (pages < 2) {
     return null
   }
-  const href = (page) => {
-    const params = new URLSearchParams()
-    if (search.q) {
-      params.set('_q', search.q)
-    }
-    if (search.sort !== 'updated') {
-      params.set('_sort', search.sort)
-    }
-    if (page > 1) {
-      params.set('_page', String(page))
-    }
-    const query = params.toString()
-    return query ? `${path}?${query}` : path
-  }
+  const href = (page) => hrefFor(path, query, { page })
   const items = []
   for (let page = 1; page <= pages; page += 1) {
-    const near = Math.abs(page - search.page) <= 1
+    const near = Math.abs(page - query.page) <= 1
     if (page === 1 || page === pages || near) {
       items.push({
         number: page,
         href: href(page),
-        current: page === search.page
+        current: page === query.page
       })
     } else if (!items[items.length - 1].ellipsis) {
       items.push({ ellipsis: true })
@@ -426,8 +565,62 @@ function paginationFor(search, pages, path) {
   }
   return {
     items,
-    previous: search.page > 1 ? { href: href(search.page - 1) } : null,
-    next: search.page < pages ? { href: href(search.page + 1) } : null
+    previous: query.page > 1 ? { href: href(query.page - 1) } : null,
+    next: query.page < pages ? { href: href(query.page + 1) } : null
+  }
+}
+
+// A column heading that sorts the table by it: ascending first, then the
+// other way each time it is chosen again. The sort starts at page 1.
+function sortableHead(query, path) {
+  return (key, label) => {
+    const current = query.sort === key
+    const dir = current && query.dir === 'asc' ? 'desc' : 'asc'
+    return {
+      html:
+        `<a class="app-sort-link" href="${escapeHtml(hrefFor(path, query, { sort: key, dir, page: 1 }))}">` +
+        `${escapeHtml(label)}</a>`,
+      attributes: {
+        'aria-sort': current
+          ? query.dir === 'asc'
+            ? 'ascending'
+            : 'descending'
+          : 'none'
+      }
+    }
+  }
+}
+
+// The filter's checkbox groups, and how many filters are set
+function filtersFor(query, text, store, path) {
+  const options = filterOptions(store)
+  const legends = {
+    status: text.filterStatus,
+    stage: text.filterStage,
+    type: text.filterType
+  }
+  const groups = FILTERS.map((name) => ({
+    name: `_${name}`,
+    legend: legends[name],
+    items: options[name].map((option) => ({
+      ...option,
+      checked: query[name].includes(option.value)
+    }))
+  }))
+  // One for each box ticked, shown beside the details' summary
+  const count =
+    FILTERS.reduce((total, name) => total + query[name].length, 0) +
+    (query.overdue ? 1 : 0)
+  return {
+    groups,
+    count,
+    // Clear filters keeps the search and the sort
+    clearHref: hrefFor(path, {
+      ...blankQuery(),
+      q: query.q,
+      sort: query.sort,
+      dir: query.dir
+    })
   }
 }
 
@@ -493,9 +686,10 @@ const retrieveCommitment = {
   }
 }
 
-// "Add record": the commitment joins the council's records, added by the
-// officer now, and the record page says so
-const checkYourAnswers = {
+// The planning application reference: continuing adds the commitment to
+// the council's records, added by the officer now, and the record page
+// says so
+const addRecord = {
   process(ctx) {
     const { data } = ctx
     const entry = data.commitmentEntry
@@ -507,19 +701,18 @@ const checkYourAnswers = {
     data.lpaRecords[entry.reference] = {
       commitment: entry,
       planningReference: data.planningReference,
-      planningStatus: 'active',
+      planningStage: ADDED_STAGE,
       officer,
       status: ADDED_STATUS,
       history: [{ event: 'added', by: officer, at: nowStamp() }]
     }
     data.recordReference = entry.reference
     data.lpaFlash = 'added'
-    // "Add another record" starts afresh
+    // "Add a developer record" starts afresh
     for (const key of [
       'commitmentReference',
       'commitmentEntry',
-      'planningReference',
-      'addRecordConfirmed'
+      'planningReference'
     ]) {
       delete data[key]
     }
@@ -529,136 +722,180 @@ const checkYourAnswers = {
   }
 }
 
-// The Change status options and copy, for the popover on the record page,
-// with the record's current status chosen
-function statusDialogFor(journey, record) {
-  const page = journey.byId.get('change-status')
-  if (!page) {
-    return null
+// The record ?ref=NRL-123456 picks, or the one last on screen, for the
+// record page and its certificate. It is remembered for the status radios.
+function loadRecord(ctx) {
+  const { data, query } = ctx
+  const reference = String(query.ref || data.recordReference || '')
+  delete data.ref
+  const record = reference ? findRecord(data, reference) : null
+  if (!record) {
+    return ctx.preview ? null : { redirect: ctx.journey.routes.DASHBOARD }
   }
-  return {
-    action: page.path,
-    field: page.field,
-    heading: page.content.heading,
-    hint: page.content.hint,
-    button: page.content.button,
-    items: page.content.options.map((option) => ({
-      text: option.label,
-      value: option.value,
-      hint: option.hint ? { text: option.hint } : undefined,
-      checked: Boolean(record && record.status.value === option.value)
-    }))
-  }
+  data.recordReference = reference
+  data.record = record
+  data.commitment = record.commitment
+  return null
 }
 
-// The record page: ?ref=NRL-123456 picks the record (and is remembered for
-// the Change status page); a flash message says what just happened
+// The record page: a flash message says what just happened, and the
+// status radios open on the record's current status. They post back here:
+// the new status, and a comment when rejecting, go on the audit timeline.
+// Choosing the current status again changes nothing, so the timeline never
+// repeats itself. Rejecting is final: a rejected record shows a warning in
+// place of the radios, and a post for it changes nothing.
 const viewRecord = {
   load(ctx) {
-    const { data, query } = ctx
-    const reference = String(query.ref || data.recordReference || '')
-    delete data.ref
-    const record = reference ? findRecord(data, reference) : null
-    if (!record) {
-      return ctx.preview
-        ? undefined
-        : { redirect: ctx.journey.routes.DASHBOARD }
+    const redirect = loadRecord(ctx)
+    if (redirect) {
+      return redirect
     }
-    data.recordReference = reference
-    data.record = record
-    data.commitment = record.commitment
+    const { data } = ctx
+    // The kit keeps the last post's fields in the session
+    delete data[COMMENT_FIELD]
+    delete data[ctx.page.field]
+    if (data.record && !(ctx.preview && data.newStatus)) {
+      data.newStatus = data.record.status.value
+    }
   },
   get(ctx, model) {
     const { data } = ctx
     model.flash = data.lpaFlash
     delete data.lpaFlash
-    model.statusDialog = statusDialogFor(ctx.journey, data.record)
-  }
-}
-
-// Change status: the new status and an entry on the audit timeline. The
-// page opens on the record's current status; choosing it again changes
-// nothing, so the timeline never repeats itself
-const changeStatus = {
-  load(ctx) {
-    const { data } = ctx
-    if (!ctx.preview && data.recordReference) {
-      data.record = findRecord(data, data.recordReference)
-      if (data.record) {
-        data.newStatus = data.record.status.value
+  },
+  // `load` does not run before a post, so the record is found again here
+  // for the page to show with any error
+  validate(ctx) {
+    const { page, body, data } = ctx
+    data.record = data.recordReference
+      ? findRecord(data, data.recordReference)
+      : null
+    if (!data.record) {
+      return { ok: true }
+    }
+    data.commitment = data.record.commitment
+    if (data.record.status.value === REJECTED_STATUS) {
+      return { ok: true, value: { status: REJECTED_STATUS, comment: '' } }
+    }
+    const status = String(body[page.field] || '')
+    const comment = String(body[COMMENT_FIELD] || '').trim()
+    data.newStatus = status
+    const allowed = page.content.options.map((option) => String(option.value))
+    if (!allowed.includes(status)) {
+      return {
+        ok: false,
+        errors: [{ field: page.field, message: message(page, 'required') }]
       }
     }
+    if (status === REJECTED_STATUS && !comment) {
+      return {
+        ok: false,
+        errors: [{ field: COMMENT_FIELD, message: message(page, 'comment') }]
+      }
+    }
+    return {
+      ok: true,
+      value: { status, comment: status === REJECTED_STATUS ? comment : '' }
+    }
   },
-  process(ctx, status) {
+  process(ctx, value) {
     const { data } = ctx
     const reference = data.recordReference
     const found = allEntries(data).find(
       (item) => item.entry.reference === reference
     )
-    if (!found) {
+    delete data.newStatus
+    delete data[COMMENT_FIELD]
+    delete data[ctx.page.field]
+    if (!found || !value) {
       return { redirect: ctx.journey.routes.DASHBOARD }
     }
-    delete data.newStatus
     const viewPath = `${ctx.journey.routes.VIEW_RECORD}?ref=${encodeURIComponent(reference)}`
-    if ((found.record.status || ADDED_STATUS) === status) {
+    const current = found.record.status || ADDED_STATUS
+    if (current === value.status || current === REJECTED_STATUS) {
       return { redirect: viewPath }
     }
     const officer = (data.officer && data.officer.fullName) || MOCK_OFFICER
+    const event = { event: 'status', status: value.status, by: officer }
+    if (value.comment) {
+      event.comment = value.comment
+    }
     data.lpaRecords = data.lpaRecords || {}
     data.lpaRecords[reference] = {
       ...found.record,
       commitment: found.entry,
-      status,
-      history: [
-        ...(found.record.history || []),
-        { event: 'status', status, by: officer, at: nowStamp() }
-      ]
+      status: value.status,
+      history: [...(found.record.history || []), { ...event, at: nowStamp() }]
     }
     data.lpaFlash = 'status'
     return { redirect: viewPath }
   }
 }
 
-// The landing page: counts, search and the most recently updated records
+// Every detail of a record's commitment, behind the record page
+const certificate = {
+  load: loadRecord
+}
+
+// The landing page: counts that open the table filtered to them, the
+// search and the most recently updated records
 const dashboard = {
   get(ctx, model) {
-    const records = allRecords(ctx.data).sort(SORTS.updated)
-    model.counts = {
-      active: records.filter((r) => !r.expired && r.planningStatus === 'active')
-        .length,
-      dispute: records.filter(
-        (r) => !r.expired && r.planningStatus === 'in-dispute'
-      ).length,
-      expired: records.filter((r) => r.expired).length
-    }
-    model.table = tableFor(
-      records.slice(0, DASHBOARD_ROWS),
-      model.content.text,
-      ctx.journey
-    )
+    const { text } = model.content
+    const path = ctx.journey.routes.RECORDS
+    const records = allRecords(ctx.data).sort(newestFirst)
+    const atStage = (stage) =>
+      records.filter((r) => r.planningStage.value === stage).length
+    model.cards = [
+      {
+        count: atStage('applied'),
+        label: text.activeCount,
+        href: hrefFor(path, blankQuery(), { stage: ['applied'] })
+      },
+      {
+        count: atStage('in-dispute'),
+        label: text.disputeCount,
+        href: hrefFor(path, blankQuery(), { stage: ['in-dispute'] })
+      },
+      {
+        count: records.filter((r) => r.overdue).length,
+        label: text.overdueCount,
+        href: hrefFor(path, blankQuery(), { overdue: true })
+      }
+    ]
+    model.table = tableFor(records.slice(0, DASHBOARD_ROWS), text, ctx.journey)
   }
 }
 
-// The table of every record, searched and sorted
+// The table of every record: searched, filtered, sorted by its column
+// headings and paged
 const recordsTable = {
   get(ctx, model) {
-    const search = searchOf(ctx)
-    const records = allRecords(ctx.data)
-      .filter((record) => matches(record, search.q))
-      .sort(SORTS[search.sort])
+    const store = loadStore()
+    const { text } = model.content
+    const path = ctx.journey.routes.RECORDS
+    const query = queryOf(ctx, store)
+    const records = sortRecords(
+      allRecords(ctx.data).filter(
+        (record) => matches(record, query.q) && matchesFilters(record, query)
+      ),
+      query
+    )
     const pages = Math.max(1, Math.ceil(records.length / RECORDS_PER_PAGE))
-    search.page = Math.min(search.page, pages)
-    const from = (search.page - 1) * RECORDS_PER_PAGE
+    query.page = Math.min(query.page, pages)
+    const from = (query.page - 1) * RECORDS_PER_PAGE
     const shown = records.slice(from, from + RECORDS_PER_PAGE)
-    model.search = search
+    model.search = query
     model.resultCount = records.length
     // "Showing 11 to 14 of 14 records", from the page's `showing` text
-    model.showing = String(model.content.text.showing || '')
+    model.showing = String(text.showing || '')
       .replace('{from}', String(from + 1))
       .replace('{to}', String(from + shown.length))
       .replace('{total}', String(records.length))
-    model.pagination = paginationFor(search, pages, ctx.journey.routes.RECORDS)
-    model.table = tableFor(shown, model.content.text, ctx.journey)
+    model.pagination = paginationFor(query, pages, path)
+    model.filters = filtersFor(query, text, store, path)
+    model.clearSearchHref = hrefFor(path, query, { q: '', page: 1 })
+    model.table = tableFor(shown, text, ctx.journey, sortableHead(query, path))
   }
 }
 
@@ -666,9 +903,9 @@ module.exports = {
   'one-login-email': signOut,
   'one-login-password': oneLoginSignIn,
   'retrieve-commitment': retrieveCommitment,
-  'check-your-answers': checkYourAnswers,
+  'planning-reference': addRecord,
   'view-record': viewRecord,
-  'change-status': changeStatus,
+  certificate,
   dashboard,
   records: recordsTable,
   // For tests

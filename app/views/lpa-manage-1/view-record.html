@@ -1,23 +1,27 @@
 {#
   A developer record (content/lpa-manage-1/pages/view-record.md): a success
   banner after adding it or changing its status, the NRL reference with its
-  status, the commitment details and planning application (the page's
-  `rows`), the red line boundary (the page's copy), the audit timeline and
-  the page's actions.
-
-  "Change status" opens the change-status page's question as a popover
-  (statusDialog, from the hook); without JavaScript it is a link to that
-  page. Model extras from app/lib/lpa-manage-1/hooks.js: flash,
-  statusDialog, data.record.
+  status, the first commitment details with a link to the full certificate,
+  the planning details (the page's `rows`), the red line boundary (the
+  page's copy), the audit timeline and the status radios, which post back
+  to this page. Rejecting asks for a comment and warns it is final; a
+  rejected record shows that warning in place of the radios. Model extras
+  from
+  app/lib/lpa-manage-1/hooks.js: flash, data.record.
 #}
 {% extends "journey-engine/_page.html" %}
 
 {% set text = content.text %}
 {% set record = data.record %}
 
+{# The hook reports one problem at a time: no status, or no comment #}
+{% set fieldError = errors[0] if errors and errors | length else null %}
+
 {% block content %}
+{% if errors or flash %}
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-two-thirds-from-desktop">
+    {% include "journey-engine/_error-summary.html" %}
     {% if flash %}
       {{ govukNotificationBanner({
         type: "success",
@@ -25,28 +29,36 @@
         html: '<p class="govuk-notification-banner__heading">' + ((text.added if flash == 'added' else text.statusChanged) | escape) + '</p>'
       }) }}
     {% endif %}
+  </div>
+</div>
+{% endif %}
 
-    <div class="app-staff-page-header app-staff-page-header--record">
-      <h1 class="govuk-heading-l app-staff-record__heading">
-        <span>{{ content.heading }}</span>
-        {% if record %}
-          <strong class="govuk-tag govuk-tag--{{ record.status.colour }}">{{ record.status.label }}</strong>
-        {% endif %}
-      </h1>
-      {% if statusDialog %}
-        {{ govukButton({
-          text: text.changeStatus,
-          href: statusDialog.action,
-          classes: "govuk-button--secondary",
-          attributes: { "data-dialog-open": "app-status-dialog" }
-        }) }}
-      {% endif %}
-    </div>
+{# Full width, like the dashboard and the table: the button sits at the
+   right-hand edge of the page #}
+<div class="app-staff-page-header">
+  <h1 class="govuk-heading-l app-staff-record__heading">
+    <span>{{ content.heading }}</span>
+    {% if record %}
+      <strong class="govuk-tag govuk-tag--{{ record.status.colour }}">{{ record.status.label }}</strong>
+    {% endif %}
+  </h1>
+  {{ govukButton({ text: text.addRecord, href: routes.RETRIEVE_COMMITMENT }) }}
+</div>
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds-from-desktop">
 
     {% for group in content.rowGroups %}
       {% if group.heading %}<h2 class="govuk-heading-m">{{ group.heading }}</h2>{% endif %}
       {% if group.rows | length %}
-        {{ govukSummaryList({ classes: "govuk-!-margin-bottom-9", rows: group.rows }) }}
+        {{ govukSummaryList({ classes: "govuk-!-margin-bottom-6" if loop.first else "govuk-!-margin-bottom-9", rows: group.rows }) }}
+      {% endif %}
+      {% if loop.first and record %}
+        {{ govukButton({
+          text: text.viewCertificate,
+          href: routes.CERTIFICATE + "?ref=" + (record.reference | urlencode),
+          classes: "govuk-button--secondary govuk-!-margin-bottom-9"
+        }) }}
       {% endif %}
     {% endfor %}
 
@@ -64,40 +76,62 @@
           </h3>
           <p class="app-timeline__byline">{{ text.by }} {{ event.by }}</p>
           <p class="app-timeline__date">{{ event.date }} {{ text.at }} {{ event.time }}</p>
+          {% if event.comment %}
+            <p class="app-timeline__comment"><span class="govuk-visually-hidden">{{ text.timelineComment }}: </span>{{ event.comment }}</p>
+          {% endif %}
         </li>
         {% endfor %}
       </ol>
     {% endif %}
 
-    {% include "journey-engine/_actions.html" %}
+    {% if record and record.status.value == 'rejected' %}
+      <h2 class="govuk-heading-m">{{ text.statusLegend }}</h2>
+      {{ govukWarningText({ text: text.rejectedFinal, iconFallbackText: text.warning }) }}
+      <div class="govuk-button-group">
+        {% for action in content.actions %}
+          {{ govukButton({ text: action.text, href: action.href, classes: "govuk-button--secondary" }) }}
+        {% endfor %}
+      </div>
+    {% else %}
+    <form action="{{ page.path }}" method="post" novalidate>
+      {% set commentHtml = govukTextarea({
+        name: "status-comment",
+        id: "status-comment",
+        rows: 4,
+        label: { text: text.commentLabel },
+        hint: { text: text.commentHint } if text.commentHint,
+        value: data["status-comment"] if errors else "",
+        errorMessage: { text: fieldError.message } if fieldError and fieldError.field == "status-comment"
+      }) + govukWarningText({
+        text: text.rejectWarning,
+        iconFallbackText: text.warning,
+        classes: "govuk-!-margin-bottom-0"
+      }) %}
+      {% set statusItems = [] %}
+      {% for item in content.items %}
+        {% set statusItems = (statusItems.push({
+          text: item.text,
+          value: item.value,
+          hint: item.hint,
+          checked: item.checked,
+          conditional: { html: commentHtml } if item.value == 'rejected'
+        }), statusItems) %}
+      {% endfor %}
+      {{ govukRadios({
+        name: page.field,
+        idPrefix: page.field,
+        fieldset: { legend: { text: text.statusLegend, classes: "govuk-fieldset__legend--m" } },
+        errorMessage: { text: fieldError.message } if fieldError and fieldError.field == page.field,
+        items: statusItems
+      }) }}
+      <div class="govuk-button-group">
+        {{ govukButton({ text: content.button }) }}
+        {% for action in content.actions %}
+          {{ govukButton({ text: action.text, href: action.href, classes: "govuk-button--secondary" }) }}
+        {% endfor %}
+      </div>
+    </form>
+    {% endif %}
   </div>
 </div>
-
-{% if statusDialog %}
-<dialog class="app-status-dialog" id="app-status-dialog" aria-labelledby="app-status-dialog-heading">
-  <form action="{{ statusDialog.action }}" method="post" novalidate>
-    {{ govukRadios({
-      name: statusDialog.field,
-      idPrefix: "dialog-" + statusDialog.field,
-      fieldset: {
-        legend: {
-          html: '<span id="app-status-dialog-heading">' + (statusDialog.heading | escape) + '</span>',
-          classes: "govuk-fieldset__legend--m"
-        }
-      },
-      hint: { text: statusDialog.hint } if statusDialog.hint,
-      items: statusDialog.items
-    }) }}
-    <div class="govuk-button-group">
-      {{ govukButton({ text: statusDialog.button }) }}
-      <button type="button" class="govuk-link govuk-link-button" data-dialog-close>{{ text.cancel }}</button>
-    </div>
-  </form>
-</dialog>
-{% endif %}
-{% endblock %}
-
-{% block pageScripts %}
-{{ super() }}
-<script src="/public/javascripts/status-dialog.js"></script>
 {% endblock %}

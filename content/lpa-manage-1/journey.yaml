@@ -8,12 +8,12 @@
 #
 # A planning officer at Scarfolk Council signs in with the mock GOV.UK One
 # Login, then either adds a developer record (retrieve the commitment the
-# developer made by its NRL reference, confirm it, add the planning
-# application reference, check and add) or looks through the records the
-# council already has (a dashboard and a table of every record). Each record
-# has its own page with an audit timeline, where the officer can change its
-# status. Behaviour that needs code (the officer, the commitment store, the
-# tables) is in app/lib/lpa-manage-1/hooks.js.
+# developer made by its NRL reference, confirm it and add the planning
+# application reference, which adds the record) or looks through the records
+# the council already has (a dashboard and a table of every record). Each
+# record has its own page with an audit timeline and the status radios, and
+# a full certificate a click away. Behaviour that needs code (the officer,
+# the commitment store, the tables) is in app/lib/lpa-manage-1/hooks.js.
 #
 # Every page wears the staff layout: the service name, the officer's account
 # and a Menu in the header, and a wider page for tables. The One Login pages
@@ -44,9 +44,6 @@ header:
       - text: All developer records
         href: records
 
-summaryPages:
-  - check-your-answers
-
 # When this holds the header shows the officer's account and the Menu
 signedIn: { key: officer, isSet: true }
 
@@ -64,8 +61,11 @@ homepage:
   changes:
     - new service for LPA officers, with its own header and a wider page for tables
     - add a developer record from an NRL reference
-    - record page with an audit timeline and a Change status popover
-    - dashboard and table of records, built from canned records
+    - record page with an audit timeline, the status radios and a comment when rejecting
+    - full commitment certificate behind the record, with breadcrumbs
+    - dashboard cards open the table filtered; overdue actions card
+    - table of records with sortable columns and a filter, built from canned records
+    - no check your answers page: adding the planning reference adds the record
 
 # The answers the copy can show, as {{ name }} (see content/README.md).
 # `commitment` is the commitment on screen and `record` the record.
@@ -75,7 +75,6 @@ session:
   - commitmentEntry
   - commitment
   - planningReference
-  - addRecordConfirmed
   - recordReference
   - record
   - newStatus
@@ -154,28 +153,24 @@ pages:
     guard: { key: commitment, isSet: true, redirect: retrieve-commitment }
     next: planning-reference
 
+  # Continuing adds the record to the session's records and opens its page
   - id: planning-reference
     field: planning-reference
     sessionKey: planningReference
-    changeable: true
     guard: { key: commitmentEntry, isSet: true, redirect: retrieve-commitment }
-    next: check-your-answers
-
-  # "Add record" adds it to the session's records and opens its page
-  - id: check-your-answers
-    field: add-record-confirmed
-    sessionKey: addRecordConfirmed
-    guard: { key: commitmentEntry, isSet: true, redirect: retrieve-commitment }
-    handler: custom
+    handler: custom # adds the record, see hooks.js
     next: view-record
 
   # --------------------------------------------------------------------
-  # A record: view-record?ref=NRL-123456. The Change status button opens
-  # change-status as a popover (the whole page without JavaScript).
+  # A record: view-record?ref=NRL-123456. The status radios at the bottom
+  # post back here; the change goes on the audit timeline (hooks.js).
   - id: view-record
     template: lpa-manage-1/view-record
+    field: new-status
+    sessionKey: newStatus
     guard: *signed-in
     back: dashboard
+    handler: custom
     preview:
       variants:
         - id: added
@@ -184,14 +179,15 @@ pages:
         - id: status
           label: Status changed
           data: { lpaFlash: status }
+        - id: rejected
+          label: Rejecting
+          data: { newStatus: rejected }
 
-  - id: change-status
-    field: new-status
-    sessionKey: newStatus
-    guard: { key: recordReference, isSet: true, redirect: dashboard }
-    back: view-record
-    handler: custom # records the change on the timeline, see hooks.js
-    next: view-record
+  # Every detail of a record's commitment: certificate?ref=NRL-123456.
+  # Breadcrumbs lead back to the dashboard and the record.
+  - id: certificate
+    template: lpa-manage-1/certificate
+    guard: *signed-in
 
   # The records the council has: the landing page and the full table
   - id: dashboard

@@ -1,0 +1,51 @@
+{#
+  Every detail of a record's commitment
+  (content/lpa-manage-1/pages/certificate.md), opened from "View full
+  certificate" on the record page: the page's `rows` and the red line
+  boundary (the page's copy). Breadcrumbs in place of a back link lead to
+  the dashboard and the record, then name this page without a link; a
+  button at the bottom goes back to the record too. The
+  hook finds the record from ?ref=.
+#}
+{% extends "journey-engine/_page.html" %}
+
+{% set text = content.text %}
+{% set record = data.record %}
+
+{% block beforeContent %}
+{{ super() }}
+{% set crumbs = [{ text: text.breadcrumbDashboard, href: routes.DASHBOARD }] %}
+{% if record %}
+  {% set crumbs = (crumbs.push({ text: record.reference, href: routes.VIEW_RECORD + "?ref=" + (record.reference | urlencode) }), crumbs) %}
+{% endif %}
+{# This page ends the trail as plain text, not a link #}
+{% set crumbs = (crumbs.push({ text: content.heading }), crumbs) %}
+{{ govukBreadcrumbs({ items: crumbs }) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds-from-desktop">
+    {% if content.caption %}<span class="govuk-caption-l">{{ content.caption }}</span>{% endif %}
+    <h1 class="govuk-heading-l">{{ content.heading }}</h1>
+
+    {% for group in content.rowGroups %}
+      {% if group.heading %}<h2 class="govuk-heading-m">{{ group.heading }}</h2>{% endif %}
+      {% if group.rows | length %}
+        {{ govukSummaryList({ classes: "govuk-!-margin-bottom-9", rows: group.rows }) }}
+      {% endif %}
+    {% endfor %}
+
+    <div class="app-staff-record__map">
+      {{ content.html | safe }}
+    </div>
+
+    {% if record %}
+      {{ govukButton({
+        text: text.backToRecord,
+        href: routes.VIEW_RECORD + "?ref=" + (record.reference | urlencode)
+      }) }}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

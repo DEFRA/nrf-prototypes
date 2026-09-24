@@ -257,7 +257,7 @@ rows:
     value: '{{ planningType }}'
 ```
 
-Rows that several pages show go in one file: write them in `partials/<name>.md` (only `rows:` in its frontmatter) and put `- include: <name>` where they belong in each page's rows. `content/lpa-manage-1/partials/commitment-details.md` is used this way by three pages.
+Rows that several pages show go in one file: write them in `partials/<name>.md` (only `rows:` in its frontmatter) and put `- include: <name>` where they belong in each page's rows. `content/lpa-manage-1/partials/commitment-summary.md` is used this way by three pages.
 
 A `value` can also be a choice, `{ when: <condition>, then: Added, else: Not added }`, whose `else` may be another choice when there are three or more possibilities, and `change` can be a list of rules so the link goes to a different page depending on an answer (a rule list with no default shows no link when nothing matches).
 

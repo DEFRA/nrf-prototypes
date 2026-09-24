@@ -1,8 +1,9 @@
 {#
   The landing page (content/lpa-manage-1/pages/dashboard.md): a button to add
-  a record, the search, counts of the council's records and the most
-  recently updated ones. Model extras from app/lib/lpa-manage-1/hooks.js:
-  counts { active, dispute, expired }, table { head, rows }.
+  a record, the search, counts of the council's records (each opening the
+  table filtered to them) and the most recently updated ones. Model extras
+  from app/lib/lpa-manage-1/hooks.js: cards [{ count, label, href }],
+  table { head, rows }.
 #}
 {% extends "journey-engine/_page.html" %}
 
@@ -22,18 +23,14 @@
 </form>
 
 <ul class="app-staff-cards">
+  {% for card in cards %}
   <li class="app-staff-card">
-    <span class="app-staff-card__count">{{ counts.active }}</span>
-    <span class="app-staff-card__label">{{ text.activeCount }}</span>
+    <a class="app-staff-card__link" href="{{ card.href }}">
+      <span class="app-staff-card__count">{{ card.count }}</span>
+      <span class="app-staff-card__label">{{ card.label }}</span>
+    </a>
   </li>
-  <li class="app-staff-card">
-    <span class="app-staff-card__count">{{ counts.dispute }}</span>
-    <span class="app-staff-card__label">{{ text.disputeCount }}</span>
-  </li>
-  <li class="app-staff-card">
-    <span class="app-staff-card__count">{{ counts.expired }}</span>
-    <span class="app-staff-card__label">{{ text.expiredCount }}</span>
-  </li>
+  {% endfor %}
 </ul>
 
 {{ govukTable({

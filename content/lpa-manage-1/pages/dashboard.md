@@ -1,6 +1,7 @@
 ---
 # The landing page (app/views/lpa-manage-1/dashboard.html): counts of the
-# council's records, a search and the most recently updated records.
+# council's records, each opening the table filtered to them, a search and
+# the most recently updated records.
 type: custom
 text:
   addRecord: Add a developer record
@@ -8,12 +9,14 @@ text:
   searchButton: Search
   activeCount: Commitments with active planning applications
   disputeCount: Commitments with planning applications in dispute
-  expiredCount: Expired commitments
+  overdueCount: Overdue actions for commitments
   tableHeading: Table of certificates
   viewAll: View all certificates
   columns:
     reference: NRL reference
     developer: Developer
+    stage: Planning application stage
+    planningType: Planning type
     officer: Officer
     lastModified: Last modified
     expires: Expires

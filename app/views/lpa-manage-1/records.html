@@ -1,13 +1,33 @@
 {#
-  Every record the council has (content/lpa-manage-1/pages/records.md),
-  searched (?_q=), sorted (?_sort=updated|expires|reference) and paged
-  (?_page=). Model extras from app/lib/lpa-manage-1/hooks.js:
-  search { q, sort, page }, resultCount, showing, pagination, table.
-  Sorting or searching starts again at page 1.
+  Every record the council has (content/lpa-manage-1/pages/records.md):
+  searched (?_q=), filtered (?_status=, ?_stage=, ?_type=, ?_overdue=1),
+  sorted by a column heading (?_sort=<column>&_dir=asc|desc) and paged
+  (?_page=). Each form keeps what the other sets; searching, filtering or
+  sorting starts again at page 1. Model extras from
+  app/lib/lpa-manage-1/hooks.js: search (the query), resultCount, showing,
+  pagination, filters { groups, count, clearHref }, clearSearchHref,
+  table.
 #}
 {% extends "journey-engine/_page.html" %}
 
 {% set text = content.text %}
+
+{# Hidden inputs carrying the filters (for the search form) or the search
+   (for the filter form), and the sort for both #}
+{% macro keep(search, filters) %}
+  {% if filters %}
+    {% for name in ['status', 'stage', 'type'] %}
+      {% for value in search[name] %}<input type="hidden" name="_{{ name }}" value="{{ value }}">{% endfor %}
+    {% endfor %}
+    {% if search.overdue %}<input type="hidden" name="_overdue" value="1">{% endif %}
+  {% elif search.q %}
+    <input type="hidden" name="_q" value="{{ search.q }}">
+  {% endif %}
+  {% if search.sort != 'lastModified' or search.dir != 'desc' %}
+    <input type="hidden" name="_sort" value="{{ search.sort }}">
+    <input type="hidden" name="_dir" value="{{ search.dir }}">
+  {% endif %}
+{% endmacro %}
 
 {% block content %}
 <div class="app-staff-page-header">
@@ -21,24 +41,44 @@
 <form class="app-staff-search" action="{{ routes.RECORDS }}" method="get" role="search">
   {% set searchValue = search.q %}
   {% include "lpa-manage-1/_search.html" %}
-  {{ govukSelect({
-    id: "sort",
-    name: "_sort",
-    label: { text: text.sortLabel, classes: "govuk-label--s" },
-    formGroup: { classes: "govuk-!-margin-bottom-0" },
-    attributes: { "data-auto-submit": "true" },
-    items: [
-      { value: "updated", text: text.sortUpdated, selected: search.sort == "updated" },
-      { value: "expires", text: text.sortExpires, selected: search.sort == "expires" },
-      { value: "reference", text: text.sortReference, selected: search.sort == "reference" }
-    ]
-  }) }}
-  {{ govukButton({ text: text.apply, classes: "govuk-button--secondary govuk-!-margin-bottom-0 app-js-hidden" }) }}
+  {{ keep(search, true) }}
 </form>
+
+<details class="govuk-details app-staff-filter">
+  <summary class="govuk-details__summary">
+    <span class="govuk-details__summary-text">{{ text.filterSummary }}{% if filters.count %} ({{ filters.count }}){% endif %}</span>
+  </summary>
+  <div class="govuk-details__text">
+    <form action="{{ routes.RECORDS }}" method="get" novalidate>
+      {{ keep(search, false) }}
+      <div class="app-staff-filter__groups">
+        {% for group in filters.groups %}
+          {{ govukCheckboxes({
+            name: group.name,
+            idPrefix: "filter" + group.name,
+            classes: "govuk-checkboxes--small",
+            fieldset: { legend: { text: group.legend, classes: "govuk-fieldset__legend--s" } },
+            items: group.items
+          }) }}
+        {% endfor %}
+      </div>
+      {{ govukCheckboxes({
+        name: "_overdue",
+        idPrefix: "filter_overdue",
+        classes: "govuk-checkboxes--small",
+        items: [{ value: "1", text: text.filterOverdue, checked: search.overdue }]
+      }) }}
+      <div class="govuk-button-group">
+        {{ govukButton({ text: text.applyFilters, classes: "govuk-button--secondary" }) }}
+        <a class="govuk-link govuk-link--no-visited-state" href="{{ filters.clearHref }}">{{ text.clearFilters }}</a>
+      </div>
+    </form>
+  </div>
+</details>
 
 {% if resultCount %}
   {{ govukTable({
-    classes: "app-staff-table",
+    classes: "app-staff-table app-staff-table--sortable",
     head: table.head,
     rows: table.rows
   }) }}
@@ -53,18 +93,7 @@
 {% endif %}
 {% if search.q %}
   <p class="govuk-body">
-    <a class="govuk-link govuk-link--no-visited-state" href="{{ routes.RECORDS }}">{{ text.clearSearch }}</a>
+    <a class="govuk-link govuk-link--no-visited-state" href="{{ clearSearchHref }}">{{ text.clearSearch }}</a>
   </p>
 {% endif %}
-{% endblock %}
-
-{% block pageScripts %}
-{{ super() }}
-<script>
-  // Sorting applies as soon as it is chosen; the Apply button is for no-JS
-  document.querySelectorAll('[data-auto-submit]').forEach(function (select) {
-    select.addEventListener('change', function () { select.form.submit() })
-  })
-  document.querySelectorAll('.app-js-hidden').forEach(function (el) { el.style.display = 'none' })
-</script>
 {% endblock %}
