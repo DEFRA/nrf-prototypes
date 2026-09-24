@@ -383,6 +383,21 @@ $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
   }
 }
 
+// Under the records table: "Showing 1 to 10 of 14 records" with the
+// pagination to its right (wrapping below it on narrow screens)
+.app-staff-table-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: govuk-spacing(2) govuk-spacing(6);
+  margin-bottom: govuk-spacing(6);
+
+  .app-staff-table-footer__count,
+  .govuk-pagination {
+    margin-bottom: 0;
+  }
+}
+
 .app-staff-record__map {
   max-width: 720px;
   margin-bottom: govuk-spacing(8);

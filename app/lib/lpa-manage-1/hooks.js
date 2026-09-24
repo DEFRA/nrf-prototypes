@@ -31,8 +31,9 @@ const RECORDS_FILE = path.join(
 const REFERENCE = /^NRL-\d{6}$/
 // Who is signed in when the facilitator has not given the participant's name
 const MOCK_OFFICER = 'John Smith'
-// How many records the dashboard's table shows
+// How many records the dashboard's table shows, and the full table per page
 const DASHBOARD_ROWS = 6
+const RECORDS_PER_PAGE = 10
 // The status of a record an officer has just added
 const ADDED_STATUS = 'received'
 const SESSION_KEYS = ['officer', 'signInEmail']
@@ -375,13 +376,58 @@ function matches(record, query) {
   )
 }
 
-// ?_q= and ?_sort= (the kit never keeps a query key starting with `_` in
-// the session, so a search never follows the officer around)
+// ?_q=, ?_sort= and ?_page= (the kit never keeps a query key starting with
+// `_` in the session, so a search never follows the officer around)
 function searchOf(ctx) {
   const query = ctx.query || {}
+  const page = parseInt(query._page, 10)
   return {
     q: String(query._q || '').trim(),
-    sort: SORTS[query._sort] ? String(query._sort) : 'updated'
+    sort: SORTS[query._sort] ? String(query._sort) : 'updated',
+    page: Number.isFinite(page) && page > 0 ? page : 1
+  }
+}
+
+/**
+ * govukPagination for the records table: every page number when there are
+ * few, otherwise the first, the last and those either side of the current
+ * one with ellipses between. Each link keeps the search and sort.
+ */
+function paginationFor(search, pages, path) {
+  if (pages < 2) {
+    return null
+  }
+  const href = (page) => {
+    const params = new URLSearchParams()
+    if (search.q) {
+      params.set('_q', search.q)
+    }
+    if (search.sort !== 'updated') {
+      params.set('_sort', search.sort)
+    }
+    if (page > 1) {
+      params.set('_page', String(page))
+    }
+    const query = params.toString()
+    return query ? `${path}?${query}` : path
+  }
+  const items = []
+  for (let page = 1; page <= pages; page += 1) {
+    const near = Math.abs(page - search.page) <= 1
+    if (page === 1 || page === pages || near) {
+      items.push({
+        number: page,
+        href: href(page),
+        current: page === search.page
+      })
+    } else if (!items[items.length - 1].ellipsis) {
+      items.push({ ellipsis: true })
+    }
+  }
+  return {
+    items,
+    previous: search.page > 1 ? { href: href(search.page - 1) } : null,
+    next: search.page < pages ? { href: href(search.page + 1) } : null
   }
 }
 
@@ -600,9 +646,19 @@ const recordsTable = {
     const records = allRecords(ctx.data)
       .filter((record) => matches(record, search.q))
       .sort(SORTS[search.sort])
+    const pages = Math.max(1, Math.ceil(records.length / RECORDS_PER_PAGE))
+    search.page = Math.min(search.page, pages)
+    const from = (search.page - 1) * RECORDS_PER_PAGE
+    const shown = records.slice(from, from + RECORDS_PER_PAGE)
     model.search = search
     model.resultCount = records.length
-    model.table = tableFor(records, model.content.text, ctx.journey)
+    // "Showing 11 to 14 of 14 records", from the page's `showing` text
+    model.showing = String(model.content.text.showing || '')
+      .replace('{from}', String(from + 1))
+      .replace('{to}', String(from + shown.length))
+      .replace('{total}', String(records.length))
+    model.pagination = paginationFor(search, pages, ctx.journey.routes.RECORDS)
+    model.table = tableFor(shown, model.content.text, ctx.journey)
   }
 }
 
@@ -621,5 +677,6 @@ module.exports = {
   findRecord,
   findCommitmentEntry,
   commitmentOf,
-  MOCK_OFFICER
+  MOCK_OFFICER,
+  RECORDS_PER_PAGE
 }

@@ -3,7 +3,8 @@ const { copyOf } = require('./helpers/journey')
 const {
   loadStore,
   allRecords,
-  MOCK_OFFICER
+  MOCK_OFFICER,
+  RECORDS_PER_PAGE
 } = require('../../app/lib/lpa-manage-1/hooks')
 
 /**
@@ -191,9 +192,15 @@ test.describe('lpa-manage-1: manage commitments', () => {
       .getByRole('button', { name: text('dashboard', 'viewAll') })
       .click()
     await expectHeading(page, 'records')
-    await expect(page.locator('.app-staff-table tbody tr')).toHaveCount(
-      records.length
-    )
+    const rows = page.locator('.app-staff-table tbody tr')
+    await expect(rows).toHaveCount(Math.min(records.length, RECORDS_PER_PAGE))
+
+    // The rest are on the next page, which keeps the sort
+    await page.goto(`${base}/records?_sort=reference`)
+    await page.locator('.govuk-pagination__next a').click()
+    await expect(page).toHaveURL(`${base}/records?_sort=reference&_page=2`)
+    await expect(rows).toHaveCount(records.length - RECORDS_PER_PAGE)
+    await expect(page.locator('.govuk-pagination__prev')).toBeVisible()
 
     await page
       .getByLabel(text('records', 'searchLabel'), { exact: true })

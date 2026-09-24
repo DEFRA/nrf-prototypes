@@ -1,8 +1,9 @@
 {#
   Every record the council has (content/lpa-manage-1/pages/records.md),
-  searched (?_q=) and sorted (?_sort=updated|expires|reference). Model extras
-  from app/lib/lpa-manage-1/hooks.js: search { q, sort }, resultCount,
-  table { head, rows }.
+  searched (?_q=), sorted (?_sort=updated|expires|reference) and paged
+  (?_page=). Model extras from app/lib/lpa-manage-1/hooks.js:
+  search { q, sort, page }, resultCount, showing, pagination, table.
+  Sorting or searching starts again at page 1.
 #}
 {% extends "journey-engine/_page.html" %}
 
@@ -41,6 +42,12 @@
     head: table.head,
     rows: table.rows
   }) }}
+  <div class="app-staff-table-footer">
+    {% if showing %}<p class="govuk-body app-staff-table-footer__count" aria-live="polite">{{ showing }}</p>{% endif %}
+    {% if pagination %}
+      {{ govukPagination(pagination) }}
+    {% endif %}
+  </div>
 {% else %}
   <p class="govuk-body">{{ text.noResults }}</p>
 {% endif %}

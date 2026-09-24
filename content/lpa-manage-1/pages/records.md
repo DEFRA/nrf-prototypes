@@ -12,6 +12,8 @@ text:
   sortExpires: Expiry date
   sortReference: NRL reference
   apply: Apply
+  # {from}, {to} and {total} are filled in with the numbers
+  showing: 'Showing {from} to {to} of {total} records'
   noResults: No records match your search.
   clearSearch: Clear search
   columns:
