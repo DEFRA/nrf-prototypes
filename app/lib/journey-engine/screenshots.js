@@ -9,15 +9,19 @@
 const { exportScreens, previewErrorKey } = require('./flow')
 const { pageHandoff } = require('./history')
 
-// Capture sizes. Non-map pages are captured full length, so the height only
-// sets the initial viewport
+// Capture sizes. Pages are captured full length (all but the full-screen
+// map), so the height only sets the initial viewport
 const VIEWPORTS = {
   desktop: { width: 1000, height: 760 },
   mobile: { width: 375, height: 812 }
 }
-// Map pages fetch tiles after load; give them a moment and capture the
-// viewport only, as a full-page capture of a map canvas is unreliable
+// Map pages fetch tiles after load, so custom pages (which may carry one)
+// get a moment. The full-screen map (layouts/interactive-map.html, which
+// marks its body with this class) fills the viewport and is captured as
+// is: a full-page capture of it is unreliable. Every other page, custom
+// ones included, is captured full length.
 const CUSTOM_PAGE_WAIT_MS = 3000
+const FULL_SCREEN_MAP = 'body.app-draw-boundary-body'
 
 function loadChromium() {
   try {
@@ -64,8 +68,9 @@ async function withPage(viewportName, run) {
 }
 
 /**
- * Capture one preview URL on an open page. Map pages fetch tiles after
- * load, so they get a moment and a viewport-only capture.
+ * Capture one preview URL on an open page. Pages that may carry a map get
+ * a moment for its tiles; only the full-screen map is captured
+ * viewport-only.
  */
 async function shoot(page, baseUrl, screen, quality) {
   const isCustom = screen.type === 'custom'
@@ -75,10 +80,11 @@ async function shoot(page, baseUrl, screen, quality) {
   if (waitForMap) {
     await page.waitForTimeout(CUSTOM_PAGE_WAIT_MS)
   }
+  const fullScreenMap = (await page.locator(FULL_SCREEN_MAP).count()) > 0
   return page.screenshot({
     type: 'jpeg',
     quality,
-    fullPage: !isCustom
+    fullPage: !fullScreenMap
   })
 }
 
