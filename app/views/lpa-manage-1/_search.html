@@ -1,0 +1,15 @@
+{#
+  The search box the dashboard and the records table share: it always opens
+  the records table with ?_q= (the kit never keeps `_` keys in the session).
+  Expects: text (the page's `text:`), searchAction, searchValue.
+#}
+<div class="govuk-form-group app-staff-search__query">
+  <label class="govuk-label govuk-label--s" for="search">{{ text.searchLabel }}</label>
+  <div class="app-staff-search__box">
+    <input class="govuk-input" id="search" name="_q" type="search" value="{{ searchValue }}" spellcheck="false">
+    <button class="app-staff-search__button" type="submit">
+      <span class="govuk-visually-hidden">{{ text.searchButton }}</span>
+      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><circle cx="8.5" cy="8.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="m13.5 13.5 5 5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+</div>

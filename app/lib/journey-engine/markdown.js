@@ -12,7 +12,8 @@
  *   :::notification Title    → govuk-notification-banner
  *   :::map [key]             → the saved red line boundary drawn on a small
  *                              map (key defaults to redlineBoundaryPolygon)
- *   :::after-button          → everything inside renders below the page's
+ *   :::map key os            → the same on the Ordnance Survey basemap
+ *   :::after-button         → everything inside renders below the page's
  *                              button (a "Get help" link, a details block)
  *   :::if key                → conditional block (see expressions.js)
  *   :::if key equals value
@@ -273,8 +274,10 @@ function boundarySvg(ring) {
 /**
  * `:::map key` → a figure holding the SVG fallback and an empty canvas the
  * client script (app/assets/javascripts/boundary-map.js) fills with a map.
+ * `:::map key os` asks for the Ordnance Survey basemap (the script falls
+ * back to Streets when the server has no OS key).
  */
-function renderBoundaryMap(value) {
+function renderBoundaryMap(value, style) {
   const ring =
     value && Array.isArray(value.coordinates) ? value.coordinates : []
   const points = ring.filter(
@@ -289,6 +292,7 @@ function renderBoundaryMap(value) {
     first[0] === last[0] && first[1] === last[1] ? points : [...points, first]
   return (
     '<figure class="app-boundary-map" data-module="app-boundary-map" ' +
+    (style ? `data-style="${escapeHtml(style)}" ` : '') +
     `data-coordinates="${escapeHtml(JSON.stringify(closed))}">\n` +
     `${boundarySvg(closed)}\n` +
     '<div class="app-boundary-map__canvas" hidden></div>\n' +
@@ -542,10 +546,14 @@ function createMarkdown() {
   md.use(container, 'map', {
     render: (tokens, idx, options, env) => {
       if (tokens[idx].nesting === 1) {
-        const key = params(tokens[idx], 'map') || 'redlineBoundaryPolygon'
+        const [key = 'redlineBoundaryPolygon', style] = (
+          params(tokens[idx], 'map') || ''
+        )
+          .split(/\s+/)
+          .filter(Boolean)
         const data = (env.ctx && env.ctx.data) || {}
         // Anything written between the fences is dropped: the block is the map
-        return `${renderBoundaryMap(getPath(data, key))}${ifOpen(false)}`
+        return `${renderBoundaryMap(getPath(data, key), style)}${ifOpen(false)}`
       }
       return IF_CLOSE
     }

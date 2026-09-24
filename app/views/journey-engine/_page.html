@@ -15,12 +15,29 @@ Journey engine base page. Every generic page type extends this and fills
                  banner, no back link
   email          an email the service sent: bare header, no banner, no back
                  link, at the usual reading width
+  staff          an internal case-work service (the LPA's): the service
+                 name, the user's account and a Menu in the header
+                 (journey.header), Prototype banner, a wider page for tables
+
+A `:::map` block anywhere in the copy (or `hasMap` set by a custom template)
+loads the production map plugin so the boundary shows on a real basemap;
+without it the inline SVG drawn by the engine stays.
 #}
 {% extends "layouts/main.html" %}
+
+{% if page.layout == 'staff' %}
+  {% set bodyClasses = "app-staff" %}
+{% endif %}
+{% set hasMap = hasMap or (content and content.html and "app-boundary-map" in content.html) %}
+{% set interactiveMapAssets = "/plugin-assets/%40defra%2Finteractive-map" %}
 
 {% block head %}
 {{ super() }}
 {% include "journey-engine/_preview-head.html" %}
+{% if hasMap %}
+<link href="{{ interactiveMapAssets }}/dist/css/index.css" rel="stylesheet">
+<link href="{{ interactiveMapAssets }}/plugins/datasets/dist/css/index.css" rel="stylesheet">
+{% endif %}
 {% endblock %}
 
 {% block pageTitle %}
@@ -36,6 +53,8 @@ Journey engine base page. Every generic page type extends this and fills
   {% include "includes/defra-id-header.html" %}
 {% elif page.layout == 'defra-account' %}
   {% include "includes/defra-account-header.html" %}
+{% elif page.layout == 'staff' %}
+  {% include "includes/staff-header.html" %}
 {% elif page.layout in ['document', 'email'] %}
   {{ govukHeader({
     homepageUrl: "https://www.gov.uk/",
@@ -64,7 +83,10 @@ Journey engine base page. Every generic page type extends this and fills
   {% if not frozen %}
     {% include "includes/prototype-phase-banner.html" %}
   {% endif %}
-  {% include "journey-engine/_signed-in-bar.html" %}
+  {# The staff header shows who is signed in itself #}
+  {% if page.layout != 'staff' %}
+    {% include "journey-engine/_signed-in-bar.html" %}
+  {% endif %}
 {% endif %}
 {% if backLink and page.layout not in ['document', 'email'] %}
 {{ govukBackLink({
@@ -93,5 +115,18 @@ Journey engine base page. Every generic page type extends this and fills
   {% include "includes/email-footer.html" %}
 {% else %}
   {{ super() }}
+{% endif %}
+{% endblock %}
+
+{% block pageScripts %}
+{{ super() }}
+{% if hasMap %}
+<script src="{{ interactiveMapAssets }}/dist/umd/index.js"></script>
+<script src="{{ interactiveMapAssets }}/providers/maplibre/dist/umd/index.js"></script>
+<script src="{{ interactiveMapAssets }}/plugins/datasets/dist/umd/index.js"></script>
+<script src="/public/javascripts/boundary-map.js" data-has-os-key="{{ 'true' if hasOsKey else 'false' }}"></script>
+{% endif %}
+{% if page.layout == 'staff' %}
+<script src="/public/javascripts/staff-header.js"></script>
 {% endif %}
 {% endblock %}

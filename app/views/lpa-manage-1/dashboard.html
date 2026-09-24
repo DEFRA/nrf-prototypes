@@ -1,0 +1,49 @@
+{#
+  The landing page (content/lpa-manage-1/pages/dashboard.md): a button to add
+  a record, the search, counts of the council's records and the most
+  recently updated ones. Model extras from app/lib/lpa-manage-1/hooks.js:
+  counts { active, dispute, expired }, table { head, rows }.
+#}
+{% extends "journey-engine/_page.html" %}
+
+{% set text = content.text %}
+
+{% block content %}
+<div class="app-staff-page-header">
+  <h1 class="govuk-heading-xl">{{ content.heading }}</h1>
+  {{ govukButton({ text: text.addRecord, href: routes.RETRIEVE_COMMITMENT }) }}
+</div>
+
+{{ content.html | safe }}
+
+<form class="app-staff-search" action="{{ routes.RECORDS }}" method="get" role="search">
+  {% set searchValue = "" %}
+  {% include "lpa-manage-1/_search.html" %}
+</form>
+
+<ul class="app-staff-cards">
+  <li class="app-staff-card">
+    <span class="app-staff-card__count">{{ counts.active }}</span>
+    <span class="app-staff-card__label">{{ text.activeCount }}</span>
+  </li>
+  <li class="app-staff-card">
+    <span class="app-staff-card__count">{{ counts.dispute }}</span>
+    <span class="app-staff-card__label">{{ text.disputeCount }}</span>
+  </li>
+  <li class="app-staff-card">
+    <span class="app-staff-card__count">{{ counts.expired }}</span>
+    <span class="app-staff-card__label">{{ text.expiredCount }}</span>
+  </li>
+</ul>
+
+{{ govukTable({
+  caption: text.tableHeading,
+  captionClasses: "govuk-table__caption--m",
+  classes: "app-staff-table",
+  firstCellIsHeader: false,
+  head: table.head,
+  rows: table.rows
+}) }}
+
+{{ govukButton({ text: text.viewAll, href: routes.RECORDS }) }}
+{% endblock %}

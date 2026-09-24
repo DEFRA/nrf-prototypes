@@ -428,6 +428,32 @@ function renderContent(page, ctx) {
   }
 }
 
+/**
+ * The staff layout's header (`header:` in journey.yaml) with each link's
+ * `href` resolved: a page id becomes its path, `$signOut` the sign-out route
+ * a hook registered, anything else (an absolute path, `#`) stays as written.
+ */
+function resolveHeader(journey) {
+  const header = journey.header || {}
+  const resolve = (link) => {
+    const href = String(link.href || '#')
+    if (href === '$signOut') {
+      return { ...link, href: journey.routes.SIGN_OUT || journey.basePath }
+    }
+    return { ...link, href: toPath(href, journey) || href }
+  }
+  const menu = header.menu || {}
+  return {
+    organisation: header.organisation,
+    homePage: header.homePage ? toPath(header.homePage, journey) : null,
+    account: (header.account || []).map(resolve),
+    menu: {
+      heading: menu.heading,
+      links: (menu.links || []).map(resolve)
+    }
+  }
+}
+
 function buildModel(ctx, extra = {}) {
   const { journey, page } = ctx
   // `errors` lists one problem per field (form pages); `error` is the single
@@ -455,6 +481,8 @@ function buildModel(ctx, extra = {}) {
       serviceName: page.serviceName || chrome.serviceName,
       // Where the header's own links (Change organisation) point
       chromeBasePath: chrome.basePath,
+      // The staff layout's account and Menu panels
+      header: resolveHeader(chrome),
       summaryPage: journey.summaryPage,
       summaryPages: journey.summaryPages,
       start: journey.start
@@ -490,6 +518,9 @@ function buildModel(ctx, extra = {}) {
     // the page's own copy; see copyVariantFor
     copy: page.copyVariant ? page.copyVariant.id : null,
     routes: journey.routes,
+    // A `:::map … os` block draws on the Ordnance Survey basemap when the
+    // server can reach it (app/routes/os-base-map.js)
+    hasOsKey: Boolean(process.env.OS_API_KEY),
     // Set on a frozen copy of a handoff (see snapshots.js): the date, the
     // commit and where the live page is, for the banner
     frozen: journey.frozen || null,

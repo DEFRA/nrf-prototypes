@@ -1,0 +1,205 @@
+# Flow and logic for the LPA journey "Manage commitments to the nature
+# restoration levy".
+#
+# Copy lives in pages/*.md; the commitment details several pages show are in
+# partials/commitment-details.md. The commitments and records the pages find
+# are canned in records.yaml. This file decides the order of pages and where
+# each answer leads. See content/README.md.
+#
+# A planning officer at Scarfolk Council signs in with the mock GOV.UK One
+# Login, then either adds a developer record (retrieve the commitment the
+# developer made by its NRL reference, confirm it, add the planning
+# application reference, check and add) or looks through the records the
+# council already has (a dashboard and a table of every record). Each record
+# has its own page with an audit timeline, where the officer can change its
+# status. Behaviour that needs code (the officer, the commitment store, the
+# tables) is in app/lib/lpa-manage-1/hooks.js.
+#
+# Every page wears the staff layout: the service name, the officer's account
+# and a Menu in the header, and a wider page for tables. The One Login pages
+# keep their own look.
+
+id: lpa-manage-1
+name: Manage commitments to the nature restoration levy
+serviceName: Manage commitments to the nature restoration levy
+start: one-login-email
+layout: staff
+
+# The staff header. Links are page ids, absolute paths or `$signOut`.
+header:
+  organisation: Scarfolk Council
+  homePage: dashboard
+  account:
+    - text: Your account
+      href: '#'
+    - text: Sign out
+      href: $signOut
+  menu:
+    heading: Manage commitments
+    links:
+      - text: Dashboard
+        href: dashboard
+      - text: Add a developer record
+        href: retrieve-commitment
+      - text: All developer records
+        href: records
+
+summaryPages:
+  - check-your-answers
+
+# When this holds the header shows the officer's account and the Menu
+signedIn: { key: officer, isSet: true }
+
+homepage:
+  family: lpa
+  version: 5
+  status: in-progress
+  title: Manage commitments to the nature restoration levy (V5)
+  description: >-
+    A planning officer at the local planning authority signs in with GOV.UK
+    One Login, retrieves a developer's commitment by its NRL reference, adds
+    the planning application reference and adds it to the council's records.
+    They can change a record's status and look through every record on a
+    dashboard and a searchable table.
+  changes:
+    - new service for LPA officers, with its own header and a wider page for tables
+    - add a developer record from an NRL reference
+    - record page with an audit timeline and a Change status popover
+    - dashboard and table of records, built from canned records
+
+# The answers the copy can show, as {{ name }} (see content/README.md).
+# `commitment` is the commitment on screen and `record` the record.
+session:
+  - officer
+  - commitmentReference
+  - commitmentEntry
+  - commitment
+  - planningReference
+  - addRecordConfirmed
+  - recordReference
+  - record
+  - newStatus
+  - lpaRecords
+  - lpaFlash
+
+# Sample answers for the screen wall and ?preview=1
+preview:
+  data:
+    officer:
+      fullName: John Smith
+    recordReference: NRL-100231
+    planningReference: 2026/0412/FUL
+    commitment:
+      reference: NRL-123456
+      developer: ACME Developments
+      address:
+        line1: 1 Industrial Estate
+        line2: Scarfolk
+        line3: SC1 4AB
+      planningType: Full planning permission
+      units: 120
+      edp: Broads SAC, Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2026 to 2036)
+      levyAmount: X,XXX
+      issued: 5 September 2026
+      expires: 5 March 2027
+      boundary:
+        coordinates:
+          - [1.11, 52.56]
+          - [1.12, 52.56]
+          - [1.12, 52.57]
+          - [1.11, 52.57]
+
+groups:
+  one-login:
+    title: GOV.UK One Login
+
+pages:
+  # Mock GOV.UK One Login, shared with other journeys
+  # (content/shared/one-login/). Officers already have an account, so the
+  # journey opens on the sign in page itself: no "create or sign in" page
+  # and no account creation.
+  - id: one-login-email
+    shared: one-login
+    handler: custom # registers the sign-out route, see hooks.js
+    next: one-login-password
+
+  # Signing in makes the participant (or a stand-in) the officer
+  - id: one-login-password
+    shared: one-login
+    guard: { key: signInEmail, isSet: true, redirect: one-login-email }
+    handler: custom # signs the officer in, see hooks.js
+    next: what-would-you-like-to-do
+
+  # --------------------------------------------------------------------
+  - id: what-would-you-like-to-do
+    field: lpa-task
+    sessionKey: lpaTask
+    guard: &signed-in { key: officer, isSet: true, redirect: one-login-email }
+    next:
+      - when: { key: lpaTask, equals: view }
+        goto: dashboard
+      - goto: retrieve-commitment
+
+  # Add a developer record. The reference finds the commitment in
+  # records.yaml (or the one made in nrf-request-to-use-1 this session);
+  # one the council already has is an error. See hooks.js.
+  - id: retrieve-commitment
+    field: commitment-reference
+    sessionKey: commitmentReference
+    guard: *signed-in
+    handler: custom
+    next: confirm-commitment
+
+  - id: confirm-commitment
+    guard: { key: commitment, isSet: true, redirect: retrieve-commitment }
+    next: planning-reference
+
+  - id: planning-reference
+    field: planning-reference
+    sessionKey: planningReference
+    changeable: true
+    guard: { key: commitmentEntry, isSet: true, redirect: retrieve-commitment }
+    next: check-your-answers
+
+  # "Add record" adds it to the session's records and opens its page
+  - id: check-your-answers
+    field: add-record-confirmed
+    sessionKey: addRecordConfirmed
+    guard: { key: commitmentEntry, isSet: true, redirect: retrieve-commitment }
+    handler: custom
+    next: view-record
+
+  # --------------------------------------------------------------------
+  # A record: view-record?ref=NRL-123456. The Change status button opens
+  # change-status as a popover (the whole page without JavaScript).
+  - id: view-record
+    template: lpa-manage-1/view-record
+    guard: *signed-in
+    back: dashboard
+    preview:
+      variants:
+        - id: added
+          label: Just added
+          data: { lpaFlash: added }
+        - id: status
+          label: Status changed
+          data: { lpaFlash: status }
+
+  - id: change-status
+    field: new-status
+    sessionKey: newStatus
+    guard: { key: recordReference, isSet: true, redirect: dashboard }
+    back: view-record
+    handler: custom # records the change on the timeline, see hooks.js
+    next: view-record
+
+  # The records the council has: the landing page and the full table
+  - id: dashboard
+    template: lpa-manage-1/dashboard
+    guard: *signed-in
+    back: what-would-you-like-to-do
+
+  - id: records
+    template: lpa-manage-1/records
+    guard: *signed-in
+    back: dashboard

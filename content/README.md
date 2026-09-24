@@ -123,7 +123,7 @@ Do not share your Government Gateway user ID and password with anyone else.
 :::
 ```
 
-`:::map` draws the saved red line boundary on a small read-only map (used on the commitment certificate). The name after `map` is the answer holding the boundary and can be left out.
+`:::map` draws the saved red line boundary on a small read-only map (used on the commitment certificate). The name after `map` is the answer holding the boundary and can be left out. Add `os` after the name (`:::map commitment.boundary os`) to draw it on the Ordnance Survey basemap; without an `OS_API_KEY` on the server it falls back to the Streets map.
 
 `:::notification Title` is the blue notification banner. `:::after-button` moves everything from that line to the end of the file below the page's button: a "Get help with this page" link, or a details block that sits under Continue. When the block holds another block (a details, say), open and close it with four colons (`::::after-button` … `::::`) so the inner `:::` lines do not end it early.
 
@@ -169,7 +169,7 @@ Write the answer's name in double curly braces: `{{ estimateEmail }}`. The names
 | `document`      | `title`; a full-width document with no banner or back link                                                       |
 | `custom`        | a developer-built screen; `hint`, `errors` and `text:` (named strings the template renders) still come from here |
 
-Every page can also set `layout` to change its chrome: `default` (the prototype header and banner), `one-login` (the GOV.UK One Login look used by the shared sign-in pages), `government-gateway` (the Government Gateway look: a "Government Gateway" bar, the language toggle, no banner), `defra-id` (the Defra ID look: bare header with a Sign out bar and the Defra footer, used by the mock "register a Defra account" pages), `defra-account` (as `defra-id` with the "Your Defra account" bar showing the user's name, Manage account and Sign out) `document` (bare crown header, full width, no banner or back link; `type: document` pages get this automatically) or `email` (the same bare header at the usual reading width, for the emails the service sends, so they do not look like a page of the service).
+Every page can also set `layout` to change its chrome: `default` (the prototype header and banner), `one-login` (the GOV.UK One Login look used by the shared sign-in pages), `government-gateway` (the Government Gateway look: a "Government Gateway" bar, the language toggle, no banner), `defra-id` (the Defra ID look: bare header with a Sign out bar and the Defra footer, used by the mock "register a Defra account" pages), `defra-account` (as `defra-id` with the "Your Defra account" bar showing the user's name, Manage account and Sign out) `document` (bare crown header, full width, no banner or back link; `type: document` pages get this automatically) `email` (the same bare header at the usual reading width, for the emails the service sends, so they do not look like a page of the service) or `staff` (an internal service for the people who run it, such as the LPA's: a black header with the service name, the signed-in user's account and a Menu, the Prototype banner, and a page up to 1440px wide so tables have room). `layout:` at the top of `journey.yaml` sets the layout for every page of that journey that does not name its own; the shared sign-in pages keep theirs.
 
 A `caption` ("Register Defra account", say) shows in grey above the heading of content, radios, form, select and check your answers pages.
 
@@ -256,6 +256,8 @@ rows:
   - key: Planning permission type
     value: '{{ planningType }}'
 ```
+
+Rows that several pages show go in one file: write them in `partials/<name>.md` (only `rows:` in its frontmatter) and put `- include: <name>` where they belong in each page's rows. `content/lpa-manage-1/partials/commitment-details.md` is used this way by three pages.
 
 A `value` can also be a choice, `{ when: <condition>, then: Added, else: Not added }`, whose `else` may be another choice when there are three or more possibilities, and `change` can be a list of rules so the link goes to a different page depending on an answer (a rule list with no default shows no link when nothing matches).
 
@@ -448,9 +450,26 @@ pages:
       - goto: housing
 ```
 
+Journey keys beside `pages`: `id`, `name`, `serviceName`, `start` (the first page's id), `basePath`, `summaryPages`, `signedIn` (a condition: the header shows the user as signed in), `session`, `preview`, `groups`, `homepage`, `layout` (the default for every page), and `header` for the `staff` layout:
+
+```yaml
+header:
+  organisation: Scarfolk Council # under the user's name in the account toggle
+  homePage: dashboard # where the service name links
+  account: # links in the account panel
+    - { text: Your account, href: '#' }
+    - { text: Sign out, href: $signOut } # the sign-out route a hook registers
+  menu:
+    heading: Manage commitments
+    links: # page ids, absolute paths or '#'
+      - { text: Dashboard, href: dashboard }
+```
+
+Canned data a journey's pages look things up in (the LPA journey's `records.yaml`: the commitments and records its tables show) can sit beside `journey.yaml`; its hooks read it, re-reading it when it changes.
+
 Condition operators: `equals`, `notEquals`, `in`, `notIn`, `gt`, `gte`, `lt`, `lte`, `between`, `truthy`, `falsy`, `isSet`. Combine with `all:`, `any:`, `not:`. Engine values: `$navFromSummary`, `$isChange`, `$preview`, `$borrowed` (the page was opened from another journey's summary page, see "Borrowing a page from another journey").
 
-Other page keys: `handoff: YYYY-MM-DD` (the page's design was handed to development on that date; see "Handing pages to development"), `shared: true` (copy comes from `content/shared/pages/<id>.md`) or `shared: <folder>` (from `content/shared/<folder>/<id>.md`, see "Pages shared by more than one journey"), `back` (page id, absolute path, or a rule list; it wins over the Back-to-the-summary shortcut a `changeable` page gets, so a change detour that runs through several pages can step back through them with rules on `$navFromSummary` or `$borrowed`, as the quote's map does), `guard` (condition plus `redirect`), `store` (map an option's `value` to what the session stores, for booleans and the like; prefer a `value` on the option in the page file), `set` (write values on submit; also allowed on a rule), `clears` (list of keys, or `$session`), `handler: custom` (page has hooks), `template` (a hand-written view for `type: custom`), `layout` (`default`, `one-login`, `government-gateway`, `defra-id`, `defra-account`, `document` or `email`), `remember: false` (never write the answer to the session; pair it with a field name starting `_` so the kit's own auto-store skips it too, as the password page does), `accept` and `maxSize` for uploads, `min` and `max` for numbers, `research` (see below).
+Other page keys: `handoff: YYYY-MM-DD` (the page's design was handed to development on that date; see "Handing pages to development"), `shared: true` (copy comes from `content/shared/pages/<id>.md`) or `shared: <folder>` (from `content/shared/<folder>/<id>.md`, see "Pages shared by more than one journey"), `back` (page id, absolute path, or a rule list; it wins over the Back-to-the-summary shortcut a `changeable` page gets, so a change detour that runs through several pages can step back through them with rules on `$navFromSummary` or `$borrowed`, as the quote's map does), `guard` (condition plus `redirect`), `store` (map an option's `value` to what the session stores, for booleans and the like; prefer a `value` on the option in the page file), `set` (write values on submit; also allowed on a rule), `clears` (list of keys, or `$session`), `handler: custom` (page has hooks), `template` (a hand-written view for `type: custom`), `layout` (`default`, `staff`, `one-login`, `government-gateway`, `defra-id`, `defra-account`, `document` or `email`), `remember: false` (never write the answer to the session; pair it with a field name starting `_` so the kit's own auto-store skips it too, as the password page does), `accept` and `maxSize` for uploads, `min` and `max` for numbers, `research` (see below).
 
 `research` lists shortcuts for the research facilitator, shown in a "User research" section at the top of the page's footer, under the crown, each opening in a new tab. They are not part of the flow: the tools page draws one that points at a page of this journey as a dashed link from the page that offers it (so the linked page is not "not reached") and ignores the rest. A hook's `load` on the linked page can remember that it was opened (the request-to-use journey's employee invitation email). `newTab: false` opens a link in the same tab, for one the participant follows instead of the page's button. An `href` is a page of this journey (a query string is fine), a path into another journey when it starts with `/`, or a full URL:
 

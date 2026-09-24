@@ -79,9 +79,13 @@ const TEMPLATE_BY_TYPE = {
 // defra-account: the "Your Defra account" bar with the user's name), a
 // full-width document with a bare crown header and no banner or back link
 // (certificates, letters), or an email: the same bare chrome at reading
-// width, so it reads as something sent rather than a page of the service
+// width, so it reads as something sent rather than a page of the service;
+// or staff: an internal case-work service (the LPA's), with the service
+// name, account and Menu in the header and a wider page for tables. A
+// journey can set its own default with `layout:` in journey.yaml.
 const LAYOUTS = [
   'default',
+  'staff',
   'one-login',
   'government-gateway',
   'defra-id',
@@ -161,8 +165,13 @@ function sharedDirs(contentDir = CONTENT_DIR) {
 function signatureFor(journeyId, contentDir = CONTENT_DIR) {
   const dir = journeyDir(journeyId, contentDir)
   const files = [path.join(dir, 'journey.yaml')]
-  // Shared pages count for every journey, so an edit to one reloads them all
-  for (const pagesDir of [path.join(dir, 'pages'), ...sharedDirs(contentDir)]) {
+  // Shared pages count for every journey, so an edit to one reloads them all.
+  // Partials (rows several pages share) count for their journey.
+  for (const pagesDir of [
+    path.join(dir, 'pages'),
+    path.join(dir, 'partials'),
+    ...sharedDirs(contentDir)
+  ]) {
     if (fs.existsSync(pagesDir)) {
       for (const name of fs.readdirSync(pagesDir)) {
         files.push(path.join(pagesDir, name))
@@ -270,6 +279,44 @@ function buildFields(raw, type, where, problems) {
 }
 
 /**
+ * A page's summary rows, with every `- include: <name>` item replaced by the
+ * rows of `partials/<name>.md` in the journey's folder (frontmatter `rows:`
+ * only). Rows several pages show (the details of a commitment, say) are then
+ * written once. A partial may not include another.
+ */
+function expandRows(rows, journey, where, problems) {
+  const expanded = []
+  for (const row of rows || []) {
+    if (!row || row.include === undefined) {
+      expanded.push(row)
+      continue
+    }
+    const name = String(row.include)
+    const file = path.join(
+      journeyDir(journey.id, journey.contentDir || CONTENT_DIR),
+      'partials',
+      `${name}.md`
+    )
+    if (!fs.existsSync(file)) {
+      problems.push(`${where}.rows: missing partial partials/${name}.md`)
+      continue
+    }
+    const { frontmatter } = parseMarkdownFile(
+      fs.readFileSync(file, 'utf8'),
+      file
+    )
+    const included = frontmatter.rows || []
+    if (included.some((item) => item && item.include !== undefined)) {
+      problems.push(`partials/${name}.md: a partial cannot include another`)
+    }
+    expanded.push(
+      ...included.filter((item) => item && item.include === undefined)
+    )
+  }
+  return expanded
+}
+
+/**
  * Build one page from its journey.yaml entry and its markdown file. With
  * `from.file` and `from.variantId` set, the same entry is built from a
  * copy variant's file instead (`pages/<id>~<variantId>.md`, see
@@ -363,7 +410,7 @@ function buildPage(entry, journey, problems, from = {}) {
   const layout =
     entry.layout ||
     frontmatter.layout ||
-    (type === 'document' ? 'document' : 'default')
+    (type === 'document' ? 'document' : journey.layout || 'default')
   if (!LAYOUTS.includes(layout)) {
     problems.push(
       `${where}: unknown layout '${layout}' (expected one of ${LAYOUTS.join(', ')})`
@@ -494,7 +541,7 @@ function buildPage(entry, journey, problems, from = {}) {
       autocomplete: frontmatter.autocomplete,
       spellcheck: frontmatter.spellcheck,
       fields,
-      rows: frontmatter.rows || [],
+      rows: expandRows(frontmatter.rows, journey, where, problems),
       actions: frontmatter.actions || [],
       panel: frontmatter.panel,
       // Named strings a hand-written template (type: custom) renders itself
@@ -868,6 +915,11 @@ function build(journeyId, options = {}) {
   if (raw.signedIn !== undefined) {
     problems.push(...validateCondition(raw.signedIn, 'signedIn'))
   }
+  if (raw.layout !== undefined && !LAYOUTS.includes(raw.layout)) {
+    problems.push(
+      `layout: unknown layout '${raw.layout}' (expected one of ${LAYOUTS.join(', ')})`
+    )
+  }
 
   const journey = {
     id: raw.id || journeyId,
@@ -887,6 +939,11 @@ function build(journeyId, options = {}) {
     // Homepage card metadata (family, version, status, description, changes).
     // Read by app/config/shared/journeys.js; the engine itself ignores it.
     homepage: raw.homepage || {},
+    // The layout every page wears unless it names its own (see LAYOUTS)
+    layout: raw.layout,
+    // The staff layout's header: the organisation under the user's name, and
+    // the links in its account and Menu panels (see staff-header.html)
+    header: raw.header || {},
     // Titles for the groups the tools page carves out (`groups: { one-login:
     // { title: GOV.UK One Login } }`); see flow.js journeyGroups()
     groups: raw.groups || {},

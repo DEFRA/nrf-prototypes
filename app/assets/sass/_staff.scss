@@ -1,0 +1,451 @@
+// Staff layout of the journey engine (`layout: staff`, see
+// app/views/journey-engine/_page.html): internal case-work services such as
+// the LPA's "Manage commitments" journey (content/lpa-manage-1).
+//
+//   .app-staff              body class: a wider page so tables have room
+//   .app-staff-header       black header with the service name, the account
+//                           and Menu toggles and their grey panels
+//                           (app/views/includes/staff-header.html)
+//   .app-staff-page-header  heading with a button to its right
+//   .app-staff-cards        the dashboard's count cards
+//   .app-staff-search       search box with its button, plus a sort select
+//   .app-timeline           audit history (after the MOJ timeline)
+//   .app-status-dialog      the Change status popover on a record
+
+$app-staff-max-width: 1440px;
+// Below this width the service name and the account and Menu toggles no
+// longer fit on one line, so the toggles move to a row of their own
+$app-staff-header-stack: 1240px;
+$app-staff-black: govuk-colour('black');
+$app-staff-grey: govuk-colour('black', $variant: 'tint-95');
+
+// The GOV.UK width container at 1440px: the same gutters as on any page,
+// centred only once the window is wider than the page and its gutters (the
+// 960px container's own rule would drop the gutters from 1020px)
+.app-staff .govuk-width-container {
+  @include govuk-width-container($app-staff-max-width);
+}
+
+// Question pages keep the reading width of any GOV.UK service (two thirds
+// of 960px) however wide the page is; tables and records use the full width
+.app-staff .govuk-grid-column-two-thirds {
+  max-width: 640px;
+}
+
+// -------------------------------------------------------------- Header
+
+.app-staff-header {
+  position: relative;
+  background: $app-staff-black;
+  color: govuk-colour('white');
+  @include govuk-font($size: 19);
+}
+
+.app-staff-header__container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: space-between;
+  min-height: 80px;
+}
+
+.app-staff-header__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: govuk-spacing(3);
+  padding: govuk-spacing(3) 0;
+  margin-right: govuk-spacing(4);
+  color: govuk-colour('white');
+  text-decoration: none;
+
+  &:link,
+  &:visited {
+    color: govuk-colour('white');
+  }
+
+  &:hover .app-staff-header__service {
+    text-decoration: underline;
+    text-decoration-thickness: 3px;
+  }
+
+  &:focus {
+    @include govuk-focused-text;
+  }
+}
+
+.app-staff-header__crown {
+  width: 42px;
+  height: auto;
+  flex-shrink: 0;
+  fill: currentcolor;
+}
+
+.app-staff-header__service {
+  @include govuk-font($size: 24);
+}
+
+.app-staff-header__controls {
+  display: flex;
+  align-items: stretch;
+}
+
+.app-staff-header__item {
+  display: flex;
+  align-items: stretch;
+}
+
+.app-staff-header__item--account {
+  position: relative;
+}
+
+.app-staff-header__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: govuk-spacing(3);
+  margin: 0;
+  padding: govuk-spacing(3) govuk-spacing(4);
+  border: 0;
+  background: transparent;
+  color: govuk-colour('white');
+  text-align: left;
+  cursor: pointer;
+  @include govuk-font($size: 19);
+
+  &[hidden] {
+    display: none;
+  }
+
+  &:focus {
+    @include govuk-focused-text;
+  }
+}
+
+// The white rules either side of the account toggle, as in the HMPPS header
+.app-staff-header__item--account .app-staff-header__toggle {
+  border-left: 1px solid govuk-colour('white');
+  border-right: 1px solid govuk-colour('white');
+  margin: govuk-spacing(3) 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.app-staff-header__toggle--menu {
+  font-weight: $govuk-font-weight-bold;
+}
+
+.app-staff-header__chevron {
+  flex-shrink: 0;
+  transition: transform 0.1s;
+}
+
+.app-staff-header__person {
+  flex-shrink: 0;
+}
+
+.app-staff-header__account-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.app-staff-header__account-organisation {
+  @include govuk-font($size: 16);
+}
+
+// Open: the toggle turns grey with a blue rule under its text, like a tab
+.app-staff-header__item--open {
+  .app-staff-header__toggle {
+    margin: 0;
+    padding-top: govuk-spacing(3);
+    padding-bottom: govuk-spacing(3);
+    border-color: transparent;
+    background: $app-staff-grey;
+    color: govuk-colour('blue', $variant: 'shade-50');
+    box-shadow: inset 0 -5px 0 govuk-colour('blue', $variant: 'shade-50');
+  }
+
+  .app-staff-header__chevron {
+    transform: rotate(180deg);
+  }
+}
+
+.app-staff-header__panel {
+  padding: govuk-spacing(4);
+  background: $app-staff-grey;
+  color: $app-staff-black;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+// With JavaScript the panels drop down over the page; without it they sit
+// open in the header's flow so their links stay reachable
+.govuk-frontend-supported {
+  .app-staff-header__panel {
+    position: absolute;
+    z-index: 100;
+    top: 100%;
+  }
+
+  .app-staff-header__panel--account {
+    left: 0;
+    right: 0;
+    min-width: 220px;
+  }
+
+  .app-staff-header__panel--menu {
+    left: 0;
+    right: 0;
+    padding: govuk-spacing(6) 0;
+  }
+}
+
+.app-staff-header__links {
+  margin-bottom: 0;
+
+  li {
+    margin-bottom: govuk-spacing(3);
+  }
+
+  li:last-child {
+    margin-bottom: 0;
+  }
+
+  .govuk-link {
+    font-weight: $govuk-font-weight-bold;
+  }
+}
+
+// Stacked: the toggles on their own row under the service name, lined up
+// with the crown, with no rule to their left
+@media (max-width: #{$app-staff-header-stack - 1px}) {
+  .app-staff-header__controls {
+    width: 100%;
+  }
+
+  .app-staff-header__item--account .app-staff-header__toggle {
+    border-left: 0;
+    padding-left: 0;
+  }
+
+  .app-staff-header__item--open .app-staff-header__toggle {
+    padding-left: govuk-spacing(3);
+  }
+}
+
+@include govuk-media-query($until: tablet) {
+  .app-staff-header__service {
+    @include govuk-font($size: 19);
+  }
+}
+
+// ------------------------------------------------------ Page furniture
+
+.app-staff-page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: govuk-spacing(3) govuk-spacing(6);
+  margin-bottom: govuk-spacing(4);
+
+  .govuk-heading-xl,
+  .govuk-heading-l {
+    flex: 1 1 auto;
+    max-width: 20em;
+    margin-bottom: 0;
+  }
+
+  .govuk-button {
+    margin-bottom: 0;
+  }
+}
+
+// A record's page: the reference and its status tag, centred on one line,
+// with the Change status button level with them
+.app-staff-page-header--record {
+  align-items: center;
+}
+
+.app-staff-record__heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: govuk-spacing(2) govuk-spacing(3);
+
+  .govuk-tag {
+    @include govuk-font($size: 19);
+  }
+}
+
+.app-staff-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: govuk-spacing(3);
+  margin: 0 0 govuk-spacing(8);
+  padding: 0;
+  list-style: none;
+
+  // Side by side from desktop; stacked one above another below it, never
+  // two and one
+  @include govuk-media-query($from: desktop) {
+    grid-template-columns: repeat(3, 1fr);
+    gap: govuk-spacing(4);
+  }
+}
+
+.app-staff-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: govuk-spacing(3);
+  border: 1px solid govuk-colour('black', $variant: 'tint-80');
+  border-bottom: 5px solid govuk-colour('blue');
+  background: $app-staff-grey;
+  text-align: center;
+
+  @include govuk-media-query($from: desktop) {
+    min-height: 160px;
+    padding: govuk-spacing(4);
+  }
+}
+
+.app-staff-card__count {
+  display: block;
+  margin-bottom: govuk-spacing(2);
+  @include govuk-font($size: 48, $weight: bold);
+}
+
+.app-staff-card__label {
+  @include govuk-font($size: 19);
+}
+
+.app-staff-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: govuk-spacing(4);
+  margin-bottom: govuk-spacing(6);
+
+  .govuk-form-group {
+    margin-bottom: 0;
+  }
+}
+
+.app-staff-search__query {
+  flex: 1 1 30em;
+  max-width: 50em;
+}
+
+.app-staff-search__box {
+  display: flex;
+
+  .govuk-input {
+    flex: 1 1 auto;
+  }
+}
+
+.app-staff-search__button {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: govuk-colour('blue');
+  color: govuk-colour('white');
+  cursor: pointer;
+
+  svg {
+    display: block;
+    margin: auto;
+  }
+
+  &:hover {
+    background: govuk-colour('blue', $variant: 'shade-25');
+  }
+
+  &:focus {
+    @include govuk-focused-text;
+  }
+}
+
+.app-staff-table {
+  .govuk-table__cell,
+  .govuk-table__header {
+    vertical-align: middle;
+  }
+
+  .govuk-tag {
+    max-width: none;
+    white-space: nowrap;
+  }
+}
+
+.app-staff-record__map {
+  max-width: 720px;
+  margin-bottom: govuk-spacing(8);
+}
+
+// ------------------------------------------------------------ Timeline
+
+.app-timeline {
+  margin: 0 0 govuk-spacing(6);
+  padding: 0;
+  list-style: none;
+}
+
+.app-timeline__item {
+  position: relative;
+  padding-bottom: govuk-spacing(6);
+  padding-left: govuk-spacing(4);
+  border-left: 5px solid govuk-colour('blue');
+
+  &:last-child {
+    padding-bottom: govuk-spacing(1);
+  }
+
+  // A dot on the rule by each entry's title
+  &::before {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: -12px;
+    width: 14px;
+    height: 14px;
+    border: 3px solid govuk-colour('white');
+    border-radius: 50%;
+    background: govuk-colour('blue');
+  }
+}
+
+.app-timeline__title {
+  margin: 0 0 govuk-spacing(1);
+  @include govuk-font($size: 19, $weight: bold);
+}
+
+.app-timeline__byline,
+.app-timeline__date {
+  margin: 0 0 govuk-spacing(1);
+  color: govuk-colour('black', $variant: 'tint-25');
+  @include govuk-font($size: 16);
+}
+
+// ------------------------------------------------ Change status dialog
+
+.app-status-dialog {
+  width: min(640px, calc(100vw - #{govuk-spacing(6)}));
+  max-height: calc(100vh - #{govuk-spacing(6)});
+  padding: govuk-spacing(6);
+  border: 5px solid $app-staff-black;
+  color: $app-staff-black;
+
+  &::backdrop {
+    background: rgba(11, 12, 12, 0.6);
+  }
+
+  .govuk-button-group {
+    margin-bottom: 0;
+  }
+}

@@ -1,0 +1,63 @@
+{#
+  Every record the council has (content/lpa-manage-1/pages/records.md),
+  searched (?_q=) and sorted (?_sort=updated|expires|reference). Model extras
+  from app/lib/lpa-manage-1/hooks.js: search { q, sort }, resultCount,
+  table { head, rows }.
+#}
+{% extends "journey-engine/_page.html" %}
+
+{% set text = content.text %}
+
+{% block content %}
+<div class="app-staff-page-header">
+  <h1 class="govuk-heading-xl">{{ content.heading }}</h1>
+  {{ govukButton({ text: text.addRecord, href: routes.RETRIEVE_COMMITMENT }) }}
+</div>
+{% if text.lede %}<p class="govuk-body-l">{{ text.lede }}</p>{% endif %}
+
+{{ content.html | safe }}
+
+<form class="app-staff-search" action="{{ routes.RECORDS }}" method="get" role="search">
+  {% set searchValue = search.q %}
+  {% include "lpa-manage-1/_search.html" %}
+  {{ govukSelect({
+    id: "sort",
+    name: "_sort",
+    label: { text: text.sortLabel, classes: "govuk-label--s" },
+    formGroup: { classes: "govuk-!-margin-bottom-0" },
+    attributes: { "data-auto-submit": "true" },
+    items: [
+      { value: "updated", text: text.sortUpdated, selected: search.sort == "updated" },
+      { value: "expires", text: text.sortExpires, selected: search.sort == "expires" },
+      { value: "reference", text: text.sortReference, selected: search.sort == "reference" }
+    ]
+  }) }}
+  {{ govukButton({ text: text.apply, classes: "govuk-button--secondary govuk-!-margin-bottom-0 app-js-hidden" }) }}
+</form>
+
+{% if resultCount %}
+  {{ govukTable({
+    classes: "app-staff-table",
+    head: table.head,
+    rows: table.rows
+  }) }}
+{% else %}
+  <p class="govuk-body">{{ text.noResults }}</p>
+{% endif %}
+{% if search.q %}
+  <p class="govuk-body">
+    <a class="govuk-link govuk-link--no-visited-state" href="{{ routes.RECORDS }}">{{ text.clearSearch }}</a>
+  </p>
+{% endif %}
+{% endblock %}
+
+{% block pageScripts %}
+{{ super() }}
+<script>
+  // Sorting applies as soon as it is chosen; the Apply button is for no-JS
+  document.querySelectorAll('[data-auto-submit]').forEach(function (select) {
+    select.addEventListener('change', function () { select.form.submit() })
+  })
+  document.querySelectorAll('.app-js-hidden').forEach(function (el) { el.style.display = 'none' })
+</script>
+{% endblock %}

@@ -5,9 +5,26 @@
   page works without JavaScript and in print. When the production map
   plugin (@defra/interactive-map, served by the kit from /plugin-assets/)
   is on the page, this script draws the same boundary on a small read-only
-  basemap instead: the keyless Streets style the drawing page also offers.
+  basemap instead: the keyless Streets style the drawing page also offers,
+  or the Ordnance Survey Outdoor style for a `:::map key os` block when the
+  server has an OS key (the script tag carries data-has-os-key; the style
+  JSON goes through the app/routes/os-base-map.js proxy).
 */
 ;(function () {
+  var script = document.currentScript
+  var hasOsKey = Boolean(
+    script && script.getAttribute('data-has-os-key') === 'true'
+  )
+  var OS_STYLE = {
+    id: 'outdoor-os',
+    label: 'Outdoor OS',
+    url: '/public/data/vts/OS_VTS_3857_Outdoor.json',
+    attribution:
+      '&copy; Crown copyright and database rights ' +
+      new Date().getFullYear() +
+      ' Ordnance Survey',
+    backgroundColor: '#f5f5f0'
+  }
   var STREETS_STYLE = {
     id: 'openfreemap',
     label: 'Streets',
@@ -102,7 +119,10 @@
       var map = new defra.InteractiveMap(canvas.id, {
         behaviour: 'inline',
         mapProvider: defra.maplibreProvider(),
-        mapStyle: STREETS_STYLE,
+        mapStyle:
+          hasOsKey && figure.getAttribute('data-style') === 'os'
+            ? OS_STYLE
+            : STREETS_STYLE,
         bounds: bufferedBounds(ring),
         containerHeight: '100%',
         urlPosition: 'none',

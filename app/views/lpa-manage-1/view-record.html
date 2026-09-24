@@ -1,0 +1,103 @@
+{#
+  A developer record (content/lpa-manage-1/pages/view-record.md): a success
+  banner after adding it or changing its status, the NRL reference with its
+  status, the commitment details and planning application (the page's
+  `rows`), the red line boundary (the page's copy), the audit timeline and
+  the page's actions.
+
+  "Change status" opens the change-status page's question as a popover
+  (statusDialog, from the hook); without JavaScript it is a link to that
+  page. Model extras from app/lib/lpa-manage-1/hooks.js: flash,
+  statusDialog, data.record.
+#}
+{% extends "journey-engine/_page.html" %}
+
+{% set text = content.text %}
+{% set record = data.record %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds-from-desktop">
+    {% if flash %}
+      {{ govukNotificationBanner({
+        type: "success",
+        titleText: text.successTitle,
+        html: '<p class="govuk-notification-banner__heading">' + ((text.added if flash == 'added' else text.statusChanged) | escape) + '</p>'
+      }) }}
+    {% endif %}
+
+    <div class="app-staff-page-header app-staff-page-header--record">
+      <h1 class="govuk-heading-l app-staff-record__heading">
+        <span>{{ content.heading }}</span>
+        {% if record %}
+          <strong class="govuk-tag govuk-tag--{{ record.status.colour }}">{{ record.status.label }}</strong>
+        {% endif %}
+      </h1>
+      {% if statusDialog %}
+        {{ govukButton({
+          text: text.changeStatus,
+          href: statusDialog.action,
+          classes: "govuk-button--secondary",
+          attributes: { "data-dialog-open": "app-status-dialog" }
+        }) }}
+      {% endif %}
+    </div>
+
+    {% for group in content.rowGroups %}
+      {% if group.heading %}<h2 class="govuk-heading-m">{{ group.heading }}</h2>{% endif %}
+      {% if group.rows | length %}
+        {{ govukSummaryList({ classes: "govuk-!-margin-bottom-9", rows: group.rows }) }}
+      {% endif %}
+    {% endfor %}
+
+    <div class="app-staff-record__map">
+      {{ content.html | safe }}
+    </div>
+
+    {% if record %}
+      <h2 class="govuk-heading-m">{{ text.timelineHeading }}</h2>
+      <ol class="app-timeline">
+        {% for event in record.timeline %}
+        <li class="app-timeline__item">
+          <h3 class="app-timeline__title">
+            {% if event.event == 'added' %}{{ text.timelineAdded }}{% else %}{{ text.timelineStatus }} {{ event.status.label }}{% endif %}
+          </h3>
+          <p class="app-timeline__byline">{{ text.by }} {{ event.by }}</p>
+          <p class="app-timeline__date">{{ event.date }} {{ text.at }} {{ event.time }}</p>
+        </li>
+        {% endfor %}
+      </ol>
+    {% endif %}
+
+    {% include "journey-engine/_actions.html" %}
+  </div>
+</div>
+
+{% if statusDialog %}
+<dialog class="app-status-dialog" id="app-status-dialog" aria-labelledby="app-status-dialog-heading">
+  <form action="{{ statusDialog.action }}" method="post" novalidate>
+    {{ govukRadios({
+      name: statusDialog.field,
+      idPrefix: "dialog-" + statusDialog.field,
+      fieldset: {
+        legend: {
+          html: '<span id="app-status-dialog-heading">' + (statusDialog.heading | escape) + '</span>',
+          classes: "govuk-fieldset__legend--m"
+        }
+      },
+      hint: { text: statusDialog.hint } if statusDialog.hint,
+      items: statusDialog.items
+    }) }}
+    <div class="govuk-button-group">
+      {{ govukButton({ text: statusDialog.button }) }}
+      <button type="button" class="govuk-link govuk-link-button" data-dialog-close>{{ text.cancel }}</button>
+    </div>
+  </form>
+</dialog>
+{% endif %}
+{% endblock %}
+
+{% block pageScripts %}
+{{ super() }}
+<script src="/public/javascripts/status-dialog.js"></script>
+{% endblock %}

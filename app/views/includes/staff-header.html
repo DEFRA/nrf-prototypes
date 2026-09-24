@@ -1,0 +1,70 @@
+{#
+  Staff header: the `staff` layout of the journey engine (see
+  journey-engine/_page.html), for internal case-work services such as the
+  LPA's. Modelled on the HMPPS header: the crown and service name on the
+  left; on the right, once signed in, an account toggle (the user's name
+  over their organisation) and a Menu toggle. Each toggle opens a grey panel
+  under the header with the links from `header:` in journey.yaml.
+
+  The panels are shown open without JavaScript; staff-header.js hides them
+  and turns the buttons into toggles.
+
+  Model: journey.serviceName, journey.header ({ organisation, homePage,
+  account[], menu: { heading, links[] } }), signedIn, data.officer.
+#}
+{% from "govuk/macros/logo.njk" import govukLogo %}
+{% set staffHeader = journey.header if journey and journey.header else {} %}
+{% set staffHome = staffHeader.homePage or (journey.basePath if journey else "/") %}
+{% set officerName = data.officer.fullName if data and data.officer else "" %}
+{% macro chevron() %}<svg class="app-staff-header__chevron" width="16" height="10" viewBox="0 0 16 10" aria-hidden="true" focusable="false"><path d="M1.5 1.5 8 8l6.5-6.5" fill="none" stroke="currentColor" stroke-width="2.5"/></svg>{% endmacro %}
+<div class="app-staff-header" data-module="app-staff-header">
+  <div class="app-staff-header__container govuk-width-container">
+    <a class="app-staff-header__brand" href="{{ staffHome }}">
+      {{ govukLogo({
+        classes: "app-staff-header__crown",
+        ariaLabelText: "GOV.UK",
+        useLogotype: false
+      }) | safe }}
+      <span class="app-staff-header__service">{{ journey.serviceName }}</span>
+    </a>
+    <div class="app-staff-header__controls">
+      {% if signedIn %}
+      <div class="app-staff-header__item app-staff-header__item--account">
+        <button type="button" class="app-staff-header__toggle" aria-expanded="true" aria-controls="app-staff-header-account" hidden>
+          {{ chevron() }}
+          <svg class="app-staff-header__person" width="32" height="32" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><circle cx="16" cy="16" r="14.5" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="16" cy="12.5" r="5" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M6.8 26.5c1.8-4 5.3-6 9.2-6s7.4 2 9.2 6" fill="none" stroke="currentColor" stroke-width="2.5"/></svg>
+          <span class="app-staff-header__account-text">
+            {% if officerName %}<span class="app-staff-header__account-name">{{ officerName }}</span>{% endif %}
+            <span class="app-staff-header__account-organisation">{{ staffHeader.organisation }}</span>
+          </span>
+        </button>
+        <nav id="app-staff-header-account" class="app-staff-header__panel app-staff-header__panel--account" aria-label="Account">
+          <ul class="govuk-list app-staff-header__links">
+            {% for link in staffHeader.account %}
+            <li><a class="govuk-link govuk-link--no-visited-state" href="{{ link.href }}">{{ link.text }}</a></li>
+            {% endfor %}
+          </ul>
+        </nav>
+      </div>
+      {% if staffHeader.menu and staffHeader.menu.links | length %}
+      <div class="app-staff-header__item app-staff-header__item--menu">
+        <button type="button" class="app-staff-header__toggle app-staff-header__toggle--menu" aria-expanded="true" aria-controls="app-staff-header-menu" hidden>
+          {{ chevron() }}
+          <span>Menu</span>
+        </button>
+        <nav id="app-staff-header-menu" class="app-staff-header__panel app-staff-header__panel--menu" aria-labelledby="app-staff-header-menu-heading">
+          <div class="govuk-width-container">
+            <h2 class="govuk-heading-m" id="app-staff-header-menu-heading">{{ staffHeader.menu.heading or "Menu" }}</h2>
+            <ul class="govuk-list app-staff-header__links">
+              {% for link in staffHeader.menu.links %}
+              <li><a class="govuk-link govuk-link--no-visited-state" href="{{ link.href }}">{{ link.text }}</a></li>
+              {% endfor %}
+            </ul>
+          </div>
+        </nav>
+      </div>
+      {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</div>

@@ -1,0 +1,454 @@
+# Canned data for the LPA "Manage commitments" journey: the commitments
+# developers have submitted to Scarfolk Council, and the developer records
+# the council's officers have already made from them.
+#
+# This is data, not page copy: the words on the pages are in pages/*.md.
+# Edits show on the next page load (no restart). The code that reads it is
+# app/lib/lpa-manage-1/hooks.js.
+#
+#   statuses      every status a record can have: its tag label and the
+#                 govuk-tag colour (grey, green, turquoise, blue, light-blue,
+#                 purple, pink, red, orange, yellow). `received` is the
+#                 status of a record an officer has just added; the other
+#                 values are the options of pages/change-status.md
+#   boundaries    named red line boundaries: open rings of [longitude,
+#                 latitude] pairs. A commitment names one (or gives its own
+#                 `coordinates`)
+#   commitments   what developers have submitted, found by NRL reference on
+#                 "Retrieve commitment details". Dates are YYYY-MM-DD.
+#                 A commitment with a `record:` is already in the council's
+#                 records (the dashboard and table show it, and retrieving
+#                 it again says so); one without is waiting to be added
+#   fallback      the commitment any other well-formed NRL reference
+#                 retrieves (it takes the reference typed). Delete this
+#                 block to make an unknown reference an error instead
+#
+# A record:
+#   planningReference  the planning application it belongs to
+#   planningStatus     active or in-dispute (the dashboard's count cards;
+#                      a commitment past its expiry date counts as expired)
+#   officer            who added it (the table's Officer column)
+#   status             one of the statuses above
+#   history            the audit timeline, oldest first: `event: added` or
+#                      `event: status` (with the new `status`), `by` and `at`
+#                      (YYYY-MM-DDTHH:MM). The newest entry is "Last modified"
+
+statuses:
+  received: { label: Received, colour: light-blue }
+  confirmed: { label: Confirmed, colour: green }
+  review-later: { label: Awaiting review, colour: yellow }
+  rejected: { label: Rejected, colour: red }
+
+edp: &edp Broads SAC, Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2026 to 2036)
+
+boundaries:
+  wymondham:
+    - [1.1100, 52.5600]
+    - [1.1200, 52.5600]
+    - [1.1200, 52.5700]
+    - [1.1100, 52.5700]
+  hethersett:
+    - [1.1742, 52.5985]
+    - [1.1811, 52.5979]
+    - [1.1838, 52.6013]
+    - [1.1795, 52.6041]
+    - [1.1739, 52.6027]
+  taverham:
+    - [1.1965, 52.6795]
+    - [1.2031, 52.6788]
+    - [1.2047, 52.6822]
+    - [1.1990, 52.6839]
+  reepham:
+    - [1.1102, 52.7612]
+    - [1.1150, 52.7601]
+    - [1.1183, 52.7625]
+    - [1.1161, 52.7653]
+    - [1.1109, 52.7648]
+  dereham:
+    - [0.9335, 52.6873]
+    - [0.9412, 52.6869]
+    - [0.9420, 52.6917]
+    - [0.9351, 52.6922]
+  aylsham:
+    - [1.2461, 52.7905]
+    - [1.2522, 52.7893]
+    - [1.2556, 52.7931]
+    - [1.2487, 52.7951]
+
+commitments:
+  # ------------------------------------------------ Waiting to be added
+  - reference: NRL-123456
+    developer: ACME Developments
+    address: [1 Industrial Estate, Scarfolk, SC1 4AB]
+    planningType: Full planning permission
+    units: 120
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-09-05
+    expires: 2027-03-05
+    boundary: wymondham
+
+  - reference: NRL-234567
+    developer: Hollow Lane Builders
+    address: [Hollow Lane Yard, Scarfolk, SC3 9LH]
+    planningType: Outline planning permission
+    units: 45
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-09-12
+    expires: 2027-03-12
+    boundary: reepham
+
+  - reference: NRL-345678
+    developer: Greenacre Living
+    address: [Greenacre House, 4 Market Street, Scarfolk, SC2 1GL]
+    planningType: Reserved matters
+    units: 18
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-09-18
+    expires: 2027-03-18
+    boundary: aylsham
+
+  - reference: NRL-456789
+    developer: Mere Farm Homes
+    address: [Mere Farm, Scarfolk Road, Scarfolk, SC5 2MF]
+    planningType: Full planning permission
+    units: 8
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-09-21
+    expires: 2027-03-21
+    boundary: dereham
+
+  # --------------------------------------- Already in the council's records
+  - reference: NRL-100231
+    developer: ACME Developments
+    address: [1 Industrial Estate, Scarfolk, SC1 4AB]
+    planningType: Full planning permission
+    units: 200
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-09-05
+    expires: 2027-03-05
+    boundary: hethersett
+    record:
+      planningReference: 2026/0412/FUL
+      planningStatus: active
+      officer: John Smith
+      status: received
+      history:
+        - event: added
+          by: John Smith
+          at: 2026-09-05T10:12
+
+  - reference: NRL-100487
+    developer: Scarfolk Homes Ltd
+    address: [Unit 7, Kettle Hill Business Park, Scarfolk, SC4 7KH]
+    planningType: Full planning permission
+    units: 64
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-08-28
+    expires: 2027-02-28
+    boundary: taverham
+    record:
+      planningReference: 2026/0388/FUL
+      planningStatus: active
+      officer: Priya Shah
+      status: confirmed
+      history:
+        - event: added
+          by: Priya Shah
+          at: 2026-08-29T09:40
+        - event: status
+          status: confirmed
+          by: Priya Shah
+          at: 2026-09-02T14:05
+
+  - reference: NRL-100562
+    developer: Broadland Housing Partnership
+    address: [The Old Maltings, Scarfolk, SC2 8BH]
+    planningType: Outline planning permission
+    units: 150
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-08-20
+    expires: 2027-02-20
+    boundary: wymondham
+    record:
+      planningReference: 2026/0351/OUT
+      planningStatus: in-dispute
+      officer: Tom Barker
+      status: review-later
+      history:
+        - event: added
+          by: Tom Barker
+          at: 2026-08-21T11:20
+        - event: status
+          status: review-later
+          by: Tom Barker
+          at: 2026-09-01T16:45
+
+  - reference: NRL-100619
+    developer: Wensum Valley Estates
+    address: [Riverside Offices, Mill Lane, Scarfolk, SC6 3WV]
+    planningType: Full planning permission
+    units: 32
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-08-14
+    expires: 2027-02-14
+    boundary: reepham
+    record:
+      planningReference: 2026/0330/FUL
+      planningStatus: active
+      officer: John Smith
+      status: confirmed
+      history:
+        - event: added
+          by: John Smith
+          at: 2026-08-15T10:02
+        - event: status
+          status: confirmed
+          by: Aisha Khan
+          at: 2026-08-19T09:15
+
+  - reference: NRL-100744
+    developer: Kettle Hill Developments
+    address: [2 Kettle Hill, Scarfolk, SC4 1KD]
+    planningType: Reserved matters
+    units: 90
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-08-07
+    expires: 2027-02-07
+    boundary: dereham
+    record:
+      planningReference: 2026/0302/REM
+      planningStatus: in-dispute
+      officer: Aisha Khan
+      status: rejected
+      history:
+        - event: added
+          by: Aisha Khan
+          at: 2026-08-08T13:30
+        - event: status
+          status: rejected
+          by: Aisha Khan
+          at: 2026-08-22T15:10
+
+  - reference: NRL-100815
+    developer: Tattersall and Sons
+    address: [14 Church Street, Scarfolk, SC1 2TS]
+    planningType: Full planning permission
+    units: 12
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-07-30
+    expires: 2027-01-30
+    boundary: aylsham
+    record:
+      planningReference: 2026/0287/FUL
+      planningStatus: active
+      officer: Priya Shah
+      status: received
+      history:
+        - event: added
+          by: Priya Shah
+          at: 2026-07-31T10:45
+
+  - reference: NRL-100903
+    developer: Northfield Construction
+    address: [Northfield Depot, Scarfolk, SC7 5NC]
+    planningType: Outline planning permission
+    units: 240
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-07-22
+    expires: 2027-01-22
+    boundary: hethersett
+    record:
+      planningReference: 2026/0264/OUT
+      planningStatus: active
+      officer: Tom Barker
+      status: confirmed
+      history:
+        - event: added
+          by: Tom Barker
+          at: 2026-07-23T09:05
+        - event: status
+          status: confirmed
+          by: Tom Barker
+          at: 2026-07-28T11:50
+
+  - reference: NRL-101044
+    developer: ACME Developments
+    address: [1 Industrial Estate, Scarfolk, SC1 4AB]
+    planningType: Full planning permission
+    units: 75
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-07-10
+    expires: 2027-01-10
+    boundary: taverham
+    record:
+      planningReference: 2026/0240/FUL
+      planningStatus: in-dispute
+      officer: John Smith
+      status: review-later
+      history:
+        - event: added
+          by: John Smith
+          at: 2026-07-11T14:25
+        - event: status
+          status: review-later
+          by: John Smith
+          at: 2026-07-18T10:00
+
+  - reference: NRL-101178
+    developer: Greenacre Living
+    address: [Greenacre House, 4 Market Street, Scarfolk, SC2 1GL]
+    planningType: Full planning permission
+    units: 26
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-06-26
+    expires: 2026-12-26
+    boundary: wymondham
+    record:
+      planningReference: 2026/0211/FUL
+      planningStatus: active
+      officer: Aisha Khan
+      status: confirmed
+      history:
+        - event: added
+          by: Aisha Khan
+          at: 2026-06-27T09:30
+        - event: status
+          status: confirmed
+          by: Aisha Khan
+          at: 2026-07-01T13:40
+
+  - reference: NRL-101236
+    developer: Scarfolk Homes Ltd
+    address: [Unit 7, Kettle Hill Business Park, Scarfolk, SC4 7KH]
+    planningType: Reserved matters
+    units: 40
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-06-12
+    expires: 2026-12-12
+    boundary: reepham
+    record:
+      planningReference: 2026/0189/REM
+      planningStatus: in-dispute
+      officer: Priya Shah
+      status: received
+      history:
+        - event: added
+          by: Priya Shah
+          at: 2026-06-13T15:15
+
+  # Expired: past their expiry date (today in the prototype is the real date)
+  - reference: NRL-099412
+    developer: Hollow Lane Builders
+    address: [Hollow Lane Yard, Scarfolk, SC3 9LH]
+    planningType: Full planning permission
+    units: 16
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-02-20
+    expires: 2026-08-20
+    boundary: dereham
+    record:
+      planningReference: 2026/0061/FUL
+      planningStatus: active
+      officer: Tom Barker
+      status: confirmed
+      history:
+        - event: added
+          by: Tom Barker
+          at: 2026-02-21T10:10
+        - event: status
+          status: confirmed
+          by: Tom Barker
+          at: 2026-02-25T12:00
+
+  - reference: NRL-099307
+    developer: Mere Farm Homes
+    address: [Mere Farm, Scarfolk Road, Scarfolk, SC5 2MF]
+    planningType: Outline planning permission
+    units: 55
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-02-06
+    expires: 2026-08-06
+    boundary: aylsham
+    record:
+      planningReference: 2026/0044/OUT
+      planningStatus: active
+      officer: John Smith
+      status: received
+      history:
+        - event: added
+          by: John Smith
+          at: 2026-02-07T09:50
+
+  - reference: NRL-099188
+    developer: Wensum Valley Estates
+    address: [Riverside Offices, Mill Lane, Scarfolk, SC6 3WV]
+    planningType: Full planning permission
+    units: 22
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-01-15
+    expires: 2026-07-15
+    boundary: hethersett
+    record:
+      planningReference: 2026/0012/FUL
+      planningStatus: in-dispute
+      officer: Aisha Khan
+      status: rejected
+      history:
+        - event: added
+          by: Aisha Khan
+          at: 2026-01-16T11:35
+        - event: status
+          status: rejected
+          by: Aisha Khan
+          at: 2026-01-30T14:20
+
+  - reference: NRL-099054
+    developer: Northfield Construction
+    address: [Northfield Depot, Scarfolk, SC7 5NC]
+    planningType: Full planning permission
+    units: 110
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-01-08
+    expires: 2026-07-08
+    boundary: taverham
+    record:
+      planningReference: 2025/1187/FUL
+      planningStatus: active
+      officer: Priya Shah
+      status: confirmed
+      history:
+        - event: added
+          by: Priya Shah
+          at: 2026-01-09T10:00
+        - event: status
+          status: confirmed
+          by: Priya Shah
+          at: 2026-01-14T09:25
+
+fallback:
+  developer: Scarfolk Homes Ltd
+  address: [Unit 7, Kettle Hill Business Park, Scarfolk, SC4 7KH]
+  planningType: Full planning permission
+  units: 100
+  edp: *edp
+  levyAmount: 'X,XXX'
+  # Issued today, expiring six months later
+  boundary: wymondham
