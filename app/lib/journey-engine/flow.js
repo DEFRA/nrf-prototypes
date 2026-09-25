@@ -967,6 +967,35 @@ function exportScreens(journey, options = {}) {
   return screens
 }
 
+/**
+ * Pages a user can only reach once signed in, for previews: the journey's
+ * `preview.signedInFrom` pages (where signing in leads) and every page their
+ * Continue buttons and links go on to. Change links and returns to a summary
+ * page are left out, since they lead back to pages seen before signing in.
+ * Returns null when the journey does not say where signing in leads.
+ */
+function signedInPages(journey) {
+  const from = journey.preview && journey.preview.signedInFrom
+  if (!from || !from.length) {
+    return null
+  }
+  const edges = getEdges(journey).filter(
+    (edge) => !edge.external && ['next', 'link'].includes(edge.kind)
+  )
+  const reached = new Set(from)
+  const queue = [...from]
+  while (queue.length) {
+    const id = queue.shift()
+    for (const edge of edges) {
+      if (edge.fromId === id && !reached.has(edge.toId)) {
+        reached.add(edge.toId)
+        queue.push(edge.toId)
+      }
+    }
+  }
+  return reached
+}
+
 module.exports = {
   previewVariants,
   copyVariants,
@@ -979,6 +1008,7 @@ module.exports = {
   journeySections,
   exportSections,
   getEdges,
+  signedInPages,
   externalNodes,
   layoutLevels,
   mainChain,

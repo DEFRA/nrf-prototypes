@@ -133,7 +133,15 @@ session:
 # Sample answers used when a page is opened with ?preview=1 and on the
 # screen wall at /tools/journeys/nrf-request-to-use-1. Only a summary page
 # opened that way writes them to the session, so its Change links work.
+# The sample account would show every page signed in: `signedInFrom` names
+# where signing in leads, and only those pages and the ones after them show
+# Sign out and the agent's organisation in the header.
 preview:
+  signedInFrom:
+    - defra-register
+    - defra-choose-organisation
+    - individual-address
+    - org-address
   data:
     journeyType: request-to-use
     hasNrlReference: 'Yes'
@@ -291,9 +299,20 @@ pages:
     back: email
 
   # The email with the retrieval link. Following the link loads the quote.
+  # User research aid in the footer: the page an expired retrieval link
+  # opens, in this tab in place of the email's link
   - id: retrieve-email
     handoff: 2026-09-21
+    research:
+      - text: Expired link
+        href: link-expired
+        newTab: false
     next: review-quote-details
+
+  # Placeholder copy: the retrieval link has expired, so the user asks for
+  # a new one
+  - id: link-expired
+    back: retrieve-email
 
   - id: review-quote-details
     guard: { key: quoteReference, isSet: true, redirect: quote-reference }

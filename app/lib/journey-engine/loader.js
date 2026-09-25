@@ -885,6 +885,14 @@ function validateChoiceValues(journey, problems) {
     }
   }
 
+  // Where signing in leads, for the header on previews (see signedInPages)
+  const pageIds = new Set(journey.pages.map((page) => page.id))
+  for (const id of (journey.preview && journey.preview.signedInFrom) || []) {
+    if (!pageIds.has(id)) {
+      problems.push(`preview.signedInFrom: unknown page '${id}'`)
+    }
+  }
+
   // The sample answers stand in for real ones in preview and ?errors=false
   const sample = (journey.preview && journey.preview.data) || {}
   for (const [key, value] of Object.entries(sample)) {

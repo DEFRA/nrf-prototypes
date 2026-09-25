@@ -1,10 +1,32 @@
 {#
   Footer for the mock emails (`layout: email`). An email does not carry the
   GOV.UK footer, so this is a plain grey band with the sort of generic text a
-  mail client shows at the end of a service email.
+  mail client shows at the end of a service email. A page's `research:` links
+  sit above the text in the same "User research" panel as layouts/main.html.
 #}
+{% set emailResearchHidden = embed or (data and (data.research == 'false' or data.research == false)) %}
 <footer class="app-email-footer" role="contentinfo">
   <div class="govuk-width-container">
+    {% if page and page.research and not emailResearchHidden %}
+    <div class="app-footer--research">
+      <div class="govuk-footer__navigation">
+        <div class="govuk-footer__section">
+          <h2 class="govuk-footer__heading">User research</h2>
+          <ul class="govuk-footer__list">
+            {% for link in page.research %}
+            <li class="govuk-footer__list-item">
+              {% if link.newTab %}
+              <a class="govuk-footer__link" href="{{ link.href }}" target="_blank" rel="noopener">{{ link.text }} (opens in new tab)</a>
+              {% else %}
+              <a class="govuk-footer__link" href="{{ link.href }}">{{ link.text }}</a>
+              {% endif %}
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+    {% endif %}
     <p class="app-email-footer__text">
       This email was sent automatically. Do not reply to it.
     </p>

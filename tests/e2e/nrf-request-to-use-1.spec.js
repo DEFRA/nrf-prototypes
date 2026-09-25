@@ -44,6 +44,7 @@ const {
   link,
   followLink,
   followResearchLink,
+  researchLink,
   changeLink,
   expectHeading,
   expectError,
@@ -88,6 +89,19 @@ test.describe('nrf-request-to-use-1 preview mode', () => {
       )
     })
   }
+
+  test('a preview shows the user signed in only after signing in', async ({
+    page
+  }) => {
+    for (const id of ['review-quote-details', 'sign-in-method']) {
+      await page.goto(`${journey.byId.get(id).path}?preview=1`)
+      await expect(page.getByRole('link', { name: 'Sign out' })).toHaveCount(0)
+    }
+    for (const id of ['developer-details', 'check-your-answers']) {
+      await page.goto(`${journey.byId.get(id).path}?preview=1`)
+      await expect(page.getByRole('link', { name: 'Sign out' })).toHaveCount(1)
+    }
+  })
 
   test('a form page previews one error per required field', async ({
     page
@@ -1166,6 +1180,19 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
     await expectHeading(page, 'reference-not-matched')
     await page.getByRole('link', { name: 'Back' }).click()
     await expect(page).toHaveURL(`${base}/email`)
+  })
+
+  test('an expired retrieval link is a research link on the email', async ({
+    page
+  }) => {
+    await page.goto(`${base}/retrieve-email?preview=1`)
+    const expired = researchLink(page, 'retrieve-email', 'link-expired')
+    await expect(expired).not.toHaveAttribute('target', '_blank')
+    await expired.click()
+    await expect(page).toHaveURL(`${base}/link-expired`)
+    await expectHeading(page, 'link-expired')
+    await page.getByRole('link', { name: 'Back' }).click()
+    await expect(page).toHaveURL(`${base}/retrieve-email`)
   })
 
   test('the journey has no copies of the quote pages', () => {

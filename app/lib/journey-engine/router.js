@@ -20,7 +20,7 @@
 const multer = require('multer')
 const { evaluate, firstMatch, isTruthy } = require('./expressions')
 const { validatePage, previewErrors, message } = require('./validation')
-const { previewErrorKey } = require('./flow')
+const { previewErrorKey, signedInPages } = require('./flow')
 const { resolveBackLink, toPath } = require('./back-link')
 const { createRenderer } = require('./markdown')
 const {
@@ -70,6 +70,23 @@ function previewData(journey, page, variantId) {
     : null
   const variantData = (variant && variant.data) || {}
   return JSON.parse(JSON.stringify({ ...base, ...override, ...variantData }))
+}
+
+/**
+ * Whether the header shows the user as signed in: the journey's `signedIn`
+ * condition. A preview's sample answers always hold an account, so there
+ * the page must also come after signing in (see signedInPages), or every
+ * page on the screen wall would show Sign out and the agent's organisation.
+ */
+function isSignedIn(chrome, page, ctx) {
+  if (!chrome.signedIn || !evaluate(chrome.signedIn, ctx)) {
+    return false
+  }
+  if (ctx.preview && chrome === ctx.journey) {
+    const pages = signedInPages(chrome)
+    return !pages || pages.has(page.id)
+  }
+  return true
 }
 
 /**
@@ -507,7 +524,7 @@ function buildModel(ctx, extra = {}) {
     errorHref: page.field || 'main-content',
     // The header shows Sign out (and the agent's organisation) when the
     // journey's `signedIn` condition holds
-    signedIn: chrome.signedIn ? evaluate(chrome.signedIn, ctx) : false,
+    signedIn: isSignedIn(chrome, page, ctx),
     account: ctx.data.account,
     isChange: ctx.isChange,
     navFromSummary: ctx.navFromSummary,
