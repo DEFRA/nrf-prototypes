@@ -211,6 +211,11 @@ test.describe('participant details', () => {
     await reachRegistrationType(page, 'new-company@example.com', 'organisation')
     await answer(page, 'defra-registration-type', 'business')
     await submit(page, 'defra-registration-type')
+    // The name is filled in from the participant's details
+    await expect(page).toHaveURL(`${base}/defra-name`)
+    await submit(page, 'defra-name')
+    await fillField(page, 'defra-telephone', 'telephone-number', '07700 900456')
+    await submit(page, 'defra-telephone')
     // The business pages' bar shows the participant's name
     await expect(page.locator('.govuk-service-navigation')).toContainText(
       'Ada Lovelace'

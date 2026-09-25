@@ -8,6 +8,15 @@ rows:
     value: Business
     change: defra-registration-type
     changeHidden: account type
+  - heading: Your details
+  - key: Name
+    value: '{{ defraName.firstName }} {{ defraName.lastName }}'
+    change: defra-name
+    changeHidden: name
+  - key: Telephone number
+    value: '{{ defraTelephone.telephoneNumber }}'
+    change: defra-telephone
+    changeHidden: your telephone number
   - heading: Business details
   - key: Type
     value: Limited company

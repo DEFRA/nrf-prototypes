@@ -611,17 +611,22 @@ pages:
     sessionKey: defraAccountType
     changeable: true
     guard: { key: account, isSet: true, redirect: sign-in-method }
-    next:
-      - when: { key: defraAccountType, equals: individual }
-        goto: defra-name
-      - goto: defra-trading-uk
+    next: defra-name
 
-  # Individual: name, telephone, address (found or entered), memorable word
+  # Everyone gives their name and telephone number. An individual then
+  # gives an address and memorable word; a business carries on to its
+  # business details
   - id: defra-name
     shared: defra-id
     sessionKey: defraName
     changeable: true
     guard: { key: account, isSet: true, redirect: sign-in-method }
+    back:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - when: { key: account.invitedEmployee, truthy: true }
+        goto: defra-what-we-need
+      - goto: defra-registration-type
     next:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
@@ -635,6 +640,8 @@ pages:
     next:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
+      - when: { key: defraAccountType, equals: business }
+        goto: defra-trading-uk
       - goto: defra-postcode
 
   # Find address: the postcode leads to a fixed list; the links on both pages

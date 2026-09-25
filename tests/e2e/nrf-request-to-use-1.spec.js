@@ -583,6 +583,18 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
     await atRegistrationType(page)
     await answer(page, 'defra-registration-type', 'business')
     await submit(page, 'defra-registration-type')
+    // A business gives the registering person's name and telephone first
+    await expect(page).toHaveURL(`${base}/defra-name`)
+    await expect(page.locator('.govuk-back-link')).toHaveAttribute(
+      'href',
+      `${base}/defra-registration-type`
+    )
+    await fillField(page, 'defra-name', 'first-name', 'Trevor')
+    await fillField(page, 'defra-name', 'last-name', 'Barker')
+    await submit(page, 'defra-name')
+    await expect(page).toHaveURL(`${base}/defra-telephone`)
+    await fillField(page, 'defra-telephone', 'telephone-number', '07700 900456')
+    await submit(page, 'defra-telephone')
     await expect(page).toHaveURL(`${base}/defra-trading-uk`)
     // The business pages wear the "Your Defra account" bar
     await expect(
@@ -630,6 +642,15 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
     await expect(page).toHaveURL(`${base}/defra-business-check-answers`)
     await expect(page.locator('main')).toContainText('09084488')
     await expect(page.locator('main')).toContainText('hello@acme.com')
+    // The registering person's details are played back
+    await expect(page.locator('main')).toContainText('Trevor Barker')
+    await expect(page.locator('main')).toContainText('07700 900456')
+    await page
+      .getByRole('link', { name: 'Change your telephone number' })
+      .click()
+    await expect(page).toHaveURL(/\/defra-telephone/)
+    await submit(page, 'defra-telephone')
+    await expect(page).toHaveURL(`${base}/defra-business-check-answers`)
 
     await submit(page, 'defra-business-check-answers')
     // The registration email for a business names the company
@@ -657,6 +678,11 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
     await atRegistrationType(page)
     await answer(page, 'defra-registration-type', 'business')
     await submit(page, 'defra-registration-type')
+    await fillField(page, 'defra-name', 'first-name', 'Trevor')
+    await fillField(page, 'defra-name', 'last-name', 'Barker')
+    await submit(page, 'defra-name')
+    await fillField(page, 'defra-telephone', 'telephone-number', '07700 900456')
+    await submit(page, 'defra-telephone')
     await answer(page, 'defra-trading-uk', 'No')
     await submit(page, 'defra-trading-uk')
     await expect(page).toHaveURL(`${base}/defra-has-crn`)
