@@ -1,9 +1,12 @@
 ---
 # A developer record (app/views/lpa-manage-1/view-record.html). The heading
 # is the record's NRL reference; `text:` holds the rest of the page's words.
-# The status radios sit at the bottom of the page and post back to it; the
-# first option is the status of a record just added, and Rejected is final
-# (see records.yaml).
+# The review options sit at the bottom of the page, none chosen, and
+# Submit returns to the dashboard. A record For review offers the first
+# three options (Rejected is final; later keeps it For review and notes it
+# on the timeline). Once its commitment details are reviewed the options
+# with `step: planning` take their place: they set the planning
+# application's stage (see records.yaml).
 type: custom
 rows:
   - heading: Commitment details
@@ -23,25 +26,35 @@ rows:
       then: '{{ record.reviewedBy }}'
       else: Not reviewed yet
 options:
-  - label: For review
-    value: for-review
   - label: Review and confirm commitment details
     value: reviewed
   - label: Review and confirm commitment details later
     value: review-later
   - label: Reject commitment details
     value: rejected
+  - label: Planning permission granted
+    value: granted
+    step: planning
+  - label: Planning permission refused
+    value: refused
+    step: planning
+  - label: Under appeal
+    value: under-appeal
+    step: planning
+  - label: In judicial review
+    value: judicial-review
+    step: planning
 errors:
   required: Select a new status for this record
+  stageRequired: Select the stage the planning application has reached
   comment: Enter a comment explaining why you are rejecting the commitment details
-button: Change status
+button: Submit
 text:
   addRecord: Add a developer record
-  successTitle: Success
-  added: Record added
-  statusChanged: Status updated
+  successTitle: Commitment details retrieved 
+  added: A new record has been created
   viewCertificate: View full certificate
-  statusLegend: Change status
+  statusLegend: Review options
   commentLabel: Add a comment
   commentHint: Explain why you are rejecting the commitment details
   # Under the comment box, and in place of the radios once rejected
@@ -49,13 +62,15 @@ text:
   rejectedFinal: This record has been rejected. Its status cannot be changed.
   warning: Warning
   timelineHeading: Audit timeline
-  timelineAdded: Record added
+  timelineAdded: Commitment details retrieved
   timelineStatus: Status changed to
+  timelineReviewLater: Marked to review and confirm later
+  timelineStage: Planning application stage changed to
   timelineComment: Comment
   by: by
   at: at
 actions:
-  - text: Back to dashboard
+  - text: Manage developer records
     kind: secondary
     goto: dashboard
 ---

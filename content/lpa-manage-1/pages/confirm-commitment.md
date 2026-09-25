@@ -2,12 +2,12 @@
 type: check-answers
 rows:
   - include: commitment-summary
-button: Confirm
+button: Continue
 actions:
-  - text: Confirm
+  - text: Continue
 ---
 
-# Confirm commitment details
+# Retrieve these commitment details?
 
 ## Red line boundary
 

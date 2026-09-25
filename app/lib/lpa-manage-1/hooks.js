@@ -14,8 +14,9 @@
  *     the session (`lpaRecords`) over the file's own
  *   - the dashboard's counts and the records table, with search, filters
  *     and sortable columns
- *   - the record page's audit timeline and its status radios, which post
- *     back to the page, and the full certificate behind it
+ *   - the record page's audit timeline and its review options, which post
+ *     back to the page and return to the dashboard, and the full
+ *     certificate behind it
  *
  * Nothing here is real: no passwords are checked or stored.
  */
@@ -43,6 +44,11 @@ const ADDED_STAGE = 'applied'
 // The status that needs a comment, and the field the comment is in
 const REJECTED_STATUS = 'rejected'
 const COMMENT_FIELD = 'status-comment'
+// Reviewing the commitment details moves a record on to its planning
+// application's stage; putting it off keeps it For review
+const REVIEWED_STATUS = 'reviewed'
+const REVIEW_LATER = 'review-later'
+const PLANNING_STEP = 'planning'
 const SESSION_KEYS = ['officer', 'signInEmail']
 
 // ------------------------------------------------------------ The data
@@ -265,6 +271,7 @@ function recordOf({ entry, record }, store, today = new Date()) {
       .map((event) => ({
         event: event.event,
         status: event.status ? statusOf(event.status, store) : null,
+        stage: event.stage ? planningStageOf(event.stage, store) : null,
         comment: event.comment || '',
         by: event.by,
         date: formatDate(event.date),
@@ -745,12 +752,26 @@ function loadRecord(ctx) {
   return null
 }
 
-// The record page: a flash message says what just happened, and the
-// status radios open on the record's current status. They post back here:
-// the new status, and a comment when rejecting, go on the audit timeline.
-// Choosing the current status again changes nothing, so the timeline never
-// repeats itself. Rejecting is final: a rejected record shows a warning in
-// place of the radios, and a post for it changes nothing.
+// Which review options a record offers: the first step's (options with no
+// `step`) until its commitment details are reviewed, then the planning
+// application stages (`step: planning`)
+function stepOf(record) {
+  return record && record.status.value === REVIEWED_STATUS ? PLANNING_STEP : ''
+}
+
+function optionsFor(page, record) {
+  const step = stepOf(record)
+  return page.content.options.filter((option) => (option.step || '') === step)
+}
+
+// The record page: a flash message says a record was just added. The
+// review options open with none chosen and post back here; Submit returns
+// to the dashboard, which says the record was updated. Reviewing the
+// details later keeps the record For review and notes it on the timeline;
+// reviewing them moves it on to its planning application's stage, and
+// choosing the stage it is at already changes nothing. Rejecting needs a
+// comment and is final: a rejected record shows a warning in place of the
+// radios, and a post for it changes nothing.
 const viewRecord = {
   load(ctx) {
     const redirect = loadRecord(ctx)
@@ -761,14 +782,19 @@ const viewRecord = {
     // The kit keeps the last post's fields in the session
     delete data[COMMENT_FIELD]
     delete data[ctx.page.field]
-    if (data.record && !(ctx.preview && data.newStatus)) {
-      data.newStatus = data.record.status.value
+    if (!ctx.preview) {
+      delete data.newStatus
     }
   },
   get(ctx, model) {
-    const { data } = ctx
-    model.flash = data.lpaFlash
+    const { data, page } = ctx
+    model.flash = data.lpaFlash === 'added' ? 'added' : null
     delete data.lpaFlash
+    // The items line up with the page's options
+    const offered = new Set(optionsFor(page, data.record))
+    model.content.items = model.content.items.filter((item, index) =>
+      offered.has(page.content.options[index])
+    )
   },
   // `load` does not run before a post, so the record is found again here
   // for the page to show with any error
@@ -782,19 +808,23 @@ const viewRecord = {
     }
     data.commitment = data.record.commitment
     if (data.record.status.value === REJECTED_STATUS) {
-      return { ok: true, value: { status: REJECTED_STATUS, comment: '' } }
+      return { ok: true, value: null }
     }
-    const status = String(body[page.field] || '')
+    const choice = String(body[page.field] || '')
     const comment = String(body[COMMENT_FIELD] || '').trim()
-    data.newStatus = status
-    const allowed = page.content.options.map((option) => String(option.value))
-    if (!allowed.includes(status)) {
+    data.newStatus = choice
+    const step = stepOf(data.record)
+    const allowed = optionsFor(page, data.record).map((option) =>
+      String(option.value)
+    )
+    if (!allowed.includes(choice)) {
+      const key = step === PLANNING_STEP ? 'stageRequired' : 'required'
       return {
         ok: false,
-        errors: [{ field: page.field, message: message(page, 'required') }]
+        errors: [{ field: page.field, message: message(page, key) }]
       }
     }
-    if (status === REJECTED_STATUS && !comment) {
+    if (choice === REJECTED_STATUS && !comment) {
       return {
         ok: false,
         errors: [{ field: COMMENT_FIELD, message: message(page, 'comment') }]
@@ -802,7 +832,11 @@ const viewRecord = {
     }
     return {
       ok: true,
-      value: { status, comment: status === REJECTED_STATUS ? comment : '' }
+      value: {
+        step,
+        choice,
+        comment: choice === REJECTED_STATUS ? comment : ''
+      }
     }
   },
   process(ctx, value) {
@@ -814,28 +848,41 @@ const viewRecord = {
     delete data.newStatus
     delete data[COMMENT_FIELD]
     delete data[ctx.page.field]
+    const dashboardPath = ctx.journey.routes.DASHBOARD
     if (!found || !value) {
-      return { redirect: ctx.journey.routes.DASHBOARD }
+      return { redirect: dashboardPath }
     }
-    const viewPath = `${ctx.journey.routes.VIEW_RECORD}?ref=${encodeURIComponent(reference)}`
-    const current = found.record.status || ADDED_STATUS
-    if (current === value.status || current === REJECTED_STATUS) {
-      return { redirect: viewPath }
-    }
+    const record = found.record
     const officer = (data.officer && data.officer.fullName) || MOCK_OFFICER
-    const event = { event: 'status', status: value.status, by: officer }
-    if (value.comment) {
-      event.comment = value.comment
+    const changes = {}
+    let event
+    if (value.step === PLANNING_STEP) {
+      if ((record.planningStage || ADDED_STAGE) === value.choice) {
+        return { redirect: dashboardPath }
+      }
+      changes.planningStage = value.choice
+      event = { event: 'stage', stage: value.choice }
+    } else if (value.choice === REVIEW_LATER) {
+      event = { event: REVIEW_LATER }
+    } else {
+      changes.status = value.choice
+      event = { event: 'status', status: value.choice }
+      if (value.comment) {
+        event.comment = value.comment
+      }
     }
     data.lpaRecords = data.lpaRecords || {}
     data.lpaRecords[reference] = {
-      ...found.record,
+      ...record,
+      ...changes,
       commitment: found.entry,
-      status: value.status,
-      history: [...(found.record.history || []), { ...event, at: nowStamp() }]
+      history: [
+        ...(record.history || []),
+        { ...event, by: officer, at: nowStamp() }
+      ]
     }
-    data.lpaFlash = 'status'
-    return { redirect: viewPath }
+    data.lpaFlash = 'updated'
+    return { redirect: dashboardPath }
   }
 }
 
@@ -849,6 +896,14 @@ const certificate = {
 const dashboard = {
   get(ctx, model) {
     const { text } = model.content
+    // After Submit on a record page: "NRL-123456 has been updated"
+    if (ctx.data.lpaFlash === 'updated') {
+      model.flash = String(text.updated || '').replace(
+        '{reference}',
+        String(ctx.data.recordReference || '')
+      )
+      delete ctx.data.lpaFlash
+    }
     const path = ctx.journey.routes.RECORDS
     const records = allRecords(ctx.data).sort(newestFirst)
     // Each card counts the records the table shows with its filters set

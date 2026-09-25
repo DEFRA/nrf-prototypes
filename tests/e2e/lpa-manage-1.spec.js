@@ -9,7 +9,8 @@ const {
 
 /**
  * lpa-manage-1: a planning officer signs in with the mock GOV.UK One Login,
- * adds a developer record from an NRL reference, changes its status, and
+ * adds a developer record from an NRL reference, reviews it and sets its
+ * planning application's stage, and
  * finds it on the dashboard and in the table of records.
  *
  * Headings, labels, buttons and errors come from content/lpa-manage-1
@@ -105,8 +106,10 @@ test.describe('lpa-manage-1: manage commitments', () => {
     const timeline = page.locator('.app-timeline')
     await expect(timeline).toContainText(text('view-record', 'timelineAdded'))
     await expect(timeline).toContainText(MOCK_OFFICER)
-    // A new record's status is the first option
-    await expect(optionLocator(page, 'view-record', 'for-review')).toBeChecked()
+    // No review option is chosen for the officer
+    await expect(page.locator('input[name="new-status"]:checked')).toHaveCount(
+      0
+    )
 
     // The new record leads the dashboard's table
     await actionLocator(page, 'view-record', 'secondary').click()
@@ -145,35 +148,80 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expectHeading(page, 'view-record', { record: recorded })
   })
 
-  test('changes a record’s status, with a comment when rejecting', async ({
+  test('reviews a record, then sets its planning application stage', async ({
     page
   }) => {
+    const forReview = store.commitments.find(
+      (entry) => entry.record && entry.record.status === 'for-review'
+    )
+    const viewPath = `${base}/view-record?ref=${forReview.reference}`
+    const items = page.locator('.app-timeline__item')
+    const radios = page.locator('input[name="new-status"]')
     await signIn(page)
-    await page.goto(`${base}/view-record?ref=${recorded.reference}`)
-    const entries = await page.locator('.app-timeline__item').count()
+    await page.goto(viewPath)
+    const entries = await items.count()
 
-    // The radios open on the current status; saving it again changes
-    // nothing, so the timeline gains no entry
-    const current = store.commitments.find(
-      (entry) => entry.reference === recorded.reference
-    ).record.status
-    await expect(optionLocator(page, 'view-record', current)).toBeChecked()
+    // For review: the three review options, none chosen
+    await expect(radios).toHaveCount(3)
+    await expect(page.locator('input[name="new-status"]:checked')).toHaveCount(
+      0
+    )
     await submit(page, 'view-record')
-    await expect(page.locator('.govuk-notification-banner')).toHaveCount(0)
-    await expect(page.locator('.app-timeline__item')).toHaveCount(entries)
+    await expectError(page, 'view-record', 'required')
 
-    // "Later" keeps the record For review in the tag, and its radio ticked
+    // Later keeps it For review, notes it on the timeline and returns to
+    // the dashboard, which says so
     await answer(page, 'view-record', 'review-later')
     await submit(page, 'view-record')
-    await expect(page.locator('h1 .govuk-tag')).toHaveText(
-      store.statuses['for-review'].label
+    await expectHeading(page, 'dashboard')
+    await expect(page.locator('.govuk-notification-banner')).toContainText(
+      text('dashboard', 'updated').replace('{reference}', forReview.reference)
     )
-    await expect(
-      optionLocator(page, 'view-record', 'review-later')
-    ).toBeChecked()
-    await expect(page.locator('.app-timeline__item')).toHaveCount(entries + 1)
+    const row = page.locator('.app-staff-table tbody tr').first()
+    await expect(row).toContainText(forReview.reference)
+    await expect(row).toContainText(store.statuses['for-review'].label)
+    await page.goto(viewPath)
+    await expect(items).toHaveCount(entries + 1)
+    await expect(items.first()).toContainText(
+      text('view-record', 'timelineReviewLater')
+    )
 
-    // Rejecting asks for a comment and warns that it is final
+    // Reviewing moves it on: the options become the planning stages
+    await answer(page, 'view-record', 'reviewed')
+    await submit(page, 'view-record')
+    await expectHeading(page, 'dashboard')
+    await page.goto(viewPath)
+    await expect(page.locator('h1 .govuk-tag')).toHaveText(
+      store.statuses.reviewed.label
+    )
+    await expect(radios).toHaveCount(4)
+    await expect(optionLocator(page, 'view-record', 'reviewed')).toHaveCount(0)
+    await submit(page, 'view-record')
+    await expectError(page, 'view-record', 'stageRequired')
+    await answer(page, 'view-record', 'judicial-review')
+    await submit(page, 'view-record')
+    await expectHeading(page, 'dashboard')
+    const stage = store.planningStages['judicial-review']
+    await expect(row).toContainText(stage)
+    await page.goto(viewPath)
+    await expect(items).toHaveCount(entries + 3)
+    await expect(items.first()).toContainText(
+      `${text('view-record', 'timelineStage')} ${stage}`
+    )
+    await expect(page.locator('h1 .govuk-tag')).toHaveText(
+      store.statuses.reviewed.label
+    )
+  })
+
+  test('rejecting needs a comment and is final', async ({ page }) => {
+    const forReview = store.commitments.find(
+      (entry) => entry.record && entry.record.status === 'for-review'
+    )
+    const viewPath = `${base}/view-record?ref=${forReview.reference}`
+    await signIn(page)
+    await page.goto(viewPath)
+    const entries = await page.locator('.app-timeline__item').count()
+
     await answer(page, 'view-record', 'rejected')
     await expect(page.locator('.govuk-warning-text')).toContainText(
       text('view-record', 'rejectWarning')
@@ -185,13 +233,9 @@ test.describe('lpa-manage-1: manage commitments', () => {
       .getByLabel(text('view-record', 'commentLabel'), { exact: true })
       .fill('The boundary does not match the application')
     await submit(page, 'view-record')
+    await expectHeading(page, 'dashboard')
 
-    await expect(page).toHaveURL(
-      `${base}/view-record?ref=${recorded.reference}`
-    )
-    await expect(page.locator('.govuk-notification-banner')).toContainText(
-      text('view-record', 'statusChanged')
-    )
+    await page.goto(viewPath)
     const rejected = store.statuses.rejected.label
     await expect(page.locator('h1 .govuk-tag')).toHaveText(rejected)
     const latest = page.locator('.app-timeline__item').first()
@@ -199,7 +243,7 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(latest).toContainText(
       'The boundary does not match the application'
     )
-    await expect(page.locator('.app-timeline__item')).toHaveCount(entries + 2)
+    await expect(page.locator('.app-timeline__item')).toHaveCount(entries + 1)
 
     // A rejected record's status cannot change: a warning replaces the
     // radios

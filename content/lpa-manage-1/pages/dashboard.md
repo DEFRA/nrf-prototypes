@@ -5,15 +5,18 @@
 type: custom
 text:
   addRecord: Add a developer record
-  searchLabel: Search commitments
+  # The banner after Submit on a record page; {reference} is its NRL reference
+  successTitle: Success
+  updated: '{reference} has been updated'
+  searchLabel: Search developer records
   searchButton: Search
   # The count cards, each under its number
   forReviewCount: Commitment details for review
   rejectedCount: Rejected commitment details
   reviewedActiveCount: Reviewed commitments with active planning applications
-  overdueCount: Overdue actions for commitments
-  tableHeading: Table of certificates
-  viewAll: View all certificates
+  overdueCount: Overdue actions
+  tableHeading: Latest
+  viewAll: View all
   columns:
     reference: NRL reference
     developer: Developer

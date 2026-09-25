@@ -11,8 +11,9 @@
 # developer made by its NRL reference, confirm it and add the planning
 # application reference, which adds the record) or looks through the records
 # the council already has (a dashboard and a table of every record). Each
-# record has its own page with an audit timeline and the status radios, and
-# a full certificate a click away. Behaviour that needs code (the officer,
+# record has its own page with an audit timeline and the review options
+# (reviewing the commitment details, then the planning application's
+# stage), and a full certificate a click away. Behaviour that needs code (the officer,
 # the commitment store, the tables) is in app/lib/lpa-manage-1/hooks.js.
 #
 # Every page wears the staff layout: the service name, the officer's account
@@ -61,7 +62,9 @@ homepage:
   changes:
     - new service for LPA officers, with its own header and a wider page for tables
     - add a developer record from an NRL reference
-    - record page with an audit timeline, the status radios and a comment when rejecting
+    - record page with an audit timeline, the review options and a comment when rejecting
+    - review options start unchosen and Submit returns to the dashboard; reviewing later is noted on the timeline
+    - once the commitment details are reviewed, the options set the planning application's stage
     - full commitment certificate behind the record, with breadcrumbs
     - dashboard cards open the table filtered; overdue actions card
     - table of records with sortable columns and a filter, built from canned records
@@ -162,8 +165,9 @@ pages:
     next: view-record
 
   # --------------------------------------------------------------------
-  # A record: view-record?ref=NRL-123456. The status radios at the bottom
-  # post back here; the change goes on the audit timeline (hooks.js).
+  # A record: view-record?ref=NRL-123456. The review options at the bottom
+  # post back here; the change goes on the audit timeline and Submit
+  # returns to the dashboard (hooks.js).
   - id: view-record
     template: lpa-manage-1/view-record
     field: new-status
@@ -176,9 +180,9 @@ pages:
         - id: added
           label: Just added
           data: { lpaFlash: added }
-        - id: status
-          label: Status changed
-          data: { lpaFlash: status }
+        - id: planning
+          label: Reviewed (planning stages)
+          data: { recordReference: NRL-100903 }
         - id: rejected
           label: Rejecting
           data: { newStatus: rejected }
@@ -194,6 +198,11 @@ pages:
     template: lpa-manage-1/dashboard
     guard: *signed-in
     back: what-would-you-like-to-do
+    preview:
+      variants:
+        - id: updated
+          label: Record updated
+          data: { lpaFlash: updated }
 
   - id: records
     template: lpa-manage-1/records

@@ -2,14 +2,26 @@
   The landing page (content/lpa-manage-1/pages/dashboard.md): a button to add
   a record, the search, counts of the council's records (each opening the
   table filtered to them) and the most recently updated ones. Model extras
-  from app/lib/lpa-manage-1/hooks.js: cards [{ count, label, href }],
-  table { head, rows }.
+  from app/lib/lpa-manage-1/hooks.js: flash (the banner after Submit on a
+  record page), cards [{ count, label, href }], table { head, rows }.
 #}
 {% extends "journey-engine/_page.html" %}
 
 {% set text = content.text %}
 
 {% block content %}
+{% if flash %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds-from-desktop">
+    {{ govukNotificationBanner({
+      type: "success",
+      titleText: text.successTitle,
+      html: '<p class="govuk-notification-banner__heading">' + (flash | escape) + '</p>'
+    }) }}
+  </div>
+</div>
+{% endif %}
+
 <div class="app-staff-page-header">
   <h1 class="govuk-heading-xl">{{ content.heading }}</h1>
   {{ govukButton({ text: text.addRecord, href: routes.RETRIEVE_COMMITMENT }) }}

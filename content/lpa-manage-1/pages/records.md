@@ -5,7 +5,7 @@ type: custom
 text:
   addRecord: Add a developer record
   lede: Update planning permission statuses or cancel commitments.
-  searchLabel: Search commitments
+  searchLabel: Search developer records
   searchButton: Search
   filterSummary: Filter records
   filterStatus: Status

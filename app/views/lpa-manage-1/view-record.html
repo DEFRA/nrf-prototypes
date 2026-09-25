@@ -1,10 +1,11 @@
 {#
   A developer record (content/lpa-manage-1/pages/view-record.md): a success
-  banner after adding it or changing its status, the NRL reference with its
+  banner after adding it, the NRL reference with its
   status, the first commitment details with a link to the full certificate,
   the planning details (the page's `rows`), the red line boundary (the
-  page's copy), the audit timeline and the status radios, which post back
-  to this page. Rejecting asks for a comment and warns it is final; a
+  page's copy), the audit timeline and the review options (the hook leaves
+  only those for the record's step in content.items), which post back to
+  this page. Rejecting asks for a comment and warns it is final; a
   rejected record shows that warning in place of the radios. Model extras
   from
   app/lib/lpa-manage-1/hooks.js: flash, data.record.
@@ -26,7 +27,7 @@
       {{ govukNotificationBanner({
         type: "success",
         titleText: text.successTitle,
-        html: '<p class="govuk-notification-banner__heading">' + ((text.added if flash == 'added' else text.statusChanged) | escape) + '</p>'
+        html: '<p class="govuk-notification-banner__heading">' + (text.added | escape) + '</p>'
       }) }}
     {% endif %}
   </div>
@@ -72,7 +73,7 @@
         {% for event in record.timeline %}
         <li class="app-timeline__item">
           <h3 class="app-timeline__title">
-            {% if event.event == 'added' %}{{ text.timelineAdded }}{% else %}{{ text.timelineStatus }} {{ event.status.label }}{% endif %}
+            {% if event.event == 'added' %}{{ text.timelineAdded }}{% elif event.event == 'review-later' %}{{ text.timelineReviewLater }}{% elif event.event == 'stage' %}{{ text.timelineStage }} {{ event.stage.label }}{% else %}{{ text.timelineStatus }} {{ event.status.label }}{% endif %}
           </h3>
           <p class="app-timeline__byline">{{ text.by }} {{ event.by }}</p>
           <p class="app-timeline__date">{{ event.date }} {{ text.at }} {{ event.time }}</p>

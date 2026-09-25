@@ -15,9 +15,11 @@
 #                 purple, pink, red, orange, yellow), or `shownAs` another
 #                 status to look like it in the tables, tags and filter.
 #                 `for-review` is the status of a record an officer has
-#                 just added, and `rejected` is final. The radios on
-#                 pages/view-record.md offer some of them; the others
-#                 (withdrawn, cancelled) are set outside this prototype
+#                 just added (and stays so when they review it later),
+#                 and `rejected` is final. The radios on
+#                 pages/view-record.md offer reviewed and rejected; the
+#                 others (withdrawn, cancelled) are set outside this
+#                 prototype
 #   boundaries    named red line boundaries: open rings of [longitude,
 #                 latitude] pairs. A commitment names one (or gives its own
 #                 `coordinates`)
@@ -32,22 +34,28 @@
 #
 # A record:
 #   planningReference  the planning application it belongs to
-#   planningStage      applied, refused or in-dispute (one of the
-#                      planningStages below; the table's column and filter,
-#                      and the dashboard's first two count cards, which
-#                      leave out commitments past their expiry date)
+#   planningStage      one of the planningStages below (the table's column
+#                      and filter, and the dashboard's count cards). A
+#                      record is `applied` until its commitment details
+#                      are reviewed; the record page's radios then move it
+#                      on
 #   overdue            true when an action on the record is overdue (the
 #                      dashboard's third count card and the table's filter)
 #   officer            who added it (the table's Officer column)
 #   status             one of the statuses above
-#   history            the audit timeline, oldest first: `event: added` or
-#                      `event: status` (with the new `status`), `by` and `at`
-#                      (YYYY-MM-DDTHH:MM). The newest entry is "Last modified"
+#   history            the audit timeline, oldest first: `event: added`,
+#                      `event: review-later` (reviewing the details was put
+#                      off), `event: status` (with the new `status`) or
+#                      `event: stage` (with the new planning `stage`), and
+#                      `by` and `at` (YYYY-MM-DDTHH:MM). The newest entry
+#                      is "Last modified"
 
 planningStages:
   applied: Applied
+  granted: Granted
   refused: Refused
-  in-dispute: In dispute
+  under-appeal: Under appeal
+  judicial-review: In judicial review
 
 planningTypes:
   Full planning permission: Full
@@ -56,8 +64,6 @@ planningTypes:
 
 statuses:
   for-review: { label: For review, colour: light-blue }
-  # "Review and confirm commitment details later": shown as For review
-  review-later: { shownAs: for-review }
   reviewed: { label: Reviewed, colour: green }
   rejected: { label: Rejected, colour: red }
   withdrawn: { label: Withdrawn, colour: purple }
@@ -179,7 +185,7 @@ commitments:
     boundary: taverham
     record:
       planningReference: 2026/0388/FUL
-      planningStage: applied
+      planningStage: granted
       officer: Priya Shah
       status: reviewed
       history:
@@ -190,6 +196,10 @@ commitments:
           status: reviewed
           by: Priya Shah
           at: 2026-09-02T14:05
+        - event: stage
+          stage: granted
+          by: Priya Shah
+          at: 2026-09-16T11:30
 
   - reference: NRL-100562
     developer: Broadland Housing Partnership
@@ -203,7 +213,7 @@ commitments:
     boundary: wymondham
     record:
       planningReference: 2026/0351/OUT
-      planningStage: in-dispute
+      planningStage: applied
       overdue: true
       officer: Tom Barker
       status: for-review
@@ -224,7 +234,7 @@ commitments:
     boundary: reepham
     record:
       planningReference: 2026/0330/FUL
-      planningStage: applied
+      planningStage: under-appeal
       officer: John Smith
       status: reviewed
       history:
@@ -235,6 +245,14 @@ commitments:
           status: reviewed
           by: Aisha Khan
           at: 2026-08-19T09:15
+        - event: stage
+          stage: refused
+          by: John Smith
+          at: 2026-09-03T16:20
+        - event: stage
+          stage: under-appeal
+          by: John Smith
+          at: 2026-09-17T09:45
 
   - reference: NRL-100744
     developer: Kettle Hill Developments
@@ -316,7 +334,7 @@ commitments:
     boundary: taverham
     record:
       planningReference: 2026/0240/FUL
-      planningStage: in-dispute
+      planningStage: applied
       overdue: true
       officer: John Smith
       status: for-review
@@ -361,13 +379,16 @@ commitments:
     boundary: reepham
     record:
       planningReference: 2026/0189/REM
-      planningStage: in-dispute
+      planningStage: applied
       officer: Priya Shah
       status: for-review
       history:
         - event: added
           by: Priya Shah
           at: 2026-06-13T15:15
+        - event: review-later
+          by: Priya Shah
+          at: 2026-06-16T10:05
 
   # Expired: past their expiry date (today in the prototype is the real date)
   - reference: NRL-099412
@@ -430,7 +451,7 @@ commitments:
     boundary: hethersett
     record:
       planningReference: 2026/0012/FUL
-      planningStage: in-dispute
+      planningStage: judicial-review
       officer: Aisha Khan
       status: rejected
       history:
