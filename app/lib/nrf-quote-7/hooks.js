@@ -16,6 +16,7 @@
 const turf = require('@turf/turf')
 const { message, validatePage } = require('../journey-engine/validation')
 const edpData = require('../map/edp-data')
+const { participantOf } = require('../nrf-request-to-use-1/hooks')
 
 // ============================================================================
 // EDP DATA (loaded once at startup)
@@ -629,12 +630,39 @@ const checkYourAnswers = {
   }
 }
 
+/**
+ * The research participant's made-up email address, first.last@email.com,
+ * from the footer's "Participant details" box: null when no name was given
+ */
+function participantEmail(sessionData) {
+  const { firstName, lastName } = participantOf(sessionData)
+  const local = [firstName, lastName]
+    .map((name) => name.toLowerCase().replace(/[^a-z0-9'-]+/g, ''))
+    .filter(Boolean)
+    .join('.')
+  return local ? `${local}@email.com` : null
+}
+
+// The quote email (usually opened from the footer with the sample quote)
+// is addressed to the participant once the facilitator has given their
+// name. Only the page's own copy of the answers changes, never the session.
+const estimateEmailContent = {
+  load(ctx) {
+    const email = participantEmail(ctx.req.session.data)
+    if (email) {
+      ctx.data = { ...ctx.data, estimateEmail: email }
+    }
+  }
+}
+
 module.exports = {
   map,
   'upload-redline': uploadRedline,
   'checking-file': checkingFile,
   'file-preview': filePreview,
   'check-your-answers': checkYourAnswers,
+  'estimate-email-content': estimateEmailContent,
+  participantEmail,
   checkEDPIntersections,
   checkBoundary,
   buildBoundaryMetadata

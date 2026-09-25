@@ -131,6 +131,23 @@ test.describe('participant details', () => {
     await expect(dialog(page)).toBeHidden()
   })
 
+  test('the quote email is addressed to the participant', async ({ page }) => {
+    const quote = copyOf('nrf-quote-7')
+    const email = `${quote.base}/estimate-email-content?preview=1`
+    await page.goto(`${email}&participant`)
+    await dialog(page).getByLabel('First name').fill(PARTICIPANT.firstName)
+    await dialog(page).getByLabel('Last name').fill(PARTICIPANT.lastName)
+    await dialog(page)
+      .getByRole('button', { name: 'Use these details' })
+      .click()
+    const address = [PARTICIPANT.firstName, PARTICIPANT.lastName]
+      .join('.')
+      .toLowerCase()
+    await expect(page.locator('.govuk-inset-text')).toContainText(
+      `${address}@email.com`
+    )
+  })
+
   test('an embedded preview has no box', async ({ page }) => {
     await page.goto(`${base}/start?preview=1&embed=1`)
     await expect(dialog(page)).toHaveCount(0)
@@ -215,7 +232,7 @@ test.describe('participant details', () => {
       'Analytical Engines Ltd'
     )
     await expect(page.locator('.govuk-inset-text')).not.toContainText(
-      'ACME LTD'
+      'Fenland Homes'
     )
     await submit(page, 'defra-confirm-business')
     await expect(page).toHaveURL(`${base}/defra-business-contact`)
@@ -267,7 +284,7 @@ test.describe('participant details', () => {
       'on behalf of Analytical Engines Ltd',
       { researchParticipant: { organisation: 'Analytical Engines Ltd' } }
     )
-    await expect(page.locator('main')).not.toContainText('Bloggs Developers')
+    await expect(page.locator('main')).not.toContainText('Fenland Homes')
   })
 
   test('an agent acts for the client given', async ({ page }) => {

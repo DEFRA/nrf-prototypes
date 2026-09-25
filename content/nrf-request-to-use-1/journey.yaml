@@ -171,17 +171,17 @@ preview:
     signInEmail: agent@example.com
     securityCodeMethod: app
     mobileNumber: 07700 900123
-    governmentGatewayName: John Smith
+    governmentGatewayName: Trevor Barker
     governmentGatewayUserId: 43 93 78 15 57 40
     account:
       accountType: agent
-      fullName: Name Name
-      businessName: Agent Ltd
+      fullName: Trevor Barker
+      businessName: Fenland Homes
       organisationName: Organisation name
       email: agent@example.com
     representedOrganisation: participant
     developerDetails:
-      fullName: A Developer
+      fullName: Trevor Barker
       addressLine1: Development Road
       addressLine2: ''
       town: Development
@@ -197,8 +197,8 @@ preview:
     informationConfirmed: 'Yes'
     defraAccountType: individual
     defraName:
-      firstName: John
-      lastName: Smith
+      firstName: Trevor
+      lastName: Barker
     defraTelephone:
       telephoneNumber: '07900 123456'
     defraPostcode:
@@ -750,7 +750,7 @@ pages:
     preview:
       account:
         accountType: agent
-        fullName: John Smith
+        fullName: Trevor Barker
         email: new@example.com
     next: defra-registered-business
 
@@ -763,7 +763,7 @@ pages:
     preview:
       account:
         accountType: individual
-        fullName: John Smith
+        fullName: Trevor Barker
         email: new-individual@example.com
     next: *signed-in
 
@@ -773,8 +773,8 @@ pages:
     preview:
       account:
         accountType: company
-        fullName: Name Name
-        businessName: ACME LTD
+        fullName: Trevor Barker
+        businessName: Fenland Homes
         email: new-company@example.com
     next: *signed-in
 
@@ -784,9 +784,9 @@ pages:
     preview:
       account:
         accountType: company
-        fullName: John Smith
-        businessName: ACME LTD
-        administratorName: Name Name
+        fullName: Trevor Barker
+        businessName: Fenland Homes
+        administratorName: Trevor Barker
         invitedEmployee: true
         email: new-employee@example.com
     next: *signed-in
@@ -835,8 +835,8 @@ pages:
     preview:
       account:
         accountType: company
-        fullName: Name Name
-        businessName: Developer Ltd
+        fullName: Trevor Barker
+        businessName: Fenland Homes
         email: company@example.com
     next:
       - when: { key: $navFromSummary, truthy: true }
@@ -850,7 +850,7 @@ pages:
     preview:
       account:
         accountType: individual
-        fullName: Name Name
+        fullName: Trevor Barker
         email: individual@example.com
     next:
       - when: { key: $navFromSummary, truthy: true }
@@ -862,8 +862,8 @@ pages:
     preview:
       account:
         accountType: company
-        fullName: Name Name
-        businessName: Developer Ltd
+        fullName: Trevor Barker
+        businessName: Fenland Homes
         email: company@example.com
     next:
       - goto: check-your-answers

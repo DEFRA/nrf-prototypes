@@ -5,7 +5,7 @@
 //
 // The facilitator types the participant's name and the organisation or
 // client they are acting for, once, and the mock accounts use them in place
-// of the stand-in names ("Name Name", Developer Ltd, ACME LTD…): see
+// of the stand-in names ("Trevor Barker", Fenland Homes…): see
 // app/lib/nrf-request-to-use-1/hooks.js. The details live in the session
 // as `researchParticipant`, so Clear data forgets them and Sign out does
 // not. Nothing here is part of the service under test.

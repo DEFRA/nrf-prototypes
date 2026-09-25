@@ -193,7 +193,9 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
     await fillField(page, 'org-address', 'postcode', 'LP1 7RF')
     await submit(page, 'org-address')
     await expect(page).toHaveURL(`${base}/review-your-details`)
-    await expect(page.locator('.govuk-summary-list')).toContainText('Name Name')
+    await expect(page.locator('.govuk-summary-list')).toContainText(
+      'Trevor Barker'
+    )
     await expect(
       changeLink(page, 'review-your-details', 'org-address')
     ).toHaveAttribute(
@@ -201,7 +203,7 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
       `${base}/org-address?change=true&nav=review-your-details`
     )
     await expect(page.locator('.govuk-summary-list')).toContainText(
-      'Developer Ltd'
+      'Fenland Homes'
     )
     await expect(page.locator('.govuk-summary-list')).toContainText(
       '53 Business Lane'
@@ -211,7 +213,7 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
     await expect(page.locator('main')).toContainText(
       rowKey('check-your-answers', 'review-your-details')
     )
-    await expect(page.locator('main')).toContainText('Name Name')
+    await expect(page.locator('main')).toContainText('Trevor Barker')
 
     // Everyone confirms the declaration box before submitting; it is
     // required and the Delete link is the way out
@@ -241,7 +243,7 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
     await expectHeading(page, 'commitment-certificate')
     await expect(page.locator('.app-boundary-map')).toHaveCount(1)
     await expect(page.locator('.govuk-phase-banner')).toHaveCount(0)
-    await expect(page.locator('main')).toContainText('Name Name')
+    await expect(page.locator('main')).toContainText('Trevor Barker')
     await expect(page.locator('main')).toContainText('53 Business Lane')
   })
 
@@ -607,7 +609,9 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
     )
     await submit(page, 'defra-crn')
     await expect(page).toHaveURL(`${base}/defra-confirm-business`)
-    await expect(page.locator('.govuk-inset-text')).toContainText('ACME LTD')
+    await expect(page.locator('.govuk-inset-text')).toContainText(
+      'Fenland Homes'
+    )
     await submit(page, 'defra-confirm-business')
     await expect(page).toHaveURL(`${base}/defra-business-contact`)
     await fillField(
@@ -633,8 +637,8 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
     await expectBodyCopy(
       page,
       'defra-registered-business',
-      'registered to use Defra online services on behalf of ACME LTD',
-      { account: { businessName: 'ACME LTD' } }
+      'registered to use Defra online services on behalf of Fenland Homes',
+      { account: { businessName: 'Fenland Homes' } }
     )
     await expectBodyCopy(
       page,
@@ -710,7 +714,7 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
 
     // The employee email: the administrator finishes setting them up
     await expect(page).toHaveURL(`${base}/defra-registered-employee`)
-    const business = { account: { businessName: 'ACME LTD' } }
+    const business = { account: { businessName: 'Fenland Homes' } }
     await expectHeading(page, 'defra-registered-employee', business)
     await expectBodyCopy(page, 'defra-registered-employee', 'Hello Fabien,', {
       defraName: { firstName: 'Fabien' }
@@ -723,7 +727,7 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
     await expectBodyCopy(
       page,
       'defra-registered-employee',
-      'tasks you can perform on behalf of ACME LTD',
+      'tasks you can perform on behalf of Fenland Homes',
       business
     )
     // They act for the business, so they get the company's pages

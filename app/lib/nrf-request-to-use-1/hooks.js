@@ -71,14 +71,14 @@ const FIXTURE_QUOTE = {
 
 // The stand-in name of a mock account, until the user gives a real one
 // (Defra ID registration, Government Gateway or the participant details)
-const MOCK_NAME = 'Name Name'
+const MOCK_NAME = 'Trevor Barker'
 
 // Mock accounts, keyed on the start of the sign-in email address
 const ACCOUNTS = {
   company: {
     accountType: 'company',
     fullName: MOCK_NAME,
-    businessName: 'Developer Ltd'
+    businessName: 'Fenland Homes'
   },
   individual: {
     accountType: 'individual',
@@ -88,7 +88,7 @@ const ACCOUNTS = {
   agent: {
     accountType: 'agent',
     fullName: MOCK_NAME,
-    businessName: 'Agent Ltd',
+    businessName: 'Fenland Homes',
     organisationName: 'Organisation name'
   }
 }
@@ -154,7 +154,7 @@ function levyFor() {
 }
 
 // The business every company registration number finds (a fixture)
-const FIXTURE_BUSINESS = 'ACME LTD'
+const FIXTURE_BUSINESS = 'Fenland Homes'
 // The administrator who invited an employee to the business's Defra account
 const FIXTURE_ADMINISTRATOR = MOCK_NAME
 

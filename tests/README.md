@@ -51,7 +51,7 @@ await expectError(page, 'agreement') // the page's `required` error
 
 Pages are named by id, options by their `value` and form fields by their `name`: the identifiers the journey's logic already depends on. `followLink(page, id, target)` finds a body link by where it goes, `followResearchLink(page, id, target)` opens a footer user research link's page by where it goes, `changeLink(page, id, target)` a summary row's Change link by the page it changes, and `expectBodyCopy(page, id, phrase)` keeps a prose assertion literal but fails naming the content file when the phrase is gone. `tests/e2e/helpers/request-to-use.js` holds the walkthroughs the request-to-use specs share.
 
-Literals are fine for design-system chrome (`Continue`, `Back`, `Sign out`, `There is a problem`) and for fixture data (`NRL-000001`, `ACME LTD`). `tests/e2e/test-conventions.spec.js` scans the specs and fails on the idioms that used to break: a heading or error summary asserted against a literal string, and `getByLabel(/regex/)`. End a statement with `// copy-ok` if it really must keep one.
+Literals are fine for design-system chrome (`Continue`, `Back`, `Sign out`, `There is a problem`) and for fixture data (`NRL-000001`, `Fenland Homes`). `tests/e2e/test-conventions.spec.js` scans the specs and fails on the idioms that used to break: a heading or error summary asserted against a literal string, and `getByLabel(/regex/)`. End a statement with `// copy-ok` if it really must keep one.
 
 Branching options carry an explicit `value:` in their page file, and the loader refuses a `journey.yaml` that compares an answer with a value none of the page's options can store (see `content/README.md`), so a reword can no longer send the journey the wrong way either.
 

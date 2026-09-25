@@ -73,7 +73,7 @@ preview:
       intersections:
         nutrient: River Trent
       intersectingCatchment: River Trent
-    estimateEmail: jane.smith@example.com
+    estimateEmail: trevor.barker@email.com
     nrfReference: NRL-123456
     levyAmount: '2,500'
 

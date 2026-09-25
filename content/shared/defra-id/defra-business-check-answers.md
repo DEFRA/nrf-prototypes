@@ -19,7 +19,7 @@ rows:
       - goto: defra-has-crn
     changeHidden: company registration number
   - key: Company name
-    value: '{{ researchParticipant.organisation or "ACME LTD" }}'
+    value: '{{ researchParticipant.organisation or "Fenland Homes" }}'
   - key: Registered address
     value:
       lines:
