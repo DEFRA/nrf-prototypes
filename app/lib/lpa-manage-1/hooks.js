@@ -775,6 +775,15 @@ function optionsFor(page, record) {
 // radios, and a post for it changes nothing.
 const viewRecord = {
   load(ctx) {
+    // The screen wall's stage error needs a record past its review
+    if (ctx.preview && ctx.previewError === 'stageRequired') {
+      const reviewed = allRecords(ctx.data).find(
+        (record) => stepOf(record) === PLANNING_STEP
+      )
+      if (reviewed) {
+        ctx.data.recordReference = reviewed.reference
+      }
+    }
     const redirect = loadRecord(ctx)
     if (redirect) {
       return redirect
@@ -796,6 +805,22 @@ const viewRecord = {
     model.content.items = model.content.items.filter((item, index) =>
       offered.has(page.content.options[index])
     )
+    // The screen wall's error states, as a post would show them: the
+    // comment's error with Reject chosen and its box open
+    if (ctx.preview && ctx.previewError) {
+      const onComment = ctx.previewError === 'comment'
+      model.errors = [
+        {
+          field: onComment ? COMMENT_FIELD : page.field,
+          message: message(page, ctx.previewError)
+        }
+      ]
+      if (onComment) {
+        for (const item of model.content.items) {
+          item.checked = item.value === REJECTED_STATUS
+        }
+      }
+    }
   },
   // `load` does not run before a post, so the record is found again here
   // for the page to show with any error
