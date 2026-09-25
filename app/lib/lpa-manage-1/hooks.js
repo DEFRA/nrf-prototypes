@@ -275,7 +275,8 @@ function recordOf({ entry, record }, store, today = new Date()) {
         comment: event.comment || '',
         by: event.by,
         date: formatDate(event.date),
-        time: formatTime(event.date)
+        time: formatTime(event.date),
+        datetime: event.date ? event.date.toISOString() : ''
       }))
       .reverse(),
     commitment: commitmentOf(entry, store)

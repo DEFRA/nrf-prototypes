@@ -61,7 +61,7 @@ text:
   rejectWarning: Once you reject the commitment details, you cannot change the status of this record.
   rejectedFinal: This record has been rejected. Its status cannot be changed.
   warning: Warning
-  timelineHeading: Audit timeline
+  timelineHeading: Timeline
   timelineAdded: Commitment details retrieved
   timelineStatus: Status changed to
   timelineReviewLater: Marked to review and confirm later

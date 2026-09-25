@@ -11,7 +11,7 @@
 //   .app-staff-search       search box with its button
 //   .app-staff-filter       the records table's filter (a details)
 //   .app-staff-table--sortable  column headings that sort the table
-//   .app-timeline           audit history (after the MOJ timeline)
+//   .app-timeline           audit history (the MOJ timeline)
 
 $app-staff-max-width: 1440px;
 // Below this width the service name and the account and Menu toggles no
@@ -503,50 +503,61 @@ $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
 
 // ------------------------------------------------------------ Timeline
 
+// The MOJ timeline (design-patterns.service.justice.gov.uk/components/
+// timeline), its styles ported from @ministryofjustice/frontend 11: a
+// brand-blue rule down the left with a tick by each entry, the title and
+// "by" line on one line, the date under them.
 .app-timeline {
-  margin: 0 0 govuk-spacing(6);
-  padding: 0;
-  list-style: none;
+  position: relative;
+  margin-bottom: govuk-spacing(4);
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: govuk-spacing(2);
+    left: 0;
+    width: 5px;
+    height: 100%;
+    background-color: govuk-functional-colour(brand);
+  }
 }
 
 .app-timeline__item {
   position: relative;
   padding-bottom: govuk-spacing(6);
   padding-left: govuk-spacing(4);
-  border-left: 5px solid govuk-colour('blue');
 
-  &:last-child {
-    padding-bottom: govuk-spacing(1);
-  }
-
-  // A dot on the rule by each entry's title
   &::before {
     content: '';
     position: absolute;
-    top: 6px;
-    left: -12px;
-    width: 14px;
-    height: 14px;
-    border: 3px solid govuk-colour('white');
-    border-radius: 50%;
-    background: govuk-colour('blue');
+    top: govuk-spacing(2);
+    left: 0;
+    width: 15px;
+    height: 5px;
+    background-color: govuk-functional-colour(brand);
   }
 }
 
-.app-timeline__comment {
-  margin-top: govuk-spacing(2);
-  color: $app-staff-black;
-}
-
 .app-timeline__title {
-  margin: 0 0 govuk-spacing(1);
+  display: inline;
   @include govuk-font($size: 19, $weight: bold);
 }
 
-.app-timeline__byline,
-.app-timeline__date,
-.app-timeline__comment {
-  margin: 0 0 govuk-spacing(1);
-  color: govuk-colour('black', $variant: 'tint-25');
+.app-timeline__byline {
+  display: inline;
+  margin: 0;
+  color: govuk-functional-colour(secondary-text);
+  @include govuk-font($size: 19);
+}
+
+.app-timeline__date {
+  margin-top: govuk-spacing(1);
+  margin-bottom: 0;
   @include govuk-font($size: 16);
+}
+
+.app-timeline__description {
+  margin-top: govuk-spacing(4);
+  @include govuk-font($size: 19);
 }

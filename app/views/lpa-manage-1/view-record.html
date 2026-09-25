@@ -69,20 +69,25 @@
 
     {% if record %}
       <h2 class="govuk-heading-m">{{ text.timelineHeading }}</h2>
-      <ol class="app-timeline">
+      {# The MOJ timeline's markup #}
+      <div class="app-timeline">
         {% for event in record.timeline %}
-        <li class="app-timeline__item">
-          <h3 class="app-timeline__title">
-            {% if event.event == 'added' %}{{ text.timelineAdded }}{% elif event.event == 'review-later' %}{{ text.timelineReviewLater }}{% elif event.event == 'stage' %}{{ text.timelineStage }} {{ event.stage.label }}{% else %}{{ text.timelineStatus }} {{ event.status.label }}{% endif %}
-          </h3>
-          <p class="app-timeline__byline">{{ text.by }} {{ event.by }}</p>
-          <p class="app-timeline__date">{{ event.date }} {{ text.at }} {{ event.time }}</p>
+        <div class="app-timeline__item">
+          <div class="app-timeline__header">
+            <h3 class="app-timeline__title">
+              {%- if event.event == 'added' %}{{ text.timelineAdded }}{% elif event.event == 'review-later' %}{{ text.timelineReviewLater }}{% elif event.event == 'stage' %}{{ text.timelineStage }} {{ event.stage.label }}{% else %}{{ text.timelineStatus }} {{ event.status.label }}{% endif -%}
+            </h3>
+            <p class="app-timeline__byline">{{ text.by }} {{ event.by }}</p>
+          </div>
+          <p class="app-timeline__date">
+            <time datetime="{{ event.datetime }}">{{ event.date }} {{ text.at }} {{ event.time }}</time>
+          </p>
           {% if event.comment %}
-            <p class="app-timeline__comment"><span class="govuk-visually-hidden">{{ text.timelineComment }}: </span>{{ event.comment }}</p>
+            <div class="app-timeline__description"><span class="govuk-visually-hidden">{{ text.timelineComment }}: </span>{{ event.comment }}</div>
           {% endif %}
-        </li>
+        </div>
         {% endfor %}
-      </ol>
+      </div>
     {% endif %}
 
     {% if record and record.status.value == 'rejected' %}
