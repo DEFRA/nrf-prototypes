@@ -3,6 +3,10 @@
 // https://prototype-kit.service.gov.uk/docs/create-routes
 //
 
+// Before any request: sessions are saved whole, so a page loading many
+// files at once never loses one (see the file)
+require('./lib/session-store')
+
 const fs = require('fs')
 const path = require('path')
 const govukPrototypeKit = require('govuk-prototype-kit')
