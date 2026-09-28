@@ -1,6 +1,6 @@
 ---
 # The first details of a commitment: who made it and its reference. Shown
-# on "Confirm commitment details", a record's page and the full certificate,
+# on a developer record's page and the full certificate,
 # which lists `- include: commitment-summary` in its rows. `commitment` is
 # the commitment on screen (see app/lib/lpa-manage-1/hooks.js for its fields).
 rows:

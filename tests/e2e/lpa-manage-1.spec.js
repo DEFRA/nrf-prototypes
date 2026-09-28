@@ -25,6 +25,7 @@ const {
   submit,
   actionLocator,
   optionLocator,
+  option,
   text,
   expectHeading,
   heading,
@@ -84,15 +85,9 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await retrieve(page, recorded.reference)
     await expectError(page, 'retrieve-commitment', 'recorded')
 
-    // Confirming shows the first three details and the boundary
+    // The planning reference follows straight on and adds the record: no
+    // confirm or check your answers page
     await retrieve(page, waiting.reference)
-    await expectHeading(page, 'confirm-commitment')
-    await expect(page.locator('main')).toContainText(waiting.developer)
-    await expect(page.locator('.govuk-summary-list__row')).toHaveCount(3)
-    await expect(page.locator('.app-boundary-map')).toHaveCount(1)
-    await submit(page, 'confirm-commitment')
-
-    // The planning reference adds the record: no check your answers
     await expectHeading(page, 'planning-reference')
     await fillAnswer(page, 'planning-reference', '26/00001/FUL')
     await submit(page, 'planning-reference')
@@ -196,6 +191,9 @@ test.describe('lpa-manage-1: manage commitments', () => {
     )
     await expect(radios).toHaveCount(4)
     await expect(optionLocator(page, 'view-record', 'reviewed')).toHaveCount(0)
+    await expect(page.locator('legend')).toHaveText(
+      text('view-record', 'planningLegend')
+    )
     await submit(page, 'view-record')
     await expectError(page, 'view-record', 'stageRequired')
     await answer(page, 'view-record', 'judicial-review')
@@ -213,7 +211,7 @@ test.describe('lpa-manage-1: manage commitments', () => {
     )
   })
 
-  test('rejecting needs a comment and is final', async ({ page }) => {
+  test('rejecting asks why and is final', async ({ page }) => {
     const forReview = store.commitments.find(
       (entry) => entry.record && entry.record.status === 'for-review'
     )
@@ -223,16 +221,23 @@ test.describe('lpa-manage-1: manage commitments', () => {
     const entries = await page.locator('.app-timeline__item').count()
 
     await answer(page, 'view-record', 'rejected')
+    await submit(page, 'view-record')
+    await expectHeading(page, 'reject-commitment')
     await expect(page.locator('.govuk-warning-text')).toContainText(
-      text('view-record', 'rejectWarning')
+      text('reject-commitment', 'rejectWarning')
     )
+    // The link beside Confirm goes back without rejecting
+    await actionLocator(page, 'reject-commitment', 'link').click()
+    await expectHeading(page, 'view-record', { record: forReview })
+    await answer(page, 'view-record', 'rejected')
     await submit(page, 'view-record')
-    await expectError(page, 'view-record', 'comment')
-    await expect(optionLocator(page, 'view-record', 'rejected')).toBeChecked()
+    await submit(page, 'reject-commitment')
+    await expectError(page, 'reject-commitment', 'required')
+    await answer(page, 'reject-commitment', 'mismatch')
     await page
-      .getByLabel(text('view-record', 'commentLabel'), { exact: true })
+      .getByLabel(text('reject-commitment', 'commentLabel'), { exact: true })
       .fill('The boundary does not match the application')
-    await submit(page, 'view-record')
+    await submit(page, 'reject-commitment')
     await expectHeading(page, 'dashboard')
 
     await page.goto(viewPath)
@@ -240,6 +245,7 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(page.locator('h1 .govuk-tag')).toHaveText(rejected)
     const latest = page.locator('.app-timeline__item').first()
     await expect(latest).toContainText(rejected)
+    await expect(latest).toContainText(option('reject-commitment', 'mismatch'))
     await expect(latest).toContainText(
       'The boundary does not match the application'
     )

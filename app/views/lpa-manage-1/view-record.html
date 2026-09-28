@@ -5,17 +5,17 @@
   the planning details (the page's `rows`), the red line boundary (the
   page's copy), the audit timeline and the review options (the hook leaves
   only those for the record's step in content.items), which post back to
-  this page. Rejecting asks for a comment and warns it is final; a
-  rejected record shows that warning in place of the radios. Model extras
-  from
-  app/lib/lpa-manage-1/hooks.js: flash, data.record.
+  this page. Once the commitment details are reviewed they are the planning
+  stage options. Rejecting asks why on reject-commitment; a rejected record
+  shows a warning in place of the radios. Model extras from
+  app/lib/lpa-manage-1/hooks.js: flash, planningStep, data.record.
 #}
 {% extends "journey-engine/_page.html" %}
 
 {% set text = content.text %}
 {% set record = data.record %}
 
-{# The hook reports one problem at a time: no status, or no comment #}
+{# The hook reports one problem: no option chosen #}
 {% set fieldError = errors[0] if errors and errors | length else null %}
 
 {% block content %}
@@ -82,6 +82,9 @@
           <p class="app-timeline__date">
             <time datetime="{{ event.datetime }}">{{ event.date }} {{ text.at }} {{ event.time }}</time>
           </p>
+          {% if event.reason %}
+            <div class="app-timeline__description">{{ event.reason }}</div>
+          {% endif %}
           {% if event.comment %}
             <div class="app-timeline__description"><span class="govuk-visually-hidden">{{ text.timelineComment }}: </span>{{ event.comment }}</div>
           {% endif %}
@@ -100,35 +103,13 @@
       </div>
     {% else %}
     <form action="{{ page.path }}" method="post" novalidate>
-      {% set commentHtml = govukTextarea({
-        name: "status-comment",
-        id: "status-comment",
-        rows: 4,
-        label: { text: text.commentLabel },
-        hint: { text: text.commentHint } if text.commentHint,
-        value: data["status-comment"] if errors else "",
-        errorMessage: { text: fieldError.message } if fieldError and fieldError.field == "status-comment"
-      }) + govukWarningText({
-        text: text.rejectWarning,
-        iconFallbackText: text.warning,
-        classes: "govuk-!-margin-bottom-0"
-      }) %}
-      {% set statusItems = [] %}
-      {% for item in content.items %}
-        {% set statusItems = (statusItems.push({
-          text: item.text,
-          value: item.value,
-          hint: item.hint,
-          checked: item.checked,
-          conditional: { html: commentHtml } if item.value == 'rejected'
-        }), statusItems) %}
-      {% endfor %}
       {{ govukRadios({
         name: page.field,
         idPrefix: page.field,
-        fieldset: { legend: { text: text.statusLegend, classes: "govuk-fieldset__legend--m" } },
+        fieldset: { legend: { text: text.planningLegend if planningStep else text.statusLegend, classes: "govuk-fieldset__legend--m" } },
+        hint: { text: text.planningHint } if planningStep and text.planningHint,
         errorMessage: { text: fieldError.message } if fieldError and fieldError.field == page.field,
-        items: statusItems
+        items: content.items
       }) }}
       <div class="govuk-button-group">
         {{ govukButton({ text: content.button }) }}

@@ -1,0 +1,42 @@
+{#
+  Why a developer record's commitment details are rejected
+  (content/lpa-manage-1/pages/reject-commitment.md): the reasons as radios,
+  an optional comment below them and a warning that rejecting is final.
+  The hook (app/lib/lpa-manage-1/hooks.js) puts both on the record's
+  history.
+#}
+{% extends "journey-engine/_page.html" %}
+
+{% set text = content.text %}
+
+{% block pageBody %}
+<form action="{{ page.path }}" method="post" novalidate>
+  {% include "journey-engine/_error-summary.html" %}
+
+  {{ govukRadios({
+    name: page.field,
+    idPrefix: page.field,
+    fieldset: {
+      legend: {
+        text: content.heading,
+        isPageHeading: true,
+        classes: "govuk-fieldset__legend--l"
+      }
+    },
+    items: content.items,
+    errorMessage: { text: error } if error
+  }) }}
+
+  {{ govukTextarea({
+    name: "reject-comment",
+    id: "reject-comment",
+    rows: 4,
+    label: { text: text.commentLabel, classes: "govuk-label--s" },
+    value: data["reject-comment"] if error else ""
+  }) }}
+
+  {{ govukWarningText({ text: text.rejectWarning, iconFallbackText: text.warning }) }}
+
+  {% include "journey-engine/_question-actions.html" %}
+</form>
+{% endblock %}

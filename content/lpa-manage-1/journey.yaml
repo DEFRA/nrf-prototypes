@@ -8,9 +8,9 @@
 #
 # A planning officer at Scarfolk Council signs in with the mock GOV.UK One
 # Login, then either adds a developer record (retrieve the commitment the
-# developer made by its NRL reference, confirm it and add the planning
-# application reference, which adds the record) or looks through the records
-# the council already has (a dashboard and a table of every record). Each
+# developer made by its NRL reference and add the planning application
+# reference, which adds the record) or looks through the records
+# the council already has (a dashboard with a table of every record). Each
 # record has its own page with an audit timeline and the review options
 # (reviewing the commitment details, then the planning application's
 # stage), and a full certificate a click away. Behaviour that needs code (the officer,
@@ -62,13 +62,15 @@ homepage:
   changes:
     - new service for LPA officers, with its own header and a wider page for tables
     - add a developer record from an NRL reference
-    - record page with an audit timeline, the review options and a comment when rejecting
-    - review options start unchosen and Submit returns to the dashboard; reviewing later is noted on the timeline
+    - record page with the developer record history and the review options
+    - rejecting asks why on its own page, with an optional comment
+    - review options start unchosen and Confirm returns to the dashboard; reviewing later is noted on the history
     - once the commitment details are reviewed, the options set the planning application's stage
     - full commitment certificate behind the record, with breadcrumbs
-    - dashboard cards open the table filtered; overdue actions card
-    - table of records with sortable columns and a filter, built from canned records
+    - dashboard cards filter its table; overdue actions card
+    - the dashboard's table of every record has sortable columns, a filter and pages, built from canned records
     - no check your answers page: adding the planning reference adds the record
+    - no confirm commitment page: the NRL reference goes straight to the planning reference
 
 # The answers the copy can show, as {{ name }} (see content/README.md).
 # `commitment` is the commitment on screen and `record` the record.
@@ -81,6 +83,7 @@ session:
   - recordReference
   - record
   - newStatus
+  - rejectReason
   - lpaRecords
   - lpaFlash
 
@@ -150,10 +153,6 @@ pages:
     sessionKey: commitmentReference
     guard: *signed-in
     handler: custom
-    next: confirm-commitment
-
-  - id: confirm-commitment
-    guard: { key: commitment, isSet: true, redirect: retrieve-commitment }
     next: planning-reference
 
   # Continuing adds the record to the session's records and opens its page
@@ -166,8 +165,8 @@ pages:
 
   # --------------------------------------------------------------------
   # A record: view-record?ref=NRL-123456. The review options at the bottom
-  # post back here; the change goes on the audit timeline and Submit
-  # returns to the dashboard (hooks.js).
+  # post back here; the change goes on the audit timeline and Confirm
+  # returns to the dashboard (hooks.js). Rejecting asks why first.
   - id: view-record
     template: lpa-manage-1/view-record
     field: new-status
@@ -183,9 +182,16 @@ pages:
         - id: planning
           label: Reviewed (planning stages)
           data: { recordReference: NRL-100903 }
-        - id: rejected
-          label: Rejecting
-          data: { newStatus: rejected }
+
+  # Why the commitment details are rejected, with an optional comment.
+  # Confirm rejects the record for good and returns to the dashboard.
+  - id: reject-commitment
+    template: lpa-manage-1/reject-commitment
+    field: reject-reason
+    sessionKey: rejectReason
+    guard: { key: recordReference, isSet: true, redirect: dashboard }
+    back: view-record
+    handler: custom
 
   # Every detail of a record's commitment: certificate?ref=NRL-123456.
   # Breadcrumbs lead back to the dashboard and the record.

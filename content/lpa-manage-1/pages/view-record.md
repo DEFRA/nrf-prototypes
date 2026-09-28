@@ -2,11 +2,12 @@
 # A developer record (app/views/lpa-manage-1/view-record.html). The heading
 # is the record's NRL reference; `text:` holds the rest of the page's words.
 # The review options sit at the bottom of the page, none chosen, and
-# Submit returns to the dashboard. A record For review offers the first
-# three options (Rejected is final; later keeps it For review and notes it
-# on the timeline). Once its commitment details are reviewed the options
-# with `step: planning` take their place: they set the planning
-# application's stage (see records.yaml).
+# Confirm returns to the dashboard. A record For review offers the first
+# three options (rejecting asks why on reject-commitment and is final;
+# later keeps it For review and notes it on the timeline). Once its
+# commitment details are reviewed the planning stage options (`step:
+# planning`) take their place: they set the planning application's stage
+# (see records.yaml).
 type: custom
 rows:
   - heading: Commitment details
@@ -26,42 +27,43 @@ rows:
       then: '{{ record.reviewedBy }}'
       else: Not reviewed yet
 options:
-  - label: Review and confirm commitment details
+  - label: I have reviewed these commitment details
     value: reviewed
-  - label: Review and confirm commitment details later
-    value: review-later
-  - label: Reject commitment details
+    hint: The details match the planning application
+  - label: I want to reject these commitment details
     value: rejected
-  - label: Planning permission granted
+    hint: The details are incorrect or don't match the planning application
+  - label: I want to review these later
+    value: review-later
+  - label: The planning permission has been granted
     value: granted
     step: planning
-  - label: Planning permission refused
+  - label: The planning permission has been refused
     value: refused
     step: planning
-  - label: Under appeal
+  - label: The planning permission is under appeal
     value: under-appeal
     step: planning
-  - label: In judicial review
+  - label: The planning permission is in judicial review
     value: judicial-review
     step: planning
 errors:
-  required: Select a new status for this record
+  required: Select a new status for this developer record
   stageRequired: Select the stage the planning application has reached
-  comment: Enter a comment explaining why you are rejecting the commitment details
-button: Submit
+button: Confirm
 text:
   addRecord: Add a developer record
-  successTitle: Commitment details retrieved 
-  added: A new record has been created
+  successTitle: Commitment details retrieved
+  added: A new developer record has been created for review
   viewCertificate: View full certificate
   statusLegend: Review options
-  commentLabel: Add a comment
-  commentHint: Explain why you are rejecting the commitment details
-  # Under the comment box, and in place of the radios once rejected
-  rejectWarning: Once you reject the commitment details, you cannot change the status of this record.
-  rejectedFinal: This record has been rejected. Its status cannot be changed.
+  # Once the commitment details are reviewed
+  planningLegend: Planning stage options
+  planningHint: Update the planning stage for this developer record
+  # In place of the radios once rejected
+  rejectedFinal: This developer record has been rejected. Its status cannot be changed.
   warning: Warning
-  timelineHeading: Timeline
+  timelineHeading: Developer record history
   timelineAdded: Commitment details retrieved
   timelineStatus: Status changed to
   timelineReviewLater: Marked to review and confirm later
