@@ -262,6 +262,24 @@ $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
   .govuk-button {
     margin-bottom: 0;
   }
+
+  // From desktop the heading keeps to two thirds of the page and the
+  // button stays at the right-hand edge of the last third, however long
+  // the heading
+  @include govuk-media-query($from: desktop) {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    align-items: start;
+
+    .govuk-heading-xl,
+    .govuk-heading-l {
+      max-width: none;
+    }
+
+    .govuk-button {
+      justify-self: end;
+    }
+  }
 }
 
 // A record's page: the reference and its status tag, centred on one line
@@ -300,13 +318,15 @@ $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
   display: flex;
 }
 
-// The whole card is the link to the records it counts
+// The whole card is the link to the records it counts. Its contents sit
+// at the top, so the numbers line up across a row however many lines the
+// labels wrap to; the grid stretches every card to the tallest in its row.
 .app-staff-card__link {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   padding: govuk-spacing(3);
   border: 1px solid govuk-colour('black', $variant: 'tint-80');
   border-bottom: 5px solid govuk-colour('blue');
@@ -316,7 +336,6 @@ $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
   text-decoration: none;
 
   @include govuk-media-query($from: desktop) {
-    min-height: 160px;
     padding: govuk-spacing(4);
   }
 

@@ -11,7 +11,7 @@ const {
  * lpa-manage-1: a planning officer signs in with the mock GOV.UK One Login,
  * adds a developer record from an NRL reference, reviews it and sets its
  * planning application's stage, and
- * finds it on the dashboard and in the table of records.
+ * finds it in the dashboard’s table of records.
  *
  * Headings, labels, buttons and errors come from content/lpa-manage-1
  * through the helpers; references and names come from records.yaml.
@@ -294,26 +294,30 @@ test.describe('lpa-manage-1: manage commitments', () => {
 
     // Overdue actions: the table filtered to them
     await cards.nth(3).getByRole('link').click()
-    await expectHeading(page, 'records')
+    await expectHeading(page, 'dashboard')
     const rows = page.locator('.app-staff-table tbody tr')
     await expect(rows).toHaveCount(counted[3].length)
 
     // The filter's summary counts the filters set; clearing them shows
     // every record again
-    const summary = page.getByText(text('records', 'filterSummary'))
-    await expect(summary).toHaveText(`${text('records', 'filterSummary')} (1)`)
+    const summary = page.getByText(text('dashboard', 'filterSummary'))
+    await expect(summary).toHaveText(
+      `${text('dashboard', 'filterSummary')} (1)`
+    )
     await summary.click()
     await page
-      .getByRole('link', { name: text('records', 'clearFilters') })
+      .getByRole('link', { name: text('dashboard', 'clearFilters') })
       .click()
-    await expect(summary).toHaveText(text('records', 'filterSummary'))
+    await expect(summary).toHaveText(text('dashboard', 'filterSummary'))
     await expect(rows).toHaveCount(Math.min(records.length, RECORDS_PER_PAGE))
 
     // Reviewed with active planning applications: two filters at once
     await page.goto(`${base}/dashboard`)
     await cards.nth(2).getByRole('link').click()
     await expect(rows).toHaveCount(counted[2].length)
-    await expect(summary).toHaveText(`${text('records', 'filterSummary')} (2)`)
+    await expect(summary).toHaveText(
+      `${text('dashboard', 'filterSummary')} (2)`
+    )
     await expect(
       page.getByLabel(store.statuses.reviewed.label, { exact: true })
     ).toBeChecked()
@@ -322,19 +326,19 @@ test.describe('lpa-manage-1: manage commitments', () => {
     ).toBeChecked()
   })
 
-  test('the table searches, filters, sorts and pages the records', async ({
+  test('the dashboard’s table searches, filters, sorts and pages the records', async ({
     page
   }) => {
     await signIn(page)
-    await page.goto(`${base}/records`)
-    await expectHeading(page, 'records')
+    await page.goto(`${base}/dashboard`)
+    await expectHeading(page, 'dashboard')
     const records = allRecords({})
     const rows = page.locator('.app-staff-table tbody tr')
     await expect(rows).toHaveCount(Math.min(records.length, RECORDS_PER_PAGE))
 
     // Sorting by a heading, then the other way; the pages keep the sort
     const heading = page.locator('.app-staff-table th', {
-      hasText: text('records', 'columns').reference
+      hasText: text('dashboard', 'columns').reference
     })
     await heading.getByRole('link').click()
     await expect(heading).toHaveAttribute('aria-sort', 'ascending')
@@ -345,16 +349,16 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(rows.first()).toContainText(references[references.length - 1])
     await page.locator('.govuk-pagination__next a').click()
     await expect(page).toHaveURL(
-      `${base}/records?_sort=reference&_dir=desc&_page=2`
+      `${base}/dashboard?_sort=reference&_dir=desc&_page=2`
     )
     await expect(rows).toHaveCount(records.length - RECORDS_PER_PAGE)
     await expect(rows.last()).toContainText(references[0])
 
     // Filtering by planning application stage
-    await page.getByText(text('records', 'filterSummary')).click()
+    await page.getByText(text('dashboard', 'filterSummary')).click()
     await page.getByLabel(store.planningStages.refused, { exact: true }).check()
     await page
-      .getByRole('button', { name: text('records', 'applyFilters') })
+      .getByRole('button', { name: text('dashboard', 'applyFilters') })
       .click()
     const refused = records.filter(
       (record) => record.planningStage.value === 'refused'
@@ -363,19 +367,19 @@ test.describe('lpa-manage-1: manage commitments', () => {
 
     // Searching keeps the filter
     await page
-      .getByLabel(text('records', 'searchLabel'), { exact: true })
+      .getByLabel(text('dashboard', 'searchLabel'), { exact: true })
       .fill(refused[0].developer)
     await page
-      .getByRole('button', { name: text('records', 'searchButton') })
+      .getByRole('button', { name: text('dashboard', 'searchButton') })
       .click()
     await expect(rows).toHaveCount(
       refused.filter((record) => record.developer === refused[0].developer)
         .length
     )
 
-    await page.goto(`${base}/records?_q=no-such-record`)
+    await page.goto(`${base}/dashboard?_q=no-such-record`)
     await expect(page.locator('main')).toContainText(
-      text('records', 'noResults')
+      text('dashboard', 'noResults')
     )
   })
 

@@ -12,8 +12,8 @@
  *     made in nrf-request-to-use-1 this session, or the file's `fallback`
  *   - the records the officer adds, and every status they change, kept in
  *     the session (`lpaRecords`) over the file's own
- *   - the dashboard's counts and the records table, with search, filters
- *     and sortable columns
+ *   - the dashboard's counts and its table of every record, with search,
+ *     filters, sortable columns and pages
  *   - the record page's audit timeline and its review options, which post
  *     back to the page and return to the dashboard, and the full
  *     certificate behind it
@@ -35,7 +35,6 @@ const REFERENCE = /^NRL-\d{6}$/
 // Who is signed in when the facilitator has not given the participant's name
 const MOCK_OFFICER = 'John Smith'
 // How many records the dashboard's table shows, and the full table per page
-const DASHBOARD_ROWS = 6
 const RECORDS_PER_PAGE = 10
 // The status of a record an officer has just added, and the stage of its
 // planning application
@@ -412,7 +411,7 @@ function sortRecords(records, query) {
 }
 
 // Rows of govukTable for the records, with the page's own column copy.
-// `headFor` makes a column heading sortable (the records page).
+// `headFor` makes a column heading sortable.
 function tableFor(records, text, journey, headFor) {
   const viewPath = journey.routes.VIEW_RECORD
   const columns = text.columns || {}
@@ -944,12 +943,13 @@ const certificate = {
   load: loadRecord
 }
 
-// The landing page: counts that open the table filtered to them, the
-// search and the most recently updated records
+// The landing page: counts that open the table filtered to them, and
+// every record, searched, filtered, sorted by its column headings and paged
 const dashboard = {
   get(ctx, model) {
+    const store = loadStore()
     const { text } = model.content
-    // After Submit on a record page: "NRL-123456 has been updated"
+    // After Confirm on a record page: "NRL-123456 has been updated"
     if (ctx.data.lpaFlash === 'updated') {
       model.flash = String(text.updated || '').replace(
         '{reference}',
@@ -957,11 +957,11 @@ const dashboard = {
       )
       delete ctx.data.lpaFlash
     }
-    const path = ctx.journey.routes.RECORDS
-    const records = allRecords(ctx.data).sort(newestFirst)
+    const path = ctx.journey.routes.DASHBOARD
+    const all = allRecords(ctx.data)
     // Each card counts the records the table shows with its filters set
     const card = (label, filters, test) => ({
-      count: records.filter(test).length,
+      count: all.filter(test).length,
       label,
       href: hrefFor(path, blankQuery(), filters)
     })
@@ -980,20 +980,10 @@ const dashboard = {
       ),
       card(text.overdueCount, { overdue: true }, (r) => r.overdue)
     ]
-    model.table = tableFor(records.slice(0, DASHBOARD_ROWS), text, ctx.journey)
-  }
-}
 
-// The table of every record: searched, filtered, sorted by its column
-// headings and paged
-const recordsTable = {
-  get(ctx, model) {
-    const store = loadStore()
-    const { text } = model.content
-    const path = ctx.journey.routes.RECORDS
     const query = queryOf(ctx, store)
     const records = sortRecords(
-      allRecords(ctx.data).filter(
+      all.filter(
         (record) => matches(record, query.q) && matchesFilters(record, query)
       ),
       query
@@ -1025,7 +1015,6 @@ module.exports = {
   'reject-commitment': rejectCommitment,
   certificate,
   dashboard,
-  records: recordsTable,
   // For tests
   loadStore,
   allRecords,

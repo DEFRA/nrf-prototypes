@@ -42,10 +42,8 @@ header:
         href: dashboard
       - text: Add a developer record
         href: retrieve-commitment
-      - text: All developer records
-        href: records
 
-# When this holds the header shows the officer's account and the Menu
+# When this holds the header shows the officer's account dropdown
 signedIn: { key: officer, isSet: true }
 
 homepage:
@@ -57,8 +55,8 @@ homepage:
     A planning officer at the local planning authority signs in with GOV.UK
     One Login, retrieves a developer's commitment by its NRL reference, adds
     the planning application reference and adds it to the council's records.
-    They can change a record's status and look through every record on a
-    dashboard and a searchable table.
+    They can change a record's status and look through every record in a
+    searchable table on the dashboard.
   changes:
     - new service for LPA officers, with its own header and a wider page for tables
     - add a developer record from an NRL reference
@@ -199,7 +197,8 @@ pages:
     template: lpa-manage-1/certificate
     guard: *signed-in
 
-  # The records the council has: the landing page and the full table
+  # The records the council has: counts, then a table searched, filtered,
+  # sorted and paged
   - id: dashboard
     template: lpa-manage-1/dashboard
     guard: *signed-in
@@ -209,8 +208,3 @@ pages:
         - id: updated
           label: Record updated
           data: { lpaFlash: updated }
-
-  - id: records
-    template: lpa-manage-1/records
-    guard: *signed-in
-    back: dashboard

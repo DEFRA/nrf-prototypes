@@ -1,7 +1,7 @@
 {#
-  The search box the dashboard and the records table share: it always opens
-  the records table with ?_q= (the kit never keeps `_` keys in the session).
-  Expects: text (the page's `text:`), searchAction, searchValue.
+  The dashboard's search box: it opens the dashboard with ?_q= (the kit
+  never keeps `_` keys in the session).
+  Expects: text (the page's `text:`), searchValue.
 #}
 <div class="govuk-form-group app-staff-search__query">
   <label class="govuk-label govuk-label--s" for="search">{{ text.searchLabel }}</label>

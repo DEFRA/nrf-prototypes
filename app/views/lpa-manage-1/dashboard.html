@@ -1,13 +1,35 @@
 {#
   The landing page (content/lpa-manage-1/pages/dashboard.md): a button to add
   a record, the search, counts of the council's records (each opening the
-  table filtered to them) and the most recently updated ones. Model extras
-  from app/lib/lpa-manage-1/hooks.js: flash (the banner after Submit on a
-  record page), cards [{ count, label, href }], table { head, rows }.
+  table filtered to them) and every record the council has: searched
+  (?_q=), filtered (?_status=, ?_stage=, ?_type=, ?_overdue=1), sorted by a
+  column heading (?_sort=<column>&_dir=asc|desc) and paged (?_page=). Each
+  form keeps what the other sets; searching, filtering or sorting starts
+  again at page 1. Model extras from app/lib/lpa-manage-1/hooks.js: flash
+  (the banner after Confirm on a record page), cards [{ count, label, href }],
+  search (the query), resultCount, showing, pagination,
+  filters { groups, count, clearHref }, clearSearchHref, table.
 #}
 {% extends "journey-engine/_page.html" %}
 
 {% set text = content.text %}
+
+{# Hidden inputs carrying the filters (for the search form) or the search
+   (for the filter form), and the sort for both #}
+{% macro keep(search, filters) %}
+  {% if filters %}
+    {% for name in ['status', 'stage', 'type'] %}
+      {% for value in search[name] %}<input type="hidden" name="_{{ name }}" value="{{ value }}">{% endfor %}
+    {% endfor %}
+    {% if search.overdue %}<input type="hidden" name="_overdue" value="1">{% endif %}
+  {% elif search.q %}
+    <input type="hidden" name="_q" value="{{ search.q }}">
+  {% endif %}
+  {% if search.sort != 'lastModified' or search.dir != 'desc' %}
+    <input type="hidden" name="_sort" value="{{ search.sort }}">
+    <input type="hidden" name="_dir" value="{{ search.dir }}">
+  {% endif %}
+{% endmacro %}
 
 {% block content %}
 {% if flash %}
@@ -29,9 +51,10 @@
 
 {{ content.html | safe }}
 
-<form class="app-staff-search" action="{{ routes.RECORDS }}" method="get" role="search">
-  {% set searchValue = "" %}
+<form class="app-staff-search" action="{{ routes.DASHBOARD }}" method="get" role="search">
+  {% set searchValue = search.q %}
   {% include "lpa-manage-1/_search.html" %}
+  {{ keep(search, true) }}
 </form>
 
 <ul class="app-staff-cards">
@@ -45,14 +68,56 @@
   {% endfor %}
 </ul>
 
-{{ govukTable({
-  caption: text.tableHeading,
-  captionClasses: "govuk-table__caption--m",
-  classes: "app-staff-table",
-  firstCellIsHeader: false,
-  head: table.head,
-  rows: table.rows
-}) }}
+<details class="govuk-details app-staff-filter">
+  <summary class="govuk-details__summary">
+    <span class="govuk-details__summary-text">{{ text.filterSummary }}{% if filters.count %} ({{ filters.count }}){% endif %}</span>
+  </summary>
+  <div class="govuk-details__text">
+    <form action="{{ routes.DASHBOARD }}" method="get" novalidate>
+      {{ keep(search, false) }}
+      <div class="app-staff-filter__groups">
+        {% for group in filters.groups %}
+          {{ govukCheckboxes({
+            name: group.name,
+            idPrefix: "filter" + group.name,
+            classes: "govuk-checkboxes--small",
+            fieldset: { legend: { text: group.legend, classes: "govuk-fieldset__legend--s" } },
+            items: group.items
+          }) }}
+        {% endfor %}
+      </div>
+      {{ govukCheckboxes({
+        name: "_overdue",
+        idPrefix: "filter_overdue",
+        classes: "govuk-checkboxes--small",
+        items: [{ value: "1", text: text.filterOverdue, checked: search.overdue }]
+      }) }}
+      <div class="govuk-button-group">
+        {{ govukButton({ text: text.applyFilters, classes: "govuk-button--secondary" }) }}
+        <a class="govuk-link govuk-link--no-visited-state" href="{{ filters.clearHref }}">{{ text.clearFilters }}</a>
+      </div>
+    </form>
+  </div>
+</details>
 
-{{ govukButton({ text: text.viewAll, href: routes.RECORDS }) }}
+{% if resultCount %}
+  {{ govukTable({
+    classes: "app-staff-table app-staff-table--sortable",
+    head: table.head,
+    rows: table.rows
+  }) }}
+  <div class="app-staff-table-footer">
+    {% if showing %}<p class="govuk-body app-staff-table-footer__count" aria-live="polite">{{ showing }}</p>{% endif %}
+    {% if pagination %}
+      {{ govukPagination(pagination) }}
+    {% endif %}
+  </div>
+{% else %}
+  <p class="govuk-body">{{ text.noResults }}</p>
+{% endif %}
+{% if search.q %}
+  <p class="govuk-body">
+    <a class="govuk-link govuk-link--no-visited-state" href="{{ clearSearchHref }}">{{ text.clearSearch }}</a>
+  </p>
+{% endif %}
 {% endblock %}
