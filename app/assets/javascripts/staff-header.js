@@ -1,9 +1,9 @@
 /*
-  Staff header (app/views/includes/staff-header.html): the account and Menu
-  buttons open and close their grey panels under the header. Without this
-  script the buttons stay hidden and the panels stay open, so every link is
-  still reachable. Opening one panel closes the other; Escape or a click
-  outside the header closes both.
+  Staff header (app/views/includes/staff-header.html): the account button
+  opens and closes its grey panel (the menu and account links) under the
+  header. Without this script the button stays hidden and the panel stays
+  open, so every link is still reachable. Opening one panel closes any
+  other; Escape or a click outside the header closes them.
 */
 ;(function () {
   function init(header) {

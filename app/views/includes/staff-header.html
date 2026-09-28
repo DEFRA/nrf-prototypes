@@ -2,15 +2,16 @@
   Staff header: the `staff` layout of the journey engine (see
   journey-engine/_page.html), for internal case-work services such as the
   LPA's. Modelled on the HMPPS header: the crown and service name on the
-  left; on the right, once signed in, an account toggle (the user's name
-  over their organisation) and a Menu toggle. Each toggle opens a grey panel
-  under the header with the links from `header:` in journey.yaml.
+  left; on the right, once signed in, one account toggle (the user's name
+  over their organisation). It opens a grey panel under the header with the
+  service's own links (`menu.links` in journey.yaml's `header:`), a rule,
+  then the account links (`account`).
 
-  The panels are shown open without JavaScript; staff-header.js hides them
-  and turns the buttons into toggles.
+  The panel is shown open without JavaScript; staff-header.js hides it and
+  turns the button into a toggle.
 
   Model: journey.serviceName, journey.header ({ organisation, homePage,
-  account[], menu: { heading, links[] } }), signedIn, data.officer.
+  account[], menu: { links[] } }), signedIn, data.officer.
 #}
 {% from "govuk/macros/logo.njk" import govukLogo %}
 {% set staffHeader = journey.header if journey and journey.header else {} %}
@@ -38,7 +39,15 @@
             <span class="app-staff-header__account-organisation">{{ staffHeader.organisation }}</span>
           </span>
         </button>
-        <nav id="app-staff-header-account" class="app-staff-header__panel app-staff-header__panel--account" aria-label="Account">
+        <nav id="app-staff-header-account" class="app-staff-header__panel app-staff-header__panel--account" aria-label="Menu">
+          {% if staffHeader.menu and staffHeader.menu.links | length %}
+          <ul class="govuk-list app-staff-header__links">
+            {% for link in staffHeader.menu.links %}
+            <li><a class="govuk-link govuk-link--no-visited-state" href="{{ link.href }}">{{ link.text }}</a></li>
+            {% endfor %}
+          </ul>
+          <hr class="app-staff-header__rule">
+          {% endif %}
           <ul class="govuk-list app-staff-header__links">
             {% for link in staffHeader.account %}
             <li><a class="govuk-link govuk-link--no-visited-state" href="{{ link.href }}">{{ link.text }}</a></li>
@@ -46,24 +55,6 @@
           </ul>
         </nav>
       </div>
-      {% if staffHeader.menu and staffHeader.menu.links | length %}
-      <div class="app-staff-header__item app-staff-header__item--menu">
-        <button type="button" class="app-staff-header__toggle app-staff-header__toggle--menu" aria-expanded="true" aria-controls="app-staff-header-menu" hidden>
-          {{ chevron() }}
-          <span>Menu</span>
-        </button>
-        <nav id="app-staff-header-menu" class="app-staff-header__panel app-staff-header__panel--menu" aria-labelledby="app-staff-header-menu-heading">
-          <div class="govuk-width-container">
-            <h2 class="govuk-heading-m" id="app-staff-header-menu-heading">{{ staffHeader.menu.heading or "Menu" }}</h2>
-            <ul class="govuk-list app-staff-header__links">
-              {% for link in staffHeader.menu.links %}
-              <li><a class="govuk-link govuk-link--no-visited-state" href="{{ link.href }}">{{ link.text }}</a></li>
-              {% endfor %}
-            </ul>
-          </div>
-        </nav>
-      </div>
-      {% endif %}
       {% endif %}
     </div>
   </div>

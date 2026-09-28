@@ -16,8 +16,9 @@
 # stage), and a full certificate a click away. Behaviour that needs code (the officer,
 # the commitment store, the tables) is in app/lib/lpa-manage-1/hooks.js.
 #
-# Every page wears the staff layout: the service name, the officer's account
-# and a Menu in the header, and a wider page for tables. The One Login pages
+# Every page wears the staff layout: the service name and the officer's
+# account (a dropdown holding the menu) in the header, and a wider page for
+# tables. The One Login pages
 # keep their own look.
 
 id: lpa-manage-1
@@ -26,7 +27,8 @@ serviceName: Manage commitments to the nature restoration levy
 start: one-login-email
 layout: staff
 
-# The staff header. Links are page ids, absolute paths or `$signOut`.
+# The staff header. Its account dropdown lists the menu links, then the
+# account links. Links are page ids, absolute paths or `$signOut`.
 header:
   organisation: Scarfolk Council
   homePage: dashboard
@@ -36,9 +38,8 @@ header:
     - text: Sign out
       href: $signOut
   menu:
-    heading: Manage commitments
     links:
-      - text: Dashboard
+      - text: Developer records
         href: dashboard
       - text: Add a developer record
         href: retrieve-commitment

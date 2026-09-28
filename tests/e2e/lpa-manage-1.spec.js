@@ -64,12 +64,20 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(header).toContainText(journey.header.organisation)
     await expect(page.locator('.govuk-phase-banner')).toBeVisible()
 
-    // The Menu opens its panel of links
-    const menu = page.locator('.app-staff-header__toggle--menu')
-    await expect(page.locator('#app-staff-header-menu')).toBeHidden()
-    await menu.click()
-    await expect(menu).toHaveAttribute('aria-expanded', 'true')
-    await expect(page.locator('#app-staff-header-menu')).toBeVisible()
+    // The one dropdown, the officer's, holds the menu and account links
+    await expect(page.locator('.app-staff-header__toggle')).toHaveCount(1)
+    const toggle = page.locator('.app-staff-header__toggle')
+    const panel = page.locator('#app-staff-header-account')
+    await expect(panel).toBeHidden()
+    await toggle.click()
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    await expect(panel).toBeVisible()
+    for (const link of [
+      ...journey.header.menu.links,
+      ...journey.header.account
+    ]) {
+      await expect(panel.getByRole('link', { name: link.text })).toBeVisible()
+    }
   })
 
   test('adds a developer record from an NRL reference', async ({ page }) => {
