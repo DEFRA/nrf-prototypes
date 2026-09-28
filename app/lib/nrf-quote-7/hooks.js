@@ -630,27 +630,14 @@ const checkYourAnswers = {
   }
 }
 
-/**
- * The research participant's made-up email address, first.last@email.com,
- * from the footer's "Participant details" box: null when no name was given
- */
-function participantEmail(sessionData) {
-  const { firstName, lastName } = participantOf(sessionData)
-  const local = [firstName, lastName]
-    .map((name) => name.toLowerCase().replace(/[^a-z0-9'-]+/g, ''))
-    .filter(Boolean)
-    .join('.')
-  return local ? `${local}@email.com` : null
-}
-
 // The quote email (usually opened from the footer with the sample quote)
-// is addressed to the participant once the facilitator has given their
-// name. Only the page's own copy of the answers changes, never the session.
+// is addressed to the participant by name once the facilitator has given
+// it. Only the page's own copy of the answers changes, never the session.
 const estimateEmailContent = {
   load(ctx) {
-    const email = participantEmail(ctx.req.session.data)
-    if (email) {
-      ctx.data = { ...ctx.data, estimateEmail: email }
+    const { fullName } = participantOf(ctx.req.session.data)
+    if (fullName) {
+      ctx.data = { ...ctx.data, emailRecipient: fullName }
     }
   }
 }
@@ -662,7 +649,6 @@ module.exports = {
   'file-preview': filePreview,
   'check-your-answers': checkYourAnswers,
   'estimate-email-content': estimateEmailContent,
-  participantEmail,
   checkEDPIntersections,
   checkBoundary,
   buildBoundaryMetadata

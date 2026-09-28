@@ -140,11 +140,8 @@ test.describe('participant details', () => {
     await dialog(page)
       .getByRole('button', { name: 'Use these details' })
       .click()
-    const address = [PARTICIPANT.firstName, PARTICIPANT.lastName]
-      .join('.')
-      .toLowerCase()
     await expect(page.locator('.govuk-inset-text')).toContainText(
-      `${address}@email.com`
+      `To: ${PARTICIPANT.firstName} ${PARTICIPANT.lastName}`
     )
   })
 
