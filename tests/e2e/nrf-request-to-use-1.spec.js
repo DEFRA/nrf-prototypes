@@ -103,6 +103,18 @@ test.describe('nrf-request-to-use-1 preview mode', () => {
     }
   })
 
+  test('check your answers shows the original application for a variation', async ({
+    page
+  }) => {
+    // The sample answers are a variation of a committed application
+    await page.goto(`${journey.byId.get('check-your-answers').path}?preview=1`)
+    for (const target of ['original-committed', 'original-reference']) {
+      await expect(page.locator('main')).toContainText(
+        rowKey('check-your-answers', target)
+      )
+    }
+  })
+
   test('a form page previews one error per required field', async ({
     page
   }) => {
@@ -228,6 +240,12 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
       rowKey('check-your-answers', 'review-your-details')
     )
     await expect(page.locator('main')).toContainText('Trevor Barker')
+    // Not a variation, so nothing about an original application
+    for (const target of ['original-committed', 'original-reference']) {
+      await expect(page.locator('main')).not.toContainText(
+        rowKey('check-your-answers', target)
+      )
+    }
 
     // Everyone confirms the declaration box before submitting; it is
     // required and the Delete link is the way out

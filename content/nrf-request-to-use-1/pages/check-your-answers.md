@@ -12,16 +12,14 @@ rows:
     value: '{{ isVariation }}'
     change: variation
     changeHidden: whether the development is a variation
+  # The two rows about the original application only show for a variation
   - key: Original application committed to the levy
-    value:
-      when: { key: isVariation, equals: 'Yes' }
-      then: '{{ originalCommitted }}'
-      else: Not applicable
-    change:
-      - when: { key: isVariation, equals: 'Yes' }
-        goto: original-committed
+    value: '{{ originalCommitted }}'
+    when: { key: isVariation, equals: 'Yes' }
+    change: original-committed
     changeHidden: whether the original application was committed to using the levy
   - key: Original NRL reference
+    when: { key: isVariation, equals: 'Yes' }
     value:
       when: { key: originalCommitted, equals: 'Yes' }
       then: '{{ originalReference }}'
