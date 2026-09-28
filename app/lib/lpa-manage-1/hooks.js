@@ -723,7 +723,7 @@ const addRecord = {
     }
     data.recordReference = entry.reference
     data.lpaFlash = 'added'
-    // "Add a developer record" starts afresh
+    // "Create a developer record" starts afresh
     for (const key of [
       'commitmentReference',
       'commitmentEntry',

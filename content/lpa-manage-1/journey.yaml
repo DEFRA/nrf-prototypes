@@ -41,7 +41,7 @@ header:
     links:
       - text: Developer records
         href: dashboard
-      - text: Add a developer record
+      - text: Create a developer record
         href: retrieve-commitment
 
 # When this holds the header shows the officer's account dropdown
@@ -144,7 +144,7 @@ pages:
         goto: dashboard
       - goto: retrieve-commitment
 
-  # Add a developer record. The reference finds the commitment in
+  # Create a developer record. The reference finds the commitment in
   # records.yaml (or the one made in nrf-request-to-use-1 this session);
   # one the council already has is an error. See hooks.js.
   - id: retrieve-commitment

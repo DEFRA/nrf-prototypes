@@ -312,11 +312,14 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(summary).toHaveText(
       `${text('dashboard', 'filterSummary')} (1)`
     )
-    await summary.click()
-    await page
+    // Clear filters sits beside the count (the filter's own is in its
+    // closed details)
+    const clear = page
+      .locator('.app-staff-table-footer')
       .getByRole('link', { name: text('dashboard', 'clearFilters') })
-      .click()
+    await clear.click()
     await expect(summary).toHaveText(text('dashboard', 'filterSummary'))
+    await expect(clear).toHaveCount(0)
     await expect(rows).toHaveCount(Math.min(records.length, RECORDS_PER_PAGE))
 
     // Reviewed with active planning applications: two filters at once

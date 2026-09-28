@@ -52,7 +52,7 @@ errors:
   stageRequired: Select the stage the planning application has reached
 button: Confirm
 text:
-  addRecord: Add a developer record
+  addRecord: Create a developer record
   successTitle: Commitment details retrieved
   added: A new developer record has been created for review
   viewCertificate: View full certificate

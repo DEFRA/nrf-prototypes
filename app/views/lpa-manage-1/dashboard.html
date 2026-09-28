@@ -107,13 +107,22 @@
     rows: table.rows
   }) }}
   <div class="app-staff-table-footer">
-    {% if showing %}<p class="govuk-body app-staff-table-footer__count" aria-live="polite">{{ showing }}</p>{% endif %}
+    {% if showing %}
+      <p class="govuk-body app-staff-table-footer__count">
+        <span aria-live="polite">{{ showing }}</span>
+        {#- While filters are set, a way to clear them beside the count #}
+        {%- if filters.count %} <a class="govuk-link govuk-link--no-visited-state app-staff-table-footer__clear" href="{{ filters.clearHref }}">{{ text.clearFilters }}</a>{% endif %}
+      </p>
+    {% endif %}
     {% if pagination %}
       {{ govukPagination(pagination) }}
     {% endif %}
   </div>
 {% else %}
-  <p class="govuk-body">{{ text.noResults }}</p>
+  <p class="govuk-body">
+    {{- text.noResults }}
+    {%- if filters.count %} <a class="govuk-link govuk-link--no-visited-state app-staff-table-footer__clear" href="{{ filters.clearHref }}">{{ text.clearFilters }}</a>{% endif -%}
+  </p>
 {% endif %}
 {% if search.q %}
   <p class="govuk-body">

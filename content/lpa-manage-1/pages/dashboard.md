@@ -4,7 +4,7 @@
 # record, searched, filtered, sorted by its column headings and paged.
 type: custom
 text:
-  addRecord: Add a developer record
+  addRecord: Create a developer record
   # The banner after Confirm on a record page; {reference} is its NRL reference
   successTitle: Success
   updated: '{reference} has been updated'

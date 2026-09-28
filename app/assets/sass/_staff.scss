@@ -519,6 +519,11 @@ $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
   }
 }
 
+// Clear filters, beside the count of what the filters show
+.app-staff-table-footer__clear {
+  margin-left: govuk-spacing(2);
+}
+
 .app-staff-record__map {
   max-width: 720px;
   margin-bottom: govuk-spacing(8);
