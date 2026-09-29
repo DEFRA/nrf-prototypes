@@ -298,7 +298,6 @@ function loadQuote(data) {
     data.quotedUnits = Number(data.residentialBuildingCount)
     data.quotedLevyAmount = levyFor()
     data.levyAmount = data.quotedLevyAmount
-    data.levyIncreased = false
     delete data.acceptLevy
     data.quoteLoaded = reference
   }
@@ -333,15 +332,21 @@ const reviewQuoteDetails = {
   },
   process(ctx) {
     const { data } = ctx
-    const units = Number(data.residentialBuildingCount)
-    const quoted = Number(data.quotedUnits)
-    data.levyIncreased = Number.isFinite(quoted) && units > quoted
     data.levyAmount = levyFor()
     data.edpName =
       (data.redlineBoundaryPolygon &&
         data.redlineBoundaryPolygon.intersectingCatchment) ||
       data.edpName ||
       EDP_NAME
+  }
+}
+
+// "Calculating your nature restoration levy amount": a loading screen that
+// shows the spinner for a moment and continues to the accept page
+const calculatingLevy = {
+  get(ctx, model) {
+    model.continueUrl = ctx.journey.byId.get('accept-levy').path
+    model.refreshSeconds = 3
   }
 }
 
@@ -590,6 +595,7 @@ module.exports = {
   'quote-reference': quoteReference,
   'original-reference': originalReference,
   'review-quote-details': reviewQuoteDetails,
+  'calculating-levy': calculatingLevy,
   'defra-account-user-type': defraAccountUserType,
   'defra-account-employee-email': defraAccountEmployeeEmail,
   'sign-in-method': signInMethod,

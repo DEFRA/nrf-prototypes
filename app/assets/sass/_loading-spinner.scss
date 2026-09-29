@@ -24,6 +24,13 @@
     text-align: center;
     padding-top: govuk-spacing(6);
   }
+
+  // A narrower column in the middle of the page, for longer headings
+  &--narrow {
+    max-width: 560px;
+    margin-left: auto;
+    margin-right: auto;
+  }
 }
 
 @keyframes app-loading-spinner-animation {

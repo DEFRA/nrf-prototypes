@@ -93,7 +93,6 @@ session:
   - quotedUnits
   - quotedLevyAmount
   - levyAmount
-  - levyIncreased
   - edpName
   - acceptLevy
   - isVariation
@@ -169,7 +168,6 @@ preview:
     quotedUnits: 100
     quotedLevyAmount: 'X,XXX'
     levyAmount: 'X,XXX'
-    levyIncreased: true
     acceptLevy: 'Yes'
     isVariation: 'Yes'
     originalCommitted: 'Yes'
@@ -320,11 +318,9 @@ pages:
     next:
       - when: { key: residentialBuildingCount, gt: 15000 }
         goto: not-enough-capacity
-      - when: { key: levyIncreased, truthy: true }
-        goto: levy-increased
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
-      - goto: accept-levy
+      - goto: calculating-levy
 
   # The development details are changed on the quote journey's own pages:
   # the Change links on review-quote-details and check-your-answers point at
@@ -333,24 +329,21 @@ pages:
   - id: not-enough-capacity
     back: review-quote-details
 
+  # Loading screen while the levy is worked out: shows the spinner for a
+  # moment and moves on (a meta refresh in the template)
+  - id: calculating-levy
+    template: nrf-request-to-use-1/calculating-levy
+    handler: custom # where to continue to, see hooks.js
+    guard: { key: quoteReference, isSet: true, redirect: quote-reference }
+    next: accept-levy
+
   # Deleting the quote details happens on the quote journey's delete pages;
   # `return` gives them the way back for Back and Cancel
-  - id: levy-increased
-    field: accept-levy
-    sessionKey: acceptLevy
-    changeable: true
-    next:
-      - when: { key: acceptLevy, equals: 'No' }
-        goto: /nrf-quote-7/delete-quote
-        return: review-quote-details
-      - when: { key: $navFromSummary, truthy: true }
-        goto: $summary
-      - goto: variation
-
   - id: accept-levy
     field: accept-levy
     sessionKey: acceptLevy
     changeable: true
+    back: review-quote-details # not the loading screen, which moves on by itself
     next:
       - when: { key: acceptLevy, equals: 'No' }
         goto: /nrf-quote-7/delete-quote

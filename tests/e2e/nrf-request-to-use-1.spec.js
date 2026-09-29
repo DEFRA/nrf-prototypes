@@ -62,6 +62,13 @@ const {
 const quote = copyOf('nrf-quote-7')
 const quotePath = quote.base
 
+// The loading screen after the review page moves on by itself
+async function expectCalculatingLevy(page) {
+  await expect(page).toHaveURL(`${base}/calculating-levy`)
+  await expectHeading(page, 'calculating-levy')
+  await expect(page).toHaveURL(`${base}/accept-levy`, { timeout: 10000 })
+}
+
 function escapeRegExp(text) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
@@ -181,7 +188,7 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
     await expect(summary).toContainText('jane@example.com')
 
     await submit(page, 'review-quote-details')
-    await expect(page).toHaveURL(`${base}/accept-levy`)
+    await expectCalculatingLevy(page)
     await expect(page.locator('main')).toContainText(`£${LEVY_AMOUNT}`)
     await answer(page, 'accept-levy', 'Yes')
     await submit(page, 'accept-levy')
@@ -284,6 +291,7 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
   }) => {
     await retrieveQuote(page)
     await submit(page, 'review-quote-details')
+    await expectCalculatingLevy(page)
     await answer(page, 'accept-levy', 'Yes')
     await submit(page, 'accept-levy')
     await expect(page).toHaveURL(`${base}/variation`)
@@ -873,7 +881,7 @@ test.describe('nrf-request-to-use-1 with errors switched off', () => {
       'developer@example.com'
     )
     await submit(page, 'review-quote-details')
-    await expect(page).toHaveURL(`${base}/accept-levy`)
+    await expectCalculatingLevy(page)
     await submit(page, 'accept-levy')
     await expect(page).toHaveURL(`${base}/variation`)
     // The sample answers say it is a variation of a committed application
@@ -941,8 +949,8 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
     await expect(page.locator('.govuk-summary-list')).toContainText('120')
 
     await submit(page, 'review-quote-details')
-    await expect(page).toHaveURL(`${base}/levy-increased`)
-    await expect(page.locator('.govuk-hint')).toContainText(`£${LEVY_AMOUNT}`)
+    await expectCalculatingLevy(page)
+    await expect(page.locator('main')).toContainText(`£${LEVY_AMOUNT}`)
   })
 
   test('deleting the quote details uses the quote journey and starts afresh', async ({
@@ -953,10 +961,10 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
     await quote.fillAnswer(page, 'units', '120')
     await quote.submit(page, 'units')
     await submit(page, 'review-quote-details')
-    await expect(page).toHaveURL(`${base}/levy-increased`)
+    await expectCalculatingLevy(page)
 
-    await answer(page, 'levy-increased', 'No')
-    await submit(page, 'levy-increased')
+    await answer(page, 'accept-levy', 'No')
+    await submit(page, 'accept-levy')
     await expect(page).toHaveURL(`${quotePath}/delete-quote?nav=${review}`)
     await expect(page.locator(serviceNav)).toContainText(
       `PROTOTYPE - ${journey.serviceName}`
@@ -978,7 +986,7 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
     await retrieveQuote(page)
     await expect(page.locator('.govuk-summary-list')).toContainText('100')
     await submit(page, 'review-quote-details')
-    await expect(page).toHaveURL(`${base}/accept-levy`)
+    await expectCalculatingLevy(page)
     await expect(page.locator('main')).toContainText(`£${LEVY_AMOUNT}`)
     await expect(optionLocator(page, 'accept-levy', 'No')).not.toBeChecked()
   })

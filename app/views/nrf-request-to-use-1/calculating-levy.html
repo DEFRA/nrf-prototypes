@@ -1,0 +1,13 @@
+{#
+  Calculating your nature restoration levy amount – nrf-request-to-use-1.
+
+  The same loading screen as nrf-quote-7's "Checking your file": the
+  spinner shows for a moment, then a meta refresh continues to accept-levy.
+  Copy comes from content/nrf-request-to-use-1/pages/calculating-levy.md;
+  continueUrl and refreshSeconds from the calculating-levy hook in
+  app/lib/nrf-request-to-use-1/hooks.js. The longer heading sits in a
+  narrower column in the middle of the page.
+#}
+{% extends "nrf-quote-7/checking-file.html" %}
+
+{% set spinnerClasses = "app-loading-spinner--narrow" %}
