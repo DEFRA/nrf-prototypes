@@ -35,7 +35,10 @@
  */
 
 const { message } = require('../journey-engine/validation')
-const { interpolate } = require('../journey-engine/markdown')
+const { interpolate, createRenderer } = require('../journey-engine/markdown')
+const { renderContent } = require('../journey-engine/router')
+
+const stepRenderer = createRenderer()
 
 const EDP_NAME =
   'Broads SAC, Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2026 to 2036)'
@@ -591,6 +594,52 @@ const checkYourAnswers = {
   }
 }
 
+// The device whose "save as a PDF" steps show first: `?_device=<id>` (the
+// links under "Using a different device"), else a guess from the browser.
+// iPads say they are a Mac; save-commitment-certificate.js corrects that.
+const DEVICE_PATTERNS = [
+  ['iphone', /iPhone|iPad|iPod/],
+  ['android', /Android/],
+  ['firefox', /Firefox\//],
+  ['chrome', /Edg\/|Chrome\//],
+  ['safari', /Macintosh.*Safari\//]
+]
+
+function deviceFor(choice, userAgent, devices) {
+  const ids = devices.map((device) => device.id)
+  if (ids.includes(choice)) {
+    return choice
+  }
+  const match = DEVICE_PATTERNS.find(([, pattern]) =>
+    pattern.test(userAgent || '')
+  )
+  return match && ids.includes(match[0]) ? match[0] : ids[0]
+}
+
+// The commitment certificate on an A4 sheet, with the steps for saving it
+// as a PDF on the user's device
+const saveCommitmentCertificate = {
+  get(ctx, model) {
+    const devices = model.content.text.devices || []
+    model.certificate = renderContent(
+      ctx.journey.byId.get('commitment-certificate'),
+      ctx
+    )
+    model.hasMap = model.certificate.html.includes('app-boundary-map')
+    model.deviceId = deviceFor(
+      ctx.query._device,
+      ctx.req.headers['user-agent'],
+      devices
+    )
+    model.devices = devices.map((device) => ({
+      ...device,
+      steps: (device.steps || []).map((step) =>
+        stepRenderer.renderInline(step, ctx)
+      )
+    }))
+  }
+}
+
 module.exports = {
   'quote-reference': quoteReference,
   'original-reference': originalReference,
@@ -611,7 +660,9 @@ module.exports = {
   'defra-check-answers': completeRegistration,
   'defra-business-check-answers': completeRegistration,
   'check-your-answers': checkYourAnswers,
+  'save-commitment-certificate': saveCommitmentCertificate,
   // For tests
+  deviceFor,
   accountFor,
   registeredAccount,
   participantOf,

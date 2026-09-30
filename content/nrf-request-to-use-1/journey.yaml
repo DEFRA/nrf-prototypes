@@ -919,3 +919,9 @@ pages:
   - id: commitment-certificate
     handoff: 2026-09-21
     back: confirmation
+
+  # The certificate as a page to print or save as a PDF, linked from the
+  # email: the certificate on an A4 sheet and the steps for the user's device
+  - id: save-commitment-certificate
+    template: nrf-request-to-use-1/save-commitment-certificate
+    handler: custom # renders the certificate and picks the device, see hooks.js
