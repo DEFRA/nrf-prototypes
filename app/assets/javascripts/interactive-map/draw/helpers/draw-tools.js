@@ -4,6 +4,7 @@ const { interactPlugin: createInteractPlugin, drawPlugin: createDrawPlugin } =
 import { EDIT_ACTION, PANEL_ROOT_ID } from './boundary-info-panel.js'
 import { wireDrawStartPanel } from './draw-start-panel.js'
 import { buildDrawToolsMenuItems } from './draw-tools-menu.js'
+import { wireDrawHints } from './draw-hints.js'
 
 const FILL_LAYER_ID = 'fill-inactive.cold'
 const STROKE_LAYER_ID = 'stroke-inactive.cold'
@@ -178,9 +179,16 @@ export function wireDrawTools(
     interactiveMap.toggleButtonState('drawPolygon', 'disabled', boundaryExists)
   }
 
+  const drawHints = wireDrawHints(interactiveMap, {
+    mapElementId,
+    getHasBoundary
+  })
+
   function startDrawPolygon() {
     interactiveMap.toggleButtonState('drawTools', 'hidden', true)
-    drawPlugin.newPolygon(crypto.randomUUID())
+    drawPlugin.newPolygon(crypto.randomUUID(), {
+      onGeometryChange: drawHints.onGeometryChange
+    })
 
     // The library's own buttons refocus the map viewport after a click (see
     // mapButtons.js), which the draw plugin's keydown handler requires for

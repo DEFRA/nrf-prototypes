@@ -28,6 +28,7 @@ import { wireBackButton } from './helpers/back-button.js'
 import { readExistingBoundary } from '../shared-helpers/read-boundary-metadata.js'
 import { wireSavedBoundary } from './helpers/saved-boundary.js'
 import { createInteractiveMap } from './helpers/create-interactive-map.js'
+import { createMapControlsButtonPlugin } from './helpers/map-controls-button.js'
 import { wireMapErrorLogging } from '../shared-helpers/map-error-logging.js'
 import { toAbsoluteUrl } from '../shared-helpers/to-absolute-url.js'
 
@@ -36,19 +37,24 @@ const MAP_ELEMENT_ID = 'draw-boundary-map'
 // data-* attribute on its own root element as component config.
 const CONFIG_ELEMENT_ID = 'draw-boundary-config'
 
-// Moves the styles button into the same top-right slot as the zoom
-// controls, above them (buttons render before the zoom group when neither
-// specifies an explicit order — see interactive-map's slot ordering), and
-// drops its label so it matches the icon-only zoom buttons beside it.
-const TOP_RIGHT_NO_LABEL = { slot: 'right-top', showLabel: false }
+// Prototype experiment (not in production): renames the styles button "Map
+// type" and puts it in the top-left slot straight after the Key button.
+// Neither the Key nor this button sets an order, so they keep plugin order
+// (map-key is listed before map-styles below) and both fall after the
+// explicitly ordered back and search buttons. The label shows on tablet and
+// desktop, like the Key's; mobile has room only for the icon.
+const MAP_TYPE_LABEL = 'Map type'
+const TOP_LEFT_ICON_ONLY = { slot: 'top-left', showLabel: false }
+const TOP_LEFT_WITH_LABEL = { slot: 'top-left', showLabel: true }
 
-// Moves the styles panel to open beside its (now top-right) button on
-// tablet/desktop, using the button-adjacent slot so it tracks the button
-// rather than duplicating 'right-top' — see interactive-map's
-// button-adjacent panel slots. Mobile keeps the default drawer.
+// Opens the Map type panel down the left of the map, under the top-left
+// buttons, as the Key panel does (and as the plugin does by default). A
+// button-adjacent slot ('map-styles-button') only opens rightwards for a
+// button in a left-* slot; from the top-left bar it opens leftwards over the
+// Back and Key buttons. Mobile keeps the drawer.
 const STYLES_PANEL_DRAWER = { slot: 'drawer', modal: true, dismissible: true }
-const STYLES_PANEL_TOP_RIGHT = {
-  slot: 'map-styles-button',
+const STYLES_PANEL_LEFT = {
+  slot: 'left-top',
   modal: true,
   width: '400px',
   dismissible: true
@@ -58,8 +64,19 @@ const STYLES_PANEL_TOP_RIGHT = {
 // top-left slot on tablet/desktop, so it renders before the Layers and Key
 // buttons — which keep their default, unordered position and so naturally
 // fall after any explicitly-ordered buttons. See interactive-map's slot
-// ordering.
+// ordering. Prototype experiment (not in production): the label shows on
+// desktop, to match the labelled Key and Map type buttons beside it.
 const TOP_LEFT_SEARCH_SECOND = { slot: 'top-left', showLabel: false, order: 2 }
+const TOP_LEFT_SEARCH_SECOND_WITH_LABEL = {
+  ...TOP_LEFT_SEARCH_SECOND,
+  showLabel: true
+}
+
+// Prototype experiment (not in production): the search plugin also uses its
+// placeholder as the input's visually hidden label. The width keeps the
+// whole placeholder visible on tablet and desktop.
+const SEARCH_PLACEHOLDER = 'Search by address or postcode'
+const SEARCH_WIDTH = '320px'
 
 /**
  * @param {{ datasetsPlugin: object, mapKeyPlugin: object, mapStylesPlugin: object, scaleBarPlugin: object, interactPlugin: object, drawPlugin: object, searchPlugin: object }} params
@@ -83,17 +100,19 @@ function buildMapPlugins({
         buttons: [
           {
             id: 'mapStyles',
-            mobile: TOP_RIGHT_NO_LABEL,
-            tablet: TOP_RIGHT_NO_LABEL,
-            desktop: TOP_RIGHT_NO_LABEL
+            label: MAP_TYPE_LABEL,
+            mobile: TOP_LEFT_ICON_ONLY,
+            tablet: TOP_LEFT_WITH_LABEL,
+            desktop: TOP_LEFT_WITH_LABEL
           }
         ],
         panels: [
           {
             id: 'mapStyles',
+            label: MAP_TYPE_LABEL,
             mobile: STYLES_PANEL_DRAWER,
-            tablet: STYLES_PANEL_TOP_RIGHT,
-            desktop: STYLES_PANEL_TOP_RIGHT
+            tablet: STYLES_PANEL_LEFT,
+            desktop: STYLES_PANEL_LEFT
           }
         ]
       }
@@ -101,6 +120,7 @@ function buildMapPlugins({
     scaleBarPlugin,
     interactPlugin,
     drawPlugin,
+    createMapControlsButtonPlugin(),
     {
       ...searchPlugin,
       manifest: {
@@ -108,7 +128,7 @@ function buildMapPlugins({
           {
             id: 'search',
             tablet: TOP_LEFT_SEARCH_SECOND,
-            desktop: TOP_LEFT_SEARCH_SECOND
+            desktop: TOP_LEFT_SEARCH_SECOND_WITH_LABEL
           }
         ]
       }
@@ -191,7 +211,9 @@ function initDrawBoundaryMap() {
   const { interactPlugin, drawPlugin } = createDrawToolsPlugins()
   const searchPlugin = createSearchPlugin({
     osNamesURL: '/os-names-search?query={query}',
-    regions: ['england']
+    regions: ['england'],
+    placeholder: SEARCH_PLACEHOLDER,
+    width: SEARCH_WIDTH
   })
 
   const { initialFeature, bounds, center } = readExistingBoundary(configElement)
