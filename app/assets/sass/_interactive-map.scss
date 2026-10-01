@@ -215,26 +215,6 @@
   vertical-align: -0.2rem;
 }
 
-// Map key swatches -----------------------------------------------------------
-//
-// The key draws each dataset's symbol in the same colours it uses on the map,
-// on the panel's white background — so the yellow EDP boundary all but
-// disappears. Sitting the symbol on a dark ground restores the contrast and
-// matches how the layers read over the satellite basemap, and lets each
-// dataset's own coloured outline read as the swatch's border.
-//
-// #383f43 is interactive-map's own dark app background, and about as light as
-// this can go: it keeps the orange excluded-areas swatch above the 3:1
-// non-text contrast threshold (3.8:1), with the yellow EDP swatch at 7.9:1.
-// Point symbols (markers) are excluded — they are drawn to bleed outside
-// their 20px box, so a background behind them would clip oddly.
-
-.im-c-map-key-symbol:not(.im-c-map-key-symbol--point) {
-  background-color: #383f43;
-  border-radius: 2px;
-  outline: 3px solid #383f43;
-}
-
 // Read-only boundary preview on a standard page ------------------------------
 //
 // The file preview page embeds the map in the flow of the page rather than
