@@ -10,8 +10,12 @@
 
   The sheet is 210mm wide with 20mm margins and print-sized type, the same
   as the @page rule below, so what is on screen is what the PDF holds.
-  Printing hides everything but the sheet. The print button needs
-  JavaScript (save-commitment-certificate.js), so it starts hidden.
+  Printing hides everything but the sheet.
+
+  The button and the device radios need JavaScript
+  (save-commitment-certificate.js): choosing a radio shows that device's
+  steps under the radios. Without JavaScript they are hidden and the
+  generic steps (`noScriptSteps`) show instead; see _save-certificate.scss.
 #}
 {% extends "journey-engine/_page.html" %}
 
@@ -34,32 +38,57 @@
     <h1 class="govuk-heading-l">{{ content.heading }}</h1>
     {{ content.html | safe }}
 
-    {{ govukButton({
-      text: text.printButton,
-      type: "button",
-      classes: "app-save-certificate__print",
-      attributes: { hidden: "", "data-print": "" }
-    }) }}
-
     <h2 class="govuk-heading-m">{{ text.stepsHeading }}</h2>
-    {% call govukDetails({ summaryText: text.otherDevices }) %}
-    <ul class="govuk-list">
-      {% for device in devices %}
-      <li><a class="govuk-link" href="?_device={{ device.id }}" data-device-link="{{ device.id }}">{{ device.name }}</a></li>
-      {% endfor %}
-    </ul>
-    {% endcall %}
 
-    {% for device in devices %}
-    <div class="app-save-certificate__steps" data-device="{{ device.id }}"{% if device.id != deviceId %} hidden{% endif %}>
-      <h3 class="govuk-heading-s">{{ device.name }}</h3>
+    <div class="app-save-certificate__no-js">
       <ol class="govuk-list govuk-list--number">
-        {% for step in device.steps %}
+        {% for step in noScriptSteps %}
         <li>{{ step | safe }}</li>
         {% endfor %}
       </ol>
     </div>
-    {% endfor %}
+
+    <div class="app-save-certificate__js">
+      {% set deviceItems = [] %}
+      {% for device in devices %}
+        {% set deviceItems = (deviceItems.push({
+          value: device.id,
+          text: device.name,
+          checked: device.id == deviceId
+        }), deviceItems) %}
+      {% endfor %}
+      {{ govukRadios({
+        name: "_device",
+        idPrefix: "device",
+        classes: "govuk-radios--small",
+        attributes: { "data-device-radios": "" },
+        fieldset: {
+          legend: {
+            text: text.deviceLegend,
+            classes: "govuk-fieldset__legend--s"
+          }
+        },
+        items: deviceItems
+      }) }}
+
+      <div aria-live="polite">
+        {% for device in devices %}
+        <div class="app-save-certificate__steps" data-device="{{ device.id }}"{% if device.id != deviceId %} hidden{% endif %}>
+          <ol class="govuk-list govuk-list--number">
+            {% for step in device.steps %}
+            <li>{{ step | safe }}</li>
+            {% endfor %}
+          </ol>
+        </div>
+        {% endfor %}
+      </div>
+
+      {{ govukButton({
+        text: text.printButton,
+        type: "button",
+        attributes: { "data-print": "" }
+      }) }}
+    </div>
 
     <h2 class="govuk-heading-m">{{ text.previewHeading }}</h2>
   </div>

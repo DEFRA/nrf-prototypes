@@ -2,21 +2,21 @@
   "Save your commitment certificate" (nrf-request-to-use-1, see
   app/views/nrf-request-to-use-1/save-commitment-certificate.html).
 
-  - The print button opens the browser's print window, where the user
-    chooses Save as PDF. It needs JavaScript, so it starts hidden.
-  - The "Using a different device" links show that device's steps without
-    reloading the page (without JavaScript they reload with ?_device=).
-  - iPads say they are a Mac, so the server shows the Safari on a Mac
-    steps; a Mac with a touch screen is an iPad.
+  - The button opens the browser's print window, where the user chooses
+    Save as PDF.
+  - Choosing a device radio shows that device's steps under the radios.
+  - iPads say they are a Mac, so the server selects Safari on a Mac; a Mac
+    with a touch screen is an iPad.
   - The A4 sheet is scaled down to fit a narrow screen.
+  The button and radios are hidden without JavaScript (_save-certificate.scss).
 */
 ;(function () {
   var button = document.querySelector('[data-print]')
+  var radios = document.querySelector('[data-device-radios]')
   var sheet = document.querySelector('.app-save-certificate__sheet')
   var frame = document.querySelector('.app-save-certificate__frame')
 
   if (button) {
-    button.hidden = false
     button.addEventListener('click', function () {
       window.print()
     })
@@ -29,18 +29,20 @@
     })
   }
 
-  var links = document.querySelectorAll('[data-device-link]')
-  Array.prototype.forEach.call(links, function (link) {
-    link.addEventListener('click', function (event) {
-      event.preventDefault()
-      showSteps(link.getAttribute('data-device-link'))
+  if (radios) {
+    radios.addEventListener('change', function (event) {
+      showSteps(event.target.value)
     })
-  })
 
-  var safari = document.querySelector('[data-device="safari"]')
-  var chosen = /[?&]_device=/.test(window.location.search)
-  if (!chosen && safari && !safari.hidden && navigator.maxTouchPoints > 1) {
-    showSteps('iphone')
+    var safari = radios.querySelector('input[value="safari"]')
+    var iphone = radios.querySelector('input[value="iphone"]')
+    var chosen = /[?&]_device=/.test(window.location.search)
+    if (!chosen && safari && safari.checked && iphone) {
+      if (navigator.maxTouchPoints > 1) {
+        iphone.checked = true
+        showSteps('iphone')
+      }
+    }
   }
 
   function fitSheet() {

@@ -620,7 +620,10 @@ function deviceFor(choice, userAgent, devices) {
 // as a PDF on the user's device
 const saveCommitmentCertificate = {
   get(ctx, model) {
-    const devices = model.content.text.devices || []
+    const { text } = model.content
+    const devices = text.devices || []
+    const renderSteps = (steps) =>
+      (steps || []).map((step) => stepRenderer.renderInline(step, ctx))
     model.certificate = renderContent(
       ctx.journey.byId.get('commitment-certificate'),
       ctx
@@ -633,10 +636,9 @@ const saveCommitmentCertificate = {
     )
     model.devices = devices.map((device) => ({
       ...device,
-      steps: (device.steps || []).map((step) =>
-        stepRenderer.renderInline(step, ctx)
-      )
+      steps: renderSteps(device.steps)
     }))
+    model.noScriptSteps = renderSteps(text.noScriptSteps)
   }
 }
 

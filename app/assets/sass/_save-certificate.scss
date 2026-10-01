@@ -86,3 +86,19 @@ $app-sheet-margin: 20mm;
     zoom: 1 !important;
   }
 }
+
+// The print button and device radios need JavaScript; without it the
+// generic steps show instead (govuk-frontend adds the class to <body>)
+.app-save-certificate__js {
+  display: none;
+}
+
+.govuk-frontend-supported {
+  .app-save-certificate__js {
+    display: block;
+  }
+
+  .app-save-certificate__no-js {
+    display: none;
+  }
+}
