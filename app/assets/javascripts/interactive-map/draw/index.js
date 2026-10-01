@@ -136,6 +136,38 @@ function buildMapPlugins({
   ]
 }
 
+const HINT_STEPS = [
+  'idle',
+  'start',
+  'firstPoint',
+  'addPoints',
+  'finish',
+  'edit',
+  'pointSelected'
+]
+
+/**
+ * Prototype experiment: the map hints' words, from the page's text:
+ * frontmatter, where each step has hint<Step>Click and hint<Step>Tap fields
+ * (see draw-hints.js)
+ *
+ * @param {HTMLElement} configElement
+ */
+function readHints(configElement) {
+  let text = {}
+  try {
+    text = JSON.parse(configElement.dataset.text || '{}')
+  } catch {
+    console.error('[interactive-map] the page text is not valid JSON')
+  }
+  return Object.fromEntries(
+    HINT_STEPS.map((step) => {
+      const key = `hint${step[0].toUpperCase()}${step.slice(1)}`
+      return [step, { click: text[`${key}Click`], tap: text[`${key}Tap`] }]
+    })
+  )
+}
+
 /**
  * @param {object} interactiveMap
  * @param {{ configElement: HTMLElement, interactPlugin: object, drawPlugin: object, initialFeature: object|null }} params
@@ -171,7 +203,8 @@ function wireDrawBoundaryMap(
     drawPlugin,
     mapElementId: MAP_ELEMENT_ID,
     hasExistingBoundary: Boolean(initialFeature),
-    initialBoundaryFeatureId: initialFeature?.id ?? null
+    initialBoundaryFeatureId: initialFeature?.id ?? null,
+    hints: readHints(configElement)
   })
 
   wireFillOpacityOnZoom(interactiveMap, { fillLayerIds: FILL_LAYER_IDS })

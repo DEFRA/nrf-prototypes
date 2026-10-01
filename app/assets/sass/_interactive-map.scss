@@ -215,6 +215,18 @@
   vertical-align: -0.2rem;
 }
 
+// Map hints -----------------------------------------------------------------
+//
+// Prototype experiment (see draw/helpers/draw-hints.js): interactive-map
+// left-aligns its toast hints, so a hint that wraps leaves a ragged second
+// line under the centred Draw button. Centre the text and balance the lines
+// so a two-line hint breaks evenly.
+
+.im-c-hints__hint {
+  text-align: center;
+  text-wrap: balance;
+}
+
 // Read-only boundary preview on a standard page ------------------------------
 //
 // The file preview page embeds the map in the flow of the page rather than

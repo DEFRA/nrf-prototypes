@@ -151,7 +151,7 @@ function wireBoundaryInfoEdit(
 
 /**
  * @param {object} interactiveMap
- * @param {{ interactPlugin: object, drawPlugin: object, mapElementId: string, hasExistingBoundary?: boolean, initialBoundaryFeatureId?: string|null }} params
+ * @param {{ interactPlugin: object, drawPlugin: object, mapElementId: string, hasExistingBoundary?: boolean, initialBoundaryFeatureId?: string|null, hints?: Record<string, { click?: string, tap?: string }> }} params
  */
 export function wireDrawTools(
   interactiveMap,
@@ -160,7 +160,8 @@ export function wireDrawTools(
     drawPlugin,
     mapElementId,
     hasExistingBoundary = false,
-    initialBoundaryFeatureId = null
+    initialBoundaryFeatureId = null,
+    hints = {}
   }
 ) {
   let selectedFeatureIds = []
@@ -181,7 +182,8 @@ export function wireDrawTools(
 
   const drawHints = wireDrawHints(interactiveMap, {
     mapElementId,
-    getHasBoundary
+    getHasBoundary,
+    hints
   })
 
   function startDrawPolygon() {
