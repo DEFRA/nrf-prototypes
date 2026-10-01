@@ -1,10 +1,10 @@
 /**
  * Hooks for the content-driven "Request to use" journey
- * (content/nrf-request-to-use-1). The engine (app/lib/journey-engine) renders
+ * (content/nrf-request-to-use-1-1). The engine (app/lib/journey-engine) renders
  * the pages and follows journey.yaml; this file adds the bits that need code:
  *
  *   - a mock quote store: the NRL reference typed retrieves the quote made in
- *     nrf-quote-7 when it matches the reference that journey minted (kept in
+ *     nrf-quote-7-1 when it matches the reference that journey minted (kept in
  *     the session, never shown in the box), otherwise a fixture quote
  *   - "levy increased" when the units grow; the levy amount itself is the
  *     £X,XXX placeholder every journey shows until a rate is agreed
@@ -28,19 +28,22 @@
  *     (app/routes/research.js), in place of the stand-in names above
  *
  * The development details and the delete flow are the quote journey's own
- * pages (content/nrf-quote-7), borrowed with the way back in `nav`, so the
- * map and its API stay in app/lib/nrf-quote-7/hooks.js.
+ * pages (content/nrf-quote-7-1), borrowed with the way back in `nav`, so the
+ * map and its API stay in app/lib/nrf-quote-7-1/hooks.js.
  *
  * Nothing here is real: no passwords are checked or stored.
  */
 
 const { message } = require('../journey-engine/validation')
-const { interpolate } = require('../journey-engine/markdown')
+const { interpolate, createRenderer } = require('../journey-engine/markdown')
+const { renderContent } = require('../journey-engine/router')
+
+const stepRenderer = createRenderer()
 
 const EDP_NAME =
   'Broads SAC, Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2026 to 2036)'
 // No levy rate is agreed yet, so every amount is the placeholder the quote
-// journey's email shows (content/nrf-quote-7)
+// journey's email shows (content/nrf-quote-7-1)
 const LEVY_AMOUNT = 'X,XXX'
 // Quote references from either service: NRF-123456 or NRL-123456
 const REFERENCE = /^(NRF|NRL)-\d{6}$/i
@@ -271,7 +274,7 @@ function registeredAccount(data) {
 
 /**
  * Put the retrieved quote into the session. The session stands in for the
- * quote store: a quote made in nrf-quote-7 stays under the reference that
+ * quote store: a quote made in nrf-quote-7-1 stays under the reference that
  * journey minted (`nrfReference`), and typing that reference pulls it up.
  * Any other reference retrieves the fixture quote. The reference and email
  * typed here are kept apart from the quote's own, so neither box is ever
@@ -298,7 +301,6 @@ function loadQuote(data) {
     data.quotedUnits = Number(data.residentialBuildingCount)
     data.quotedLevyAmount = levyFor()
     data.levyAmount = data.quotedLevyAmount
-    data.levyIncreased = false
     delete data.acceptLevy
     data.quoteLoaded = reference
   }
@@ -333,15 +335,21 @@ const reviewQuoteDetails = {
   },
   process(ctx) {
     const { data } = ctx
-    const units = Number(data.residentialBuildingCount)
-    const quoted = Number(data.quotedUnits)
-    data.levyIncreased = Number.isFinite(quoted) && units > quoted
     data.levyAmount = levyFor()
     data.edpName =
       (data.redlineBoundaryPolygon &&
         data.redlineBoundaryPolygon.intersectingCatchment) ||
       data.edpName ||
       EDP_NAME
+  }
+}
+
+// "Calculating your nature restoration levy amount": a loading screen that
+// shows the spinner for a moment and continues to the accept page
+const calculatingLevy = {
+  get(ctx, model) {
+    model.continueUrl = ctx.journey.byId.get('accept-levy').path
+    model.refreshSeconds = 3
   }
 }
 
@@ -586,10 +594,59 @@ const checkYourAnswers = {
   }
 }
 
+// The device whose "save as a PDF" steps show first: `?_device=<id>` (the
+// links under "Using a different device"), else a guess from the browser.
+// iPads say they are a Mac; save-commitment-certificate.js corrects that.
+const DEVICE_PATTERNS = [
+  ['iphone', /iPhone|iPad|iPod/],
+  ['android', /Android/],
+  ['firefox', /Firefox\//],
+  ['chrome', /Edg\/|Chrome\//],
+  ['safari', /Macintosh.*Safari\//]
+]
+
+function deviceFor(choice, userAgent, devices) {
+  const ids = devices.map((device) => device.id)
+  if (ids.includes(choice)) {
+    return choice
+  }
+  const match = DEVICE_PATTERNS.find(([, pattern]) =>
+    pattern.test(userAgent || '')
+  )
+  return match && ids.includes(match[0]) ? match[0] : ids[0]
+}
+
+// The commitment certificate on an A4 sheet, with the steps for saving it
+// as a PDF on the user's device
+const saveCommitmentCertificate = {
+  get(ctx, model) {
+    const { text } = model.content
+    const devices = text.devices || []
+    const renderSteps = (steps) =>
+      (steps || []).map((step) => stepRenderer.renderInline(step, ctx))
+    model.certificate = renderContent(
+      ctx.journey.byId.get('commitment-certificate'),
+      ctx
+    )
+    model.hasMap = model.certificate.html.includes('app-boundary-map')
+    model.deviceId = deviceFor(
+      ctx.query._device,
+      ctx.req.headers['user-agent'],
+      devices
+    )
+    model.devices = devices.map((device) => ({
+      ...device,
+      steps: renderSteps(device.steps)
+    }))
+    model.noScriptSteps = renderSteps(text.noScriptSteps)
+  }
+}
+
 module.exports = {
   'quote-reference': quoteReference,
   'original-reference': originalReference,
   'review-quote-details': reviewQuoteDetails,
+  'calculating-levy': calculatingLevy,
   'defra-account-user-type': defraAccountUserType,
   'defra-account-employee-email': defraAccountEmployeeEmail,
   'sign-in-method': signInMethod,
@@ -605,7 +662,9 @@ module.exports = {
   'defra-check-answers': completeRegistration,
   'defra-business-check-answers': completeRegistration,
   'check-your-answers': checkYourAnswers,
+  'save-commitment-certificate': saveCommitmentCertificate,
   // For tests
+  deviceFor,
   accountFor,
   registeredAccount,
   participantOf,

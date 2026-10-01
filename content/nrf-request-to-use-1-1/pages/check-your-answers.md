@@ -3,10 +3,7 @@ type: check-answers
 rows:
   - key: Accept levy amount
     value: '{{ acceptLevy }}'
-    change:
-      - when: { key: levyIncreased, truthy: true }
-        goto: levy-increased
-      - goto: accept-levy
+    change: accept-levy
     changeHidden: whether you accept the levy amount
   - key: Variation
     value: '{{ isVariation }}'
@@ -67,15 +64,15 @@ rows:
   - heading: Development details
   - key: Planning permission type
     value: '{{ planningType }}'
-    change: /nrf-quote-7/planning-type
+    change: /nrf-quote-7-1/planning-type
     changeHidden: planning permission type
   - key: Housing
     value: '{{ isHousing }}'
-    change: /nrf-quote-7/housing
+    change: /nrf-quote-7-1/housing
     changeHidden: whether you are developing housing
   - key: Number of housing units
     value: '{{ residentialBuildingCount }}'
-    change: /nrf-quote-7/units
+    change: /nrf-quote-7-1/units
     changeHidden: number of housing units
   - key: Red line boundary
     # The uploaded file's name, or "Added" for a drawn boundary (as quote-7)
@@ -88,8 +85,8 @@ rows:
         else: Not added
     change:
       - when: { key: hasRedlineBoundaryFile, truthy: true }
-        goto: /nrf-quote-7/file-preview
-      - goto: /nrf-quote-7/map
+        goto: /nrf-quote-7-1/file-preview
+      - goto: /nrf-quote-7-1/map
     changeHidden:
       when: { key: hasRedlineBoundaryFile, truthy: true }
       then: uploaded red line boundary
@@ -108,7 +105,7 @@ actions:
     kind: submit
   - text: Delete
     kind: destructive
-    goto: /nrf-quote-7/delete-quote
+    goto: /nrf-quote-7-1/delete-quote
     return: check-your-answers
     hidden: quote details
 ---

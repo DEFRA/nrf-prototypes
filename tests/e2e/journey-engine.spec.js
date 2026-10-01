@@ -380,7 +380,12 @@ test.describe('journey engine: copy variants', () => {
         path.join(contentDir, 'shared', 'pages', 'start~b.md'),
         `${frontmatter}\n---\n${body.replace(/^# .*$/m, '# Another start')}`
       )
-      for (const id of ['nrf-quote-7', 'nrf-request-to-use-1']) {
+      for (const id of [
+        'nrf-quote-7',
+        'nrf-quote-7-1',
+        'nrf-request-to-use-1',
+        'nrf-request-to-use-1-1'
+      ]) {
         const page = loadJourney(id, { contentDir }).byId.get('start')
         expect(copyVariants(page)).toEqual([
           {

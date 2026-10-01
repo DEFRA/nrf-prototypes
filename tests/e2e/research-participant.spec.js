@@ -17,7 +17,7 @@ const {
  * literals here; everything on the journey's pages comes from content/.
  */
 
-const requestToUse = copyOf('nrf-request-to-use-1')
+const requestToUse = copyOf('nrf-request-to-use-1-1')
 const {
   base,
   answer,
@@ -111,7 +111,7 @@ test.describe('participant details', () => {
   test('a previewed page comes back in preview once the details are given', async ({
     page
   }) => {
-    const quote = copyOf('nrf-quote-7')
+    const quote = copyOf('nrf-quote-7-1')
     const email = `${quote.base}/estimate-email-content`
     // The footer link keeps the page's query string
     await page.goto(`${base}/start?preview=1`)
@@ -132,7 +132,7 @@ test.describe('participant details', () => {
   })
 
   test('the quote email is addressed to the participant', async ({ page }) => {
-    const quote = copyOf('nrf-quote-7')
+    const quote = copyOf('nrf-quote-7-1')
     const email = `${quote.base}/estimate-email-content?preview=1`
     await page.goto(`${email}&participant`)
     await dialog(page).getByLabel('First name').fill(PARTICIPANT.firstName)

@@ -24,4 +24,4 @@ actions:
 
 We found the following addresses for postcode **{{ defraPostcode.postcode }}**
 
-[Change postcode](/nrf-request-to-use-1/defra-postcode)
+[Change postcode](./defra-postcode)

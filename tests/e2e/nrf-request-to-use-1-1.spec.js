@@ -8,7 +8,7 @@ const {
   copyVariants
 } = require('../../app/lib/journey-engine')
 const { copyOf, gotoTools } = require('./helpers/journey')
-const { LEVY_AMOUNT } = require('../../app/lib/nrf-request-to-use-1/hooks')
+const { LEVY_AMOUNT } = require('../../app/lib/nrf-request-to-use-1-1/hooks')
 const {
   requestToUse,
   retrieveQuote,
@@ -21,11 +21,11 @@ const {
 } = require('./helpers/request-to-use')
 
 /**
- * nrf-request-to-use-1: retrieving a quote, accepting the levy, signing in
+ * nrf-request-to-use-1-1: retrieving a quote, accepting the levy, signing in
  * with the mock GOV.UK One Login and getting a commitment certificate.
  *
  * Page list, headings, labels, links and error text come from
- * content/nrf-request-to-use-1 through the helpers, so these tests follow
+ * content/nrf-request-to-use-1-1 through the helpers, so these tests follow
  * the journey definition and survive a reword.
  */
 
@@ -59,7 +59,7 @@ const {
 
 // The development details are the quote journey's own pages, borrowed
 // with the way back in `nav` (see content/README.md)
-const quote = copyOf('nrf-quote-7')
+const quote = copyOf('nrf-quote-7-1')
 const quotePath = quote.base
 
 // The loading screen after the review page moves on by itself
@@ -73,7 +73,7 @@ function escapeRegExp(text) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-test.describe('nrf-request-to-use-1 preview mode', () => {
+test.describe('nrf-request-to-use-1-1 preview mode', () => {
   for (const page of journey.pages) {
     test(`${page.id} renders with sample data`, async ({ page: browser }) => {
       const response = await browser.goto(`${page.path}?preview=1`)
@@ -136,7 +136,7 @@ test.describe('nrf-request-to-use-1 preview mode', () => {
   })
 })
 
-test.describe('nrf-request-to-use-1 validation', () => {
+test.describe('nrf-request-to-use-1-1 validation', () => {
   test('empty submission re-renders with the page error', async ({ page }) => {
     const question = journey.byId.get('have-nrl-reference')
     const response = await page.request.post(question.path, { form: {} })
@@ -175,7 +175,7 @@ test.describe('nrf-request-to-use-1 validation', () => {
   })
 })
 
-test.describe('nrf-request-to-use-1 happy paths', () => {
+test.describe('nrf-request-to-use-1-1 happy paths', () => {
   test('a company signs in, gives its address and gets a certificate', async ({
     page
   }) => {
@@ -487,7 +487,7 @@ test.describe('nrf-request-to-use-1 happy paths', () => {
   })
 })
 
-test.describe('nrf-request-to-use-1 Defra ID registration', () => {
+test.describe('nrf-request-to-use-1-1 Defra ID registration', () => {
   // Anyone requesting the levy for themselves as an individual, and sign-in
   // emails containing "new", register a Defra account first; the business or
   // individual answer then decides the account type, with who the levy is
@@ -858,7 +858,7 @@ test.describe('nrf-request-to-use-1 Defra ID registration', () => {
   })
 })
 
-test.describe('nrf-request-to-use-1 with errors switched off', () => {
+test.describe('nrf-request-to-use-1-1 with errors switched off', () => {
   test('?errors=false lets every page continue with nothing entered', async ({
     page
   }) => {
@@ -925,7 +925,7 @@ test.describe('nrf-request-to-use-1 with errors switched off', () => {
   })
 })
 
-test.describe('nrf-request-to-use-1 amending the quote', () => {
+test.describe('nrf-request-to-use-1-1 amending the quote', () => {
   const review = `${base}/review-quote-details`
   const serviceNav = '.govuk-service-navigation__service-name'
 
@@ -1057,7 +1057,7 @@ test.describe('nrf-request-to-use-1 amending the quote', () => {
   test('a quote with an uploaded boundary shows the file name', async ({
     page
   }) => {
-    // Make the quote on nrf-quote-7 by uploading (no file: the sample
+    // Make the quote on nrf-quote-7-1 by uploading (no file: the sample
     // boundary is plotted under a stand-in file name)
     const answers = [
       ['planning-type', { 'planning-type': 'full' }],
@@ -1375,7 +1375,7 @@ test.describe('journey tools', () => {
   })
 })
 
-test.describe('nrf-request-to-use-1 creating an account', () => {
+test.describe('nrf-request-to-use-1-1 creating an account', () => {
   // The mock identity providers each live in their own shared folder
   const providers = {
     'one-login-': 'one-login',

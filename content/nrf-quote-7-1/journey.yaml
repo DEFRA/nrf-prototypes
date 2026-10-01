@@ -1,0 +1,331 @@
+# Flow and logic for the "Get a quote" journey.
+#
+# Copy lives in pages/*.md. This file decides the order of pages, where each
+# answer leads, what is remembered in the session, and which pages need
+# bespoke code (hooks in app/lib/nrf-quote-7-1/hooks.js).
+#
+# Conditions are objects: { key: <session key>, <operator>: <value> }.
+# Operators: equals, notEquals, in, notIn, gt, gte, lt, lte, between,
+# truthy, falsy, isSet. Engine values start with $: $navFromSummary,
+# $isChange, $preview. See content/README.md.
+
+id: nrf-quote-7-1
+name: Get a quote for the nature restoration levy
+serviceName: Get a quote for the nature restoration levy
+start: start
+summaryPage: check-your-answers
+
+# Card shown on the homepage. `family` picks the tab, `version` orders it
+# against the other versions in that family. See app/config/shared/journeys.yaml.
+homepage:
+  family: quote
+  version: 7.1
+  status: in-progress
+  title: Get a quote for Nature Restoration Fund levy (V7.1)
+  description: >-
+    The quote journey as it stands now. V7 is kept as it was on Monday 28
+    September 2026 under previous versions.
+  changesTitle: What is different from V7
+  changes:
+    - Nothing yet; changes to the quote from 29 September 2026 go here
+
+# Every session key this journey writes. `clears: $session` expands to this.
+session:
+  - journeyType
+  - planningType
+  - isHousing
+  - residentialBuildingCount
+  - hasRedlineBoundaryFile
+  - redlineFile
+  - redlineBoundaryPolygon
+  - boundaryFailureReason
+  - mapReferrer
+  - estimateEmail
+  - nrfReference
+  - levyAmount
+  - intersectingCatchment
+
+# Sample answers used when a page is opened with ?preview=1 and on the
+# screen wall at /tools/journeys/nrf-quote-7-1. Only a summary page
+# opened that way writes them to the session, so its Change links work.
+preview:
+  data:
+    journeyType: quote
+    planningType: full
+    isHousing: 'Yes'
+    residentialBuildingCount: 120
+    hasRedlineBoundaryFile: false
+    mapReferrer: redline-map
+    redlineFile: site-boundary.geojson
+    redlineBoundaryPolygon:
+      center: [-1.1494, 52.9548]
+      coordinates:
+        - [-1.1544, 52.9518]
+        - [-1.1444, 52.9518]
+        - [-1.1444, 52.9578]
+        - [-1.1544, 52.9578]
+        - [-1.1544, 52.9518]
+      intersections:
+        nutrient: River Trent
+      intersectingCatchment: River Trent
+    estimateEmail: trevor.barker@email.com
+    nrfReference: NRL-123456
+    levyAmount: '2,500'
+
+pages:
+  # The start page and "What would you like to do?" are shared with the
+  # request-to-use journey: copy lives in content/shared/pages/. Only the
+  # answer that stays in this journey continues here; the other leaves for
+  # the request-to-use journey's first question. Update that path when a
+  # newer request-to-use version becomes the target.
+  - id: start
+    shared: true
+    next: what-would-you-like-to-do
+
+  - id: what-would-you-like-to-do
+    shared: true
+    # User research aid in the footer: the quote email, filled with the
+    # sample quote, so a participant choosing "request to use" can see the
+    # NRL reference they will be asked for
+    research:
+      - text: Quote email
+        href: estimate-email-content?preview=1
+    next:
+      - when: { key: journeyType, equals: request-to-use }
+        goto: /nrf-request-to-use-1-1/have-nrl-reference
+      - goto: planning-type
+
+  # planning-type, housing, units and map are also the pages the
+  # request-to-use journey's Change links open (borrowed with the way back
+  # in `nav`); `goto: $summary` returns to whichever summary page sent the
+  # user, in either journey
+  - id: planning-type
+    field: planning-type
+    sessionKey: planningType
+    changeable: true
+    next:
+      - when:
+          key: planningType
+          notIn: [full, outline, hybrid]
+        goto: wrong-permission
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: housing
+
+  - id: wrong-permission
+
+  # Only the request-to-use journey changes this answer (from its review
+  # page), so the return rule matters there rather than on the quote's own
+  # check your answers
+  - id: housing
+    field: housing
+    sessionKey: isHousing
+    changeable: true
+    next:
+      - when: { key: isHousing, equals: 'No' }
+        goto: not-housing
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: units
+
+  - id: not-housing
+
+  - id: units
+    field: unit-count
+    sessionKey: residentialBuildingCount
+    min: 1
+    max: 50000
+    changeable: true
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: redline-map
+
+  - id: redline-map
+    field: has-redline-boundary-file
+    sessionKey: hasRedlineBoundaryFile
+    changeable: true # check your answers' Change link lands here
+    # The options' values (see redline-map.md) become booleans in the session
+    store:
+      upload: true
+      draw: false
+    next:
+      - when: { key: hasRedlineBoundaryFile, truthy: true }
+        goto: upload-redline
+      - goto: map
+        set: { mapReferrer: redline-map }
+
+  - id: upload-redline
+    field: redline-file
+    sessionKey: redlineFile
+    accept: ['.geojson', '.json', '.kml', '.zip']
+    maxSize: 2MB
+    changeable: true
+    back: redline-map # also in a change detour, which starts at redline-map
+    handler: custom # plots the file (or a sample boundary); no file is fine, see hooks.js
+    next: checking-file
+
+  # Production polls the uploader here; the prototype shows the spinner for
+  # a moment and moves on (a meta refresh in the template)
+  - id: checking-file
+    template: nrf-quote-7-1/checking-file
+    handler: custom # where to continue to, see hooks.js
+    guard: { key: redlineFile, isSet: true, redirect: upload-redline }
+    next: file-preview
+
+  # The uploaded boundary on a read-only map. Nothing is checked and every
+  # upload lands here (a polygon outside every EDP is swapped for a sample
+  # one inside the live EDP); the error states below exist for the screen
+  # wall only.
+  - id: file-preview
+    template: nrf-quote-7-1/file-preview
+    handler: custom # boundary, EDP list and error, see hooks.js
+    changeable: true
+    back:
+      # Opened from the request-to-use journey's review page: back there
+      - when: { key: $borrowed, truthy: true }
+        goto: $summary
+      - goto: upload-redline
+    preview:
+      data:
+        hasRedlineBoundaryFile: true
+        mapReferrer: upload-redline
+        redlineBoundaryPolygon:
+          coordinates:
+            - [1.162, 52.6845]
+            - [1.165, 52.6845]
+            - [1.165, 52.6875]
+            - [1.162, 52.6875]
+      # Error states, shown on the screen wall only (an upload never sets
+      # `boundaryFailureReason`). Each is a key in file-preview.md's errors;
+      # the shape (when there is one) is drawn so the problem can be seen
+      variants:
+        - id: overlapping
+          label: File contains an error (overlapping itself)
+          data:
+            boundaryFailureReason: selfIntersecting
+            redlineBoundaryPolygon:
+              geometry:
+                type: Polygon
+                coordinates:
+                  - - [1.162, 52.6845]
+                    - [1.165, 52.6875]
+                    - [1.165, 52.6845]
+                    - [1.162, 52.6875]
+                    - [1.162, 52.6845]
+        - id: hole
+          label: File contains an error (hole)
+          data:
+            boundaryFailureReason: hasHoles
+            redlineBoundaryPolygon:
+              geometry:
+                type: Polygon
+                coordinates:
+                  - - [1.162, 52.6845]
+                    - [1.165, 52.6845]
+                    - [1.165, 52.6875]
+                    - [1.162, 52.6875]
+                    - [1.162, 52.6845]
+                  - - [1.163, 52.6855]
+                    - [1.164, 52.6855]
+                    - [1.164, 52.6865]
+                    - [1.163, 52.6865]
+                    - [1.163, 52.6855]
+        - id: not-an-area
+          label: File contains an error (point or line, no map)
+          data:
+            boundaryFailureReason: unsupportedGeometry
+            redlineBoundaryPolygon: null
+    next:
+      # An excluded area (the designated site itself) makes the boundary
+      # ineligible for the EDP, so it outranks the no-EDP route, as production
+      - when:
+          { key: redlineBoundaryPolygon.intersectingExcludedAreas, truthy: true }
+        goto: exclusion
+      - when:
+          { key: redlineBoundaryPolygon.intersections.nutrient, falsy: true }
+        goto: no-edp
+      - when: { key: residentialBuildingCount, gt: 15000, lt: 20000 }
+        goto: exclusion
+      - when: { key: residentialBuildingCount, gte: 20000 }
+        goto: no-capacity
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: estimate-email
+
+  - id: map
+    template: nrf-quote-7-1/map
+    field: boundary-data
+    handler: custom # EDP intersection check, see hooks.js
+    changeable: true
+    back:
+      # Opened from the request-to-use journey's review page: back there.
+      # Check your answers' own Change link goes through redline-map, so a
+      # detour steps back to it rather than straight to the summary
+      - when: { key: $borrowed, truthy: true }
+        goto: $summary
+      - when: { key: mapReferrer, equals: upload-redline }
+        goto: upload-redline
+      - goto: redline-map
+    next:
+      # An excluded area (the designated site itself) makes the boundary
+      # ineligible for the EDP, so it outranks the no-EDP route, as production
+      - when:
+          { key: redlineBoundaryPolygon.intersectingExcludedAreas, truthy: true }
+        goto: exclusion
+      - when:
+          { key: redlineBoundaryPolygon.intersections.nutrient, falsy: true }
+        goto: no-edp
+      - when: { key: residentialBuildingCount, gt: 15000, lt: 20000 }
+        goto: exclusion
+      - when: { key: residentialBuildingCount, gte: 20000 }
+        goto: no-capacity
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: estimate-email
+
+  - id: no-edp
+
+  - id: exclusion
+
+  - id: no-capacity
+    back: units
+
+  - id: estimate-email
+    field: email
+    sessionKey: estimateEmail
+    changeable: true
+    back:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - when: { key: mapReferrer, equals: upload-redline }
+        goto: file-preview
+      - goto: map
+    next: check-your-answers
+
+  - id: check-your-answers
+    guard: { key: estimateEmail, isSet: true, redirect: estimate-email }
+    handler: custom # mints the NRL reference, see hooks.js
+    next: confirmation
+
+  # Also used by the request-to-use journey ("No, delete my quote details"),
+  # which arrives with the way back in `nav`; Back and Cancel then return to
+  # its review page instead of check your answers
+  - id: delete-quote
+    back:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: check-your-answers
+    clears: $session
+    next: delete-confirmation
+
+  - id: delete-confirmation
+
+  # User research aid in the footer: the quote email the submission sends
+  - id: confirmation
+    research:
+      - text: View the email content
+        href: estimate-email-content
+
+  - id: estimate-email-content
+    back: confirmation

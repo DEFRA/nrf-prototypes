@@ -1,6 +1,6 @@
 ---
 # The commitment certificate as a page the developer saves as a PDF
-# (app/views/nrf-request-to-use-1/save-commitment-certificate.html), linked
+# (app/views/nrf-request-to-use-1-1/save-commitment-certificate.html), linked
 # from the email in place of an attachment. The certificate itself is
 # commitment-certificate.md, shown on an A4 sheet below this copy.
 # `devices` are the radios and the steps under them: the one matching the

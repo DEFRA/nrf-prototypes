@@ -102,6 +102,11 @@ test.describe('design handoff', () => {
         has: page.locator(`code:text-is("${journeyId}")`)
       })
       .first()
+    // An older version's card sits in the closed "Previous versions" details
+    const previous = page.locator('details.govuk-details', { has: card })
+    if (await previous.count()) {
+      await previous.locator(':scope > summary').click()
+    }
     await card.locator('.journey-card__ready').click()
     await expect(page).toHaveURL(
       new RegExp(`/handoffs/${journeyId}/latest/${journey.start}\\?preview=1$`)

@@ -9,7 +9,7 @@
 # and confirms who the developer is. On submission they get an email and a
 # commitment certificate to give to their local planning authority.
 # Behaviour that needs code (the mock quote store, sign-in accounts, the NRL
-# reference) is in app/lib/nrf-request-to-use-1/hooks.js.
+# reference) is in app/lib/nrf-request-to-use-1-1/hooks.js.
 #
 # The sign-in, account creation and Defra ID registration pages are shared
 # with any other journey that signs users in: their copy lives in
@@ -18,10 +18,10 @@
 # The development details (planning type, housing, units, the map) and the
 # delete flow are the quote journey's own pages, borrowed rather than copied:
 # the Change links and the "No, delete my quote details" answer leave for
-# /nrf-quote-7/... with the way back in `nav`, and those pages return here.
+# /nrf-quote-7-1/... with the way back in `nav`, and those pages return here.
 # Update the paths when a newer quote version becomes the target.
 
-id: nrf-request-to-use-1
+id: nrf-request-to-use-1-1
 name: Request to use the nature restoration levy
 serviceName: Request to use the nature restoration levy
 start: start
@@ -44,30 +44,18 @@ signedIn: { key: account, isSet: true }
 # against the other versions in that family. See app/config/shared/journeys.yaml.
 homepage:
   family: request-to-use
-  version: 1
+  version: 1.1
   status: in-progress
-  title: Request to use the nature restoration levy (V1)
+  title: Request to use the nature restoration levy (V1.1)
   description: >-
-    A developer retrieves their quote with the NRL reference, reviews and
-    amends the development details, accepts the levy amount, signs in with
-    GOV.UK One Login and confirms the developer details. On submission they
-    receive an email and a commitment certificate to submit with their
-    planning application.
+    The request to use journey as it stands now. V1 is kept as it was on
+    Monday 28 September 2026 under previous versions.
+  changesTitle: What is different from V1
   changes:
-    - quote journey and request to use journey - contact details updated throughout the journeys
-    - new start page content including request to use, Defra ID guidance links, information about file uploads, when to assume liability
-    - quote journey includes new details component with file upload guidance
-    - added branching page to quote or request to use
-    - retrieving a quote and reviewing the details
-    - accepting a quote amount
-    - variation to an existing planning application questions
-    - Defra account user type questions
-    - added Defra ID guidance pages to the journey based on the user type
-    - full Defra ID journey added
-    - fields for additional name and address details added based on the user type
-    - check your answers page with declaration tick box 
-    - Defra check answers page with declaration tick box 
-    - updated commitment certificate page with updated planning conditions
+    - a "calculating your levy" loading screen before accepting the levy amount
+    - the "levy increased" page is gone; everyone sees the accept levy page
+    - the confirmation email links to a commitment certificate page to print or save as a PDF
+
 # Every session key this journey writes. `clears: $session` expands to this,
 # so the quote keys are included: deleting the quote details here also removes
 # a quote made in the same session. `nrfReference` is the reference the quote
@@ -93,7 +81,6 @@ session:
   - quotedUnits
   - quotedLevyAmount
   - levyAmount
-  - levyIncreased
   - edpName
   - acceptLevy
   - isVariation
@@ -131,7 +118,7 @@ session:
   - defraContactSupportId
 
 # Sample answers used when a page is opened with ?preview=1 and on the
-# screen wall at /tools/journeys/nrf-request-to-use-1. Only a summary page
+# screen wall at /tools/journeys/nrf-request-to-use-1-1. Only a summary page
 # opened that way writes them to the session, so its Change links work.
 # The sample account would show every page signed in: `signedInFrom` names
 # where signing in leads, and only those pages and the ones after them show
@@ -169,7 +156,6 @@ preview:
     quotedUnits: 100
     quotedLevyAmount: 'X,XXX'
     levyAmount: 'X,XXX'
-    levyIncreased: true
     acceptLevy: 'Yes'
     isVariation: 'Yes'
     originalCommitted: 'Yes'
@@ -236,7 +222,6 @@ pages:
   # target.
   - id: start
     shared: true
-    handoff: 2026-09-21
     next: what-would-you-like-to-do
 
   - id: what-would-you-like-to-do
@@ -246,10 +231,10 @@ pages:
     # asked for
     research:
       - text: Quote email
-        href: /nrf-quote-7/estimate-email-content?preview=1
+        href: /nrf-quote-7-1/estimate-email-content?preview=1
     next:
       - when: { key: journeyType, equals: quote }
-        goto: /nrf-quote-7/planning-type
+        goto: /nrf-quote-7-1/planning-type
       - goto: have-nrl-reference
 
   # Without a reference there is no quote to use: the drop-out page sends
@@ -302,7 +287,6 @@ pages:
   # User research aid in the footer: the page an expired retrieval link
   # opens, in this tab in place of the email's link
   - id: retrieve-email
-    handoff: 2026-09-21
     research:
       - text: Expired link
         href: link-expired
@@ -320,40 +304,35 @@ pages:
     next:
       - when: { key: residentialBuildingCount, gt: 15000 }
         goto: not-enough-capacity
-      - when: { key: levyIncreased, truthy: true }
-        goto: levy-increased
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
-      - goto: accept-levy
+      - goto: calculating-levy
 
   # The development details are changed on the quote journey's own pages:
   # the Change links on review-quote-details and check-your-answers point at
-  # /nrf-quote-7/planning-type, housing, units and map, which come back here.
+  # /nrf-quote-7-1/planning-type, housing, units and map, which come back here.
 
   - id: not-enough-capacity
     back: review-quote-details
 
+  # Loading screen while the levy is worked out: shows the spinner for a
+  # moment and moves on (a meta refresh in the template)
+  - id: calculating-levy
+    template: nrf-request-to-use-1-1/calculating-levy
+    handler: custom # where to continue to, see hooks.js
+    guard: { key: quoteReference, isSet: true, redirect: quote-reference }
+    next: accept-levy
+
   # Deleting the quote details happens on the quote journey's delete pages;
   # `return` gives them the way back for Back and Cancel
-  - id: levy-increased
-    field: accept-levy
-    sessionKey: acceptLevy
-    changeable: true
-    next:
-      - when: { key: acceptLevy, equals: 'No' }
-        goto: /nrf-quote-7/delete-quote
-        return: review-quote-details
-      - when: { key: $navFromSummary, truthy: true }
-        goto: $summary
-      - goto: variation
-
   - id: accept-levy
     field: accept-levy
     sessionKey: acceptLevy
     changeable: true
+    back: review-quote-details # not the loading screen, which moves on by itself
     next:
       - when: { key: acceptLevy, equals: 'No' }
-        goto: /nrf-quote-7/delete-quote
+        goto: /nrf-quote-7-1/delete-quote
         return: review-quote-details
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
@@ -912,7 +891,6 @@ pages:
   # User research aids in the footer: the email and the commitment
   # certificate the submission sends
   - id: confirmation
-    handoff: 2026-09-21
     research:
       - text: View the email
         href: request-email
@@ -920,9 +898,13 @@ pages:
         href: commitment-certificate
 
   - id: request-email
-    handoff: 2026-09-21
     back: confirmation
 
   - id: commitment-certificate
-    handoff: 2026-09-21
     back: confirmation
+
+  # The certificate as a page to print or save as a PDF, linked from the
+  # email: the certificate on an A4 sheet and the steps for the user's device
+  - id: save-commitment-certificate
+    template: nrf-request-to-use-1-1/save-commitment-certificate
+    handler: custom # renders the certificate and picks the device, see hooks.js
