@@ -4,8 +4,7 @@ type: content
 
 # This link has expired
 
-Placeholder copy: the link to retrieve your quote details has expired. Links in the email work for a limited time.
+The link to retrieve your quote details has expired. The link in the email can only be used once and only for a limited time.
 
-You can [ask for a new link](/nrf-request-to-use-1-1/quote-reference) by giving us your NRL reference and email address again.
+You can [request a new link](#).
 
-If you don't have a quote, or want to get another one, you can [get a quote at any time](/nrf-quote-7-1/start).
