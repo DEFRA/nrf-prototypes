@@ -1208,6 +1208,18 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     await expect(page).toHaveURL(`${base}/email`)
   })
 
+  test('the stand-in reference NRL-111111 already has a commitment', async ({
+    page
+  }) => {
+    await page.goto(`${base}/quote-reference`)
+    await fillAnswer(page, 'quote-reference', 'NRL-111111')
+    await submit(page, 'quote-reference')
+    await expect(page).toHaveURL(`${base}/already-committed`)
+    await expectHeading(page, 'already-committed')
+    await page.getByRole('link', { name: 'Back' }).click()
+    await expect(page).toHaveURL(`${base}/quote-reference`)
+  })
+
   test('an expired retrieval link is a research link on the email', async ({
     page
   }) => {

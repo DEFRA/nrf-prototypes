@@ -55,6 +55,7 @@ homepage:
     - a "calculating your levy" loading screen before accepting the levy amount
     - the "levy increased" page is gone; everyone sees the accept levy page
     - the confirmation email links to a commitment certificate page to print or save as a PDF
+    - a drop-out page when the NRL reference already has a commitment (try NRL-111111)
 
 # Every session key this journey writes. `clears: $session` expands to this,
 # so the quote keys are included: deleting the quote details here also removes
@@ -253,16 +254,25 @@ pages:
 
   # Stored apart from the quote journey's `nrfReference` so a quote made in
   # the same session never fills the box in: the user arrives afresh and types
-  # the reference from their email, which pulls the cached quote up
+  # the reference from their email, which pulls the cached quote up.
+  # The prototype cannot check a reference against real commitments, so the
+  # reference NRL-111111 stands in for a quote that already has one
   - id: quote-reference
     field: nrf-reference
     sessionKey: quoteReference
     changeable: true
     handler: custom # checks the reference format, see hooks.js
     next:
+      - when: { key: quoteReference, equals: NRL-111111 }
+        goto: already-committed
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: email
+
+  # Placeholder copy: the quote has already been committed to, so it cannot
+  # be used again
+  - id: already-committed
+    back: quote-reference
 
   # The email the retrieval link goes to, typed afresh like the reference.
   # The prototype cannot check a reference against real quotes, so the
