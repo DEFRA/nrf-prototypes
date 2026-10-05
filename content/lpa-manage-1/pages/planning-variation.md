@@ -15,10 +15,8 @@ errors:
 button: Continue
 ---
 
-# Is this a planning variation?
+# Placeholder: Is this a planning variation?
 
-:::warning
-Placeholder copy: the words on this page have not been written yet.
+::: inset
+Placeholder: {{ commitment.reference }} is already in your developer records, for planning application {{ record.planningReference }}.
 :::
-
-{{ commitment.reference }} is already in your developer records, for planning application {{ record.planningReference }}.

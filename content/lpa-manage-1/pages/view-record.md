@@ -8,7 +8,10 @@
 # commitment details are reviewed the planning stage options (`step:
 # planning`) take their place: they set the planning application's stage
 # (see records.yaml). A planning variation shows the new planning
-# application reference and the original one.
+# application reference and the original one. A record linked to another
+# (a variation the developer made a commitment for, and the original
+# application's) links to it; `linkedOriginal` and `linkedVariation` say
+# which way.
 type: custom
 rows:
   - heading: Commitment details
@@ -23,7 +26,10 @@ rows:
     value: '{{ record.planningReference }}'
   - key: Original planning application reference
     value: '{{ record.originalPlanningReference }}'
-    when: { key: record.variation, truthy: true }
+    when: { key: record.originalPlanningReference, truthy: true }
+  - key: Linked developer record
+    value: '{{ record.linkedText }}'
+    when: { key: record.linkedText, truthy: true }
   - key: Planning application stage
     value: '{{ record.planningStage.label }}'
   - key: Added by
@@ -75,6 +81,9 @@ text:
   timelineReviewLater: Marked to review and confirm later
   timelineStage: Planning application stage changed to
   timelineVariation: Planning variation added
+  # After the NRL reference of a linked developer record, in brackets
+  linkedOriginal: original planning application
+  linkedVariation: planning variation
   timelineComment: Comment
   by: by
   at: at

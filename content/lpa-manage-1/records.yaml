@@ -20,11 +20,17 @@
 #                 pages/view-record.md offer reviewed and rejected; the
 #                 others (withdrawn, cancelled) are set outside this
 #                 prototype
+#   officers      each officer's email, shown under their name on a
+#                 record's history (an officer not listed gets
+#                 firstname.lastname@scarfolk.gov.uk)
 #   boundaries    named red line boundaries: open rings of [longitude,
 #                 latitude] pairs. A commitment names one (or gives its own
 #                 `coordinates`)
 #   commitments   what developers have submitted, found by NRL reference on
 #                 "Retrieve commitment details". Dates are YYYY-MM-DD.
+#                 A commitment the developer made for a planning variation
+#                 names the original application's commitment as
+#                 `originalReference`: the two records link to each other.
 #                 A commitment with a `record:` is already in the council's
 #                 records (the dashboard and table show it, and retrieving
 #                 it again says so); one without is waiting to be added
@@ -65,6 +71,12 @@ planningTypes:
   Full planning permission: Full
   Outline planning permission: Outline
   Reserved matters: Reserved
+
+officers:
+  John Smith: john.smith@scarfolk.gov.uk
+  Priya Shah: priya.shah@scarfolk.gov.uk
+  Aisha Khan: aisha.khan@scarfolk.gov.uk
+  Tom Barker: tom.barker@scarfolk.gov.uk
 
 statuses:
   for-review: { label: For review, colour: light-blue }
@@ -154,6 +166,19 @@ commitments:
     issued: 2026-09-21
     expires: 2027-03-21
     boundary: dereham
+
+  # A variation of NRL-100619's planning application
+  - reference: NRL-567890
+    developer: Wensum Valley Estates
+    address: [Riverside Offices, Mill Lane, Scarfolk, SC6 3WV]
+    planningType: Full planning permission
+    units: 34
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-09-29
+    expires: 2027-03-29
+    boundary: reepham
+    originalReference: NRL-100619
 
   # --------------------------------------- Already in the council's records
   - reference: NRL-100231
@@ -364,7 +389,7 @@ commitments:
     boundary: wymondham
     record:
       planningReference: 2026/0211/FUL
-      planningStage: applied
+      planningStage: granted
       officer: Aisha Khan
       status: reviewed
       history:
@@ -375,6 +400,33 @@ commitments:
           status: reviewed
           by: Aisha Khan
           at: 2026-07-01T13:40
+        - event: stage
+          stage: granted
+          by: Aisha Khan
+          at: 2026-08-12T11:05
+
+  # A variation of NRL-101178's planning application: the developer made a
+  # new commitment for it, and the two records link to each other
+  - reference: NRL-101412
+    developer: Greenacre Living
+    address: [Greenacre House, 4 Market Street, Scarfolk, SC2 1GL]
+    planningType: Full planning permission
+    units: 28
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-09-30
+    expires: 2027-03-30
+    boundary: wymondham
+    originalReference: NRL-101178
+    record:
+      planningReference: 2026/0503/VAR
+      planningStage: applied
+      officer: Tom Barker
+      status: for-review
+      history:
+        - event: added
+          by: Tom Barker
+          at: 2026-10-01T10:20
 
   - reference: NRL-101236
     developer: Scarfolk Homes Ltd

@@ -20,6 +20,10 @@
  *   - a reference the council already has a record for asks whether it is
  *     a planning variation; one that is takes the new planning application
  *     reference and keeps the original on the record
+ *   - a commitment the developer made for a variation names the original
+ *     application's NRL reference (`originalReference`, from
+ *     nrf-request-to-use-1 or records.yaml): the two records link to each
+ *     other
  *   - the record page's audit timeline and its review options, which post
  *     back to the page and return to the dashboard, and the full
  *     certificate behind it
@@ -59,6 +63,8 @@ const IS_VARIATION = 'yes'
 const SESSION_KEYS = ['officer', 'signInEmail']
 // Signing in with an email containing this is a council with no records yet
 const NEW_COUNCIL = 'new'
+// The council's email domain, for an officer records.yaml gives no email
+const COUNCIL_DOMAIN = 'scarfolk.gov.uk'
 
 // ------------------------------------------------------------ The data
 
@@ -78,6 +84,7 @@ function loadStore() {
       planningStages: {},
       planningTypes: {},
       boundaries: {},
+      officers: {},
       commitments: []
     }
   }
@@ -90,6 +97,7 @@ function loadStore() {
         planningStages: raw.planningStages || {},
         planningTypes: raw.planningTypes || {},
         boundaries: raw.boundaries || {},
+        officers: raw.officers || {},
         commitments: raw.commitments || [],
         fallback: raw.fallback || null
       }
@@ -216,6 +224,29 @@ function statusOf(value, store) {
   }
 }
 
+// An officer's email on the history: records.yaml's `officers`, or their
+// name at the council's domain
+function officerEmail(name, store) {
+  if (!name) {
+    return ''
+  }
+  const listed = store.officers[name]
+  if (listed) {
+    return listed
+  }
+  const local = String(name)
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z\s-]/g, '')
+    .replace(/\s+/g, '.')
+  return local ? `${local}@${COUNCIL_DOMAIN}` : ''
+}
+
+// The email the officer signed in with, for the history of what they do
+function signedInEmail(data) {
+  return (data.officer && data.officer.email) || ''
+}
+
 /**
  * Every record the council has: the file's, then the ones the officer
  * added or changed this session (`lpaRecords`, keyed by NRL reference),
@@ -265,8 +296,13 @@ function recordOf({ entry, record }, store, today = new Date()) {
     reference: entry.reference,
     developer: entry.developer,
     planningReference: record.planningReference,
-    // A planning variation keeps the reference the record was added with
-    variation: Boolean(record.originalPlanningReference),
+    // A planning variation: one added here keeps the planning reference
+    // the record was added with; one the developer made names the original
+    // application's commitment
+    variation: Boolean(
+      record.originalPlanningReference || entry.originalReference
+    ),
+    originalReference: entry.originalReference || '',
     originalPlanningReference: record.originalPlanningReference || '',
     planningStage: planningStageOf(record.planningStage || ADDED_STAGE, store),
     planningType: entry.planningType,
@@ -289,6 +325,7 @@ function recordOf({ entry, record }, store, today = new Date()) {
         reason: event.reason || '',
         comment: event.comment || '',
         by: event.by,
+        email: event.email || officerEmail(event.by, store),
         date: formatDate(event.date),
         time: formatTime(event.date),
         datetime: event.date ? event.date.toISOString() : ''
@@ -296,6 +333,37 @@ function recordOf({ entry, record }, store, today = new Date()) {
       .reverse(),
     commitment: commitmentOf(entry, store)
   }
+}
+
+/**
+ * The records a record is linked to: the original application's, for a
+ * commitment the developer made for a variation, and every variation's
+ * that names this one. Each is { reference, relation, recorded } (relation
+ * `original` or `variation`; `recorded` when the council has that record,
+ * so the page can link to it).
+ */
+function linkedRecords(data, record) {
+  const entries = allEntries(data)
+  const links = []
+  if (record.originalReference) {
+    links.push({
+      reference: record.originalReference,
+      relation: 'original',
+      recorded: entries.some(
+        (item) => item.entry.reference === record.originalReference
+      )
+    })
+  }
+  for (const item of entries) {
+    if (item.entry.originalReference === record.reference) {
+      links.push({
+        reference: item.entry.reference,
+        relation: 'variation',
+        recorded: true
+      })
+    }
+  }
+  return links
 }
 
 function allRecords(data) {
@@ -361,6 +429,13 @@ function requestToUseEntry(data) {
     units: data.residentialBuildingCount,
     edp: data.edpName || polygon.intersectingCatchment,
     levyAmount: data.levyAmount,
+    // A variation of an application that already has a commitment
+    originalReference:
+      data.isVariation === 'Yes' && data.originalCommitted === 'Yes'
+        ? String(data.originalReference || '')
+            .trim()
+            .toUpperCase()
+        : '',
     issued: certificate.issueDate || new Date(),
     expires: certificate.expiryDate || addMonths(new Date(), 6),
     boundary: polygon.coordinates ? { coordinates: polygon.coordinates } : null
@@ -823,6 +898,7 @@ const addRecord = {
       return { redirect: ctx.journey.routes.RETRIEVE_COMMITMENT }
     }
     const officer = (data.officer && data.officer.fullName) || MOCK_OFFICER
+    const email = signedInEmail(data)
     data.lpaRecords = data.lpaRecords || {}
     data.lpaRecords[entry.reference] = {
       commitment: entry,
@@ -830,7 +906,7 @@ const addRecord = {
       planningStage: ADDED_STAGE,
       officer,
       status: ADDED_STATUS,
-      history: [{ event: 'added', by: officer, at: nowStamp() }]
+      history: [{ event: 'added', by: officer, email, at: nowStamp() }]
     }
     data.recordReference = entry.reference
     if (data.officer) {
@@ -867,6 +943,27 @@ function loadRecord(ctx) {
   return null
 }
 
+// The record page's linked records, and "NRL-101178 (original planning
+// application)" for its linked record row, which viewRecord.get turns into
+// links
+function withLinks(data, page) {
+  if (!data.record) {
+    return
+  }
+  const text = page.content.text || {}
+  const labels = {
+    original: text.linkedOriginal,
+    variation: text.linkedVariation
+  }
+  data.record.links = linkedRecords(data, data.record).map((link) => ({
+    ...link,
+    label: labels[link.relation] || link.relation
+  }))
+  data.record.linkedText = data.record.links
+    .map((link) => `${link.reference} (${link.label})`)
+    .join(', ')
+}
+
 // Which review options a record offers: the first step's (options with no
 // `step`) until its commitment details are reviewed, then the planning
 // application stages (`step: planning`)
@@ -891,7 +988,7 @@ function updateRecord(data, found, changes, event) {
     commitment: found.entry,
     history: [
       ...(record.history || []),
-      { ...event, by: officer, at: nowStamp() }
+      { ...event, by: officer, email: signedInEmail(data), at: nowStamp() }
     ]
   }
   data.lpaFlash = 'updated'
@@ -926,9 +1023,29 @@ const viewRecord = {
     if (!ctx.preview) {
       delete data.newStatus
     }
+    withLinks(data, ctx.page)
   },
   get(ctx, model) {
     const { data, page } = ctx
+    // Each linked record the council has opens its page
+    const links = (data.record && data.record.links) || []
+    for (const group of model.content.rowGroups || []) {
+      for (const row of group.rows) {
+        if (links.length && row.value.text === data.record.linkedText) {
+          row.value = {
+            html: links
+              .map((link) => {
+                const reference = escapeHtml(link.reference)
+                const shown = link.recorded
+                  ? `<a class="govuk-link" href="${ctx.journey.routes.VIEW_RECORD}?ref=${encodeURIComponent(link.reference)}">${reference}</a>`
+                  : reference
+                return `${shown} (${escapeHtml(link.label)})`
+              })
+              .join('<br>')
+          }
+        }
+      }
+    }
     model.flash = data.lpaFlash === 'added' ? 'added' : null
     delete data.lpaFlash
     // The items line up with the page's options
@@ -954,6 +1071,7 @@ const viewRecord = {
     if (!data.record) {
       return { ok: true }
     }
+    withLinks(data, page)
     data.commitment = data.record.commitment
     if (data.record.status.value === REJECTED_STATUS) {
       return { ok: true, value: null }
@@ -1142,6 +1260,7 @@ module.exports = {
   allRecords,
   findRecord,
   findCommitmentEntry,
+  linkedRecords,
   commitmentOf,
   MOCK_OFFICER,
   RECORDS_PER_PAGE

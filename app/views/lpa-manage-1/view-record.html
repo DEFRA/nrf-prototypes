@@ -77,7 +77,7 @@
             <h3 class="app-timeline__title">
               {%- if event.event == 'added' %}{{ text.timelineAdded }}{% elif event.event == 'review-later' %}{{ text.timelineReviewLater }}{% elif event.event == 'stage' %}{{ text.timelineStage }} {{ event.stage.label }}{% elif event.event == 'variation' %}{{ text.timelineVariation }}{% else %}{{ text.timelineStatus }} {{ event.status.label }}{% endif -%}
             </h3>
-            <p class="app-timeline__byline">{{ text.by }} {{ event.by }}</p>
+            <p class="app-timeline__byline">{{ text.by }} {{ event.by }}{% if event.email %} <span class="app-timeline__email">({{ event.email }})</span>{% endif %}</p>
           </div>
           <p class="app-timeline__date">
             <time datetime="{{ event.datetime }}">{{ event.date }} {{ text.at }} {{ event.time }}</time>

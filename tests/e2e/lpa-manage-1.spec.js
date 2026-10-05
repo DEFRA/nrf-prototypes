@@ -118,6 +118,10 @@ test.describe('lpa-manage-1: manage commitments', () => {
     const timeline = page.locator('.app-timeline')
     await expect(timeline).toContainText(text('view-record', 'timelineAdded'))
     await expect(timeline).toContainText(MOCK_OFFICER)
+    // with the email they signed in with
+    await expect(timeline.locator('.app-timeline__email')).toHaveText(
+      '(officer@scarfolk.gov.uk)'
+    )
     // No review option is chosen for the officer
     await expect(page.locator('input[name="new-status"]:checked')).toHaveCount(
       0
@@ -177,6 +181,57 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(main).toContainText('26/00003/VAR')
     await expect(page.locator('.app-timeline__item').first()).toContainText(
       text('view-record', 'timelineVariation')
+    )
+  })
+
+  test('the history gives each officer’s email', async ({ page }) => {
+    const { officers } = loadStore()
+    await signIn(page)
+    await page.goto(`${base}/view-record?ref=${recorded.reference}`)
+    const items = page.locator('.app-timeline__item')
+    const count = await items.count()
+    for (let i = 0; i < count; i++) {
+      const by = recorded.record.history[count - 1 - i].by
+      await expect(items.nth(i).locator('.app-timeline__email')).toHaveText(
+        `(${officers[by]})`
+      )
+    }
+  })
+
+  test('a variation’s commitment and the original’s record link to each other', async ({
+    page
+  }) => {
+    const linkedKey = pageOf('view-record').content.rows.find((row) =>
+      String(row.value).includes('record.linkedText')
+    ).key
+    const variation = store.commitments.find(
+      (entry) => entry.originalReference && !entry.record
+    )
+    const row = page
+      .locator('.govuk-summary-list__row')
+      .filter({ hasText: linkedKey })
+    await signIn(page)
+
+    // Adding the variation's commitment links it to the original's record
+    await page.goto(`${base}/retrieve-commitment`)
+    await retrieve(page, variation.reference)
+    await fillAnswer(page, 'planning-reference', '26/00004/VAR')
+    await submit(page, 'planning-reference')
+    await expect(row).toContainText(
+      `${variation.originalReference} (${text('view-record', 'linkedOriginal')})`
+    )
+
+    // and the original's record links back
+    await row.getByRole('link', { name: variation.originalReference }).click()
+    await expectHeading(page, 'view-record', {
+      record: { reference: variation.originalReference }
+    })
+    await expect(row).toContainText(
+      `${variation.reference} (${text('view-record', 'linkedVariation')})`
+    )
+    await row.getByRole('link', { name: variation.reference }).click()
+    await expect(page).toHaveURL(
+      `${base}/view-record?ref=${variation.reference}`
     )
   })
 
