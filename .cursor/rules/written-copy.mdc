@@ -18,7 +18,9 @@ The markdown files under `content/` (page copy, shared pages, mock identity-prov
 
 ## Enforcement
 
-A Claude Code hook (`.claude/hooks/guard-written-copy.sh`, wired in `.claude/settings.json`) turns every Edit, Write or mutating shell command that targets one of these files into a permission prompt, even in accept-edits or auto mode. When the prompt appears, the user should approve only if they asked for the change.
+A Claude Code hook (`.claude/hooks/guard-written-copy.sh`, wired in `.claude/settings.json`) turns every Edit, Write or mutating shell command that targets shared copy (`content/shared/**/*.md`, shown by several journeys at once) or a journey specification (`prompts/**/*.md`) into a permission prompt, even in accept-edits or auto mode. When the prompt appears, the user should approve only if they asked for the change.
+
+A journey's own pages and partials (`content/<journey>/pages/`, `content/<journey>/partials/`) are not gated, because the prompts got in the way of changes the user had asked for. The rule above still applies to them in full: change them only when asked, and name every copy file you changed in your summary so nothing lands unnoticed.
 
 ## Why
 

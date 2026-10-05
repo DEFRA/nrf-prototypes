@@ -14,7 +14,7 @@ A **GOV.UK Prototype Kit 13** app (Node.js/Express, Nunjucks, govuk-frontend 5.1
 
 **Never edit a `.md` file under `content/` or `prompts/` unless the user has explicitly asked for that specific copy change in the current conversation.** These files are the content designer's words (page copy, shared pages such as `content/shared/pages/start.md`, mock sign-in pages, journey specifications). A code, routing or test task is not permission to reword, reformat or "tidy" them; if a change seems to need it, propose the exact before/after wording and wait. `journey.yaml` is flow logic, not copy, and is not covered; nor is any `README.md` in those folders (developer documentation). See `.cursor/rules/written-copy.mdc`.
 
-This is enforced: `.claude/settings.json` runs `.claude/hooks/guard-written-copy.sh` before every Edit/Write/Bash call and turns any write to those files into a permission prompt, even in accept-edits or auto mode.
+The rule covers every copy file, but only the riskiest are hard-gated: `.claude/settings.json` runs `.claude/hooks/guard-written-copy.sh` before every Edit/Write/Bash call and turns any write to `content/shared/**/*.md` (copy several journeys show) or `prompts/**/*.md` (journey specifications) into a permission prompt, even in accept-edits or auto mode. A journey's own pages and partials are not gated, so a change the user asked for lands without a prompt; always name every copy file you changed in your summary.
 
 ## Commands
 
