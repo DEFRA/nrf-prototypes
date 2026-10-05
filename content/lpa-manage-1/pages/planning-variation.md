@@ -6,10 +6,8 @@ bodyFirst: true
 options:
   - label: 'Yes'
     value: 'yes'
-    hint: Enter the new planning application reference number for this commitment
   - label: 'No'
     value: 'no'
-    hint: Go to the developer record you already have for this commitment
 errors:
   required: Select yes if this is a planning variation
 button: Continue

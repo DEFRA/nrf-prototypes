@@ -1220,6 +1220,25 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     await expect(page).toHaveURL(`${base}/quote-reference`)
   })
 
+  test('the stand-in original reference NRL-222222 has a red line boundary that does not match', async ({
+    page
+  }) => {
+    await page.goto(`${base}/original-reference`)
+    await fillAnswer(page, 'original-reference', 'NRL-222222')
+    await submit(page, 'original-reference')
+    await expect(page).toHaveURL(`${base}/original-reference-not-matched`)
+    await expectHeading(page, 'original-reference-not-matched')
+    await page.getByRole('link', { name: 'Back' }).click()
+    await expect(page).toHaveURL(`${base}/original-reference`)
+    await page.goto(`${base}/original-reference-not-matched`)
+    await followLink(
+      page,
+      'original-reference-not-matched',
+      './original-reference'
+    )
+    await expect(page).toHaveURL(`${base}/original-reference`)
+  })
+
   test('an expired retrieval link is a research link on the email', async ({
     page
   }) => {
