@@ -2,7 +2,7 @@
 type: content
 ---
 
-# {{ nrlReference }} does not match our records 
+# {{ originalReference }} does not match our records
 
 You can find the NRL reference on the commitment certificate for the original planning application.
 

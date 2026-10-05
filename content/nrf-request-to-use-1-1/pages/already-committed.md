@@ -2,7 +2,7 @@
 type: content
 ---
 
-#  {{ nrlReference }} has already been used for a previous commitment
+# {{ quoteReference }} has already been used for a previous commitment
 
 This NRL reference has already been used to commit to using the nature restoration levy.
 
