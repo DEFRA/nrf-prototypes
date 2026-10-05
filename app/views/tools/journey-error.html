@@ -1,0 +1,26 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Journey tools - GOV.UK
+{% endblock %}
+
+{% block beforeContent %}
+{{ govukBackLink({ text: "All journeys", href: "/" }) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    {% if known %}
+    <h1 class="govuk-heading-l">Could not load journey "{{ journeyId }}"</h1>
+    <div class="govuk-error-summary" role="alert">
+      <h2 class="govuk-error-summary__title">Fix <code>content/{{ journeyId }}/journey.yaml</code></h2>
+      <div class="govuk-error-summary__body"><pre class="govuk-body" style="white-space: pre-wrap">{{ loadError }}</pre></div>
+    </div>
+    {% else %}
+    <h1 class="govuk-heading-l">No journey called "{{ journeyId }}"</h1>
+    <p class="govuk-body">Content-driven journeys live under <code>content/&lt;journey&gt;/journey.yaml</code>. Every one of them is listed on the <a class="govuk-link" href="/">homepage</a> with a link to its flow and screen wall.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

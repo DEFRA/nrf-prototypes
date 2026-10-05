@@ -27,6 +27,7 @@ const {
   pageHandoff,
   journeyHandoffs
 } = require('../lib/journey-engine')
+const { getFamilies } = require('../config/shared/journeys')
 
 // Where the prototype is published, for the "copy link" buttons on the wall
 const PUBLIC_BASE_URL = (
@@ -104,34 +105,25 @@ function loadOr404(req, res) {
   try {
     return loadJourney(req.params.journey)
   } catch (error) {
-    res.status(404).render('tools/journeys', {
-      journeys: listJourneys(),
-      notFound: req.params.journey,
+    res.status(404).render('tools/journey-error', {
+      journeyId: req.params.journey,
+      known: getJourneyIds().includes(req.params.journey),
       loadError: error.message
     })
     return null
   }
 }
 
-function listJourneys() {
-  return getJourneyIds().map((id) => {
-    try {
-      const journey = loadJourney(id)
-      return {
-        id,
-        name: journey.name,
-        basePath: journey.basePath,
-        pageCount: journey.pages.length,
-        startPath: journey.byId.get(journey.start).path
-      }
-    } catch (error) {
-      return { id, name: id, error: error.message }
-    }
-  })
+// The homepage, opened on the tab that holds the journey's card
+function homeUrl(journey) {
+  const family = (journey.homepage || {}).family
+  const known = getFamilies().some((entry) => entry.id === family)
+  return `/#${known ? family : 'other'}`
 }
 
+// The homepage lists every journey and links each one's wall
 router.get('/tools/journeys', (req, res) => {
-  res.render('tools/journeys', { journeys: listJourneys() })
+  res.redirect('/')
 })
 
 router.get('/tools/journeys/:journey', (req, res) => {
@@ -190,6 +182,7 @@ router.get('/tools/journeys/:journey', (req, res) => {
       start: journey.start,
       pageCount: journey.pages.length
     },
+    homeUrl: homeUrl(journey),
     publicBaseUrl: PUBLIC_BASE_URL,
     // Playwright is a dev dependency, so the export is local-only
     canExportScreens: canExportScreens(),
