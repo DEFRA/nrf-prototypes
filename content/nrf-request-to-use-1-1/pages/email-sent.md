@@ -2,14 +2,15 @@
 type: confirmation
 title: We have sent you an email
 panel:
-  title: 'Placeholder: We have sent you an email'
+  title: 'We have sent you an email'
 ---
 
-## What happens next
+We’ve sent an email to {{ retrievalEmail or "user@example.com" }}.
 
-Placeholder copy: we have sent an email to {{ retrievalEmail or "user@example.com" }} with a link to retrieve the details from your quote.
+The email contains a link you can use to retrieve your quote details.
 
-If you do not get the email, check your spam folder or [enter your email address again](./email).
+If you do not receive the email, check your spam or junk folder.
+You can also [enter your email address again](./email).
 
 ## Get help with the nature restoration levy
 
