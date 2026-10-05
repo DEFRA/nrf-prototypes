@@ -873,7 +873,8 @@ test.describe('nrf-request-to-use-1-1 with errors switched off', () => {
     await submit(page, 'quote-reference')
     await expect(page).toHaveURL(`${base}/email`)
     await submit(page, 'email')
-    await expect(page).toHaveURL(`${base}/retrieve-email`)
+    await expect(page).toHaveURL(`${base}/email-sent`)
+    await page.goto(`${base}/retrieve-email`)
     await followLink(page, 'retrieve-email', 'review-quote-details')
     await expect(page).toHaveURL(`${base}/review-quote-details`)
     // Blanks were filled from the sample answers
@@ -1237,6 +1238,24 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
       './original-reference'
     )
     await expect(page).toHaveURL(`${base}/original-reference`)
+  })
+
+  test('the email page says the email with the link has been sent', async ({
+    page
+  }) => {
+    await page.goto(`${base}/email`)
+    await fillAnswer(page, 'email', 'jane@example.com')
+    await submit(page, 'email')
+    await expect(page).toHaveURL(`${base}/email-sent`)
+    await expect(page.locator('.govuk-panel')).toHaveCount(1)
+    await expect(page.locator('main')).toContainText('jane@example.com')
+    await followLink(page, 'email-sent', './email')
+    await expect(page).toHaveURL(`${base}/email`)
+    await page.goto(`${base}/email-sent`)
+    const email = researchLink(page, 'email-sent', 'retrieve-email')
+    await expect(email).not.toHaveAttribute('target', '_blank')
+    await email.click()
+    await expect(page).toHaveURL(`${base}/retrieve-email`)
   })
 
   test('an expired retrieval link is a research link on the email', async ({

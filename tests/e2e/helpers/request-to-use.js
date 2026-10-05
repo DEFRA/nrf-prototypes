@@ -9,7 +9,8 @@ const { copyOf } = require('./journey')
  * pin down.
  */
 const requestToUse = copyOf('nrf-request-to-use-1-1')
-const { base, answer, fillAnswer, submit, followLink } = requestToUse
+const { base, answer, fillAnswer, submit, followLink, researchLink } =
+  requestToUse
 
 async function retrieveQuote(page, reference = 'NRL-123456') {
   await page.goto(`${base}/start`)
@@ -28,6 +29,8 @@ async function retrieveQuote(page, reference = 'NRL-123456') {
 
   await fillAnswer(page, 'email', 'jane@example.com')
   await submit(page, 'email')
+  await expect(page).toHaveURL(`${base}/email-sent`)
+  await researchLink(page, 'email-sent', 'retrieve-email').click()
   await expect(page).toHaveURL(`${base}/retrieve-email`)
   await expectEmailChrome(page)
 

@@ -57,6 +57,7 @@ homepage:
     - the confirmation email links to a commitment certificate page to print or save as a PDF
     - a drop-out page when the NRL reference already has a commitment (try NRL-111111)
     - a drop-out page when the original application's red line boundary does not match (try NRL-222222 as the original NRL reference)
+    - a success page once the email with the link to retrieve the quote has been sent
 
 # Every session key this journey writes. `clears: $session` expands to this,
 # so the quote keys are included: deleting the quote details here also removes
@@ -287,7 +288,17 @@ pages:
         goto: reference-not-matched
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
-      - goto: retrieve-email
+      - goto: email-sent
+
+  # Placeholder copy: the link to retrieve the quote has been sent.
+  # User research aid in the footer: the email itself, in this tab so the
+  # journey carries on from its link
+  - id: email-sent
+    research:
+      - text: View the email
+        href: retrieve-email
+        newTab: false
+    next: retrieve-email
 
   # Production's error page when the reference in the retrieval link is not
   # a known quote; here only the NRL-000000 stand-in reaches it
@@ -298,6 +309,7 @@ pages:
   # User research aid in the footer: the page an expired retrieval link
   # opens, in this tab in place of the email's link
   - id: retrieve-email
+    back: email-sent
     research:
       - text: Expired link
         href: link-expired
