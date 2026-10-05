@@ -2,7 +2,7 @@
 type: content
 ---
 
-# Aleady committed
+# Already committed
 
 Placeholder copy: this quote has already been used to commit to using the nature restoration levy, so it cannot be used again.
 
