@@ -56,6 +56,7 @@ homepage:
     - the "levy increased" page is gone; everyone sees the accept levy page
     - the confirmation email links to a commitment certificate page to print or save as a PDF
     - a drop-out page when the NRL reference already has a commitment (try NRL-111111)
+    - a drop-out page when the original application's red line boundary does not match (try NRL-222222 as the original NRL reference)
 
 # Every session key this journey writes. `clears: $session` expands to this,
 # so the quote keys are included: deleting the quote details here also removes
@@ -373,15 +374,25 @@ pages:
         goto: $summary
       - goto: defra-account-user-type
 
+  # Behind the scenes the service checks the original application's red line
+  # boundary matches this one. The prototype cannot, so the reference
+  # NRL-222222 stands in for an original whose boundary does not match
   - id: original-reference
     field: original-reference
     sessionKey: originalReference
     changeable: true
     handler: custom # checks the reference format, see hooks.js
     next:
+      - when: { key: originalReference, equals: NRL-222222 }
+        goto: original-reference-not-matched
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: defra-account-user-type
+
+  # Placeholder copy: the original application's red line boundary does not
+  # match this one, so the user tries again with the correct reference
+  - id: original-reference-not-matched
+    back: original-reference
 
   # Before signing in, the user says who they are requesting to use the levy
   # for and reads the Defra account guidance for that kind of user. The answer
