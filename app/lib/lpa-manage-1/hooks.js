@@ -5,7 +5,10 @@
  *
  *   - the officer signing in with the mock GOV.UK One Login: the name the
  *     facilitator gave in the footer's "Participant details" box, or a
- *     stand-in, shown in the staff header over "Scarfolk Council"
+ *     stand-in, shown in the staff header over "Scarfolk Council". An
+ *     email with "new" in it stands for a council that has no records yet:
+ *     records.yaml's records are hidden and the officer lands on "Enter an
+ *     NRL reference" rather than the dashboard
  *   - a mock commitment store: content/lpa-manage-1/records.yaml holds the
  *     commitments developers have submitted and the records the council
  *     already has. Retrieving a reference finds it there, or the commitment
@@ -14,6 +17,9 @@
  *     the session (`lpaRecords`) over the file's own
  *   - the dashboard's counts and its table of every record, with search,
  *     filters, sortable columns and pages
+ *   - a reference the council already has a record for asks whether it is
+ *     a planning variation; one that is takes the new planning application
+ *     reference and keeps the original on the record
  *   - the record page's audit timeline and its review options, which post
  *     back to the page and return to the dashboard, and the full
  *     certificate behind it
@@ -48,7 +54,11 @@ const COMMENT_FIELD = 'reject-comment'
 const REVIEWED_STATUS = 'reviewed'
 const REVIEW_LATER = 'review-later'
 const PLANNING_STEP = 'planning'
+// "Is this a planning variation?"
+const IS_VARIATION = 'yes'
 const SESSION_KEYS = ['officer', 'signInEmail']
+// Signing in with an email containing this is a council with no records yet
+const NEW_COUNCIL = 'new'
 
 // ------------------------------------------------------------ The data
 
@@ -214,8 +224,9 @@ function statusOf(value, store) {
 function allEntries(data) {
   const store = loadStore()
   const byReference = new Map()
+  const newCouncil = Boolean(data && data.officer && data.officer.newCouncil)
   for (const entry of store.commitments) {
-    if (entry.record) {
+    if (entry.record && !newCouncil) {
       byReference.set(entry.reference, { entry, record: entry.record })
     }
   }
@@ -254,6 +265,9 @@ function recordOf({ entry, record }, store, today = new Date()) {
     reference: entry.reference,
     developer: entry.developer,
     planningReference: record.planningReference,
+    // A planning variation keeps the reference the record was added with
+    variation: Boolean(record.originalPlanningReference),
+    originalPlanningReference: record.originalPlanningReference || '',
     planningStage: planningStageOf(record.planningStage || ADDED_STAGE, store),
     planningType: entry.planningType,
     planningTypeShort: planningTypeShort(entry.planningType, store),
@@ -271,6 +285,7 @@ function recordOf({ entry, record }, store, today = new Date()) {
         event: event.event,
         status: event.status ? statusOf(event.status, store) : null,
         stage: event.stage ? planningStageOf(event.stage, store) : null,
+        planningReference: event.planningReference || '',
         reason: event.reason || '',
         comment: event.comment || '',
         by: event.by,
@@ -461,6 +476,7 @@ function matches(record, query) {
     record.reference,
     record.developer,
     record.planningReference,
+    record.originalPlanningReference,
     record.officer
   ].some((value) =>
     String(value || '')
@@ -646,10 +662,15 @@ const oneLoginSignIn = {
   process(ctx) {
     const { data } = ctx
     delete data._password
+    const email = String(data.signInEmail || '').trim()
     data.officer = {
       fullName: participantOf(data).fullName || MOCK_OFFICER,
-      email: data.signInEmail || ''
+      email,
+      newCouncil: email.toLowerCase().includes(NEW_COUNCIL)
     }
+    // journey.yaml sends an officer with no records to "Enter an NRL
+    // reference" rather than the dashboard
+    data.officer.hasRecords = allEntries(data).length > 0
   }
 }
 
@@ -668,9 +689,16 @@ const signOut = {
   }
 }
 
-// "Retrieve commitment details": NRL-123456 (or just the six digits) that
-// the council does not already have a record for
+// "Retrieve commitment details": NRL-123456 (or just the six digits). One
+// the council already has a record for asks whether it is a planning
+// variation (journey.yaml) rather than adding it again.
 const retrieveCommitment = {
+  // With no records there is no dashboard to go back to
+  get(ctx, model) {
+    if (!ctx.preview && !allEntries(ctx.data).length) {
+      model.backLink = null
+    }
+  },
   validate(ctx) {
     const { page, body, data } = ctx
     const typed = String(body[page.field] || '')
@@ -684,20 +712,103 @@ const retrieveCommitment = {
     if (!REFERENCE.test(reference)) {
       return { ok: false, error: message(page, 'format') }
     }
-    if (findRecord(data, reference)) {
-      return { ok: false, error: message(page, 'recorded') }
-    }
-    const entry = findCommitmentEntry(data, reference)
-    if (!entry) {
+    if (!findRecord(data, reference) && !findCommitmentEntry(data, reference)) {
       return { ok: false, error: message(page, 'notFound') }
     }
     return { ok: true, value: reference }
   },
   process(ctx, reference) {
     const { data } = ctx
-    const entry = findCommitmentEntry(data, reference)
+    const recorded = findRecord(data, reference)
+    const entry = recorded
+      ? allEntries(data).find((item) => item.entry.reference === reference)
+          .entry
+      : findCommitmentEntry(data, reference)
     data.commitmentEntry = entry
     data.commitment = commitmentOf(entry, loadStore())
+    data.commitmentRecorded = Boolean(recorded)
+    delete data.planningVariation
+    if (recorded) {
+      data.record = recorded
+    }
+  }
+}
+
+// "Is this a planning variation?" for a commitment the council already has
+// a record for. No opens that record as it is.
+const planningVariation = {
+  process(ctx, answer) {
+    const { data } = ctx
+    if (answer !== IS_VARIATION) {
+      data.recordReference = data.commitmentEntry.reference
+      for (const key of ['commitmentReference', 'commitmentEntry']) {
+        delete data[key]
+      }
+    }
+  }
+}
+
+// The new planning application reference for a planning variation: the
+// record takes it, keeps the one it was added with (only the first, if it
+// is varied again) and starts its new application at Applied
+const addVariation = {
+  validate(ctx) {
+    const { page, body, data } = ctx
+    const typed = String(body[page.field] || '').trim()
+    if (!typed) {
+      return { ok: false, error: message(page, 'required') }
+    }
+    const found = data.commitmentEntry
+      ? findRecord(data, data.commitmentEntry.reference)
+      : null
+    if (
+      found &&
+      typed.replace(/\s+/g, '').toUpperCase() ===
+        String(found.planningReference || '')
+          .replace(/\s+/g, '')
+          .toUpperCase()
+    ) {
+      return { ok: false, error: message(page, 'same') }
+    }
+    return { ok: true, value: typed }
+  },
+  process(ctx, reference) {
+    const { data } = ctx
+    const entry = data.commitmentEntry
+    const found = entry
+      ? allEntries(data).find(
+          (item) => item.entry.reference === entry.reference
+        )
+      : null
+    if (!found) {
+      return { redirect: ctx.journey.routes.RETRIEVE_COMMITMENT }
+    }
+    const { record } = found
+    updateRecord(
+      data,
+      found,
+      {
+        planningReference: reference,
+        originalPlanningReference:
+          record.originalPlanningReference || record.planningReference,
+        planningStage: ADDED_STAGE
+      },
+      { event: 'variation', planningReference: reference }
+    )
+    data.recordReference = entry.reference
+    delete data.lpaFlash
+    for (const key of [
+      'commitmentReference',
+      'commitmentEntry',
+      'commitmentRecorded',
+      'planningVariation',
+      'planningVariationReference'
+    ]) {
+      delete data[key]
+    }
+    return {
+      redirect: `${ctx.journey.routes.VIEW_RECORD}?ref=${encodeURIComponent(entry.reference)}`
+    }
   }
 }
 
@@ -722,6 +833,9 @@ const addRecord = {
       history: [{ event: 'added', by: officer, at: nowStamp() }]
     }
     data.recordReference = entry.reference
+    if (data.officer) {
+      data.officer.hasRecords = true
+    }
     data.lpaFlash = 'added'
     // "Create a developer record" starts afresh
     for (const key of [
@@ -946,6 +1060,12 @@ const certificate = {
 // The landing page: counts that open the table filtered to them, and
 // every record, searched, filtered, sorted by its column headings and paged
 const dashboard = {
+  // A council with no records yet adds its first one instead
+  load(ctx) {
+    if (!ctx.preview && !allEntries(ctx.data).length) {
+      return { redirect: ctx.journey.routes.RETRIEVE_COMMITMENT }
+    }
+  },
   get(ctx, model) {
     const store = loadStore()
     const { text } = model.content
@@ -1011,6 +1131,8 @@ module.exports = {
   'one-login-password': oneLoginSignIn,
   'retrieve-commitment': retrieveCommitment,
   'planning-reference': addRecord,
+  'planning-variation': planningVariation,
+  'planning-variation-reference': addVariation,
   'view-record': viewRecord,
   'reject-commitment': rejectCommitment,
   certificate,

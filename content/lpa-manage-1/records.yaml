@@ -34,6 +34,8 @@
 #
 # A record:
 #   planningReference  the planning application it belongs to
+#   originalPlanningReference  for a planning variation, the planning
+#                      application the record was added with
 #   planningStage      one of the planningStages below (the table's column
 #                      and filter, and the dashboard's count cards). A
 #                      record is `applied` until its commitment details
@@ -45,8 +47,10 @@
 #   status             one of the statuses above
 #   history            the audit timeline, oldest first: `event: added`,
 #                      `event: review-later` (reviewing the details was put
-#                      off), `event: status` (with the new `status`) or
-#                      `event: stage` (with the new planning `stage`), and
+#                      off), `event: status` (with the new `status`),
+#                      `event: stage` (with the new planning `stage`) or
+#                      `event: variation` (with the new
+#                      `planningReference`), and
 #                      `by` and `at` (YYYY-MM-DDTHH:MM). The newest entry
 #                      is "Last modified"
 
@@ -184,8 +188,9 @@ commitments:
     expires: 2027-02-28
     boundary: taverham
     record:
-      planningReference: 2026/0388/FUL
-      planningStage: granted
+      planningReference: 2026/0461/VAR
+      originalPlanningReference: 2026/0388/FUL
+      planningStage: applied
       officer: Priya Shah
       status: reviewed
       history:
@@ -200,6 +205,10 @@ commitments:
           stage: granted
           by: Priya Shah
           at: 2026-09-16T11:30
+        - event: variation
+          planningReference: 2026/0461/VAR
+          by: Priya Shah
+          at: 2026-09-30T15:10
 
   - reference: NRL-100562
     developer: Broadland Housing Partnership

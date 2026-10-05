@@ -30,7 +30,8 @@ const {
   expectHeading,
   heading,
   expectError,
-  expectOnPage
+  expectOnPage,
+  pageOf
 } = copyOf('lpa-manage-1')
 
 const store = loadStore()
@@ -38,14 +39,19 @@ const store = loadStore()
 const waiting = store.commitments.find((entry) => !entry.record)
 const recorded = store.commitments.find((entry) => entry.record)
 
-async function signIn(page) {
+// Signing in lands on the dashboard, or on "Enter an NRL reference" for a
+// council with no records yet (an email with "new" in it)
+async function signIn(page, email = 'officer@scarfolk.gov.uk') {
   await page.goto(`${base}/${journey.start}`)
   await expectOnPage(page, 'one-login-email')
-  await fillAnswer(page, 'one-login-email', 'officer@scarfolk.gov.uk')
+  await fillAnswer(page, 'one-login-email', email)
   await submit(page, 'one-login-email')
   await fillAnswer(page, 'one-login-password', 'not-a-real-password')
   await submit(page, 'one-login-password')
-  await expectOnPage(page, 'what-would-you-like-to-do')
+  await expectOnPage(
+    page,
+    email.includes('new') ? 'retrieve-commitment' : 'dashboard'
+  )
 }
 
 async function retrieve(page, reference) {
@@ -82,16 +88,19 @@ test.describe('lpa-manage-1: manage commitments', () => {
 
   test('adds a developer record from an NRL reference', async ({ page }) => {
     await signIn(page)
-    await answer(page, 'what-would-you-like-to-do', 'create')
-    await submit(page, 'what-would-you-like-to-do')
+    await page
+      .getByRole('button', { name: text('dashboard', 'addRecord') })
+      .click()
     await expectHeading(page, 'retrieve-commitment')
+    await expect(page.locator('.govuk-back-link')).toHaveAttribute(
+      'href',
+      `${base}/dashboard`
+    )
 
     await submit(page, 'retrieve-commitment')
     await expectError(page, 'retrieve-commitment', 'required')
     await retrieve(page, 'NRL-12')
     await expectError(page, 'retrieve-commitment', 'format')
-    await retrieve(page, recorded.reference)
-    await expectError(page, 'retrieve-commitment', 'recorded')
 
     // The planning reference follows straight on and adds the record: no
     // confirm or check your answers page
@@ -120,6 +129,55 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(
       page.locator('.app-staff-table tbody tr').first()
     ).toContainText(waiting.reference)
+  })
+
+  test('an NRL reference already in the records may be a planning variation', async ({
+    page
+  }) => {
+    // The record page's row for the original planning application
+    const originalKey = pageOf('view-record').content.rows.find((row) =>
+      String(row.value).includes('record.originalPlanningReference')
+    ).key
+    const main = page.locator('main')
+    await signIn(page)
+
+    // Not a variation: the record opens as it is
+    await page.goto(`${base}/retrieve-commitment`)
+    await retrieve(page, recorded.reference)
+    await expectHeading(page, 'planning-variation')
+    await submit(page, 'planning-variation')
+    await expectError(page, 'planning-variation', 'required')
+    await answer(page, 'planning-variation', 'no')
+    await submit(page, 'planning-variation')
+    await expectHeading(page, 'view-record', { record: recorded })
+    await expect(main).not.toContainText(originalKey)
+
+    // A variation takes the new planning application reference and keeps
+    // the original
+    await page.goto(`${base}/retrieve-commitment`)
+    await retrieve(page, recorded.reference)
+    await answer(page, 'planning-variation', 'yes')
+    await submit(page, 'planning-variation')
+    await expectHeading(page, 'planning-variation-reference')
+    await fillAnswer(
+      page,
+      'planning-variation-reference',
+      recorded.record.planningReference
+    )
+    await submit(page, 'planning-variation-reference')
+    await expectError(page, 'planning-variation-reference', 'same')
+    await fillAnswer(page, 'planning-variation-reference', '26/00003/VAR')
+    await submit(page, 'planning-variation-reference')
+
+    await expect(page).toHaveURL(
+      `${base}/view-record?ref=${recorded.reference}`
+    )
+    await expect(main).toContainText(originalKey)
+    await expect(main).toContainText(recorded.record.planningReference)
+    await expect(main).toContainText('26/00003/VAR')
+    await expect(page.locator('.app-timeline__item').first()).toContainText(
+      text('view-record', 'timelineVariation')
+    )
   })
 
   test('the full certificate sits behind the record', async ({ page }) => {
@@ -271,9 +329,8 @@ test.describe('lpa-manage-1: manage commitments', () => {
     page
   }) => {
     await signIn(page)
-    await answer(page, 'what-would-you-like-to-do', 'view')
-    await submit(page, 'what-would-you-like-to-do')
     await expectHeading(page, 'dashboard')
+    await expect(page.locator('.govuk-back-link')).toHaveCount(0)
 
     const records = allRecords({})
     const counted = [
@@ -392,6 +449,29 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(page.locator('main')).toContainText(
       text('dashboard', 'noResults')
     )
+  })
+
+  test('a council with no records yet goes straight to adding one', async ({
+    page
+  }) => {
+    await signIn(page, 'new-officer@scarfolk.gov.uk')
+    await expectHeading(page, 'retrieve-commitment')
+    // Nothing to go back to, and the dashboard sends the officer here too
+    await expect(page.locator('.govuk-back-link')).toHaveCount(0)
+    await page.goto(`${base}/dashboard`)
+    await expectOnPage(page, 'retrieve-commitment')
+
+    // The council's first record is the only one on the dashboard
+    await retrieve(page, recorded.reference)
+    await expectHeading(page, 'planning-reference')
+    await fillAnswer(page, 'planning-reference', '26/00002/FUL')
+    await submit(page, 'planning-reference')
+    await expectHeading(page, 'view-record', { record: recorded })
+    await page.goto(`${base}/dashboard`)
+    await expectHeading(page, 'dashboard')
+    const rows = page.locator('.app-staff-table tbody tr')
+    await expect(rows).toHaveCount(1)
+    await expect(rows.first()).toContainText(recorded.reference)
   })
 
   test('signing out returns to GOV.UK One Login', async ({ page }) => {

@@ -7,10 +7,13 @@
 # each answer leads. See content/README.md.
 #
 # A planning officer at Scarfolk Council signs in with the mock GOV.UK One
-# Login, then either adds a developer record (retrieve the commitment the
+# Login and lands on the records the council already has (a dashboard with
+# a table of every record), or, when the council has none yet (an email
+# with "new" in it), straight on adding one: retrieve the commitment the
 # developer made by its NRL reference and add the planning application
-# reference, which adds the record) or looks through the records
-# the council already has (a dashboard with a table of every record). Each
+# reference, which adds the record. A reference the council already has a
+# record for asks whether it is a planning variation; one that is takes
+# the new planning application reference and keeps the original. Each
 # record has its own page with an audit timeline and the review options
 # (reviewing the commitment details, then the planning application's
 # stage), and a full certificate a click away. Behaviour that needs code (the officer,
@@ -70,6 +73,9 @@ homepage:
     - the dashboard's table of every record has sortable columns, a filter and pages, built from canned records
     - no check your answers page: adding the planning reference adds the record
     - no confirm commitment page: the NRL reference goes straight to the planning reference
+    - an NRL reference already in the records asks whether it is a planning variation (placeholder copy); a variation takes the new planning application reference and the record shows both
+    - planning type leads the record's planning details
+    - no "What would you like to do?" page: signing in opens the dashboard, or "Enter an NRL reference" for a council with no records yet (an email with "new" in it)
 
 # The answers the copy can show, as {{ name }} (see content/README.md).
 # `commitment` is the commitment on screen and `record` the record.
@@ -78,7 +84,10 @@ session:
   - commitmentReference
   - commitmentEntry
   - commitment
+  - commitmentRecorded
   - planningReference
+  - planningVariation
+  - planningVariationReference
   - recordReference
   - record
   - newStatus
@@ -127,32 +136,56 @@ pages:
     handler: custom # registers the sign-out route, see hooks.js
     next: one-login-password
 
-  # Signing in makes the participant (or a stand-in) the officer
+  # Signing in makes the participant (or a stand-in) the officer and opens
+  # the council's records. An email with "new" in it is a council with no
+  # records yet, which goes straight on to adding its first (hooks.js).
   - id: one-login-password
     shared: one-login
     guard: { key: signInEmail, isSet: true, redirect: one-login-email }
     handler: custom # signs the officer in, see hooks.js
-    next: what-would-you-like-to-do
-
-  # --------------------------------------------------------------------
-  - id: what-would-you-like-to-do
-    field: lpa-task
-    sessionKey: lpaTask
-    guard: &signed-in { key: officer, isSet: true, redirect: one-login-email }
     next:
-      - when: { key: lpaTask, equals: view }
+      - when: { key: officer.hasRecords, truthy: true }
         goto: dashboard
       - goto: retrieve-commitment
 
+  # --------------------------------------------------------------------
   # Create a developer record. The reference finds the commitment in
-  # records.yaml (or the one made in nrf-request-to-use-1 this session);
-  # one the council already has is an error. See hooks.js.
+  # records.yaml (or the one made in nrf-request-to-use-1 this session).
+  # One the council already has a record for asks whether it is a planning
+  # variation. See hooks.js. With no records yet there is no Back link.
   - id: retrieve-commitment
     field: commitment-reference
     sessionKey: commitmentReference
-    guard: *signed-in
+    guard: &signed-in { key: officer, isSet: true, redirect: one-login-email }
+    back: dashboard
     handler: custom
-    next: planning-reference
+    next:
+      - when: { key: commitmentRecorded, truthy: true }
+        goto: planning-variation
+      - goto: planning-reference
+
+  # Placeholder copy. No opens the record the council already has.
+  - id: planning-variation
+    field: planning-variation
+    sessionKey: planningVariation
+    guard: { key: commitmentRecorded, truthy: true, redirect: retrieve-commitment }
+    handler: custom # No opens the existing record, see hooks.js
+    next:
+      - when: { key: planningVariation, equals: 'yes' }
+        goto: planning-variation-reference
+      - goto: view-record
+    preview:
+      data:
+        record: { planningReference: 2026/0412/FUL }
+
+  # The variation's new planning application reference: the record takes it
+  # and keeps the original, then opens (hooks.js)
+  - id: planning-variation-reference
+    field: planning-variation-reference
+    sessionKey: planningVariationReference
+    guard: { key: planningVariation, equals: 'yes', redirect: planning-variation }
+    handler: custom
+    next: view-record
 
   # Continuing adds the record to the session's records and opens its page
   - id: planning-reference
@@ -181,6 +214,9 @@ pages:
         - id: planning
           label: Reviewed (planning stages)
           data: { recordReference: NRL-100903 }
+        - id: variation
+          label: Planning variation
+          data: { recordReference: NRL-100487 }
 
   # Why the commitment details are rejected, with an optional comment.
   # Confirm rejects the record for good and returns to the dashboard.
@@ -199,11 +235,12 @@ pages:
     guard: *signed-in
 
   # The records the council has: counts, then a table searched, filtered,
-  # sorted and paged
+  # sorted and paged. The landing page, so no Back link; a council with no
+  # records yet is sent to "Enter an NRL reference" (hooks.js).
   - id: dashboard
     template: lpa-manage-1/dashboard
     guard: *signed-in
-    back: what-would-you-like-to-do
+    back: []
     preview:
       variants:
         - id: updated

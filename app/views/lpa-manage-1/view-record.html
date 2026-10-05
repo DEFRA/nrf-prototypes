@@ -6,7 +6,8 @@
   page's copy), the audit timeline and the review options (the hook leaves
   only those for the record's step in content.items), which post back to
   this page. Once the commitment details are reviewed they are the planning
-  stage options. Rejecting asks why on reject-commitment; a rejected record
+  stage options. A planning variation's timeline entry shows its new
+  planning application reference. Rejecting asks why on reject-commitment; a rejected record
   shows a warning in place of the radios. Model extras from
   app/lib/lpa-manage-1/hooks.js: flash, planningStep, data.record.
 #}
@@ -34,8 +35,8 @@
 </div>
 {% endif %}
 
-{# Full width, like the dashboard and the table: the button sits at the
-   right-hand edge of the page #}
+{# Full width, like the dashboard and the table: the heading keeps to two
+   thirds of the page #}
 <div class="app-staff-page-header">
   <h1 class="govuk-heading-l app-staff-record__heading">
     <span>{{ content.heading }}</span>
@@ -43,7 +44,6 @@
       <strong class="govuk-tag govuk-tag--{{ record.status.colour }}">{{ record.status.label }}</strong>
     {% endif %}
   </h1>
-  {{ govukButton({ text: text.addRecord, href: routes.RETRIEVE_COMMITMENT }) }}
 </div>
 
 <div class="govuk-grid-row">
@@ -75,13 +75,16 @@
         <div class="app-timeline__item">
           <div class="app-timeline__header">
             <h3 class="app-timeline__title">
-              {%- if event.event == 'added' %}{{ text.timelineAdded }}{% elif event.event == 'review-later' %}{{ text.timelineReviewLater }}{% elif event.event == 'stage' %}{{ text.timelineStage }} {{ event.stage.label }}{% else %}{{ text.timelineStatus }} {{ event.status.label }}{% endif -%}
+              {%- if event.event == 'added' %}{{ text.timelineAdded }}{% elif event.event == 'review-later' %}{{ text.timelineReviewLater }}{% elif event.event == 'stage' %}{{ text.timelineStage }} {{ event.stage.label }}{% elif event.event == 'variation' %}{{ text.timelineVariation }}{% else %}{{ text.timelineStatus }} {{ event.status.label }}{% endif -%}
             </h3>
             <p class="app-timeline__byline">{{ text.by }} {{ event.by }}</p>
           </div>
           <p class="app-timeline__date">
             <time datetime="{{ event.datetime }}">{{ event.date }} {{ text.at }} {{ event.time }}</time>
           </p>
+          {% if event.planningReference %}
+            <div class="app-timeline__description">{{ event.planningReference }}</div>
+          {% endif %}
           {% if event.reason %}
             <div class="app-timeline__description">{{ event.reason }}</div>
           {% endif %}

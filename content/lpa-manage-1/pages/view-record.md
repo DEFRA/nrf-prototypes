@@ -7,18 +7,25 @@
 # later keeps it For review and notes it on the timeline). Once its
 # commitment details are reviewed the planning stage options (`step:
 # planning`) take their place: they set the planning application's stage
-# (see records.yaml).
+# (see records.yaml). A planning variation shows the new planning
+# application reference and the original one.
 type: custom
 rows:
   - heading: Commitment details
   - include: commitment-summary
   - heading: Planning details
-  - key: Planning application reference
-    value: '{{ record.planningReference }}'
-  - key: Planning application stage
-    value: '{{ record.planningStage.label }}'
   - key: Planning type
     value: '{{ commitment.planningType }}'
+  - key: Planning variation
+    value: 'Yes'
+    when: { key: record.variation, truthy: true }
+  - key: Planning application reference
+    value: '{{ record.planningReference }}'
+  - key: Original planning application reference
+    value: '{{ record.originalPlanningReference }}'
+    when: { key: record.variation, truthy: true }
+  - key: Planning application stage
+    value: '{{ record.planningStage.label }}'
   - key: Added by
     value: '{{ record.officer }}'
   - key: Reviewed by
@@ -52,7 +59,6 @@ errors:
   stageRequired: Select the stage the planning application has reached
 button: Confirm
 text:
-  addRecord: Create a developer record
   successTitle: Commitment details retrieved
   added: A new developer record has been created for review
   viewCertificate: View full certificate
@@ -68,6 +74,7 @@ text:
   timelineStatus: Status changed to
   timelineReviewLater: Marked to review and confirm later
   timelineStage: Planning application stage changed to
+  timelineVariation: Planning variation added
   timelineComment: Comment
   by: by
   at: at
