@@ -1269,6 +1269,10 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     await expectHeading(page, 'link-expired')
     await page.getByRole('link', { name: 'Back' }).click()
     await expect(page).toHaveURL(`${base}/retrieve-email`)
+    // Asking for a new link sends the email again
+    await page.goto(`${base}/link-expired`)
+    await followLink(page, 'link-expired', './email-sent')
+    await expect(page).toHaveURL(`${base}/email-sent`)
   })
 
   test('the journey has no copies of the quote pages', () => {
