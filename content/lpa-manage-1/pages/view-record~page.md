@@ -1,4 +1,11 @@
 ---
+variant: Add reserved matters on its own page
+sample: outline # the wall shows it with this sample record (journey.yaml)
+# Copy variant of view-record.md: a button opens the form on a page of its
+# own (add-reserved-matters.md), with breadcrumbs back to the record, and
+# saving returns to the record. See content/README.md "Trying out
+# variations of a page".
+#
 # A developer record (app/views/lpa-manage-1/view-record.html). The heading
 # is the record's NRL reference; `text:` holds the rest of the page's words.
 # The review options sit at the bottom of the page, none chosen, and
@@ -99,7 +106,7 @@ text:
   timelineReservedMatters: Reserved matters added
   # Below the history once an outline application is granted.
   # reservedMattersLayout: details, modal, drawer, inline or cards
-  reservedMattersLayout: details
+  reservedMattersLayout: page
   outlineHeading: Outline application
   addReservedMatters: Add reserved matters
   reservedMattersReferenceLabel: Reference number

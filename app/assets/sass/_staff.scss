@@ -12,6 +12,8 @@
 //   .app-staff-filter       the records table's filter (a details)
 //   .app-staff-table--sortable  column headings that sort the table
 //   .app-timeline           audit history (the MOJ timeline)
+//   .app-staff-reserved-matters  the form adding reserved matters to a record
+//   .app-staff-dialog       a modal dialog, or a drawer from the right
 
 $app-staff-max-width: 1440px;
 // Below this width the service name and the account toggle no longer fit
@@ -524,6 +526,69 @@ $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
   margin-left: govuk-spacing(2);
 }
 
+// The details holding the form that adds reserved matters to a granted
+// outline application's record
+.app-staff-reserved-matters {
+  margin-bottom: govuk-spacing(9);
+}
+
+// The same form always on show (the inline layout)
+.app-staff-reserved-matters-panel {
+  margin-bottom: govuk-spacing(9);
+  padding: govuk-spacing(4);
+  background-color: $app-staff-grey;
+}
+
+// A native dialog opened as a modal (staff-dialog.js): white on a dimmed
+// page, centred (modal) or a full-height panel from the right (drawer)
+.app-staff-dialog {
+  box-sizing: border-box;
+  width: calc(100% - #{govuk-spacing(6)});
+  max-width: 640px;
+  max-height: calc(100vh - #{govuk-spacing(6)});
+  padding: govuk-spacing(6);
+  overflow-y: auto;
+  border: 0;
+  border-top: 5px solid govuk-functional-colour(brand);
+  color: govuk-functional-colour(text);
+  background-color: govuk-functional-colour(body-background);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+
+  &::backdrop {
+    background-color: rgba(11, 12, 12, 0.6);
+  }
+}
+
+.app-staff-dialog--drawer {
+  width: 100%;
+  max-width: 560px;
+  height: 100vh;
+  max-height: 100vh;
+  margin: 0 0 0 auto;
+  border-top: 0;
+  border-left: 5px solid govuk-functional-colour(brand);
+
+  &[open] {
+    animation: app-staff-drawer-in 200ms ease-out;
+  }
+}
+
+@keyframes app-staff-drawer-in {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-staff-dialog--drawer[open] {
+    animation: none;
+  }
+}
+
 .app-staff-record__map {
   max-width: 720px;
   margin-bottom: govuk-spacing(8);
@@ -572,12 +637,13 @@ $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
   @include govuk-font($size: 19, $weight: bold);
 }
 
-// Who did it, on the line under the title: their name, then their email in
-// brackets, which breaks anywhere rather than pushing past the column
+// Who did it, on the line under the title, set like the date: their name,
+// then their email in brackets, which breaks anywhere rather than pushing
+// past the column
 .app-timeline__byline {
   margin: govuk-spacing(1) 0 0;
   color: govuk-functional-colour(secondary-text);
-  @include govuk-font($size: 19);
+  @include govuk-font($size: 16);
 }
 
 .app-timeline__email {
@@ -587,6 +653,7 @@ $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
 .app-timeline__date {
   margin-top: govuk-spacing(1);
   margin-bottom: 0;
+  color: govuk-functional-colour(secondary-text);
   @include govuk-font($size: 16);
 }
 

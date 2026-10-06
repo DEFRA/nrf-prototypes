@@ -47,6 +47,11 @@
 #                      record is `applied` until its commitment details
 #                      are reviewed; the record page's radios then move it
 #                      on
+#   reservedMatters    for an outline planning application that has been
+#                      granted, the reserved matters applications made
+#                      under it: each a `reference`, a `status` (one of the
+#                      planningStages) and a short `description`. The
+#                      record page adds more
 #   overdue            true when an action on the record is overdue (the
 #                      dashboard's third count card and the table's filter)
 #   officer            who added it (the table's Officer column)
@@ -56,7 +61,8 @@
 #                      off), `event: status` (with the new `status`),
 #                      `event: stage` (with the new planning `stage`) or
 #                      `event: variation` (with the new
-#                      `planningReference`), and
+#                      `planningReference`), `event: reserved-matters`
+#                      (with the reserved matters `planningReference`), and
 #                      `by` and `at` (YYYY-MM-DDTHH:MM). The newest entry
 #                      is "Last modified"
 
@@ -355,6 +361,44 @@ commitments:
           status: reviewed
           by: Tom Barker
           at: 2026-07-28T11:50
+
+  # An outline application already granted, with one reserved matters
+  # application under it: the record page offers to add more
+  - reference: NRL-100958
+    developer: Brightwater Homes
+    address: [Brightwater House, 9 Quay Road, Scarfolk, SC8 2BW]
+    planningType: Outline planning permission
+    units: 300
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-07-16
+    expires: 2027-01-16
+    boundary: dereham
+    record:
+      planningReference: 2026/0255/OUT
+      planningStage: granted
+      officer: Aisha Khan
+      status: reviewed
+      reservedMatters:
+        - reference: 2026/0498/REM
+          status: applied
+          description: Layout, scale and appearance of phase 1 (85 homes)
+      history:
+        - event: added
+          by: Aisha Khan
+          at: 2026-07-17T10:40
+        - event: status
+          status: reviewed
+          by: Aisha Khan
+          at: 2026-07-21T14:15
+        - event: stage
+          stage: granted
+          by: Aisha Khan
+          at: 2026-09-08T09:30
+        - event: reserved-matters
+          planningReference: 2026/0498/REM
+          by: Aisha Khan
+          at: 2026-09-29T11:55
 
   - reference: NRL-101044
     developer: ACME Developments

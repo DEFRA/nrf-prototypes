@@ -226,6 +226,7 @@ pages:
   - id: start
     shared: true
     next: what-would-you-like-to-do
+    handoff: 2026-10-06
 
   - id: what-would-you-like-to-do
     shared: true
@@ -239,6 +240,7 @@ pages:
       - when: { key: journeyType, equals: quote }
         goto: /nrf-quote-7-1/planning-type
       - goto: have-nrl-reference
+    handoff: 2026-10-06
 
   # Without a reference there is no quote to use: the drop-out page sends
   # the user to get one first
@@ -249,10 +251,11 @@ pages:
       - when: { key: hasNrlReference, equals: 'No' }
         goto: no-nrl-reference
       - goto: quote-reference
+    handoff: 2026-10-06
 
-  # Placeholder copy: links out to the quote journey's first question
   - id: no-nrl-reference
     back: have-nrl-reference
+    handoff: 2026-10-06
 
   # Stored apart from the quote journey's `nrfReference` so a quote made in
   # the same session never fills the box in: the user arrives afresh and types
@@ -270,11 +273,13 @@ pages:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: email
+    handoff: 2026-10-06
 
   # Placeholder copy: the quote has already been committed to, so it cannot
   # be used again
   - id: already-committed
     back: quote-reference
+    handoff: 2026-10-06
 
   # The email the retrieval link goes to, typed afresh like the reference.
   # The prototype cannot check a reference against real quotes, so the
@@ -289,8 +294,8 @@ pages:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: email-sent
+    handoff: 2026-10-06
 
-  # Placeholder copy: the link to retrieve the quote has been sent.
   # User research aid in the footer: the email itself, in this tab so the
   # journey carries on from its link
   - id: email-sent
@@ -299,27 +304,31 @@ pages:
         href: retrieve-email
         newTab: false
     next: retrieve-email
+    handoff: 2026-10-06
 
   # Production's error page when the reference in the retrieval link is not
   # a known quote; here only the NRL-000000 stand-in reaches it
   - id: reference-not-matched
     back: email
+    handoff: 2026-10-06
 
   # The email with the retrieval link. Following the link loads the quote.
   # User research aid in the footer: the page an expired retrieval link
   # opens, in this tab in place of the email's link
   - id: retrieve-email
     back: email-sent
+    handoff: 2026-10-06
     research:
       - text: Expired link
         href: link-expired
         newTab: false
     next: review-quote-details
 
-  # Placeholder copy: the retrieval link has expired, so the user asks for
+  # the retrieval link has expired, so the user asks for
   # a new one
   - id: link-expired
     back: retrieve-email
+    handoff: 2026-10-06
 
   - id: review-quote-details
     guard: { key: quoteReference, isSet: true, redirect: quote-reference }

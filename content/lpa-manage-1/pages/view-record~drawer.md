@@ -1,4 +1,10 @@
 ---
+variant: Add reserved matters in a drawer
+sample: outline # the wall shows it with this sample record (journey.yaml)
+# Copy variant of view-record.md: a button opens the form in a panel that
+# slides in from the right, with Cancel beside Save. See content/README.md
+# "Trying out variations of a page".
+#
 # A developer record (app/views/lpa-manage-1/view-record.html). The heading
 # is the record's NRL reference; `text:` holds the rest of the page's words.
 # The review options sit at the bottom of the page, none chosen, and
@@ -99,13 +105,14 @@ text:
   timelineReservedMatters: Reserved matters added
   # Below the history once an outline application is granted.
   # reservedMattersLayout: details, modal, drawer, inline or cards
-  reservedMattersLayout: details
+  reservedMattersLayout: drawer
   outlineHeading: Outline application
   addReservedMatters: Add reserved matters
   reservedMattersReferenceLabel: Reference number
   reservedMattersStatusLegend: Status
   reservedMattersDescriptionLabel: Short description
   reservedMattersSave: Save reserved matters
+  reservedMattersCancel: Cancel
   # The success banner once saved; {reference} is the one just added
   reservedMattersAddedTitle: Success
   reservedMattersAdded: Reserved matters {reference} has been added to this developer record

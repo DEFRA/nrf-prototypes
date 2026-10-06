@@ -8,8 +8,11 @@
   this page. Once the commitment details are reviewed they are the planning
   stage options. A planning variation's timeline entry shows its new
   planning application reference. Rejecting asks why on reject-commitment; a rejected record
-  shows a warning in place of the radios. Model extras from
-  app/lib/lpa-manage-1/hooks.js: flash, planningStep, data.record.
+  shows a warning in place of the radios. A granted outline application
+  has an "Outline application" section below the timeline
+  (_reserved-matters.html): Add reserved matters and its small form
+  (posting to ADD_RESERVED_MATTERS), laid out as the page's copy says. Model extras from app/lib/lpa-manage-1/hooks.js:
+  flash, flashText, planningStep, reservedMatters, data.record.
 #}
 {% extends "journey-engine/_page.html" %}
 
@@ -24,7 +27,13 @@
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-two-thirds-from-desktop">
     {% include "journey-engine/_error-summary.html" %}
-    {% if flash %}
+    {% if flash == 'reserved-matters' %}
+      {{ govukNotificationBanner({
+        type: "success",
+        titleText: text.reservedMattersAddedTitle,
+        html: '<p class="govuk-notification-banner__heading">' + (flashText | escape) + '</p>'
+      }) }}
+    {% elif flash %}
       {{ govukNotificationBanner({
         type: "success",
         titleText: text.successTitle,
@@ -75,7 +84,7 @@
         <div class="app-timeline__item">
           <div class="app-timeline__header">
             <h3 class="app-timeline__title">
-              {%- if event.event == 'added' %}{{ text.timelineAdded }}{% elif event.event == 'review-later' %}{{ text.timelineReviewLater }}{% elif event.event == 'stage' %}{{ text.timelineStage }} {{ event.stage.label }}{% elif event.event == 'variation' %}{{ text.timelineVariation }}{% else %}{{ text.timelineStatus }} {{ event.status.label }}{% endif -%}
+              {%- if event.event == 'added' %}{{ text.timelineAdded }}{% elif event.event == 'review-later' %}{{ text.timelineReviewLater }}{% elif event.event == 'stage' %}{{ text.timelineStage }} {{ event.stage.label }}{% elif event.event == 'variation' %}{{ text.timelineVariation }}{% elif event.event == 'reserved-matters' %}{{ text.timelineReservedMatters }}{% else %}{{ text.timelineStatus }} {{ event.status.label }}{% endif -%}
             </h3>
             <p class="app-timeline__byline">{{ text.by }} {{ event.by }}{% if event.email %} <span class="app-timeline__email">({{ event.email }})</span>{% endif %}</p>
           </div>
@@ -94,6 +103,11 @@
         </div>
         {% endfor %}
       </div>
+    {% endif %}
+
+    {% set rm = reservedMatters %}
+    {% if rm %}
+      {% include "lpa-manage-1/_reserved-matters.html" %}
     {% endif %}
 
     {% if record and record.status.value == 'rejected' %}
@@ -124,4 +138,9 @@
     {% endif %}
   </div>
 </div>
+{% endblock %}
+
+{% block pageScripts %}
+{{ super() }}
+<script src="/public/javascripts/staff-dialog.js"></script>
 {% endblock %}

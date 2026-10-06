@@ -1,4 +1,11 @@
 ---
+variant: Reserved matters as cards
+sample: outline # the wall shows it with this sample record (journey.yaml)
+# Copy variant of view-record.md: the record's reserved matters are
+# summary cards below the Outline application heading (not a row of the
+# planning details), with the Add reserved matters details under them. See
+# content/README.md "Trying out variations of a page".
+#
 # A developer record (app/views/lpa-manage-1/view-record.html). The heading
 # is the record's NRL reference; `text:` holds the rest of the page's words.
 # The review options sit at the bottom of the page, none chosen, and
@@ -38,9 +45,6 @@ rows:
     when: { key: record.linkedText, truthy: true }
   - key: Planning application stage
     value: '{{ record.planningStage.label }}'
-  - key: Reserved matters
-    value: '{{ record.reservedMattersText }}'
-    when: { key: record.reservedMattersText, truthy: true }
   - key: Added by
     value: '{{ record.officer }}'
   - key: Reviewed by
@@ -99,7 +103,7 @@ text:
   timelineReservedMatters: Reserved matters added
   # Below the history once an outline application is granted.
   # reservedMattersLayout: details, modal, drawer, inline or cards
-  reservedMattersLayout: details
+  reservedMattersLayout: cards
   outlineHeading: Outline application
   addReservedMatters: Add reserved matters
   reservedMattersReferenceLabel: Reference number

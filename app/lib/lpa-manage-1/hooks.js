@@ -27,6 +27,9 @@
  *   - the record page's audit timeline and its review options, which post
  *     back to the page and return to the dashboard, and the full
  *     certificate behind it
+ *   - an outline planning application, once granted, takes reserved
+ *     matters applications: a small form below the history adds each one
+ *     to the record (its own post route, so its errors show on the record)
  *
  * Nothing here is real: no passwords are checked or stored.
  */
@@ -35,6 +38,12 @@ const fs = require('fs')
 const path = require('path')
 const yaml = require('js-yaml')
 const { message } = require('../journey-engine/validation')
+const { loadJourney } = require('../journey-engine/loader')
+const {
+  buildContext,
+  buildModel,
+  copyVariantFor
+} = require('../journey-engine/router')
 const { participantOf } = require('../nrf-request-to-use-1/hooks')
 
 const RECORDS_FILE = path.join(
@@ -58,6 +67,33 @@ const COMMENT_FIELD = 'reject-comment'
 const REVIEWED_STATUS = 'reviewed'
 const REVIEW_LATER = 'review-later'
 const PLANNING_STEP = 'planning'
+// An outline planning application, once granted, takes reserved matters
+// applications: each a reference, a status (a planning stage) and a short
+// description of no more than DESCRIPTION_LIMIT characters
+const OUTLINE_TYPE = 'Outline planning permission'
+const GRANTED_STAGE = 'granted'
+const RESERVED_MATTERS = 'reserved-matters'
+const RESERVED_MATTERS_FIELDS = {
+  reference: 'reserved-matters-reference',
+  status: 'reserved-matters-status',
+  description: 'reserved-matters-description'
+}
+const DESCRIPTION_LIMIT = 200
+// How the record page offers the form: `reservedMattersLayout` in the
+// page's `text:`, which its copy variants (view-record~<name>.md) change to
+// compare the designs. details (the default), modal, drawer, inline, cards
+// or page (the add-reserved-matters page, whose own copy says `page`)
+const RESERVED_MATTERS_LAYOUTS = [
+  'details',
+  'modal',
+  'drawer',
+  'inline',
+  'cards',
+  'page'
+]
+// The form on the add-reserved-matters page posts with ?_from=page, so its
+// errors show on that page rather than the record's
+const FROM_PAGE = 'page'
 // "Is this a planning variation?"
 const IS_VARIATION = 'yes'
 const SESSION_KEYS = ['officer', 'signInEmail']
@@ -305,6 +341,11 @@ function recordOf({ entry, record }, store, today = new Date()) {
     originalReference: entry.originalReference || '',
     originalPlanningReference: record.originalPlanningReference || '',
     planningStage: planningStageOf(record.planningStage || ADDED_STAGE, store),
+    reservedMatters: (record.reservedMatters || []).map((item) => ({
+      reference: item.reference,
+      status: planningStageOf(item.status || ADDED_STAGE, store),
+      description: item.description || ''
+    })),
     planningType: entry.planningType,
     planningTypeShort: planningTypeShort(entry.planningType, store),
     overdue: Boolean(record.overdue),
@@ -552,6 +593,7 @@ function matches(record, query) {
     record.developer,
     record.planningReference,
     record.originalPlanningReference,
+    ...record.reservedMatters.map((item) => item.reference),
     record.officer
   ].some((value) =>
     String(value || '')
@@ -971,6 +1013,147 @@ function stepOf(record) {
   return record && record.status.value === REVIEWED_STATUS ? PLANNING_STEP : ''
 }
 
+// A granted outline application whose commitment details are reviewed
+// takes reserved matters
+function takesReservedMatters(record) {
+  return Boolean(
+    record &&
+      record.planningType === OUTLINE_TYPE &&
+      record.planningStage.value === GRANTED_STAGE &&
+      stepOf(record) === PLANNING_STEP
+  )
+}
+
+// The record's reserved matters as one line, for the planning details row
+// (which only shows when there are some); viewRecord.get swaps it for a list
+function withReservedMatters(data) {
+  if (data.record) {
+    data.record.reservedMattersText = data.record.reservedMatters
+      .map((item) => item.reference)
+      .join(', ')
+  }
+}
+
+function reservedMattersHtml(record) {
+  const items = record.reservedMatters.map(
+    (item) =>
+      `<li><span class="govuk-!-font-weight-bold">${escapeHtml(item.reference)}</span>` +
+      ` (${escapeHtml(item.status.label)})` +
+      (item.description ? `<br>${escapeHtml(item.description)}` : '') +
+      '</li>'
+  )
+  const spaced = items.length > 1 ? ' govuk-list--spaced' : ''
+  return `<ul class="govuk-list${spaced}">${items.join('')}</ul>`
+}
+
+// Reference typed, ignoring case and spaces
+function sameReference(a, b) {
+  const plain = (value) =>
+    String(value || '')
+      .replace(/\s+/g, '')
+      .toUpperCase()
+  return plain(a) === plain(b)
+}
+
+// A copy variant shown once (?_copy=, the screen wall's and the compare
+// page's way) is carried through the form's post and back to the record
+function copyQuery(ctx) {
+  const copy = ctx.query && ctx.query._copy
+  return copy ? `&_copy=${encodeURIComponent(String(copy))}` : ''
+}
+
+/**
+ * The "Outline application" section of the record page: Add reserved
+ * matters, laid out as the page's copy says (RESERVED_MATTERS_LAYOUTS),
+ * holding the form (open when it has errors), its status radios the
+ * planning stages in records.yaml. Null for any other record.
+ */
+function reservedMattersModel(ctx, record, { open, values = {}, errors = [] }) {
+  if (!takesReservedMatters(record)) {
+    return null
+  }
+  const routes = ctx.journey.routes
+  const ref = `?ref=${encodeURIComponent(record.reference)}`
+  const store = loadStore()
+  const errorFor = {}
+  for (const item of errors) {
+    errorFor[item.field] = item.message
+  }
+  const text = (ctx.page.content && ctx.page.content.text) || {}
+  const layout = RESERVED_MATTERS_LAYOUTS.includes(text.reservedMattersLayout)
+    ? text.reservedMattersLayout
+    : RESERVED_MATTERS_LAYOUTS[0]
+  const fromPage = layout === FROM_PAGE ? `&_from=${FROM_PAGE}` : ''
+  return {
+    layout,
+    open: Boolean(open || errors.length),
+    action: `${routes.ADD_RESERVED_MATTERS}${ref}${copyQuery(ctx)}${fromPage}`,
+    // The page layout's button, and the page's Cancel
+    pageHref: `${routes.ADD_RESERVED_MATTERS}${ref}`,
+    recordHref: `${routes.VIEW_RECORD}${ref}`,
+    items: record.reservedMatters,
+    fields: RESERVED_MATTERS_FIELDS,
+    limit: DESCRIPTION_LIMIT,
+    values,
+    errors: errorFor,
+    // For a dialog's own error summary
+    errorList: errors.map((item) => ({
+      text: item.message,
+      href: `#${item.field}`
+    })),
+    statuses: Object.entries(store.planningStages).map(([value, label]) => ({
+      value,
+      text: label,
+      checked: values.status === value
+    }))
+  }
+}
+
+// What the officer typed into the reserved matters form, and what is wrong
+// with it (one problem per field, in the form's order)
+function checkReservedMatters(page, body, record) {
+  const store = loadStore()
+  const values = {}
+  for (const [name, field] of Object.entries(RESERVED_MATTERS_FIELDS)) {
+    values[name] = String(body[field] || '').trim()
+  }
+  const errors = []
+  const problem = (name, key) =>
+    errors.push({
+      field: RESERVED_MATTERS_FIELDS[name],
+      message: message(page, key)
+    })
+  if (!values.reference) {
+    problem('reference', 'reservedMattersReferenceRequired')
+  } else if (
+    record.reservedMatters.some((item) =>
+      sameReference(item.reference, values.reference)
+    ) ||
+    sameReference(record.planningReference, values.reference)
+  ) {
+    problem('reference', 'reservedMattersReferenceAdded')
+  }
+  if (!(values.status in store.planningStages)) {
+    values.status = ''
+    problem('status', 'reservedMattersStatusRequired')
+  }
+  if (!values.description) {
+    problem('description', 'reservedMattersDescriptionRequired')
+  } else if (values.description.length > DESCRIPTION_LIMIT) {
+    problem('description', 'reservedMattersDescriptionTooLong')
+  }
+  return { values, errors }
+}
+
+// The screen wall's reserved matters errors: which field each belongs to
+const RESERVED_MATTERS_ERRORS = {
+  reservedMattersReferenceRequired: RESERVED_MATTERS_FIELDS.reference,
+  reservedMattersReferenceAdded: RESERVED_MATTERS_FIELDS.reference,
+  reservedMattersStatusRequired: RESERVED_MATTERS_FIELDS.status,
+  reservedMattersDescriptionRequired: RESERVED_MATTERS_FIELDS.description,
+  reservedMattersDescriptionTooLong: RESERVED_MATTERS_FIELDS.description
+}
+
 function optionsFor(page, record) {
   const step = stepOf(record)
   return page.content.options.filter((option) => (option.step || '') === step)
@@ -1003,14 +1186,36 @@ function updateRecord(data, found, changes, event) {
 // on reject-commitment and is final: a rejected record shows a warning in
 // place of the radios, and a post for it changes nothing.
 const viewRecord = {
+  // "Add reserved matters" posts here; errors show on the record page with
+  // the form open, and saving returns to the record, which says so
+  routes(router, journey) {
+    const routes = {
+      ADD_RESERVED_MATTERS: `${journey.basePath}/add-reserved-matters`
+    }
+    router.post(routes.ADD_RESERVED_MATTERS, (req, res, next) => {
+      try {
+        addReservedMatters(req, res, loadJourney(journey.id))
+      } catch (error) {
+        next(error)
+      }
+    })
+    return routes
+  },
   load(ctx) {
-    // The screen wall's stage error needs a record past its review
+    // The screen wall's stage error needs a record past its review, and
+    // its reserved matters errors a granted outline application
     if (ctx.preview && ctx.previewError === 'stageRequired') {
       const reviewed = allRecords(ctx.data).find(
         (record) => stepOf(record) === PLANNING_STEP
       )
       if (reviewed) {
         ctx.data.recordReference = reviewed.reference
+      }
+    }
+    if (ctx.preview && RESERVED_MATTERS_ERRORS[ctx.previewError]) {
+      const outline = allRecords(ctx.data).find(takesReservedMatters)
+      if (outline) {
+        ctx.data.recordReference = outline.reference
       }
     }
     const redirect = loadRecord(ctx)
@@ -1020,17 +1225,27 @@ const viewRecord = {
     const { data } = ctx
     // The kit keeps the last post's fields in the session
     delete data[ctx.page.field]
+    for (const field of Object.values(RESERVED_MATTERS_FIELDS)) {
+      delete data[field]
+    }
     if (!ctx.preview) {
       delete data.newStatus
     }
     withLinks(data, ctx.page)
+    withReservedMatters(data)
   },
-  get(ctx, model) {
+  get(ctx, model, form = {}) {
     const { data, page } = ctx
-    // Each linked record the council has opens its page
+    // Each linked record the council has opens its page, and the reserved
+    // matters are a list
     const links = (data.record && data.record.links) || []
+    const reservedMatters =
+      (data.record && data.record.reservedMattersText) || ''
     for (const group of model.content.rowGroups || []) {
       for (const row of group.rows) {
+        if (reservedMatters && row.value.text === reservedMatters) {
+          row.value = { html: reservedMattersHtml(data.record) }
+        }
         if (links.length && row.value.text === data.record.linkedText) {
           row.value = {
             html: links
@@ -1046,8 +1261,16 @@ const viewRecord = {
         }
       }
     }
-    model.flash = data.lpaFlash === 'added' ? 'added' : null
+    model.flash = ['added', RESERVED_MATTERS].includes(data.lpaFlash)
+      ? data.lpaFlash
+      : null
+    if (model.flash === RESERVED_MATTERS) {
+      model.flashText = String(
+        model.content.text.reservedMattersAdded || ''
+      ).replace('{reference}', String(data.lpaFlashReference || ''))
+    }
     delete data.lpaFlash
+    delete data.lpaFlashReference
     // The items line up with the page's options
     const offered = new Set(optionsFor(page, data.record))
     model.content.items = model.content.items.filter((item, index) =>
@@ -1055,11 +1278,17 @@ const viewRecord = {
     )
     model.planningStep = stepOf(data.record) === PLANNING_STEP
     // The screen wall's error states, as a post would show them
+    let errors = form.errors || []
     if (ctx.preview && ctx.previewError) {
-      model.errors = [
-        { field: page.field, message: message(page, ctx.previewError) }
-      ]
+      const field = RESERVED_MATTERS_ERRORS[ctx.previewError] || page.field
+      errors = [{ field, message: message(page, ctx.previewError) }]
+      model.errors = errors
     }
+    model.reservedMatters = reservedMattersModel(ctx, data.record, {
+      open: ctx.preview && data.addReservedMatters,
+      values: form.values,
+      errors: errors.filter((item) => item.field !== page.field)
+    })
   },
   // `load` does not run before a post, so the record is found again here
   // for the page to show with any error
@@ -1072,6 +1301,7 @@ const viewRecord = {
       return { ok: true }
     }
     withLinks(data, page)
+    withReservedMatters(data)
     data.commitment = data.record.commitment
     if (data.record.status.value === REJECTED_STATUS) {
       return { ok: true, value: null }
@@ -1127,6 +1357,65 @@ const viewRecord = {
   }
 }
 
+// "Add reserved matters" on a granted outline application's record: each
+// one the officer saves joins the record's reserved matters and its
+// history, and the record page says so. A problem shows the record page
+// again with the form open and the officer's answers kept.
+function addReservedMatters(req, res, journey) {
+  // The add-reserved-matters page's form, or one on the record page
+  const fromPage = req.query && req.query._from === FROM_PAGE
+  const page = fromPage
+    ? journey.byId.get('add-reserved-matters')
+    : copyVariantFor(journey, journey.byId.get('view-record'), req)
+  const ctx = buildContext(req, res, journey, page, { isPost: true })
+  const redirect = loadRecord(ctx)
+  if (redirect) {
+    return res.redirect(303, redirect.redirect)
+  }
+  const { data } = ctx
+  const recordPath = `${journey.routes.VIEW_RECORD}?ref=${encodeURIComponent(data.record.reference)}${copyQuery(ctx)}`
+  // The kit keeps the post's fields in the session
+  for (const field of Object.values(RESERVED_MATTERS_FIELDS)) {
+    delete data[field]
+  }
+  const found = allEntries(data).find(
+    (item) => item.entry.reference === data.record.reference
+  )
+  if (!found || !takesReservedMatters(data.record)) {
+    return res.redirect(303, recordPath)
+  }
+  const { values, errors } = checkReservedMatters(page, ctx.body, data.record)
+  if (errors.length) {
+    const model = buildModel(ctx, { errors })
+    if (fromPage) {
+      addReservedMattersPage.get(ctx, model, { values, errors })
+    } else {
+      withLinks(data, page)
+      withReservedMatters(data)
+      viewRecord.get(ctx, model, { values, errors })
+    }
+    return res.render(page.template, model)
+  }
+  updateRecord(
+    data,
+    found,
+    {
+      reservedMatters: [
+        ...(found.record.reservedMatters || []),
+        {
+          reference: values.reference,
+          status: values.status,
+          description: values.description
+        }
+      ]
+    },
+    { event: RESERVED_MATTERS, planningReference: values.reference }
+  )
+  data.lpaFlash = RESERVED_MATTERS
+  data.lpaFlashReference = values.reference
+  req.session.save(() => res.redirect(303, `${recordPath}#reserved-matters`))
+}
+
 // Why the commitment details are rejected: a reason and an optional
 // comment, both on the record's history. Confirm rejects the record for
 // good and returns to the dashboard. A record already rejected (or gone)
@@ -1171,6 +1460,46 @@ const rejectCommitment = {
 }
 
 // Every detail of a record's commitment, behind the record page
+// Reserved matters on a page of their own (the record page's `page`
+// layout): add-reserved-matters?ref=NRL-100958, for a granted outline
+// application only (any other record opens instead). Its form posts to
+// this page's path, which viewRecord.routes handles.
+const addReservedMattersPage = {
+  load(ctx) {
+    const redirect = loadRecord(ctx)
+    if (redirect) {
+      return redirect
+    }
+    const { data } = ctx
+    for (const field of Object.values(RESERVED_MATTERS_FIELDS)) {
+      delete data[field]
+    }
+    if (!ctx.preview && !takesReservedMatters(data.record)) {
+      return {
+        redirect: `${ctx.journey.routes.VIEW_RECORD}?ref=${encodeURIComponent(data.record.reference)}`
+      }
+    }
+  },
+  get(ctx, model, form = {}) {
+    let errors = form.errors || []
+    // The screen wall's error states, as a post would show them
+    if (ctx.preview && RESERVED_MATTERS_ERRORS[ctx.previewError]) {
+      errors = [
+        {
+          field: RESERVED_MATTERS_ERRORS[ctx.previewError],
+          message: message(ctx.page, ctx.previewError)
+        }
+      ]
+      model.errors = errors
+    }
+    model.reservedMatters = reservedMattersModel(ctx, ctx.data.record, {
+      open: true,
+      values: form.values,
+      errors
+    })
+  }
+}
+
 const certificate = {
   load: loadRecord
 }
@@ -1254,6 +1583,7 @@ module.exports = {
   'view-record': viewRecord,
   'reject-commitment': rejectCommitment,
   certificate,
+  'add-reserved-matters': addReservedMattersPage,
   dashboard,
   // For tests
   loadStore,
