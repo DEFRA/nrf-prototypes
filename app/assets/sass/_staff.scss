@@ -3,7 +3,7 @@
 // the LPA's "Manage commitments" journey (content/lpa-manage-1).
 //
 //   .app-staff              body class: a wider page so tables have room
-//   .app-staff-header       black header with the service name and the
+//   .app-staff-header       GOV.UK blue header with the service name and the
 //                           account toggle, whose grey panel holds the menu
 //                           (app/views/includes/staff-header.html)
 //   .app-staff-page-header  heading with a button to its right
@@ -21,6 +21,8 @@ $app-staff-max-width: 1440px;
 // toggle moves to a row of its own
 $app-staff-header-stack: 960px;
 $app-staff-black: govuk-colour('black');
+// The GOV.UK header's blue (the refreshed brand)
+$app-staff-header-colour: govuk-functional-colour(brand);
 $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
 
 // The GOV.UK width container at 1440px: the same gutters as on any page,
@@ -40,7 +42,7 @@ $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
 
 .app-staff-header {
   position: relative;
-  background: $app-staff-black;
+  background: $app-staff-header-colour;
   color: govuk-colour('white');
   @include govuk-font($size: 19);
 }
@@ -77,8 +79,9 @@ $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
   }
 }
 
+// The crown at the GOV.UK header's size (32 by 30px)
 .app-staff-header__crown {
-  width: 42px;
+  width: 32px;
   height: auto;
   flex-shrink: 0;
   fill: currentcolor;
