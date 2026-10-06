@@ -4,7 +4,7 @@ hint: Enter the reference to retrieve the details entered during the quote, for 
 width: 10
 errors:
   required: Enter your NRL reference
-  format: Enter a NRL reference in the correct format, like NRL-123456
+  format: Enter an NRL reference in the correct format, like NRL-123456
 button: Continue
 ---
 

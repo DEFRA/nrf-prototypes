@@ -7,7 +7,7 @@ options:
   - label: 'No'
     value: 'No'
 errors:
-  required: Select yes if you have a NRL reference
+  required: Select yes if you have an NRL reference
 button: Continue
 actions:
   - text: Cancel
@@ -15,4 +15,4 @@ actions:
     goto: start
 ---
 
-# Do you have a NRL reference?
+# Do you have an NRL reference?
