@@ -76,6 +76,7 @@ homepage:
     - an NRL reference already in the records asks whether it is a planning variation (placeholder copy); a variation takes the new planning application reference and the record shows both
     - planning type leads the record's planning details
     - a variation the developer made a commitment for (in request to use) links to the original application's record, and back
+    - an outline application that has been granted takes reserved matters (reference, status and a short description), added below the record's history and listed in its planning details
     - no "What would you like to do?" page: signing in opens the dashboard, or "Enter an NRL reference" for a council with no records yet (an email with "new" in it)
 
 # The answers the copy can show, as {{ name }} (see content/README.md).
@@ -199,7 +200,9 @@ pages:
   # --------------------------------------------------------------------
   # A record: view-record?ref=NRL-123456. The review options at the bottom
   # post back here; the change goes on the audit timeline and Confirm
-  # returns to the dashboard (hooks.js). Rejecting asks why first.
+  # returns to the dashboard (hooks.js). Rejecting asks why first. A
+  # granted outline application adds reserved matters below the history
+  # (its own post route, see hooks.js).
   - id: view-record
     template: lpa-manage-1/view-record
     field: new-status
@@ -221,6 +224,12 @@ pages:
         - id: linked
           label: Linked to the original application's record
           data: { recordReference: NRL-101412 }
+        - id: outline
+          label: Granted outline application with reserved matters
+          data: { recordReference: NRL-100958 }
+        - id: add-reserved-matters
+          label: Adding reserved matters
+          data: { recordReference: NRL-100958, addReservedMatters: true }
 
   # Why the commitment details are rejected, with an optional comment.
   # Confirm rejects the record for good and returns to the dashboard.

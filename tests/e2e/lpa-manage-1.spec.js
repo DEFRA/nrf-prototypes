@@ -380,6 +380,92 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(optionLocator(page, 'view-record', 'rejected')).toHaveCount(0)
   })
 
+  test('a granted outline application takes reserved matters', async ({
+    page
+  }) => {
+    const outline = (entry) =>
+      entry.record &&
+      entry.record.status === 'reviewed' &&
+      store.planningTypes[entry.planningType] === 'Outline'
+    const notGranted = store.commitments.find(
+      (entry) => outline(entry) && entry.record.planningStage === 'applied'
+    )
+    const granted = store.commitments.find(
+      (entry) =>
+        outline(entry) &&
+        entry.record.planningStage === 'granted' &&
+        (entry.record.reservedMatters || []).length
+    )
+    const addButton = page.getByRole('button', {
+      name: text('view-record', 'addReservedMatters')
+    })
+    const save = page.getByRole('button', {
+      name: text('view-record', 'reservedMattersSave')
+    })
+    const label = (key) =>
+      page.getByLabel(text('view-record', key), { exact: true })
+    await signIn(page)
+
+    // Not until the outline application is granted
+    await page.goto(`${base}/view-record?ref=${notGranted.reference}`)
+    await expect(addButton).toHaveCount(0)
+    await answer(page, 'view-record', 'granted')
+    await submit(page, 'view-record')
+    await expectHeading(page, 'dashboard')
+    await page.goto(`${base}/view-record?ref=${notGranted.reference}`)
+    await expect(page.locator('#reserved-matters')).toHaveText(
+      text('view-record', 'outlineHeading')
+    )
+    await expect(addButton).toBeVisible()
+
+    // One already granted lists its reserved matters in the planning
+    // details
+    const viewPath = `${base}/view-record?ref=${granted.reference}`
+    await page.goto(viewPath)
+    const [existing] = granted.record.reservedMatters
+    const details = page.locator('.govuk-summary-list').nth(1)
+    await expect(details).toContainText(existing.reference)
+    await expect(details).toContainText(existing.description)
+    const entries = await page.locator('.app-timeline__item').count()
+
+    await addButton.click()
+    await save.click()
+    await expectError(page, 'view-record', 'reservedMattersReferenceRequired')
+    await expectError(page, 'view-record', 'reservedMattersStatusRequired')
+    await expectError(page, 'view-record', 'reservedMattersDescriptionRequired')
+
+    // The same reference twice is refused; the answers are kept
+    await label('reservedMattersReferenceLabel').fill(existing.reference)
+    await page.getByLabel(store.planningStages.applied, { exact: true }).check()
+    await label('reservedMattersDescriptionLabel').fill('Phase 2 (120 homes)')
+    await save.click()
+    await expectError(page, 'view-record', 'reservedMattersReferenceAdded')
+    await expect(label('reservedMattersDescriptionLabel')).toHaveValue(
+      'Phase 2 (120 homes)'
+    )
+
+    await label('reservedMattersReferenceLabel').fill('2026/0577/REM')
+    await save.click()
+    await expectHeading(page, 'view-record', { record: granted })
+    await expect(page.locator('.govuk-notification-banner')).toContainText(
+      text('view-record', 'reservedMattersAdded').replace(
+        '{reference}',
+        '2026/0577/REM'
+      )
+    )
+    await expect(details).toContainText(existing.reference)
+    await expect(details).toContainText('2026/0577/REM')
+    await expect(details).toContainText('Phase 2 (120 homes)')
+    const items = page.locator('.app-timeline__item')
+    await expect(items).toHaveCount(entries + 1)
+    await expect(items.first()).toContainText(
+      text('view-record', 'timelineReservedMatters')
+    )
+    await expect(items.first()).toContainText('2026/0577/REM')
+    // The form closes, ready for another
+    await expect(addButton).toBeVisible()
+  })
+
   test('the dashboard’s cards open the table filtered to them', async ({
     page
   }) => {

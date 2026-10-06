@@ -8,8 +8,11 @@
   this page. Once the commitment details are reviewed they are the planning
   stage options. A planning variation's timeline entry shows its new
   planning application reference. Rejecting asks why on reject-commitment; a rejected record
-  shows a warning in place of the radios. Model extras from
-  app/lib/lpa-manage-1/hooks.js: flash, planningStep, data.record.
+  shows a warning in place of the radios. A granted outline application
+  has an "Outline application" section below the timeline: the Add
+  reserved matters button, or its small form (posting to
+  ADD_RESERVED_MATTERS). Model extras from app/lib/lpa-manage-1/hooks.js:
+  flash, flashText, planningStep, reservedMatters, data.record.
 #}
 {% extends "journey-engine/_page.html" %}
 
@@ -24,7 +27,13 @@
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-two-thirds-from-desktop">
     {% include "journey-engine/_error-summary.html" %}
-    {% if flash %}
+    {% if flash == 'reserved-matters' %}
+      {{ govukNotificationBanner({
+        type: "success",
+        titleText: text.reservedMattersAddedTitle,
+        html: '<p class="govuk-notification-banner__heading">' + (flashText | escape) + '</p>'
+      }) }}
+    {% elif flash %}
       {{ govukNotificationBanner({
         type: "success",
         titleText: text.successTitle,
@@ -75,7 +84,7 @@
         <div class="app-timeline__item">
           <div class="app-timeline__header">
             <h3 class="app-timeline__title">
-              {%- if event.event == 'added' %}{{ text.timelineAdded }}{% elif event.event == 'review-later' %}{{ text.timelineReviewLater }}{% elif event.event == 'stage' %}{{ text.timelineStage }} {{ event.stage.label }}{% elif event.event == 'variation' %}{{ text.timelineVariation }}{% else %}{{ text.timelineStatus }} {{ event.status.label }}{% endif -%}
+              {%- if event.event == 'added' %}{{ text.timelineAdded }}{% elif event.event == 'review-later' %}{{ text.timelineReviewLater }}{% elif event.event == 'stage' %}{{ text.timelineStage }} {{ event.stage.label }}{% elif event.event == 'variation' %}{{ text.timelineVariation }}{% elif event.event == 'reserved-matters' %}{{ text.timelineReservedMatters }}{% else %}{{ text.timelineStatus }} {{ event.status.label }}{% endif -%}
             </h3>
             <p class="app-timeline__byline">{{ text.by }} {{ event.by }}{% if event.email %} <span class="app-timeline__email">({{ event.email }})</span>{% endif %}</p>
           </div>
@@ -94,6 +103,51 @@
         </div>
         {% endfor %}
       </div>
+    {% endif %}
+
+    {% set rm = reservedMatters %}
+    {% if rm %}
+      <h2 class="govuk-heading-m" id="reserved-matters">{{ text.outlineHeading }}</h2>
+      {% if rm.open %}
+      <form action="{{ rm.action }}" method="post" novalidate class="app-staff-reserved-matters" id="add-reserved-matters">
+        {{ govukInput({
+          label: { text: text.reservedMattersReferenceLabel, classes: "govuk-label--s" },
+          id: rm.fields.reference,
+          name: rm.fields.reference,
+          value: rm.values.reference,
+          classes: "govuk-input--width-20",
+          spellcheck: false,
+          errorMessage: { text: rm.errors[rm.fields.reference] } if rm.errors[rm.fields.reference]
+        }) }}
+        {{ govukRadios({
+          name: rm.fields.status,
+          idPrefix: rm.fields.status,
+          classes: "govuk-radios--small",
+          fieldset: { legend: { text: text.reservedMattersStatusLegend, classes: "govuk-fieldset__legend--s" } },
+          errorMessage: { text: rm.errors[rm.fields.status] } if rm.errors[rm.fields.status],
+          items: rm.statuses
+        }) }}
+        {{ govukCharacterCount({
+          label: { text: text.reservedMattersDescriptionLabel, classes: "govuk-label--s" },
+          id: rm.fields.description,
+          name: rm.fields.description,
+          value: rm.values.description,
+          rows: 3,
+          maxlength: rm.limit,
+          errorMessage: { text: rm.errors[rm.fields.description] } if rm.errors[rm.fields.description]
+        }) }}
+        <div class="govuk-button-group">
+          {{ govukButton({ text: text.reservedMattersSave }) }}
+          <a class="govuk-link" href="{{ rm.cancelHref }}">{{ text.reservedMattersCancel }}</a>
+        </div>
+      </form>
+      {% else %}
+        {{ govukButton({
+          text: text.addReservedMatters,
+          href: rm.openHref,
+          classes: "govuk-button--secondary govuk-!-margin-bottom-9"
+        }) }}
+      {% endif %}
     {% endif %}
 
     {% if record and record.status.value == 'rejected' %}

@@ -11,7 +11,11 @@
 # application reference and the original one. A record linked to another
 # (a variation the developer made a commitment for, and the original
 # application's) links to it; `linkedOriginal` and `linkedVariation` say
-# which way.
+# which way. An outline planning application that has been granted has an
+# "Outline application" section below the history: Add reserved matters
+# opens a small form (reference, status, short description) and each one
+# saved joins the planning details. Its status radios are the planning
+# stages in records.yaml.
 type: custom
 rows:
   - heading: Commitment details
@@ -32,6 +36,9 @@ rows:
     when: { key: record.linkedText, truthy: true }
   - key: Planning application stage
     value: '{{ record.planningStage.label }}'
+  - key: Reserved matters
+    value: '{{ record.reservedMattersText }}'
+    when: { key: record.reservedMattersText, truthy: true }
   - key: Added by
     value: '{{ record.officer }}'
   - key: Reviewed by
@@ -63,6 +70,12 @@ options:
 errors:
   required: Select a new status for this developer record
   stageRequired: Select the stage the planning application has reached
+  # The reserved matters form
+  reservedMattersReferenceRequired: Enter the reserved matters reference number
+  reservedMattersReferenceAdded: This reference has already been added to this developer record
+  reservedMattersStatusRequired: Select the status of the reserved matters application
+  reservedMattersDescriptionRequired: Enter a short description of the reserved matters
+  reservedMattersDescriptionTooLong: Description must be 200 characters or fewer
 button: Confirm
 text:
   successTitle: Commitment details retrieved
@@ -81,6 +94,18 @@ text:
   timelineReviewLater: Marked to review and confirm later
   timelineStage: Planning application stage changed to
   timelineVariation: Planning variation added
+  timelineReservedMatters: Reserved matters added
+  # Below the history once an outline application is granted
+  outlineHeading: Outline application
+  addReservedMatters: Add reserved matters
+  reservedMattersReferenceLabel: Reference number
+  reservedMattersStatusLegend: Status
+  reservedMattersDescriptionLabel: Short description
+  reservedMattersSave: Save reserved matters
+  reservedMattersCancel: Cancel
+  # The success banner once saved; {reference} is the one just added
+  reservedMattersAddedTitle: Success
+  reservedMattersAdded: Reserved matters {reference} has been added to this developer record
   # After the NRL reference of a linked developer record, in brackets
   linkedOriginal: original planning application
   linkedVariation: planning variation
