@@ -39,7 +39,11 @@ const path = require('path')
 const yaml = require('js-yaml')
 const { message } = require('../journey-engine/validation')
 const { loadJourney } = require('../journey-engine/loader')
-const { buildContext, buildModel } = require('../journey-engine/router')
+const {
+  buildContext,
+  buildModel,
+  copyVariantFor
+} = require('../journey-engine/router')
 const { participantOf } = require('../nrf-request-to-use-1/hooks')
 
 const RECORDS_FILE = path.join(
@@ -75,8 +79,16 @@ const RESERVED_MATTERS_FIELDS = {
   description: 'reserved-matters-description'
 }
 const DESCRIPTION_LIMIT = 200
-// ?_add=reserved-matters opens the form on the record page
-const ADD_QUERY = '_add'
+// How the record page offers the form: `reservedMattersLayout` in the
+// page's `text:`, which its copy variants (view-record~<name>.md) change to
+// compare the designs. details (the default), modal, drawer, inline or cards
+const RESERVED_MATTERS_LAYOUTS = [
+  'details',
+  'modal',
+  'drawer',
+  'inline',
+  'cards'
+]
 // "Is this a planning variation?"
 const IS_VARIATION = 'yes'
 const SESSION_KEYS = ['officer', 'signInEmail']
@@ -1038,10 +1050,18 @@ function sameReference(a, b) {
   return plain(a) === plain(b)
 }
 
+// A copy variant shown once (?_copy=, the screen wall's and the compare
+// page's way) is carried through the form's post and back to the record
+function copyQuery(ctx) {
+  const copy = ctx.query && ctx.query._copy
+  return copy ? `&_copy=${encodeURIComponent(String(copy))}` : ''
+}
+
 /**
- * The "Outline application" section of the record page: the Add reserved
- * matters button, or (opened, or with errors) the form, its status radios
- * the planning stages in records.yaml. Null for any other record.
+ * The "Outline application" section of the record page: Add reserved
+ * matters, laid out as the page's copy says (RESERVED_MATTERS_LAYOUTS),
+ * holding the form (open when it has errors), its status radios the
+ * planning stages in records.yaml. Null for any other record.
  */
 function reservedMattersModel(ctx, record, { open, values = {}, errors = [] }) {
   if (!takesReservedMatters(record)) {
@@ -1054,15 +1074,24 @@ function reservedMattersModel(ctx, record, { open, values = {}, errors = [] }) {
   for (const item of errors) {
     errorFor[item.field] = item.message
   }
+  const text = (ctx.page.content && ctx.page.content.text) || {}
+  const layout = RESERVED_MATTERS_LAYOUTS.includes(text.reservedMattersLayout)
+    ? text.reservedMattersLayout
+    : RESERVED_MATTERS_LAYOUTS[0]
   return {
+    layout,
     open: Boolean(open || errors.length),
-    action: `${routes.ADD_RESERVED_MATTERS}${ref}`,
-    openHref: `${routes.VIEW_RECORD}${ref}&${ADD_QUERY}=${RESERVED_MATTERS}#add-reserved-matters`,
-    cancelHref: `${routes.VIEW_RECORD}${ref}#reserved-matters`,
+    action: `${routes.ADD_RESERVED_MATTERS}${ref}${copyQuery(ctx)}`,
+    items: record.reservedMatters,
     fields: RESERVED_MATTERS_FIELDS,
     limit: DESCRIPTION_LIMIT,
     values,
     errors: errorFor,
+    // For a dialog's own error summary
+    errorList: errors.map((item) => ({
+      text: item.message,
+      href: `#${item.field}`
+    })),
     statuses: Object.entries(store.planningStages).map(([value, label]) => ({
       value,
       text: label,
@@ -1247,9 +1276,7 @@ const viewRecord = {
       model.errors = errors
     }
     model.reservedMatters = reservedMattersModel(ctx, data.record, {
-      open:
-        ctx.query[ADD_QUERY] === RESERVED_MATTERS ||
-        (ctx.preview && data.addReservedMatters),
+      open: ctx.preview && data.addReservedMatters,
       values: form.values,
       errors: errors.filter((item) => item.field !== page.field)
     })
@@ -1326,14 +1353,14 @@ const viewRecord = {
 // history, and the record page says so. A problem shows the record page
 // again with the form open and the officer's answers kept.
 function addReservedMatters(req, res, journey) {
-  const page = journey.byId.get('view-record')
+  const page = copyVariantFor(journey, journey.byId.get('view-record'), req)
   const ctx = buildContext(req, res, journey, page, { isPost: true })
   const redirect = loadRecord(ctx)
   if (redirect) {
     return res.redirect(303, redirect.redirect)
   }
   const { data } = ctx
-  const recordPath = `${journey.routes.VIEW_RECORD}?ref=${encodeURIComponent(data.record.reference)}`
+  const recordPath = `${journey.routes.VIEW_RECORD}?ref=${encodeURIComponent(data.record.reference)}${copyQuery(ctx)}`
   // The kit keeps the post's fields in the session
   for (const field of Object.values(RESERVED_MATTERS_FIELDS)) {
     delete data[field]

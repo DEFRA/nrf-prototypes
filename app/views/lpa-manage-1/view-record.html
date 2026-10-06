@@ -9,9 +9,9 @@
   stage options. A planning variation's timeline entry shows its new
   planning application reference. Rejecting asks why on reject-commitment; a rejected record
   shows a warning in place of the radios. A granted outline application
-  has an "Outline application" section below the timeline: the Add
-  reserved matters button, or its small form (posting to
-  ADD_RESERVED_MATTERS). Model extras from app/lib/lpa-manage-1/hooks.js:
+  has an "Outline application" section below the timeline
+  (_reserved-matters.html): Add reserved matters and its small form
+  (posting to ADD_RESERVED_MATTERS), laid out as the page's copy says. Model extras from app/lib/lpa-manage-1/hooks.js:
   flash, flashText, planningStep, reservedMatters, data.record.
 #}
 {% extends "journey-engine/_page.html" %}
@@ -107,47 +107,7 @@
 
     {% set rm = reservedMatters %}
     {% if rm %}
-      <h2 class="govuk-heading-m" id="reserved-matters">{{ text.outlineHeading }}</h2>
-      {% if rm.open %}
-      <form action="{{ rm.action }}" method="post" novalidate class="app-staff-reserved-matters" id="add-reserved-matters">
-        {{ govukInput({
-          label: { text: text.reservedMattersReferenceLabel, classes: "govuk-label--s" },
-          id: rm.fields.reference,
-          name: rm.fields.reference,
-          value: rm.values.reference,
-          classes: "govuk-input--width-20",
-          spellcheck: false,
-          errorMessage: { text: rm.errors[rm.fields.reference] } if rm.errors[rm.fields.reference]
-        }) }}
-        {{ govukRadios({
-          name: rm.fields.status,
-          idPrefix: rm.fields.status,
-          classes: "govuk-radios--small",
-          fieldset: { legend: { text: text.reservedMattersStatusLegend, classes: "govuk-fieldset__legend--s" } },
-          errorMessage: { text: rm.errors[rm.fields.status] } if rm.errors[rm.fields.status],
-          items: rm.statuses
-        }) }}
-        {{ govukCharacterCount({
-          label: { text: text.reservedMattersDescriptionLabel, classes: "govuk-label--s" },
-          id: rm.fields.description,
-          name: rm.fields.description,
-          value: rm.values.description,
-          rows: 3,
-          maxlength: rm.limit,
-          errorMessage: { text: rm.errors[rm.fields.description] } if rm.errors[rm.fields.description]
-        }) }}
-        <div class="govuk-button-group">
-          {{ govukButton({ text: text.reservedMattersSave }) }}
-          <a class="govuk-link" href="{{ rm.cancelHref }}">{{ text.reservedMattersCancel }}</a>
-        </div>
-      </form>
-      {% else %}
-        {{ govukButton({
-          text: text.addReservedMatters,
-          href: rm.openHref,
-          classes: "govuk-button--secondary govuk-!-margin-bottom-9"
-        }) }}
-      {% endif %}
+      {% include "lpa-manage-1/_reserved-matters.html" %}
     {% endif %}
 
     {% if record and record.status.value == 'rejected' %}
@@ -178,4 +138,9 @@
     {% endif %}
   </div>
 </div>
+{% endblock %}
+
+{% block pageScripts %}
+{{ super() }}
+<script src="/public/javascripts/staff-dialog.js"></script>
 {% endblock %}
