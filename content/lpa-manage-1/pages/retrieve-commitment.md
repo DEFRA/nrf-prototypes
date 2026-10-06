@@ -1,6 +1,5 @@
 ---
 type: input
-label: Enter NRL reference
 hint: Enter the NRL reference number (eg. NRL-123456)
 width: 10
 errors:
