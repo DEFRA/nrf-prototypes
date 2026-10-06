@@ -362,6 +362,33 @@ commitments:
           by: Tom Barker
           at: 2026-07-28T11:50
 
+  # A full planning application reviewed and still at Applied: the record
+  # page offers the planning stages (the screen wall's "Reviewed, full
+  # planning" sample)
+  - reference: NRL-100676
+    developer: Kettle Hill Homes
+    address: [3 Mill Lane, Scarfolk, SC2 9ML]
+    planningType: Full planning permission
+    units: 48
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-08-14
+    expires: 2027-02-14
+    boundary: dereham
+    record:
+      planningReference: 2026/0355/FUL
+      planningStage: applied
+      officer: Priya Shah
+      status: reviewed
+      history:
+        - event: added
+          by: Priya Shah
+          at: 2026-08-15T10:20
+        - event: status
+          status: reviewed
+          by: Priya Shah
+          at: 2026-08-20T15:35
+
   # An outline application already granted, with one reserved matters
   # application under it: the record page offers to add more
   - reference: NRL-100958

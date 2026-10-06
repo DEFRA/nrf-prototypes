@@ -244,6 +244,9 @@ pages:
         - id: planning
           label: Reviewed (planning stages)
           data: { recordReference: NRL-100903 }
+        - id: reviewed-full
+          label: Reviewed, full planning
+          data: { recordReference: NRL-100676 }
         - id: variation
           label: Planning variation
           data: { recordReference: NRL-100487 }
