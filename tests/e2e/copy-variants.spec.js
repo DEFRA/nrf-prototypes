@@ -118,6 +118,22 @@ test.describe('copy variants', () => {
     await expectHeading(page, pageId)
   })
 
+  test('a preview ignores the copy the session sticks to', async ({ page }) => {
+    const journey = loadJourney(journeyId)
+    const path = journey.byId.get(pageId).path
+    await page.goto(`${path}?copy=${variantId}`)
+    await expect(page.locator('h1')).toHaveText(variantHeading)
+    // The wall's card for the page's own copy
+    await page.goto(`${path}?preview=1`)
+    await expectHeading(page, pageId)
+    await page.goto(`${path}?preview=1&_copy=${variantId}`)
+    await expect(page.locator('h1')).toHaveText(variantHeading)
+    // The session still has it
+    await page.goto(path)
+    await expect(page.locator('h1')).toHaveText(variantHeading)
+    await page.goto(`${path}?copy=default`)
+  })
+
   test('a frozen handoff copy never varies', async ({ page }) => {
     const journey = loadJourney(journeyId)
     const frozen = journeyHandoffs(journey).find(

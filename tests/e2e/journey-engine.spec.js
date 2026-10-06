@@ -2,7 +2,8 @@ const { test, expect } = require('@playwright/test')
 const {
   loadJourney,
   getJourneyIds,
-  validateChoiceValues
+  validateChoiceValues,
+  previewData
 } = require('../../app/lib/journey-engine')
 
 /**
@@ -327,7 +328,8 @@ test.describe('journey engine: copy variants', () => {
       expect(variant.page.next).toEqual(page.next)
       expect(variant.page.copyVariant).toEqual({
         id: 'words',
-        label: 'Other words'
+        label: 'Other words',
+        sample: null
       })
       // Only the page itself is a page of the journey
       expect(
@@ -363,6 +365,51 @@ test.describe('journey engine: copy variants', () => {
       )
       expect(message).toContain(
         "pages.planning-type~Type: a variant's name (after the ~) uses lower-case letters, digits and hyphens only"
+      )
+    })
+  })
+
+  test('sample: shows a variant with one of the page’s preview variants', () => {
+    withContentCopy((contentDir) => {
+      const pagesDir = path.join(contentDir, 'lpa-manage-1', 'pages')
+      const source = fs.readFileSync(
+        path.join(pagesDir, 'view-record.md'),
+        'utf8'
+      )
+      const withSample = (sample) =>
+        source.replace('---\n', `---\nsample: ${sample}\n`)
+      fs.writeFileSync(
+        path.join(pagesDir, 'view-record~sampled.md'),
+        withSample('outline')
+      )
+      const journey = loadJourney('lpa-manage-1', { contentDir })
+      const page = journey.byId.get('view-record')
+      const variant = page.copyVariants.find((item) => item.id === 'sampled')
+      const outline = page.preview.variants.find(
+        (item) => item.id === 'outline'
+      )
+      expect(variant.page.copyVariant.sample).toBe('outline')
+      // Unless another is asked for
+      expect(previewData(journey, variant.page)).toMatchObject(outline.data)
+      expect(previewData(journey, variant.page, 'planning')).toMatchObject({
+        recordReference: 'NRL-100903'
+      })
+      expect(previewData(journey, page).recordReference).not.toBe(
+        outline.data.recordReference
+      )
+
+      fs.writeFileSync(
+        path.join(pagesDir, 'view-record~sampled.md'),
+        withSample('nope')
+      )
+      let message = ''
+      try {
+        loadJourney('lpa-manage-1', { contentDir })
+      } catch (error) {
+        message = error.message
+      }
+      expect(message).toContain(
+        "pages.view-record~sampled: 'sample: nope' names none of the page's preview variants"
       )
     })
   })

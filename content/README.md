@@ -381,7 +381,7 @@ Seeing the variants:
 
 - On the screen wall at `/tools/journeys/<id>`, each variant is an orange-topped card right after the page it varies, labelled with its `variant:` name. The ⋯ menu on the page or on a variant has **Compare side by side**, which opens every copy of the page in columns at desktop or mobile width, in the error state if the page has one.
 - `?_copy=b` on the page's URL shows that copy once, for that request. The wall and the export use it, so looking at a variant never changes what anyone else sees.
-- `?copy=b` shows that copy for the rest of the session: every page that has a `~b` file shows it and the others show their own copy, so a research participant can be walked through variant B end to end. `?copy=default` goes back to the pages' own copy. The Copy link button on a variant's card gives that URL.
+- `?copy=b` shows that copy for the rest of the session: every page that has a `~b` file shows it and the others show their own copy, so a research participant can be walked through variant B end to end. `?copy=default` goes back to the pages' own copy. The Copy link button on a variant's card gives that URL. The screen wall, the compare page and the export ignore it, so the page's own card always shows its own copy.
 - The JPG export saves each variant beside the page as `<page>~b.jpg`.
 
 Variants are for experiments, not handoffs. A variant never appears in a frozen handoff copy or in the "as handed over" export, and editing one does not turn the page's tag to **Changed since handoff**: only the page's own file counts. To keep a variant, move its words into the page's own file and delete the variant; to drop one, delete its file. Either shows up without a restart.

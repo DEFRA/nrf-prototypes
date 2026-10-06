@@ -289,7 +289,9 @@ router.get('/tools/journeys/:journey/screens.zip', async (req, res) => {
 
 // One page's copies side by side: its own copy and each copy variant
 // (pages/<id>~<variant>.md), at desktop or mobile width, in the error
-// state if wanted. Opened from the "Compare side by side" link on the wall
+// state if wanted, and with any of the page's sample answers (its preview
+// variants; ?variant=<id> picks one up front). Opened from the "Compare
+// side by side" link on the wall
 router.get('/tools/journeys/:journey/compare/:page', (req, res) => {
   const journey = loadOr404(req, res)
   if (!journey) {
@@ -326,6 +328,11 @@ router.get('/tools/journeys/:journey/compare/:page', (req, res) => {
       }))
     ],
     errorQuery: errorStates.length ? errorStates[0].query : null,
+    samples: ((page.preview && page.preview.variants) || []).map((item) => ({
+      id: item.id,
+      label: item.label || item.id,
+      selected: item.id === String(req.query.variant || '')
+    })),
     wallUrl: `/tools/journeys/${journey.id}#screen-${page.id}`,
     publicBaseUrl: PUBLIC_BASE_URL
   })
