@@ -5,7 +5,7 @@ type: input
 label: Enter the planning application reference for this variation
 width: 20
 errors:
-  required: Enter the planning application reference for this variation
+  required: Enter the planning application reference
   same: Planning application references cannot be the same
 button: Continue
 ---
