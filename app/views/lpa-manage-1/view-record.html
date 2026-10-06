@@ -12,7 +12,7 @@
   has an "Outline application" section below the timeline
   (_reserved-matters.html): Add reserved matters and its small form
   (posting to ADD_RESERVED_MATTERS), laid out as the page's copy says. Model extras from app/lib/lpa-manage-1/hooks.js:
-  flash, flashText, planningStep, reservedMatters, data.record.
+  flash, flashTitle, flashText, planningStep, reservedMatters, data.record.
 #}
 {% extends "journey-engine/_page.html" %}
 
@@ -27,17 +27,11 @@
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-two-thirds-from-desktop">
     {% include "journey-engine/_error-summary.html" %}
-    {% if flash == 'reserved-matters' %}
+    {% if flash %}
       {{ govukNotificationBanner({
         type: "success",
-        titleText: text.reservedMattersAddedTitle,
+        titleText: flashTitle,
         html: '<p class="govuk-notification-banner__heading">' + (flashText | escape) + '</p>'
-      }) }}
-    {% elif flash %}
-      {{ govukNotificationBanner({
-        type: "success",
-        titleText: text.successTitle,
-        html: '<p class="govuk-notification-banner__heading">' + (text.added | escape) + '</p>'
       }) }}
     {% endif %}
   </div>

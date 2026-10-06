@@ -36,6 +36,10 @@ rows:
     when: { key: record.variation, truthy: true }
   - key: Planning application reference
     value: '{{ record.planningReference }}'
+    when: { key: record.originalPlanningReference, falsy: true }
+  - key: Variation planning application reference
+    value: '{{ record.planningReference }}'
+    when: { key: record.originalPlanningReference, truthy: true }
   - key: Original planning application reference
     value: '{{ record.originalPlanningReference }}'
     when: { key: record.originalPlanningReference, truthy: true }
@@ -88,6 +92,12 @@ button: Confirm
 text:
   successTitle: Commitment details retrieved
   added: A new developer record has been created for review
+  # A variation the developer made a commitment for; {reference} is the
+  # existing developer record it is linked with
+  addedLinked: A new developer record has been created for review and linked with existing developer record {reference}
+  # Once a planning variation's reference is added
+  variationAddedTitle: Success
+  variationAdded: Planning variation reference added
   viewCertificate: View full certificate
   statusLegend: Review options
   # Once the commitment details are reviewed

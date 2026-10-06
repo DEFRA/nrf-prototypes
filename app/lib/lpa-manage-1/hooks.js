@@ -791,7 +791,8 @@ const oneLoginSignIn = {
   }
 }
 
-// Sign out, registered once at boot; the header's `$signOut` link
+// Sign out, registered once at boot; the header's `$signOut` link. It
+// returns to the One Login sign in page, not the start page.
 const signOut = {
   routes(router, journey) {
     const routes = { SIGN_OUT: `${journey.basePath}/sign-out` }
@@ -800,7 +801,7 @@ const signOut = {
       for (const key of SESSION_KEYS) {
         delete data[key]
       }
-      res.redirect(`${journey.basePath}/${journey.start}`)
+      res.redirect(`${journey.basePath}/one-login-email`)
     })
     return routes
   }
@@ -852,13 +853,17 @@ const retrieveCommitment = {
 }
 
 // "Is this a planning variation?" for a commitment the council already has
-// a record for. No opens that record as it is.
+// a record for. No returns to "Enter an NRL reference", which still holds
+// the reference typed so the officer can correct it.
 const planningVariation = {
   process(ctx, answer) {
     const { data } = ctx
     if (answer !== IS_VARIATION) {
-      data.recordReference = data.commitmentEntry.reference
-      for (const key of ['commitmentReference', 'commitmentEntry']) {
+      for (const key of [
+        'commitmentEntry',
+        'commitmentRecorded',
+        'planningVariation'
+      ]) {
         delete data[key]
       }
     }
@@ -913,7 +918,7 @@ const addVariation = {
       { event: 'variation', planningReference: reference }
     )
     data.recordReference = entry.reference
-    delete data.lpaFlash
+    data.lpaFlash = 'variation'
     for (const key of [
       'commitmentReference',
       'commitmentEntry',
@@ -954,7 +959,15 @@ const addRecord = {
     if (data.officer) {
       data.officer.hasRecords = true
     }
-    data.lpaFlash = 'added'
+    // A variation the developer made a commitment for says which existing
+    // record it is linked with
+    const original = entry.originalReference
+    if (original && findRecord(data, original)) {
+      data.lpaFlash = 'linked'
+      data.lpaFlashReference = original
+    } else {
+      data.lpaFlash = 'added'
+    }
     // "Create a developer record" starts afresh
     for (const key of [
       'commitmentReference',
@@ -1177,6 +1190,18 @@ function updateRecord(data, found, changes, event) {
   data.lpaFlash = 'updated'
 }
 
+// The record page's success banners: the `text:` keys of each one's title
+// and words ({reference} is lpaFlashReference)
+const FLASHES = {
+  added: { title: 'successTitle', text: 'added' },
+  linked: { title: 'successTitle', text: 'addedLinked' },
+  variation: { title: 'variationAddedTitle', text: 'variationAdded' },
+  [RESERVED_MATTERS]: {
+    title: 'reservedMattersAddedTitle',
+    text: 'reservedMattersAdded'
+  }
+}
+
 // The record page: a flash message says a record was just added. The
 // review options open with none chosen and post back here; Confirm returns
 // to the dashboard, which says the record was updated. Reviewing the
@@ -1261,13 +1286,15 @@ const viewRecord = {
         }
       }
     }
-    model.flash = ['added', RESERVED_MATTERS].includes(data.lpaFlash)
-      ? data.lpaFlash
-      : null
-    if (model.flash === RESERVED_MATTERS) {
-      model.flashText = String(
-        model.content.text.reservedMattersAdded || ''
-      ).replace('{reference}', String(data.lpaFlashReference || ''))
+    const flash = FLASHES[data.lpaFlash]
+    if (flash) {
+      const text = model.content.text
+      model.flash = data.lpaFlash
+      model.flashTitle = text[flash.title]
+      model.flashText = String(text[flash.text] || '').replace(
+        '{reference}',
+        String(data.lpaFlashReference || '')
+      )
     }
     delete data.lpaFlash
     delete data.lpaFlashReference

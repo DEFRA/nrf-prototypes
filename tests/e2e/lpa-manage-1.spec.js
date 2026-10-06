@@ -42,7 +42,7 @@ const recorded = store.commitments.find((entry) => entry.record)
 // Signing in lands on the dashboard, or on "Enter an NRL reference" for a
 // council with no records yet (an email with "new" in it)
 async function signIn(page, email = 'officer@scarfolk.gov.uk') {
-  await page.goto(`${base}/${journey.start}`)
+  await page.goto(`${base}/one-login-email`)
   await expectOnPage(page, 'one-login-email')
   await fillAnswer(page, 'one-login-email', email)
   await submit(page, 'one-login-email')
@@ -60,6 +60,13 @@ async function retrieve(page, reference) {
 }
 
 test.describe('lpa-manage-1: manage commitments', () => {
+  test('the start page leads to signing in', async ({ page }) => {
+    await page.goto(`${base}/${journey.start}`)
+    await expectHeading(page, 'start')
+    await page.getByRole('button', { name: 'Start now' }).click()
+    await expectOnPage(page, 'one-login-email')
+  })
+
   test('the staff header shows the service, the officer and the council', async ({
     page
   }) => {
@@ -139,13 +146,22 @@ test.describe('lpa-manage-1: manage commitments', () => {
     page
   }) => {
     // The record page's row for the original planning application
-    const originalKey = pageOf('view-record').content.rows.find((row) =>
+    const { rows } = pageOf('view-record').content
+    const originalKey = rows.find((row) =>
       String(row.value).includes('record.originalPlanningReference')
+    ).key
+    const variationKey = rows.find(
+      (row) =>
+        row.when &&
+        row.when.key === 'record.originalPlanningReference' &&
+        row.when.truthy &&
+        String(row.value).includes('record.planningReference }}')
     ).key
     const main = page.locator('main')
     await signIn(page)
 
-    // Not a variation: the record opens as it is
+    // Not a variation: back to the NRL reference, holding the one typed,
+    // to correct it
     await page.goto(`${base}/retrieve-commitment`)
     await retrieve(page, recorded.reference)
     await expectHeading(page, 'planning-variation')
@@ -153,8 +169,10 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expectError(page, 'planning-variation', 'required')
     await answer(page, 'planning-variation', 'no')
     await submit(page, 'planning-variation')
-    await expectHeading(page, 'view-record', { record: recorded })
-    await expect(main).not.toContainText(originalKey)
+    await expectHeading(page, 'retrieve-commitment')
+    await expect(
+      page.locator('input[name="commitment-reference"]')
+    ).toHaveValue(recorded.reference)
 
     // A variation takes the new planning application reference and keeps
     // the original
@@ -176,9 +194,18 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(page).toHaveURL(
       `${base}/view-record?ref=${recorded.reference}`
     )
+    await expect(page.locator('.govuk-notification-banner')).toContainText(
+      text('view-record', 'variationAdded')
+    )
     await expect(main).toContainText(originalKey)
     await expect(main).toContainText(recorded.record.planningReference)
-    await expect(main).toContainText('26/00003/VAR')
+    // The new reference is the variation's
+    await expect(
+      page
+        .locator('.govuk-summary-list__row')
+        .filter({ hasText: '26/00003/VAR' })
+        .locator('.govuk-summary-list__key')
+    ).toHaveText(variationKey)
     await expect(page.locator('.app-timeline__item').first()).toContainText(
       text('view-record', 'timelineVariation')
     )
@@ -217,6 +244,12 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await retrieve(page, variation.reference)
     await fillAnswer(page, 'planning-reference', '26/00004/VAR')
     await submit(page, 'planning-reference')
+    await expect(page.locator('.govuk-notification-banner')).toContainText(
+      text('view-record', 'addedLinked').replace(
+        '{reference}',
+        variation.originalReference
+      )
+    )
     await expect(row).toContainText(
       `${variation.originalReference} (${text('view-record', 'linkedOriginal')})`
     )
