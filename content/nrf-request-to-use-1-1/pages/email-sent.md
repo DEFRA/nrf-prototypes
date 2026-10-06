@@ -10,7 +10,6 @@ We’ve sent an email to {{ retrievalEmail or "user@example.com" }}.
 The email contains a link you can use to retrieve your quote details.
 
 If you do not receive the email, check your spam or junk folder.
-You can also [enter your email address again](./email).
 
 ## Get help with the nature restoration levy
 
