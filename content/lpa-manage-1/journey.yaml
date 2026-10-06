@@ -82,6 +82,7 @@ homepage:
     - choosing No on "Is this a planning variation?" returns to "Enter an NRL reference" to correct it
     - success banners for a record linked with an existing developer record, and for a planning variation reference added; a variation's planning reference is labelled as the variation's
     - blue GOV.UK header with a GOV.UK-sized crown, still at the wider page width; the start page is a regular GOV.UK start page
+    - signing out returns to the start page
 
 # The answers the copy can show, as {{ name }} (see content/README.md).
 # `commitment` is the commitment on screen and `record` the record.

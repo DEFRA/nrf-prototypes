@@ -749,10 +749,10 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(rows.first()).toContainText(recorded.reference)
   })
 
-  test('signing out returns to GOV.UK One Login', async ({ page }) => {
+  test('signing out returns to the start page', async ({ page }) => {
     await signIn(page)
     await page.goto(`${base}/sign-out`)
-    await expectOnPage(page, 'one-login-email')
+    await expectOnPage(page, 'start')
     await page.goto(`${base}/dashboard`)
     await expectOnPage(page, 'one-login-email')
   })

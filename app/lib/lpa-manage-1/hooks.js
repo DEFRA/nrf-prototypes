@@ -792,7 +792,7 @@ const oneLoginSignIn = {
 }
 
 // Sign out, registered once at boot; the header's `$signOut` link. It
-// returns to the One Login sign in page, not the start page.
+// returns to the start page.
 const signOut = {
   routes(router, journey) {
     const routes = { SIGN_OUT: `${journey.basePath}/sign-out` }
@@ -801,7 +801,7 @@ const signOut = {
       for (const key of SESSION_KEYS) {
         delete data[key]
       }
-      res.redirect(`${journey.basePath}/one-login-email`)
+      res.redirect(`${journey.basePath}/start`)
     })
     return routes
   }
