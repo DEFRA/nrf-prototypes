@@ -5,9 +5,9 @@ type: radios
 hint: If this is a variation, choose yes and the two planning applications will be connected under one developer record.
 bodyFirst: true
 options:
-  - label: 'Yes - this is a planning variation'
+  - label: 'Yes – this is a planning variation'
     value: 'yes'
-  - label: 'No - I want to enter another NRL reference'
+  - label: 'No – I want to enter another NRL reference'
     value: 'no'
 errors:
   required: Select yes if this is a planning variation
