@@ -7,10 +7,10 @@ bodyFirst: true
 options:
   - label: 'Yes'
     value: 'yes'
-    hint: 'This is a planning variation.'
+    hint: 'This is a planning variation'
   - label: 'No'
     value: 'no'
-    hint: 'I want to enter another NRL reference.'
+    hint: 'I want to enter another NRL reference'
 errors:
   required: Select yes if this is a planning variation
 button: Continue
