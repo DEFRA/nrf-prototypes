@@ -413,6 +413,59 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(optionLocator(page, 'view-record', 'rejected')).toHaveCount(0)
   })
 
+  test('a granted application offers the granted options', async ({ page }) => {
+    const granted = store.commitments.find(
+      (entry) =>
+        entry.record &&
+        entry.record.status === 'reviewed' &&
+        entry.record.planningStage === 'granted' &&
+        store.planningTypes[entry.planningType] !== 'Outline'
+    )
+    const viewPath = `${base}/view-record?ref=${granted.reference}`
+    const radios = page.locator('input[name="new-status"]')
+    const items = page.locator('.app-timeline__item')
+    await signIn(page)
+    await page.goto(viewPath)
+    const entries = await items.count()
+
+    // Judicial review and the placeholder: no reserved matters, as it is
+    // not an outline application
+    await expect(radios).toHaveCount(2)
+    await expect(
+      optionLocator(page, 'view-record', 'judicial-review')
+    ).toHaveCount(1)
+    await expect(optionLocator(page, 'view-record', 'placeholder')).toHaveCount(
+      1
+    )
+    await expect(
+      optionLocator(page, 'view-record', 'reserved-matters')
+    ).toHaveCount(0)
+    await expect(page.locator('legend')).toHaveText(
+      text('view-record', 'planningLegend')
+    )
+    await expect(page.locator('#new-status-hint')).toHaveCount(0)
+    await submit(page, 'view-record')
+    await expectError(page, 'view-record', 'grantedRequired')
+
+    // The placeholder changes nothing
+    await answer(page, 'view-record', 'placeholder')
+    await submit(page, 'view-record')
+    await expectHeading(page, 'dashboard')
+    await page.goto(viewPath)
+    await expect(items).toHaveCount(entries)
+
+    // Judicial review sets the stage, and the planning stages return
+    await answer(page, 'view-record', 'judicial-review')
+    await submit(page, 'view-record')
+    await expectHeading(page, 'dashboard')
+    await page.goto(viewPath)
+    const stage = store.planningStages['judicial-review']
+    await expect(items.first()).toContainText(
+      `${text('view-record', 'timelineStage')} ${stage}`
+    )
+    await expect(radios).toHaveCount(4)
+  })
+
   test('a granted outline application takes reserved matters', async ({
     page
   }) => {
@@ -429,30 +482,44 @@ test.describe('lpa-manage-1: manage commitments', () => {
         entry.record.planningStage === 'granted' &&
         (entry.record.reservedMatters || []).length
     )
-    // A details whose summary opens the form
-    const addDetails = page.locator('details#add-reserved-matters')
-    const addSummary = addDetails.locator('summary', {
-      hasText: text('view-record', 'addReservedMatters')
-    })
+    const radios = page.locator('input[name="new-status"]')
     const save = page.getByRole('button', {
-      name: text('view-record', 'reservedMattersSave')
+      name: text('add-reserved-matters', 'reservedMattersSave')
     })
     const label = (key) =>
-      page.getByLabel(text('view-record', key), { exact: true })
+      page.getByLabel(text('add-reserved-matters', key), { exact: true })
+    const addReservedMatters = async () => {
+      await answer(page, 'view-record', 'reserved-matters')
+      await submit(page, 'view-record')
+      await expectHeading(page, 'add-reserved-matters')
+    }
     await signIn(page)
 
     // Not until the outline application is granted
     await page.goto(`${base}/view-record?ref=${notGranted.reference}`)
-    await expect(addDetails).toHaveCount(0)
+    await expect(
+      optionLocator(page, 'view-record', 'reserved-matters')
+    ).toHaveCount(0)
     await answer(page, 'view-record', 'granted')
     await submit(page, 'view-record')
     await expectHeading(page, 'dashboard')
     await page.goto(`${base}/view-record?ref=${notGranted.reference}`)
-    await expect(page.locator('#reserved-matters')).toHaveText(
-      text('view-record', 'outlineHeading')
+    // Judicial review, Add reserved matters, then the placeholder
+    await expect(radios).toHaveCount(3)
+    await expect(radios.nth(1)).toHaveAttribute('value', 'reserved-matters')
+
+    // Its own page, with breadcrumbs back to the record; Cancel returns
+    // there
+    await addReservedMatters()
+    await expect(page.locator('.govuk-breadcrumbs')).toContainText(
+      notGranted.reference
     )
-    await expect(addSummary).toBeVisible()
-    await expect(addDetails).not.toHaveAttribute('open', '')
+    await page
+      .getByRole('link', {
+        name: text('add-reserved-matters', 'reservedMattersCancel')
+      })
+      .click()
+    await expectHeading(page, 'view-record', { record: notGranted })
 
     // One already granted lists its reserved matters in the planning
     // details
@@ -464,20 +531,34 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(details).toContainText(existing.description)
     const entries = await page.locator('.app-timeline__item').count()
 
-    await addSummary.click()
-    await expect(addDetails).toHaveAttribute('open', '')
+    await addReservedMatters()
     await save.click()
-    await expectError(page, 'view-record', 'reservedMattersReferenceRequired')
-    await expectError(page, 'view-record', 'reservedMattersStatusRequired')
-    await expectError(page, 'view-record', 'reservedMattersDescriptionRequired')
-    await expect(addDetails).toHaveAttribute('open', '')
+    await expectError(
+      page,
+      'add-reserved-matters',
+      'reservedMattersReferenceRequired'
+    )
+    await expectError(
+      page,
+      'add-reserved-matters',
+      'reservedMattersStatusRequired'
+    )
+    await expectError(
+      page,
+      'add-reserved-matters',
+      'reservedMattersDescriptionRequired'
+    )
 
     // The same reference twice is refused; the answers are kept
     await label('reservedMattersReferenceLabel').fill(existing.reference)
     await page.getByLabel(store.planningStages.applied, { exact: true }).check()
     await label('reservedMattersDescriptionLabel').fill('Phase 2 (120 homes)')
     await save.click()
-    await expectError(page, 'view-record', 'reservedMattersReferenceAdded')
+    await expectError(
+      page,
+      'add-reserved-matters',
+      'reservedMattersReferenceAdded'
+    )
     await expect(label('reservedMattersDescriptionLabel')).toHaveValue(
       'Phase 2 (120 homes)'
     )
@@ -500,105 +581,9 @@ test.describe('lpa-manage-1: manage commitments', () => {
       text('view-record', 'timelineReservedMatters')
     )
     await expect(items.first()).toContainText('2026/0577/REM')
-    // The details closes, ready for another
-    await expect(addSummary).toBeVisible()
-    await expect(addDetails).not.toHaveAttribute('open', '')
+    // Still granted, ready for another
+    await expect(radios).toHaveCount(3)
   })
-
-  // view-record~<name>.md try other layouts of the same form
-  for (const variant of pageOf('view-record').copyVariants) {
-    test(`reserved matters can be added in the ${variant.id} layout`, async ({
-      page
-    }) => {
-      const copy = variant.page.content.text
-      // The page layout's form is on the add-reserved-matters page, in its
-      // copy
-      const onPage = copy.reservedMattersLayout === 'page'
-      const formPage = pageOf(onPage ? 'add-reserved-matters' : 'view-record')
-      const formCopy = onPage ? formPage.content.text : copy
-      const granted = store.commitments.find(
-        (entry) =>
-          entry.record &&
-          entry.record.planningStage === 'granted' &&
-          (entry.record.reservedMatters || []).length
-      )
-      const form = page.locator('#add-reserved-matters')
-      const save = form.getByRole('button', {
-        name: formCopy.reservedMattersSave
-      })
-      const fill = (label, value) =>
-        form.getByLabel(label, { exact: true }).fill(value)
-      await signIn(page)
-      await page.goto(
-        `${base}/view-record?ref=${granted.reference}&copy=${variant.id}`
-      )
-      const dialog = ['modal', 'drawer'].includes(copy.reservedMattersLayout)
-      const openDialog = () =>
-        page.getByRole('button', { name: copy.addReservedMatters }).click()
-      if (dialog) {
-        await expect(form).toBeHidden()
-        // Cancel closes it without submitting
-        await openDialog()
-        await form
-          .getByRole('button', { name: copy.reservedMattersCancel })
-          .click()
-        await expect(form).toBeHidden()
-        await expect(page.locator('.govuk-error-summary')).toHaveCount(0)
-        await openDialog()
-      } else if (onPage) {
-        // Its own page, with breadcrumbs back to the record; Cancel
-        // returns there
-        const openPage = () =>
-          page.getByRole('button', { name: copy.addReservedMatters }).click()
-        await openPage()
-        await expectHeading(page, 'add-reserved-matters')
-        await expect(page.locator('.govuk-breadcrumbs')).toContainText(
-          granted.reference
-        )
-        await form
-          .getByRole('link', { name: formCopy.reservedMattersCancel })
-          .click()
-        await expectHeading(page, 'view-record', { record: granted })
-        await openPage()
-      } else if (copy.reservedMattersLayout !== 'inline') {
-        await form.locator('summary').click()
-      }
-      await expect(form).toBeVisible()
-      if (copy.reservedMattersLayout === 'cards') {
-        await expect(page.locator('.govuk-summary-card')).toContainText(
-          granted.record.reservedMatters[0].reference
-        )
-      }
-
-      // A problem comes back with the form open (a dialog has its own
-      // error summary)
-      await save.click()
-      await expect(form).toBeVisible()
-      await expect(page.locator('.govuk-error-summary').last()).toContainText(
-        formPage.content.errors.reservedMattersReferenceRequired
-      )
-      if (onPage) {
-        await expectHeading(page, 'add-reserved-matters')
-      }
-
-      await fill(formCopy.reservedMattersReferenceLabel, '2026/0611/REM')
-      await form
-        .getByLabel(store.planningStages.granted, { exact: true })
-        .check()
-      await fill(formCopy.reservedMattersDescriptionLabel, 'Phase 3')
-      await save.click()
-      // Back on the record
-      await expectHeading(page, 'view-record', { record: granted })
-      await expect(page.locator('.govuk-notification-banner')).toContainText(
-        copy.reservedMattersAdded.replace('{reference}', '2026/0611/REM')
-      )
-      await expect(page.locator('main')).toContainText('2026/0611/REM')
-      if (dialog) {
-        await expect(form).toBeHidden()
-      }
-      await page.goto(`${base}/dashboard?copy=default`)
-    })
-  }
 
   test('the dashboard’s cards open the table filtered to them', async ({
     page

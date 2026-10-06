@@ -12,6 +12,8 @@
  *     load(ctx)               → { redirect }?     before the page is built, e.g.
  *                                                 to put data in the session
  *     get(ctx, model)         → { redirect }?     enrich the render model
+ *     getOnError: true                            run `get` on a failed post's
+ *                                                 page too
  *     validate(ctx)           → { ok, value | error }
  *     process(ctx, value)     → { redirect | error }?  after validation
  *   }
@@ -655,14 +657,17 @@ async function handlePost(req, res, journey, page, hooks) {
   }
   if (!result.ok) {
     if (!errorsOff(data)) {
-      return res.render(
-        page.template,
-        buildModel(ctx, {
-          error: result.error,
-          errors: result.errors,
-          values: result.values
-        })
-      )
+      const model = buildModel(ctx, {
+        error: result.error,
+        errors: result.errors,
+        values: result.values
+      })
+      // A hook whose `get` shapes the page (which options it offers, say)
+      // can ask for the same on the page showing the error
+      if (hook.getOnError && typeof hook.get === 'function') {
+        await hook.get(ctx, model)
+      }
+      return res.render(page.template, model)
     }
     result = { ok: true, value: lenientValue(journey, page, ctx.body) }
   }

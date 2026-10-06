@@ -11,13 +11,12 @@
 # application reference and the original one. A record linked to another
 # (a variation the developer made a commitment for, and the original
 # application's) links to it; `linkedOriginal` and `linkedVariation` say
-# which way. An outline planning application that has been granted has an
-# "Outline application" section below the history: the Add reserved
-# matters details opens a small form (reference, status, short
-# description); each one saved joins the planning details and the details
-# closes again. Its status radios are the planning stages in records.yaml.
-# `reservedMattersLayout` picks how the form is offered; the copy variants
-# view-record~<name>.md try the others (modal, drawer, inline, cards).
+# which way. Once an outline planning application's permission is granted
+# the granted options (`step: granted`) take the planning stages' place:
+# judicial review, Add reserved matters (which Confirm opens on
+# add-reserved-matters) and a placeholder. Any other granted application
+# offers the same without Add reserved matters. The reserved matters saved
+# are listed in the planning details.
 type: custom
 rows:
   - heading: Commitment details
@@ -73,15 +72,23 @@ options:
   - label: The planning permission is in judicial review
     value: judicial-review
     step: planning
+  # Once the planning permission is granted. Add reserved matters is for an
+  # outline application only
+  - label: The planning permission is in judicial review
+    value: judicial-review
+    step: granted
+  - label: Add reserved matters
+    value: reserved-matters
+    step: granted
+  # PLACEHOLDER COPY: an option still to be decided
+  - label: Placeholder option
+    value: placeholder
+    step: granted
 errors:
   required: Select a new status for this developer record
   stageRequired: Select the stage the planning application has reached
-  # The reserved matters form
-  reservedMattersReferenceRequired: Enter the reserved matters reference number
-  reservedMattersReferenceAdded: This reference has already been added to this developer record
-  reservedMattersStatusRequired: Select the status of the reserved matters application
-  reservedMattersDescriptionRequired: Enter a short description of the reserved matters
-  reservedMattersDescriptionTooLong: Description must be 200 characters or fewer
+  # PLACEHOLDER COPY: no granted option chosen
+  grantedRequired: Select an option
 button: Confirm
 text:
   successTitle: Commitment details retrieved
@@ -107,16 +114,8 @@ text:
   timelineStage: Planning application stage changed to
   timelineVariation: Planning variation added
   timelineReservedMatters: Reserved matters added
-  # Below the history once an outline application is granted.
-  # reservedMattersLayout: details, modal, drawer, inline or cards
-  reservedMattersLayout: details
-  outlineHeading: Outline application
-  addReservedMatters: Add reserved matters
-  reservedMattersReferenceLabel: Reference number
-  reservedMattersStatusLegend: Status
-  reservedMattersDescriptionLabel: Short description
-  reservedMattersSave: Save reserved matters
-  # The success banner once saved; {reference} is the one just added
+  # The success banner once reserved matters are saved on
+  # add-reserved-matters; {reference} is the one just added
   reservedMattersAddedTitle: Success
   reservedMattersAdded: Reserved matters {reference} has been added to this developer record
   # After the NRL reference of a linked developer record, in brackets

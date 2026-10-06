@@ -27,9 +27,10 @@
  *   - the record page's audit timeline and its review options, which post
  *     back to the page and return to the dashboard, and the full
  *     certificate behind it
- *   - an outline planning application, once granted, takes reserved
- *     matters applications: a small form below the history adds each one
- *     to the record (its own post route, so its errors show on the record)
+ *   - once a planning permission is granted the record page offers the
+ *     granted options; for an outline application one of them opens the
+ *     add-reserved-matters page, whose form adds a reserved matters
+ *     application to the record (its own post route)
  *
  * Nothing here is real: no passwords are checked or stored.
  */
@@ -39,11 +40,7 @@ const path = require('path')
 const yaml = require('js-yaml')
 const { message } = require('../journey-engine/validation')
 const { loadJourney } = require('../journey-engine/loader')
-const {
-  buildContext,
-  buildModel,
-  copyVariantFor
-} = require('../journey-engine/router')
+const { buildContext, buildModel } = require('../journey-engine/router')
 const { participantOf } = require('../nrf-request-to-use-1/hooks')
 
 const RECORDS_FILE = path.join(
@@ -67,33 +64,24 @@ const COMMENT_FIELD = 'reject-comment'
 const REVIEWED_STATUS = 'reviewed'
 const REVIEW_LATER = 'review-later'
 const PLANNING_STEP = 'planning'
+// Once the planning permission is granted the granted options take the
+// planning stages' place (`step: granted`)
+const GRANTED_STEP = 'granted'
+const GRANTED_STAGE = 'granted'
 // An outline planning application, once granted, takes reserved matters
 // applications: each a reference, a status (a planning stage) and a short
-// description of no more than DESCRIPTION_LIMIT characters
+// description of no more than DESCRIPTION_LIMIT characters. Its granted
+// option of that value opens the add-reserved-matters page.
 const OUTLINE_TYPE = 'Outline planning permission'
-const GRANTED_STAGE = 'granted'
 const RESERVED_MATTERS = 'reserved-matters'
+// A granted option still to be decided: Confirm changes nothing
+const PLACEHOLDER_OPTION = 'placeholder'
 const RESERVED_MATTERS_FIELDS = {
   reference: 'reserved-matters-reference',
   status: 'reserved-matters-status',
   description: 'reserved-matters-description'
 }
 const DESCRIPTION_LIMIT = 200
-// How the record page offers the form: `reservedMattersLayout` in the
-// page's `text:`, which its copy variants (view-record~<name>.md) change to
-// compare the designs. details (the default), modal, drawer, inline, cards
-// or page (the add-reserved-matters page, whose own copy says `page`)
-const RESERVED_MATTERS_LAYOUTS = [
-  'details',
-  'modal',
-  'drawer',
-  'inline',
-  'cards',
-  'page'
-]
-// The form on the add-reserved-matters page posts with ?_from=page, so its
-// errors show on that page rather than the record's
-const FROM_PAGE = 'page'
 // "Is this a planning variation?"
 const IS_VARIATION = 'yes'
 const SESSION_KEYS = ['officer', 'signInEmail']
@@ -1021,9 +1009,15 @@ function withLinks(data, page) {
 
 // Which review options a record offers: the first step's (options with no
 // `step`) until its commitment details are reviewed, then the planning
-// application stages (`step: planning`)
+// application stages (`step: planning`), and once the permission is
+// granted the granted options (`step: granted`)
 function stepOf(record) {
-  return record && record.status.value === REVIEWED_STATUS ? PLANNING_STEP : ''
+  if (!record || record.status.value !== REVIEWED_STATUS) {
+    return ''
+  }
+  return record.planningStage.value === GRANTED_STAGE
+    ? GRANTED_STEP
+    : PLANNING_STEP
 }
 
 // A granted outline application whose commitment details are reviewed
@@ -1032,8 +1026,7 @@ function takesReservedMatters(record) {
   return Boolean(
     record &&
       record.planningType === OUTLINE_TYPE &&
-      record.planningStage.value === GRANTED_STAGE &&
-      stepOf(record) === PLANNING_STEP
+      stepOf(record) === GRANTED_STEP
   )
 }
 
@@ -1068,20 +1061,11 @@ function sameReference(a, b) {
   return plain(a) === plain(b)
 }
 
-// A copy variant shown once (?_copy=, the screen wall's and the compare
-// page's way) is carried through the form's post and back to the record
-function copyQuery(ctx) {
-  const copy = ctx.query && ctx.query._copy
-  return copy ? `&_copy=${encodeURIComponent(String(copy))}` : ''
-}
-
 /**
- * The "Outline application" section of the record page: Add reserved
- * matters, laid out as the page's copy says (RESERVED_MATTERS_LAYOUTS),
- * holding the form (open when it has errors), its status radios the
- * planning stages in records.yaml. Null for any other record.
+ * The add-reserved-matters page's form, its status radios the planning
+ * stages in records.yaml. Null for a record that takes none.
  */
-function reservedMattersModel(ctx, record, { open, values = {}, errors = [] }) {
+function reservedMattersModel(ctx, record, { values = {}, errors = [] }) {
   if (!takesReservedMatters(record)) {
     return null
   }
@@ -1092,28 +1076,14 @@ function reservedMattersModel(ctx, record, { open, values = {}, errors = [] }) {
   for (const item of errors) {
     errorFor[item.field] = item.message
   }
-  const text = (ctx.page.content && ctx.page.content.text) || {}
-  const layout = RESERVED_MATTERS_LAYOUTS.includes(text.reservedMattersLayout)
-    ? text.reservedMattersLayout
-    : RESERVED_MATTERS_LAYOUTS[0]
-  const fromPage = layout === FROM_PAGE ? `&_from=${FROM_PAGE}` : ''
   return {
-    layout,
-    open: Boolean(open || errors.length),
-    action: `${routes.ADD_RESERVED_MATTERS}${ref}${copyQuery(ctx)}${fromPage}`,
-    // The page layout's button, and the page's Cancel
-    pageHref: `${routes.ADD_RESERVED_MATTERS}${ref}`,
+    action: `${routes.ADD_RESERVED_MATTERS}${ref}`,
+    // Cancel
     recordHref: `${routes.VIEW_RECORD}${ref}`,
-    items: record.reservedMatters,
     fields: RESERVED_MATTERS_FIELDS,
     limit: DESCRIPTION_LIMIT,
     values,
     errors: errorFor,
-    // For a dialog's own error summary
-    errorList: errors.map((item) => ({
-      text: item.message,
-      href: `#${item.field}`
-    })),
     statuses: Object.entries(store.planningStages).map(([value, label]) => ({
       value,
       text: label,
@@ -1167,9 +1137,22 @@ const RESERVED_MATTERS_ERRORS = {
   reservedMattersDescriptionTooLong: RESERVED_MATTERS_FIELDS.description
 }
 
+// The options for the record's step; Add reserved matters only for an
+// outline application
 function optionsFor(page, record) {
   const step = stepOf(record)
-  return page.content.options.filter((option) => (option.step || '') === step)
+  return page.content.options.filter(
+    (option) =>
+      (option.step || '') === step &&
+      (option.value !== RESERVED_MATTERS || takesReservedMatters(record))
+  )
+}
+
+// The error for no option chosen, by step
+const REQUIRED_ERRORS = {
+  '': 'required',
+  [PLANNING_STEP]: 'stageRequired',
+  [GRANTED_STEP]: 'grantedRequired'
 }
 
 // Writes a change to a record: its new fields and the event for its
@@ -1209,10 +1192,15 @@ const FLASHES = {
 // reviewing them moves it on to its planning application's stage, and
 // choosing the stage it is at already changes nothing. Rejecting asks why
 // on reject-commitment and is final: a rejected record shows a warning in
-// place of the radios, and a post for it changes nothing.
+// place of the radios, and a post for it changes nothing. Once the
+// permission is granted, judicial review sets the stage, Add reserved
+// matters opens the add-reserved-matters page and the placeholder changes
+// nothing.
 const viewRecord = {
-  // "Add reserved matters" posts here; errors show on the record page with
-  // the form open, and saving returns to the record, which says so
+  // The page showing "Select ..." offers only the record's options too
+  getOnError: true,
+  // The add-reserved-matters page's form posts here; errors show on that
+  // page, and saving returns to the record, which says so
   routes(router, journey) {
     const routes = {
       ADD_RESERVED_MATTERS: `${journey.basePath}/add-reserved-matters`
@@ -1228,19 +1216,17 @@ const viewRecord = {
   },
   load(ctx) {
     // The screen wall's stage error needs a record past its review, and
-    // its reserved matters errors a granted outline application
-    if (ctx.preview && ctx.previewError === 'stageRequired') {
-      const reviewed = allRecords(ctx.data).find(
-        (record) => stepOf(record) === PLANNING_STEP
+    // its granted error a granted one
+    const errorStep = {
+      stageRequired: PLANNING_STEP,
+      grantedRequired: GRANTED_STEP
+    }[ctx.preview && ctx.previewError]
+    if (errorStep) {
+      const shown = allRecords(ctx.data).find(
+        (record) => stepOf(record) === errorStep
       )
-      if (reviewed) {
-        ctx.data.recordReference = reviewed.reference
-      }
-    }
-    if (ctx.preview && RESERVED_MATTERS_ERRORS[ctx.previewError]) {
-      const outline = allRecords(ctx.data).find(takesReservedMatters)
-      if (outline) {
-        ctx.data.recordReference = outline.reference
+      if (shown) {
+        ctx.data.recordReference = shown.reference
       }
     }
     const redirect = loadRecord(ctx)
@@ -1248,18 +1234,15 @@ const viewRecord = {
       return redirect
     }
     const { data } = ctx
-    // The kit keeps the last post's fields in the session
+    // The kit keeps the last post's field in the session
     delete data[ctx.page.field]
-    for (const field of Object.values(RESERVED_MATTERS_FIELDS)) {
-      delete data[field]
-    }
     if (!ctx.preview) {
       delete data.newStatus
     }
     withLinks(data, ctx.page)
     withReservedMatters(data)
   },
-  get(ctx, model, form = {}) {
+  get(ctx, model) {
     const { data, page } = ctx
     // Each linked record the council has opens its page, and the reserved
     // matters are a list
@@ -1303,19 +1286,17 @@ const viewRecord = {
     model.content.items = model.content.items.filter((item, index) =>
       offered.has(page.content.options[index])
     )
-    model.planningStep = stepOf(data.record) === PLANNING_STEP
+    // The planning stages and the granted options share a legend; only
+    // the stages have the hint
+    const step = stepOf(data.record)
+    model.planningStep = step === PLANNING_STEP || step === GRANTED_STEP
+    model.stageHint = step === PLANNING_STEP
     // The screen wall's error states, as a post would show them
-    let errors = form.errors || []
     if (ctx.preview && ctx.previewError) {
-      const field = RESERVED_MATTERS_ERRORS[ctx.previewError] || page.field
-      errors = [{ field, message: message(page, ctx.previewError) }]
-      model.errors = errors
+      model.errors = [
+        { field: page.field, message: message(page, ctx.previewError) }
+      ]
     }
-    model.reservedMatters = reservedMattersModel(ctx, data.record, {
-      open: ctx.preview && data.addReservedMatters,
-      values: form.values,
-      errors: errors.filter((item) => item.field !== page.field)
-    })
   },
   // `load` does not run before a post, so the record is found again here
   // for the page to show with any error
@@ -1340,10 +1321,11 @@ const viewRecord = {
       String(option.value)
     )
     if (!allowed.includes(choice)) {
-      const key = step === PLANNING_STEP ? 'stageRequired' : 'required'
       return {
         ok: false,
-        errors: [{ field: page.field, message: message(page, key) }]
+        errors: [
+          { field: page.field, message: message(page, REQUIRED_ERRORS[step]) }
+        ]
       }
     }
     return { ok: true, value: { step, choice } }
@@ -1364,10 +1346,18 @@ const viewRecord = {
       delete data.rejectReason
       return { redirect: ctx.journey.routes.REJECT_COMMITMENT }
     }
+    if (value.choice === RESERVED_MATTERS) {
+      return {
+        redirect: `${ctx.journey.routes.ADD_RESERVED_MATTERS}?ref=${encodeURIComponent(reference)}`
+      }
+    }
+    if (value.choice === PLACEHOLDER_OPTION) {
+      return { redirect: dashboardPath }
+    }
     const record = found.record
     const changes = {}
     let event
-    if (value.step === PLANNING_STEP) {
+    if (value.step === PLANNING_STEP || value.step === GRANTED_STEP) {
       if ((record.planningStage || ADDED_STAGE) === value.choice) {
         return { redirect: dashboardPath }
       }
@@ -1384,23 +1374,19 @@ const viewRecord = {
   }
 }
 
-// "Add reserved matters" on a granted outline application's record: each
-// one the officer saves joins the record's reserved matters and its
-// history, and the record page says so. A problem shows the record page
-// again with the form open and the officer's answers kept.
+// The add-reserved-matters page's form: each reserved matters application
+// the officer saves joins the record's reserved matters and its history,
+// and the record page says so. A problem shows the page again with the
+// officer's answers kept.
 function addReservedMatters(req, res, journey) {
-  // The add-reserved-matters page's form, or one on the record page
-  const fromPage = req.query && req.query._from === FROM_PAGE
-  const page = fromPage
-    ? journey.byId.get('add-reserved-matters')
-    : copyVariantFor(journey, journey.byId.get('view-record'), req)
+  const page = journey.byId.get('add-reserved-matters')
   const ctx = buildContext(req, res, journey, page, { isPost: true })
   const redirect = loadRecord(ctx)
   if (redirect) {
     return res.redirect(303, redirect.redirect)
   }
   const { data } = ctx
-  const recordPath = `${journey.routes.VIEW_RECORD}?ref=${encodeURIComponent(data.record.reference)}${copyQuery(ctx)}`
+  const recordPath = `${journey.routes.VIEW_RECORD}?ref=${encodeURIComponent(data.record.reference)}`
   // The kit keeps the post's fields in the session
   for (const field of Object.values(RESERVED_MATTERS_FIELDS)) {
     delete data[field]
@@ -1414,13 +1400,7 @@ function addReservedMatters(req, res, journey) {
   const { values, errors } = checkReservedMatters(page, ctx.body, data.record)
   if (errors.length) {
     const model = buildModel(ctx, { errors })
-    if (fromPage) {
-      addReservedMattersPage.get(ctx, model, { values, errors })
-    } else {
-      withLinks(data, page)
-      withReservedMatters(data)
-      viewRecord.get(ctx, model, { values, errors })
-    }
+    addReservedMattersPage.get(ctx, model, { values, errors })
     return res.render(page.template, model)
   }
   updateRecord(
@@ -1440,7 +1420,7 @@ function addReservedMatters(req, res, journey) {
   )
   data.lpaFlash = RESERVED_MATTERS
   data.lpaFlashReference = values.reference
-  req.session.save(() => res.redirect(303, `${recordPath}#reserved-matters`))
+  req.session.save(() => res.redirect(303, recordPath))
 }
 
 // Why the commitment details are rejected: a reason and an optional
@@ -1487,10 +1467,10 @@ const rejectCommitment = {
 }
 
 // Every detail of a record's commitment, behind the record page
-// Reserved matters on a page of their own (the record page's `page`
-// layout): add-reserved-matters?ref=NRL-100958, for a granted outline
-// application only (any other record opens instead). Its form posts to
-// this page's path, which viewRecord.routes handles.
+// Reserved matters on a page of their own, opened from the record's Add
+// reserved matters option: add-reserved-matters?ref=NRL-100958, for a
+// granted outline application only (any other record opens instead). Its
+// form posts to this page's path, which viewRecord.routes handles.
 const addReservedMattersPage = {
   load(ctx) {
     const redirect = loadRecord(ctx)
@@ -1520,7 +1500,6 @@ const addReservedMattersPage = {
       model.errors = errors
     }
     model.reservedMatters = reservedMattersModel(ctx, ctx.data.record, {
-      open: true,
       values: form.values,
       errors
     })

@@ -51,7 +51,7 @@
 #                      granted, the reserved matters applications made
 #                      under it: each a `reference`, a `status` (one of the
 #                      planningStages) and a short `description`. The
-#                      record page adds more
+#                      add-reserved-matters page adds more
 #   overdue            true when an action on the record is overdue (the
 #                      dashboard's third count card and the table's filter)
 #   officer            who added it (the table's Officer column)

@@ -1,7 +1,7 @@
 ---
 # Reserved matters for a granted outline application, on a page of their
-# own (app/views/lpa-manage-1/add-reserved-matters.html): the Add reserved
-# matters button of view-record~page.md opens
+# own (app/views/lpa-manage-1/add-reserved-matters.html): choosing Add
+# reserved matters on the record and Confirm opens
 # add-reserved-matters?ref=NRL-100958. Breadcrumbs lead back to the
 # dashboard and the developer record; Save adds the reserved matters to the
 # record and returns to it, which says so. Its status radios are the
@@ -16,7 +16,6 @@ errors:
   reservedMattersDescriptionTooLong: Description must be 200 characters or fewer
 text:
   breadcrumbDashboard: Developer records
-  reservedMattersLayout: page
   reservedMattersReferenceLabel: Reference number
   reservedMattersStatusLegend: Status
   reservedMattersDescriptionLabel: Short description

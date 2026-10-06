@@ -83,6 +83,7 @@ homepage:
     - success banners for a record linked with an existing developer record, and for a planning variation reference added; a variation's planning reference is labelled as the variation's
     - blue GOV.UK header with a GOV.UK-sized crown, still at the wider page width; the start page is a regular GOV.UK start page
     - signing out returns to the start page
+    - once the planning permission is granted the record's options are judicial review, Add reserved matters (outline applications only, opening its own page) and a placeholder; the other reserved matters layouts are gone
 
 # The answers the copy can show, as {{ name }} (see content/README.md).
 # `commitment` is the commitment on screen and `record` the record.
@@ -216,9 +217,9 @@ pages:
   # --------------------------------------------------------------------
   # A record: view-record?ref=NRL-123456. The review options at the bottom
   # post back here; the change goes on the audit timeline and Confirm
-  # returns to the dashboard (hooks.js). Rejecting asks why first. A
-  # granted outline application adds reserved matters below the history
-  # (its own post route, see hooks.js).
+  # returns to the dashboard (hooks.js). Rejecting asks why first. Once the
+  # permission is granted the options are the granted ones; for an outline
+  # application Add reserved matters opens add-reserved-matters.
   - id: view-record
     template: lpa-manage-1/view-record
     field: new-status
@@ -249,12 +250,12 @@ pages:
         - id: linked
           label: Linked to the original application's record
           data: { recordReference: NRL-101412 }
+        - id: granted
+          label: Granted (not an outline application)
+          data: { recordReference: NRL-101178 }
         - id: outline
           label: Granted outline application with reserved matters
           data: { recordReference: NRL-100958 }
-        - id: add-reserved-matters
-          label: Adding reserved matters
-          data: { recordReference: NRL-100958, addReservedMatters: true }
 
   # Why the commitment details are rejected, with an optional comment.
   # Confirm rejects the record for good and returns to the dashboard.
@@ -272,8 +273,8 @@ pages:
     template: lpa-manage-1/certificate
     guard: *signed-in
 
-  # Reserved matters added on a page of their own (the layout
-  # view-record~page.md tries): add-reserved-matters?ref=NRL-100958.
+  # Reserved matters added on a page of their own, from the record's Add
+  # reserved matters option: add-reserved-matters?ref=NRL-100958.
   # Breadcrumbs lead back to the dashboard and the record; saving adds them
   # to the record and returns to it (hooks.js).
   - id: add-reserved-matters

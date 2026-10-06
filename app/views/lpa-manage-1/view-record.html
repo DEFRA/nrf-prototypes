@@ -8,11 +8,12 @@
   this page. Once the commitment details are reviewed they are the planning
   stage options. A planning variation's timeline entry shows its new
   planning application reference. Rejecting asks why on reject-commitment; a rejected record
-  shows a warning in place of the radios. A granted outline application
-  has an "Outline application" section below the timeline
-  (_reserved-matters.html): Add reserved matters and its small form
-  (posting to ADD_RESERVED_MATTERS), laid out as the page's copy says. Model extras from app/lib/lpa-manage-1/hooks.js:
-  flash, flashTitle, flashText, planningStep, reservedMatters, data.record.
+  shows a warning in place of the radios. Once the permission is granted
+  the radios are the granted options, under the same legend without the
+  hint; for an outline application one of them is Add reserved matters,
+  which Confirm opens on add-reserved-matters. Model extras from
+  app/lib/lpa-manage-1/hooks.js: flash, flashTitle, flashText,
+  planningStep, stageHint, data.record.
 #}
 {% extends "journey-engine/_page.html" %}
 
@@ -99,11 +100,6 @@
       </div>
     {% endif %}
 
-    {% set rm = reservedMatters %}
-    {% if rm %}
-      {% include "lpa-manage-1/_reserved-matters.html" %}
-    {% endif %}
-
     {% if record and record.status.value == 'rejected' %}
       <h2 class="govuk-heading-m">{{ text.statusLegend }}</h2>
       {{ govukWarningText({ text: text.rejectedFinal, iconFallbackText: text.warning }) }}
@@ -118,7 +114,7 @@
         name: page.field,
         idPrefix: page.field,
         fieldset: { legend: { text: text.planningLegend if planningStep else text.statusLegend, classes: "govuk-fieldset__legend--m" } },
-        hint: { text: text.planningHint } if planningStep and text.planningHint,
+        hint: { text: text.planningHint } if stageHint and text.planningHint,
         errorMessage: { text: fieldError.message } if fieldError and fieldError.field == page.field,
         items: content.items
       }) }}
@@ -132,9 +128,4 @@
     {% endif %}
   </div>
 </div>
-{% endblock %}
-
-{% block pageScripts %}
-{{ super() }}
-<script src="/public/javascripts/staff-dialog.js"></script>
 {% endblock %}
