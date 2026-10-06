@@ -478,6 +478,11 @@ test.describe('lpa-manage-1: manage commitments', () => {
       page
     }) => {
       const copy = variant.page.content.text
+      // The page layout's form is on the add-reserved-matters page, in its
+      // copy
+      const onPage = copy.reservedMattersLayout === 'page'
+      const formPage = pageOf(onPage ? 'add-reserved-matters' : 'view-record')
+      const formCopy = onPage ? formPage.content.text : copy
       const granted = store.commitments.find(
         (entry) =>
           entry.record &&
@@ -485,7 +490,9 @@ test.describe('lpa-manage-1: manage commitments', () => {
           (entry.record.reservedMatters || []).length
       )
       const form = page.locator('#add-reserved-matters')
-      const save = form.getByRole('button', { name: copy.reservedMattersSave })
+      const save = form.getByRole('button', {
+        name: formCopy.reservedMattersSave
+      })
       const fill = (label, value) =>
         form.getByLabel(label, { exact: true }).fill(value)
       await signIn(page)
@@ -505,6 +512,21 @@ test.describe('lpa-manage-1: manage commitments', () => {
         await expect(form).toBeHidden()
         await expect(page.locator('.govuk-error-summary')).toHaveCount(0)
         await openDialog()
+      } else if (onPage) {
+        // Its own page, with breadcrumbs back to the record; Cancel
+        // returns there
+        const openPage = () =>
+          page.getByRole('button', { name: copy.addReservedMatters }).click()
+        await openPage()
+        await expectHeading(page, 'add-reserved-matters')
+        await expect(page.locator('.govuk-breadcrumbs')).toContainText(
+          granted.reference
+        )
+        await form
+          .getByRole('link', { name: formCopy.reservedMattersCancel })
+          .click()
+        await expectHeading(page, 'view-record', { record: granted })
+        await openPage()
       } else if (copy.reservedMattersLayout !== 'inline') {
         await form.locator('summary').click()
       }
@@ -520,15 +542,20 @@ test.describe('lpa-manage-1: manage commitments', () => {
       await save.click()
       await expect(form).toBeVisible()
       await expect(page.locator('.govuk-error-summary').last()).toContainText(
-        variant.page.content.errors.reservedMattersReferenceRequired
+        formPage.content.errors.reservedMattersReferenceRequired
       )
+      if (onPage) {
+        await expectHeading(page, 'add-reserved-matters')
+      }
 
-      await fill(copy.reservedMattersReferenceLabel, '2026/0611/REM')
+      await fill(formCopy.reservedMattersReferenceLabel, '2026/0611/REM')
       await form
         .getByLabel(store.planningStages.granted, { exact: true })
         .check()
-      await fill(copy.reservedMattersDescriptionLabel, 'Phase 3')
+      await fill(formCopy.reservedMattersDescriptionLabel, 'Phase 3')
       await save.click()
+      // Back on the record
+      await expectHeading(page, 'view-record', { record: granted })
       await expect(page.locator('.govuk-notification-banner')).toContainText(
         copy.reservedMattersAdded.replace('{reference}', '2026/0611/REM')
       )

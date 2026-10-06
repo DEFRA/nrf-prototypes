@@ -81,14 +81,19 @@ const RESERVED_MATTERS_FIELDS = {
 const DESCRIPTION_LIMIT = 200
 // How the record page offers the form: `reservedMattersLayout` in the
 // page's `text:`, which its copy variants (view-record~<name>.md) change to
-// compare the designs. details (the default), modal, drawer, inline or cards
+// compare the designs. details (the default), modal, drawer, inline, cards
+// or page (the add-reserved-matters page, whose own copy says `page`)
 const RESERVED_MATTERS_LAYOUTS = [
   'details',
   'modal',
   'drawer',
   'inline',
-  'cards'
+  'cards',
+  'page'
 ]
+// The form on the add-reserved-matters page posts with ?_from=page, so its
+// errors show on that page rather than the record's
+const FROM_PAGE = 'page'
 // "Is this a planning variation?"
 const IS_VARIATION = 'yes'
 const SESSION_KEYS = ['officer', 'signInEmail']
@@ -1078,10 +1083,14 @@ function reservedMattersModel(ctx, record, { open, values = {}, errors = [] }) {
   const layout = RESERVED_MATTERS_LAYOUTS.includes(text.reservedMattersLayout)
     ? text.reservedMattersLayout
     : RESERVED_MATTERS_LAYOUTS[0]
+  const fromPage = layout === FROM_PAGE ? `&_from=${FROM_PAGE}` : ''
   return {
     layout,
     open: Boolean(open || errors.length),
-    action: `${routes.ADD_RESERVED_MATTERS}${ref}${copyQuery(ctx)}`,
+    action: `${routes.ADD_RESERVED_MATTERS}${ref}${copyQuery(ctx)}${fromPage}`,
+    // The page layout's button, and the page's Cancel
+    pageHref: `${routes.ADD_RESERVED_MATTERS}${ref}`,
+    recordHref: `${routes.VIEW_RECORD}${ref}`,
     items: record.reservedMatters,
     fields: RESERVED_MATTERS_FIELDS,
     limit: DESCRIPTION_LIMIT,
@@ -1353,7 +1362,11 @@ const viewRecord = {
 // history, and the record page says so. A problem shows the record page
 // again with the form open and the officer's answers kept.
 function addReservedMatters(req, res, journey) {
-  const page = copyVariantFor(journey, journey.byId.get('view-record'), req)
+  // The add-reserved-matters page's form, or one on the record page
+  const fromPage = req.query && req.query._from === FROM_PAGE
+  const page = fromPage
+    ? journey.byId.get('add-reserved-matters')
+    : copyVariantFor(journey, journey.byId.get('view-record'), req)
   const ctx = buildContext(req, res, journey, page, { isPost: true })
   const redirect = loadRecord(ctx)
   if (redirect) {
@@ -1373,10 +1386,14 @@ function addReservedMatters(req, res, journey) {
   }
   const { values, errors } = checkReservedMatters(page, ctx.body, data.record)
   if (errors.length) {
-    withLinks(data, page)
-    withReservedMatters(data)
     const model = buildModel(ctx, { errors })
-    viewRecord.get(ctx, model, { values, errors })
+    if (fromPage) {
+      addReservedMattersPage.get(ctx, model, { values, errors })
+    } else {
+      withLinks(data, page)
+      withReservedMatters(data)
+      viewRecord.get(ctx, model, { values, errors })
+    }
     return res.render(page.template, model)
   }
   updateRecord(
@@ -1443,6 +1460,46 @@ const rejectCommitment = {
 }
 
 // Every detail of a record's commitment, behind the record page
+// Reserved matters on a page of their own (the record page's `page`
+// layout): add-reserved-matters?ref=NRL-100958, for a granted outline
+// application only (any other record opens instead). Its form posts to
+// this page's path, which viewRecord.routes handles.
+const addReservedMattersPage = {
+  load(ctx) {
+    const redirect = loadRecord(ctx)
+    if (redirect) {
+      return redirect
+    }
+    const { data } = ctx
+    for (const field of Object.values(RESERVED_MATTERS_FIELDS)) {
+      delete data[field]
+    }
+    if (!ctx.preview && !takesReservedMatters(data.record)) {
+      return {
+        redirect: `${ctx.journey.routes.VIEW_RECORD}?ref=${encodeURIComponent(data.record.reference)}`
+      }
+    }
+  },
+  get(ctx, model, form = {}) {
+    let errors = form.errors || []
+    // The screen wall's error states, as a post would show them
+    if (ctx.preview && RESERVED_MATTERS_ERRORS[ctx.previewError]) {
+      errors = [
+        {
+          field: RESERVED_MATTERS_ERRORS[ctx.previewError],
+          message: message(ctx.page, ctx.previewError)
+        }
+      ]
+      model.errors = errors
+    }
+    model.reservedMatters = reservedMattersModel(ctx, ctx.data.record, {
+      open: true,
+      values: form.values,
+      errors
+    })
+  }
+}
+
 const certificate = {
   load: loadRecord
 }
@@ -1526,6 +1583,7 @@ module.exports = {
   'view-record': viewRecord,
   'reject-commitment': rejectCommitment,
   certificate,
+  'add-reserved-matters': addReservedMattersPage,
   dashboard,
   // For tests
   loadStore,

@@ -9,6 +9,8 @@
     drawer   a button opening the form in a panel from the right
     inline   the form always on show, in a grey panel
     cards    the record's reserved matters as summary cards, then the details
+    page     a button opening the form on a page of its own
+             (add-reserved-matters.html), which returns here once saved
 
   Every layout opens with the form when it has errors. The dialogs open
   and close with staff-dialog.js. Reads `rm` and `text` from the page.
@@ -27,7 +29,13 @@
   {% endfor %}
 {% endif %}
 
-{% if rm.layout in ['modal', 'drawer'] %}
+{% if rm.layout == 'page' %}
+  {{ govukButton({
+    text: text.addReservedMatters,
+    href: rm.pageHref,
+    classes: "govuk-button--secondary govuk-!-margin-bottom-9"
+  }) }}
+{% elif rm.layout in ['modal', 'drawer'] %}
   {{ govukButton({
     text: text.addReservedMatters,
     type: "button",

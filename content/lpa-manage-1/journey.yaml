@@ -247,6 +247,17 @@ pages:
     template: lpa-manage-1/certificate
     guard: *signed-in
 
+  # Reserved matters added on a page of their own (the layout
+  # view-record~page.md tries): add-reserved-matters?ref=NRL-100958.
+  # Breadcrumbs lead back to the dashboard and the record; saving adds them
+  # to the record and returns to it (hooks.js).
+  - id: add-reserved-matters
+    template: lpa-manage-1/add-reserved-matters
+    guard: *signed-in
+    back: []
+    preview:
+      data: { recordReference: NRL-100958 }
+
   # The records the council has: counts, then a table searched, filtered,
   # sorted and paged. The landing page, so no Back link; a council with no
   # records yet is sent to "Enter an NRL reference" (hooks.js).
