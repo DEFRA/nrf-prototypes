@@ -2,12 +2,12 @@
 # A planning variation's new planning application reference. The record
 # keeps the original reference too.
 type: input
-label: Enter the new planning application reference number for this planning variation
+label: Enter the planning application reference for this variation
 width: 20
 errors:
-  required: Enter the new planning application reference number
-  same: Enter a planning application reference number different from the current one
+  required: Enter the planning application reference for this variation
+  same: Planning application references cannot be the same
 button: Continue
 ---
 
-# Enter the new planning application reference
+# Enter the planning application reference for this variation
