@@ -259,6 +259,12 @@ pages:
         - id: outline
           label: Granted outline application with reserved matters
           data: { recordReference: NRL-100958 }
+        - id: reserved-matters-added
+          label: Reserved matters just added
+          data:
+            recordReference: NRL-100958
+            lpaFlash: reserved-matters
+            lpaFlashReference: 2026/0498/REM
 
   # Why the commitment details are rejected, with an optional comment.
   # Confirm rejects the record for good and returns to the dashboard.
