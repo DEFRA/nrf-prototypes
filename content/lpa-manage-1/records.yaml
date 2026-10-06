@@ -389,6 +389,37 @@ commitments:
           by: Priya Shah
           at: 2026-08-20T15:35
 
+  # A full planning application granted, linked to no other record: the
+  # record page offers the granted options (the screen wall's "Granted"
+  # sample)
+  - reference: NRL-100681
+    developer: Millbrook Developments
+    address: [12 Station Road, Scarfolk, SC5 3SR]
+    planningType: Full planning permission
+    units: 36
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-07-30
+    expires: 2027-01-30
+    boundary: aylsham
+    record:
+      planningReference: 2026/0318/FUL
+      planningStage: granted
+      officer: Tom Barker
+      status: reviewed
+      history:
+        - event: added
+          by: Tom Barker
+          at: 2026-07-31T09:15
+        - event: status
+          status: reviewed
+          by: Tom Barker
+          at: 2026-08-04T14:10
+        - event: stage
+          stage: granted
+          by: Tom Barker
+          at: 2026-09-18T10:45
+
   # An outline application already granted, with one reserved matters
   # application under it: the record page offers to add more
   - reference: NRL-100958

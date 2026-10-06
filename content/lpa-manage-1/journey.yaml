@@ -254,8 +254,8 @@ pages:
           label: Linked to the original application's record
           data: { recordReference: NRL-101412 }
         - id: granted
-          label: Granted (not an outline application)
-          data: { recordReference: NRL-101178 }
+          label: Granted, full planning
+          data: { recordReference: NRL-100681 }
         - id: outline
           label: Granted outline application with reserved matters
           data: { recordReference: NRL-100958 }
