@@ -289,13 +289,14 @@ function initDrawBoundaryMap() {
   const { searchPlugin: createSearchPlugin } = window.defra
 
   const hasOsKey = configElement.dataset.hasOsKey === 'true'
+  const hasAerial = configElement.dataset.hasAerial === 'true'
   const {
     mapStyles,
     datasetsPlugin,
     mapKeyPlugin,
     mapStylesPlugin,
     scaleBarPlugin
-  } = createCommonMapPlugins({ hasOsKey })
+  } = createCommonMapPlugins({ hasOsKey, hasAerial })
   const { interactPlugin, drawPlugin } = createDrawToolsPlugins()
   const experiment = configElement.dataset.mapExperiment === 'true'
   const searchPlugin = createSearchPlugin({

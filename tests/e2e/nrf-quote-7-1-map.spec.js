@@ -219,4 +219,35 @@ test.describe('nrf-quote-7-1 production map', () => {
     )
     expect(missing.status()).toBe(404)
   })
+
+  test("production's Hybrid and Aerial basemaps have their tiles and pictures", async ({
+    request
+  }) => {
+    for (const file of [
+      '/public/data/vts/APGB_Hybrid.json',
+      '/public/data/vts/APGB_Aerial.json',
+      '/public/data/vts/thumbnails/hybrid.jpg',
+      '/public/data/vts/thumbnails/aerial.jpg'
+    ]) {
+      expect((await request.get(file)).status()).toBe(200)
+    }
+
+    // A tile far out to sea is all sea, with no need to ask Ordnance Survey
+    const sea = await request.get('/os-base-map/sea-mask/10/0/0.pbf')
+    expect(sea.status()).toBe(200)
+    expect(sea.headers()['content-type']).toBe(
+      'application/vnd.mapbox-vector-tile'
+    )
+    expect((await sea.body()).length).toBeGreaterThan(0)
+
+    // Over land it needs the OS tile: without a key, an empty tile
+    const land = await request.get('/os-base-map/sea-mask/10/515/333.pbf')
+    expect([200, 204]).toContain(land.status())
+
+    // Aerial imagery comes only from the impact assessor
+    const aerial = await request.get(
+      '/impact-assessor-map/aerial_proxy/10/515/333'
+    )
+    expect([200, 503]).toContain(aerial.status())
+  })
 })

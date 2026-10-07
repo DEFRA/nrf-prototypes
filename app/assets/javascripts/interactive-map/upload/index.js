@@ -37,6 +37,7 @@ function initUploadPreviewMap() {
   }
 
   const hasOsKey = configElement.dataset.hasOsKey === 'true'
+  const hasAerial = configElement.dataset.hasAerial === 'true'
   const { initialFeature, bounds, center } = readExistingBoundary(configElement)
 
   const {
@@ -45,7 +46,7 @@ function initUploadPreviewMap() {
     mapKeyPlugin,
     mapStylesPlugin,
     scaleBarPlugin
-  } = createCommonMapPlugins({ hasOsKey })
+  } = createCommonMapPlugins({ hasOsKey, hasAerial })
 
   const interactiveMap = createInteractiveMap(MAP_ELEMENT_ID, {
     mapStyles,
