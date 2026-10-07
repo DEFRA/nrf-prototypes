@@ -21,7 +21,7 @@
  *
  * Each step has a click and a tap version, picked by how the user last
  * touched the map. The words come from the page's text: frontmatter
- * (content/nrf-quote-7/pages/map.md), handed over on the page's config
+ * (content/nrf-quote-7-1/pages/map.md), handed over on the page's config
  * element. A step whose text is missing shows no hint.
  */
 
