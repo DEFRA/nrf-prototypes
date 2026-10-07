@@ -220,9 +220,10 @@
 // Prototype experiment (see draw/helpers/draw-hints.js): interactive-map
 // left-aligns its toast hints, so a hint that wraps leaves a ragged second
 // line under the centred Draw button. Centre the text and balance the lines
-// so a two-line hint breaks evenly.
+// so a two-line hint breaks evenly. Only on the experiment's map page
+// (nrf-quote-7-1).
 
-.im-c-hints__hint {
+.app-draw-boundary--experiment .im-c-hints__hint {
   text-align: center;
   text-wrap: balance;
 }

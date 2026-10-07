@@ -24,7 +24,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="app-draw-boundary">
+<div class="app-draw-boundary app-draw-boundary--experiment">
   <h1 class="govuk-visually-hidden">{{ content.heading }}</h1>
 
   {% if error %}
@@ -53,6 +53,7 @@
     data-existing-boundary-metadata="{{ existingBoundaryMetadata }}"
     data-has-os-key="{{ hasOsKey }}"
     data-text="{{ content.text | dump }}"
+    data-map-experiment="true"
   ></div>
 
   <div id="draw-boundary-map" class="app-draw-boundary__map"></div>
