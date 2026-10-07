@@ -294,7 +294,7 @@ pages:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: email-sent
-    handoff: 2026-10-06
+    handoff: 2026-10-07
 
   # User research aid in the footer: the email itself, in this tab so the
   # journey carries on from its link
