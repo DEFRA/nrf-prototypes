@@ -21,7 +21,7 @@ The rule covers every copy file, but only the riskiest are hard-gated: `.claude/
 ```bash
 nvm use                 # Node >= v22 (.nvmrc)
 npm run dev             # dev server on http://localhost:3000 (PORT=3100 npm run dev to use another port)
-npm run test:e2e        # Playwright; auto-starts `npm run dev` on :3000 (reuses one if already running)
+npm run test:e2e        # Playwright; starts its own `npm run dev` on :3300 with the production map keys blanked (reuses one if already running)
 npm run format          # prettier --write (cjs,js,json,md,scss)
 npm run format:check    # prettier --check
 npm run screenshot      # scripts/screenshot-capture.js (puppeteer) — captures journey pages

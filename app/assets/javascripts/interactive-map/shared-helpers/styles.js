@@ -125,6 +125,14 @@ const STREETS_STYLE = {
   backgroundColor: '#f5f5f0'
 }
 
+// On a production map without the keys, the keyless styles wear
+// production's thumbnails: Satellite is aerial imagery like Aerial, Streets
+// a street map like Outdoor OS
+const PRODUCTION_KEYLESS_THUMBNAILS = {
+  [SATELLITE_STYLE.id]: `${VTS_THUMBNAIL_BASE_URL}/aerial.jpg`,
+  [STREETS_STYLE.id]: `${VTS_THUMBNAIL_BASE_URL}/outdoor-os.jpg`
+}
+
 /**
  * The first style is the default. A production map (data-production-map, on
  * quote V7.1's pages) with both keys offers exactly production's styles;
@@ -157,5 +165,11 @@ export function getMapStyles({
   // interactive-map hides the copyright at its mobile breakpoint unless the
   // style opts in; the APGB, OS and Esri licence terms require the credit on
   // every device
-  return styles.map((style) => ({ ...style, showAttributionOnMobile: true }))
+  return styles.map((style) => ({
+    ...style,
+    thumbnail:
+      (production && PRODUCTION_KEYLESS_THUMBNAILS[style.id]) ||
+      style.thumbnail,
+    showAttributionOnMobile: true
+  }))
 }

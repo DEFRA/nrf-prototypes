@@ -84,16 +84,16 @@ npx playwright show-report
 
 Configuration in [`playwright.config.js`](../playwright.config.js):
 
-- Base URL: `http://localhost:3000`
+- Base URL: `http://localhost:3300`, a server of its own that Playwright starts with the production map's keys blanked (`OS_API_KEY`, `IMPACT_ASSESSOR_*`, `NRF_BACKEND_API_URL`, `BACKEND_API_KEY`), so the tests always see the prototype's own basemaps and EDP data whatever `.env` holds. A test server left running on 3300 is reused
 - Timeout: 30 seconds per test
 - Browser: Chromium only
 - Workers: 1 (prototype kit limitation)
 
 ## Common Issues
 
-**Port 3000 in use:** Stop existing app instances
+**Port 3300 in use:** Stop the leftover test server
 
-**Tests timeout:** Ensure app is running at http://localhost:3000
+**Tests timeout:** Check the test server starts: `PORT=3300 npm run dev`
 
 **Browser not found:** Run `npx playwright install chromium`
 
