@@ -38,6 +38,9 @@ function initUploadPreviewMap() {
 
   const hasOsKey = configElement.dataset.hasOsKey === 'true'
   const hasAerial = configElement.dataset.hasAerial === 'true'
+  // Quote V7.1's maps follow production: its basemaps, England bounds and
+  // EDP tiles
+  const production = configElement.dataset.productionMap === 'true'
   const { initialFeature, bounds, center } = readExistingBoundary(configElement)
 
   const {
@@ -46,12 +49,17 @@ function initUploadPreviewMap() {
     mapKeyPlugin,
     mapStylesPlugin,
     scaleBarPlugin
-  } = createCommonMapPlugins({ hasOsKey, hasAerial })
+  } = createCommonMapPlugins({
+    hasOsKey,
+    hasAerial,
+    production
+  })
 
   const interactiveMap = createInteractiveMap(MAP_ELEMENT_ID, {
     mapStyles,
     bounds,
     center,
+    production,
     plugins: [datasetsPlugin, mapKeyPlugin, mapStylesPlugin, scaleBarPlugin]
   })
 

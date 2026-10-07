@@ -13,7 +13,9 @@
  *     using production's layer names and working at every zoom level (the
  *     MBTiles stop at zoom 10-12).
  *     Set IMPACT_ASSESSOR_BASE_URL (and IMPACT_ASSESSOR_API_KEY) to proxy
- *     the real service instead.
+ *     the real service instead (quote V7.1's maps only).
+ *   /prototype-map/tiles/{layer}/{z}/{x}/{y}.mvt
+ *     the same EDP layers from local data whatever is set (quote V7's maps)
  */
 
 const govukPrototypeKit = require('govuk-prototype-kit')
@@ -320,12 +322,14 @@ router.get('/impact-assessor-map/aerial_proxy/:z/:x/:y', async (req, res) => {
 })
 
 /**
- * Production-shaped EDP overlay tiles
- * Handles /impact-assessor-map/tiles/{layer}/{z}/{x}/{y}.mvt
+ * Production-shaped EDP overlay tiles. `proxy` sends them to the real impact
+ * assessor when IMPACT_ASSESSOR_BASE_URL is set; otherwise they are sliced
+ * from the prototype's own EDP data.
+ *
+ * @param {{ proxy: boolean }} options
  */
-router.get(
-  '/impact-assessor-map/tiles/:layer/:z/:x/:y.mvt',
-  async (req, res) => {
+function edpTileHandler({ proxy }) {
+  return async (req, res) => {
     const { layer } = req.params
     const zoom = parseInt(req.params.z, 10)
     const tileX = parseInt(req.params.x, 10)
@@ -348,7 +352,7 @@ router.get(
     }
 
     try {
-      if (process.env.IMPACT_ASSESSOR_BASE_URL) {
+      if (proxy && process.env.IMPACT_ASSESSOR_BASE_URL) {
         return await proxyImpactAssessorTile(
           req,
           res,
@@ -375,6 +379,20 @@ router.get(
       return sendTileError(res, error)
     }
   }
+}
+
+// Production's path, for quote V7.1's maps: the real impact assessor's EDPs
+// when it is set
+router.get(
+  '/impact-assessor-map/tiles/:layer/:z/:x/:y.mvt',
+  edpTileHandler({ proxy: true })
+)
+
+// The prototype's own EDP data whatever is set, for quote V7's maps (see
+// app/assets/javascripts/interactive-map/shared-helpers/datasets.js)
+router.get(
+  '/prototype-map/tiles/:layer/:z/:x/:y.mvt',
+  edpTileHandler({ proxy: false })
 )
 
 module.exports = router

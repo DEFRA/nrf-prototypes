@@ -244,6 +244,12 @@ test.describe('nrf-quote-7-1 production map', () => {
     const land = await request.get('/os-base-map/sea-mask/10/515/333.pbf')
     expect([200, 204]).toContain(land.status())
 
+    // Quote V7's maps draw the prototype's own EDP data whatever is set
+    const local = await request.get(
+      '/prototype-map/tiles/edp_boundaries/6/31/20.mvt'
+    )
+    expect([200, 204]).toContain(local.status())
+
     // Aerial imagery comes only from the impact assessor
     const aerial = await request.get(
       '/impact-assessor-map/aerial_proxy/10/515/333'

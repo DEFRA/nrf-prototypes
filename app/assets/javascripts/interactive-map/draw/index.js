@@ -290,13 +290,20 @@ function initDrawBoundaryMap() {
 
   const hasOsKey = configElement.dataset.hasOsKey === 'true'
   const hasAerial = configElement.dataset.hasAerial === 'true'
+  // Quote V7.1's maps follow production: its basemaps, England bounds and
+  // EDP tiles
+  const production = configElement.dataset.productionMap === 'true'
   const {
     mapStyles,
     datasetsPlugin,
     mapKeyPlugin,
     mapStylesPlugin,
     scaleBarPlugin
-  } = createCommonMapPlugins({ hasOsKey, hasAerial })
+  } = createCommonMapPlugins({
+    hasOsKey,
+    hasAerial,
+    production
+  })
   const { interactPlugin, drawPlugin } = createDrawToolsPlugins()
   const experiment = configElement.dataset.mapExperiment === 'true'
   const searchPlugin = createSearchPlugin({
@@ -313,6 +320,7 @@ function initDrawBoundaryMap() {
     mapStyles,
     bounds,
     center,
+    production,
     plugins: buildMapPlugins({
       datasetsPlugin,
       mapKeyPlugin,

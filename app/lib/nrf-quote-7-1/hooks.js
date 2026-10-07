@@ -257,6 +257,86 @@ function edpOverlap(geometry, edpId) {
   }
 }
 
+// ---------------------------------------------------------------- Backend
+//
+// Production checks a boundary against the EDPs with the NRF backend
+// (nrf-frontend src/server/common/services/boundary.js, POST /boundary/check
+// with { geometry }). With NRF_BACKEND_API_URL set, so does this journey;
+// without it, the prototype's own EDP data answers (checkBoundary above).
+
+const CHECK_ERROR = 'An error occurred checking the boundary'
+
+function usesBackend() {
+  return Boolean(process.env.NRF_BACKEND_API_URL)
+}
+
+/**
+ * @returns {Promise<{ ok: boolean, status: number, payload: object|null }>}
+ */
+async function postBoundaryToBackend(geometry) {
+  const baseUrl = process.env.NRF_BACKEND_API_URL.replace(/\/$/, '')
+  const headers = { 'content-type': 'application/json' }
+  if (process.env.BACKEND_API_KEY) {
+    headers['x-api-key'] = process.env.BACKEND_API_KEY
+  }
+  const response = await fetch(`${baseUrl}/boundary/check`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ geometry })
+  })
+  const payload = await response.json().catch(() => null)
+  return { ok: response.ok, status: response.status, payload }
+}
+
+/**
+ * The map's check, answered as production's draw-boundary controller does:
+ * the backend's payload, or its error with the failure code.
+ *
+ * @returns {Promise<{ status: number, body: object }>}
+ */
+async function checkBoundaryResponse(geometry) {
+  if (!usesBackend()) {
+    return { status: 200, body: checkBoundary(geometry) }
+  }
+  try {
+    const { ok, status, payload } = await postBoundaryToBackend(geometry)
+    if (ok) {
+      return { status: 200, body: payload }
+    }
+    const failureReason =
+      payload && typeof payload.error === 'string'
+        ? payload.error
+        : 'server_error'
+    console.error(`Backend boundary check failed: ${status} ${failureReason}`)
+    return {
+      status,
+      body: { error: CHECK_ERROR, failureReason, geojson: payload }
+    }
+  } catch (error) {
+    console.error('Backend boundary check failed:', error)
+    return {
+      status: 502,
+      body: { error: CHECK_ERROR, failureReason: 'server_error' }
+    }
+  }
+}
+
+/**
+ * The check result to store for a boundary: the backend's when it answers,
+ * else the prototype's own (so a research session carries on if the backend
+ * is down).
+ */
+async function checkedBoundary(geometry) {
+  if (usesBackend()) {
+    const { status, body } = await checkBoundaryResponse(geometry)
+    if (status === 200 && body && Array.isArray(body.intersectingEdps)) {
+      return body
+    }
+    console.warn('Using the prototype EDP data for this boundary instead')
+  }
+  return checkBoundary(geometry)
+}
+
 function polygonFeatureFromCoordinates(coordinates) {
   return {
     type: 'Feature',
@@ -337,9 +417,9 @@ const SAMPLE_BOUNDARY = {
  * when it is GeoJSON with one that falls in an EDP, else the sample
  * boundary. Returns the geometry with its check result.
  */
-function uploadedBoundary(file) {
+async function uploadedBoundary(file) {
   const geometry = uploadedGeometry(file)
-  const result = checkBoundary(geometry)
+  const result = await checkedBoundary(geometry)
   if (
     result.intersectingEdps.length ||
     result.intersectingExcludedAreas.length
@@ -348,7 +428,7 @@ function uploadedBoundary(file) {
   }
   return {
     geometry: SAMPLE_BOUNDARY,
-    boundaryGeojson: checkBoundary(SAMPLE_BOUNDARY)
+    boundaryGeojson: await checkedBoundary(SAMPLE_BOUNDARY)
   }
 }
 
@@ -376,7 +456,9 @@ function uploadedGeometry(file) {
  */
 function storeBoundary(data, geometry, boundaryGeojson) {
   const coordinates = openRing(geometry.coordinates[0])
-  const results = checkEDPIntersections(coordinates)
+  const results = usesBackend()
+    ? backendIntersections(boundaryGeojson)
+    : checkEDPIntersections(coordinates)
   data.redlineBoundaryPolygon = {
     center:
       (boundaryGeojson && boundaryGeojson.boundaryMetadata.centre) ||
@@ -390,6 +472,20 @@ function storeBoundary(data, geometry, boundaryGeojson) {
     boundaryGeojson: boundaryGeojson || null
   }
   data.intersectingCatchment = results.nutrient
+}
+
+/**
+ * The backend's check result in the shape checkEDPIntersections gives: the
+ * first EDP's label stands for the nutrient EDP, as production's panel
+ * shows it.
+ */
+function backendIntersections(boundaryGeojson) {
+  const edps = (boundaryGeojson && boundaryGeojson.intersectingEdps) || []
+  return {
+    nutrient: edps.length ? edps[0].label : null,
+    excludedAreas:
+      (boundaryGeojson && boundaryGeojson.intersectingExcludedAreas) || []
+  }
 }
 
 /**
@@ -427,7 +523,7 @@ const map = {
       API_BOUNDARY_CHECK: `${journey.basePath}/api/boundary/check`
     }
 
-    router.post(routes.API_BOUNDARY_CHECK, (req, res) => {
+    router.post(routes.API_BOUNDARY_CHECK, async (req, res) => {
       try {
         const geometry = req.body && req.body.geometry
         const failureReason = validatePolygonGeometry(geometry)
@@ -437,7 +533,8 @@ const map = {
             failureReason
           })
         }
-        return res.json(checkBoundary(geometry))
+        const { status, body } = await checkBoundaryResponse(geometry)
+        return res.status(status).json(body)
       } catch (error) {
         console.error('Boundary check failed:', error)
         return res.status(500).json({
@@ -498,13 +595,17 @@ const map = {
     return { ok: true, value: boundary }
   },
 
-  process(ctx, boundary) {
+  async process(ctx, boundary) {
     // The server-side check is authoritative even when the client already
-    // ran one; the result drives the journey.yaml branching.
+    // ran one; the result drives the journey.yaml branching. With the
+    // backend it is checked again there.
     const geometry = polygonFeatureFromCoordinates(
       boundary.coordinates
     ).geometry
-    storeBoundary(ctx.data, geometry, boundary.boundaryGeojson || null)
+    const boundaryGeojson = usesBackend()
+      ? await checkedBoundary(geometry)
+      : boundary.boundaryGeojson || null
+    storeBoundary(ctx.data, geometry, boundaryGeojson)
     delete ctx.data.boundaryFailureReason
   }
 }
@@ -521,17 +622,17 @@ const uploadRedline = {
     }
     return validatePage(ctx.page, ctx.body, ctx.file, ctx.req.multerError)
   },
-  process(ctx, file) {
+  async process(ctx, file) {
     const { data } = ctx
     data.redlineFile = file ? file.originalname : SAMPLE_FILE_NAME
     data.hasRedlineBoundaryFile = true
     data.mapReferrer = 'upload-redline'
     delete data.boundaryFailureReason
     const { geometry, boundaryGeojson } = file
-      ? uploadedBoundary(file)
+      ? await uploadedBoundary(file)
       : {
           geometry: SAMPLE_BOUNDARY,
-          boundaryGeojson: checkBoundary(SAMPLE_BOUNDARY)
+          boundaryGeojson: await checkedBoundary(SAMPLE_BOUNDARY)
         }
     storeBoundary(data, geometry, boundaryGeojson)
   }

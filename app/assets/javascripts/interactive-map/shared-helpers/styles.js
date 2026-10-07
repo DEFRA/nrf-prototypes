@@ -66,6 +66,36 @@ const OS_STYLES = [
   }
 ]
 
+// The Ordnance Survey styles as the maps had them before production's
+// Hybrid and Aerial arrived, kept for quote V7 (a map without
+// data-production-map), with the interactive-map package's thumbnails
+const PROTOTYPE_OS_STYLES = [
+  {
+    id: 'outdoor-os',
+    label: 'Outdoor OS',
+    url: `${VTS_STYLE_BASE_URL}/OS_VTS_3857_Outdoor.json`,
+    thumbnail: `${PLUGIN_THUMBNAIL_BASE_URL}/outdoor-map-thumb.jpg`,
+    attribution: getOrdnanceSurveyAttribution(),
+    backgroundColor: '#f5f5f0'
+  },
+  {
+    id: 'dark',
+    label: 'Dark',
+    url: `${VTS_STYLE_BASE_URL}/OS_VTS_3857_Dark.json`,
+    thumbnail: `${PLUGIN_THUMBNAIL_BASE_URL}/dark-map-thumb.jpg`,
+    attribution: getOrdnanceSurveyAttribution(),
+    mapColorScheme: 'dark',
+    appColorScheme: 'dark'
+  },
+  {
+    id: 'black-and-white',
+    label: 'Black and white',
+    url: `${VTS_STYLE_BASE_URL}/OS_VTS_3857_Black_and_White.json`,
+    thumbnail: `${PLUGIN_THUMBNAIL_BASE_URL}/black-and-white-map-thumb.jpg`,
+    attribution: getOrdnanceSurveyAttribution()
+  }
+]
+
 // Basemaps that need no key, for a prototype run without the impact
 // assessor's aerial imagery (a laptop with no .env, say). Satellite stands
 // in for production's aerial default.
@@ -96,21 +126,30 @@ const STREETS_STYLE = {
 }
 
 /**
- * The first style is the default. With both keys the map offers exactly
- * production's styles. Ordnance Survey styles need OS_API_KEY (see
- * app/routes/os-base-map.js); Hybrid and Aerial also need the impact
- * assessor's aerial imagery, IMPACT_ASSESSOR_BASE_URL (see
- * app/routes/tileserver-proxy.js). Without them the keyless Satellite and
- * Streets stand in.
+ * The first style is the default. A production map (data-production-map, on
+ * quote V7.1's pages) with both keys offers exactly production's styles;
+ * Ordnance Survey styles need OS_API_KEY (see app/routes/os-base-map.js) and
+ * Hybrid and Aerial also need the impact assessor's aerial imagery,
+ * IMPACT_ASSESSOR_BASE_URL (see app/routes/tileserver-proxy.js). Otherwise
+ * the keyless Satellite and Streets stand in, with the OS styles when there
+ * is a key.
  *
- * @param {{ hasOsKey?: boolean, hasAerial?: boolean }} [params]
+ * @param {{ hasOsKey?: boolean, hasAerial?: boolean, production?: boolean }} [params]
  */
-export function getMapStyles({ hasOsKey = false, hasAerial = false } = {}) {
+export function getMapStyles({
+  hasOsKey = false,
+  hasAerial = false,
+  production = false
+} = {}) {
   let styles
-  if (hasOsKey && hasAerial) {
+  if (production && hasOsKey && hasAerial) {
     styles = [...APGB_STYLES, ...OS_STYLES]
   } else if (hasOsKey) {
-    styles = [SATELLITE_STYLE, ...OS_STYLES, STREETS_STYLE]
+    styles = [
+      SATELLITE_STYLE,
+      ...(production ? OS_STYLES : PROTOTYPE_OS_STYLES),
+      STREETS_STYLE
+    ]
   } else {
     styles = [SATELLITE_STYLE, STREETS_STYLE]
   }
