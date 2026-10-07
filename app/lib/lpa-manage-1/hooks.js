@@ -5,7 +5,10 @@
  *
  *   - the officer signing in with the mock GOV.UK One Login: the name the
  *     facilitator gave in the footer's "Participant details" box, or a
- *     stand-in, shown in the staff header over "Scarfolk Council"
+ *     stand-in, shown in the staff header over "Scarfolk Council". An
+ *     email with "new" in it stands for a council that has no records yet:
+ *     records.yaml's records are hidden and the officer lands on "Enter an
+ *     NRL reference" rather than the dashboard
  *   - a mock commitment store: content/lpa-manage-1/records.yaml holds the
  *     commitments developers have submitted and the records the council
  *     already has. Retrieving a reference finds it there, or the commitment
@@ -14,9 +17,20 @@
  *     the session (`lpaRecords`) over the file's own
  *   - the dashboard's counts and its table of every record, with search,
  *     filters, sortable columns and pages
+ *   - a reference the council already has a record for asks whether it is
+ *     a planning variation; one that is takes the new planning application
+ *     reference and keeps the original on the record
+ *   - a commitment the developer made for a variation names the original
+ *     application's NRL reference (`originalReference`, from
+ *     nrf-request-to-use-1 or records.yaml): the two records link to each
+ *     other
  *   - the record page's audit timeline and its review options, which post
  *     back to the page and return to the dashboard, and the full
  *     certificate behind it
+ *   - once a planning permission is granted the record page offers the
+ *     granted options; for an outline application one of them opens the
+ *     add-reserved-matters page, whose form adds a reserved matters
+ *     application to the record (its own post route)
  *
  * Nothing here is real: no passwords are checked or stored.
  */
@@ -25,6 +39,8 @@ const fs = require('fs')
 const path = require('path')
 const yaml = require('js-yaml')
 const { message } = require('../journey-engine/validation')
+const { loadJourney } = require('../journey-engine/loader')
+const { buildContext, buildModel } = require('../journey-engine/router')
 const { participantOf } = require('../nrf-request-to-use-1/hooks')
 
 const RECORDS_FILE = path.join(
@@ -48,7 +64,31 @@ const COMMENT_FIELD = 'reject-comment'
 const REVIEWED_STATUS = 'reviewed'
 const REVIEW_LATER = 'review-later'
 const PLANNING_STEP = 'planning'
+// Once the planning permission is granted the granted options take the
+// planning stages' place (`step: granted`)
+const GRANTED_STEP = 'granted'
+const GRANTED_STAGE = 'granted'
+// An outline planning application, once granted, takes reserved matters
+// applications: each a reference, a status (a planning stage) and a short
+// description of no more than DESCRIPTION_LIMIT characters. Its granted
+// option of that value opens the add-reserved-matters page.
+const OUTLINE_TYPE = 'Outline planning permission'
+const RESERVED_MATTERS = 'reserved-matters'
+// A granted option still to be decided: Confirm changes nothing
+const PLACEHOLDER_OPTION = 'placeholder'
+const RESERVED_MATTERS_FIELDS = {
+  reference: 'reserved-matters-reference',
+  status: 'reserved-matters-status',
+  description: 'reserved-matters-description'
+}
+const DESCRIPTION_LIMIT = 200
+// "Is this a planning variation?"
+const IS_VARIATION = 'yes'
 const SESSION_KEYS = ['officer', 'signInEmail']
+// Signing in with an email containing this is a council with no records yet
+const NEW_COUNCIL = 'new'
+// The council's email domain, for an officer records.yaml gives no email
+const COUNCIL_DOMAIN = 'scarfolk.gov.uk'
 
 // ------------------------------------------------------------ The data
 
@@ -68,6 +108,7 @@ function loadStore() {
       planningStages: {},
       planningTypes: {},
       boundaries: {},
+      officers: {},
       commitments: []
     }
   }
@@ -80,6 +121,7 @@ function loadStore() {
         planningStages: raw.planningStages || {},
         planningTypes: raw.planningTypes || {},
         boundaries: raw.boundaries || {},
+        officers: raw.officers || {},
         commitments: raw.commitments || [],
         fallback: raw.fallback || null
       }
@@ -206,6 +248,29 @@ function statusOf(value, store) {
   }
 }
 
+// An officer's email on the history: records.yaml's `officers`, or their
+// name at the council's domain
+function officerEmail(name, store) {
+  if (!name) {
+    return ''
+  }
+  const listed = store.officers[name]
+  if (listed) {
+    return listed
+  }
+  const local = String(name)
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z\s-]/g, '')
+    .replace(/\s+/g, '.')
+  return local ? `${local}@${COUNCIL_DOMAIN}` : ''
+}
+
+// The email the officer signed in with, for the history of what they do
+function signedInEmail(data) {
+  return (data.officer && data.officer.email) || ''
+}
+
 /**
  * Every record the council has: the file's, then the ones the officer
  * added or changed this session (`lpaRecords`, keyed by NRL reference),
@@ -214,8 +279,9 @@ function statusOf(value, store) {
 function allEntries(data) {
   const store = loadStore()
   const byReference = new Map()
+  const newCouncil = Boolean(data && data.officer && data.officer.newCouncil)
   for (const entry of store.commitments) {
-    if (entry.record) {
+    if (entry.record && !newCouncil) {
       byReference.set(entry.reference, { entry, record: entry.record })
     }
   }
@@ -254,7 +320,20 @@ function recordOf({ entry, record }, store, today = new Date()) {
     reference: entry.reference,
     developer: entry.developer,
     planningReference: record.planningReference,
+    // A planning variation: one added here keeps the planning reference
+    // the record was added with; one the developer made names the original
+    // application's commitment
+    variation: Boolean(
+      record.originalPlanningReference || entry.originalReference
+    ),
+    originalReference: entry.originalReference || '',
+    originalPlanningReference: record.originalPlanningReference || '',
     planningStage: planningStageOf(record.planningStage || ADDED_STAGE, store),
+    reservedMatters: (record.reservedMatters || []).map((item) => ({
+      reference: item.reference,
+      status: planningStageOf(item.status || ADDED_STAGE, store),
+      description: item.description || ''
+    })),
     planningType: entry.planningType,
     planningTypeShort: planningTypeShort(entry.planningType, store),
     overdue: Boolean(record.overdue),
@@ -271,9 +350,11 @@ function recordOf({ entry, record }, store, today = new Date()) {
         event: event.event,
         status: event.status ? statusOf(event.status, store) : null,
         stage: event.stage ? planningStageOf(event.stage, store) : null,
+        planningReference: event.planningReference || '',
         reason: event.reason || '',
         comment: event.comment || '',
         by: event.by,
+        email: event.email || officerEmail(event.by, store),
         date: formatDate(event.date),
         time: formatTime(event.date),
         datetime: event.date ? event.date.toISOString() : ''
@@ -281,6 +362,37 @@ function recordOf({ entry, record }, store, today = new Date()) {
       .reverse(),
     commitment: commitmentOf(entry, store)
   }
+}
+
+/**
+ * The records a record is linked to: the original application's, for a
+ * commitment the developer made for a variation, and every variation's
+ * that names this one. Each is { reference, relation, recorded } (relation
+ * `original` or `variation`; `recorded` when the council has that record,
+ * so the page can link to it).
+ */
+function linkedRecords(data, record) {
+  const entries = allEntries(data)
+  const links = []
+  if (record.originalReference) {
+    links.push({
+      reference: record.originalReference,
+      relation: 'original',
+      recorded: entries.some(
+        (item) => item.entry.reference === record.originalReference
+      )
+    })
+  }
+  for (const item of entries) {
+    if (item.entry.originalReference === record.reference) {
+      links.push({
+        reference: item.entry.reference,
+        relation: 'variation',
+        recorded: true
+      })
+    }
+  }
+  return links
 }
 
 function allRecords(data) {
@@ -346,6 +458,13 @@ function requestToUseEntry(data) {
     units: data.residentialBuildingCount,
     edp: data.edpName || polygon.intersectingCatchment,
     levyAmount: data.levyAmount,
+    // A variation of an application that already has a commitment
+    originalReference:
+      data.isVariation === 'Yes' && data.originalCommitted === 'Yes'
+        ? String(data.originalReference || '')
+            .trim()
+            .toUpperCase()
+        : '',
     issued: certificate.issueDate || new Date(),
     expires: certificate.expiryDate || addMonths(new Date(), 6),
     boundary: polygon.coordinates ? { coordinates: polygon.coordinates } : null
@@ -461,6 +580,8 @@ function matches(record, query) {
     record.reference,
     record.developer,
     record.planningReference,
+    record.originalPlanningReference,
+    ...record.reservedMatters.map((item) => item.reference),
     record.officer
   ].some((value) =>
     String(value || '')
@@ -646,14 +767,20 @@ const oneLoginSignIn = {
   process(ctx) {
     const { data } = ctx
     delete data._password
+    const email = String(data.signInEmail || '').trim()
     data.officer = {
       fullName: participantOf(data).fullName || MOCK_OFFICER,
-      email: data.signInEmail || ''
+      email,
+      newCouncil: email.toLowerCase().includes(NEW_COUNCIL)
     }
+    // journey.yaml sends an officer with no records to "Enter an NRL
+    // reference" rather than the dashboard
+    data.officer.hasRecords = allEntries(data).length > 0
   }
 }
 
-// Sign out, registered once at boot; the header's `$signOut` link
+// Sign out, registered once at boot; the header's `$signOut` link. It
+// returns to the start page.
 const signOut = {
   routes(router, journey) {
     const routes = { SIGN_OUT: `${journey.basePath}/sign-out` }
@@ -662,15 +789,22 @@ const signOut = {
       for (const key of SESSION_KEYS) {
         delete data[key]
       }
-      res.redirect(`${journey.basePath}/${journey.start}`)
+      res.redirect(`${journey.basePath}/start`)
     })
     return routes
   }
 }
 
-// "Retrieve commitment details": NRL-123456 (or just the six digits) that
-// the council does not already have a record for
+// "Retrieve commitment details": NRL-123456 (or just the six digits). One
+// the council already has a record for asks whether it is a planning
+// variation (journey.yaml) rather than adding it again.
 const retrieveCommitment = {
+  // With no records there is no dashboard to go back to
+  get(ctx, model) {
+    if (!ctx.preview && !allEntries(ctx.data).length) {
+      model.backLink = null
+    }
+  },
   validate(ctx) {
     const { page, body, data } = ctx
     const typed = String(body[page.field] || '')
@@ -684,20 +818,107 @@ const retrieveCommitment = {
     if (!REFERENCE.test(reference)) {
       return { ok: false, error: message(page, 'format') }
     }
-    if (findRecord(data, reference)) {
-      return { ok: false, error: message(page, 'recorded') }
-    }
-    const entry = findCommitmentEntry(data, reference)
-    if (!entry) {
+    if (!findRecord(data, reference) && !findCommitmentEntry(data, reference)) {
       return { ok: false, error: message(page, 'notFound') }
     }
     return { ok: true, value: reference }
   },
   process(ctx, reference) {
     const { data } = ctx
-    const entry = findCommitmentEntry(data, reference)
+    const recorded = findRecord(data, reference)
+    const entry = recorded
+      ? allEntries(data).find((item) => item.entry.reference === reference)
+          .entry
+      : findCommitmentEntry(data, reference)
     data.commitmentEntry = entry
     data.commitment = commitmentOf(entry, loadStore())
+    data.commitmentRecorded = Boolean(recorded)
+    delete data.planningVariation
+    if (recorded) {
+      data.record = recorded
+    }
+  }
+}
+
+// "Is this a planning variation?" for a commitment the council already has
+// a record for. No returns to "Enter an NRL reference", which still holds
+// the reference typed so the officer can correct it.
+const planningVariation = {
+  process(ctx, answer) {
+    const { data } = ctx
+    if (answer !== IS_VARIATION) {
+      for (const key of [
+        'commitmentEntry',
+        'commitmentRecorded',
+        'planningVariation'
+      ]) {
+        delete data[key]
+      }
+    }
+  }
+}
+
+// The new planning application reference for a planning variation: the
+// record takes it, keeps the one it was added with (only the first, if it
+// is varied again) and starts its new application at Applied
+const addVariation = {
+  validate(ctx) {
+    const { page, body, data } = ctx
+    const typed = String(body[page.field] || '').trim()
+    if (!typed) {
+      return { ok: false, error: message(page, 'required') }
+    }
+    const found = data.commitmentEntry
+      ? findRecord(data, data.commitmentEntry.reference)
+      : null
+    if (
+      found &&
+      typed.replace(/\s+/g, '').toUpperCase() ===
+        String(found.planningReference || '')
+          .replace(/\s+/g, '')
+          .toUpperCase()
+    ) {
+      return { ok: false, error: message(page, 'same') }
+    }
+    return { ok: true, value: typed }
+  },
+  process(ctx, reference) {
+    const { data } = ctx
+    const entry = data.commitmentEntry
+    const found = entry
+      ? allEntries(data).find(
+          (item) => item.entry.reference === entry.reference
+        )
+      : null
+    if (!found) {
+      return { redirect: ctx.journey.routes.RETRIEVE_COMMITMENT }
+    }
+    const { record } = found
+    updateRecord(
+      data,
+      found,
+      {
+        planningReference: reference,
+        originalPlanningReference:
+          record.originalPlanningReference || record.planningReference,
+        planningStage: ADDED_STAGE
+      },
+      { event: 'variation', planningReference: reference }
+    )
+    data.recordReference = entry.reference
+    data.lpaFlash = 'variation'
+    for (const key of [
+      'commitmentReference',
+      'commitmentEntry',
+      'commitmentRecorded',
+      'planningVariation',
+      'planningVariationReference'
+    ]) {
+      delete data[key]
+    }
+    return {
+      redirect: `${ctx.journey.routes.VIEW_RECORD}?ref=${encodeURIComponent(entry.reference)}`
+    }
   }
 }
 
@@ -712,6 +933,7 @@ const addRecord = {
       return { redirect: ctx.journey.routes.RETRIEVE_COMMITMENT }
     }
     const officer = (data.officer && data.officer.fullName) || MOCK_OFFICER
+    const email = signedInEmail(data)
     data.lpaRecords = data.lpaRecords || {}
     data.lpaRecords[entry.reference] = {
       commitment: entry,
@@ -719,10 +941,21 @@ const addRecord = {
       planningStage: ADDED_STAGE,
       officer,
       status: ADDED_STATUS,
-      history: [{ event: 'added', by: officer, at: nowStamp() }]
+      history: [{ event: 'added', by: officer, email, at: nowStamp() }]
     }
     data.recordReference = entry.reference
-    data.lpaFlash = 'added'
+    if (data.officer) {
+      data.officer.hasRecords = true
+    }
+    // A variation the developer made a commitment for says which existing
+    // record it is linked with
+    const original = entry.originalReference
+    if (original && findRecord(data, original)) {
+      data.lpaFlash = 'linked'
+      data.lpaFlashReference = original
+    } else {
+      data.lpaFlash = 'added'
+    }
     // "Create a developer record" starts afresh
     for (const key of [
       'commitmentReference',
@@ -753,16 +986,173 @@ function loadRecord(ctx) {
   return null
 }
 
-// Which review options a record offers: the first step's (options with no
-// `step`) until its commitment details are reviewed, then the planning
-// application stages (`step: planning`)
-function stepOf(record) {
-  return record && record.status.value === REVIEWED_STATUS ? PLANNING_STEP : ''
+// The record page's linked records, and "NRL-101178 (original planning
+// application)" for its linked record row, which viewRecord.get turns into
+// links
+function withLinks(data, page) {
+  if (!data.record) {
+    return
+  }
+  const text = page.content.text || {}
+  const labels = {
+    original: text.linkedOriginal,
+    variation: text.linkedVariation
+  }
+  data.record.links = linkedRecords(data, data.record).map((link) => ({
+    ...link,
+    label: labels[link.relation] || link.relation
+  }))
+  data.record.linkedText = data.record.links
+    .map((link) => `${link.reference} (${link.label})`)
+    .join(', ')
 }
 
+// Which review options a record offers: the first step's (options with no
+// `step`) until its commitment details are reviewed, then the planning
+// application stages (`step: planning`), and once the permission is
+// granted the granted options (`step: granted`)
+function stepOf(record) {
+  if (!record || record.status.value !== REVIEWED_STATUS) {
+    return ''
+  }
+  return record.planningStage.value === GRANTED_STAGE
+    ? GRANTED_STEP
+    : PLANNING_STEP
+}
+
+// A granted outline application whose commitment details are reviewed
+// takes reserved matters
+function takesReservedMatters(record) {
+  return Boolean(
+    record &&
+      record.planningType === OUTLINE_TYPE &&
+      stepOf(record) === GRANTED_STEP
+  )
+}
+
+// The record's reserved matters as one line, for the planning details row
+// (which only shows when there are some); viewRecord.get swaps it for a list
+function withReservedMatters(data) {
+  if (data.record) {
+    data.record.reservedMattersText = data.record.reservedMatters
+      .map((item) => item.reference)
+      .join(', ')
+  }
+}
+
+function reservedMattersHtml(record) {
+  const items = record.reservedMatters.map(
+    (item) =>
+      `<li><span class="govuk-!-font-weight-bold">${escapeHtml(item.reference)}</span>` +
+      ` (${escapeHtml(item.status.label)})` +
+      (item.description ? `<br>${escapeHtml(item.description)}` : '') +
+      '</li>'
+  )
+  const spaced = items.length > 1 ? ' govuk-list--spaced' : ''
+  return `<ul class="govuk-list${spaced}">${items.join('')}</ul>`
+}
+
+// Reference typed, ignoring case and spaces
+function sameReference(a, b) {
+  const plain = (value) =>
+    String(value || '')
+      .replace(/\s+/g, '')
+      .toUpperCase()
+  return plain(a) === plain(b)
+}
+
+/**
+ * The add-reserved-matters page's form, its status radios the planning
+ * stages in records.yaml. Null for a record that takes none.
+ */
+function reservedMattersModel(ctx, record, { values = {}, errors = [] }) {
+  if (!takesReservedMatters(record)) {
+    return null
+  }
+  const routes = ctx.journey.routes
+  const ref = `?ref=${encodeURIComponent(record.reference)}`
+  const store = loadStore()
+  const errorFor = {}
+  for (const item of errors) {
+    errorFor[item.field] = item.message
+  }
+  return {
+    action: `${routes.ADD_RESERVED_MATTERS}${ref}`,
+    // Cancel
+    recordHref: `${routes.VIEW_RECORD}${ref}`,
+    fields: RESERVED_MATTERS_FIELDS,
+    limit: DESCRIPTION_LIMIT,
+    values,
+    errors: errorFor,
+    statuses: Object.entries(store.planningStages).map(([value, label]) => ({
+      value,
+      text: label,
+      checked: values.status === value
+    }))
+  }
+}
+
+// What the officer typed into the reserved matters form, and what is wrong
+// with it (one problem per field, in the form's order)
+function checkReservedMatters(page, body, record) {
+  const store = loadStore()
+  const values = {}
+  for (const [name, field] of Object.entries(RESERVED_MATTERS_FIELDS)) {
+    values[name] = String(body[field] || '').trim()
+  }
+  const errors = []
+  const problem = (name, key) =>
+    errors.push({
+      field: RESERVED_MATTERS_FIELDS[name],
+      message: message(page, key)
+    })
+  if (!values.reference) {
+    problem('reference', 'reservedMattersReferenceRequired')
+  } else if (
+    record.reservedMatters.some((item) =>
+      sameReference(item.reference, values.reference)
+    ) ||
+    sameReference(record.planningReference, values.reference)
+  ) {
+    problem('reference', 'reservedMattersReferenceAdded')
+  }
+  if (!(values.status in store.planningStages)) {
+    values.status = ''
+    problem('status', 'reservedMattersStatusRequired')
+  }
+  if (!values.description) {
+    problem('description', 'reservedMattersDescriptionRequired')
+  } else if (values.description.length > DESCRIPTION_LIMIT) {
+    problem('description', 'reservedMattersDescriptionTooLong')
+  }
+  return { values, errors }
+}
+
+// The screen wall's reserved matters errors: which field each belongs to
+const RESERVED_MATTERS_ERRORS = {
+  reservedMattersReferenceRequired: RESERVED_MATTERS_FIELDS.reference,
+  reservedMattersReferenceAdded: RESERVED_MATTERS_FIELDS.reference,
+  reservedMattersStatusRequired: RESERVED_MATTERS_FIELDS.status,
+  reservedMattersDescriptionRequired: RESERVED_MATTERS_FIELDS.description,
+  reservedMattersDescriptionTooLong: RESERVED_MATTERS_FIELDS.description
+}
+
+// The options for the record's step; Add reserved matters only for an
+// outline application
 function optionsFor(page, record) {
   const step = stepOf(record)
-  return page.content.options.filter((option) => (option.step || '') === step)
+  return page.content.options.filter(
+    (option) =>
+      (option.step || '') === step &&
+      (option.value !== RESERVED_MATTERS || takesReservedMatters(record))
+  )
+}
+
+// The error for no option chosen, by step
+const REQUIRED_ERRORS = {
+  '': 'required',
+  [PLANNING_STEP]: 'stageRequired',
+  [GRANTED_STEP]: 'grantedRequired'
 }
 
 // Writes a change to a record: its new fields and the event for its
@@ -777,10 +1167,22 @@ function updateRecord(data, found, changes, event) {
     commitment: found.entry,
     history: [
       ...(record.history || []),
-      { ...event, by: officer, at: nowStamp() }
+      { ...event, by: officer, email: signedInEmail(data), at: nowStamp() }
     ]
   }
   data.lpaFlash = 'updated'
+}
+
+// The record page's success banners: the `text:` keys of each one's title
+// and words ({reference} is lpaFlashReference)
+const FLASHES = {
+  added: { title: 'successTitle', text: 'added' },
+  linked: { title: 'successTitle', text: 'addedLinked' },
+  variation: { title: 'variationAddedTitle', text: 'variationAdded' },
+  [RESERVED_MATTERS]: {
+    title: 'reservedMattersAddedTitle',
+    text: 'reservedMattersAdded'
+  }
 }
 
 // The record page: a flash message says a record was just added. The
@@ -790,16 +1192,41 @@ function updateRecord(data, found, changes, event) {
 // reviewing them moves it on to its planning application's stage, and
 // choosing the stage it is at already changes nothing. Rejecting asks why
 // on reject-commitment and is final: a rejected record shows a warning in
-// place of the radios, and a post for it changes nothing.
+// place of the radios, and a post for it changes nothing. Once the
+// permission is granted, judicial review sets the stage, Add reserved
+// matters opens the add-reserved-matters page and the placeholder changes
+// nothing.
 const viewRecord = {
+  // The page showing "Select ..." offers only the record's options too
+  getOnError: true,
+  // The add-reserved-matters page's form posts here; errors show on that
+  // page, and saving returns to the record, which says so
+  routes(router, journey) {
+    const routes = {
+      ADD_RESERVED_MATTERS: `${journey.basePath}/add-reserved-matters`
+    }
+    router.post(routes.ADD_RESERVED_MATTERS, (req, res, next) => {
+      try {
+        addReservedMatters(req, res, loadJourney(journey.id))
+      } catch (error) {
+        next(error)
+      }
+    })
+    return routes
+  },
   load(ctx) {
-    // The screen wall's stage error needs a record past its review
-    if (ctx.preview && ctx.previewError === 'stageRequired') {
-      const reviewed = allRecords(ctx.data).find(
-        (record) => stepOf(record) === PLANNING_STEP
+    // The screen wall's stage error needs a record past its review, and
+    // its granted error a granted one
+    const errorStep = {
+      stageRequired: PLANNING_STEP,
+      grantedRequired: GRANTED_STEP
+    }[ctx.preview && ctx.previewError]
+    if (errorStep) {
+      const shown = allRecords(ctx.data).find(
+        (record) => stepOf(record) === errorStep
       )
-      if (reviewed) {
-        ctx.data.recordReference = reviewed.reference
+      if (shown) {
+        ctx.data.recordReference = shown.reference
       }
     }
     const redirect = loadRecord(ctx)
@@ -807,22 +1234,63 @@ const viewRecord = {
       return redirect
     }
     const { data } = ctx
-    // The kit keeps the last post's fields in the session
+    // The kit keeps the last post's field in the session
     delete data[ctx.page.field]
     if (!ctx.preview) {
       delete data.newStatus
     }
+    withLinks(data, ctx.page)
+    withReservedMatters(data)
   },
   get(ctx, model) {
     const { data, page } = ctx
-    model.flash = data.lpaFlash === 'added' ? 'added' : null
+    // Each linked record the council has opens its page, and the reserved
+    // matters are a list
+    const links = (data.record && data.record.links) || []
+    const reservedMatters =
+      (data.record && data.record.reservedMattersText) || ''
+    for (const group of model.content.rowGroups || []) {
+      for (const row of group.rows) {
+        if (reservedMatters && row.value.text === reservedMatters) {
+          row.value = { html: reservedMattersHtml(data.record) }
+        }
+        if (links.length && row.value.text === data.record.linkedText) {
+          row.value = {
+            html: links
+              .map((link) => {
+                const reference = escapeHtml(link.reference)
+                const shown = link.recorded
+                  ? `<a class="govuk-link" href="${ctx.journey.routes.VIEW_RECORD}?ref=${encodeURIComponent(link.reference)}">${reference}</a>`
+                  : reference
+                return `${shown} (${escapeHtml(link.label)})`
+              })
+              .join('<br>')
+          }
+        }
+      }
+    }
+    const flash = FLASHES[data.lpaFlash]
+    if (flash) {
+      const text = model.content.text
+      model.flash = data.lpaFlash
+      model.flashTitle = text[flash.title]
+      model.flashText = String(text[flash.text] || '').replace(
+        '{reference}',
+        String(data.lpaFlashReference || '')
+      )
+    }
     delete data.lpaFlash
+    delete data.lpaFlashReference
     // The items line up with the page's options
     const offered = new Set(optionsFor(page, data.record))
     model.content.items = model.content.items.filter((item, index) =>
       offered.has(page.content.options[index])
     )
-    model.planningStep = stepOf(data.record) === PLANNING_STEP
+    // The planning stages and the granted options share a legend; only
+    // the stages have the hint
+    const step = stepOf(data.record)
+    model.planningStep = step === PLANNING_STEP || step === GRANTED_STEP
+    model.stageHint = step === PLANNING_STEP
     // The screen wall's error states, as a post would show them
     if (ctx.preview && ctx.previewError) {
       model.errors = [
@@ -840,6 +1308,8 @@ const viewRecord = {
     if (!data.record) {
       return { ok: true }
     }
+    withLinks(data, page)
+    withReservedMatters(data)
     data.commitment = data.record.commitment
     if (data.record.status.value === REJECTED_STATUS) {
       return { ok: true, value: null }
@@ -851,10 +1321,11 @@ const viewRecord = {
       String(option.value)
     )
     if (!allowed.includes(choice)) {
-      const key = step === PLANNING_STEP ? 'stageRequired' : 'required'
       return {
         ok: false,
-        errors: [{ field: page.field, message: message(page, key) }]
+        errors: [
+          { field: page.field, message: message(page, REQUIRED_ERRORS[step]) }
+        ]
       }
     }
     return { ok: true, value: { step, choice } }
@@ -875,10 +1346,18 @@ const viewRecord = {
       delete data.rejectReason
       return { redirect: ctx.journey.routes.REJECT_COMMITMENT }
     }
+    if (value.choice === RESERVED_MATTERS) {
+      return {
+        redirect: `${ctx.journey.routes.ADD_RESERVED_MATTERS}?ref=${encodeURIComponent(reference)}`
+      }
+    }
+    if (value.choice === PLACEHOLDER_OPTION) {
+      return { redirect: dashboardPath }
+    }
     const record = found.record
     const changes = {}
     let event
-    if (value.step === PLANNING_STEP) {
+    if (value.step === PLANNING_STEP || value.step === GRANTED_STEP) {
       if ((record.planningStage || ADDED_STAGE) === value.choice) {
         return { redirect: dashboardPath }
       }
@@ -893,6 +1372,55 @@ const viewRecord = {
     updateRecord(data, found, changes, event)
     return { redirect: dashboardPath }
   }
+}
+
+// The add-reserved-matters page's form: each reserved matters application
+// the officer saves joins the record's reserved matters and its history,
+// and the record page says so. A problem shows the page again with the
+// officer's answers kept.
+function addReservedMatters(req, res, journey) {
+  const page = journey.byId.get('add-reserved-matters')
+  const ctx = buildContext(req, res, journey, page, { isPost: true })
+  const redirect = loadRecord(ctx)
+  if (redirect) {
+    return res.redirect(303, redirect.redirect)
+  }
+  const { data } = ctx
+  const recordPath = `${journey.routes.VIEW_RECORD}?ref=${encodeURIComponent(data.record.reference)}`
+  // The kit keeps the post's fields in the session
+  for (const field of Object.values(RESERVED_MATTERS_FIELDS)) {
+    delete data[field]
+  }
+  const found = allEntries(data).find(
+    (item) => item.entry.reference === data.record.reference
+  )
+  if (!found || !takesReservedMatters(data.record)) {
+    return res.redirect(303, recordPath)
+  }
+  const { values, errors } = checkReservedMatters(page, ctx.body, data.record)
+  if (errors.length) {
+    const model = buildModel(ctx, { errors })
+    addReservedMattersPage.get(ctx, model, { values, errors })
+    return res.render(page.template, model)
+  }
+  updateRecord(
+    data,
+    found,
+    {
+      reservedMatters: [
+        ...(found.record.reservedMatters || []),
+        {
+          reference: values.reference,
+          status: values.status,
+          description: values.description
+        }
+      ]
+    },
+    { event: RESERVED_MATTERS, planningReference: values.reference }
+  )
+  data.lpaFlash = RESERVED_MATTERS
+  data.lpaFlashReference = values.reference
+  req.session.save(() => res.redirect(303, recordPath))
 }
 
 // Why the commitment details are rejected: a reason and an optional
@@ -939,6 +1467,45 @@ const rejectCommitment = {
 }
 
 // Every detail of a record's commitment, behind the record page
+// Reserved matters on a page of their own, opened from the record's Add
+// reserved matters option: add-reserved-matters?ref=NRL-100958, for a
+// granted outline application only (any other record opens instead). Its
+// form posts to this page's path, which viewRecord.routes handles.
+const addReservedMattersPage = {
+  load(ctx) {
+    const redirect = loadRecord(ctx)
+    if (redirect) {
+      return redirect
+    }
+    const { data } = ctx
+    for (const field of Object.values(RESERVED_MATTERS_FIELDS)) {
+      delete data[field]
+    }
+    if (!ctx.preview && !takesReservedMatters(data.record)) {
+      return {
+        redirect: `${ctx.journey.routes.VIEW_RECORD}?ref=${encodeURIComponent(data.record.reference)}`
+      }
+    }
+  },
+  get(ctx, model, form = {}) {
+    let errors = form.errors || []
+    // The screen wall's error states, as a post would show them
+    if (ctx.preview && RESERVED_MATTERS_ERRORS[ctx.previewError]) {
+      errors = [
+        {
+          field: RESERVED_MATTERS_ERRORS[ctx.previewError],
+          message: message(ctx.page, ctx.previewError)
+        }
+      ]
+      model.errors = errors
+    }
+    model.reservedMatters = reservedMattersModel(ctx, ctx.data.record, {
+      values: form.values,
+      errors
+    })
+  }
+}
+
 const certificate = {
   load: loadRecord
 }
@@ -946,6 +1513,12 @@ const certificate = {
 // The landing page: counts that open the table filtered to them, and
 // every record, searched, filtered, sorted by its column headings and paged
 const dashboard = {
+  // A council with no records yet adds its first one instead
+  load(ctx) {
+    if (!ctx.preview && !allEntries(ctx.data).length) {
+      return { redirect: ctx.journey.routes.RETRIEVE_COMMITMENT }
+    }
+  },
   get(ctx, model) {
     const store = loadStore()
     const { text } = model.content
@@ -1011,15 +1584,19 @@ module.exports = {
   'one-login-password': oneLoginSignIn,
   'retrieve-commitment': retrieveCommitment,
   'planning-reference': addRecord,
+  'planning-variation': planningVariation,
+  'planning-variation-reference': addVariation,
   'view-record': viewRecord,
   'reject-commitment': rejectCommitment,
   certificate,
+  'add-reserved-matters': addReservedMattersPage,
   dashboard,
   // For tests
   loadStore,
   allRecords,
   findRecord,
   findCommitmentEntry,
+  linkedRecords,
   commitmentOf,
   MOCK_OFFICER,
   RECORDS_PER_PAGE

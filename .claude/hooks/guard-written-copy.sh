@@ -15,7 +15,7 @@ tool=$(printf '%s' "$input" | jq -r '.tool_name // empty')
 
 # Paths that count as written copy (relative to the repo root). READMEs in
 # those folders are developer documentation, not copy, and pass through.
-copy_regex='(^|/)(content|prompts)/[^[:space:]]*\.md$'
+copy_regex='(^|/)(content/shared|prompts)/[^[:space:]]*\.md$'
 readme_regex='(^|/)README\.md$'
 
 is_copy() {
@@ -46,7 +46,7 @@ case "$tool" in
     # copies, deletes, tee, or git commands that rewrite the working tree.
     mutating='(>|>>|\bsed[[:space:]]+-[a-zA-Z]*i|\bperl[[:space:]]+-[a-zA-Z]*i|\bmv\b|\bcp\b|\brm\b|\btee\b|\btruncate\b|\bgit[[:space:]]+(checkout|restore|revert|reset|stash|apply|cherry-pick)\b|\bpatch\b)'
     if printf '%s' "$cmd" | grep -Eq "$mutating"; then
-      path=$(printf '%s' "$cmd" | grep -Eo '(^|[[:space:]"'"'"'=])[^[:space:]"'"'"']*(content|prompts)/[^[:space:]"'"'"']*\.md' | head -n1 | sed -E 's/^[[:space:]"'"'"'=]//')
+      path=$(printf '%s' "$cmd" | grep -Eo '(^|[[:space:]"'"'"'=])[^[:space:]"'"'"']*(content/shared|prompts)/[^[:space:]"'"'"']*\.md' | head -n1 | sed -E 's/^[[:space:]"'"'"'=]//')
       if [[ -n "$path" ]] && is_copy "$path"; then
         reason "$path"
       fi

@@ -30,7 +30,8 @@ const {
   expectHeading,
   heading,
   expectError,
-  expectOnPage
+  expectOnPage,
+  pageOf
 } = copyOf('lpa-manage-1')
 
 const store = loadStore()
@@ -38,14 +39,19 @@ const store = loadStore()
 const waiting = store.commitments.find((entry) => !entry.record)
 const recorded = store.commitments.find((entry) => entry.record)
 
-async function signIn(page) {
-  await page.goto(`${base}/${journey.start}`)
+// Signing in lands on the dashboard, or on "Enter an NRL reference" for a
+// council with no records yet (an email with "new" in it)
+async function signIn(page, email = 'officer@scarfolk.gov.uk') {
+  await page.goto(`${base}/one-login-email`)
   await expectOnPage(page, 'one-login-email')
-  await fillAnswer(page, 'one-login-email', 'officer@scarfolk.gov.uk')
+  await fillAnswer(page, 'one-login-email', email)
   await submit(page, 'one-login-email')
   await fillAnswer(page, 'one-login-password', 'not-a-real-password')
   await submit(page, 'one-login-password')
-  await expectOnPage(page, 'what-would-you-like-to-do')
+  await expectOnPage(
+    page,
+    email.includes('new') ? 'retrieve-commitment' : 'dashboard'
+  )
 }
 
 async function retrieve(page, reference) {
@@ -54,6 +60,13 @@ async function retrieve(page, reference) {
 }
 
 test.describe('lpa-manage-1: manage commitments', () => {
+  test('the start page leads to signing in', async ({ page }) => {
+    await page.goto(`${base}/${journey.start}`)
+    await expectHeading(page, 'start')
+    await page.getByRole('button', { name: 'Start now' }).click()
+    await expectOnPage(page, 'one-login-email')
+  })
+
   test('the staff header shows the service, the officer and the council', async ({
     page
   }) => {
@@ -82,16 +95,19 @@ test.describe('lpa-manage-1: manage commitments', () => {
 
   test('adds a developer record from an NRL reference', async ({ page }) => {
     await signIn(page)
-    await answer(page, 'what-would-you-like-to-do', 'create')
-    await submit(page, 'what-would-you-like-to-do')
+    await page
+      .getByRole('button', { name: text('dashboard', 'addRecord') })
+      .click()
     await expectHeading(page, 'retrieve-commitment')
+    await expect(page.locator('.govuk-back-link')).toHaveAttribute(
+      'href',
+      `${base}/dashboard`
+    )
 
     await submit(page, 'retrieve-commitment')
     await expectError(page, 'retrieve-commitment', 'required')
     await retrieve(page, 'NRL-12')
     await expectError(page, 'retrieve-commitment', 'format')
-    await retrieve(page, recorded.reference)
-    await expectError(page, 'retrieve-commitment', 'recorded')
 
     // The planning reference follows straight on and adds the record: no
     // confirm or check your answers page
@@ -109,6 +125,10 @@ test.describe('lpa-manage-1: manage commitments', () => {
     const timeline = page.locator('.app-timeline')
     await expect(timeline).toContainText(text('view-record', 'timelineAdded'))
     await expect(timeline).toContainText(MOCK_OFFICER)
+    // with the email they signed in with
+    await expect(timeline.locator('.app-timeline__email')).toHaveText(
+      '(officer@scarfolk.gov.uk)'
+    )
     // No review option is chosen for the officer
     await expect(page.locator('input[name="new-status"]:checked')).toHaveCount(
       0
@@ -120,6 +140,132 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(
       page.locator('.app-staff-table tbody tr').first()
     ).toContainText(waiting.reference)
+  })
+
+  test('an NRL reference already in the records may be a planning variation', async ({
+    page
+  }) => {
+    // The record page's row for the original planning application
+    const { rows } = pageOf('view-record').content
+    const originalKey = rows.find((row) =>
+      String(row.value).includes('record.originalPlanningReference')
+    ).key
+    const variationKey = rows.find(
+      (row) =>
+        row.when &&
+        row.when.key === 'record.originalPlanningReference' &&
+        row.when.truthy &&
+        String(row.value).includes('record.planningReference }}')
+    ).key
+    const main = page.locator('main')
+    await signIn(page)
+
+    // Not a variation: back to the NRL reference, holding the one typed,
+    // to correct it
+    await page.goto(`${base}/retrieve-commitment`)
+    await retrieve(page, recorded.reference)
+    await expectHeading(page, 'planning-variation')
+    await submit(page, 'planning-variation')
+    await expectError(page, 'planning-variation', 'required')
+    await answer(page, 'planning-variation', 'no')
+    await submit(page, 'planning-variation')
+    await expectHeading(page, 'retrieve-commitment')
+    await expect(
+      page.locator('input[name="commitment-reference"]')
+    ).toHaveValue(recorded.reference)
+
+    // A variation takes the new planning application reference and keeps
+    // the original
+    await page.goto(`${base}/retrieve-commitment`)
+    await retrieve(page, recorded.reference)
+    await answer(page, 'planning-variation', 'yes')
+    await submit(page, 'planning-variation')
+    await expectHeading(page, 'planning-variation-reference')
+    await fillAnswer(
+      page,
+      'planning-variation-reference',
+      recorded.record.planningReference
+    )
+    await submit(page, 'planning-variation-reference')
+    await expectError(page, 'planning-variation-reference', 'same')
+    await fillAnswer(page, 'planning-variation-reference', '26/00003/VAR')
+    await submit(page, 'planning-variation-reference')
+
+    await expect(page).toHaveURL(
+      `${base}/view-record?ref=${recorded.reference}`
+    )
+    await expect(page.locator('.govuk-notification-banner')).toContainText(
+      text('view-record', 'variationAdded')
+    )
+    await expect(main).toContainText(originalKey)
+    await expect(main).toContainText(recorded.record.planningReference)
+    // The new reference is the variation's
+    await expect(
+      page
+        .locator('.govuk-summary-list__row')
+        .filter({ hasText: '26/00003/VAR' })
+        .locator('.govuk-summary-list__key')
+    ).toHaveText(variationKey)
+    await expect(page.locator('.app-timeline__item').first()).toContainText(
+      text('view-record', 'timelineVariation')
+    )
+  })
+
+  test('the history gives each officer’s email', async ({ page }) => {
+    const { officers } = loadStore()
+    await signIn(page)
+    await page.goto(`${base}/view-record?ref=${recorded.reference}`)
+    const items = page.locator('.app-timeline__item')
+    const count = await items.count()
+    for (let i = 0; i < count; i++) {
+      const by = recorded.record.history[count - 1 - i].by
+      await expect(items.nth(i).locator('.app-timeline__email')).toHaveText(
+        `(${officers[by]})`
+      )
+    }
+  })
+
+  test('a variation’s commitment and the original’s record link to each other', async ({
+    page
+  }) => {
+    const linkedKey = pageOf('view-record').content.rows.find((row) =>
+      String(row.value).includes('record.linkedText')
+    ).key
+    const variation = store.commitments.find(
+      (entry) => entry.originalReference && !entry.record
+    )
+    const row = page
+      .locator('.govuk-summary-list__row')
+      .filter({ hasText: linkedKey })
+    await signIn(page)
+
+    // Adding the variation's commitment links it to the original's record
+    await page.goto(`${base}/retrieve-commitment`)
+    await retrieve(page, variation.reference)
+    await fillAnswer(page, 'planning-reference', '26/00004/VAR')
+    await submit(page, 'planning-reference')
+    await expect(page.locator('.govuk-notification-banner')).toContainText(
+      text('view-record', 'addedLinked').replace(
+        '{reference}',
+        variation.originalReference
+      )
+    )
+    await expect(row).toContainText(
+      `${variation.originalReference} (${text('view-record', 'linkedOriginal')})`
+    )
+
+    // and the original's record links back
+    await row.getByRole('link', { name: variation.originalReference }).click()
+    await expectHeading(page, 'view-record', {
+      record: { reference: variation.originalReference }
+    })
+    await expect(row).toContainText(
+      `${variation.reference} (${text('view-record', 'linkedVariation')})`
+    )
+    await row.getByRole('link', { name: variation.reference }).click()
+    await expect(page).toHaveURL(
+      `${base}/view-record?ref=${variation.reference}`
+    )
   })
 
   test('the full certificate sits behind the record', async ({ page }) => {
@@ -267,13 +413,184 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(optionLocator(page, 'view-record', 'rejected')).toHaveCount(0)
   })
 
+  test('a granted application offers the granted options', async ({ page }) => {
+    const granted = store.commitments.find(
+      (entry) =>
+        entry.record &&
+        entry.record.status === 'reviewed' &&
+        entry.record.planningStage === 'granted' &&
+        store.planningTypes[entry.planningType] !== 'Outline'
+    )
+    const viewPath = `${base}/view-record?ref=${granted.reference}`
+    const radios = page.locator('input[name="new-status"]')
+    const items = page.locator('.app-timeline__item')
+    await signIn(page)
+    await page.goto(viewPath)
+    const entries = await items.count()
+
+    // Judicial review and the placeholder: no reserved matters, as it is
+    // not an outline application
+    await expect(radios).toHaveCount(2)
+    await expect(
+      optionLocator(page, 'view-record', 'judicial-review')
+    ).toHaveCount(1)
+    await expect(optionLocator(page, 'view-record', 'placeholder')).toHaveCount(
+      1
+    )
+    await expect(
+      optionLocator(page, 'view-record', 'reserved-matters')
+    ).toHaveCount(0)
+    await expect(page.locator('legend')).toHaveText(
+      text('view-record', 'planningLegend')
+    )
+    await expect(page.locator('#new-status-hint')).toHaveCount(0)
+    await submit(page, 'view-record')
+    await expectError(page, 'view-record', 'grantedRequired')
+
+    // The placeholder changes nothing
+    await answer(page, 'view-record', 'placeholder')
+    await submit(page, 'view-record')
+    await expectHeading(page, 'dashboard')
+    await page.goto(viewPath)
+    await expect(items).toHaveCount(entries)
+
+    // Judicial review sets the stage, and the planning stages return
+    await answer(page, 'view-record', 'judicial-review')
+    await submit(page, 'view-record')
+    await expectHeading(page, 'dashboard')
+    await page.goto(viewPath)
+    const stage = store.planningStages['judicial-review']
+    await expect(items.first()).toContainText(
+      `${text('view-record', 'timelineStage')} ${stage}`
+    )
+    await expect(radios).toHaveCount(4)
+  })
+
+  test('a granted outline application takes reserved matters', async ({
+    page
+  }) => {
+    const outline = (entry) =>
+      entry.record &&
+      entry.record.status === 'reviewed' &&
+      store.planningTypes[entry.planningType] === 'Outline'
+    const notGranted = store.commitments.find(
+      (entry) => outline(entry) && entry.record.planningStage === 'applied'
+    )
+    const granted = store.commitments.find(
+      (entry) =>
+        outline(entry) &&
+        entry.record.planningStage === 'granted' &&
+        (entry.record.reservedMatters || []).length
+    )
+    const radios = page.locator('input[name="new-status"]')
+    const save = page.getByRole('button', {
+      name: text('add-reserved-matters', 'reservedMattersSave')
+    })
+    const label = (key) =>
+      page.getByLabel(text('add-reserved-matters', key), { exact: true })
+    const addReservedMatters = async () => {
+      await answer(page, 'view-record', 'reserved-matters')
+      await submit(page, 'view-record')
+      await expectHeading(page, 'add-reserved-matters')
+    }
+    await signIn(page)
+
+    // Not until the outline application is granted
+    await page.goto(`${base}/view-record?ref=${notGranted.reference}`)
+    await expect(
+      optionLocator(page, 'view-record', 'reserved-matters')
+    ).toHaveCount(0)
+    await answer(page, 'view-record', 'granted')
+    await submit(page, 'view-record')
+    await expectHeading(page, 'dashboard')
+    await page.goto(`${base}/view-record?ref=${notGranted.reference}`)
+    // Judicial review, Add reserved matters, then the placeholder
+    await expect(radios).toHaveCount(3)
+    await expect(radios.nth(1)).toHaveAttribute('value', 'reserved-matters')
+
+    // Its own page, with breadcrumbs back to the record; Cancel returns
+    // there
+    await addReservedMatters()
+    await expect(page.locator('.govuk-breadcrumbs')).toContainText(
+      notGranted.reference
+    )
+    await page
+      .getByRole('link', {
+        name: text('add-reserved-matters', 'reservedMattersCancel')
+      })
+      .click()
+    await expectHeading(page, 'view-record', { record: notGranted })
+
+    // One already granted lists its reserved matters in the planning
+    // details
+    const viewPath = `${base}/view-record?ref=${granted.reference}`
+    await page.goto(viewPath)
+    const [existing] = granted.record.reservedMatters
+    const details = page.locator('.govuk-summary-list').nth(1)
+    await expect(details).toContainText(existing.reference)
+    await expect(details).toContainText(existing.description)
+    const entries = await page.locator('.app-timeline__item').count()
+
+    await addReservedMatters()
+    await save.click()
+    await expectError(
+      page,
+      'add-reserved-matters',
+      'reservedMattersReferenceRequired'
+    )
+    await expectError(
+      page,
+      'add-reserved-matters',
+      'reservedMattersStatusRequired'
+    )
+    await expectError(
+      page,
+      'add-reserved-matters',
+      'reservedMattersDescriptionRequired'
+    )
+
+    // The same reference twice is refused; the answers are kept
+    await label('reservedMattersReferenceLabel').fill(existing.reference)
+    await page.getByLabel(store.planningStages.applied, { exact: true }).check()
+    await label('reservedMattersDescriptionLabel').fill('Phase 2 (120 homes)')
+    await save.click()
+    await expectError(
+      page,
+      'add-reserved-matters',
+      'reservedMattersReferenceAdded'
+    )
+    await expect(label('reservedMattersDescriptionLabel')).toHaveValue(
+      'Phase 2 (120 homes)'
+    )
+
+    await label('reservedMattersReferenceLabel').fill('2026/0577/REM')
+    await save.click()
+    await expectHeading(page, 'view-record', { record: granted })
+    await expect(page.locator('.govuk-notification-banner')).toContainText(
+      text('view-record', 'reservedMattersAdded').replace(
+        '{reference}',
+        '2026/0577/REM'
+      )
+    )
+    await expect(details).toContainText(existing.reference)
+    await expect(details).toContainText('2026/0577/REM')
+    await expect(details).toContainText('Phase 2 (120 homes)')
+    const items = page.locator('.app-timeline__item')
+    await expect(items).toHaveCount(entries + 1)
+    await expect(items.first()).toContainText(
+      text('view-record', 'timelineReservedMatters')
+    )
+    await expect(items.first()).toContainText('2026/0577/REM')
+    // Still granted, ready for another
+    await expect(radios).toHaveCount(3)
+  })
+
   test('the dashboard’s cards open the table filtered to them', async ({
     page
   }) => {
     await signIn(page)
-    await answer(page, 'what-would-you-like-to-do', 'view')
-    await submit(page, 'what-would-you-like-to-do')
     await expectHeading(page, 'dashboard')
+    await expect(page.locator('.govuk-back-link')).toHaveCount(0)
 
     const records = allRecords({})
     const counted = [
@@ -394,10 +711,33 @@ test.describe('lpa-manage-1: manage commitments', () => {
     )
   })
 
-  test('signing out returns to GOV.UK One Login', async ({ page }) => {
+  test('a council with no records yet goes straight to adding one', async ({
+    page
+  }) => {
+    await signIn(page, 'new-officer@scarfolk.gov.uk')
+    await expectHeading(page, 'retrieve-commitment')
+    // Nothing to go back to, and the dashboard sends the officer here too
+    await expect(page.locator('.govuk-back-link')).toHaveCount(0)
+    await page.goto(`${base}/dashboard`)
+    await expectOnPage(page, 'retrieve-commitment')
+
+    // The council's first record is the only one on the dashboard
+    await retrieve(page, recorded.reference)
+    await expectHeading(page, 'planning-reference')
+    await fillAnswer(page, 'planning-reference', '26/00002/FUL')
+    await submit(page, 'planning-reference')
+    await expectHeading(page, 'view-record', { record: recorded })
+    await page.goto(`${base}/dashboard`)
+    await expectHeading(page, 'dashboard')
+    const rows = page.locator('.app-staff-table tbody tr')
+    await expect(rows).toHaveCount(1)
+    await expect(rows.first()).toContainText(recorded.reference)
+  })
+
+  test('signing out returns to the start page', async ({ page }) => {
     await signIn(page)
     await page.goto(`${base}/sign-out`)
-    await expectOnPage(page, 'one-login-email')
+    await expectOnPage(page, 'start')
     await page.goto(`${base}/dashboard`)
     await expectOnPage(page, 'one-login-email')
   })

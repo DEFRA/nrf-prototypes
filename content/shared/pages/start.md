@@ -31,7 +31,7 @@ You will need to upload a red line boundary file to tell us where your relevant 
 
 If you don't have access to these file types, you will be able to draw on a map instead. [Learn more about telling us where your development is (opens in a new tab)](*)
 
-When we have all your details confirmed, you will be sent a quote email with a NRL reference and the amount of the levy. You can get as many quotes as you like.
+When we have all your details confirmed, you will be sent a quote email with an NRL reference and the amount of the levy. You can get as many quotes as you like.
 
 ### What to do with your quote
 

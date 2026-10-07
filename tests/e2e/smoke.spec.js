@@ -36,7 +36,7 @@ test.describe('Journey Start Pages', () => {
   const journeyPages = getJourneysWithStartPage()
 
   for (const journey of journeyPages) {
-    test(`${journey.name} start page loads without errors`, async ({
+    test(`${journey.name} (${journey.path}) start page loads without errors`, async ({
       page
     }) => {
       // Navigate to the journey start page

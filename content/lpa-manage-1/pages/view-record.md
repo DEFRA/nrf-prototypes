@@ -7,18 +7,43 @@
 # later keeps it For review and notes it on the timeline). Once its
 # commitment details are reviewed the planning stage options (`step:
 # planning`) take their place: they set the planning application's stage
-# (see records.yaml).
+# (see records.yaml). A planning variation shows the new planning
+# application reference and the original one. A record linked to another
+# (a variation the developer made a commitment for, and the original
+# application's) links to it; `linkedOriginal` and `linkedVariation` say
+# which way. Once an outline planning application's permission is granted
+# the granted options (`step: granted`) take the planning stages' place:
+# judicial review, Add reserved matters (which Confirm opens on
+# add-reserved-matters) and a placeholder. Any other granted application
+# offers the same without Add reserved matters. The reserved matters saved
+# are listed in the planning details.
 type: custom
 rows:
   - heading: Commitment details
   - include: commitment-summary
   - heading: Planning details
-  - key: Planning application reference
-    value: '{{ record.planningReference }}'
-  - key: Planning application stage
-    value: '{{ record.planningStage.label }}'
   - key: Planning type
     value: '{{ commitment.planningType }}'
+  - key: Planning variation
+    value: 'Yes'
+    when: { key: record.variation, truthy: true }
+  - key: Planning application reference
+    value: '{{ record.planningReference }}'
+    when: { key: record.originalPlanningReference, falsy: true }
+  - key: Variation planning application reference
+    value: '{{ record.planningReference }}'
+    when: { key: record.originalPlanningReference, truthy: true }
+  - key: Original planning application reference
+    value: '{{ record.originalPlanningReference }}'
+    when: { key: record.originalPlanningReference, truthy: true }
+  - key: Linked developer record
+    value: '{{ record.linkedText }}'
+    when: { key: record.linkedText, truthy: true }
+  - key: Planning application stage
+    value: '{{ record.planningStage.label }}'
+  - key: Reserved matters
+    value: '{{ record.reservedMattersText }}'
+    when: { key: record.reservedMattersText, truthy: true }
   - key: Added by
     value: '{{ record.officer }}'
   - key: Reviewed by
@@ -47,14 +72,33 @@ options:
   - label: The planning permission is in judicial review
     value: judicial-review
     step: planning
+  # Once the planning permission is granted. Add reserved matters is for an
+  # outline application only
+  - label: The planning permission is in judicial review
+    value: judicial-review
+    step: granted
+  - label: Add reserved matters
+    value: reserved-matters
+    step: granted
+  # PLACEHOLDER COPY: an option still to be decided
+  - label: Placeholder option
+    value: placeholder
+    step: granted
 errors:
   required: Select a new status for this developer record
   stageRequired: Select the stage the planning application has reached
+  # PLACEHOLDER COPY: no granted option chosen
+  grantedRequired: Select an option
 button: Confirm
 text:
-  addRecord: Create a developer record
   successTitle: Commitment details retrieved
   added: A new developer record has been created for review
+  # A variation the developer made a commitment for; {reference} is the
+  # existing developer record it is linked with
+  addedLinked: A new developer record has been created for review and linked with existing developer record {reference}
+  # Once a planning variation's reference is added
+  variationAddedTitle: Developer record updated
+  variationAdded: Variation planning application reference added
   viewCertificate: View full certificate
   statusLegend: Review options
   # Once the commitment details are reviewed
@@ -68,6 +112,15 @@ text:
   timelineStatus: Status changed to
   timelineReviewLater: Marked to review and confirm later
   timelineStage: Planning application stage changed to
+  timelineVariation: Planning variation added
+  timelineReservedMatters: Reserved matters added
+  # The success banner once reserved matters are saved on
+  # add-reserved-matters; {reference} is the one just added
+  reservedMattersAddedTitle: Success
+  reservedMattersAdded: Reserved matters {reference} has been added to this developer record
+  # After the NRL reference of a linked developer record, in brackets
+  linkedOriginal: original planning application
+  linkedVariation: planning variation
   timelineComment: Comment
   by: by
   at: at

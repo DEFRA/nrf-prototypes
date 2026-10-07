@@ -12,8 +12,8 @@ const { copyOf, gotoTools } = require('./helpers/journey')
  * other leaves for the sibling journey's first question.
  */
 
-const quote = copyOf('nrf-quote-7')
-const requestToUse = copyOf('nrf-request-to-use-1')
+const quote = copyOf('nrf-quote-7-1')
+const requestToUse = copyOf('nrf-request-to-use-1-1')
 const funnel = quote.journey.byId.get('what-would-you-like-to-do')
 // Where the funnel sends "request to use" answers: the request-to-use
 // journey's first question, read from the rule so the test follows the YAML

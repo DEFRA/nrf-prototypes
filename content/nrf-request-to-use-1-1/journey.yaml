@@ -1,0 +1,952 @@
+# Flow and logic for the "Request to use" journey.
+#
+# Copy lives in pages/*.md. This file decides the order of pages, where each
+# answer leads and what is remembered in the session. See content/README.md.
+#
+# A developer with a quote retrieves it with their NRL reference, reviews and
+# amends the development details, accepts the levy amount, signs in (or
+# creates an account) with the mock GOV.UK One Login or Government Gateway
+# and confirms who the developer is. On submission they get an email and a
+# commitment certificate to give to their local planning authority.
+# Behaviour that needs code (the mock quote store, sign-in accounts, the NRL
+# reference) is in app/lib/nrf-request-to-use-1-1/hooks.js.
+#
+# The sign-in, account creation and Defra ID registration pages are shared
+# with any other journey that signs users in: their copy lives in
+# content/shared/one-login, government-gateway and defra-id.
+#
+# The development details (planning type, housing, units, the map) and the
+# delete flow are the quote journey's own pages, borrowed rather than copied:
+# the Change links and the "No, delete my quote details" answer leave for
+# /nrf-quote-7-1/... with the way back in `nav`, and those pages return here.
+# Update the paths when a newer quote version becomes the target.
+
+id: nrf-request-to-use-1-1
+name: Request to use the nature restoration levy
+serviceName: Request to use the nature restoration levy
+start: start
+
+# Pages with Change links. A `goto: $summary` returns to whichever of these the
+# user came from.
+summaryPages:
+  - review-quote-details
+  - review-developer-details
+  - review-your-details
+  - check-your-answers
+  - defra-check-answers
+  - defra-business-check-answers
+
+# When this holds the header shows Sign out and, for agents, the organisation
+# they are acting for
+signedIn: { key: account, isSet: true }
+
+# Card shown on the homepage. `family` picks the tab, `version` orders it
+# against the other versions in that family. See app/config/shared/journeys.yaml.
+homepage:
+  family: request-to-use
+  version: 1.1
+  status: in-progress
+  title: Request to use the nature restoration levy (V1.1)
+  description: >-
+    The request to use journey as it stands now. V1 is kept as it was on
+    Monday 28 September 2026 under previous versions.
+  changesTitle: What is different from V1
+  changes:
+    - a "calculating your levy" loading screen before accepting the levy amount
+    - the "levy increased" page is gone; everyone sees the accept levy page
+    - the confirmation email links to a commitment certificate page to print or save as a PDF
+    - a drop-out page when the NRL reference already has a commitment (try NRL-111111)
+    - a drop-out page when the original application's red line boundary does not match (try NRL-222222 as the original NRL reference)
+    - a success page once the email with the link to retrieve the quote has been sent
+
+# Every session key this journey writes. `clears: $session` expands to this,
+# so the quote keys are included: deleting the quote details here also removes
+# a quote made in the same session. `nrfReference` is the reference the quote
+# journey minted, kept so typing it pulls that quote up; `quoteReference` and
+# `retrievalEmail` are what the user types here (the quote's own
+# `estimateEmail` stays in the cache untouched).
+session:
+  - journeyType
+  - hasNrlReference
+  - quoteReference
+  - retrievalEmail
+  - nrfReference
+  - estimateEmail
+  - planningType
+  - isHousing
+  - residentialBuildingCount
+  - hasRedlineBoundaryFile
+  - redlineFile
+  - redlineBoundaryPolygon
+  - mapReferrer
+  - intersectingCatchment
+  - quoteLoaded
+  - quotedUnits
+  - quotedLevyAmount
+  - levyAmount
+  - edpName
+  - acceptLevy
+  - isVariation
+  - originalCommitted
+  - originalReference
+  - defraUserType
+  - employeeInvited
+  - signInMethod
+  - signInEmail
+  - securityCodeMethod
+  - mobileNumber
+  - governmentGatewayName
+  - governmentGatewayUserId
+  - account
+  - representedOrganisation
+  - developerDetails
+  - yourAddress
+  - detailsConfirmed
+  - informationConfirmed
+  - nrlReference
+  - certificate
+  # Defra ID registration (sign-in emails containing "new")
+  - defraAccountType
+  - defraName
+  - defraTelephone
+  - defraPostcode
+  - defraAddress
+  - defraAddressManual
+  - defraMemorableWord
+  - defraTradingUk
+  - defraHasCrn
+  - defraCrn
+  - defraBusinessContact
+  - defraAccountCreated
+  - defraContactSupportId
+
+# Sample answers used when a page is opened with ?preview=1 and on the
+# screen wall at /tools/journeys/nrf-request-to-use-1-1. Only a summary page
+# opened that way writes them to the session, so its Change links work.
+# The sample account would show every page signed in: `signedInFrom` names
+# where signing in leads, and only those pages and the ones after them show
+# Sign out and the agent's organisation in the header.
+preview:
+  signedInFrom:
+    - defra-register
+    - defra-choose-organisation
+    - individual-address
+    - org-address
+  data:
+    journeyType: request-to-use
+    hasNrlReference: 'Yes'
+    quoteReference: NRL-123456
+    retrievalEmail: developer@example.com
+    estimateEmail: developer@example.com
+    planningType: full
+    isHousing: 'Yes'
+    residentialBuildingCount: 120
+    hasRedlineBoundaryFile: false
+    mapReferrer: redline-map
+    redlineBoundaryPolygon:
+      center: [1.115, 52.565]
+      coordinates:
+        - [1.11, 52.56]
+        - [1.12, 52.56]
+        - [1.12, 52.57]
+        - [1.11, 52.57]
+      intersections:
+        nutrient: Broads SAC, Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2026 to 2036)
+      intersectingCatchment: Broads SAC, Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2026 to 2036)
+    intersectingCatchment: Broads SAC, Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2026 to 2036)
+    edpName: Broads SAC, Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2026 to 2036)
+    quoteLoaded: NRL-123456
+    quotedUnits: 100
+    quotedLevyAmount: 'X,XXX'
+    levyAmount: 'X,XXX'
+    acceptLevy: 'Yes'
+    isVariation: 'Yes'
+    originalCommitted: 'Yes'
+    originalReference: NRL-654321
+    defraUserType: agent
+    signInMethod: one-login
+    signInEmail: agent@example.com
+    securityCodeMethod: app
+    mobileNumber: 07700 900123
+    governmentGatewayName: Trevor Barker
+    governmentGatewayUserId: 43 93 78 15 57 40
+    account:
+      accountType: agent
+      fullName: Trevor Barker
+      businessName: Fenland Homes
+      organisationName: Organisation name
+      email: agent@example.com
+    representedOrganisation: participant
+    developerDetails:
+      fullName: Trevor Barker
+      addressLine1: Development Road
+      addressLine2: ''
+      town: Development
+      county: ''
+      postcode: DV1 6RP
+    yourAddress:
+      addressLine1: 53 Business Lane
+      addressLine2: ''
+      town: Business
+      county: ''
+      postcode: LP1 7RF
+    detailsConfirmed: 'Yes'
+    informationConfirmed: 'Yes'
+    defraAccountType: individual
+    defraName:
+      firstName: Trevor
+      lastName: Barker
+    defraTelephone:
+      telephoneNumber: '07900 123456'
+    defraPostcode:
+      postcode: SW1A 1AA
+    defraAddress: 1 Church Street, London, SW1A 1AA
+    defraMemorableWord:
+      memorableWord: sundance
+      hintQuestion: What is the name of my first school?
+    defraContactSupportId: BA202609-R9-2509-K0-0410
+    defraTradingUk: 'Yes'
+    defraHasCrn: 'Yes'
+    defraCrn:
+      companyRegistrationNumber: '09084488'
+    defraBusinessContact:
+      telephoneNumber: '07900 123456'
+      emailAddress: hello@acme.com
+    nrlReference: NRL-912665
+    certificate:
+      issueDate: 1 September 2026
+      expiryDate: 1 March 2027
+
+pages:
+  # The start page and "What would you like to do?" are shared with the quote
+  # journey: copy lives in content/shared/pages/. Only the answer that stays in
+  # this journey continues here; the other leaves for the quote journey's
+  # first question. Update that path when a newer quote version becomes the
+  # target.
+  - id: start
+    shared: true
+    next: what-would-you-like-to-do
+    handoff: 2026-10-06
+
+  - id: what-would-you-like-to-do
+    shared: true
+    # User research aid in the footer: the quote email, filled with the
+    # sample quote, so a participant can see the NRL reference they will be
+    # asked for
+    research:
+      - text: Quote email
+        href: /nrf-quote-7-1/estimate-email-content?preview=1
+    next:
+      - when: { key: journeyType, equals: quote }
+        goto: /nrf-quote-7-1/planning-type
+      - goto: have-nrl-reference
+    handoff: 2026-10-06
+
+  # Without a reference there is no quote to use: the drop-out page sends
+  # the user to get one first
+  - id: have-nrl-reference
+    field: has-nrl-reference
+    sessionKey: hasNrlReference
+    next:
+      - when: { key: hasNrlReference, equals: 'No' }
+        goto: no-nrl-reference
+      - goto: quote-reference
+    handoff: 2026-10-06
+
+  - id: no-nrl-reference
+    back: have-nrl-reference
+    handoff: 2026-10-06
+
+  # Stored apart from the quote journey's `nrfReference` so a quote made in
+  # the same session never fills the box in: the user arrives afresh and types
+  # the reference from their email, which pulls the cached quote up.
+  # The prototype cannot check a reference against real commitments, so the
+  # reference NRL-111111 stands in for a quote that already has one
+  - id: quote-reference
+    field: nrf-reference
+    sessionKey: quoteReference
+    changeable: true
+    handler: custom # checks the reference format, see hooks.js
+    next:
+      - when: { key: quoteReference, equals: NRL-111111 }
+        goto: already-committed
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: email
+    handoff: 2026-10-06
+
+  # Placeholder copy: the quote has already been committed to, so it cannot
+  # be used again
+  - id: already-committed
+    back: quote-reference
+    handoff: 2026-10-06
+
+  # The email the retrieval link goes to, typed afresh like the reference.
+  # The prototype cannot check a reference against real quotes, so the
+  # reference NRL-000000 stands in for one that does not match
+  - id: email
+    field: email
+    sessionKey: retrievalEmail
+    changeable: true
+    next:
+      - when: { key: quoteReference, equals: NRL-000000 }
+        goto: reference-not-matched
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: email-sent
+    handoff: 2026-10-07
+
+  # User research aid in the footer: the email itself, in this tab so the
+  # journey carries on from its link
+  - id: email-sent
+    research:
+      - text: View the email
+        href: retrieve-email
+        newTab: false
+    next: retrieve-email
+    handoff: 2026-10-06
+
+  # Production's error page when the reference in the retrieval link is not
+  # a known quote; here only the NRL-000000 stand-in reaches it
+  - id: reference-not-matched
+    back: email
+    handoff: 2026-10-06
+
+  # The email with the retrieval link. Following the link loads the quote.
+  # User research aid in the footer: the page an expired retrieval link
+  # opens, in this tab in place of the email's link
+  - id: retrieve-email
+    back: email-sent
+    handoff: 2026-10-06
+    research:
+      - text: Expired link
+        href: link-expired
+        newTab: false
+    next: review-quote-details
+
+  # the retrieval link has expired, so the user asks for
+  # a new one
+  - id: link-expired
+    back: retrieve-email
+    handoff: 2026-10-06
+
+  - id: review-quote-details
+    guard: { key: quoteReference, isSet: true, redirect: quote-reference }
+    handler: custom # loads the quote, recalculates the levy, see hooks.js
+    next:
+      - when: { key: residentialBuildingCount, gt: 15000 }
+        goto: not-enough-capacity
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: calculating-levy
+
+  # The development details are changed on the quote journey's own pages:
+  # the Change links on review-quote-details and check-your-answers point at
+  # /nrf-quote-7-1/planning-type, housing, units and map, which come back here.
+
+  - id: not-enough-capacity
+    back: review-quote-details
+
+  # Loading screen while the levy is worked out: shows the spinner for a
+  # moment and moves on (a meta refresh in the template)
+  - id: calculating-levy
+    template: nrf-request-to-use-1-1/calculating-levy
+    handler: custom # where to continue to, see hooks.js
+    guard: { key: quoteReference, isSet: true, redirect: quote-reference }
+    next: accept-levy
+
+  # Deleting the quote details happens on the quote journey's delete pages;
+  # `return` gives them the way back for Back and Cancel
+  - id: accept-levy
+    field: accept-levy
+    sessionKey: acceptLevy
+    changeable: true
+    back: review-quote-details # not the loading screen, which moves on by itself
+    next:
+      - when: { key: acceptLevy, equals: 'No' }
+        goto: /nrf-quote-7-1/delete-quote
+        return: review-quote-details
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: variation
+
+  # A variation only needs the original NRL reference when the original
+  # application was committed to using the levy
+  - id: variation
+    field: variation
+    sessionKey: isVariation
+    changeable: true
+    next:
+      - when: { key: isVariation, equals: 'Yes' }
+        goto: original-committed
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: defra-account-user-type
+
+  - id: original-committed
+    field: original-committed
+    sessionKey: originalCommitted
+    changeable: true
+    guard: { key: isVariation, equals: 'Yes', redirect: variation }
+    next:
+      - when: { key: originalCommitted, equals: 'Yes' }
+        goto: original-reference
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: defra-account-user-type
+
+  # Behind the scenes the service checks the original application's red line
+  # boundary matches this one. The prototype cannot, so the reference
+  # NRL-222222 stands in for an original whose boundary does not match
+  - id: original-reference
+    field: original-reference
+    sessionKey: originalReference
+    changeable: true
+    handler: custom # checks the reference format, see hooks.js
+    next:
+      - when: { key: originalReference, equals: NRL-222222 }
+        goto: original-reference-not-matched
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: defra-account-user-type
+
+  # Placeholder copy: the original application's red line boundary does not
+  # match this one, so the user tries again with the correct reference
+  - id: original-reference-not-matched
+    back: original-reference
+
+  # Before signing in, the user says who they are requesting to use the levy
+  # for and reads the Defra account guidance for that kind of user. The answer
+  # decides the account type once they sign in (see accountFor in hooks.js):
+  # an individual, a company for the organisation they work for, or an agent
+  # acting for a client. An individual, or an organisation's account admin,
+  # always registers a Defra account after signing in; an employee who opened
+  # the invitation email skips it; for an agent the sign-in email decides
+  # (see one-login-password).
+  - id: defra-account-user-type
+    back:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - when: { key: originalCommitted, equals: 'Yes' }
+        goto: original-reference
+      - when: { key: isVariation, equals: 'Yes' }
+        goto: original-committed
+      - goto: variation
+    field: defra-account-user-type
+    sessionKey: defraUserType
+    changeable: true
+    next:
+      - when: { key: defraUserType, equals: individual }
+        goto: defra-account-individual
+      - when: { key: defraUserType, equals: organisation }
+        goto: defra-account-organisation
+      - goto: defra-account-agent
+
+  - id: defra-account-individual
+    guard: { key: defraUserType, equals: individual, redirect: defra-account-user-type }
+    back: defra-account-user-type
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: sign-in-method
+
+  # Whoever continues from here is taken to be the organisation's account
+  # admin and registers a Defra account after signing in. User research aid
+  # in the footer: the invitation email an admin's Defra account sends an
+  # employee, opened in this tab in place of Continue. Opening it marks the
+  # user as an invited employee (see hooks.js), so signing in skips the
+  # registration.
+  - id: defra-account-organisation
+    guard: { key: defraUserType, equals: organisation, redirect: defra-account-user-type }
+    back: defra-account-user-type
+    research:
+      - text: Employee invitation email
+        href: defra-account-employee-email
+        newTab: false
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: sign-in-method
+
+  # The same email as the agent's for now, in its own file so the copy can
+  # diverge. Its "Start your secure registration process" link (`./$next`)
+  # carries on to signing in.
+  - id: defra-account-employee-email
+    guard: { key: defraUserType, equals: organisation, redirect: defra-account-user-type }
+    handler: custom # remembers the invitation was opened, see hooks.js
+    next: sign-in-method
+
+  # An agent then sees the invitation email their client's Defra account
+  # sends them (addressed to the email they gave to retrieve the quote, from
+  # a made-up client). Its "Start your secure registration process" link
+  # (`./$next`) carries on to signing in.
+  - id: defra-account-agent
+    guard: { key: defraUserType, equals: agent, redirect: defra-account-user-type }
+    back: defra-account-user-type
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: defra-account-agent-email
+
+  - id: defra-account-agent-email
+    guard: { key: defraUserType, equals: agent, redirect: defra-account-user-type }
+    next: sign-in-method
+
+  - id: sign-in-method
+    back:
+      - when: { key: defraUserType, equals: individual }
+        goto: defra-account-individual
+      - when: { key: defraUserType, equals: organisation }
+        goto: defra-account-organisation
+      - goto: defra-account-agent-email
+    field: sign-in-method
+    sessionKey: signInMethod
+    handler: custom # registers the sign-out route, see hooks.js
+    next:
+      - when: { key: signInMethod, equals: government-gateway }
+        goto: government-gateway-sign-in
+      - goto: one-login-start
+
+  # Mock GOV.UK One Login, shared with other journeys
+  # (content/shared/one-login/). "Sign in" leads to the email page; the
+  # "Create your GOV.UK One Login" button links to one-login-create-email.
+  - id: one-login-start
+    shared: one-login
+    next: one-login-email
+
+  - id: one-login-email
+    shared: one-login
+    next: one-login-password
+
+  # Signing in, or finishing creating an account, decides the account type.
+  # Anyone requesting to use the levy for themselves as an individual, or
+  # for their organisation as its account admin, has no Defra account yet
+  # and registers one first, whatever their email; an employee who opened
+  # the invitation email has been invited to the organisation's account and
+  # skips it; for an agent a sign-in email containing "new" registers.
+  # An agent then chooses which organisation they represent (a Defra ID page).
+  - id: one-login-password
+    shared: one-login
+    handler: custom # decides the account type from the email, see hooks.js
+    next: &signed-in
+      - when: { key: account.needsDefraAccount, truthy: true }
+        goto: defra-register
+      - when: { key: account.accountType, equals: individual }
+        goto: individual-address
+      - when: { key: account.accountType, equals: company }
+        goto: org-address
+      - goto: defra-choose-organisation
+
+  # Creating a GOV.UK One Login: email, code from the email, password, then
+  # security codes by text message (two pages) or authenticator app (one)
+  - id: one-login-create-email
+    shared: one-login
+    next: one-login-check-email
+
+  - id: one-login-check-email
+    shared: one-login
+    guard: { key: signInEmail, isSet: true, redirect: one-login-create-email }
+    next: one-login-create-password
+
+  - id: one-login-create-password
+    shared: one-login
+    guard: { key: signInEmail, isSet: true, redirect: one-login-create-email }
+    next: one-login-security-codes
+
+  - id: one-login-security-codes
+    shared: one-login
+    guard: { key: signInEmail, isSet: true, redirect: one-login-create-email }
+    next:
+      - when: { key: securityCodeMethod, equals: sms }
+        goto: one-login-phone-number
+      - goto: one-login-authenticator
+
+  - id: one-login-phone-number
+    shared: one-login
+    guard: { key: securityCodeMethod, equals: sms, redirect: one-login-security-codes }
+    next: one-login-check-phone
+
+  - id: one-login-check-phone
+    shared: one-login
+    guard: { key: mobileNumber, isSet: true, redirect: one-login-phone-number }
+    next: one-login-created
+
+  - id: one-login-authenticator
+    shared: one-login
+    guard: { key: signInEmail, isSet: true, redirect: one-login-create-email }
+    next: one-login-created
+
+  - id: one-login-created
+    shared: one-login
+    guard: { key: signInEmail, isSet: true, redirect: one-login-create-email }
+    handler: custom # signs in with the new account, see hooks.js
+    next: *signed-in
+
+  # Mock Government Gateway, shared with other journeys
+  # (content/shared/government-gateway/). Signing in reads the user ID the
+  # way One Login reads the email (company, individual, new-...); "Create
+  # sign in details" on the page links to government-gateway-email.
+  - id: government-gateway-sign-in
+    shared: government-gateway
+    handler: custom # decides the account type from the user ID, see hooks.js
+    next: *signed-in
+
+  - id: government-gateway-email
+    shared: government-gateway
+    next: government-gateway-confirm-email
+
+  - id: government-gateway-confirm-email
+    shared: government-gateway
+    guard: { key: signInEmail, isSet: true, redirect: government-gateway-email }
+    next: government-gateway-email-confirmed
+
+  - id: government-gateway-email-confirmed
+    shared: government-gateway
+    guard: { key: signInEmail, isSet: true, redirect: government-gateway-email }
+    next: government-gateway-name
+
+  - id: government-gateway-name
+    shared: government-gateway
+    guard: { key: signInEmail, isSet: true, redirect: government-gateway-email }
+    next: government-gateway-create-password
+
+  - id: government-gateway-create-password
+    shared: government-gateway
+    guard: { key: governmentGatewayName, isSet: true, redirect: government-gateway-name }
+    next: government-gateway-user-id
+
+  - id: government-gateway-user-id
+    shared: government-gateway
+    guard: { key: governmentGatewayName, isSet: true, redirect: government-gateway-name }
+    handler: custom # mints the user ID and signs in with the new account, see hooks.js
+    next: *signed-in
+
+  # Mock Defra ID: register a Defra account (content/shared/defra-id/). The
+  # business or individual answer picks the screens and, on the check your
+  # answers page, the account type for the rest of the journey (see
+  # hooks.js). Every page needs the sign in first.
+  - id: defra-register
+    shared: defra-id
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    next: defra-terms
+
+  - id: defra-terms
+    shared: defra-id
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    next: defra-what-we-need
+
+  # An invited employee (new-employee@) is not asked whether they register a
+  # business: they give their own details, as an individual does
+  - id: defra-what-we-need
+    shared: defra-id
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    next:
+      - when: { key: account.invitedEmployee, truthy: true }
+        goto: defra-name
+      - goto: defra-registration-type
+
+  - id: defra-registration-type
+    shared: defra-id
+    field: registration-type
+    sessionKey: defraAccountType
+    changeable: true
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    next: defra-name
+
+  # Everyone gives their name and telephone number. An individual then
+  # gives an address and memorable word; a business carries on to its
+  # business details
+  - id: defra-name
+    shared: defra-id
+    sessionKey: defraName
+    changeable: true
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    back:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - when: { key: account.invitedEmployee, truthy: true }
+        goto: defra-what-we-need
+      - goto: defra-registration-type
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: defra-telephone
+
+  - id: defra-telephone
+    shared: defra-id
+    sessionKey: defraTelephone
+    changeable: true
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - when: { key: defraAccountType, equals: business }
+        goto: defra-trading-uk
+      - goto: defra-postcode
+
+  # Find address: the postcode leads to a fixed list; the links on both pages
+  # go to the manual address form
+  - id: defra-postcode
+    shared: defra-id
+    sessionKey: defraPostcode
+    changeable: true
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    next: defra-select-address
+
+  - id: defra-select-address
+    shared: defra-id
+    field: address
+    sessionKey: defraAddress
+    changeable: true
+    handler: custom # forgets a manual address, see hooks.js
+    guard: { key: defraPostcode, isSet: true, redirect: defra-postcode }
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: defra-memorable-word
+
+  - id: defra-address-manual
+    shared: defra-id
+    sessionKey: defraAddressManual
+    changeable: true
+    handler: custom # joins the lines into the address, see hooks.js
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    back:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: defra-postcode
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: defra-memorable-word
+
+  - id: defra-memorable-word
+    shared: defra-id
+    sessionKey: defraMemorableWord
+    changeable: true
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: defra-check-answers
+
+  # Completing the registration sends the email for the kind of user
+  - id: defra-check-answers
+    shared: defra-id
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    handler: custom # completes the registration and sets the account type, see hooks.js
+    next:
+      - when: { key: account.invitedEmployee, truthy: true }
+        goto: defra-registered-employee
+      - goto: defra-registered-individual
+
+  # Business: registered to trade, company registration number (Companies
+  # House fixture), contact details. "No" answers carry on: not trading in
+  # the UK still asks for the number; no number skips to the contact details.
+  - id: defra-trading-uk
+    shared: defra-id
+    field: trading-uk
+    sessionKey: defraTradingUk
+    changeable: true
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: defra-has-crn
+
+  - id: defra-has-crn
+    shared: defra-id
+    field: has-crn
+    sessionKey: defraHasCrn
+    changeable: true
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    next:
+      - when: { key: defraHasCrn, equals: 'No' }
+        goto: defra-business-contact
+      - goto: defra-crn
+
+  - id: defra-crn
+    shared: defra-id
+    sessionKey: defraCrn
+    changeable: true
+    guard: { key: defraHasCrn, equals: 'Yes', redirect: defra-has-crn }
+    next: defra-confirm-business
+
+  - id: defra-confirm-business
+    shared: defra-id
+    guard: { key: defraCrn, isSet: true, redirect: defra-crn }
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: defra-business-contact
+
+  - id: defra-business-contact
+    shared: defra-id
+    sessionKey: defraBusinessContact
+    changeable: true
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: defra-business-check-answers
+
+  - id: defra-business-check-answers
+    shared: defra-id
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    handler: custom # completes the registration and sets the account type, see hooks.js
+    preview:
+      account:
+        accountType: agent
+        fullName: Trevor Barker
+        email: new@example.com
+    next: defra-registered-business
+
+  # The registration emails (content/shared/defra-id/). Their "Sign in to
+  # your account" link (`./$next`) carries on to wherever signing in leads
+  # for the account type, the same rules as the sign-in pages
+  - id: defra-registered-individual
+    shared: defra-id
+    guard: { key: defraAccountCreated, equals: 'Yes', redirect: defra-register }
+    preview:
+      account:
+        accountType: individual
+        fullName: Trevor Barker
+        email: new-individual@example.com
+    next: *signed-in
+
+  - id: defra-registered-business
+    shared: defra-id
+    guard: { key: defraAccountCreated, equals: 'Yes', redirect: defra-register }
+    preview:
+      account:
+        accountType: company
+        fullName: Trevor Barker
+        businessName: Fenland Homes
+        email: new-company@example.com
+    next: *signed-in
+
+  - id: defra-registered-employee
+    shared: defra-id
+    guard: { key: defraAccountCreated, equals: 'Yes', redirect: defra-register }
+    preview:
+      account:
+        accountType: company
+        fullName: Trevor Barker
+        businessName: Fenland Homes
+        administratorName: Trevor Barker
+        invitedEmployee: true
+        email: new-employee@example.com
+    next: *signed-in
+
+  # Defra ID's own "Who do you want to represent?": an agent's Defra account
+  # is linked to the organisations they act for, and once signed in they
+  # pick which one this request is for. The last option is the research
+  # participant's own organisation (the footer's "Participant details" box).
+  # The organisation chosen shows in the header and as the business name on
+  # the developer details review page, whose Change link comes back here.
+  - id: defra-choose-organisation
+    shared: defra-id
+    field: represent
+    sessionKey: representedOrganisation
+    changeable: true
+    guard: { key: account.accountType, equals: agent, redirect: sign-in-method }
+    handler: custom # puts the organisation chosen in the header, see hooks.js
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: developer-details
+
+  # Agents enter the developer they act for; companies and individuals give
+  # their own address (their name comes from the account)
+  - id: developer-details
+    sessionKey: developerDetails
+    changeable: true
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: review-developer-details
+
+  - id: review-developer-details
+    guard: { key: developerDetails, isSet: true, redirect: developer-details }
+    next:
+      - goto: check-your-answers
+        set: { detailsConfirmed: 'Yes' }
+
+  # Companies and individuals each have their own address page (the hint
+  # differs); both keep the address in yourAddress for the review page
+  - id: org-address
+    sessionKey: yourAddress
+    changeable: true
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    preview:
+      account:
+        accountType: company
+        fullName: Trevor Barker
+        businessName: Fenland Homes
+        email: company@example.com
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: review-your-details
+
+  - id: individual-address
+    sessionKey: yourAddress
+    changeable: true
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    preview:
+      account:
+        accountType: individual
+        fullName: Trevor Barker
+        email: individual@example.com
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: review-your-details
+
+  - id: review-your-details
+    guard: { key: yourAddress, isSet: true, redirect: org-address }
+    preview:
+      account:
+        accountType: company
+        fullName: Trevor Barker
+        businessName: Fenland Homes
+        email: company@example.com
+    next:
+      - goto: check-your-answers
+        set: { detailsConfirmed: 'Yes' }
+
+  # The declaration is the confirmation checkbox on this page (it stores
+  # 'Yes', its `value` in check-your-answers.md); the Delete link is the way
+  # out for anyone who does not agree
+  - id: check-your-answers
+    field: confirm-information
+    sessionKey: informationConfirmed
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    back:
+      - when: { key: account.accountType, equals: agent }
+        goto: review-developer-details
+      - goto: review-your-details
+    handler: custom # mints the NRL reference and certificate dates, see hooks.js
+    next: confirmation
+
+  # User research aids in the footer: the email and the commitment
+  # certificate the submission sends
+  - id: confirmation
+    research:
+      - text: View the email
+        href: request-email
+      - text: View the commitment certificate
+        href: commitment-certificate
+
+  - id: request-email
+    back: confirmation
+
+  - id: commitment-certificate
+    back: confirmation
+
+  # The certificate as a page to print or save as a PDF, linked from the
+  # email: the certificate on an A4 sheet and the steps for the user's device
+  - id: save-commitment-certificate
+    template: nrf-request-to-use-1-1/save-commitment-certificate
+    handler: custom # renders the certificate and picks the device, see hooks.js

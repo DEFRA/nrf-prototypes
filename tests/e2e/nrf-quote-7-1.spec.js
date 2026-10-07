@@ -11,10 +11,10 @@ const {
 const { copyOf, gotoTools } = require('./helpers/journey')
 
 /**
- * nrf-quote-7: the content-driven port of nrf-quote-6.
+ * nrf-quote-7-1: the content-driven port of nrf-quote-6.
  *
  * Page list, headings, labels, links and error text come from
- * content/nrf-quote-7 through the helpers, so these tests follow the
+ * content/nrf-quote-7-1 through the helpers, so these tests follow the
  * journey definition and survive a reword.
  */
 
@@ -35,7 +35,7 @@ const {
   error,
   option,
   text
-} = copyOf('nrf-quote-7')
+} = copyOf('nrf-quote-7-1')
 
 // The wall shows one card per page plus one per preview variant and one
 // per copy variant
@@ -45,7 +45,7 @@ const wallCardCount = journey.pages.reduce(
   0
 )
 
-test.describe('nrf-quote-7 preview mode', () => {
+test.describe('nrf-quote-7-1 preview mode', () => {
   for (const page of journey.pages) {
     test(`${page.id} renders with sample data`, async ({ page: browser }) => {
       const response = await browser.goto(`${page.path}?preview=1`)
@@ -107,7 +107,7 @@ test.describe('nrf-quote-7 preview mode', () => {
   })
 })
 
-test.describe('nrf-quote-7 error previews', () => {
+test.describe('nrf-quote-7-1 error previews', () => {
   // A page with several errors can show each of them: ?error=1 is the
   // required one, ?error=<key> any other in its `errors:` block
   const units = journey.byId.get('units')
@@ -134,7 +134,7 @@ test.describe('nrf-quote-7 error previews', () => {
   })
 })
 
-test.describe('nrf-quote-7 validation', () => {
+test.describe('nrf-quote-7-1 validation', () => {
   test('empty submission re-renders with the page error', async ({ page }) => {
     const planningType = journey.byId.get('planning-type')
     const response = await page.request.post(planningType.path, { form: {} })
@@ -160,7 +160,7 @@ async function answerDevelopmentDetails(page, planningType = 'full') {
   await expect(page).toHaveURL(/redline-map/)
 }
 
-test.describe('nrf-quote-7 happy path', () => {
+test.describe('nrf-quote-7-1 happy path', () => {
   test('draws a boundary and reaches confirmation', async ({ page }) => {
     // Pick a point inside the first nutrient catchment so the map check passes
     const catchments = JSON.parse(

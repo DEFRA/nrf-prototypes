@@ -487,12 +487,16 @@ function buildPage(entry, journey, problems, from = {}) {
     group: entry.group || (typeof shared === 'string' ? shared : undefined),
     contentFile,
     handoff,
-    // Set on a page built from a copy variant's file: which one, and the
-    // label the tools page shows for it (`variant:` in the frontmatter)
+    // Set on a page built from a copy variant's file: which one, the label
+    // the tools page shows for it (`variant:` in the frontmatter) and the
+    // page's preview variant its previews use unless one is asked for
+    // (`sample:`, for a variant whose difference only shows with certain
+    // sample answers)
     copyVariant: variantId
       ? {
           id: variantId,
-          label: frontmatter.variant ? String(frontmatter.variant) : variantId
+          label: frontmatter.variant ? String(frontmatter.variant) : variantId,
+          sample: frontmatter.sample ? String(frontmatter.sample) : null
         }
       : null,
     // The page's copy variants, [{ id, label, contentFile, page }]; filled
@@ -634,6 +638,15 @@ function checkCopyOnly(page, variant, where, problems) {
   if (variant.field !== page.field || variant.sessionKey !== page.sessionKey) {
     problems.push(
       `${where}: a variant keeps the page's field and sessionKey; set them in journey.yaml or the default file only`
+    )
+  }
+  const sample = variant.copyVariant.sample
+  const samples = ((page.preview && page.preview.variants) || []).map(
+    (item) => item.id
+  )
+  if (sample && !samples.includes(sample)) {
+    problems.push(
+      `${where}: 'sample: ${sample}' names none of the page's preview variants in journey.yaml (${list(samples)})`
     )
   }
 }

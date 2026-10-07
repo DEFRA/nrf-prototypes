@@ -12,6 +12,8 @@
  *     load(ctx)               → { redirect }?     before the page is built, e.g.
  *                                                 to put data in the session
  *     get(ctx, model)         → { redirect }?     enrich the render model
+ *     getOnError: true                            run `get` on a failed post's
+ *                                                 page too
  *     validate(ctx)           → { ok, value | error }
  *     process(ctx, value)     → { redirect | error }?  after validation
  *   }
@@ -58,9 +60,12 @@ function scrub(sessionData) {
  * Sample answers for a page: the journey's `preview.data`, then the page's
  * own `preview.data` (or a bare `preview:` map of answers), then the named
  * variant's `data` when `?variant=<id>` is set. Variants show alternative
- * states of one screen on the wall (an upload that failed, say).
+ * states of one screen on the wall (an upload that failed, say). A copy
+ * variant with `sample: <id>` uses that variant when none is asked for.
  */
-function previewData(journey, page, variantId) {
+function previewData(journey, page, requested) {
+  const variantId =
+    requested || (page.copyVariant && page.copyVariant.sample) || null
   const base = (journey.preview && journey.preview.data) || {}
   const pagePreview = page.preview || {}
   const structured = 'data' in pagePreview || 'variants' in pagePreview
@@ -652,14 +657,17 @@ async function handlePost(req, res, journey, page, hooks) {
   }
   if (!result.ok) {
     if (!errorsOff(data)) {
-      return res.render(
-        page.template,
-        buildModel(ctx, {
-          error: result.error,
-          errors: result.errors,
-          values: result.values
-        })
-      )
+      const model = buildModel(ctx, {
+        error: result.error,
+        errors: result.errors,
+        values: result.values
+      })
+      // A hook whose `get` shapes the page (which options it offers, say)
+      // can ask for the same on the page showing the error
+      if (hook.getOnError && typeof hook.get === 'function') {
+        await hook.get(ctx, model)
+      }
+      return res.render(page.template, model)
     }
     result = { ok: true, value: lenientValue(journey, page, ctx.body) }
   }
@@ -734,8 +742,12 @@ async function handlePost(req, res, journey, page, hooks) {
  * until `?copy=default` (or any name no page has). `?_copy=<variant>` asks
  * for this request only, as the kit never stores a query key starting with
  * `_`; the tools page uses that so looking at the wall or exporting a
- * screen never changes what a research session shows. A frozen copy of a
- * handoff never varies: the handoff is the confirmed design.
+ * screen never changes what a research session shows. A preview
+ * (`?preview=1`: the wall, compare page and export) shows only the copy its
+ * URL asks for, never the session's, so the page's own card stays its own
+ * copy while a research session runs a variant in the same browser. A
+ * frozen copy of a handoff never varies: the handoff is the confirmed
+ * design.
  */
 function copyVariantFor(journey, page, req) {
   if (!page || journey.frozen || !page.copyVariants.length) {
@@ -743,12 +755,15 @@ function copyVariantFor(journey, page, req) {
   }
   const query = req.query || {}
   const session = (req.session && req.session.data) || {}
+  const preview = ['1', 'true'].includes(String(query.preview))
   const wanted =
     query._copy !== undefined
       ? query._copy
       : query.copy !== undefined
         ? query.copy
-        : session.copy
+        : preview
+          ? null
+          : session.copy
   const found = wanted
     ? page.copyVariants.find((variant) => variant.id === String(wanted))
     : null

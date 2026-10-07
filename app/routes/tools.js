@@ -27,6 +27,7 @@ const {
   pageHandoff,
   journeyHandoffs
 } = require('../lib/journey-engine')
+const { getFamilies } = require('../config/shared/journeys')
 
 // Where the prototype is published, for the "copy link" buttons on the wall
 const PUBLIC_BASE_URL = (
@@ -104,34 +105,25 @@ function loadOr404(req, res) {
   try {
     return loadJourney(req.params.journey)
   } catch (error) {
-    res.status(404).render('tools/journeys', {
-      journeys: listJourneys(),
-      notFound: req.params.journey,
+    res.status(404).render('tools/journey-error', {
+      journeyId: req.params.journey,
+      known: getJourneyIds().includes(req.params.journey),
       loadError: error.message
     })
     return null
   }
 }
 
-function listJourneys() {
-  return getJourneyIds().map((id) => {
-    try {
-      const journey = loadJourney(id)
-      return {
-        id,
-        name: journey.name,
-        basePath: journey.basePath,
-        pageCount: journey.pages.length,
-        startPath: journey.byId.get(journey.start).path
-      }
-    } catch (error) {
-      return { id, name: id, error: error.message }
-    }
-  })
+// The homepage, opened on the tab that holds the journey's card
+function homeUrl(journey) {
+  const family = (journey.homepage || {}).family
+  const known = getFamilies().some((entry) => entry.id === family)
+  return `/#${known ? family : 'other'}`
 }
 
+// The homepage lists every journey and links each one's wall
 router.get('/tools/journeys', (req, res) => {
-  res.render('tools/journeys', { journeys: listJourneys() })
+  res.redirect('/')
 })
 
 router.get('/tools/journeys/:journey', (req, res) => {
@@ -190,6 +182,7 @@ router.get('/tools/journeys/:journey', (req, res) => {
       start: journey.start,
       pageCount: journey.pages.length
     },
+    homeUrl: homeUrl(journey),
     publicBaseUrl: PUBLIC_BASE_URL,
     // Playwright is a dev dependency, so the export is local-only
     canExportScreens: canExportScreens(),
@@ -296,7 +289,9 @@ router.get('/tools/journeys/:journey/screens.zip', async (req, res) => {
 
 // One page's copies side by side: its own copy and each copy variant
 // (pages/<id>~<variant>.md), at desktop or mobile width, in the error
-// state if wanted. Opened from the "Compare side by side" link on the wall
+// state if wanted, and with any of the page's sample answers (its preview
+// variants; ?variant=<id> picks one up front). Opened from the "Compare
+// side by side" link on the wall
 router.get('/tools/journeys/:journey/compare/:page', (req, res) => {
   const journey = loadOr404(req, res)
   if (!journey) {
@@ -333,6 +328,11 @@ router.get('/tools/journeys/:journey/compare/:page', (req, res) => {
       }))
     ],
     errorQuery: errorStates.length ? errorStates[0].query : null,
+    samples: ((page.preview && page.preview.variants) || []).map((item) => ({
+      id: item.id,
+      label: item.label || item.id,
+      selected: item.id === String(req.query.variant || '')
+    })),
     wallUrl: `/tools/journeys/${journey.id}#screen-${page.id}`,
     publicBaseUrl: PUBLIC_BASE_URL
   })

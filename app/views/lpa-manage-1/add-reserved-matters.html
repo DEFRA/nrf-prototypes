@@ -1,0 +1,41 @@
+{#
+  Reserved matters for a granted outline application, on a page of their
+  own (content/lpa-manage-1/pages/add-reserved-matters.md), opened from the
+  record page's Add reserved matters option.
+  Breadcrumbs in place of a back link lead to the dashboard and the record,
+  then name this page without a link. The form (_reserved-matters-form.html)
+  posts to this page's path, which the hook's ADD_RESERVED_MATTERS route
+  handles: errors show here, saving returns to the record. The hook finds
+  the record from ?ref= and sets reservedMatters.
+#}
+{% extends "journey-engine/_page.html" %}
+
+{% set text = content.text %}
+{% set record = data.record %}
+{% set rm = reservedMatters %}
+
+{% block beforeContent %}
+{{ super() }}
+{% set crumbs = [{ text: text.breadcrumbDashboard, href: routes.DASHBOARD }] %}
+{% if record %}
+  {% set crumbs = (crumbs.push({ text: record.reference, href: routes.VIEW_RECORD + "?ref=" + (record.reference | urlencode) }), crumbs) %}
+{% endif %}
+{# This page ends the trail as plain text, not a link #}
+{% set crumbs = (crumbs.push({ text: content.heading }), crumbs) %}
+{{ govukBreadcrumbs({ items: crumbs }) }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds-from-desktop">
+    {% include "journey-engine/_error-summary.html" %}
+    {% if content.caption %}<span class="govuk-caption-l">{{ content.caption }}</span>{% endif %}
+    <h1 class="govuk-heading-l">{{ content.heading }}</h1>
+    {% if rm %}
+      <div id="add-reserved-matters">
+        {% include "lpa-manage-1/_reserved-matters-form.html" %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

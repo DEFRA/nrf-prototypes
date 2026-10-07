@@ -6,9 +6,14 @@
   page's copy), the audit timeline and the review options (the hook leaves
   only those for the record's step in content.items), which post back to
   this page. Once the commitment details are reviewed they are the planning
-  stage options. Rejecting asks why on reject-commitment; a rejected record
-  shows a warning in place of the radios. Model extras from
-  app/lib/lpa-manage-1/hooks.js: flash, planningStep, data.record.
+  stage options. A planning variation's timeline entry shows its new
+  planning application reference. Rejecting asks why on reject-commitment; a rejected record
+  shows a warning in place of the radios. Once the permission is granted
+  the radios are the granted options, under the same legend without the
+  hint; for an outline application one of them is Add reserved matters,
+  which Confirm opens on add-reserved-matters. Model extras from
+  app/lib/lpa-manage-1/hooks.js: flash, flashTitle, flashText,
+  planningStep, stageHint, data.record.
 #}
 {% extends "journey-engine/_page.html" %}
 
@@ -26,16 +31,16 @@
     {% if flash %}
       {{ govukNotificationBanner({
         type: "success",
-        titleText: text.successTitle,
-        html: '<p class="govuk-notification-banner__heading">' + (text.added | escape) + '</p>'
+        titleText: flashTitle,
+        html: '<p class="govuk-notification-banner__heading">' + (flashText | escape) + '</p>'
       }) }}
     {% endif %}
   </div>
 </div>
 {% endif %}
 
-{# Full width, like the dashboard and the table: the button sits at the
-   right-hand edge of the page #}
+{# Full width, like the dashboard and the table: the heading keeps to two
+   thirds of the page #}
 <div class="app-staff-page-header">
   <h1 class="govuk-heading-l app-staff-record__heading">
     <span>{{ content.heading }}</span>
@@ -43,7 +48,6 @@
       <strong class="govuk-tag govuk-tag--{{ record.status.colour }}">{{ record.status.label }}</strong>
     {% endif %}
   </h1>
-  {{ govukButton({ text: text.addRecord, href: routes.RETRIEVE_COMMITMENT }) }}
 </div>
 
 <div class="govuk-grid-row">
@@ -75,13 +79,16 @@
         <div class="app-timeline__item">
           <div class="app-timeline__header">
             <h3 class="app-timeline__title">
-              {%- if event.event == 'added' %}{{ text.timelineAdded }}{% elif event.event == 'review-later' %}{{ text.timelineReviewLater }}{% elif event.event == 'stage' %}{{ text.timelineStage }} {{ event.stage.label }}{% else %}{{ text.timelineStatus }} {{ event.status.label }}{% endif -%}
+              {%- if event.event == 'added' %}{{ text.timelineAdded }}{% elif event.event == 'review-later' %}{{ text.timelineReviewLater }}{% elif event.event == 'stage' %}{{ text.timelineStage }} {{ event.stage.label }}{% elif event.event == 'variation' %}{{ text.timelineVariation }}{% elif event.event == 'reserved-matters' %}{{ text.timelineReservedMatters }}{% else %}{{ text.timelineStatus }} {{ event.status.label }}{% endif -%}
             </h3>
-            <p class="app-timeline__byline">{{ text.by }} {{ event.by }}</p>
+            <p class="app-timeline__byline">{{ text.by }} {{ event.by }}{% if event.email %} <span class="app-timeline__email">({{ event.email }})</span>{% endif %}</p>
           </div>
           <p class="app-timeline__date">
             <time datetime="{{ event.datetime }}">{{ event.date }} {{ text.at }} {{ event.time }}</time>
           </p>
+          {% if event.planningReference %}
+            <div class="app-timeline__description">{{ event.planningReference }}</div>
+          {% endif %}
           {% if event.reason %}
             <div class="app-timeline__description">{{ event.reason }}</div>
           {% endif %}
@@ -107,7 +114,7 @@
         name: page.field,
         idPrefix: page.field,
         fieldset: { legend: { text: text.planningLegend if planningStep else text.statusLegend, classes: "govuk-fieldset__legend--m" } },
-        hint: { text: text.planningHint } if planningStep and text.planningHint,
+        hint: { text: text.planningHint } if stageHint and text.planningHint,
         errorMessage: { text: fieldError.message } if fieldError and fieldError.field == page.field,
         items: content.items
       }) }}

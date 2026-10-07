@@ -3,7 +3,10 @@ type: check-answers
 rows:
   - key: Accept levy amount
     value: '{{ acceptLevy }}'
-    change: accept-levy
+    change:
+      - when: { key: levyIncreased, truthy: true }
+        goto: levy-increased
+      - goto: accept-levy
     changeHidden: whether you accept the levy amount
   - key: Variation
     value: '{{ isVariation }}'

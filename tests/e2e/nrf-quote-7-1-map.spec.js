@@ -5,7 +5,7 @@ const { test, expect } = require('@playwright/test')
 const turf = require('@turf/turf')
 const { copyOf } = require('./helpers/journey')
 
-const { base, answer, fillAnswer, submit } = copyOf('nrf-quote-7')
+const { base, answer, fillAnswer, submit } = copyOf('nrf-quote-7-1')
 const CHECK_URL = `${base}/api/boundary/check`
 
 // A small square inside the first nutrient catchment, as a closed ring
@@ -64,7 +64,7 @@ const SEA_SQUARE = [
   [2.5, 53.5]
 ]
 
-test.describe('nrf-quote-7 production map', () => {
+test.describe('nrf-quote-7-1 production map', () => {
   test('map page loads the @defra/interactive-map plugin assets', async ({
     page
   }) => {

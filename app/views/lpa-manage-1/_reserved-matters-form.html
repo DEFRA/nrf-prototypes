@@ -1,0 +1,37 @@
+{#
+  The reserved matters form (reference, status, short description) of the
+  add-reserved-matters page. Reads `rm` and `text` from the page. Cancel
+  returns to the record.
+#}
+<form action="{{ rm.action }}" method="post" novalidate>
+  {{ govukInput({
+    label: { text: text.reservedMattersReferenceLabel, classes: "govuk-label--s" },
+    id: rm.fields.reference,
+    name: rm.fields.reference,
+    value: rm.values.reference,
+    classes: "govuk-input--width-20",
+    spellcheck: false,
+    errorMessage: { text: rm.errors[rm.fields.reference] } if rm.errors[rm.fields.reference]
+  }) }}
+  {{ govukRadios({
+    name: rm.fields.status,
+    idPrefix: rm.fields.status,
+    classes: "govuk-radios--small",
+    fieldset: { legend: { text: text.reservedMattersStatusLegend, classes: "govuk-fieldset__legend--s" } },
+    errorMessage: { text: rm.errors[rm.fields.status] } if rm.errors[rm.fields.status],
+    items: rm.statuses
+  }) }}
+  {{ govukCharacterCount({
+    label: { text: text.reservedMattersDescriptionLabel, classes: "govuk-label--s" },
+    id: rm.fields.description,
+    name: rm.fields.description,
+    value: rm.values.description,
+    rows: 3,
+    maxlength: rm.limit,
+    errorMessage: { text: rm.errors[rm.fields.description] } if rm.errors[rm.fields.description]
+  }) }}
+  <div class="govuk-button-group govuk-!-margin-bottom-0">
+    {{ govukButton({ text: text.reservedMattersSave, classes: "govuk-!-margin-bottom-0" }) }}
+    <a class="govuk-link" href="{{ rm.recordHref }}">{{ text.reservedMattersCancel }}</a>
+  </div>
+</form>

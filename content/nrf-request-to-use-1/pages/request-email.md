@@ -18,7 +18,7 @@ Thank you for submitting details of the relevant development on [Request to use 
 
 ## Next steps
 
-Your [commitment certificate](/nrf-request-to-use-1/save-commitment-certificate) will disapply the relevant environmental obligations through the planning application process.
+The attached [commitment certificate](/nrf-request-to-use-1/commitment-certificate) will disapply the relevant environmental obligations through the planning application process.
 
 Submit this certificate as part of any planning and decision-making processes.
 

@@ -2,14 +2,15 @@ const { expect } = require('@playwright/test')
 const { copyOf } = require('./journey')
 
 /**
- * Walkthroughs shared by the nrf-request-to-use-1 specs: retrieving a
+ * Walkthroughs shared by the nrf-request-to-use-1-1 specs: retrieving a
  * quote, choosing who the levy is for and signing in with the mock GOV.UK
  * One Login. Every label, heading and link comes from the content files
  * through copyOf(); the flow itself (page ids and URLs) is what the tests
  * pin down.
  */
-const requestToUse = copyOf('nrf-request-to-use-1')
-const { base, answer, fillAnswer, submit, followLink } = requestToUse
+const requestToUse = copyOf('nrf-request-to-use-1-1')
+const { base, answer, fillAnswer, submit, followLink, researchLink } =
+  requestToUse
 
 async function retrieveQuote(page, reference = 'NRL-123456') {
   await page.goto(`${base}/start`)
@@ -28,6 +29,8 @@ async function retrieveQuote(page, reference = 'NRL-123456') {
 
   await fillAnswer(page, 'email', 'jane@example.com')
   await submit(page, 'email')
+  await expect(page).toHaveURL(`${base}/email-sent`)
+  await researchLink(page, 'email-sent', 'retrieve-email').click()
   await expect(page).toHaveURL(`${base}/retrieve-email`)
   await expectEmailChrome(page)
 
