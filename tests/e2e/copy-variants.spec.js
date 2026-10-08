@@ -80,6 +80,7 @@ test.describe('copy variants', () => {
     expect(copyVariants(page)).toContainEqual({
       id: variantId,
       label: variantLabel,
+      description: null,
       contentFile: variant.contentFile
     })
   })

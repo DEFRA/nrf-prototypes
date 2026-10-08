@@ -779,6 +779,15 @@ const oneLoginSignIn = {
   }
 }
 
+// A live scenario from the tools page (`live: true` in journey.yaml) starts
+// signed in, as the participant or the stand-in, with the email the
+// scenario gives or the stand-in's
+function scenario(ctx) {
+  const { data } = ctx
+  data.signInEmail = data.signInEmail || officerEmail(MOCK_OFFICER, loadStore())
+  oneLoginSignIn.process(ctx)
+}
+
 // Sign out, registered once at boot; the header's `$signOut` link. It
 // returns to the start page.
 const signOut = {
@@ -1591,6 +1600,8 @@ module.exports = {
   certificate,
   'add-reserved-matters': addReservedMattersPage,
   dashboard,
+  // Journey-wide: a live scenario's sign in (see journey-engine/router.js)
+  scenario,
   // For tests
   loadStore,
   allRecords,

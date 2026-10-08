@@ -329,6 +329,7 @@ test.describe('journey engine: copy variants', () => {
       expect(variant.page.copyVariant).toEqual({
         id: 'words',
         label: 'Other words',
+        description: null,
         sample: null
       })
       // Only the page itself is a page of the journey
@@ -438,6 +439,7 @@ test.describe('journey engine: copy variants', () => {
           {
             id: 'b',
             label: 'b',
+            description: null,
             contentFile: 'content/shared/pages/start~b.md'
           }
         ])

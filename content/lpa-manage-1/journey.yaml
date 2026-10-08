@@ -134,6 +134,17 @@ groups:
   one-login:
     title: GOV.UK One Login
 
+# The Scenarios tab on the tools page shows the NRL reference of each
+# scenario on the record page and "Enter an NRL reference" beside its name
+scenarios:
+  columns:
+    - label: NRL reference
+      key: recordReference
+      pages: [view-record]
+    - label: NRL reference
+      key: commitmentReference
+      pages: [retrieve-commitment]
+
 pages:
   # Placeholder start page: a heading, body text, a list and Start now.
   # It wears the usual GOV.UK start page chrome (blue header, PROTOTYPE
@@ -179,6 +190,18 @@ pages:
       - when: { key: commitmentRecorded, truthy: true }
         goto: planning-variation
       - goto: planning-reference
+    # `live: true`: the Scenarios tab opens it for real, signed in (as the
+    # participant, or the stand-in) with the reference typed in, so
+    # Continue carries on to "Is this a planning variation?"
+    preview:
+      variants:
+        - id: existing-record
+          label: NRL reference the council already has a record for
+          description: >-
+            Prepopulates input with NRL-100681. Next page shown is "Is
+            this a planning variation?"
+          live: true
+          data: { commitmentReference: NRL-100681 }
 
   # Placeholder copy. No returns to "Enter an NRL reference", holding the
   # reference typed, so the officer can correct it.
@@ -227,40 +250,73 @@ pages:
     guard: *signed-in
     back: dashboard
     handler: custom
+    # Each variant's description says what it shows, on the tools page's
+    # Scenarios tab; the record numbers are in records.yaml
     preview:
+      label: For review
+      description: >-
+        A record waiting for its commitment details to be reviewed
       variants:
         - id: added
           label: Just added
+          description: >-
+            The same record straight after the officer has added it with banner
           data: { lpaFlash: added }
+        - id: reviewed-full
+          label: Reviewed, full planning
+          description: >-
+            The same for a full planning application: reviewed and waiting on
+            its planning decision
+          data: { recordReference: NRL-100676 }
+        - id: granted
+          label: Granted, full planning
+          description: >-
+            A full planning application that has been granted 
+          data: { recordReference: NRL-100681 }
         - id: added-linked
           label: Just added, linked with an existing record
+          description: >-
+            A planning variation the developer made its own commitment for
+            (NRL-101412), straight after it was added showing the banner
           data:
             recordReference: NRL-101412
             lpaFlash: linked
             lpaFlashReference: NRL-101178
         - id: variation-added
           label: Planning variation reference just added
+          description: >-
+            Record straight after a planning variation
+            reference was added to it with the banner. The record
+            shows the variation's planning reference and the original one.
           data: { recordReference: NRL-100487, lpaFlash: variation }
-        - id: planning
-          label: Reviewed (planning stages)
-          data: { recordReference: NRL-100903 }
-        - id: reviewed-full
-          label: Reviewed, full planning
-          data: { recordReference: NRL-100676 }
         - id: variation
           label: Planning variation
+          description: >-
+            A reviewed record with a planning variation, without the banner
           data: { recordReference: NRL-100487 }
         - id: linked
           label: Linked to the original application's record
+          description: >-
+            A planning variation the developer made its own commitment for,
+            for review. It links to the original application's record, which links back.
           data: { recordReference: NRL-101412 }
-        - id: granted
-          label: Granted, full planning
-          data: { recordReference: NRL-100681 }
+        - id: planning
+          label: Reviewed outline with planning stages
+          description: >-
+            An outline application record, reviewed but waiting
+            on its planning decision
+          data: { recordReference: NRL-100903 }
         - id: outline
           label: Granted outline application with reserved matters
+          description: >-
+            A granted outline application with one reserved matters
+            application already made
           data: { recordReference: NRL-100958 }
         - id: reserved-matters-added
           label: Reserved matters just added
+          description: >-
+            The same record straight after reserved matters
+            were added, with the banner saying so.
           data:
             recordReference: NRL-100958
             lpaFlash: reserved-matters
@@ -301,7 +357,12 @@ pages:
     guard: *signed-in
     back: []
     preview:
+      description: >-
+        The dashboard of developer records
       variants:
         - id: updated
           label: Record updated
+          description: >-
+            Back on the dashboard after choosing a review option on a record
+            and confirming it, with the banner
           data: { lpaFlash: updated }

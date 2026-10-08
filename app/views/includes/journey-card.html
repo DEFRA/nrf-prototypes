@@ -68,6 +68,9 @@
       {% if card.toolsUrl %}
       <span class="govuk-!-margin-left-3"><a href="{{ card.toolsUrl }}" class="govuk-link">View flow and screen wall<span class="govuk-visually-hidden">: {{ card.title }}</span></a></span>
       {% endif %}
+      {% if card.scenarioCount %}
+      <span class="govuk-!-margin-left-3"><a href="{{ card.toolsUrl }}#scenarios" class="govuk-link">Scenarios<span class="govuk-visually-hidden">: {{ card.title }}</span></a></span>
+      {% endif %}
     </p>
     {% if card.handoff and card.handoff.url %}
     <p class="govuk-body">

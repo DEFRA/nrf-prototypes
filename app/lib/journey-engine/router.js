@@ -17,6 +17,11 @@
  *     validate(ctx)           → { ok, value | error }
  *     process(ctx, value)     → { redirect | error }?  after validation
  *   }
+ * and one for the whole journey:
+ *   hooks.scenario(ctx)                         after a live scenario has
+ *                                                 put its answers in the
+ *                                                 session (see startScenario),
+ *                                                 e.g. to sign the user in
  */
 
 const multer = require('multer')
@@ -69,7 +74,9 @@ function previewData(journey, page, requested) {
     requested || (page.copyVariant && page.copyVariant.sample) || null
   const base = (journey.preview && journey.preview.data) || {}
   const pagePreview = page.preview || {}
-  const structured = 'data' in pagePreview || 'variants' in pagePreview
+  const structured = ['data', 'variants', 'label', 'description'].some(
+    (key) => key in pagePreview
+  )
   const override = structured ? pagePreview.data || {} : pagePreview
   const variant = variantId
     ? (pagePreview.variants || []).find((item) => item.id === variantId)
@@ -774,6 +781,40 @@ function copyVariantFor(journey, page, req) {
   return found ? found.page : page
 }
 
+/**
+ * `?_scenario=<id>` on a page with a preview variant marked `live: true`
+ * starts that scenario for real, so a research participant can carry on
+ * from it: the journey's answers (its `session:` keys) are cleared, the
+ * variant's own `data` goes into the session, the journey's `scenario`
+ * hook runs (to sign the user in, say) and the page opens without the
+ * query, so reloading it changes nothing. The tools page's Scenarios tab
+ * links these. The kit never stores a query key starting with `_`.
+ */
+async function startScenario(journey, page, hooks, req, res) {
+  const id = (req.query || {})._scenario
+  const variants = (page.preview && page.preview.variants) || []
+  const variant =
+    id === undefined
+      ? null
+      : variants.find(
+          (item) => item && item.live && String(item.id) === String(id)
+        )
+  if (!variant) {
+    return false
+  }
+  req.session = req.session || {}
+  const data = (req.session.data = req.session.data || {})
+  for (const key of journey.session) {
+    delete data[key]
+  }
+  Object.assign(data, JSON.parse(JSON.stringify(variant.data || {})))
+  if (typeof hooks.scenario === 'function') {
+    await hooks.scenario({ req, res, journey, page, data, variant: variant.id })
+  }
+  res.redirect(page.path)
+  return true
+}
+
 async function dispatch(journey, basePath, hooks, req, res, next) {
   try {
     const page = copyVariantFor(
@@ -785,6 +826,9 @@ async function dispatch(journey, basePath, hooks, req, res, next) {
       return next()
     }
     if (req.method === 'GET' || req.method === 'HEAD') {
+      if (await startScenario(journey, page, hooks, req, res)) {
+        return
+      }
       return await handleGet(req, res, journey, page, hooks)
     }
     if (req.method === 'POST' && hasPost(page)) {

@@ -19,6 +19,8 @@ const {
   isQuestionType,
   previewVariants,
   copyVariants,
+  journeyScenarios,
+  previewData,
   previewErrorStates,
   captureScreens,
   captureScreen,
@@ -28,6 +30,7 @@ const {
   journeyHandoffs
 } = require('../lib/journey-engine')
 const { getFamilies } = require('../config/shared/journeys')
+const { getPath } = require('../lib/journey-engine/expressions')
 
 // Where the prototype is published, for the "copy link" buttons on the wall
 const PUBLIC_BASE_URL = (
@@ -99,6 +102,44 @@ function levelViews(levels, journey) {
         : pageView(page, journey.source || journey, entry.via)
     })
   }))
+}
+
+// The Scenarios tab: each page's standard state, preview and copy variants,
+// with the sample answer each of the journey's `scenarios.columns` shows.
+// A column with `pages` appears on those pages only
+function scenarioViews(journey) {
+  const columns = [].concat(
+    (journey.scenarios && journey.scenarios.columns) || []
+  )
+  return journeyScenarios(journey).map((entry) => {
+    const page = journey.byId.get(entry.id)
+    const shown = columns.filter(
+      (column) => !column.pages || [].concat(column.pages).includes(page.id)
+    )
+    const valuesOf = (data) =>
+      shown.map((column) => {
+        const value = getPath(data, column.key)
+        return value === undefined || value === null ? '' : String(value)
+      })
+    const copyPage = (id) =>
+      page.copyVariants.find((variant) => variant.id === id).page
+    return {
+      ...entry,
+      columns: shown.map((column) => column.label),
+      standard: {
+        ...entry.standard,
+        values: valuesOf(previewData(journey, page))
+      },
+      samples: entry.samples.map((sample) => ({
+        ...sample,
+        values: valuesOf(previewData(journey, page, sample.id))
+      })),
+      copies: entry.copies.map((copy) => ({
+        ...copy,
+        values: valuesOf(previewData(journey, copyPage(copy.id)))
+      }))
+    }
+  })
 }
 
 function loadOr404(req, res) {
@@ -188,6 +229,7 @@ router.get('/tools/journeys/:journey', (req, res) => {
     canExportScreens: canExportScreens(),
     // Pages handed to development, newest first
     handoffs: journeyHandoffs(journey),
+    scenarios: scenarioViews(journey),
     levels,
     groups,
     edges: getEdges(journey),

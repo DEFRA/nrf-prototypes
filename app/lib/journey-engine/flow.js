@@ -776,7 +776,9 @@ function toFlowJson(journey) {
 
 /**
  * The named preview variants of a page (`preview.variants` in journey.yaml
- * or the page's frontmatter): [{ id, label }].
+ * or the page's frontmatter): [{ id, label, description, live }]. The
+ * description says what the variant shows, for the Scenarios tab; a `live`
+ * one starts there for real (see router.js startScenario).
  */
 function previewVariants(page) {
   const variants = (page.preview && page.preview.variants) || []
@@ -784,7 +786,9 @@ function previewVariants(page) {
     .filter((variant) => variant && variant.id)
     .map((variant) => ({
       id: String(variant.id),
-      label: variant.label || String(variant.id)
+      label: variant.label || String(variant.id),
+      description: variant.description ? String(variant.description) : null,
+      live: Boolean(variant.live)
     }))
 }
 
@@ -795,11 +799,53 @@ function previewVariants(page) {
  * copy.
  */
 function copyVariants(page) {
-  return (page.copyVariants || []).map(({ id, label, contentFile }) => ({
-    id,
-    label,
-    contentFile
-  }))
+  return (page.copyVariants || []).map(
+    ({ id, label, description, contentFile }) => ({
+      id,
+      label,
+      description: description || null,
+      contentFile
+    })
+  )
+}
+
+// A page's name for people: its heading, or its id in words when the
+// heading prints an answer ({{ record.reference }}) and says nothing alone
+function pageTitle(page) {
+  const heading = String(page.content.heading || '')
+  if (heading && !/\{\{/.test(heading)) {
+    return heading
+  }
+  const words = page.id.replace(/-/g, ' ')
+  return words.charAt(0).toUpperCase() + words.slice(1)
+}
+
+/**
+ * Every scenario baked into a journey, page by page in journey.yaml order:
+ * the page's standard state (its usual sample answers, named by
+ * `preview.label` and explained by `preview.description`), its preview
+ * variants (the same screen with other sample answers, such as a record
+ * just added) and its copy variants (other wording). Pages with no
+ * variants of either kind are left out. The Scenarios tab on the tools
+ * page lists them and the homepage card links there when there are any.
+ */
+function journeyScenarios(journey) {
+  return journey.pages
+    .map((page) => {
+      const preview = page.preview || {}
+      return {
+        id: page.id,
+        path: page.path,
+        title: pageTitle(page),
+        standard: {
+          label: preview.label ? String(preview.label) : 'Standard',
+          description: preview.description ? String(preview.description) : null
+        },
+        samples: previewVariants(page),
+        copies: copyVariants(page)
+      }
+    })
+    .filter((page) => page.samples.length || page.copies.length)
 }
 
 // The error a preview shows when asked for one without saying which
@@ -999,6 +1045,7 @@ function signedInPages(journey) {
 module.exports = {
   previewVariants,
   copyVariants,
+  journeyScenarios,
   previewErrorKey,
   previewErrorStates,
   DEFAULT_ERROR,

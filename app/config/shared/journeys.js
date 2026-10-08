@@ -25,6 +25,7 @@ const {
   CONTENT_DIR
 } = require('../../lib/journey-engine/loader')
 const { journeyHandoffs } = require('../../lib/journey-engine/history')
+const { journeyScenarios } = require('../../lib/journey-engine/flow')
 
 const REGISTRY_FILE = path.join(__dirname, 'journeys.yaml')
 const STATUSES = ['tested', 'in-progress', 'spike']
@@ -141,6 +142,9 @@ function normaliseEntry(raw, source, extra = {}) {
     // Pages marked `handoff:` in journey.yaml (content journeys only):
     // how many, and how many have changed since. See journey-engine/history.js
     handoff: extra.handoff || null,
+    // Preview and copy variants (content journeys only), listed on the
+    // tools page's Scenarios tab. See journey-engine/flow.js
+    scenarioCount: extra.scenarioCount || 0,
     mount: raw.mount !== false,
     error: extra.error
   }
@@ -167,6 +171,10 @@ function contentJourney(id) {
         basePath: journey.basePath,
         entryPath: `/${journey.start}`,
         toolsUrl: `/tools/journeys/${id}`,
+        scenarioCount: journeyScenarios(journey).reduce(
+          (count, page) => count + page.samples.length + page.copies.length,
+          0
+        ),
         handoff: handoffs.length
           ? {
               count: handoffs.length,

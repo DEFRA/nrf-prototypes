@@ -496,6 +496,10 @@ function buildPage(entry, journey, problems, from = {}) {
       ? {
           id: variantId,
           label: frontmatter.variant ? String(frontmatter.variant) : variantId,
+          // What the variant tries out, for the tools page's Scenarios tab
+          description: frontmatter.description
+            ? String(frontmatter.description)
+            : null,
           sample: frontmatter.sample ? String(frontmatter.sample) : null
         }
       : null,
@@ -604,6 +608,7 @@ function buildCopyVariants(entry, journey, problems, page, pageFile) {
       return {
         id: variantId,
         label: variant.copyVariant.label,
+        description: variant.copyVariant.description,
         contentFile: variant.contentFile,
         page: variant
       }
@@ -968,6 +973,11 @@ function build(journeyId, options = {}) {
     // Titles for the groups the tools page carves out (`groups: { one-login:
     // { title: GOV.UK One Login } }`); see flow.js journeyGroups()
     groups: raw.groups || {},
+    // Extra columns for the tools page's Scenarios tab, each showing one
+    // sample answer of every scenario (`scenarios: { columns: [{ label: NRL
+    // reference, key: recordReference, pages: [view-record] }] }`; every
+    // page when `pages` is left out). See app/routes/tools.js
+    scenarios: raw.scenarios || {},
     pages: [],
     byId: new Map(),
     routes: {}
@@ -993,6 +1003,18 @@ function build(journeyId, options = {}) {
   }
 
   validateTargets(journey, problems)
+  ;[].concat(journey.scenarios.columns || []).forEach((column, i) => {
+    const where = `scenarios.columns[${i}]`
+    if (!column || !column.label || !column.key) {
+      problems.push(`${where}: needs a 'label' and a sample answer 'key'`)
+      return
+    }
+    for (const id of [].concat(column.pages || [])) {
+      if (!journey.byId.has(id)) {
+        problems.push(`${where}.pages: unknown page '${id}'`)
+      }
+    }
+  })
   validateChoiceValues(journey, problems)
 
   const pagesDir = path.join(dir, 'pages')
