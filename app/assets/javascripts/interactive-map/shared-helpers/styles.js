@@ -24,21 +24,25 @@ function getApgbAttribution() {
 // Production's styles (nrf-frontend src/client/javascripts/map/shared-helpers/
 // styles.js, PR #490), in production's order: Hybrid is the default. Hybrid
 // and Aerial need the impact assessor's aerial imagery and Ordnance Survey's
-// tiles; the OS styles need only the OS key.
+// tiles; the OS styles need only the OS key. mapColorScheme 'dark' tells
+// interactive-map the basemap is dark, so the scale bar and draw-ml edit
+// lines and vertices switch to white with a dark halo instead of near-black.
 const APGB_STYLES = [
   {
     id: 'hybrid',
     label: 'Hybrid',
     url: `${VTS_STYLE_BASE_URL}/APGB_Hybrid.json`,
     thumbnail: `${VTS_THUMBNAIL_BASE_URL}/hybrid.jpg`,
-    attribution: getApgbAttribution()
+    attribution: getApgbAttribution(),
+    mapColorScheme: 'dark'
   },
   {
     id: 'aerial',
     label: 'Aerial',
     url: `${VTS_STYLE_BASE_URL}/APGB_Aerial.json`,
     thumbnail: `${VTS_THUMBNAIL_BASE_URL}/aerial.jpg`,
-    attribution: getApgbAttribution()
+    attribution: getApgbAttribution(),
+    mapColorScheme: 'dark'
   }
 ]
 
@@ -55,7 +59,8 @@ const OS_STYLES = [
     label: 'Dark',
     url: `${VTS_STYLE_BASE_URL}/OS_VTS_3857_Dark.json`,
     thumbnail: `${VTS_THUMBNAIL_BASE_URL}/dark.jpg`,
-    attribution: getOrdnanceSurveyAttribution()
+    attribution: getOrdnanceSurveyAttribution(),
+    mapColorScheme: 'dark'
   },
   {
     id: 'black-and-white',
