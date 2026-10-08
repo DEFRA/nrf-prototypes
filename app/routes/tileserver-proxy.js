@@ -12,7 +12,7 @@
  *     app/lib/map/edp-data.js (dissolved EDP outlines and excluded areas),
  *     using production's layer names and working at every zoom level (the
  *     MBTiles stop at zoom 10-12).
- *     Set IMPACT_ASSESSOR_BASE_URL (and IMPACT_ASSESSOR_API_KEY) to proxy
+ *     Set IMPACT_ASSESSOR_BASE_URL and IMPACT_ASSESSOR_API_KEY to proxy
  *     the real service instead (quote V7.1's maps only).
  *   /prototype-map/tiles/{layer}/{z}/{x}/{y}.mvt
  *     the same EDP layers from local data whatever is set (quote V7's maps)
@@ -26,6 +26,7 @@ const path = require('path')
 const geojsonvt = require('geojson-vt').default
 const vtpbf = require('vt-pbf')
 const edpData = require('../lib/map/edp-data')
+const { usesImpactAssessor } = require('../lib/map/production-services')
 
 const MVT_CONTENT_TYPE = 'application/vnd.mapbox-vector-tile'
 
@@ -244,10 +245,7 @@ router.get('/tiles/*', async (req, res) => {
 async function proxyImpactAssessorTile(req, res, layer, z, x, y) {
   const baseUrl = process.env.IMPACT_ASSESSOR_BASE_URL.replace(/\/$/, '')
   const upstreamUrl = `${baseUrl}/tiles/${layer}/${z}/${x}/${y}.mvt`
-  const headers = {}
-  if (process.env.IMPACT_ASSESSOR_API_KEY) {
-    headers['x-api-key'] = process.env.IMPACT_ASSESSOR_API_KEY
-  }
+  const headers = { 'x-api-key': process.env.IMPACT_ASSESSOR_API_KEY }
   const upstream = await fetch(upstreamUrl, { headers })
   const payload = Buffer.from(await upstream.arrayBuffer())
   if (!upstream.ok) {
@@ -272,26 +270,24 @@ const THIRTY_DAYS_SECONDS = 30 * 86400
  * (app/assets/data/vts/APGB_Hybrid.json and APGB_Aerial.json), proxied from
  * the impact assessor like production's /impact-assessor-map/aerial_proxy.
  * The impact assessor holds the imagery licence, so there is no local
- * stand-in: without IMPACT_ASSESSOR_BASE_URL the map offers the keyless
- * Satellite basemap instead (see shared-helpers/styles.js).
+ * stand-in: without IMPACT_ASSESSOR_BASE_URL and IMPACT_ASSESSOR_API_KEY the
+ * map offers the keyless Satellite basemap instead (see
+ * shared-helpers/styles.js).
  */
 router.get('/impact-assessor-map/aerial_proxy/:z/:x/:y', async (req, res) => {
   const { z, x, y } = req.params
   if (![z, x, y].every((value) => /^\d+$/.test(value))) {
     return res.status(400).json({ error: 'Invalid tile path' })
   }
-  if (!process.env.IMPACT_ASSESSOR_BASE_URL) {
-    return res
-      .status(503)
-      .json({ error: 'IMPACT_ASSESSOR_BASE_URL is not set' })
+  if (!usesImpactAssessor()) {
+    return res.status(503).json({
+      error: 'IMPACT_ASSESSOR_BASE_URL and IMPACT_ASSESSOR_API_KEY are not set'
+    })
   }
 
   try {
     const baseUrl = process.env.IMPACT_ASSESSOR_BASE_URL.replace(/\/$/, '')
-    const headers = {}
-    if (process.env.IMPACT_ASSESSOR_API_KEY) {
-      headers['x-api-key'] = process.env.IMPACT_ASSESSOR_API_KEY
-    }
+    const headers = { 'x-api-key': process.env.IMPACT_ASSESSOR_API_KEY }
     const upstream = await fetch(`${baseUrl}/aerial_proxy/${z}/${x}/${y}`, {
       headers,
       redirect: 'follow'
@@ -323,8 +319,8 @@ router.get('/impact-assessor-map/aerial_proxy/:z/:x/:y', async (req, res) => {
 
 /**
  * Production-shaped EDP overlay tiles. `proxy` sends them to the real impact
- * assessor when IMPACT_ASSESSOR_BASE_URL is set; otherwise they are sliced
- * from the prototype's own EDP data.
+ * assessor when IMPACT_ASSESSOR_BASE_URL and IMPACT_ASSESSOR_API_KEY are set;
+ * otherwise they are sliced from the prototype's own EDP data.
  *
  * @param {{ proxy: boolean }} options
  */
@@ -352,7 +348,7 @@ function edpTileHandler({ proxy }) {
     }
 
     try {
-      if (proxy && process.env.IMPACT_ASSESSOR_BASE_URL) {
+      if (proxy && usesImpactAssessor()) {
         return await proxyImpactAssessorTile(
           req,
           res,

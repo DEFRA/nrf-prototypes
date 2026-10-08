@@ -16,6 +16,7 @@
 const turf = require('@turf/turf')
 const { message, validatePage } = require('../journey-engine/validation')
 const edpData = require('../map/edp-data')
+const { usesBackend } = require('../map/production-services')
 const { participantOf } = require('../nrf-request-to-use-1-1/hooks')
 
 // ============================================================================
@@ -261,23 +262,20 @@ function edpOverlap(geometry, edpId) {
 //
 // Production checks a boundary against the EDPs with the NRF backend
 // (nrf-frontend src/server/common/services/boundary.js, POST /boundary/check
-// with { geometry }). With NRF_BACKEND_API_URL set, so does this journey;
-// without it, the prototype's own EDP data answers (checkBoundary above).
+// with { geometry }). With NRF_BACKEND_API_URL and BACKEND_API_KEY set, so
+// does this journey; without them, the prototype's own EDP data answers
+// (checkBoundary above).
 
 const CHECK_ERROR = 'An error occurred checking the boundary'
-
-function usesBackend() {
-  return Boolean(process.env.NRF_BACKEND_API_URL)
-}
 
 /**
  * @returns {Promise<{ ok: boolean, status: number, payload: object|null }>}
  */
 async function postBoundaryToBackend(geometry) {
   const baseUrl = process.env.NRF_BACKEND_API_URL.replace(/\/$/, '')
-  const headers = { 'content-type': 'application/json' }
-  if (process.env.BACKEND_API_KEY) {
-    headers['x-api-key'] = process.env.BACKEND_API_KEY
+  const headers = {
+    'content-type': 'application/json',
+    'x-api-key': process.env.BACKEND_API_KEY
   }
   const response = await fetch(`${baseUrl}/boundary/check`, {
     method: 'POST',

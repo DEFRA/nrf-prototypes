@@ -265,6 +265,58 @@ test.describe('nrf-quote-7-1 production map', () => {
     expect(missing.status()).toBe(404)
   })
 
+  test("production's services switch on only with both their URL and their key", () => {
+    // A URL without its key (say, the hosted prototype's config deployed
+    // before its secrets) would offer Hybrid and Aerial with no imagery
+    const {
+      usesImpactAssessor,
+      usesBackend
+    } = require('../../app/lib/map/production-services')
+    const names = [
+      'IMPACT_ASSESSOR_BASE_URL',
+      'IMPACT_ASSESSOR_API_KEY',
+      'NRF_BACKEND_API_URL',
+      'BACKEND_API_KEY'
+    ]
+    const saved = Object.fromEntries(
+      names.map((name) => [name, process.env[name]])
+    )
+    const withEnv = (env, check) => {
+      names.forEach((name) => delete process.env[name])
+      Object.assign(process.env, env)
+      return check()
+    }
+
+    try {
+      const url = 'https://example.test'
+      expect(withEnv({}, usesImpactAssessor)).toBe(false)
+      expect(
+        withEnv({ IMPACT_ASSESSOR_BASE_URL: url }, usesImpactAssessor)
+      ).toBe(false)
+      expect(
+        withEnv(
+          { IMPACT_ASSESSOR_BASE_URL: url, IMPACT_ASSESSOR_API_KEY: 'key' },
+          usesImpactAssessor
+        )
+      ).toBe(true)
+      expect(withEnv({ NRF_BACKEND_API_URL: url }, usesBackend)).toBe(false)
+      expect(
+        withEnv(
+          { NRF_BACKEND_API_URL: url, BACKEND_API_KEY: 'key' },
+          usesBackend
+        )
+      ).toBe(true)
+    } finally {
+      names.forEach((name) => {
+        if (saved[name] === undefined) {
+          delete process.env[name]
+        } else {
+          process.env[name] = saved[name]
+        }
+      })
+    }
+  })
+
   test("production's Hybrid and Aerial basemaps have their tiles and pictures", async ({
     request
   }) => {

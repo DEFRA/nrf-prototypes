@@ -25,6 +25,7 @@ const { validatePage, previewErrors, message } = require('./validation')
 const { previewErrorKey, signedInPages } = require('./flow')
 const { resolveBackLink, toPath } = require('./back-link')
 const { createRenderer } = require('./markdown')
+const { usesImpactAssessor } = require('../map/production-services')
 const {
   loadJourney,
   resolveSummaryPath,
@@ -545,7 +546,7 @@ function buildModel(ctx, extra = {}) {
     hasOsKey: Boolean(process.env.OS_API_KEY),
     // The production map's Hybrid and Aerial basemaps need the impact
     // assessor's aerial imagery (app/routes/tileserver-proxy.js)
-    hasAerial: Boolean(process.env.IMPACT_ASSESSOR_BASE_URL),
+    hasAerial: usesImpactAssessor(),
     // Set on a frozen copy of a handoff (see snapshots.js): the date, the
     // commit and where the live page is, for the banner
     frozen: journey.frozen || null,
