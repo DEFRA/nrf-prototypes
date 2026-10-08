@@ -146,6 +146,51 @@ test.describe('nrf-quote-7-1 production map', () => {
     expect(payload.intersectingEdps).toEqual([])
   })
 
+  test('the boundary panel puts an excluded area before the EDP it sits in, like production', async ({
+    page
+  }) => {
+    // The backend (production's impact assessor) lists the EDP as well as
+    // the excluded area, so the panel itself has to give the excluded area
+    // precedence. Rendered on a page without a map, whose own panel would
+    // take the same id.
+    await page.goto('/')
+    const items = await page.evaluate(async () => {
+      const panel = await import(
+        '/public/javascripts/interactive-map/draw/helpers/boundary-info-panel.js'
+      )
+      const holder = document.createElement('div')
+      holder.innerHTML = panel.buildPanelHtml()
+      document.body.append(holder)
+      const edp = { label: 'Test nutrient EDP' }
+      const boundaryMetadata = { area: 10000, perimeter: 400 }
+      const listed = (results) => {
+        panel.renderPanel({ results: { boundaryMetadata, ...results } })
+        return [
+          ...holder.querySelectorAll('.app-boundary-info-panel__edp-item')
+        ].map((item) => item.textContent.trim())
+      }
+      return {
+        inEdp: listed({
+          intersectingEdps: [edp],
+          intersectingExcludedAreas: []
+        }),
+        inExcludedArea: listed({
+          intersectingEdps: [edp],
+          intersectingExcludedAreas: ['River Wensum SSSI']
+        }),
+        inNoEdp: listed({
+          intersectingEdps: [],
+          intersectingExcludedAreas: []
+        })
+      }
+    })
+
+    expect(items.inEdp).toHaveLength(1)
+    expect(items.inEdp[0]).toContain('Test nutrient EDP')
+    expect(items.inExcludedArea).toEqual(items.inNoEdp)
+    expect(items.inExcludedArea[0]).not.toContain('Test nutrient EDP')
+  })
+
   test('boundary check API rejects a non-polygon', async ({ request }) => {
     const response = await request.post(CHECK_URL, {
       data: { geometry: { type: 'Point', coordinates: [1, 52] } }

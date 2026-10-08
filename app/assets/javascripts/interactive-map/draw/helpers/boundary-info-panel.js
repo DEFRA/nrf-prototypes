@@ -164,6 +164,10 @@ function getPanelElements(panelRoot) {
   }
 }
 
+/**
+ * @param {{ intersectingEdps?: Array<string|{ label?: string }>, intersectingExcludedAreas?: string[], boundaryMetadata?: object }} results
+ * @param {{ areaEl: HTMLElement, perimeterEl: HTMLElement, intersectionsEl: HTMLElement }} elements
+ */
 function renderResults(results, { areaEl, perimeterEl, intersectionsEl }) {
   areaEl.textContent = formatArea(results.boundaryMetadata?.area)
   perimeterEl.textContent = formatPerimeter(results.boundaryMetadata?.perimeter)
@@ -172,9 +176,17 @@ function renderResults(results, { areaEl, perimeterEl, intersectionsEl }) {
   const edps = Array.isArray(results.intersectingEdps)
     ? results.intersectingEdps
     : []
-  const items = edps.length
-    ? edps.map(buildEdpListItem)
-    : [buildUnsupportedAreaListItem()]
+  const excludedAreas = Array.isArray(results.intersectingExcludedAreas)
+    ? results.intersectingExcludedAreas
+    : []
+  // Excluded-area takes precedence over the EDP list: the exclusion zones sit
+  // inside an EDP, so the impact assessor still populates intersectingEdps for
+  // an excluded boundary — the exclusion zone alone makes it ineligible,
+  // matching the save handler's redirect order.
+  const items =
+    excludedAreas.length === 0 && edps.length > 0
+      ? edps.map(buildEdpListItem)
+      : [buildUnsupportedAreaListItem()]
   items.forEach((item) => intersectionsEl.appendChild(item))
 }
 
