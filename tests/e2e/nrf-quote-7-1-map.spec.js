@@ -146,6 +146,51 @@ test.describe('nrf-quote-7-1 production map', () => {
     expect(payload.intersectingEdps).toEqual([])
   })
 
+  test('the boundary panel puts an excluded area before the EDP it sits in, like production', async ({
+    page
+  }) => {
+    // The backend (production's impact assessor) lists the EDP as well as
+    // the excluded area, so the panel itself has to give the excluded area
+    // precedence. Rendered on a page without a map, whose own panel would
+    // take the same id.
+    await page.goto('/')
+    const items = await page.evaluate(async () => {
+      const panel = await import(
+        '/public/javascripts/interactive-map/draw/helpers/boundary-info-panel.js'
+      )
+      const holder = document.createElement('div')
+      holder.innerHTML = panel.buildPanelHtml()
+      document.body.append(holder)
+      const edp = { label: 'Test nutrient EDP' }
+      const boundaryMetadata = { area: 10000, perimeter: 400 }
+      const listed = (results) => {
+        panel.renderPanel({ results: { boundaryMetadata, ...results } })
+        return [
+          ...holder.querySelectorAll('.app-boundary-info-panel__edp-item')
+        ].map((item) => item.textContent.trim())
+      }
+      return {
+        inEdp: listed({
+          intersectingEdps: [edp],
+          intersectingExcludedAreas: []
+        }),
+        inExcludedArea: listed({
+          intersectingEdps: [edp],
+          intersectingExcludedAreas: ['River Wensum SSSI']
+        }),
+        inNoEdp: listed({
+          intersectingEdps: [],
+          intersectingExcludedAreas: []
+        })
+      }
+    })
+
+    expect(items.inEdp).toHaveLength(1)
+    expect(items.inEdp[0]).toContain('Test nutrient EDP')
+    expect(items.inExcludedArea).toEqual(items.inNoEdp)
+    expect(items.inExcludedArea[0]).not.toContain('Test nutrient EDP')
+  })
+
   test('boundary check API rejects a non-polygon', async ({ request }) => {
     const response = await request.post(CHECK_URL, {
       data: { geometry: { type: 'Point', coordinates: [1, 52] } }
@@ -218,5 +263,42 @@ test.describe('nrf-quote-7-1 production map', () => {
       '/impact-assessor-map/tiles/nope/1/1/1.mvt'
     )
     expect(missing.status()).toBe(404)
+  })
+
+  test("production's Hybrid and Aerial basemaps have their tiles and pictures", async ({
+    request
+  }) => {
+    for (const file of [
+      '/public/data/vts/APGB_Hybrid.json',
+      '/public/data/vts/APGB_Aerial.json',
+      '/public/data/vts/thumbnails/hybrid.jpg',
+      '/public/data/vts/thumbnails/aerial.jpg'
+    ]) {
+      expect((await request.get(file)).status()).toBe(200)
+    }
+
+    // A tile far out to sea is all sea, with no need to ask Ordnance Survey
+    const sea = await request.get('/os-base-map/sea-mask/10/0/0.pbf')
+    expect(sea.status()).toBe(200)
+    expect(sea.headers()['content-type']).toBe(
+      'application/vnd.mapbox-vector-tile'
+    )
+    expect((await sea.body()).length).toBeGreaterThan(0)
+
+    // Over land it needs the OS tile: without a key, an empty tile
+    const land = await request.get('/os-base-map/sea-mask/10/515/333.pbf')
+    expect([200, 204]).toContain(land.status())
+
+    // Quote V7's maps draw the prototype's own EDP data whatever is set
+    const local = await request.get(
+      '/prototype-map/tiles/edp_boundaries/6/31/20.mvt'
+    )
+    expect([200, 204]).toContain(local.status())
+
+    // Aerial imagery comes only from the impact assessor
+    const aerial = await request.get(
+      '/impact-assessor-map/aerial_proxy/10/515/333'
+    )
+    expect([200, 503]).toContain(aerial.status())
   })
 })

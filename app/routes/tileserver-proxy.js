@@ -13,7 +13,9 @@
  *     using production's layer names and working at every zoom level (the
  *     MBTiles stop at zoom 10-12).
  *     Set IMPACT_ASSESSOR_BASE_URL (and IMPACT_ASSESSOR_API_KEY) to proxy
- *     the real service instead.
+ *     the real service instead (quote V7.1's maps only).
+ *   /prototype-map/tiles/{layer}/{z}/{x}/{y}.mvt
+ *     the same EDP layers from local data whatever is set (quote V7's maps)
  */
 
 const govukPrototypeKit = require('govuk-prototype-kit')
@@ -259,13 +261,75 @@ async function proxyImpactAssessorTile(req, res, layer, z, x, y) {
   return res.status(200).send(payload)
 }
 
+// The impact assessor answers every aerial failure with a 200 placeholder
+// and says which it sent in this header ('hit' for real imagery)
+const AERIAL_OUTCOME_HEADER = 'x-aerial-proxy-tile'
+const AERIAL_HIT = 'hit'
+const THIRTY_DAYS_SECONDS = 30 * 86400
+
 /**
- * Production-shaped EDP overlay tiles
- * Handles /impact-assessor-map/tiles/{layer}/{z}/{x}/{y}.mvt
+ * APGB aerial imagery for the production map's Hybrid and Aerial basemaps
+ * (app/assets/data/vts/APGB_Hybrid.json and APGB_Aerial.json), proxied from
+ * the impact assessor like production's /impact-assessor-map/aerial_proxy.
+ * The impact assessor holds the imagery licence, so there is no local
+ * stand-in: without IMPACT_ASSESSOR_BASE_URL the map offers the keyless
+ * Satellite basemap instead (see shared-helpers/styles.js).
  */
-router.get(
-  '/impact-assessor-map/tiles/:layer/:z/:x/:y.mvt',
-  async (req, res) => {
+router.get('/impact-assessor-map/aerial_proxy/:z/:x/:y', async (req, res) => {
+  const { z, x, y } = req.params
+  if (![z, x, y].every((value) => /^\d+$/.test(value))) {
+    return res.status(400).json({ error: 'Invalid tile path' })
+  }
+  if (!process.env.IMPACT_ASSESSOR_BASE_URL) {
+    return res
+      .status(503)
+      .json({ error: 'IMPACT_ASSESSOR_BASE_URL is not set' })
+  }
+
+  try {
+    const baseUrl = process.env.IMPACT_ASSESSOR_BASE_URL.replace(/\/$/, '')
+    const headers = {}
+    if (process.env.IMPACT_ASSESSOR_API_KEY) {
+      headers['x-api-key'] = process.env.IMPACT_ASSESSOR_API_KEY
+    }
+    const upstream = await fetch(`${baseUrl}/aerial_proxy/${z}/${x}/${y}`, {
+      headers,
+      redirect: 'follow'
+    })
+    const payload = Buffer.from(await upstream.arrayBuffer())
+    if (!upstream.ok) {
+      return res.status(upstream.status).send(payload)
+    }
+    const outcome = upstream.headers.get(AERIAL_OUTCOME_HEADER)
+    // Real imagery is browser-cached for production's aerial max-age;
+    // placeholders keep the impact assessor's short one so a broken region
+    // isn't pinned in the browser
+    res.set(
+      'Cache-Control',
+      outcome === AERIAL_HIT
+        ? `private, max-age=${THIRTY_DAYS_SECONDS}`
+        : upstream.headers.get('cache-control') || 'no-cache'
+    )
+    res.set('Content-Type', upstream.headers.get('content-type') || 'image/png')
+    if (outcome) {
+      res.set(AERIAL_OUTCOME_HEADER, outcome)
+    }
+    return res.status(200).send(payload)
+  } catch (error) {
+    console.error(`[TileServer] Aerial tile ${z}/${x}/${y} failed:`, error)
+    return res.status(502).send('Impact assessor tile request failed')
+  }
+})
+
+/**
+ * Production-shaped EDP overlay tiles. `proxy` sends them to the real impact
+ * assessor when IMPACT_ASSESSOR_BASE_URL is set; otherwise they are sliced
+ * from the prototype's own EDP data.
+ *
+ * @param {{ proxy: boolean }} options
+ */
+function edpTileHandler({ proxy }) {
+  return async (req, res) => {
     const { layer } = req.params
     const zoom = parseInt(req.params.z, 10)
     const tileX = parseInt(req.params.x, 10)
@@ -288,7 +352,7 @@ router.get(
     }
 
     try {
-      if (process.env.IMPACT_ASSESSOR_BASE_URL) {
+      if (proxy && process.env.IMPACT_ASSESSOR_BASE_URL) {
         return await proxyImpactAssessorTile(
           req,
           res,
@@ -315,6 +379,20 @@ router.get(
       return sendTileError(res, error)
     }
   }
+}
+
+// Production's path, for quote V7.1's maps: the real impact assessor's EDPs
+// when it is set
+router.get(
+  '/impact-assessor-map/tiles/:layer/:z/:x/:y.mvt',
+  edpTileHandler({ proxy: true })
+)
+
+// The prototype's own EDP data whatever is set, for quote V7's maps (see
+// app/assets/javascripts/interactive-map/shared-helpers/datasets.js)
+router.get(
+  '/prototype-map/tiles/:layer/:z/:x/:y.mvt',
+  edpTileHandler({ proxy: false })
 )
 
 module.exports = router

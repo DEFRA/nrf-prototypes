@@ -1,0 +1,48 @@
+{
+  "version": 8,
+  "name": "APGB Aerial",
+  "sources": {
+    "apgb-aerial": {
+      "type": "raster",
+      "tiles": ["/impact-assessor-map/aerial_proxy/{z}/{x}/{y}"],
+      "tileSize": 256,
+      "maxzoom": 21,
+      "attribution": "© Bluesky International Limited 2021 and onwards | © Bluesky International Limited and Getmapping Limited 1999-2020"
+    },
+    "sea-mask": {
+      "type": "vector",
+      "tiles": ["/os-base-map/sea-mask/{z}/{x}/{y}.pbf"],
+      "maxzoom": 16
+    },
+    "esri": {
+      "type": "vector",
+      "tiles": ["/os-base-map/tile/{z}/{y}/{x}.pbf"],
+      "maxzoom": 16
+    }
+  },
+  "layers": [
+    {
+      "id": "apgb-aerial",
+      "type": "raster",
+      "source": "apgb-aerial"
+    },
+    {
+      "id": "sea-mask",
+      "type": "fill",
+      "source": "sea-mask",
+      "source-layer": "sea",
+      "paint": {
+        "fill-color": "#A9DDEF"
+      }
+    },
+    {
+      "id": "European_land",
+      "type": "fill",
+      "source": "esri",
+      "source-layer": "European_land",
+      "paint": {
+        "fill-color": "#C3C9BA"
+      }
+    }
+  ]
+}

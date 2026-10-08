@@ -12,6 +12,7 @@
 const govukPrototypeKit = require('govuk-prototype-kit')
 const router = govukPrototypeKit.requests.setupRouter()
 const { ProxyAgent, fetch: undiciFetch } = require('undici')
+const seaMask = require('../lib/map/sea-mask')
 
 const OS_VTS_URL = 'https://api.os.uk/maps/vector/v1/vts'
 const OS_NAMES_URL = 'https://api.os.uk/search/names/v1/find'
@@ -32,14 +33,15 @@ if (getOsApiKey()) {
 }
 
 // Route outbound requests through HTTP_PROXY when one is configured
-function fetchUpstream(url) {
+function fetchUpstream(url, options = {}) {
   if (process.env.HTTP_PROXY) {
     return undiciFetch(url, {
+      ...options,
       dispatcher: new ProxyAgent(process.env.HTTP_PROXY),
       redirect: 'follow'
     })
   }
-  return fetch(url, { redirect: 'follow' })
+  return fetch(url, { ...options, redirect: 'follow' })
 }
 
 function getRequestBaseUrl(req) {
@@ -134,6 +136,70 @@ async function proxyOsBaseMap(req, res) {
     return res.status(502).send('Map tile request failed')
   }
 }
+
+/**
+ * The sea mask under the Hybrid and Aerial basemaps, as production's
+ * /os-base-map/sea-mask/{z}/{x}/{y}.pbf (see app/lib/map/sea-mask). Listed
+ * before the catch-all proxy below.
+ *
+ * The mask is decoration over the aerial imagery, so an upstream failure (or
+ * no OS_API_KEY) leaves the map as it looked before the layer existed: an
+ * empty tile with no cache header, so a brief outage isn't kept in browsers.
+ */
+const SEA_MASK_PATH = `${BASE_MAP_PATH}/sea-mask/:z/:x/:y.pbf`
+const SEA_MASK_UPSTREAM_TIMEOUT_MS = 5000
+const MVT_CONTENT_TYPE = 'application/vnd.mapbox-vector-tile'
+const ONE_DAY_SECONDS = 86400
+
+// With no land to cut out, the mask is the whole tile
+const allSeaTile = seaMask.buildSeaMaskTile(Buffer.alloc(0))
+
+function sendSeaTile(res, tile) {
+  res.set('Content-Type', MVT_CONTENT_TYPE)
+  res.set('Cache-Control', `public, max-age=${ONE_DAY_SECONDS}, immutable`)
+  return res.send(tile)
+}
+
+function sendEmptyTile(res) {
+  res.set('Content-Type', MVT_CONTENT_TYPE)
+  return res.status(204).end()
+}
+
+router.get(SEA_MASK_PATH, async (req, res) => {
+  const z = Number(req.params.z)
+  const x = Number(req.params.x)
+  const y = Number(req.params.y)
+  if (![z, x, y].every(Number.isInteger)) {
+    return res.status(400).json({ error: 'Invalid tile path' })
+  }
+
+  if (seaMask.isTileOutsideEngland({ z, x, y })) {
+    return sendSeaTile(res, allSeaTile)
+  }
+  if (!getOsApiKey()) {
+    return sendEmptyTile(res)
+  }
+
+  try {
+    // Ordnance Survey orders the tile path row before column, the reverse of
+    // the {z}/{x}/{y} MapLibre requests
+    const upstream = await fetchUpstream(
+      buildOsBaseMapUrl(`tile/${z}/${y}/${x}.pbf`),
+      { signal: AbortSignal.timeout(SEA_MASK_UPSTREAM_TIMEOUT_MS) }
+    )
+    if (!upstream.ok) {
+      console.warn(
+        `[OS proxy] Sea mask upstream tile ${z}/${x}/${y} failed: ${upstream.status}`
+      )
+      return sendEmptyTile(res)
+    }
+    const landTile = Buffer.from(await upstream.arrayBuffer())
+    return sendSeaTile(res, seaMask.buildSeaMaskTile(landTile))
+  } catch (error) {
+    console.error(`[OS proxy] Sea mask tile failed for ${z}/${x}/${y}:`, error)
+    return sendEmptyTile(res)
+  }
+})
 
 router.get(BASE_MAP_PATH, proxyOsBaseMap)
 router.get(`${BASE_MAP_PATH}/*`, proxyOsBaseMap)
