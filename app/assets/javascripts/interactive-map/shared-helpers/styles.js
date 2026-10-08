@@ -145,7 +145,8 @@ const PRODUCTION_KEYLESS_THUMBNAILS = {
  * Hybrid and Aerial also need the impact assessor's aerial imagery,
  * IMPACT_ASSESSOR_BASE_URL (see app/routes/tileserver-proxy.js). Otherwise
  * the keyless Satellite and Streets stand in, with the OS styles when there
- * is a key.
+ * is a key. A production map with the OS styles leaves Streets out: Outdoor
+ * OS is production's street map.
  *
  * @param {{ hasOsKey?: boolean, hasAerial?: boolean, production?: boolean }} [params]
  */
@@ -157,12 +158,10 @@ export function getMapStyles({
   let styles
   if (production && hasOsKey && hasAerial) {
     styles = [...APGB_STYLES, ...OS_STYLES]
+  } else if (hasOsKey && production) {
+    styles = [SATELLITE_STYLE, ...OS_STYLES]
   } else if (hasOsKey) {
-    styles = [
-      SATELLITE_STYLE,
-      ...(production ? OS_STYLES : PROTOTYPE_OS_STYLES),
-      STREETS_STYLE
-    ]
+    styles = [SATELLITE_STYLE, ...PROTOTYPE_OS_STYLES, STREETS_STYLE]
   } else {
     styles = [SATELLITE_STYLE, STREETS_STYLE]
   }
