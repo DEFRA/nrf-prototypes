@@ -1,5 +1,9 @@
 ---
 type: document
+text:
+  # The print link beside the certificate, which opens the print window
+  # (where the user can also save it as a PDF)
+  printLink: Save or print this certificate
 ---
 
 # Nature restoration levy – commitment certificate

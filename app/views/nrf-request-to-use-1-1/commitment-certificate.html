@@ -1,0 +1,46 @@
+{#
+  Commitment certificate – nrf-request-to-use-1-1.
+
+  Linked from the email in place of an attached PDF. The certificate is
+  content/nrf-request-to-use-1-1/pages/commitment-certificate.md, shown on
+  the service's own layout with a print link beside it, as GOV.UK
+  publications have (GOV.UK Publishing's print_link component). The link
+  opens the browser's print window, where the user can also save it as a
+  PDF (print-link.js); it needs JavaScript, so it is hidden without it.
+
+  Printing leaves only the certificate, on A4 with 20mm margins and
+  govuk-frontend's print type sizes (_commitment-certificate.scss).
+#}
+{% extends "journey-engine/_page.html" %}
+
+{% set text = content.text %}
+{% set bodyClasses = "app-certificate" %}
+
+{% block head %}
+{{ super() }}
+<style>
+  @page {
+    size: A4;
+    margin: 20mm;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if not content.headingInBody %}<h1 class="govuk-heading-l">{{ content.heading }}</h1>{% endif %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-one-third-from-desktop app-certificate__aside">
+    <div class="app-print-link">
+      <button class="app-print-link__button" type="button" data-module="app-print-link">{{ text.printLink }}</button>
+    </div>
+  </div>
+  <div class="govuk-grid-column-two-thirds-from-desktop app-certificate__body">
+    {{ content.html | safe }}
+  </div>
+</div>
+{% endblock %}
+
+{% block pageScripts %}
+{{ super() }}
+<script src="/public/javascripts/print-link.js"></script>
+{% endblock %}

@@ -1,0 +1,82 @@
+// The commitment certificate (nrf-request-to-use-1-1): the certificate on the
+// service's own layout with a print link beside it. Printing, or saving as a
+// PDF from the print window, leaves only the certificate, on A4 with the
+// 20mm margins of the page's @page rule; govuk-frontend sets its print font
+// and type sizes.
+
+// GOV.UK Publishing's print_link component: an outlined button with a
+// printer icon. It needs JavaScript, so it shows only once govuk-frontend has
+// marked the page as supported.
+.app-print-link {
+  display: none;
+  margin-bottom: govuk-spacing(6);
+}
+
+.govuk-frontend-supported .app-print-link {
+  display: block;
+}
+
+.app-print-link__button {
+  @include govuk-font($size: 16);
+  margin: 0;
+  padding: 10px 10px 10px 38px;
+  border: 1px solid govuk-colour('black', $variant: 'tint-25');
+  color: $govuk-link-colour;
+  background: url('/public/images/icon-print.svg') no-repeat 10px 50%;
+  background-size: 18px 18px;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    color: $govuk-text-colour;
+    background-color: govuk-colour('black', $variant: 'tint-95');
+  }
+
+  &:focus,
+  &:active {
+    border-color: transparent;
+    outline: 3px solid transparent;
+    color: $govuk-focus-text-colour;
+    background-color: $govuk-focus-colour;
+    box-shadow:
+      0 -2px $govuk-focus-colour,
+      0 4px $govuk-focus-text-colour;
+  }
+}
+
+@media print {
+  .app-certificate {
+    .govuk-header,
+    .govuk-service-navigation,
+    .govuk-phase-banner,
+    .app-organisation-bar,
+    .govuk-footer,
+    .app-certificate__aside {
+      display: none !important;
+    }
+
+    .govuk-width-container,
+    .govuk-main-wrapper {
+      max-width: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    // The certificate takes the whole width of the paper
+    .govuk-grid-row {
+      margin: 0;
+    }
+
+    .app-certificate__body {
+      float: none;
+      width: auto;
+      padding: 0;
+    }
+  }
+
+  // The rebranded template's pale blue page colour would show below the
+  // certificate when backgrounds are printed
+  .govuk-template:has(.app-certificate) {
+    background-color: govuk-colour('white');
+  }
+}

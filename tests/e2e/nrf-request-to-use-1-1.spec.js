@@ -299,15 +299,33 @@ test.describe('nrf-request-to-use-1-1 happy paths', () => {
     await expect(page).toHaveURL(`${base}/request-email`)
     await expectEmailChrome(page)
     await expectHeading(page, 'request-email')
+    // The email links to the certificate itself
+    await expect(
+      page.locator(`main a[href="${base}/commitment-certificate"]`)
+    ).toHaveCount(1)
 
     await page.goBack()
     await followResearchLink(page, 'confirmation', 'commitment-certificate')
     await expect(page).toHaveURL(`${base}/commitment-certificate`)
     await expectHeading(page, 'commitment-certificate')
     await expect(page.locator('.app-boundary-map')).toHaveCount(1)
-    await expect(page.locator('.govuk-phase-banner')).toHaveCount(0)
+    // On the service's own layout, with no way back (it opens from the email)
+    await expect(page.locator('.govuk-phase-banner')).toHaveCount(1)
+    await expect(page.locator('.govuk-back-link')).toHaveCount(0)
     await expect(page.locator('main')).toContainText('Trevor Barker')
     await expect(page.locator('main')).toContainText('53 Business Lane')
+
+    // The print link beside it opens the browser's print window
+    await page.evaluate(() => {
+      window.printed = 0
+      window.print = () => {
+        window.printed += 1
+      }
+    })
+    const { printLink } = journey.byId.get('commitment-certificate').content
+      .text
+    await page.getByRole('button', { name: printLink }).click()
+    expect(await page.evaluate(() => window.printed)).toBe(1)
   })
 
   test('an agent enters the developer details and can sign out', async ({

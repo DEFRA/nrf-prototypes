@@ -957,11 +957,9 @@ pages:
   - id: request-email
     back: confirmation
 
+  # The certificate, linked from the email, on the service's own layout with a
+  # print link beside it (printing or saving as a PDF gives the certificate
+  # alone on A4). It opens from the email, so it has no back link
   - id: commitment-certificate
-    back: confirmation
-
-  # The certificate as a page to print or save as a PDF, linked from the
-  # email: the certificate on an A4 sheet and the steps for the user's device
-  - id: save-commitment-certificate
-    template: nrf-request-to-use-1-1/save-commitment-certificate
-    handler: custom # renders the certificate and picks the device, see hooks.js
+    layout: default
+    template: nrf-request-to-use-1-1/commitment-certificate
