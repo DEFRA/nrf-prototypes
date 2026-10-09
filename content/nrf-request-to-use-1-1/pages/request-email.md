@@ -35,10 +35,11 @@ You told us the relevant development is planned to have:
 - housing with a total of {{ residentialBuildingCount }} unit(s)
 
 :::
+## Environmental Delivery Plan (EDP)
+
+{{ edpName }}
 
 ## Nature restoration levy amount
-
-Your relevant development is planned in: {{ edpName }}
 
 ### Provisional nature restoration levy amount
 
