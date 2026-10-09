@@ -133,9 +133,10 @@ session:
 # Sample answers used when a page is opened with ?preview=1 and on the
 # screen wall at /tools/journeys/nrf-request-to-use-1. Only a summary page
 # opened that way writes them to the session, so its Change links work.
-# The sample account would show every page signed in: `signedInFrom` names
-# where signing in leads, and only those pages and the ones after them show
-# Sign out and the agent's organisation in the header.
+# The sample account, or one left in the session by an earlier run, would
+# show every page signed in: `signedInFrom` names where signing in leads, and
+# only those pages and the ones after them show Sign out and the agent's
+# organisation in the header.
 preview:
   signedInFrom:
     - defra-register

@@ -87,15 +87,17 @@ function previewData(journey, page, requested) {
 
 /**
  * Whether the header shows the user as signed in: the journey's `signedIn`
- * condition. A preview's sample answers always hold an account, so there
- * the page must also come after signing in (see signedInPages), or every
- * page on the screen wall would show Sign out and the agent's organisation.
+ * condition, on a page that comes after signing in (see signedInPages). A
+ * preview's sample answers always hold an account, and the session keeps
+ * one after a run through the journey (into the next run, other versions
+ * and the frozen handoff copies), so without the page check every page
+ * would show Sign out and the agent's organisation.
  */
 function isSignedIn(chrome, page, ctx) {
   if (!chrome.signedIn || !evaluate(chrome.signedIn, ctx)) {
     return false
   }
-  if (ctx.preview && chrome === ctx.journey) {
+  if (chrome === ctx.journey) {
     const pages = signedInPages(chrome)
     return !pages || pages.has(page.id)
   }
