@@ -29,7 +29,6 @@ text:
 
 The relevant development is planned to have:
 
-- {{ planningType | lower }}
 :::if residentialBuildingCount
 - housing with a total of {{ residentialBuildingCount }} unit(s)
 
@@ -45,8 +44,6 @@ The relevant development is planned to have:
 {{ edpName }}
 
 ## Nature restoration levy amount
-
-The relevant development is planned in {{ edpName }}
 
 ### Provisional nature restoration levy amount
 
