@@ -1014,7 +1014,7 @@ function exportScreens(journey, options = {}) {
 }
 
 /**
- * Pages a user can only reach once signed in, for previews: the journey's
+ * Pages a user can only reach once signed in, for the header: the journey's
  * `preview.signedInFrom` pages (where signing in leads) and every page their
  * Continue buttons and links go on to. Change links and returns to a summary
  * page are left out, since they lead back to pages seen before signing in.

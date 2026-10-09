@@ -903,7 +903,7 @@ function validateChoiceValues(journey, problems) {
     }
   }
 
-  // Where signing in leads, for the header on previews (see signedInPages)
+  // Where signing in leads, for the header (see signedInPages)
   const pageIds = new Set(journey.pages.map((page) => page.id))
   for (const id of (journey.preview && journey.preview.signedInFrom) || []) {
     if (!pageIds.has(id)) {

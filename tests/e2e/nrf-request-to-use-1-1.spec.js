@@ -110,6 +110,30 @@ test.describe('nrf-request-to-use-1-1 preview mode', () => {
     }
   })
 
+  test('an account left in the session shows signed in only after signing in', async ({
+    page
+  }) => {
+    await reachSignIn(page)
+    await signIn(page, 'agent@example.com')
+    await chooseOrganisation(page, 'oakwood')
+    await expect(page).toHaveURL(`${base}/developer-details`)
+    await expect(page.locator('.app-organisation-bar')).toHaveCount(1)
+
+    // Back at the start of the journey, or on its frozen handoff copy, the
+    // account is still in the session but the header is signed out
+    for (const url of [
+      `${base}/start`,
+      `${base}/email-sent`,
+      `/handoffs/nrf-request-to-use-1-1/latest/email-sent`
+    ]) {
+      await page.goto(url)
+      await expect(page.getByRole('link', { name: 'Sign out' })).toHaveCount(0)
+      await expect(page.locator('.app-organisation-bar')).toHaveCount(0)
+    }
+    await page.goto(`${base}/developer-details`)
+    await expect(page.getByRole('link', { name: 'Sign out' })).toHaveCount(1)
+  })
+
   test('check your answers shows the original application for a variation', async ({
     page
   }) => {
