@@ -376,7 +376,7 @@ errors:
 # Which type of planning application is it?
 ```
 
-The name after the `~` uses lower-case letters, digits and hyphens. A variant is copy only: reword the heading, hint, body, labels, error messages and button as you like, but keep the page's `type`, the `value` of every option, the fields of a form and its `field` and `sessionKey`, because `journey.yaml` branches on those. The loader refuses a variant that changes them and says which file. A shared page varies the same way, with the file beside it in `content/shared/...`, in every journey that shares it.
+The name after the `~` uses lower-case letters, digits and hyphens. A variant is copy only: reword the heading, hint, body, labels, error messages and button as you like, but keep the page's `type`, the `value` of every option, the fields of a form and its `field` and `sessionKey`, because `journey.yaml` branches on those. The loader refuses a variant that changes them and says which file. The one exception: a variant of a check-answers page may leave out its declaration checkbox (`options`), to try the declaration on a page of its own; rules on `copy` in `journey.yaml` then route through it (see `check-your-answers~declaration.md` in `nrf-request-to-use-1-1`). A shared page varies the same way, with the file beside it in `content/shared/...`, in every journey that shares it.
 
 Seeing the variants:
 

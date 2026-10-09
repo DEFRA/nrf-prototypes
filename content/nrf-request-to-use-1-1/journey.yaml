@@ -103,6 +103,7 @@ session:
   - yourAddress
   - detailsConfirmed
   - informationConfirmed
+  - declarationConfirmed
   - nrlReference
   - certificate
   # Defra ID registration (sign-in emails containing "new")
@@ -885,6 +886,9 @@ pages:
   - id: review-developer-details
     guard: { key: developerDetails, isSet: true, redirect: developer-details }
     next:
+      - when: { key: copy, equals: declaration }
+        goto: declaration
+        set: { detailsConfirmed: 'Yes' }
       - goto: check-your-answers
         set: { detailsConfirmed: 'Yes' }
 
@@ -928,8 +932,24 @@ pages:
         businessName: Fenland Homes
         email: company@example.com
     next:
+      - when: { key: copy, equals: declaration }
+        goto: declaration
+        set: { detailsConfirmed: 'Yes' }
       - goto: check-your-answers
         set: { detailsConfirmed: 'Yes' }
+
+  # Only in the `declaration` copy variant (?copy=declaration): the
+  # declaration on a page of its own before check-your-answers, whose
+  # variant (check-your-answers~declaration.md) has no confirmation checkbox
+  - id: declaration
+    field: confirm-declaration
+    sessionKey: declarationConfirmed
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    back:
+      - when: { key: account.accountType, equals: agent }
+        goto: review-developer-details
+      - goto: review-your-details
+    next: check-your-answers
 
   # The declaration is the confirmation checkbox on this page (it stores
   # 'Yes', its `value` in check-your-answers.md); the Delete link is the way
@@ -939,6 +959,8 @@ pages:
     sessionKey: informationConfirmed
     guard: { key: account, isSet: true, redirect: sign-in-method }
     back:
+      - when: { key: copy, equals: declaration }
+        goto: declaration
       - when: { key: account.accountType, equals: agent }
         goto: review-developer-details
       - goto: review-your-details

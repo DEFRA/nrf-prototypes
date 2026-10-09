@@ -629,7 +629,12 @@ function checkCopyOnly(page, variant, where, problems) {
     )
   }
   const values = (p) => p.content.options.map((option) => String(option.value))
-  if (list(values(variant)) !== list(values(page))) {
+  // A check-answers variant may leave out the declaration checkbox, to try
+  // the declaration on a page of its own (rules on `copy` in journey.yaml
+  // route that variant through it)
+  const dropsDeclaration =
+    page.type === 'check-answers' && values(variant).length === 0
+  if (!dropsDeclaration && list(values(variant)) !== list(values(page))) {
     problems.push(
       `${where}: a variant keeps the options' values (${list(values(page))}); reword the labels, not the values`
     )
