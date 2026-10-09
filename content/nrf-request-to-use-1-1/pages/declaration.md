@@ -8,15 +8,15 @@ actions:
     kind: submit
 ---
 
-# Nature restoration levy: Details before you commit
+# Details to read before you request to use the nature restoration levy
 
-## When you will receive a commitment certificate
+## When you will receive your commitment certificate
 
-Once Natural England accepts your request to use this levy, you will be issued a commitment certificate that you can use in your planning application.
+Once Natural England accepts your request to use this levy, you will be issued a commitment certificate that you can use in your planning application. You will receive this email within 5 minutes of submitting your request. 
 
 The commitment certificate will disapply the relevant environmental obligations through the planning application process.
 
-## Environmental Delivery Plan (EDP)
+## The Environmental Delivery Plan (EDP) your development is in 
 
 {{ edpName }}
 
@@ -34,9 +34,7 @@ The inflation-adjusted amount shows the indicative levy amount for the year this
 The levy has been calculated from the details you submitted and the charging schedule for the relevant EDP(s). [Read about the charging schedule for the EDP (opens in new tab)](#).
 :::
 
-## Conditions
-
-### Planning condition requirements
+## Planning condition requirements
 
 In accordance with the requirements of Regulation 5 of the nature restoration levy Regulations ("Levy Regulations") 2026, the local planning authority must impose the statutory pre-commencement planning condition, requiring payment of the levy in full or the first instalment prior to commencement. This applies to any grant of permission relying on a commitment to pay the nature restoration levy.
 
@@ -53,7 +51,7 @@ In accordance with the requirements of the Environmental Delivery Plan(s) the lo
 
 [See guidance for local planning authorities for more information on imposing conditions](#)
 
-## Assuming liability to pay the nature restoration levy
+## When you need to pay the nature restoration levy
 
 Once your planning application is approved and you are ready to start development, you must assume liability to pay the levy. [Learn more about paying the nature restoration levy (opens in new tab)](#)
 
