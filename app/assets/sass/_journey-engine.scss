@@ -80,6 +80,8 @@
     pointer-events: none;
   }
 
+  // The SVG gives way once the map is drawn (boundary-map.js)
+  &__svg[hidden],
   &__canvas[hidden] {
     display: none;
   }

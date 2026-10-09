@@ -47,13 +47,30 @@ const EDP_NAME =
 const LEVY_AMOUNT = 'X,XXX'
 // Quote references from either service: NRF-123456 or NRL-123456
 const REFERENCE = /^(NRF|NRL)-\d{6}$/i
-// An open ring ([lng, lat]) near Wymondham, inside the Broads/Wensum EDP and
-// clear of its excluded areas (checked with checkEDPIntersections)
+// An open ring ([lng, lat]): a 3 hectare field off London Road on the edge
+// of Wymondham, room for the fixture's 100 homes. Traced from the Ordnance
+// Survey MasterMap parcel the certificate's map draws, inside the
+// Broads/Wensum EDP and clear of its excluded areas (checked with
+// checkEDPIntersections)
 const FIXTURE_RING = [
-  [1.11, 52.56],
-  [1.12, 52.56],
-  [1.12, 52.57],
-  [1.11, 52.57]
+  [1.091643, 52.559405],
+  [1.094002, 52.558738],
+  [1.09425, 52.559242],
+  [1.094565, 52.559712],
+  [1.094892, 52.56029],
+  [1.094548, 52.560345],
+  [1.094457, 52.560486],
+  [1.094237, 52.560453],
+  [1.093986, 52.560489],
+  [1.093307, 52.560823],
+  [1.093235, 52.560778],
+  [1.092969, 52.560882],
+  [1.09291, 52.560885],
+  [1.092598, 52.56083],
+  [1.092469, 52.560841],
+  [1.092315, 52.560307],
+  [1.092124, 52.559852],
+  [1.091981, 52.559662]
 ]
 
 const FIXTURE_QUOTE = {
@@ -63,7 +80,7 @@ const FIXTURE_QUOTE = {
   hasRedlineBoundaryFile: false,
   mapReferrer: 'redline-map',
   redlineBoundaryPolygon: {
-    center: [1.115, 52.565],
+    center: [1.0934, 52.5602],
     coordinates: FIXTURE_RING,
     intersections: { nutrient: EDP_NAME },
     intersectingCatchment: EDP_NAME,

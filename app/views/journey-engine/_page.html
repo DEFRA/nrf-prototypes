@@ -20,8 +20,9 @@ Journey engine base page. Every generic page type extends this and fills
                  (journey.header), Prototype banner, a wider page for tables
 
 A `:::map` block anywhere in the copy (or `hasMap` set by a custom template)
-loads the production map plugin so the boundary shows on a real basemap;
-without it the inline SVG drawn by the engine stays.
+loads the production map plugin so the boundary shows on a real basemap,
+drawn like a planning location plan (see boundary-map.js); without it the
+inline SVG drawn by the engine stays.
 #}
 {% extends "layouts/main.html" %}
 
@@ -37,6 +38,7 @@ without it the inline SVG drawn by the engine stays.
 {% if hasMap %}
 <link href="{{ interactiveMapAssets }}/dist/css/index.css" rel="stylesheet">
 <link href="{{ interactiveMapAssets }}/plugins/datasets/dist/css/index.css" rel="stylesheet">
+<link href="{{ interactiveMapAssets }}/plugins/beta/scale-bar/dist/css/index.css" rel="stylesheet">
 {% endif %}
 {% endblock %}
 
@@ -124,6 +126,7 @@ without it the inline SVG drawn by the engine stays.
 <script src="{{ interactiveMapAssets }}/dist/umd/index.js"></script>
 <script src="{{ interactiveMapAssets }}/providers/maplibre/dist/umd/index.js"></script>
 <script src="{{ interactiveMapAssets }}/plugins/datasets/dist/umd/index.js"></script>
+<script src="{{ interactiveMapAssets }}/plugins/beta/scale-bar/dist/umd/index.js"></script>
 <script src="/public/javascripts/boundary-map.js" data-has-os-key="{{ 'true' if hasOsKey else 'false' }}"></script>
 {% endif %}
 {% if page.layout == 'staff' %}

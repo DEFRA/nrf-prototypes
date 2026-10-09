@@ -25,7 +25,13 @@
 #                 firstname.lastname@scarfolk.gov.uk)
 #   boundaries    named red line boundaries: open rings of [longitude,
 #                 latitude] pairs. A commitment names one (or gives its own
-#                 `coordinates`)
+#                 `coordinates`). Each is a real field or plot on the edge
+#                 of the town in its name, traced from the Ordnance Survey
+#                 MasterMap parcels the map draws (so the red line follows
+#                 hedges and fences), named after the nearest road and
+#                 sized for its commitment's homes at about 30 to 45 a
+#                 hectare. All sit inside the Norfolk EDP and clear of its
+#                 excluded areas
 #   commitments   what developers have submitted, found by NRL reference on
 #                 "Retrieve commitment details". Dates are YYYY-MM-DD.
 #                 A commitment the developer made for a planning variation
@@ -94,38 +100,313 @@ statuses:
 edp: &edp 'Norfolk: Broads Special Area of Conservation (SAC) (Yare and Bure), Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2027 to 2037)'
 
 boundaries:
-  wymondham:
-    - [1.1100, 52.5600]
-    - [1.1200, 52.5600]
-    - [1.1200, 52.5700]
-    - [1.1100, 52.5700]
-  hethersett:
-    - [1.1742, 52.5985]
-    - [1.1811, 52.5979]
-    - [1.1838, 52.6013]
-    - [1.1795, 52.6041]
-    - [1.1739, 52.6027]
-  taverham:
-    - [1.1965, 52.6795]
-    - [1.2031, 52.6788]
-    - [1.2047, 52.6822]
-    - [1.1990, 52.6839]
-  reepham:
-    - [1.1102, 52.7612]
-    - [1.1150, 52.7601]
-    - [1.1183, 52.7625]
-    - [1.1161, 52.7653]
-    - [1.1109, 52.7648]
-  dereham:
-    - [0.9335, 52.6873]
-    - [0.9412, 52.6869]
-    - [0.9420, 52.6917]
-    - [0.9351, 52.6922]
-  aylsham:
-    - [1.2461, 52.7905]
-    - [1.2522, 52.7893]
-    - [1.2556, 52.7931]
-    - [1.2487, 52.7951]
+  wymondham-frogshall-lane:
+    - [1.103662, 52.574687]
+    - [1.105894, 52.574153]
+    - [1.106850, 52.573891]
+    - [1.107017, 52.574124]
+    - [1.107070, 52.574297]
+    - [1.107060, 52.574435]
+    - [1.106995, 52.574579]
+    - [1.106598, 52.575102]
+    - [1.106533, 52.575225]
+    - [1.106583, 52.575577]
+    - [1.106008, 52.575752]
+    - [1.104735, 52.576038]
+    - [1.104662, 52.575947]
+    - [1.104472, 52.575997]
+    - [1.103847, 52.574914]
+  wymondham-tuttles-lane:
+    - [1.093081, 52.583351]
+    - [1.093334, 52.583045]
+    - [1.093554, 52.582856]
+    - [1.094553, 52.581862]
+    - [1.095583, 52.582221]
+    - [1.096353, 52.582394]
+    - [1.096105, 52.583121]
+    - [1.095898, 52.583302]
+    - [1.095783, 52.583441]
+    - [1.095791, 52.583597]
+    - [1.095812, 52.583613]
+    - [1.095881, 52.583593]
+    - [1.095838, 52.583641]
+    - [1.095855, 52.583685]
+    - [1.095625, 52.585025]
+    - [1.095406, 52.585004]
+    - [1.095403, 52.584985]
+    - [1.095354, 52.584977]
+    - [1.093141, 52.583730]
+    - [1.093125, 52.583677]
+    - [1.093205, 52.583450]
+    - [1.093195, 52.583402]
+  wymondham-applegarth:
+    - [1.102083, 52.574736]
+    - [1.102895, 52.574089]
+    - [1.103518, 52.573331]
+    - [1.104075, 52.573548]
+    - [1.106190, 52.573031]
+    - [1.106382, 52.573163]
+    - [1.106437, 52.573276]
+    - [1.106442, 52.573357]
+    - [1.106772, 52.573712]
+    - [1.106781, 52.573800]
+    - [1.106850, 52.573891]
+    - [1.105627, 52.574219]
+    - [1.102299, 52.575013]
+    - [1.102214, 52.574902]
+    - [1.102216, 52.574804]
+  wymondham-chestnut-drive:
+    - [1.102818, 52.562697]
+    - [1.104320, 52.562528]
+    - [1.104660, 52.563050]
+    - [1.104359, 52.563064]
+    - [1.103426, 52.563203]
+    - [1.103240, 52.563193]
+    - [1.103136, 52.563148]
+    - [1.103069, 52.563090]
+    - [1.102834, 52.562778]
+    - [1.102856, 52.562768]
+  hethersett-camelia-close:
+    - [1.166743, 52.604061]
+    - [1.166777, 52.603992]
+    - [1.167517, 52.603804]
+    - [1.168475, 52.603605]
+    - [1.169267, 52.603499]
+    - [1.170340, 52.603285]
+    - [1.170342, 52.603310]
+    - [1.170595, 52.603578]
+    - [1.170827, 52.604454]
+    - [1.170818, 52.604601]
+    - [1.170882, 52.604786]
+    - [1.170892, 52.605071]
+    - [1.170862, 52.605276]
+    - [1.170745, 52.605708]
+    - [1.170780, 52.605787]
+    - [1.170653, 52.605879]
+    - [1.169033, 52.606566]
+    - [1.168461, 52.606220]
+    - [1.168712, 52.606106]
+    - [1.167674, 52.605031]
+    - [1.166856, 52.604275]
+    - [1.166906, 52.604232]
+  hethersett-norwich-road:
+    - [1.187101, 52.597333]
+    - [1.189108, 52.595531]
+    - [1.190300, 52.595992]
+    - [1.191357, 52.596331]
+    - [1.192206, 52.596672]
+    - [1.192241, 52.596645]
+    - [1.193179, 52.597064]
+    - [1.193385, 52.597167]
+    - [1.193480, 52.597255]
+    - [1.193784, 52.597434]
+    - [1.194040, 52.597733]
+    - [1.194956, 52.598199]
+    - [1.193586, 52.599319]
+    - [1.193473, 52.599432]
+    - [1.193262, 52.599727]
+    - [1.193052, 52.599950]
+    - [1.189996, 52.598709]
+    - [1.189961, 52.598752]
+    - [1.189090, 52.598370]
+    - [1.188162, 52.598531]
+    - [1.187852, 52.598302]
+    - [1.187519, 52.597973]
+    - [1.187316, 52.597727]
+  hethersett-back-lane:
+    - [1.191451, 52.603515]
+    - [1.192249, 52.603188]
+    - [1.193434, 52.604277]
+    - [1.192410, 52.604458]
+    - [1.192147, 52.604469]
+    - [1.192088, 52.604413]
+    - [1.191941, 52.604078]
+    - [1.191826, 52.603903]
+  taverham-taverham-road:
+    - [1.196680, 52.678669]
+    - [1.198639, 52.677573]
+    - [1.199538, 52.678192]
+    - [1.198462, 52.678838]
+    - [1.197663, 52.679036]
+    - [1.197224, 52.679078]
+    - [1.197331, 52.679037]
+    - [1.197052, 52.678729]
+    - [1.196782, 52.678793]
+  taverham-fleet-road:
+    - [1.183919, 52.672994]
+    - [1.184394, 52.672598]
+    - [1.184780, 52.672202]
+    - [1.185052, 52.671886]
+    - [1.185443, 52.671361]
+    - [1.186029, 52.671282]
+    - [1.186188, 52.671231]
+    - [1.186910, 52.672111]
+    - [1.184398, 52.673229]
+  taverham-kingswood-avenue:
+    - [1.191382, 52.689568]
+    - [1.193338, 52.689180]
+    - [1.193496, 52.689508]
+    - [1.193421, 52.689521]
+    - [1.193407, 52.689489]
+    - [1.193162, 52.689533]
+    - [1.193175, 52.689563]
+    - [1.193104, 52.689574]
+    - [1.193418, 52.690260]
+    - [1.194402, 52.690084]
+    - [1.194927, 52.691199]
+    - [1.192249, 52.691627]
+    - [1.191915, 52.690837]
+    - [1.191982, 52.690827]
+    - [1.191951, 52.690755]
+    - [1.191882, 52.690762]
+  reepham-furze-lane:
+    - [1.121438, 52.757251]
+    - [1.121297, 52.757260]
+    - [1.121264, 52.757293]
+    - [1.121355, 52.757319]
+    - [1.121379, 52.757349]
+    - [1.121328, 52.757539]
+    - [1.121130, 52.757651]
+    - [1.122403, 52.758552]
+    - [1.123058, 52.758763]
+    - [1.124336, 52.758149]
+    - [1.124336, 52.758096]
+    - [1.123144, 52.757773]
+    - [1.121806, 52.757339]
+  reepham-dereham-road:
+    - [1.104236, 52.761766]
+    - [1.105894, 52.761726]
+    - [1.105829, 52.762574]
+    - [1.104984, 52.762529]
+    - [1.104955, 52.762419]
+    - [1.104243, 52.762386]
+  reepham-the-street:
+    - [1.113542, 52.757735]
+    - [1.113697, 52.757719]
+    - [1.113412, 52.756792]
+    - [1.112461, 52.756884]
+    - [1.112519, 52.757057]
+    - [1.111855, 52.757121]
+    - [1.111816, 52.757851]
+    - [1.112891, 52.757731]
+    - [1.112980, 52.757746]
+    - [1.113023, 52.757786]
+  aylsham-the-meadows:
+    - [1.251918, 52.800398]
+    - [1.252107, 52.799614]
+    - [1.252162, 52.799565]
+    - [1.252612, 52.799493]
+    - [1.252671, 52.799594]
+    - [1.252771, 52.799568]
+    - [1.253199, 52.800140]
+  aylsham-cromer-road:
+    - [1.249799, 52.799503]
+    - [1.251023, 52.799264]
+    - [1.251279, 52.799737]
+    - [1.250302, 52.799931]
+    - [1.250267, 52.799867]
+    - [1.250112, 52.799898]
+    - [1.250127, 52.799924]
+    - [1.250070, 52.799937]
+  aylsham-holman-road:
+    - [1.239232, 52.795893]
+    - [1.240575, 52.795784]
+    - [1.240736, 52.796747]
+    - [1.239438, 52.796927]
+    - [1.239288, 52.796421]
+  aylsham-bure-valley-lane:
+    - [1.266667, 52.791172]
+    - [1.266730, 52.791068]
+    - [1.266838, 52.790983]
+    - [1.267196, 52.790801]
+    - [1.267320, 52.790775]
+    - [1.267538, 52.790889]
+    - [1.267519, 52.790907]
+    - [1.268139, 52.791111]
+    - [1.268519, 52.791180]
+    - [1.268836, 52.791191]
+    - [1.268914, 52.792154]
+    - [1.267584, 52.792263]
+    - [1.266767, 52.791183]
+  dereham-magpie-court:
+    - [0.940875, 52.686781]
+    - [0.941015, 52.686342]
+    - [0.941626, 52.686391]
+    - [0.941631, 52.686880]
+  dereham-hawthorn-drive:
+    - [0.925019, 52.672962]
+    - [0.926479, 52.672862]
+    - [0.926533, 52.673016]
+    - [0.926392, 52.673203]
+    - [0.926058, 52.673499]
+    - [0.925634, 52.673338]
+  dereham-rowan-drive:
+    - [0.954675, 52.675592]
+    - [0.956122, 52.673845]
+    - [0.957027, 52.673916]
+    - [0.957184, 52.674254]
+    - [0.957165, 52.674440]
+    - [0.956554, 52.675152]
+    - [0.956379, 52.675266]
+    - [0.956131, 52.675374]
+    - [0.955989, 52.675530]
+    - [0.955864, 52.675491]
+    - [0.955194, 52.675753]
+    - [0.954719, 52.675655]
+  dereham-rushmeadow-road:
+    - [0.929670, 52.682218]
+    - [0.929765, 52.682183]
+    - [0.930386, 52.682113]
+    - [0.931063, 52.681907]
+    - [0.931345, 52.681863]
+    - [0.932037, 52.681970]
+    - [0.932703, 52.682040]
+    - [0.933143, 52.682310]
+    - [0.933201, 52.682736]
+    - [0.932506, 52.682902]
+    - [0.932058, 52.682964]
+    - [0.931570, 52.683078]
+    - [0.931571, 52.683014]
+    - [0.931486, 52.682996]
+    - [0.931361, 52.682892]
+    - [0.931292, 52.682874]
+    - [0.930945, 52.682982]
+    - [0.930566, 52.683017]
+    - [0.930358, 52.682965]
+    - [0.930057, 52.682968]
+    - [0.929875, 52.683034]
+    - [0.929855, 52.682967]
+    - [0.929891, 52.682918]
+    - [0.929886, 52.682890]
+    - [0.929718, 52.682503]
+  dereham-b1146:
+    - [0.917633, 52.673934]
+    - [0.917666, 52.673779]
+    - [0.919442, 52.673589]
+    - [0.922919, 52.673172]
+    - [0.923625, 52.673096]
+    - [0.923912, 52.673087]
+    - [0.923998, 52.673162]
+    - [0.924029, 52.673416]
+    - [0.924144, 52.673659]
+    - [0.924686, 52.674267]
+    - [0.924938, 52.674493]
+    - [0.925630, 52.674961]
+    - [0.925787, 52.675108]
+    - [0.925837, 52.675197]
+    - [0.925853, 52.675303]
+    - [0.925789, 52.675890]
+    - [0.925516, 52.676544]
+    - [0.924785, 52.676401]
+    - [0.922453, 52.675866]
+    - [0.920462, 52.675496]
+    - [0.919991, 52.675446]
+    - [0.919224, 52.675487]
+    - [0.918543, 52.675393]
+    - [0.917731, 52.675349]
+    - [0.917702, 52.675275]
+    - [0.917723, 52.675136]
+    - [0.917643, 52.674663]
 
 commitments:
   # ------------------------------------------------ Waiting to be added
@@ -138,7 +419,7 @@ commitments:
     levyAmount: 'X,XXX'
     issued: 2026-09-05
     expires: 2027-03-05
-    boundary: wymondham
+    boundary: wymondham-frogshall-lane
 
   - reference: NRL-234567
     developer: Hollow Lane Builders
@@ -149,7 +430,7 @@ commitments:
     levyAmount: 'X,XXX'
     issued: 2026-09-12
     expires: 2027-03-12
-    boundary: reepham
+    boundary: reepham-furze-lane
 
   - reference: NRL-345678
     developer: Greenacre Living
@@ -160,7 +441,7 @@ commitments:
     levyAmount: 'X,XXX'
     issued: 2026-09-18
     expires: 2027-03-18
-    boundary: aylsham
+    boundary: aylsham-the-meadows
 
   - reference: NRL-456789
     developer: Mere Farm Homes
@@ -171,7 +452,7 @@ commitments:
     levyAmount: 'X,XXX'
     issued: 2026-09-21
     expires: 2027-03-21
-    boundary: dereham
+    boundary: dereham-magpie-court
 
   # A variation of NRL-100619's planning application
   - reference: NRL-567890
@@ -183,7 +464,7 @@ commitments:
     levyAmount: 'X,XXX'
     issued: 2026-09-29
     expires: 2027-03-29
-    boundary: reepham
+    boundary: reepham-dereham-road
     originalReference: NRL-100619
 
   # --------------------------------------- Already in the council's records
@@ -196,7 +477,7 @@ commitments:
     levyAmount: 'X,XXX'
     issued: 2026-09-05
     expires: 2027-03-05
-    boundary: hethersett
+    boundary: hethersett-camelia-close
     record:
       planningReference: 2026/0412/FUL
       planningStage: applied
@@ -217,7 +498,7 @@ commitments:
     levyAmount: 'X,XXX'
     issued: 2026-08-28
     expires: 2027-02-28
-    boundary: taverham
+    boundary: taverham-taverham-road
     record:
       planningReference: 2026/0461/VAR
       originalPlanningReference: 2026/0388/FUL
@@ -250,7 +531,7 @@ commitments:
     levyAmount: 'X,XXX'
     issued: 2026-08-20
     expires: 2027-02-20
-    boundary: wymondham
+    boundary: wymondham-tuttles-lane
     record:
       planningReference: 2026/0351/OUT
       planningStage: applied
@@ -271,7 +552,7 @@ commitments:
     levyAmount: 'X,XXX'
     issued: 2026-08-14
     expires: 2027-02-14
-    boundary: reepham
+    boundary: reepham-dereham-road
     record:
       planningReference: 2026/0330/FUL
       planningStage: under-appeal
@@ -303,7 +584,7 @@ commitments:
     levyAmount: 'X,XXX'
     issued: 2026-08-07
     expires: 2027-02-07
-    boundary: dereham
+    boundary: dereham-rushmeadow-road
     record:
       planningReference: 2026/0302/REM
       planningStage: refused
@@ -327,7 +608,7 @@ commitments:
     levyAmount: 'X,XXX'
     issued: 2026-07-30
     expires: 2027-01-30
-    boundary: aylsham
+    boundary: aylsham-cromer-road
     record:
       planningReference: 2026/0287/FUL
       planningStage: applied
@@ -347,7 +628,7 @@ commitments:
     levyAmount: 'X,XXX'
     issued: 2026-07-22
     expires: 2027-01-22
-    boundary: hethersett
+    boundary: hethersett-norwich-road
     record:
       planningReference: 2026/0264/OUT
       planningStage: applied
@@ -374,7 +655,7 @@ commitments:
     levyAmount: 'X,XXX'
     issued: 2026-08-14
     expires: 2027-02-14
-    boundary: dereham
+    boundary: dereham-rowan-drive
     record:
       planningReference: 2026/0355/FUL
       planningStage: applied
@@ -401,7 +682,7 @@ commitments:
     levyAmount: 'X,XXX'
     issued: 2026-07-30
     expires: 2027-01-30
-    boundary: aylsham
+    boundary: aylsham-holman-road
     record:
       planningReference: 2026/0318/FUL
       planningStage: granted
@@ -431,7 +712,7 @@ commitments:
     levyAmount: 'X,XXX'
     issued: 2026-07-16
     expires: 2027-01-16
-    boundary: dereham
+    boundary: dereham-b1146
     record:
       planningReference: 2026/0255/OUT
       planningStage: granted
@@ -467,7 +748,7 @@ commitments:
     levyAmount: 'X,XXX'
     issued: 2026-07-10
     expires: 2027-01-10
-    boundary: taverham
+    boundary: taverham-fleet-road
     record:
       planningReference: 2026/0240/FUL
       planningStage: applied
@@ -488,7 +769,7 @@ commitments:
     levyAmount: 'X,XXX'
     issued: 2026-06-26
     expires: 2026-12-26
-    boundary: wymondham
+    boundary: wymondham-chestnut-drive
     record:
       planningReference: 2026/0211/FUL
       planningStage: granted
@@ -518,7 +799,7 @@ commitments:
     levyAmount: 'X,XXX'
     issued: 2026-09-30
     expires: 2027-03-30
-    boundary: wymondham
+    boundary: wymondham-chestnut-drive
     originalReference: NRL-101178
     record:
       planningReference: 2026/0503/VAR
@@ -539,7 +820,7 @@ commitments:
     levyAmount: 'X,XXX'
     issued: 2026-06-12
     expires: 2026-12-12
-    boundary: reepham
+    boundary: reepham-the-street
     record:
       planningReference: 2026/0189/REM
       planningStage: applied
@@ -563,7 +844,7 @@ commitments:
     levyAmount: 'X,XXX'
     issued: 2026-02-20
     expires: 2026-08-20
-    boundary: dereham
+    boundary: dereham-hawthorn-drive
     record:
       planningReference: 2026/0061/FUL
       planningStage: refused
@@ -587,7 +868,7 @@ commitments:
     levyAmount: 'X,XXX'
     issued: 2026-02-06
     expires: 2026-08-06
-    boundary: aylsham
+    boundary: aylsham-bure-valley-lane
     record:
       planningReference: 2026/0044/OUT
       planningStage: applied
@@ -611,7 +892,7 @@ commitments:
     levyAmount: 'X,XXX'
     issued: 2026-01-15
     expires: 2026-07-15
-    boundary: hethersett
+    boundary: hethersett-back-lane
     record:
       planningReference: 2026/0012/FUL
       planningStage: judicial-review
@@ -635,7 +916,7 @@ commitments:
     levyAmount: 'X,XXX'
     issued: 2026-01-08
     expires: 2026-07-08
-    boundary: taverham
+    boundary: taverham-kingswood-avenue
     record:
       planningReference: 2025/1187/FUL
       planningStage: applied
@@ -662,4 +943,4 @@ fallback:
   edp: *edp
   levyAmount: 'X,XXX'
   # Issued today, expiring six months later
-  boundary: wymondham
+  boundary: wymondham-applegarth
