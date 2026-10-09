@@ -315,17 +315,27 @@ test.describe('nrf-request-to-use-1-1 happy paths', () => {
     await expect(page.locator('main')).toContainText('Trevor Barker')
     await expect(page.locator('main')).toContainText('53 Business Lane')
 
-    // The print link beside it opens the browser's print window
-    await page.evaluate(() => {
-      window.printed = 0
-      window.print = () => {
-        window.printed += 1
+    // The print link beside it opens the browser's print window. The page
+    // file can switch it off (a # before `printLink`), and the column then
+    // collapses unless it also has a contents list
+    const { printLink, contentsTitle } = journey.byId.get(
+      'commitment-certificate'
+    ).content.text
+    if (printLink) {
+      await page.evaluate(() => {
+        window.printed = 0
+        window.print = () => {
+          window.printed += 1
+        }
+      })
+      await page.getByRole('button', { name: printLink }).click()
+      expect(await page.evaluate(() => window.printed)).toBe(1)
+    } else {
+      await expect(page.locator('.app-print-link')).toHaveCount(0)
+      if (!contentsTitle) {
+        await expect(page.locator('.app-certificate__aside')).toHaveCount(0)
       }
-    })
-    const { printLink } = journey.byId.get('commitment-certificate').content
-      .text
-    await page.getByRole('button', { name: printLink }).click()
-    expect(await page.evaluate(() => window.printed)).toBe(1)
+    }
   })
 
   test('an agent enters the developer details and can sign out', async ({
