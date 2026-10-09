@@ -28,8 +28,6 @@ Other environmental obligations will continue to apply.
 
 You told us the relevant development is planned to have:
 
-- {{ planningType | lower }}
-
 :::if residentialBuildingCount
 
 - housing with a total of {{ residentialBuildingCount }} unit(s)
@@ -37,8 +35,6 @@ You told us the relevant development is planned to have:
 :::
 
 ## Nature restoration levy amount
-
-Your relevant development is planned in {{ edpName }}
 
 ### Provisional nature restoration levy amount
 
