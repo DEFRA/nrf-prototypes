@@ -116,30 +116,6 @@ actions:
 Make sure the details of your development match your planning application. Updates may result in a recalculation of available capacity and the levy amount.
 :::
 
-## Commitment certificate
-
-Once Natural England accepts your request to use this levy, you will be issued a commitment certificate that you can use in your planning application.
-
-The commitment certificate will disapply the relevant environmental obligations through the planning application process.
-
-## Details of your levy amount
-
-### Provisional nature restoration levy amount: £{{ levyAmount }} (excluding VAT)
-
-The provisional amount is calculated from the charging schedule in the relevant EDP(s).
-
-### Inflation-adjusted nature restoration levy amount: £{{ levyAmount }} (excluding VAT)
-
-The inflation-adjusted amount shows the indicative levy amount for the year this commitment was issued.
-
-:::details How the nature restoration levy was calculated
-The levy has been calculated from the details you submitted and the charging schedule for the relevant EDP(s). [Read about the charging schedule for the EDP (opens in new tab)](#).
-:::
-
-## Assuming liability to pay the nature restoration levy
-
-Once your planning application is approved and you are ready to start development, you must assume liability to pay the levy. [Learn more about paying the nature restoration levy (opens in new tab)](#)
-
 ## Requesting to use the nature restoration levy
 
 By confirming and submitting these details, you are requesting to use the nature restoration levy.
