@@ -53,7 +53,7 @@ To request to use nature restoration levy you will need to:
 
 ### What to do with your commitment certificate
 
-You will receive a commitment certificate that you can submit with your planning application. If the commitment certificate is not submitted with a planning application within 6 months it will expire and you will need to request to use nature restoration levy again.
+You will receive a commitment certificate that you can submit with your planning application. If the commitment certificate is not submitted with a planning application within 6 months it will expire. You will need to request to use nature restoration levy again.
 
 ## When to pay the nature restoration levy
 

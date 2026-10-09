@@ -24,7 +24,7 @@ Submit this certificate as part of any planning and decision-making processes.
 
 Other environmental obligations will continue to apply.
 
-If the commitment certificate is not submitted with a planning application within 6 months it will expire and you will need to request to use nature restoration levy again.
+If the commitment certificate is not submitted with a planning application within 6 months it will expire. You will need to request to use nature restoration levy again.
 
 ## Details of your relevant development
 
