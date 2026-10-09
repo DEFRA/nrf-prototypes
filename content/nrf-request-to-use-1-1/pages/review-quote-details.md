@@ -35,13 +35,11 @@ rows:
     change: email
     changeHidden: email address
 actions:
-  - text: Continue
+  - text: Save and continue
     kind: submit
-  - text: Delete
-    kind: destructive
-    goto: /nrf-quote-7-1/delete-quote
-    return: review-quote-details
-    hidden: quote details
+  - text: Save and come back later
+    kind: secondary
+    goto: start
 ---
 
 # Review and amend your quote details

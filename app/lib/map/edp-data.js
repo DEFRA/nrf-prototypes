@@ -1,8 +1,8 @@
 /**
  * Environmental Delivery Plan (EDP) data for the maps and boundary checks.
  *
- * Production has one live nutrient EDP: the Broads SAC, Broadland Ramsar and
- * River Wensum SAC plan. Its map layer is the dissolved outline of the
+ * Production has one live nutrient EDP: the Norfolk Broads SAC (Yare and
+ * Bure), Broadland Ramsar and River Wensum SAC plan. Its map layer is the dissolved outline of the
  * nutrient neutrality catchments that feed those designated sites, and its
  * "excluded areas" are the designated sites themselves (development inside
  * them cannot use the EDP).
@@ -30,12 +30,17 @@ const EXCLUDED_AREAS_FILE = path.join(
 )
 
 // The live EDP. Member catchments are matched on their designated site name;
-// the label is production's exact wording.
+// the label is the plan's full published name.
 const LIVE_EDPS = [
   {
     id: 'broads-wensum-nutrient',
     label:
-      'Broads SAC, Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2026 to 2036)',
+      'Norfolk: Broads Special Area of Conservation (SAC) (Yare and Bure), Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2027 to 2037)',
+    // What the production backend still calls it, renamed in its answers
+    // until production catches up
+    previousLabels: [
+      'Broads SAC, Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2026 to 2036)'
+    ],
     sites: ['The Broads SAC', 'River Wensum SAC'],
     excludedAreaSites: [
       'River Wensum SAC',
@@ -218,6 +223,28 @@ function findIntersectingEdps(polygon) {
 }
 
 /**
+ * A boundary check result (the production backend's, say) with each live
+ * EDP's previous name replaced by its current one.
+ */
+function withCurrentEdpNames(result) {
+  if (!result || !Array.isArray(result.intersectingEdps)) {
+    return result
+  }
+  const current = (label) => {
+    const edp = LIVE_EDPS.find((live) => live.previousLabels.includes(label))
+    return edp ? edp.label : label
+  }
+  return {
+    ...result,
+    intersectingEdps: result.intersectingEdps.map((edp) =>
+      typeof edp === 'string'
+        ? current(edp)
+        : { ...edp, label: current(edp.label) }
+    )
+  }
+}
+
+/**
  * Excluded areas a polygon intersects.
  * @returns {Array<{ label: string, designation: string }>}
  */
@@ -235,5 +262,6 @@ module.exports = {
   getEdpBoundaries,
   getExcludedAreas,
   findIntersectingEdps,
-  findIntersectingExcludedAreas
+  findIntersectingExcludedAreas,
+  withCurrentEdpNames
 }

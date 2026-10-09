@@ -119,16 +119,28 @@ preview:
         line3: SC1 4AB
       planningType: Full planning permission
       units: 120
-      edp: Broads SAC, Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2026 to 2036)
+      edp: 'Norfolk: Broads Special Area of Conservation (SAC) (Yare and Bure), Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2027 to 2037)'
       levyAmount: X,XXX
       issued: 5 September 2026
       expires: 5 March 2027
+      # NRL-123456's site in records.yaml (wymondham-frogshall-lane)
       boundary:
         coordinates:
-          - [1.11, 52.56]
-          - [1.12, 52.56]
-          - [1.12, 52.57]
-          - [1.11, 52.57]
+          - [1.103662, 52.574687]
+          - [1.105894, 52.574153]
+          - [1.106850, 52.573891]
+          - [1.107017, 52.574124]
+          - [1.107070, 52.574297]
+          - [1.107060, 52.574435]
+          - [1.106995, 52.574579]
+          - [1.106598, 52.575102]
+          - [1.106533, 52.575225]
+          - [1.106583, 52.575577]
+          - [1.106008, 52.575752]
+          - [1.104735, 52.576038]
+          - [1.104662, 52.575947]
+          - [1.104472, 52.575997]
+          - [1.103847, 52.574914]
 
 groups:
   one-login:

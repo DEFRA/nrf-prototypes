@@ -186,7 +186,8 @@ test.describe('nrf-quote-7-1 production map', () => {
     })
 
     expect(items.inEdp).toHaveLength(1)
-    expect(items.inEdp[0]).toContain('Test nutrient EDP')
+    // Just the EDP's name: it says it is an EDP, so it has no heading
+    expect(items.inEdp[0]).toBe('Test nutrient EDP')
     expect(items.inExcludedArea).toEqual(items.inNoEdp)
     expect(items.inExcludedArea[0]).not.toContain('Test nutrient EDP')
   })

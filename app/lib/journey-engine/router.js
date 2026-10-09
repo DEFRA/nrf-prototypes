@@ -550,7 +550,7 @@ function buildModel(ctx, extra = {}) {
     // the page's own copy; see copyVariantFor
     copy: page.copyVariant ? page.copyVariant.id : null,
     routes: journey.routes,
-    // A `:::map … os` block draws on the Ordnance Survey basemap when the
+    // A `:::map` block draws on the Ordnance Survey basemap when the
     // server can reach it (app/routes/os-base-map.js)
     hasOsKey: Boolean(process.env.OS_API_KEY),
     // The production map's Hybrid and Aerial basemaps need the impact

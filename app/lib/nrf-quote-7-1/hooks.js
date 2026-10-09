@@ -299,7 +299,7 @@ async function checkBoundaryResponse(geometry) {
   try {
     const { ok, status, payload } = await postBoundaryToBackend(geometry)
     if (ok) {
-      return { status: 200, body: payload }
+      return { status: 200, body: edpData.withCurrentEdpNames(payload) }
     }
     const failureReason =
       payload && typeof payload.error === 'string'

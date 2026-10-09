@@ -36,24 +36,40 @@
 
 const { message } = require('../journey-engine/validation')
 const { interpolate, createRenderer } = require('../journey-engine/markdown')
-const { renderContent } = require('../journey-engine/router')
 
-const stepRenderer = createRenderer()
+const certificateRenderer = createRenderer()
 
 const EDP_NAME =
-  'Broads SAC, Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2026 to 2036)'
+  'Norfolk: Broads Special Area of Conservation (SAC) (Yare and Bure), Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2027 to 2037)'
 // No levy rate is agreed yet, so every amount is the placeholder the quote
 // journey's email shows (content/nrf-quote-7-1)
 const LEVY_AMOUNT = 'X,XXX'
 // Quote references from either service: NRF-123456 or NRL-123456
 const REFERENCE = /^(NRF|NRL)-\d{6}$/i
-// An open ring ([lng, lat]) near Wymondham, inside the Broads/Wensum EDP and
-// clear of its excluded areas (checked with checkEDPIntersections)
+// An open ring ([lng, lat]): a 3 hectare field off London Road on the edge
+// of Wymondham, room for the fixture's 100 homes. Traced from the Ordnance
+// Survey MasterMap parcel the certificate's map draws, inside the
+// Broads/Wensum EDP and clear of its excluded areas (checked with
+// checkEDPIntersections)
 const FIXTURE_RING = [
-  [1.11, 52.56],
-  [1.12, 52.56],
-  [1.12, 52.57],
-  [1.11, 52.57]
+  [1.091643, 52.559405],
+  [1.094002, 52.558738],
+  [1.09425, 52.559242],
+  [1.094565, 52.559712],
+  [1.094892, 52.56029],
+  [1.094548, 52.560345],
+  [1.094457, 52.560486],
+  [1.094237, 52.560453],
+  [1.093986, 52.560489],
+  [1.093307, 52.560823],
+  [1.093235, 52.560778],
+  [1.092969, 52.560882],
+  [1.09291, 52.560885],
+  [1.092598, 52.56083],
+  [1.092469, 52.560841],
+  [1.092315, 52.560307],
+  [1.092124, 52.559852],
+  [1.091981, 52.559662]
 ]
 
 const FIXTURE_QUOTE = {
@@ -63,7 +79,7 @@ const FIXTURE_QUOTE = {
   hasRedlineBoundaryFile: false,
   mapReferrer: 'redline-map',
   redlineBoundaryPolygon: {
-    center: [1.115, 52.565],
+    center: [1.0934, 52.5602],
     coordinates: FIXTURE_RING,
     intersections: { nutrient: EDP_NAME },
     intersectingCatchment: EDP_NAME,
@@ -594,51 +610,55 @@ const checkYourAnswers = {
   }
 }
 
-// The device whose "save as a PDF" steps show first: `?_device=<id>` (the
-// links under "Using a different device"), else a guess from the browser.
-// iPads say they are a Mac; save-commitment-certificate.js corrects that.
-const DEVICE_PATTERNS = [
-  ['iphone', /iPhone|iPad|iPod/],
-  ['android', /Android/],
-  ['firefox', /Firefox\//],
-  ['chrome', /Edg\/|Chrome\//],
-  ['safari', /Macintosh.*Safari\//]
-]
-
-function deviceFor(choice, userAgent, devices) {
-  const ids = devices.map((device) => device.id)
-  if (ids.includes(choice)) {
-    return choice
+// The words of a heading as an id for the contents list to link to
+function headingId(label, taken) {
+  const base =
+    label
+      .toLowerCase()
+      .replace(/&[a-z]+;|&#\d+;/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '') || 'section'
+  let id = base
+  for (let n = 2; taken.has(id); n += 1) {
+    id = `${base}-${n}`
   }
-  const match = DEVICE_PATTERNS.find(([, pattern]) =>
-    pattern.test(userAgent || '')
-  )
-  return match && ids.includes(match[0]) ? match[0] : ids[0]
+  taken.add(id)
+  return id
 }
 
-// The commitment certificate on an A4 sheet, with the steps for saving it
-// as a PDF on the user's device
-const saveCommitmentCertificate = {
+// The commitment certificate's sidebar, all optional under `text:` in
+// pages/commitment-certificate.md:
+//   contentsTitle    a contents list headed with this, linking to each of
+//                    the certificate's `##` headings (given ids here)
+//   printLink        the print link's words; without it there is no link
+//   printLinkHeading a heading above the print link
+//   printLinkBefore  copy above and below the print link, in markdown so it
+//   printLinkAfter   can hold paragraphs, bold and links
+const commitmentCertificate = {
   get(ctx, model) {
     const { text } = model.content
-    const devices = text.devices || []
-    const renderSteps = (steps) =>
-      (steps || []).map((step) => stepRenderer.renderInline(step, ctx))
-    model.certificate = renderContent(
-      ctx.journey.byId.get('commitment-certificate'),
-      ctx
+    const taken = new Set()
+    const sections = []
+    model.content.html = model.content.html.replace(
+      /<h2 class="govuk-heading-m">([\s\S]*?)<\/h2>/g,
+      (whole, inner) => {
+        const label = inner.replace(/<[^>]+>/g, '').trim()
+        const id = headingId(label, taken)
+        sections.push({ id, label })
+        return `<h2 class="govuk-heading-m" id="${id}">${inner}</h2>`
+      }
     )
-    model.hasMap = model.certificate.html.includes('app-boundary-map')
-    model.deviceId = deviceFor(
-      ctx.query._device,
-      ctx.req.headers['user-agent'],
-      devices
-    )
-    model.devices = devices.map((device) => ({
-      ...device,
-      steps: renderSteps(device.steps)
-    }))
-    model.noScriptSteps = renderSteps(text.noScriptSteps)
+    model.contents = text.contentsTitle ? sections : []
+    if (text.printLink) {
+      model.printLinkBefore = certificateRenderer.render(
+        text.printLinkBefore,
+        ctx
+      )
+      model.printLinkAfter = certificateRenderer.render(
+        text.printLinkAfter,
+        ctx
+      )
+    }
   }
 }
 
@@ -662,9 +682,8 @@ module.exports = {
   'defra-check-answers': completeRegistration,
   'defra-business-check-answers': completeRegistration,
   'check-your-answers': checkYourAnswers,
-  'save-commitment-certificate': saveCommitmentCertificate,
+  'commitment-certificate': commitmentCertificate,
   // For tests
-  deviceFor,
   accountFor,
   registeredAccount,
   participantOf,

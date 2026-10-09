@@ -281,7 +281,7 @@ test.describe('nrf-quote-7-1 happy path', () => {
     await expect(page).toHaveURL(/file-preview$/, { timeout: 10000 })
     await expectHeading(page, 'file-preview')
     await expect(page.locator('.govuk-list--bullet')).toContainText(
-      'Broads SAC, Broadland Ramsar and River Wensum SAC'
+      'Broadland Ramsar and River Wensum SAC'
     )
     await expect(page.locator('.govuk-list--bullet')).toContainText(
       '(100% of boundary)'
@@ -331,7 +331,7 @@ test.describe('nrf-quote-7-1 happy path', () => {
     await submit(page, 'upload-redline')
     await expect(page).toHaveURL(/file-preview$/, { timeout: 10000 })
     await expect(page.locator('.govuk-list--bullet')).toContainText(
-      'Broads SAC, Broadland Ramsar and River Wensum SAC'
+      'Broadland Ramsar and River Wensum SAC'
     )
 
     // The error states live on the screen wall as preview variants

@@ -1,5 +1,20 @@
 ---
 type: document
+text:
+  # A contents list beside the certificate, linking to each of its ##
+  # headings. Take the # off the line to show it
+  # contentsTitle: Contents
+  # The print link beside the certificate, which opens the print window
+  # (where the user can also save it as a PDF). Put a # in front of the
+  # line to hide the link, its heading and the copy above and below it
+  # printLink: Save or print this certificate
+  # The heading above the print link
+  # printLinkHeading: Share
+  # Optional copy above or below the print link, in markdown (paragraphs,
+  # **bold**, [links](...)). Take the # off a line to use it; for more than
+  # one paragraph, start with | and indent the lines under it
+  # printLinkBefore: Keep a copy to send to your local planning authority.
+  # printLinkAfter: Choose **Save as PDF** in the print window to keep a copy.
 ---
 
 # Nature restoration levy – commitment certificate

@@ -123,7 +123,7 @@ Do not share your Government Gateway user ID and password with anyone else.
 :::
 ```
 
-`:::map` draws the saved red line boundary on a small read-only map (used on the commitment certificate). The name after `map` is the answer holding the boundary and can be left out. Add `os` after the name (`:::map commitment.boundary os`) to draw it on the Ordnance Survey basemap; without an `OS_API_KEY` on the server it falls back to the Streets map.
+`:::map` draws the saved red line boundary on a small read-only map (used on the commitment certificate and the LPA record pages), drawn like the location plan on a planning application: the Ordnance Survey Black and white basemap, which shows building outlines, plot boundaries and road names at site scale, with a scale bar. The name after `map` is the answer holding the boundary and can be left out. Without an `OS_API_KEY` on the server it falls back to a keyless grey street map. (An `os` after the name, as in `:::map commitment.boundary os`, is still accepted but no longer changes anything.)
 
 `:::notification Title` is the blue notification banner. `:::after-button` moves everything from that line to the end of the file below the page's button: a "Get help with this page" link, or a details block that sits under Continue. When the block holds another block (a details, say), open and close it with four colons (`::::after-button` … `::::`) so the inner `:::` lines do not end it early.
 

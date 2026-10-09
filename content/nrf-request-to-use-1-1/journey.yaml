@@ -144,18 +144,30 @@ preview:
     residentialBuildingCount: 120
     hasRedlineBoundaryFile: false
     mapReferrer: redline-map
+    # The same site as NRL-123456 in content/lpa-manage-1/records.yaml
     redlineBoundaryPolygon:
-      center: [1.115, 52.565]
+      center: [1.1059, 52.575]
       coordinates:
-        - [1.11, 52.56]
-        - [1.12, 52.56]
-        - [1.12, 52.57]
-        - [1.11, 52.57]
+        - [1.103662, 52.574687]
+        - [1.105894, 52.574153]
+        - [1.106850, 52.573891]
+        - [1.107017, 52.574124]
+        - [1.107070, 52.574297]
+        - [1.107060, 52.574435]
+        - [1.106995, 52.574579]
+        - [1.106598, 52.575102]
+        - [1.106533, 52.575225]
+        - [1.106583, 52.575577]
+        - [1.106008, 52.575752]
+        - [1.104735, 52.576038]
+        - [1.104662, 52.575947]
+        - [1.104472, 52.575997]
+        - [1.103847, 52.574914]
       intersections:
-        nutrient: Broads SAC, Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2026 to 2036)
-      intersectingCatchment: Broads SAC, Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2026 to 2036)
-    intersectingCatchment: Broads SAC, Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2026 to 2036)
-    edpName: Broads SAC, Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2026 to 2036)
+        nutrient: 'Norfolk: Broads Special Area of Conservation (SAC) (Yare and Bure), Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2027 to 2037)'
+      intersectingCatchment: 'Norfolk: Broads Special Area of Conservation (SAC) (Yare and Bure), Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2027 to 2037)'
+    intersectingCatchment: 'Norfolk: Broads Special Area of Conservation (SAC) (Yare and Bure), Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2027 to 2037)'
+    edpName: 'Norfolk: Broads Special Area of Conservation (SAC) (Yare and Bure), Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2027 to 2037)'
     quoteLoaded: NRL-123456
     quotedUnits: 100
     quotedLevyAmount: 'X,XXX'
@@ -331,7 +343,9 @@ pages:
     back: retrieve-email
     handoff: 2026-10-06
 
+  # Reached from the link in the quote email, so it has no Back link
   - id: review-quote-details
+    back: []
     guard: { key: quoteReference, isSet: true, redirect: quote-reference }
     handler: custom # loads the quote, recalculates the levy, see hooks.js
     next:
@@ -943,11 +957,9 @@ pages:
   - id: request-email
     back: confirmation
 
+  # The certificate, linked from the email, on the service's own layout with a
+  # print link beside it (printing or saving as a PDF gives the certificate
+  # alone on A4). It opens from the email, so it has no back link
   - id: commitment-certificate
-    back: confirmation
-
-  # The certificate as a page to print or save as a PDF, linked from the
-  # email: the certificate on an A4 sheet and the steps for the user's device
-  - id: save-commitment-certificate
-    template: nrf-request-to-use-1-1/save-commitment-certificate
-    handler: custom # renders the certificate and picks the device, see hooks.js
+    layout: default
+    template: nrf-request-to-use-1-1/commitment-certificate
