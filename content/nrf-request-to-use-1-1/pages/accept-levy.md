@@ -17,6 +17,8 @@ The amount of your levy may have changed since your quote. You might have update
 
 ## Details of your levy amount
 
+Your relevant development is planned in {{ edpName }}
+
 ### Provisional nature restoration levy amount: £{{ levyAmount }} (excluding VAT)
 
 The provisional amount is calculated from the charging schedule in the relevant EDP(s).
