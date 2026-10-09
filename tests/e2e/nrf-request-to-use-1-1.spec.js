@@ -867,6 +867,40 @@ test.describe('nrf-request-to-use-1-1 Defra ID registration', () => {
     await expect(page).toHaveURL(`${base}/sign-in-method`)
   })
 
+  test('the declaration variant asks for the declaration before check your answers', async ({
+    page
+  }) => {
+    // ?copy=declaration for the session, as a research participant would have
+    await page.goto(`${base}/start?copy=declaration`)
+    await reachSignIn(page, 'employee')
+    await signIn(page, 'company@example.com')
+    await fillField(page, 'org-address', 'address-line-1', '53 Business Lane')
+    await fillField(page, 'org-address', 'town', 'Business')
+    await fillField(page, 'org-address', 'postcode', 'LP1 7RF')
+    await submit(page, 'org-address')
+    await submit(page, 'review-your-details')
+
+    // The declaration is required before checking the answers
+    await expect(page).toHaveURL(`${base}/declaration`)
+    await expectHeading(page, 'declaration')
+    await submit(page, 'declaration')
+    await expect(page).toHaveURL(`${base}/declaration`)
+    await expectError(page, 'declaration')
+    await answer(page, 'declaration', 'Yes')
+    await submit(page, 'declaration')
+
+    // ...whose variant has no checkbox and goes Back to the declaration
+    await expect(page).toHaveURL(`${base}/check-your-answers`)
+    await expect(page.locator('input[type="checkbox"]')).toHaveCount(0)
+    await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
+      'href',
+      `${base}/declaration`
+    )
+    await submit(page, 'check-your-answers')
+    await expect(page).toHaveURL(`${base}/confirmation`)
+    await expect(page.locator('.govuk-panel__body')).toContainText('NRL-')
+  })
+
   test('an individual always registers, whatever their email', async ({
     page
   }) => {
