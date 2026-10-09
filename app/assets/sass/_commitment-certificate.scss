@@ -4,6 +4,33 @@
 // 20mm margins of the page's @page rule; govuk-frontend sets its print font
 // and type sizes.
 
+// GOV.UK Publishing's contents_list component: an em dash before each
+// link, under a govuk-heading-m title
+.app-contents-list {
+  margin-bottom: govuk-spacing(6);
+}
+
+.app-contents-list__list {
+  @include govuk-font($size: 19);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.app-contents-list__item {
+  position: relative;
+  margin-bottom: govuk-spacing(2);
+  padding-left: govuk-spacing(5);
+
+  &::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    width: govuk-spacing(4);
+    overflow: hidden;
+  }
+}
+
 // GOV.UK Publishing's print_link component: an outlined button with a
 // printer icon. It needs JavaScript, so it shows only once govuk-frontend has
 // marked the page as supported.
@@ -14,6 +41,26 @@
 
 .govuk-frontend-supported .app-print-link {
   display: block;
+}
+
+// Copy above or below the button, at the smaller size GOV.UK uses beside
+// the main content
+.app-print-link__text {
+  margin-bottom: govuk-spacing(3);
+
+  .govuk-body,
+  .govuk-list {
+    @include govuk-font($size: 16);
+  }
+
+  > :last-child {
+    margin-bottom: 0;
+  }
+}
+
+.app-print-link__text--after {
+  margin-top: govuk-spacing(3);
+  margin-bottom: 0;
 }
 
 .app-print-link__button {

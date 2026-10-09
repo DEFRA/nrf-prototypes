@@ -4,9 +4,16 @@
   Linked from the email in place of an attached PDF. The certificate is
   content/nrf-request-to-use-1-1/pages/commitment-certificate.md, shown on
   the service's own layout with a print link beside it, as GOV.UK
-  publications have (GOV.UK Publishing's print_link component). The link
+  publications have (GOV.UK Publishing's print_link component), and
+  optionally a contents list above it (contents_list). Each is switched on
+  by its words under `text:` in the page file (see the hook in
+  app/lib/nrf-request-to-use-1-1/hooks.js); with neither, the column
+  collapses and the certificate starts at the left. The link
   opens the browser's print window, where the user can also save it as a
-  PDF (print-link.js); it needs JavaScript, so it is hidden without it.
+  PDF (print-link.js); it needs JavaScript, so it is hidden without it,
+  along with the optional copy above and below it (`printLinkBefore` and
+  `printLinkAfter`, rendered from markdown by the page's hook in
+  app/lib/nrf-request-to-use-1-1/hooks.js).
 
   Printing leaves only the certificate, on A4 with 20mm margins and
   govuk-frontend's print type sizes (_commitment-certificate.scss).
@@ -27,13 +34,34 @@
 {% endblock %}
 
 {% block content %}
+{% set hasAside = contents.length or text.printLink %}
 {% if not content.headingInBody %}<h1 class="govuk-heading-l">{{ content.heading }}</h1>{% endif %}
 <div class="govuk-grid-row">
+  {% if hasAside %}
   <div class="govuk-grid-column-one-third-from-desktop app-certificate__aside">
+    {% if contents.length %}
+    {# GOV.UK Publishing's contents_list component #}
+    <nav class="app-contents-list" aria-label="{{ text.contentsTitle }}">
+      <h2 class="govuk-heading-m">{{ text.contentsTitle }}</h2>
+      <ol class="app-contents-list__list">
+        {% for section in contents %}
+        <li class="app-contents-list__item">
+          <a class="govuk-link app-contents-list__link" href="#{{ section.id }}">{{ section.label | safe }}</a>
+        </li>
+        {% endfor %}
+      </ol>
+    </nav>
+    {% endif %}
+    {% if text.printLink %}
     <div class="app-print-link">
+      {% if text.printLinkHeading %}<h2 class="govuk-heading-m">{{ text.printLinkHeading }}</h2>{% endif %}
+      {% if printLinkBefore %}<div class="app-print-link__text">{{ printLinkBefore | safe }}</div>{% endif %}
       <button class="app-print-link__button" type="button" data-module="app-print-link">{{ text.printLink }}</button>
+      {% if printLinkAfter %}<div class="app-print-link__text app-print-link__text--after">{{ printLinkAfter | safe }}</div>{% endif %}
     </div>
+    {% endif %}
   </div>
+  {% endif %}
   <div class="govuk-grid-column-two-thirds-from-desktop app-certificate__body">
     {{ content.html | safe }}
   </div>

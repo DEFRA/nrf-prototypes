@@ -35,7 +35,9 @@
  */
 
 const { message } = require('../journey-engine/validation')
-const { interpolate } = require('../journey-engine/markdown')
+const { interpolate, createRenderer } = require('../journey-engine/markdown')
+
+const certificateRenderer = createRenderer()
 
 const EDP_NAME =
   'Norfolk: Broads Special Area of Conservation (SAC) (Yare and Bure), Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2027 to 2037)'
@@ -608,6 +610,58 @@ const checkYourAnswers = {
   }
 }
 
+// The words of a heading as an id for the contents list to link to
+function headingId(label, taken) {
+  const base =
+    label
+      .toLowerCase()
+      .replace(/&[a-z]+;|&#\d+;/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '') || 'section'
+  let id = base
+  for (let n = 2; taken.has(id); n += 1) {
+    id = `${base}-${n}`
+  }
+  taken.add(id)
+  return id
+}
+
+// The commitment certificate's sidebar, all optional under `text:` in
+// pages/commitment-certificate.md:
+//   contentsTitle    a contents list headed with this, linking to each of
+//                    the certificate's `##` headings (given ids here)
+//   printLink        the print link's words; without it there is no link
+//   printLinkHeading a heading above the print link
+//   printLinkBefore  copy above and below the print link, in markdown so it
+//   printLinkAfter   can hold paragraphs, bold and links
+const commitmentCertificate = {
+  get(ctx, model) {
+    const { text } = model.content
+    const taken = new Set()
+    const sections = []
+    model.content.html = model.content.html.replace(
+      /<h2 class="govuk-heading-m">([\s\S]*?)<\/h2>/g,
+      (whole, inner) => {
+        const label = inner.replace(/<[^>]+>/g, '').trim()
+        const id = headingId(label, taken)
+        sections.push({ id, label })
+        return `<h2 class="govuk-heading-m" id="${id}">${inner}</h2>`
+      }
+    )
+    model.contents = text.contentsTitle ? sections : []
+    if (text.printLink) {
+      model.printLinkBefore = certificateRenderer.render(
+        text.printLinkBefore,
+        ctx
+      )
+      model.printLinkAfter = certificateRenderer.render(
+        text.printLinkAfter,
+        ctx
+      )
+    }
+  }
+}
+
 module.exports = {
   'quote-reference': quoteReference,
   'original-reference': originalReference,
@@ -628,6 +682,7 @@ module.exports = {
   'defra-check-answers': completeRegistration,
   'defra-business-check-answers': completeRegistration,
   'check-your-answers': checkYourAnswers,
+  'commitment-certificate': commitmentCertificate,
   // For tests
   accountFor,
   registeredAccount,
