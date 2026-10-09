@@ -55,9 +55,9 @@ To request to use nature restoration levy you will need to:
 
 You will receive a commitment certificate that you can submit with your planning application.
 
-## Assuming liability to pay the nature restoration levy
+## When to pay the nature restoration levy
 
-Once your planning application is approved and you are ready to start development, you must assume liability to pay the levy.
+Once the planning application is approved and you are ready to start development, you must assume liability to pay the levy.
 
 ## Get help with the nature restoration levy
 
