@@ -91,7 +91,7 @@ statuses:
   withdrawn: { label: Withdrawn, colour: purple }
   cancelled: { label: Cancelled, colour: grey }
 
-edp: &edp Broads SAC, Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2026 to 2036)
+edp: &edp 'Norfolk: Broads Special Area of Conservation (SAC) (Yare and Bure), Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2027 to 2037)'
 
 boundaries:
   wymondham:

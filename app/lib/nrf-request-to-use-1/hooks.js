@@ -38,7 +38,7 @@ const { message } = require('../journey-engine/validation')
 const { interpolate } = require('../journey-engine/markdown')
 
 const EDP_NAME =
-  'Broads SAC, Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2026 to 2036)'
+  'Norfolk: Broads Special Area of Conservation (SAC) (Yare and Bure), Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2027 to 2037)'
 // No levy rate is agreed yet, so every amount is the placeholder the quote
 // journey's email shows (content/nrf-quote-7)
 const LEVY_AMOUNT = 'X,XXX'

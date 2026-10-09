@@ -6,7 +6,8 @@ export const SAVE_ACTION = 'save'
 const NOT_AVAILABLE_TEXT = 'Not available'
 const UNSUPPORTED_AREA_MESSAGE =
   'An area not supported by an Environmental Delivery Plan (EDP)'
-const EDP_HEADING = 'Environmental Delivery Plan (EDP)'
+// Only shown when a check result carries no EDP name
+const EDP_FALLBACK_NAME = 'Environmental Delivery Plan (EDP)'
 
 export function buildPanelHtml() {
   return `
@@ -58,7 +59,7 @@ function formatPerimeter(perimeter) {
 /**
  * Every EDP in the boundary check payload carries a label, so this normally
  * just reads it. The string form and the null fallback are defensive: a
- * malformed entry omits the name line instead of dumping raw JSON into the
+ * malformed entry shows a generic name instead of dumping raw JSON into the
  * panel.
  *
  * @param {string|{ label?: string }} edp
@@ -90,19 +91,13 @@ function buildEdpListItem(edp) {
   const text = document.createElement('div')
   text.className = 'app-boundary-info-panel__edp-text'
 
-  const name = document.createElement('span')
-  name.className = 'govuk-body-s app-boundary-info-panel__edp-name'
-  name.textContent = EDP_HEADING
-
-  const edpName = formatEdp(edp)
-  text.append(name)
-  if (edpName) {
-    const descriptionEl = document.createElement('p')
-    descriptionEl.className =
-      'govuk-body-s app-boundary-info-panel__edp-description'
-    descriptionEl.textContent = edpName
-    text.append(descriptionEl)
-  }
+  // The EDP's name says it is an Environmental Delivery Plan, so it needs
+  // no heading of its own
+  const descriptionEl = document.createElement('p')
+  descriptionEl.className =
+    'govuk-body-s app-boundary-info-panel__edp-description'
+  descriptionEl.textContent = formatEdp(edp) || EDP_FALLBACK_NAME
+  text.append(descriptionEl)
 
   item.append(swatchWrap, text)
 
