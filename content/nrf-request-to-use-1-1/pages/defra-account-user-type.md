@@ -17,4 +17,4 @@ errors:
 button: Continue
 ---
 
-# Who are you requesting to use the nature restoration fund for?
+# Who are you requesting to use the nature restoration levy for?
