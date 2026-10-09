@@ -2,7 +2,7 @@
 # Placeholder copy: the declaration on a page of its own, before the
 # `declaration` copy variant of check your answers
 type: content
-title: Your client will need to create a Defra account and invite you as an agent or third party
+title: Details to read before you request to use the nature restoration levy
 actions:
   - text: Continue
     kind: submit
