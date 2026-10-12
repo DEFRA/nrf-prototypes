@@ -1192,15 +1192,14 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     await expect(page).toHaveURL(`${base}/read-this`)
     await submit(page, 'read-this')
     await expect(page).toHaveURL(`${base}/check-your-answers`)
+    // Same row as on review-quote-details, but with no Change link: the
+    // development details are changed from there
     await expect(page.locator('main')).toContainText(
-      rowValue('check-your-answers', filePreview, uploaded)
+      rowValue('review-quote-details', filePreview, uploaded)
     )
     await expect(
-      changeLink(page, 'check-your-answers', filePreview)
-    ).toHaveAttribute(
-      'href',
-      `${filePreview}?change=true&nav=${base}/check-your-answers`
-    )
+      changeLink(page, 'review-quote-details', filePreview)
+    ).toHaveCount(0)
   })
 
   test('the delete link on check your answers also comes back here', async ({
@@ -1227,12 +1226,21 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     await expect(page).toHaveURL(`${base}/check-your-answers`)
 
     const cya = `${base}/check-your-answers`
+    // The development details have no Change links here; the warning links
+    // to review-quote-details, which comes back here
     await expect(
-      changeLink(page, 'check-your-answers', `${quotePath}/planning-type`)
-    ).toHaveAttribute(
-      'href',
-      `${quotePath}/planning-type?change=true&nav=${cya}`
+      changeLink(page, 'review-quote-details', `${quotePath}/planning-type`)
+    ).toHaveCount(0)
+    await followLink(
+      page,
+      'check-your-answers',
+      'review-quote-details?nav=check-your-answers'
     )
+    await expect(page).toHaveURL(
+      `${base}/review-quote-details?nav=check-your-answers`
+    )
+    await submit(page, 'review-quote-details')
+    await expect(page).toHaveURL(cya)
     await act(page, 'check-your-answers', 'destructive')
     await expect(page).toHaveURL(`${quotePath}/delete-quote?nav=${cya}`)
     // Signed in as an agent: the borrowed page keeps the organisation bar
