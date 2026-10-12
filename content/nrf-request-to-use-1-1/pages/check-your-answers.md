@@ -62,18 +62,14 @@ rows:
       - goto: review-your-details
     changeHidden: the confirmed details
   - heading: Development details
+  # No Change links here: the development details are changed from
+  # review-quote-details, linked from the warning below
   - key: Planning permission type
     value: '{{ planningType }}'
-    change: /nrf-quote-7-1/planning-type
-    changeHidden: planning permission type
   - key: Housing
     value: '{{ isHousing }}'
-    change: /nrf-quote-7-1/housing
-    changeHidden: whether you are developing housing
   - key: Number of housing units
     value: '{{ residentialBuildingCount }}'
-    change: /nrf-quote-7-1/units
-    changeHidden: number of housing units
   - key: Red line boundary
     # The uploaded file's name, or "Added" for a drawn boundary (as quote-7)
     value:
@@ -83,18 +79,8 @@ rows:
         when: { key: redlineBoundaryPolygon, truthy: true }
         then: Added
         else: Not added
-    change:
-      - when: { key: hasRedlineBoundaryFile, truthy: true }
-        goto: /nrf-quote-7-1/file-preview
-      - goto: /nrf-quote-7-1/map
-    changeHidden:
-      when: { key: hasRedlineBoundaryFile, truthy: true }
-      then: uploaded red line boundary
-      else: drawn red line boundary
   - key: Email address
     value: '{{ retrievalEmail }}'
-    change: email
-    changeHidden: email address
 options:
   - label: I confirm that, to the best of my knowledge and belief, the information provided in the application is true, accurate and complete.
     value: 'Yes'
@@ -114,6 +100,8 @@ actions:
 
 :::warning
 Make sure the details of your development match your planning application. Updates may result in a recalculation of available capacity and the levy amount.
+
+To update the details of this development, [review your quote](./review-quote-details?nav=check-your-answers).
 :::
 
 ## Requesting to use the nature restoration levy
