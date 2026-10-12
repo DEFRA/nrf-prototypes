@@ -59,31 +59,28 @@ The inflation-adjusted amount shows the indicative levy amount for the year this
 
 ## Commitment details
 
-This commitment will disapply the relevant environmental obligations through the planning application process.
+This commitment may be relied upon through the planning application process to disapply the relevant environmental obligations that arise because of the environmental impact of the development.
 
-This commitment certificate will be accepted as part of any planning and decision-making processes.
+Other environmental impacts of development not covered by {{ edpName }} will need to be addressed through project specific mitigation.
+
 
 ### What this commitment enables
 
-For the purposes of section 72 of the Planning and Infrastructure Act 2025, this certificate provides you with a commitment to pay the nature restoration levy. This commitment will disapply the environmental obligations in respect of the specific environmental impact set out in the EDP for your development.
+For the purposes of section 72 of the Planning and Infrastructure Act 2025, this certificate provides you with a commitment to pay the nature restoration levy. 
 
 A local planning authority will accept this commitment certificate as part of any planning and decision-making processes, provided the details that were given to inform this commitment cover the relevant development for which a planning application is made.
 
 Your commitment will expire after 6 months from the date of issue stated above, unless an application for planning permission is made.
 
-This commitment disapplies the following environmental obligations from consideration under the Habitats Regulations 2017: {{ edpName }}.
-
-Other environmental obligations not covered above will continue to apply.
-
-### Planning conditions required to meet this commitment
+### Planning conditions
 
 There are planning condition requirements to meet this commitment; a statutory pre-commencement condition requiring payment prior to commencement, and additional conditions to impose as conservation measures.
 
-### Planning condition requirements
+### Planning conditions to be imposed 
 
-In accordance with the requirements of Regulation 5 of the nature restoration levy Regulations ("Levy Regulations") 2026, the local planning authority must impose the statutory pre-commencement planning condition, requiring payment of the levy in full or the first instalment prior to commencement. This applies to any grant of permission relying on a commitment to pay the nature restoration levy.
+Regulation 5 of the nature restoration levy regulations ("Levy Regulations") 2026, requires the local planning authority to impose the statutory pre-commencement planning condition, requiring payment of the levy in full or the first instalment prior to commencement. This applies to any grant of permission relying on a commitment to pay the nature restoration levy.
 
-In accordance with the requirements of the Environmental Delivery Plan(s) the local planning authority may need to impose additional conditions as conservation measures where they are applicable to the relevant development, to meet the requirements under this commitment.
+In accordance with the requirements of the Environmental Delivery Plan(s) set out above the local planning authority may be required to impose additional conditions as conservation measures where relevant.
 
 | Planning condition                              | Condition to be imposed\*                                                                                                                                                                                                                                                                                                    |
 | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -92,9 +89,8 @@ In accordance with the requirements of the Environmental Delivery Plan(s) the lo
 
 \*Planning decision-makers may make limited and reasonable amendments to planning conditions (with the exception of the statutory pre-commencement condition), to ensure conditions are operable for specific developments providing the intended outcome is maintained.
 
-\*\*Natural England recognises that Local Plans may set lower water efficiency targets and encourage any condition to be in line with the relevant Local Plan where this is the case.
 
-[See guidance for local planning authorities for more information on imposing conditions](#)
+[See guidance for local planning authorities on handling commitment certificates throughout the planning process](#)
 
 ## Get help with the nature restoration levy
 
