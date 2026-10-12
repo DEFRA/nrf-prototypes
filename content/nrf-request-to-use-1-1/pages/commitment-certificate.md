@@ -72,11 +72,9 @@ A local planning authority will accept this commitment certificate as part of an
 
 Your commitment will expire after 6 months from the date of issue stated above, unless an application for planning permission is made.
 
-### Planning conditions
+### Planning conditions to be imposed 
 
 There are planning condition requirements to meet this commitment; a statutory pre-commencement condition requiring payment prior to commencement, and additional conditions to impose as conservation measures.
-
-### Planning conditions to be imposed 
 
 Regulation 5 of the nature restoration levy regulations ("Levy Regulations") 2026, requires the local planning authority to impose the statutory pre-commencement planning condition, requiring payment of the levy in full or the first instalment prior to commencement. This applies to any grant of permission relying on a commitment to pay the nature restoration levy.
 

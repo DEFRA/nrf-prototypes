@@ -106,4 +106,4 @@ To update the details of this development, [review your quote](./review-quote-de
 
 ## Requesting to use the nature restoration levy
 
-By confirming and submitting these details, you are requesting to use the nature restoration levy.
+By confirming and submitting these details, you are submitting a request to use the nature restoration levy.

@@ -12,15 +12,19 @@ actions:
 
 ## When you will receive your commitment certificate
 
-Once Natural England accepts your request to use this levy, you will be issued a commitment certificate. The commitment certificate will disapply the relevant environmental obligations that arise because of the environmental impact of the development.
+Once Natural England accepts your request to use this levy, you will be issued a commitment certificate. 
 
-You will receive this email within 5 minutes of submitting your request. 
+You will receive an email within 5 minutes of submitting your request. 
 
 Your commitment certificate will expire after 6 months from the date of issue, unless an application for planning permission is made.
 
 ## The Environmental Delivery Plan (EDP) your development is in 
 
 {{ edpName }}
+
+This commitment may be relied upon through the planning application process to disapply the relevant environmental obligations that arise because of the environmental impact of the development.
+
+Other environmental impacts of development not covered by this EDP will need to be addressed through project specific mitigation.
 
 ## Details of your levy amount
 
@@ -56,3 +60,12 @@ In accordance with the requirements of the Environmental Delivery Plan(s) the lo
 
 Once your planning application is approved and you are ready to start development, you must assume liability to pay the levy. [Learn more about paying the nature restoration levy (opens in new tab)](#)
 
+## Get help with the nature restoration levy
+
+If you need help with the nature restoration levy, contact Natural England.
+
+Email: [enquiries@naturalengland.org.uk](mailto:enquiries@naturalengland.org.uk)\
+Telephone: 0300 060 3900\
+Monday to Friday, 10am to 4pm, except bank holidays
+
+[Find out about call charges (opens in new tab)](https://www.gov.uk/call-charges)
