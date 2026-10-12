@@ -266,6 +266,8 @@ test.describe('nrf-request-to-use-1-1 happy paths', () => {
       '53 Business Lane'
     )
     await submit(page, 'review-your-details')
+    await expect(page).toHaveURL(`${base}/read-this`)
+    await submit(page, 'read-this')
     await expect(page).toHaveURL(`${base}/check-your-answers`)
     await expect(page.locator('main')).toContainText(
       rowKey('check-your-answers', 'review-your-details')
@@ -470,6 +472,8 @@ test.describe('nrf-request-to-use-1-1 happy paths', () => {
       option('defra-choose-organisation', 'riverside')
     )
     await submit(page, 'review-developer-details')
+    await expect(page).toHaveURL(`${base}/read-this`)
+    await submit(page, 'read-this')
     await expect(page).toHaveURL(`${base}/check-your-answers`)
     await expect(page.locator('.govuk-summary-list').first()).toContainText(
       'NRL-000001'
@@ -867,11 +871,9 @@ test.describe('nrf-request-to-use-1-1 Defra ID registration', () => {
     await expect(page).toHaveURL(`${base}/sign-in-method`)
   })
 
-  test('the declaration variant asks for the declaration before check your answers', async ({
+  test('the read this page comes before check your answers', async ({
     page
   }) => {
-    // ?copy=declaration for the session, as a research participant would have
-    await page.goto(`${base}/start?copy=declaration`)
     await reachSignIn(page, 'employee')
     await signIn(page, 'company@example.com')
     await fillField(page, 'org-address', 'address-line-1', '53 Business Lane')
@@ -880,25 +882,20 @@ test.describe('nrf-request-to-use-1-1 Defra ID registration', () => {
     await submit(page, 'org-address')
     await submit(page, 'review-your-details')
 
-    // The declaration is required before checking the answers
-    await expect(page).toHaveURL(`${base}/declaration`)
-    await expectHeading(page, 'declaration')
-    await submit(page, 'declaration')
-    await expect(page).toHaveURL(`${base}/declaration`)
-    await expectError(page, 'declaration')
-    await answer(page, 'declaration', 'Yes')
-    await submit(page, 'declaration')
-
-    // ...whose variant has no checkbox and goes Back to the declaration
-    await expect(page).toHaveURL(`${base}/check-your-answers`)
-    await expect(page.locator('input[type="checkbox"]')).toHaveCount(0)
+    await expect(page).toHaveURL(`${base}/read-this`)
+    await expectHeading(page, 'read-this')
     await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
       'href',
-      `${base}/declaration`
+      `${base}/review-your-details`
     )
-    await submit(page, 'check-your-answers')
-    await expect(page).toHaveURL(`${base}/confirmation`)
-    await expect(page.locator('.govuk-panel__body')).toContainText('NRL-')
+    await submit(page, 'read-this')
+
+    // ...and check your answers goes Back to it
+    await expect(page).toHaveURL(`${base}/check-your-answers`)
+    await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
+      'href',
+      `${base}/read-this`
+    )
   })
 
   test('an individual always registers, whatever their email', async ({
@@ -1192,6 +1189,8 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     await fillField(page, 'org-address', 'postcode', 'LP1 7RF')
     await submit(page, 'org-address')
     await submit(page, 'review-your-details')
+    await expect(page).toHaveURL(`${base}/read-this`)
+    await submit(page, 'read-this')
     await expect(page).toHaveURL(`${base}/check-your-answers`)
     await expect(page.locator('main')).toContainText(
       rowValue('check-your-answers', filePreview, uploaded)
@@ -1223,6 +1222,8 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     await fillField(page, 'developer-details', 'postcode', 'DV1 6RP')
     await submit(page, 'developer-details')
     await submit(page, 'review-developer-details')
+    await expect(page).toHaveURL(`${base}/read-this`)
+    await submit(page, 'read-this')
     await expect(page).toHaveURL(`${base}/check-your-answers`)
 
     const cya = `${base}/check-your-answers`
