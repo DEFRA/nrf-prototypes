@@ -32,8 +32,6 @@ rows:
       else: drawn red line boundary
   - key: Email address
     value: '{{ retrievalEmail }}'
-    change: email
-    changeHidden: email address
 actions:
   - text: Save and continue
     kind: submit
