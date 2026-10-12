@@ -12,9 +12,11 @@ actions:
 
 ## When you will receive your commitment certificate
 
-Once Natural England accepts your request to use this levy, you will be issued a commitment certificate that you can use in your planning application. You will receive this email within 5 minutes of submitting your request. 
+Once Natural England accepts your request to use this levy, you will be issued a commitment certificate. The commitment certificate will disapply the relevant environmental obligations that arise because of the environmental impact of the development.
 
-The commitment certificate will disapply the relevant environmental obligations through the planning application process.
+You will receive this email within 5 minutes of submitting your request. 
+
+Your commitment certificate will expire after 6 months from the date of issue, unless an application for planning permission is made.
 
 ## The Environmental Delivery Plan (EDP) your development is in 
 
@@ -47,7 +49,6 @@ In accordance with the requirements of the Environmental Delivery Plan(s) the lo
 
 \*Planning decision-makers may make limited and reasonable amendments to planning conditions (with the exception of the statutory pre-commencement condition), to ensure conditions are operable for specific developments providing the intended outcome is maintained.
 
-\*\*Natural England recognises that Local Plans may set lower water efficiency targets and encourage any condition to be in line with the relevant Local Plan where this is the case.
 
 [See guidance for local planning authorities for more information on imposing conditions](#)
 
