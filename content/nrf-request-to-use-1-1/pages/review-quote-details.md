@@ -22,10 +22,7 @@ rows:
         when: { key: redlineBoundaryPolygon, truthy: true }
         then: Added
         else: Not added
-    change:
-      - when: { key: hasRedlineBoundaryFile, truthy: true }
-        goto: /nrf-quote-7-1/file-preview
-      - goto: /nrf-quote-7-1/map
+    change: /nrf-quote-7-1/redline-map
     changeHidden:
       when: { key: hasRedlineBoundaryFile, truthy: true }
       then: uploaded red line boundary
@@ -33,11 +30,8 @@ rows:
   - key: Email address
     value: '{{ retrievalEmail }}'
 actions:
-  - text: Save and continue
+  - text: Continue
     kind: submit
-  - text: Save and come back later
-    kind: secondary
-    goto: start
 ---
 
 # Review and amend your quote details

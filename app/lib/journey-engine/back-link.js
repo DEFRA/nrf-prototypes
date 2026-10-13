@@ -52,15 +52,48 @@ function findReferrer(page, journey) {
   return null
 }
 
+/**
+ * Carry a change detour's way back (`change=true&nav=...`) onto a URL
+ */
+function withDetourParams(url, ctx) {
+  const params = []
+  if (ctx.isChange) {
+    params.push('change=true')
+  }
+  params.push(`nav=${ctx.navFromSummary}`)
+  return `${url}${url.includes('?') ? '&' : '?'}${params.join('&')}`
+}
+
+/**
+ * Inside a change detour, a Back link to an earlier page of this journey
+ * keeps the detour's way back, so answering that page again still returns
+ * to the summary page (a drop-out page's Back link to the question that led
+ * there, say). Summary pages and other journeys' pages are left alone.
+ */
+function stayInDetour(target, journey, ctx) {
+  const url = toPath(target, journey, ctx)
+  const page = target && journey.byId.get(target)
+  if (
+    !url ||
+    !page ||
+    !ctx.isChange ||
+    !ctx.navFromSummary ||
+    journey.summaryPages.includes(page.id)
+  ) {
+    return url
+  }
+  return withDetourParams(url, ctx)
+}
+
 function resolveBackLink(page, journey, ctx) {
   // ctx.navFromSummary is the id of the summary page the user came from
   // (journeys may have more than one), or false
   if (typeof page.back === 'string') {
-    return toPath(page.back, journey, ctx)
+    return stayInDetour(page.back, journey, ctx)
   }
   if (Array.isArray(page.back)) {
     const rule = firstMatch(page.back, ctx)
-    return rule ? toPath(rule.goto, journey, ctx) : null
+    return rule ? stayInDetour(rule.goto, journey, ctx) : null
   }
   if (page.changeable && ctx.isChange && ctx.navFromSummary) {
     return toPath(SUMMARY_TARGET, journey, ctx)
@@ -72,7 +105,13 @@ function resolveBackLink(page, journey, ctx) {
     return '/'
   }
   const referrer = findReferrer(page, journey)
-  return referrer ? referrer.path : null
+  return referrer ? stayInDetour(referrer.id, journey, ctx) : null
 }
 
-module.exports = { resolveBackLink, toPath, findReferrer, SUMMARY_TARGET }
+module.exports = {
+  resolveBackLink,
+  toPath,
+  findReferrer,
+  withDetourParams,
+  SUMMARY_TARGET
+}

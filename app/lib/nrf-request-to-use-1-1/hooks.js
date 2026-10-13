@@ -44,8 +44,8 @@ const EDP_NAME =
 // No levy rate is agreed yet, so every amount is the placeholder the quote
 // journey's email shows (content/nrf-quote-7-1)
 const LEVY_AMOUNT = 'X,XXX'
-// Quote references from either service: NRF-123456 or NRL-123456
-const REFERENCE = /^(NRF|NRL)-\d{6}$/i
+// Quote references: NRL-123456, in upper or lower case
+const REFERENCE = /^NRL-\d{6}$/i
 // An open ring ([lng, lat]): a 3 hectare field off London Road on the edge
 // of Wymondham, room for the fixture's 100 homes. Traced from the Ordnance
 // Survey MasterMap parcel the certificate's map draws, inside the
@@ -360,15 +360,6 @@ const reviewQuoteDetails = {
   }
 }
 
-// "Calculating your nature restoration levy amount": a loading screen that
-// shows the spinner for a moment and continues to the accept page
-const calculatingLevy = {
-  get(ctx, model) {
-    model.continueUrl = ctx.journey.byId.get('accept-levy').path
-    model.refreshSeconds = 3
-  }
-}
-
 const SIGN_IN_KEYS = [
   'account',
   'employeeInvited',
@@ -666,7 +657,6 @@ module.exports = {
   'quote-reference': quoteReference,
   'original-reference': originalReference,
   'review-quote-details': reviewQuoteDetails,
-  'calculating-levy': calculatingLevy,
   'defra-account-user-type': defraAccountUserType,
   'defra-account-employee-email': defraAccountEmployeeEmail,
   'sign-in-method': signInMethod,

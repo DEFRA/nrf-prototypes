@@ -62,13 +62,6 @@ const {
 const quote = copyOf('nrf-quote-7-1')
 const quotePath = quote.base
 
-// The loading screen after the review page moves on by itself
-async function expectCalculatingLevy(page) {
-  await expect(page).toHaveURL(`${base}/calculating-levy`)
-  await expectHeading(page, 'calculating-levy')
-  await expect(page).toHaveURL(`${base}/accept-levy`, { timeout: 10000 })
-}
-
 function escapeRegExp(text) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
@@ -170,15 +163,15 @@ test.describe('nrf-request-to-use-1-1 validation', () => {
     expect(html).toContain(question.content.errors.required)
   })
 
-  test('the reference must look like NRL-123456 (or NRF-)', async ({
-    page
-  }) => {
+  test('the reference must look like NRL-123456', async ({ page }) => {
     const reference = journey.byId.get('quote-reference')
-    const bad = await page.request.post(reference.path, {
-      form: { 'nrf-reference': 'ABC' }
-    })
-    expect(await bad.text()).toContain(reference.content.errors.format)
-    for (const value of ['NRF-123456', 'nrl-123456']) {
+    for (const value of ['ABC', 'NRF-123456', '123456', 'NRL123456']) {
+      const bad = await page.request.post(reference.path, {
+        form: { 'nrf-reference': value }
+      })
+      expect(await bad.text()).toContain(reference.content.errors.format)
+    }
+    for (const value of ['NRL-123456', 'nrl-123456']) {
       const good = await page.request.post(reference.path, {
         form: { 'nrf-reference': value },
         maxRedirects: 0
@@ -212,7 +205,7 @@ test.describe('nrf-request-to-use-1-1 happy paths', () => {
     await expect(summary).toContainText('jane@example.com')
 
     await submit(page, 'review-quote-details')
-    await expectCalculatingLevy(page)
+    await expect(page).toHaveURL(`${base}/accept-levy`)
     await expect(page.locator('main')).toContainText(`£${LEVY_AMOUNT}`)
     await answer(page, 'accept-levy', 'Yes')
     await submit(page, 'accept-levy')
@@ -345,7 +338,7 @@ test.describe('nrf-request-to-use-1-1 happy paths', () => {
   }) => {
     await retrieveQuote(page)
     await submit(page, 'review-quote-details')
-    await expectCalculatingLevy(page)
+    await expect(page).toHaveURL(`${base}/accept-levy`)
     await answer(page, 'accept-levy', 'Yes')
     await submit(page, 'accept-levy')
     await expect(page).toHaveURL(`${base}/variation`)
@@ -965,7 +958,7 @@ test.describe('nrf-request-to-use-1-1 with errors switched off', () => {
       'developer@example.com'
     )
     await submit(page, 'review-quote-details')
-    await expectCalculatingLevy(page)
+    await expect(page).toHaveURL(`${base}/accept-levy`)
     await submit(page, 'accept-levy')
     await expect(page).toHaveURL(`${base}/variation`)
     // The sample answers say it is a variation of a committed application
@@ -1033,8 +1026,70 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     await expect(page.locator('.govuk-summary-list')).toContainText('120')
 
     await submit(page, 'review-quote-details')
-    await expectCalculatingLevy(page)
+    await expect(page).toHaveURL(`${base}/accept-levy`)
     await expect(page.locator('main')).toContainText(`£${LEVY_AMOUNT}`)
+  })
+
+  test('a drop-out answer can be taken back and still returns to the review', async ({
+    page
+  }) => {
+    const detour = `change=true&nav=${review}`
+    await retrieveQuote(page)
+    await changeLink(
+      page,
+      'review-quote-details',
+      `${quotePath}/housing`
+    ).click()
+    await quote.answer(page, 'housing', 'No')
+    await quote.submit(page, 'housing')
+    await expect(page).toHaveURL(`${quotePath}/not-housing?${detour}`)
+    await quote.expectHeading(page, 'not-housing')
+    await page.getByRole('link', { name: 'Back' }).click()
+    await expect(page).toHaveURL(`${quotePath}/housing?${detour}`)
+    await quote.answer(page, 'housing', 'Yes')
+    await quote.submit(page, 'housing')
+    await expect(page).toHaveURL(review)
+  })
+
+  test('changing the boundary starts at draw or upload and comes back', async ({
+    page
+  }) => {
+    const detour = `change=true&nav=${review}`
+    const back = page.getByRole('link', { name: 'Back' })
+    await retrieveQuote(page)
+    await changeLink(
+      page,
+      'review-quote-details',
+      `${quotePath}/redline-map`
+    ).click()
+    await expect(page).toHaveURL(`${quotePath}/redline-map?${detour}`)
+    await expect(back).toHaveAttribute('href', review)
+
+    // Drawing: the map steps back to the choice, not the review page
+    await quote.answer(page, 'redline-map', 'draw')
+    await quote.submit(page, 'redline-map')
+    await expect(page).toHaveURL(`${quotePath}/map?${detour}`)
+    await expect(page.locator('#draw-boundary-config')).toHaveAttribute(
+      'data-back-link-path',
+      `${quotePath}/redline-map?${detour}`
+    )
+
+    // Uploading: the preview steps back to the upload page, and continuing
+    // from it returns to the review page
+    await page.goto(`${quotePath}/redline-map?${detour}`)
+    await quote.answer(page, 'redline-map', 'upload')
+    await quote.submit(page, 'redline-map')
+    await expect(page).toHaveURL(`${quotePath}/upload-redline?${detour}`)
+    await quote.submit(page, 'upload-redline')
+    await expect(page).toHaveURL(`${quotePath}/file-preview?${detour}`, {
+      timeout: 10000
+    })
+    await expect(back).toHaveAttribute(
+      'href',
+      `${quotePath}/upload-redline?${detour}`
+    )
+    await quote.submit(page, 'file-preview')
+    await expect(page).toHaveURL(review)
   })
 
   test('deleting the quote details uses the quote journey and starts afresh', async ({
@@ -1045,7 +1100,7 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     await quote.fillAnswer(page, 'units', '120')
     await quote.submit(page, 'units')
     await submit(page, 'review-quote-details')
-    await expectCalculatingLevy(page)
+    await expect(page).toHaveURL(`${base}/accept-levy`)
 
     await answer(page, 'accept-levy', 'No')
     await submit(page, 'accept-levy')
@@ -1070,7 +1125,7 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     await retrieveQuote(page)
     await expect(page.locator('.govuk-summary-list')).toContainText('100')
     await submit(page, 'review-quote-details')
-    await expectCalculatingLevy(page)
+    await expect(page).toHaveURL(`${base}/accept-levy`)
     await expect(page.locator('main')).toContainText(`£${LEVY_AMOUNT}`)
     await expect(optionLocator(page, 'accept-levy', 'No')).not.toBeChecked()
   })
@@ -1169,16 +1224,16 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
       hasRedlineBoundaryFile: true,
       redlineFile: 'red-line-boundary.geojson'
     }
-    const filePreview = `${quotePath}/file-preview`
+    const boundary = `${quotePath}/redline-map`
     await retrieveQuote(page, minted)
     await expect(page.locator('.govuk-summary-list')).toContainText(
-      rowValue('review-quote-details', filePreview, uploaded)
+      rowValue('review-quote-details', boundary, uploaded)
     )
     await expect(
-      changeLink(page, 'review-quote-details', filePreview)
+      changeLink(page, 'review-quote-details', boundary)
     ).toHaveAttribute(
       'href',
-      `${filePreview}?change=true&nav=${base}/review-quote-details`
+      `${boundary}?change=true&nav=${base}/review-quote-details`
     )
 
     await acceptAndSkipVariation(page)
@@ -1195,10 +1250,10 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     // Same row as on review-quote-details, but with no Change link: the
     // development details are changed from there
     await expect(page.locator('main')).toContainText(
-      rowValue('review-quote-details', filePreview, uploaded)
+      rowValue('review-quote-details', boundary, uploaded)
     )
     await expect(
-      changeLink(page, 'review-quote-details', filePreview)
+      changeLink(page, 'review-quote-details', boundary)
     ).toHaveCount(0)
   })
 
@@ -1382,10 +1437,9 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     const borrowed = graph.nodes.filter((node) => node.external)
     expect(borrowed.map((node) => node.path).sort()).toEqual([
       `${quotePath}/delete-quote`,
-      `${quotePath}/file-preview`,
       `${quotePath}/housing`,
-      `${quotePath}/map`,
       `${quotePath}/planning-type`,
+      `${quotePath}/redline-map`,
       `${quotePath}/units`
     ])
   })

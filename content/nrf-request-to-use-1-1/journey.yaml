@@ -52,7 +52,6 @@ homepage:
     Monday 28 September 2026 under previous versions.
   changesTitle: What is different from V1
   changes:
-    - a "calculating your levy" loading screen before accepting the levy amount
     - the "levy increased" page is gone; everyone sees the accept levy page
     - the confirmation email links to a commitment certificate page to print or save as a PDF
     - a drop-out page when the NRL reference already has a commitment (try NRL-111111)
@@ -353,22 +352,15 @@ pages:
         goto: not-enough-capacity
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
-      - goto: calculating-levy
+      - goto: accept-levy
 
   # The development details are changed on the quote journey's own pages:
   # the Change links on review-quote-details point at
-  # /nrf-quote-7-1/planning-type, housing, units and map, which come back here.
+  # /nrf-quote-7-1/planning-type, housing, units and redline-map (draw or
+  # upload), which come back here.
 
   - id: not-enough-capacity
     back: review-quote-details
-
-  # Loading screen while the levy is worked out: shows the spinner for a
-  # moment and moves on (a meta refresh in the template)
-  - id: calculating-levy
-    template: nrf-request-to-use-1-1/calculating-levy
-    handler: custom # where to continue to, see hooks.js
-    guard: { key: quoteReference, isSet: true, redirect: quote-reference }
-    next: accept-levy
 
   # Deleting the quote details happens on the quote journey's delete pages;
   # `return` gives them the way back for Back and Cancel
@@ -376,7 +368,7 @@ pages:
     field: accept-levy
     sessionKey: acceptLevy
     changeable: true
-    back: review-quote-details # not the loading screen, which moves on by itself
+    back: review-quote-details
     next:
       - when: { key: acceptLevy, equals: 'No' }
         goto: /nrf-quote-7-1/delete-quote

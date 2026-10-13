@@ -345,6 +345,7 @@ actions:
 A Change link to another journey carries the way back on its own. For an exit from `actions` or a `next` rule add `return: <page>`: usually a summary page, but the Delete link on the agreement page returns to the agreement page itself, so its Cancel lands where the user was. Either way the link opens the borrowed page with `?nav=/nrf-request-to-use-1/review-quote-details`, and on that page:
 
 - the Back link and any `goto: $summary` (in `next`, `back` or `actions`, a Cancel link say) return to that summary page, so the borrowed page's own rules still run (a `wrong-permission` branch still applies) and its `$navFromSummary` rule brings the user back
+- a drop-out page the Change detour leads to (`wrong-permission`, say) keeps the way back, so its Back link returns to the question still in the detour and a different answer goes back to the summary page. The same holds for any change detour within one journey
 - the header shows the borrowing journey's service name and signed-in state, so the user does not see the service change under them
 - everything else (URL, session keys, hooks such as the map's API) stays the borrowed journey's
 

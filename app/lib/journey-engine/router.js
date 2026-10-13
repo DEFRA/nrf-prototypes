@@ -28,7 +28,7 @@ const multer = require('multer')
 const { evaluate, firstMatch, isTruthy } = require('./expressions')
 const { validatePage, previewErrors, message } = require('./validation')
 const { previewErrorKey, signedInPages } = require('./flow')
-const { resolveBackLink, toPath } = require('./back-link')
+const { resolveBackLink, toPath, withDetourParams } = require('./back-link')
 const { createRenderer } = require('./markdown')
 const { usesImpactAssessor } = require('../map/production-services')
 const {
@@ -243,8 +243,11 @@ function withReturn(url, returnTo, journey) {
 /**
  * A change detour (reached from a summary page with ?change=true&nav=...)
  * that moves on to another page of this journey keeps its way back, so the
- * detour can chain across several pages before returning. Summary pages and
- * pages that end the flow are left alone.
+ * detour can chain across several pages before returning. A drop-out page
+ * (one that ends the flow) keeps it too when reached from a Change link, so
+ * its Back link returns to the question still in the detour (see
+ * back-link.js) and a different answer goes back to the summary page.
+ * Summary pages, and pages that end any other flow, are left alone.
  */
 function withChangeDetour(url, target, ctx) {
   const { journey } = ctx
@@ -254,16 +257,11 @@ function withChangeDetour(url, target, ctx) {
     !target ||
     !ctx.navFromSummary ||
     journey.summaryPages.includes(target.id) ||
-    !continuesFlow
+    !(continuesFlow || ctx.isChange)
   ) {
     return url
   }
-  const params = []
-  if (ctx.isChange) {
-    params.push('change=true')
-  }
-  params.push(`nav=${ctx.navFromSummary}`)
-  return `${url}${url.includes('?') ? '&' : '?'}${params.join('&')}`
+  return withDetourParams(url, ctx)
 }
 
 function storedValueFor(page, optionValue) {

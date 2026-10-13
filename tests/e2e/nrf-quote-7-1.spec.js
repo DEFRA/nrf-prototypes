@@ -383,13 +383,15 @@ test.describe('nrf-quote-7-1 happy path', () => {
       'href',
       `${base}/check-your-answers`
     )
-    // Drawing instead steps back to the choice, not straight to the summary
+    // Drawing instead steps back to the choice, not straight to the summary,
+    // and the choice still returns to the summary
+    const detour = 'change=true&nav=check-your-answers'
     await answer(page, 'redline-map', 'draw')
     await submit(page, 'redline-map')
     await expect(page).toHaveURL(/map\?change=true&nav=check-your-answers/)
     await expect(page.locator('#draw-boundary-config')).toHaveAttribute(
       'data-back-link-path',
-      `${base}/redline-map`
+      `${base}/redline-map?${detour}`
     )
     await page.goto(`${base}/redline-map?change=true&nav=check-your-answers`)
 
@@ -401,7 +403,7 @@ test.describe('nrf-quote-7-1 happy path', () => {
     )
     await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
       'href',
-      `${base}/redline-map`
+      `${base}/redline-map?${detour}`
     )
     await page.locator('input[type="file"]').setInputFiles({
       name: 'site.geojson',
@@ -416,7 +418,7 @@ test.describe('nrf-quote-7-1 happy path', () => {
     )
     await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
       'href',
-      `${base}/upload-redline`
+      `${base}/upload-redline?${detour}`
     )
     await submit(page, 'file-preview')
     await expect(page).toHaveURL(/check-your-answers$/)

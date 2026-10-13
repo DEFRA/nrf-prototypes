@@ -95,10 +95,11 @@ pages:
         goto: /nrf-request-to-use-1-1/have-nrl-reference
       - goto: planning-type
 
-  # planning-type, housing, units and map are also the pages the
+  # planning-type, housing, units and redline-map are also the pages the
   # request-to-use journey's Change links open (borrowed with the way back
   # in `nav`); `goto: $summary` returns to whichever summary page sent the
-  # user, in either journey
+  # user, in either journey. A drop-out page reached from a Change link
+  # keeps the way back, so its Back link and a different answer return there
   - id: planning-type
     field: planning-type
     sessionKey: planningType
@@ -144,7 +145,7 @@ pages:
   - id: redline-map
     field: has-redline-boundary-file
     sessionKey: hasRedlineBoundaryFile
-    changeable: true # check your answers' Change link lands here
+    changeable: true # both journeys' boundary Change links land here
     # The options' values (see redline-map.md) become booleans in the session
     store:
       upload: true
@@ -181,11 +182,7 @@ pages:
     template: nrf-quote-7-1/file-preview
     handler: custom # boundary, EDP list and error, see hooks.js
     changeable: true
-    back:
-      # Opened from the request-to-use journey's review page: back there
-      - when: { key: $borrowed, truthy: true }
-        goto: $summary
-      - goto: upload-redline
+    back: upload-redline # also in a change detour, which starts at redline-map
     preview:
       data:
         hasRedlineBoundaryFile: true
@@ -259,11 +256,8 @@ pages:
     handler: custom # EDP intersection check, see hooks.js
     changeable: true
     back:
-      # Opened from the request-to-use journey's review page: back there.
-      # Check your answers' own Change link goes through redline-map, so a
-      # detour steps back to it rather than straight to the summary
-      - when: { key: $borrowed, truthy: true }
-        goto: $summary
+      # A boundary Change link goes through redline-map, so a detour steps
+      # back to it rather than straight to the summary
       - when: { key: mapReferrer, equals: upload-redline }
         goto: upload-redline
       - goto: redline-map

@@ -42,8 +42,8 @@ const EDP_NAME =
 // No levy rate is agreed yet, so every amount is the placeholder the quote
 // journey's email shows (content/nrf-quote-7)
 const LEVY_AMOUNT = 'X,XXX'
-// Quote references from either service: NRF-123456 or NRL-123456
-const REFERENCE = /^(NRF|NRL)-\d{6}$/i
+// Quote references: NRL-123456, in upper or lower case
+const REFERENCE = /^NRL-\d{6}$/i
 // An open ring ([lng, lat]): a 3 hectare field off London Road on the edge
 // of Wymondham, room for the fixture's 100 homes. Traced from the Ordnance
 // Survey MasterMap parcel the certificate's map draws, inside the
