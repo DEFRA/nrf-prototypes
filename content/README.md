@@ -127,7 +127,7 @@ Do not share your Government Gateway user ID and password with anyone else.
 
 `:::notification Title` is the blue notification banner. `:::after-button` moves everything from that line to the end of the file below the page's button: a "Get help with this page" link, or a details block that sits under Continue. When the block holds another block (a details, say), open and close it with four colons (`::::after-button` … `::::`) so the inner `:::` lines do not end it early.
 
-A link written as `[text](./page-id)` points at a page of whichever journey the file is used in, so a shared page can link to a sibling page (the Government Gateway sign in page links to `./government-gateway-email`). `[text](./$next)` follows the page's own `next` rules in `journey.yaml`, evaluated for the current session: the Defra account registration emails use it for "Sign in to your account", so the copy never names the page that comes after signing in.
+A link written as `[text](./page-id)` points at a page of whichever journey the file is used in, so a shared page can link to a sibling page (the Government Gateway sign in page links to `./government-gateway-email`). `[text](./$next)` follows the page's own `next` rules in `journey.yaml`, evaluated for the current session: the Defra account registration emails use it for "Sign in to your account", so the copy never names the page that comes after signing in. A link's address can carry an answer, written without spaces: the quote email's `[request to use the nature restoration levy](/nrf-request-to-use-1-1/quote-reference?_nrl={{nrfReference}})` takes the email's NRL reference along, URL-encoded.
 
 `:::if key` shows a block only when an answer exists, and `:::if key equals value` only when it matches:
 

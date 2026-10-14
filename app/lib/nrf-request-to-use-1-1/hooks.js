@@ -6,6 +6,9 @@
  *   - a mock quote store: the NRL reference typed retrieves the quote made in
  *     nrf-quote-7-1 when it matches the reference that journey minted (kept in
  *     the session, never shown in the box), otherwise a fixture quote
+ *   - the quote email's link (quote-reference?_nrl=NRL-123456) opens
+ *     "Enter your NRL reference" with the email's reference filled in and
+ *     no Back link
  *   - "levy increased" when the units grow; the levy amount itself is the
  *     £X,XXX placeholder every journey shows until a rate is agreed
  *   - a mock GOV.UK One Login: the sign-in email decides the account type
@@ -339,7 +342,36 @@ function validateReference(ctx) {
   return { ok: true, value: raw.toUpperCase() }
 }
 
-const quoteReference = { validate: validateReference }
+// The quote email links straight to "Enter your NRL reference" with its NRL
+// reference in ?_nrl= (the kit never stores a query key starting with
+// `_`), which fills the box in. As the user did not come through the start
+// page there is nothing to go back to; coming through "What would you like
+// to do?" brings the Back link back.
+const FROM_QUOTE_EMAIL = 'fromQuoteEmail'
+
+const quoteReference = {
+  validate: validateReference,
+  load(ctx) {
+    const reference = String(ctx.query._nrl || '').trim()
+    if (REFERENCE.test(reference)) {
+      ctx.data.quoteReference = reference.toUpperCase()
+      ctx.data[FROM_QUOTE_EMAIL] = true
+    }
+  },
+  get(ctx, model) {
+    // A Change link from check your answers still goes back there
+    if (ctx.data[FROM_QUOTE_EMAIL] && !ctx.navFromSummary) {
+      model.backLink = null
+    }
+  }
+}
+
+const whatWouldYouLikeToDo = {
+  load(ctx) {
+    delete ctx.data[FROM_QUOTE_EMAIL]
+  }
+}
+
 const originalReference = { validate: validateReference }
 
 const reviewQuoteDetails = {
@@ -662,6 +694,7 @@ const commitmentCertificate = {
 }
 
 module.exports = {
+  'what-would-you-like-to-do': whatWouldYouLikeToDo,
   'quote-reference': quoteReference,
   'original-reference': originalReference,
   'review-quote-details': reviewQuoteDetails,

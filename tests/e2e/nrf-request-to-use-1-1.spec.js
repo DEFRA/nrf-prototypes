@@ -1193,6 +1193,28 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     await expect(page.locator('.govuk-summary-list')).toContainText('100')
   })
 
+  test('the quote email’s link opens "Enter your NRL reference" filled in, with no Back link', async ({
+    page
+  }) => {
+    const back = page.locator('.govuk-back-link')
+    // The email as the research footer shows it, with the sample quote
+    await page.goto(`${quotePath}/estimate-email-content?preview=1`)
+    const reference = (await page.locator('h2').first().innerText()).match(
+      /NRL-\d{6}/
+    )[0]
+    await page.locator(`a[href^="${base}/quote-reference"]`).click()
+    await expectHeading(page, 'quote-reference')
+    await expect(answerBox(page, 'quote-reference')).toHaveValue(reference)
+    await expect(back).toHaveCount(0)
+    await submit(page, 'quote-reference')
+    await expect(page).toHaveURL(`${base}/email`)
+
+    // Coming through "What would you like to do?" brings the Back link back
+    await page.goto(`${base}/what-would-you-like-to-do`)
+    await page.goto(`${base}/quote-reference`)
+    await expect(back).toHaveCount(1)
+  })
+
   test('a quote with an uploaded boundary shows the file name', async ({
     page
   }) => {

@@ -344,8 +344,19 @@ function createMarkdown() {
     '<hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">\n'
   md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
     addClass(tokens, idx, 'govuk-link')
+    // `{{answer}}` in the address is filled in, URL-encoded (markdown-it has
+    // already encoded the braces, so the page's own filling in misses it)
+    const data = (env.ctx && env.ctx.data) || {}
+    const filled = (tokens[idx].attrGet('href') || '').replace(
+      /%7B%7B(.+?)%7D%7D/gi,
+      (match, expression) =>
+        encodeURIComponent(
+          resolveExpression(decodeURIComponent(expression), data)
+        )
+    )
+    tokens[idx].attrSet('href', filled)
     // `./page-id` is a page of the journey this page is rendered in
-    const href = tokens[idx].attrGet('href') || ''
+    const href = filled
     const journey = env.ctx && env.ctx.journey
     if (href === NEXT_TARGET && journey) {
       tokens[idx].attrSet(

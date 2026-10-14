@@ -48,7 +48,7 @@ You do not need to pay anything now, this service is designed to help you plan h
 
 Keep this email for your records.
 
-When you are ready to start the planning and development process, you can [request to use the nature restoration levy](/nrf-request-to-use-1-1/have-nrl-reference). Once your request is accepted, you will receive a commitment certificate. You can submit this alongside your planning application.
+When you are ready to start the planning and development process, you can [request to use the nature restoration levy](/nrf-request-to-use-1-1/quote-reference?_nrl={{nrfReference}}). Once your request is accepted, you will receive a commitment certificate. You can submit this alongside your planning application.
 
 ## How your nature restoration levy was calculated
 
