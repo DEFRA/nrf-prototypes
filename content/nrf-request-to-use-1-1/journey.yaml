@@ -263,7 +263,7 @@ pages:
       - when: { key: hasNrlReference, equals: 'No' }
         goto: no-nrl-reference
       - goto: quote-reference
-    handoff: 2026-10-06
+    handoff: 2026-10-14
 
   - id: no-nrl-reference
     back: have-nrl-reference
