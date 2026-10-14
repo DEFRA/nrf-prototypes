@@ -8,14 +8,14 @@ options:
   - label: No, delete my quote details
     value: 'No'
 errors:
-  required: Select yes if you accept your nature restoration levy amount
+  required: Select yes if you accept the nature restoration levy amount
 button: Continue
 ---
 
-# Do you accept your nature restoration levy amount?
-The amount of your levy may have changed since your quote. You might have updated your development details, the charging schedule may have been updated or inflation might have been applied.
+# Do you accept this  nature restoration levy amount?
+The amount of the levy may have changed since your quote. You might have updated the development details, the charging schedule may have been updated or inflation might have been applied.
 
-## Details of your levy amount
+## Details of the levy amount
 
 Your relevant development is planned in: {{ edpName }}
 
