@@ -625,6 +625,10 @@ function headingId(label, taken) {
 //   printLinkHeading a heading above the print link
 //   printLinkBefore  copy above and below the print link, in markdown so it
 //   printLinkAfter   can hold paragraphs, bold and links
+//   printLinkNoJs    copy shown under the heading, in place of the link,
+//                    when JavaScript is off; without it the section hides
+//   contentsBelowShare  true puts the contents list below the print link
+//                       rather than above it
 const commitmentCertificate = {
   get(ctx, model) {
     const { text } = model.content
@@ -640,6 +644,9 @@ const commitmentCertificate = {
       }
     )
     model.contents = text.contentsTitle ? sections : []
+    model.asideOrder = text.contentsBelowShare
+      ? ['print', 'contents']
+      : ['contents', 'print']
     if (text.printLink) {
       model.printLinkBefore = certificateRenderer.render(
         text.printLinkBefore,
@@ -649,6 +656,7 @@ const commitmentCertificate = {
         text.printLinkAfter,
         ctx
       )
+      model.printLinkNoJs = certificateRenderer.render(text.printLinkNoJs, ctx)
     }
   }
 }

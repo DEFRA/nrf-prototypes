@@ -3,36 +3,38 @@ type: document
 text:
   # A contents list beside the certificate, linking to each of its ##
   # headings. Take the # off the line to show it
-  # contentsTitle: Contents
+   contentsTitle: Contents
+  # The contents list sits above the print link; take the # off the line
+  # to move it below the print link instead
+  # contentsBelowShare: true
   # The print link beside the certificate, which opens the print window
   # (where the user can also save it as a PDF). Put a # in front of the
   # line to hide the link, its heading and the copy above and below it
-  # printLink: Save or print this certificate
+   printLink: Save or print this certificate
   # The heading above the print link
-  # printLinkHeading: Share
+   printLinkHeading: Share
   # Optional copy above or below the print link, in markdown (paragraphs,
   # **bold**, [links](...)). Take the # off a line to use it; for more than
   # one paragraph, start with | and indent the lines under it
-  # printLinkBefore: Keep a copy to send to your local planning authority.
+   printLinkBefore: Save a copy as PDF to send with your planning application.
   # printLinkAfter: Choose **Save as PDF** in the print window to keep a copy.
+  # Copy shown under the heading in place of the print link when JavaScript
+  # is off, in markdown. Put a # in front of the line to hide the whole
+  # section instead
+   printLinkNoJs: Use your browser's print option to save or print this certificate.
 ---
 
 # Nature restoration levy – commitment certificate
 
 **Full name:** {{ developerDetails.fullName or yourAddress.fullName or account.fullName }}\
 **Address:** {{ developerDetails.addressLine1 or yourAddress.addressLine1 }}, {{ developerDetails.town or yourAddress.town }}, {{ developerDetails.postcode or yourAddress.postcode }}\
-**NRL Ref:** {{ nrlReference }}\
+**NRL reference:** {{ nrlReference }}\
 **Date of issue:** {{ certificate.issueDate }}\
 **Expiry date:** {{ certificate.expiryDate }}
 
 ## Details of the relevant development
 
-The relevant development is planned to have:
-
-:::if residentialBuildingCount
-- housing with a total of {{ residentialBuildingCount }} unit(s)
-
-:::
+The relevant development is planned to have housing with a total of {{ residentialBuildingCount }} units.
 
 ### Red line boundary
 
@@ -41,7 +43,7 @@ The relevant development is planned to have:
 
 ## Environmental Delivery Plan (EDP)
 
-{{ edpName }}
+{{ edpName }}.
 
 ## Nature restoration levy amount
 

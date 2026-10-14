@@ -33,14 +33,21 @@
 
 // GOV.UK Publishing's print_link component: an outlined button with a
 // printer icon. It needs JavaScript, so it shows only once govuk-frontend has
-// marked the page as supported.
+// marked the page as supported. With `printLinkNoJs` copy the section stays
+// without JavaScript, showing its heading and that copy in place of the link.
 .app-print-link {
   display: none;
   margin-bottom: govuk-spacing(6);
 }
 
+.app-print-link--no-js-text,
 .govuk-frontend-supported .app-print-link {
   display: block;
+}
+
+body:not(.govuk-frontend-supported) .app-print-link__js,
+.govuk-frontend-supported .app-print-link__no-js {
+  display: none;
 }
 
 // Copy above or below the button, at the smaller size GOV.UK uses beside
