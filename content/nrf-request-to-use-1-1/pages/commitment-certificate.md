@@ -12,16 +12,16 @@ text:
   # line to hide the link, its heading and the copy above and below it
    printLink: Save or print this certificate
   # The heading above the print link
-   printLinkHeading: Share
+   printLinkHeading: Share this certificate with your local planning authority
   # Optional copy above or below the print link, in markdown (paragraphs,
   # **bold**, [links](...)). Take the # off a line to use it; for more than
   # one paragraph, start with | and indent the lines under it
-   printLinkBefore: Save a copy as PDF to send with your planning application.
+   printLinkBefore: Save as a PDF or print this certificate to send as part of your planning application.
   # printLinkAfter: Choose **Save as PDF** in the print window to keep a copy.
   # Copy shown under the heading in place of the print link when JavaScript
   # is off, in markdown. Put a # in front of the line to hide the whole
   # section instead
-   printLinkNoJs: Use your browser's print option to save or print this certificate.
+   printLinkNoJs: Use your print option to save as a PDF or print this certificate.
 ---
 
 # Nature restoration levy – commitment certificate
