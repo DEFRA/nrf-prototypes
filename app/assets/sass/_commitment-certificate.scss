@@ -126,6 +126,13 @@ body:not(.govuk-frontend-supported) .app-print-link__js,
       width: auto;
       padding: 0;
     }
+
+    // A heading never ends a page: it moves over with what follows it
+    .app-certificate__body :is(h1, h2, h3, h4) {
+      break-after: avoid;
+      page-break-after: avoid;
+      break-inside: avoid;
+    }
   }
 
   // The rebranded template's pale blue page colour would show below the
