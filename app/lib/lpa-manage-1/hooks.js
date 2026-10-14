@@ -27,10 +27,11 @@
  *   - the record page's audit timeline and its review options, which post
  *     back to the page and return to the dashboard, and the full
  *     certificate behind it
- *   - once a planning permission is granted the record page offers the
- *     granted options; for an outline application one of them opens the
- *     add-reserved-matters page, whose form adds a reserved matters
- *     application to the record (its own post route)
+ *   - once the commitment details are reviewed the record page offers the
+ *     planning stages possible from the stage the application is at; a
+ *     granted outline application has a button to the add-reserved-matters
+ *     page, whose form adds a reserved matters application to the record
+ *     (its own post route)
  *
  * Nothing here is real: no passwords are checked or stored.
  */
@@ -64,21 +65,17 @@ const COMMENT_FIELD = 'reject-comment'
 const REVIEWED_STATUS = 'reviewed'
 const REVIEW_LATER = 'review-later'
 const PLANNING_STEP = 'planning'
-// Once the planning permission is granted the granted options take the
-// planning stages' place (`step: granted`)
-const GRANTED_STEP = 'granted'
 const GRANTED_STAGE = 'granted'
 // An outline planning application, once granted, takes reserved matters
-// applications: each a reference, a status (a planning stage) and a short
-// description of no more than DESCRIPTION_LIMIT characters. Its granted
-// option of that value opens the add-reserved-matters page.
+// applications on the add-reserved-matters page: each a reference, a
+// status (a planning stage), the matters it is for and an optional short
+// description of no more than DESCRIPTION_LIMIT characters
 const OUTLINE_TYPE = 'Outline planning permission'
 const RESERVED_MATTERS = 'reserved-matters'
-// A granted option still to be decided: Confirm changes nothing
-const PLACEHOLDER_OPTION = 'placeholder'
 const RESERVED_MATTERS_FIELDS = {
   reference: 'reserved-matters-reference',
   status: 'reserved-matters-status',
+  matters: 'reserved-matters',
   description: 'reserved-matters-description'
 }
 const DESCRIPTION_LIMIT = 200
@@ -106,6 +103,7 @@ function loadStore() {
     return {
       statuses: {},
       planningStages: {},
+      reservedMatters: {},
       planningTypes: {},
       boundaries: {},
       officers: {},
@@ -119,6 +117,7 @@ function loadStore() {
       store: {
         statuses: raw.statuses || {},
         planningStages: raw.planningStages || {},
+        reservedMatters: raw.reservedMatters || {},
         planningTypes: raw.planningTypes || {},
         boundaries: raw.boundaries || {},
         officers: raw.officers || {},
@@ -332,6 +331,9 @@ function recordOf({ entry, record }, store, today = new Date()) {
     reservedMatters: (record.reservedMatters || []).map((item) => ({
       reference: item.reference,
       status: planningStageOf(item.status || ADDED_STAGE, store),
+      matters: (item.matters || []).map(
+        (value) => store.reservedMatters[value] || value
+      ),
       description: item.description || ''
     })),
     planningType: entry.planningType,
@@ -1018,15 +1020,9 @@ function withLinks(data, page) {
 
 // Which review options a record offers: the first step's (options with no
 // `step`) until its commitment details are reviewed, then the planning
-// application stages (`step: planning`), and once the permission is
-// granted the granted options (`step: granted`)
+// application stages (`step: planning`)
 function stepOf(record) {
-  if (!record || record.status.value !== REVIEWED_STATUS) {
-    return ''
-  }
-  return record.planningStage.value === GRANTED_STAGE
-    ? GRANTED_STEP
-    : PLANNING_STEP
+  return record && record.status.value === REVIEWED_STATUS ? PLANNING_STEP : ''
 }
 
 // A granted outline application whose commitment details are reviewed
@@ -1035,8 +1031,19 @@ function takesReservedMatters(record) {
   return Boolean(
     record &&
       record.planningType === OUTLINE_TYPE &&
-      stepOf(record) === GRANTED_STEP
+      stepOf(record) === PLANNING_STEP &&
+      record.planningStage.value === GRANTED_STAGE
   )
+}
+
+// "Appearance, layout and scale"
+function mattersText(labels) {
+  const words = labels.map((label, index) =>
+    index ? label.toLowerCase() : label
+  )
+  return words.length > 1
+    ? `${words.slice(0, -1).join(', ')} and ${words[words.length - 1]}`
+    : words.join('')
 }
 
 // The record's reserved matters as one line, for the planning details row
@@ -1054,6 +1061,9 @@ function reservedMattersHtml(record) {
     (item) =>
       `<li><span class="govuk-!-font-weight-bold">${escapeHtml(item.reference)}</span>` +
       ` (${escapeHtml(item.status.label)})` +
+      (item.matters.length
+        ? `<br>${escapeHtml(mattersText(item.matters))}`
+        : '') +
       (item.description ? `<br>${escapeHtml(item.description)}` : '') +
       '</li>'
   )
@@ -1072,7 +1082,8 @@ function sameReference(a, b) {
 
 /**
  * The add-reserved-matters page's form, its status radios the planning
- * stages in records.yaml. Null for a record that takes none.
+ * stages in records.yaml and its checkboxes the reserved matters there.
+ * Null for a record that takes none.
  */
 function reservedMattersModel(ctx, record, { values = {}, errors = [] }) {
   if (!takesReservedMatters(record)) {
@@ -1097,6 +1108,11 @@ function reservedMattersModel(ctx, record, { values = {}, errors = [] }) {
       value,
       text: label,
       checked: values.status === value
+    })),
+    matters: Object.entries(store.reservedMatters).map(([value, label]) => ({
+      value,
+      text: label,
+      checked: (values.matters || []).includes(value)
     }))
   }
 }
@@ -1109,6 +1125,10 @@ function checkReservedMatters(page, body, record) {
   for (const [name, field] of Object.entries(RESERVED_MATTERS_FIELDS)) {
     values[name] = String(body[field] || '').trim()
   }
+  // The kit adds "_unchecked" to checkboxes
+  values.matters = []
+    .concat(body[RESERVED_MATTERS_FIELDS.matters] || [])
+    .filter((value) => value in store.reservedMatters)
   const errors = []
   const problem = (name, key) =>
     errors.push({
@@ -1129,9 +1149,10 @@ function checkReservedMatters(page, body, record) {
     values.status = ''
     problem('status', 'reservedMattersStatusRequired')
   }
-  if (!values.description) {
-    problem('description', 'reservedMattersDescriptionRequired')
-  } else if (values.description.length > DESCRIPTION_LIMIT) {
+  if (!values.matters.length) {
+    problem('matters', 'reservedMattersMattersRequired')
+  }
+  if (values.description.length > DESCRIPTION_LIMIT) {
     problem('description', 'reservedMattersDescriptionTooLong')
   }
   return { values, errors }
@@ -1142,26 +1163,25 @@ const RESERVED_MATTERS_ERRORS = {
   reservedMattersReferenceRequired: RESERVED_MATTERS_FIELDS.reference,
   reservedMattersReferenceAdded: RESERVED_MATTERS_FIELDS.reference,
   reservedMattersStatusRequired: RESERVED_MATTERS_FIELDS.status,
-  reservedMattersDescriptionRequired: RESERVED_MATTERS_FIELDS.description,
+  reservedMattersMattersRequired: RESERVED_MATTERS_FIELDS.matters,
   reservedMattersDescriptionTooLong: RESERVED_MATTERS_FIELDS.description
 }
 
-// The options for the record's step; Add reserved matters only for an
-// outline application
+// The options for the record's step; a planning stage option only at the
+// stages in its `stages`
 function optionsFor(page, record) {
   const step = stepOf(record)
   return page.content.options.filter(
     (option) =>
       (option.step || '') === step &&
-      (option.value !== RESERVED_MATTERS || takesReservedMatters(record))
+      (!option.stages || option.stages.includes(record.planningStage.value))
   )
 }
 
 // The error for no option chosen, by step
 const REQUIRED_ERRORS = {
   '': 'required',
-  [PLANNING_STEP]: 'stageRequired',
-  [GRANTED_STEP]: 'grantedRequired'
+  [PLANNING_STEP]: 'stageRequired'
 }
 
 // Writes a change to a record: its new fields and the event for its
@@ -1201,10 +1221,9 @@ const FLASHES = {
 // reviewing them moves it on to its planning application's stage, and
 // choosing the stage it is at already changes nothing. Rejecting asks why
 // on reject-commitment and is final: a rejected record shows a warning in
-// place of the radios, and a post for it changes nothing. Once the
-// permission is granted, judicial review sets the stage, Add reserved
-// matters opens the add-reserved-matters page and the placeholder changes
-// nothing.
+// place of the radios, and a post for it changes nothing. A granted
+// outline application has a button to the add-reserved-matters page below
+// its planning details.
 const viewRecord = {
   // The page showing "Select ..." offers only the record's options too
   getOnError: true,
@@ -1224,15 +1243,12 @@ const viewRecord = {
     return routes
   },
   load(ctx) {
-    // The screen wall's stage error needs a record past its review, and
-    // its granted error a granted one
-    const errorStep = {
-      stageRequired: PLANNING_STEP,
-      grantedRequired: GRANTED_STEP
-    }[ctx.preview && ctx.previewError]
-    if (errorStep) {
+    // The screen wall's stage error needs a record past its review
+    if (ctx.preview && ctx.previewError === 'stageRequired') {
       const shown = allRecords(ctx.data).find(
-        (record) => stepOf(record) === errorStep
+        (record) =>
+          stepOf(record) === PLANNING_STEP &&
+          optionsFor(ctx.page, record).length
       )
       if (shown) {
         ctx.data.recordReference = shown.reference
@@ -1295,11 +1311,10 @@ const viewRecord = {
     model.content.items = model.content.items.filter((item, index) =>
       offered.has(page.content.options[index])
     )
-    // The planning stages and the granted options share a legend; only
-    // the stages have the hint
-    const step = stepOf(data.record)
-    model.planningStep = step === PLANNING_STEP || step === GRANTED_STEP
-    model.stageHint = step === PLANNING_STEP
+    model.planningStep = stepOf(data.record) === PLANNING_STEP
+    if (takesReservedMatters(data.record)) {
+      model.reservedMattersHref = `${ctx.journey.routes.ADD_RESERVED_MATTERS}?ref=${encodeURIComponent(data.record.reference)}`
+    }
     // The screen wall's error states, as a post would show them
     if (ctx.preview && ctx.previewError) {
       model.errors = [
@@ -1355,18 +1370,10 @@ const viewRecord = {
       delete data.rejectReason
       return { redirect: ctx.journey.routes.REJECT_COMMITMENT }
     }
-    if (value.choice === RESERVED_MATTERS) {
-      return {
-        redirect: `${ctx.journey.routes.ADD_RESERVED_MATTERS}?ref=${encodeURIComponent(reference)}`
-      }
-    }
-    if (value.choice === PLACEHOLDER_OPTION) {
-      return { redirect: dashboardPath }
-    }
     const record = found.record
     const changes = {}
     let event
-    if (value.step === PLANNING_STEP || value.step === GRANTED_STEP) {
+    if (value.step === PLANNING_STEP) {
       if ((record.planningStage || ADDED_STAGE) === value.choice) {
         return { redirect: dashboardPath }
       }
@@ -1421,6 +1428,7 @@ function addReservedMatters(req, res, journey) {
         {
           reference: values.reference,
           status: values.status,
+          matters: values.matters,
           description: values.description
         }
       ]
@@ -1476,10 +1484,11 @@ const rejectCommitment = {
 }
 
 // Every detail of a record's commitment, behind the record page
-// Reserved matters on a page of their own, opened from the record's Add
-// reserved matters option: add-reserved-matters?ref=NRL-100958, for a
-// granted outline application only (any other record opens instead). Its
-// form posts to this page's path, which viewRecord.routes handles.
+// Reserved matters on a page of their own, opened from the record's Add a
+// reserved matters application button:
+// add-reserved-matters?ref=NRL-100958, for a granted outline application
+// only (any other record opens instead). Its form posts to this page's
+// path, which viewRecord.routes handles.
 const addReservedMattersPage = {
   load(ctx) {
     const redirect = loadRecord(ctx)

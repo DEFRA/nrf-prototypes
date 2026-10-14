@@ -84,6 +84,10 @@ homepage:
     - blue GOV.UK header with a GOV.UK-sized crown, still at the wider page width; the start page is a regular GOV.UK start page
     - signing out returns to the start page
     - once the planning permission is granted the record's options are judicial review, Add reserved matters (outline applications only, opening its own page) and a placeholder; the other reserved matters layouts are gone
+    - the planning stage options are only those possible from the stage the application is at (granted, refused or withdrawn; then under appeal or under judicial review), under "What stage is the planning permission at?" with no hint
+    - a granted outline application has an "Add a reserved matters application" button below its planning details in place of a radio; the placeholder option is gone
+    - adding a reserved matters application asks for the planning application reference and stage, the matters it is for (checkboxes) and an optional description
+    - the developer record history is sentence case, and Manage developer records is a link
 
 # The answers the copy can show, as {{ name }} (see content/README.md).
 # `commitment` is the commitment on screen and `record` the record.
@@ -252,9 +256,10 @@ pages:
   # --------------------------------------------------------------------
   # A record: view-record?ref=NRL-123456. The review options at the bottom
   # post back here; the change goes on the audit timeline and Confirm
-  # returns to the dashboard (hooks.js). Rejecting asks why first. Once the
-  # permission is granted the options are the granted ones; for an outline
-  # application Add reserved matters opens add-reserved-matters.
+  # returns to the dashboard (hooks.js). Rejecting asks why first. Once
+  # reviewed the options are the planning stages possible from the current
+  # one; a granted outline application has a button to
+  # add-reserved-matters.
   - id: view-record
     template: lpa-manage-1/view-record
     field: new-status
@@ -350,8 +355,8 @@ pages:
     template: lpa-manage-1/certificate
     guard: *signed-in
 
-  # Reserved matters added on a page of their own, from the record's Add
-  # reserved matters option: add-reserved-matters?ref=NRL-100958.
+  # Reserved matters added on a page of their own, from the record's Add a
+  # reserved matters application button: add-reserved-matters?ref=NRL-100958.
   # Breadcrumbs lead back to the dashboard and the record; saving adds them
   # to the record and returns to it (hooks.js).
   - id: add-reserved-matters

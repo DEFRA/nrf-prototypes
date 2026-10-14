@@ -6,14 +6,14 @@
   page's copy), the audit timeline and the review options (the hook leaves
   only those for the record's step in content.items), which post back to
   this page. Once the commitment details are reviewed they are the planning
-  stage options. A planning variation's timeline entry shows its new
+  stage options possible from the stage the application is at (none once
+  withdrawn). A planning variation's timeline entry shows its new
   planning application reference. Rejecting asks why on reject-commitment; a rejected record
-  shows a warning in place of the radios. Once the permission is granted
-  the radios are the granted options, under the same legend without the
-  hint; for an outline application one of them is Add reserved matters,
-  which Confirm opens on add-reserved-matters. Model extras from
-  app/lib/lpa-manage-1/hooks.js: flash, flashTitle, flashText,
-  planningStep, stageHint, data.record.
+  shows a warning in place of the radios. A granted outline application
+  has an Add a reserved matters application button below its planning
+  details. The history's lines are sentence case: "Status changed to
+  reviewed". Model extras from app/lib/lpa-manage-1/hooks.js: flash,
+  flashTitle, flashText, planningStep, reservedMattersHref, data.record.
 #}
 {% extends "journey-engine/_page.html" %}
 
@@ -55,13 +55,20 @@
 
     {% for group in content.rowGroups %}
       {% if group.heading %}<h2 class="govuk-heading-m">{{ group.heading }}</h2>{% endif %}
+      {% set buttonBelow = (loop.first and record) or (loop.last and reservedMattersHref) %}
       {% if group.rows | length %}
-        {{ govukSummaryList({ classes: "govuk-!-margin-bottom-6" if loop.first else "govuk-!-margin-bottom-9", rows: group.rows }) }}
+        {{ govukSummaryList({ classes: "govuk-!-margin-bottom-6" if buttonBelow else "govuk-!-margin-bottom-9", rows: group.rows }) }}
       {% endif %}
       {% if loop.first and record %}
         {{ govukButton({
           text: text.viewCertificate,
           href: routes.CERTIFICATE + "?ref=" + (record.reference | urlencode),
+          classes: "govuk-button--secondary govuk-!-margin-bottom-9"
+        }) }}
+      {% elif loop.last and reservedMattersHref %}
+        {{ govukButton({
+          text: text.addReservedMatters,
+          href: reservedMattersHref,
           classes: "govuk-button--secondary govuk-!-margin-bottom-9"
         }) }}
       {% endif %}
@@ -79,7 +86,7 @@
         <div class="app-timeline__item">
           <div class="app-timeline__header">
             <h3 class="app-timeline__title">
-              {%- if event.event == 'added' %}{{ text.timelineAdded }}{% elif event.event == 'review-later' %}{{ text.timelineReviewLater }}{% elif event.event == 'stage' %}{{ text.timelineStage }} {{ event.stage.label }}{% elif event.event == 'variation' %}{{ text.timelineVariation }}{% elif event.event == 'reserved-matters' %}{{ text.timelineReservedMatters }}{% else %}{{ text.timelineStatus }} {{ event.status.label }}{% endif -%}
+              {%- if event.event == 'added' %}{{ text.timelineAdded }}{% elif event.event == 'review-later' %}{{ text.timelineReviewLater }}{% elif event.event == 'stage' %}{{ text.timelineStage }} {{ event.stage.label | lower }}{% elif event.event == 'variation' %}{{ text.timelineVariation }}{% elif event.event == 'reserved-matters' %}{{ text.timelineReservedMatters }}{% else %}{{ text.timelineStatus }} {{ event.status.label | lower }}{% endif -%}
             </h3>
             <p class="app-timeline__byline">{{ text.by }} {{ event.by }}{% if event.email %} <span class="app-timeline__email">({{ event.email }})</span>{% endif %}</p>
           </div>
@@ -100,12 +107,20 @@
       </div>
     {% endif %}
 
+    {# The page's actions (Manage developer records) are links #}
     {% if record and record.status.value == 'rejected' %}
-      <h2 class="govuk-heading-m">{{ text.statusLegend }}</h2>
+      <h2 class="govuk-heading-m">{{ text.rejectedHeading }}</h2>
       {{ govukWarningText({ text: text.rejectedFinal, iconFallbackText: text.warning }) }}
       <div class="govuk-button-group">
         {% for action in content.actions %}
-          {{ govukButton({ text: action.text, href: action.href, classes: "govuk-button--secondary" }) }}
+          <a class="govuk-link" href="{{ action.href }}">{{ action.text }}</a>
+        {% endfor %}
+      </div>
+    {% elif not content.items | length %}
+      {# No stage to move on to (withdrawn) #}
+      <div class="govuk-button-group">
+        {% for action in content.actions %}
+          <a class="govuk-link" href="{{ action.href }}">{{ action.text }}</a>
         {% endfor %}
       </div>
     {% else %}
@@ -114,14 +129,13 @@
         name: page.field,
         idPrefix: page.field,
         fieldset: { legend: { text: text.planningLegend if planningStep else text.statusLegend, classes: "govuk-fieldset__legend--m" } },
-        hint: { text: text.planningHint } if stageHint and text.planningHint,
         errorMessage: { text: fieldError.message } if fieldError and fieldError.field == page.field,
         items: content.items
       }) }}
       <div class="govuk-button-group">
         {{ govukButton({ text: content.button }) }}
         {% for action in content.actions %}
-          {{ govukButton({ text: action.text, href: action.href, classes: "govuk-button--secondary" }) }}
+          <a class="govuk-link" href="{{ action.href }}">{{ action.text }}</a>
         {% endfor %}
       </div>
     </form>

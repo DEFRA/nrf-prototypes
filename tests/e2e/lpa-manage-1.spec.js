@@ -135,7 +135,7 @@ test.describe('lpa-manage-1: manage commitments', () => {
     )
 
     // The new record leads the dashboard's table
-    await actionLocator(page, 'view-record', 'secondary').click()
+    await actionLocator(page, 'view-record', 'link').click()
     await expectHeading(page, 'dashboard')
     await expect(
       page.locator('.app-staff-table tbody tr').first()
@@ -336,6 +336,7 @@ test.describe('lpa-manage-1: manage commitments', () => {
     )
 
     // Reviewing moves it on: the options become the planning stages
+    // possible from Applied, and the history says so in sentence case
     await answer(page, 'view-record', 'reviewed')
     await submit(page, 'view-record')
     await expectHeading(page, 'dashboard')
@@ -343,26 +344,40 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(page.locator('h1 .govuk-tag')).toHaveText(
       store.statuses.reviewed.label
     )
-    await expect(radios).toHaveCount(4)
-    await expect(optionLocator(page, 'view-record', 'reviewed')).toHaveCount(0)
+    await expect(items.first()).toContainText(
+      `${text('view-record', 'timelineStatus')} ${store.statuses.reviewed.label.toLowerCase()}`
+    )
+    await expect(radios).toHaveCount(3)
+    for (const value of ['granted', 'refused', 'withdrawn']) {
+      await expect(optionLocator(page, 'view-record', value)).toHaveCount(1)
+    }
     await expect(page.locator('legend')).toHaveText(
       text('view-record', 'planningLegend')
     )
+    await expect(page.locator('#new-status-hint')).toHaveCount(0)
     await submit(page, 'view-record')
     await expectError(page, 'view-record', 'stageRequired')
-    await answer(page, 'view-record', 'judicial-review')
+    await answer(page, 'view-record', 'refused')
     await submit(page, 'view-record')
     await expectHeading(page, 'dashboard')
-    const stage = store.planningStages['judicial-review']
+    const stage = store.planningStages.refused
     await expect(row).toContainText(stage)
     await page.goto(viewPath)
     await expect(items).toHaveCount(entries + 3)
     await expect(items.first()).toContainText(
-      `${text('view-record', 'timelineStage')} ${stage}`
+      `${text('view-record', 'timelineStage')} ${stage.toLowerCase()}`
     )
     await expect(page.locator('h1 .govuk-tag')).toHaveText(
       store.statuses.reviewed.label
     )
+    // Refused: under appeal or under judicial review
+    await expect(radios).toHaveCount(2)
+    await expect(
+      optionLocator(page, 'view-record', 'under-appeal')
+    ).toHaveCount(1)
+    await expect(
+      optionLocator(page, 'view-record', 'judicial-review')
+    ).toHaveCount(1)
   })
 
   test('rejecting asks why and is final', async ({ page }) => {
@@ -398,7 +413,9 @@ test.describe('lpa-manage-1: manage commitments', () => {
     const rejected = store.statuses.rejected.label
     await expect(page.locator('h1 .govuk-tag')).toHaveText(rejected)
     const latest = page.locator('.app-timeline__item').first()
-    await expect(latest).toContainText(rejected)
+    await expect(latest).toContainText(
+      `${text('view-record', 'timelineStatus')} ${rejected.toLowerCase()}`
+    )
     await expect(latest).toContainText(option('reject-commitment', 'mismatch'))
     await expect(latest).toContainText(
       'The boundary does not match the application'
@@ -413,7 +430,9 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(optionLocator(page, 'view-record', 'rejected')).toHaveCount(0)
   })
 
-  test('a granted application offers the granted options', async ({ page }) => {
+  test('a granted application offers appeal or judicial review', async ({
+    page
+  }) => {
     const granted = store.commitments.find(
       (entry) =>
         entry.record &&
@@ -426,44 +445,35 @@ test.describe('lpa-manage-1: manage commitments', () => {
     const items = page.locator('.app-timeline__item')
     await signIn(page)
     await page.goto(viewPath)
-    const entries = await items.count()
 
-    // Judicial review and the placeholder: no reserved matters, as it is
-    // not an outline application
+    // No reserved matters, as it is not an outline application
     await expect(radios).toHaveCount(2)
+    await expect(
+      optionLocator(page, 'view-record', 'under-appeal')
+    ).toHaveCount(1)
     await expect(
       optionLocator(page, 'view-record', 'judicial-review')
     ).toHaveCount(1)
-    await expect(optionLocator(page, 'view-record', 'placeholder')).toHaveCount(
-      1
-    )
     await expect(
-      optionLocator(page, 'view-record', 'reserved-matters')
+      page.getByRole('button', {
+        name: text('view-record', 'addReservedMatters')
+      })
     ).toHaveCount(0)
-    await expect(page.locator('legend')).toHaveText(
-      text('view-record', 'planningLegend')
-    )
-    await expect(page.locator('#new-status-hint')).toHaveCount(0)
     await submit(page, 'view-record')
-    await expectError(page, 'view-record', 'grantedRequired')
+    await expectError(page, 'view-record', 'stageRequired')
 
-    // The placeholder changes nothing
-    await answer(page, 'view-record', 'placeholder')
-    await submit(page, 'view-record')
-    await expectHeading(page, 'dashboard')
-    await page.goto(viewPath)
-    await expect(items).toHaveCount(entries)
-
-    // Judicial review sets the stage, and the planning stages return
+    // Judicial review sets the stage; its outcome is granted or refused
     await answer(page, 'view-record', 'judicial-review')
     await submit(page, 'view-record')
     await expectHeading(page, 'dashboard')
     await page.goto(viewPath)
     const stage = store.planningStages['judicial-review']
     await expect(items.first()).toContainText(
-      `${text('view-record', 'timelineStage')} ${stage}`
+      `${text('view-record', 'timelineStage')} ${stage.toLowerCase()}`
     )
-    await expect(radios).toHaveCount(4)
+    await expect(radios).toHaveCount(2)
+    await expect(optionLocator(page, 'view-record', 'granted')).toHaveCount(1)
+    await expect(optionLocator(page, 'view-record', 'refused')).toHaveCount(1)
   })
 
   test('a granted outline application takes reserved matters', async ({
@@ -482,31 +492,29 @@ test.describe('lpa-manage-1: manage commitments', () => {
         entry.record.planningStage === 'granted' &&
         (entry.record.reservedMatters || []).length
     )
-    const radios = page.locator('input[name="new-status"]')
+    const addButton = page.getByRole('button', {
+      name: text('view-record', 'addReservedMatters')
+    })
     const save = page.getByRole('button', {
-      name: text('add-reserved-matters', 'reservedMattersSave')
+      name: text('add-reserved-matters', 'reservedMattersSave'),
+      exact: true
     })
     const label = (key) =>
       page.getByLabel(text('add-reserved-matters', key), { exact: true })
     const addReservedMatters = async () => {
-      await answer(page, 'view-record', 'reserved-matters')
-      await submit(page, 'view-record')
+      await addButton.click()
       await expectHeading(page, 'add-reserved-matters')
     }
     await signIn(page)
 
     // Not until the outline application is granted
     await page.goto(`${base}/view-record?ref=${notGranted.reference}`)
-    await expect(
-      optionLocator(page, 'view-record', 'reserved-matters')
-    ).toHaveCount(0)
+    await expect(addButton).toHaveCount(0)
     await answer(page, 'view-record', 'granted')
     await submit(page, 'view-record')
     await expectHeading(page, 'dashboard')
     await page.goto(`${base}/view-record?ref=${notGranted.reference}`)
-    // Judicial review, Add reserved matters, then the placeholder
-    await expect(radios).toHaveCount(3)
-    await expect(radios.nth(1)).toHaveAttribute('value', 'reserved-matters')
+    await expect(addButton).toHaveCount(1)
 
     // Its own page, with breadcrumbs back to the record; Cancel returns
     // there
@@ -531,6 +539,7 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(details).toContainText(existing.description)
     const entries = await page.locator('.app-timeline__item').count()
 
+    // The description is optional; the reference, stage and matters are not
     await addReservedMatters()
     await save.click()
     await expectError(
@@ -546,12 +555,16 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expectError(
       page,
       'add-reserved-matters',
-      'reservedMattersDescriptionRequired'
+      'reservedMattersMattersRequired'
     )
 
     // The same reference twice is refused; the answers are kept
+    const matter = page.getByLabel(store.reservedMatters.landscaping, {
+      exact: true
+    })
     await label('reservedMattersReferenceLabel').fill(existing.reference)
     await page.getByLabel(store.planningStages.applied, { exact: true }).check()
+    await matter.check()
     await label('reservedMattersDescriptionLabel').fill('Phase 2 (120 homes)')
     await save.click()
     await expectError(
@@ -562,6 +575,7 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(label('reservedMattersDescriptionLabel')).toHaveValue(
       'Phase 2 (120 homes)'
     )
+    await expect(matter).toBeChecked()
 
     await label('reservedMattersReferenceLabel').fill('2026/0577/REM')
     await save.click()
@@ -574,6 +588,7 @@ test.describe('lpa-manage-1: manage commitments', () => {
     )
     await expect(details).toContainText(existing.reference)
     await expect(details).toContainText('2026/0577/REM')
+    await expect(details).toContainText(store.reservedMatters.landscaping)
     await expect(details).toContainText('Phase 2 (120 homes)')
     const items = page.locator('.app-timeline__item')
     await expect(items).toHaveCount(entries + 1)
@@ -582,7 +597,7 @@ test.describe('lpa-manage-1: manage commitments', () => {
     )
     await expect(items.first()).toContainText('2026/0577/REM')
     // Still granted, ready for another
-    await expect(radios).toHaveCount(3)
+    await expect(addButton).toHaveCount(1)
   })
 
   test('the dashboard’s cards open the table filtered to them', async ({

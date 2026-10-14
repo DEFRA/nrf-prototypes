@@ -68,6 +68,7 @@ session:
   - journeyType
   - hasNrlReference
   - quoteReference
+  - fromQuoteEmail
   - retrievalEmail
   - nrfReference
   - estimateEmail
@@ -263,7 +264,7 @@ pages:
       - when: { key: hasNrlReference, equals: 'No' }
         goto: no-nrl-reference
       - goto: quote-reference
-    handoff: 2026-10-06
+    handoff: 2026-10-14
 
   - id: no-nrl-reference
     back: have-nrl-reference
@@ -271,14 +272,16 @@ pages:
 
   # Stored apart from the quote journey's `nrfReference` so a quote made in
   # the same session never fills the box in: the user arrives afresh and types
-  # the reference from their email, which pulls the cached quote up.
+  # the reference from their email, which pulls the cached quote up. The
+  # email's own link opens this page with its reference (?_nrl=) filled in
+  # and no Back link (hooks.js).
   # The prototype cannot check a reference against real commitments, so the
   # reference NRL-111111 stands in for a quote that already has one
   - id: quote-reference
     field: nrf-reference
     sessionKey: quoteReference
     changeable: true
-    handler: custom # checks the reference format, see hooks.js
+    handler: custom # checks the reference format, the email's link, see hooks.js
     next:
       - when: { key: quoteReference, equals: NRL-111111 }
         goto: already-committed
