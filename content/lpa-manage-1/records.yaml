@@ -8,6 +8,8 @@
 #
 #   planningStages  the stages a planning application can be at, with
 #                 the label the pages show for each
+#   reservedMatters the matters a reserved matters application can be
+#                 for, with the label the pages show for each
 #   planningTypes   the short name the tables show for each planning
 #                 permission type a commitment can have
 #   statuses      every status a record can have: its tag label and the
@@ -56,8 +58,10 @@
 #   reservedMatters    for an outline planning application that has been
 #                      granted, the reserved matters applications made
 #                      under it: each a `reference`, a `status` (one of the
-#                      planningStages) and a short `description`. The
-#                      add-reserved-matters page adds more
+#                      planningStages), the `matters` it is for (from
+#                      reservedMatters above) and an optional short
+#                      `description`. The add-reserved-matters page adds
+#                      more
 #   overdue            true when an action on the record is overdue (the
 #                      dashboard's third count card and the table's filter)
 #   officer            who added it (the table's Officer column)
@@ -77,7 +81,15 @@ planningStages:
   granted: Granted
   refused: Refused
   under-appeal: Under appeal
-  judicial-review: In judicial review
+  judicial-review: Under judicial review
+  withdrawn: Withdrawn
+
+reservedMatters:
+  access: Access
+  appearance: Appearance
+  landscaping: Landscaping
+  layout: Layout
+  scale: Scale
 
 planningTypes:
   Full planning permission: Full
@@ -721,7 +733,8 @@ commitments:
       reservedMatters:
         - reference: 2026/0498/REM
           status: applied
-          description: Layout, scale and appearance of phase 1 (85 homes)
+          matters: [appearance, layout, scale]
+          description: Phase 1 (85 homes)
       history:
         - event: added
           by: Aisha Khan

@@ -7,16 +7,15 @@
 # later keeps it For review and notes it on the timeline). Once its
 # commitment details are reviewed the planning stage options (`step:
 # planning`) take their place: they set the planning application's stage
-# (see records.yaml). A planning variation shows the new planning
-# application reference and the original one. A record linked to another
-# (a variation the developer made a commitment for, and the original
-# application's) links to it; `linkedOriginal` and `linkedVariation` say
-# which way. Once an outline planning application's permission is granted
-# the granted options (`step: granted`) take the planning stages' place:
-# judicial review, Add reserved matters (which Confirm opens on
-# add-reserved-matters) and a placeholder. Any other granted application
-# offers the same without Add reserved matters. The reserved matters saved
-# are listed in the planning details.
+# (see records.yaml), and each shows only at the stages in its `stages`.
+# A stage none lists (withdrawn) offers no options. A planning variation
+# shows the new planning application reference and the original one. A
+# record linked to another (a variation the developer made a commitment
+# for, and the original application's) links to it; `linkedOriginal` and
+# `linkedVariation` say which way. A granted outline planning application
+# has an Add a reserved matters application button below its planning
+# details, opening add-reserved-matters. The reserved matters saved are
+# listed in the planning details.
 type: custom
 rows:
   - heading: Commitment details
@@ -41,7 +40,7 @@ rows:
     when: { key: record.linkedText, truthy: true }
   - key: Planning application stage
     value: '{{ record.planningStage.label }}'
-  - key: Reserved matters
+  - key: Reserved matters applications
     value: '{{ record.reservedMattersText }}'
     when: { key: record.reservedMattersText, truthy: true }
   - key: Added by
@@ -60,35 +59,31 @@ options:
     hint: The details are incorrect or don't match the planning application
   - label: I want to review these later
     value: review-later
-  - label: The planning permission has been granted
+  # Once the commitment details are reviewed: each shows only while the
+  # planning application is at one of its `stages`
+  - label: Granted
     value: granted
     step: planning
-  - label: The planning permission has been refused
+    stages: [applied, under-appeal, judicial-review]
+  - label: Refused
     value: refused
     step: planning
-  - label: The planning permission is under appeal
+    stages: [applied, under-appeal, judicial-review]
+  - label: Withdrawn
+    value: withdrawn
+    step: planning
+    stages: [applied]
+  - label: Under appeal
     value: under-appeal
     step: planning
-  - label: The planning permission is in judicial review
+    stages: [granted, refused]
+  - label: Under judicial review
     value: judicial-review
     step: planning
-  # Once the planning permission is granted. Add reserved matters is for an
-  # outline application only
-  - label: The planning permission is in judicial review
-    value: judicial-review
-    step: granted
-  - label: Add reserved matters
-    value: reserved-matters
-    step: granted
-  # PLACEHOLDER COPY: an option still to be decided
-  - label: Placeholder option
-    value: placeholder
-    step: granted
+    stages: [granted, refused]
 errors:
   required: Select a new status for this developer record
   stageRequired: Select the stage the planning application has reached
-  # PLACEHOLDER COPY: no granted option chosen
-  grantedRequired: Select an option
 button: Confirm
 text:
   successTitle: Commitment details retrieved
@@ -100,11 +95,13 @@ text:
   variationAddedTitle: Developer record updated
   variationAdded: Variation planning application reference added
   viewCertificate: View full certificate
-  statusLegend: Review options
+  statusLegend: Have you reviewed these commitment details?
   # Once the commitment details are reviewed
-  planningLegend: Planning stage options
-  planningHint: Update the planning stage for this developer record
-  # In place of the radios once rejected
+  planningLegend: What stage is the planning permission at?
+  # Below the planning details of a granted outline application
+  addReservedMatters: Add a reserved matters application
+  # In place of the radios once rejected, under its own heading
+  rejectedHeading: Review options
   rejectedFinal: This developer record has been rejected. Its status cannot be changed.
   warning: Warning
   timelineHeading: Developer record history
@@ -126,7 +123,7 @@ text:
   at: at
 actions:
   - text: Manage developer records
-    kind: secondary
+    kind: link
     goto: dashboard
 ---
 
