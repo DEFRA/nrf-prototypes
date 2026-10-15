@@ -365,7 +365,7 @@ pages:
 
   - id: not-enough-capacity
     back: review-quote-details
-    handoff: 2026-10-14
+    handoff: 2026-10-15
 
   # Deleting the quote details happens on the quote journey's delete pages;
   # `return` gives them the way back for Back and Cancel
