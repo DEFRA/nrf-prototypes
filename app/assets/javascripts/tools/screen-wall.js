@@ -144,7 +144,7 @@
     const idleTitle = 'Export screen as JPG'
     feedback(button, 'busy', 'Exporting…', idleTitle)
     window
-      .fetch(button.href)
+      .fetch(withStamp(button))
       .then(function (response) {
         if (!response.ok) {
           return response.text().then(function (text) {
@@ -170,6 +170,19 @@
         feedback(button, 'failed', 'Export failed', idleTitle, FEEDBACK_MS * 2)
         window.console.error('Screen export failed', error)
       })
+  }
+
+  // The card's "Stamp with today's date" box adds ?stamp=1 to the export
+  function withStamp(button) {
+    const box = button
+      .closest('.wall-card__actions')
+      .querySelector('.wall-card__stamp input')
+    if (!box || !box.checked) {
+      return button.href
+    }
+    const url = new URL(button.href, window.location.href)
+    url.searchParams.set('stamp', '1')
+    return url.toString()
   }
 
   // The route names the file in Content-Disposition, but a download from

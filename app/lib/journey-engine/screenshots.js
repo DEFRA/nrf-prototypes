@@ -23,6 +23,83 @@ const VIEWPORTS = {
 const CUSTOM_PAGE_WAIT_MS = 3000
 const FULL_SCREEN_MAP = 'body.app-draw-boundary-body'
 
+/**
+ * The date stamp's wording, today on this machine with a short month:
+ * "Exported: 15 Oct 2026". The months are spelt out here because en-GB
+ * shortens September to "Sept"
+ */
+const MONTHS = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec'
+]
+
+function stampText(date = new Date()) {
+  return `Exported: ${date.getDate()} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`
+}
+
+/**
+ * Runs in the captured page: a small light blue stamp in the top right,
+ * level with the GOV.UK logo and lined up with the right edge of the
+ * header's container. The staff header has no room beside its service
+ * name and account menu, so there it sits just below the header. A page
+ * without a header gets it in the top right corner.
+ */
+function addStamp(text) {
+  const logo = document.querySelector(
+    '.govuk-header__logotype, .app-staff-header__brand svg, header svg'
+  )
+  const container =
+    logo && logo.closest('.govuk-width-container, .govuk-header__container')
+  const staffHeader = document.querySelector('.app-staff-header')
+  const stamp = document.createElement('div')
+  stamp.textContent = text
+  stamp.setAttribute('aria-hidden', 'true')
+  Object.assign(stamp.style, {
+    position: 'absolute',
+    zIndex: '2147483647',
+    padding: '3px 8px',
+    background: '#d2e2f1',
+    color: '#0c2d4a',
+    border: '1px solid #8eb8dc',
+    borderRadius: '4px',
+    font: '700 14px/1.25 "GDS Transport", arial, sans-serif',
+    whiteSpace: 'nowrap',
+    pointerEvents: 'none'
+  })
+  document.body.appendChild(stamp)
+  const scrollX = window.scrollX
+  const scrollY = window.scrollY
+  let right = document.documentElement.clientWidth - 15
+  let middle = 15 + stamp.offsetHeight / 2
+  if (logo) {
+    const box = logo.getBoundingClientRect()
+    middle = box.top + scrollY + box.height / 2
+    if (container) {
+      const edge = container.getBoundingClientRect()
+      right = edge.right + scrollX
+    }
+    if (staffHeader) {
+      middle =
+        staffHeader.getBoundingClientRect().bottom +
+        scrollY +
+        8 +
+        stamp.offsetHeight / 2
+    }
+  }
+  stamp.style.left = `${right - stamp.offsetWidth}px`
+  stamp.style.top = `${middle - stamp.offsetHeight / 2}px`
+}
+
 function loadChromium() {
   try {
     return require('@playwright/test').chromium
@@ -70,15 +147,19 @@ async function withPage(viewportName, run) {
 /**
  * Capture one preview URL on an open page. Pages that may carry a map get
  * a moment for its tiles; only the full-screen map is captured
- * viewport-only.
+ * viewport-only. `stamp`, when given, is the text of a date stamp drawn
+ * over the header (see addStamp).
  */
-async function shoot(page, baseUrl, screen, quality) {
+async function shoot(page, baseUrl, screen, quality, stamp) {
   const isCustom = screen.type === 'custom'
   // Documents may carry a map, so give its tiles a moment too
   const waitForMap = isCustom || screen.type === 'document'
   await page.goto(baseUrl + screen.url, { waitUntil: 'networkidle' })
   if (waitForMap) {
     await page.waitForTimeout(CUSTOM_PAGE_WAIT_MS)
+  }
+  if (stamp) {
+    await page.evaluate(addStamp, stamp)
   }
   const fullScreenMap = (await page.locator(FULL_SCREEN_MAP).count()) > 0
   return page.screenshot({
@@ -96,16 +177,18 @@ function trimBaseUrl(baseUrl) {
  * Capture every screen of a journey as a JPEG.
  *
  * @param {object} journey  loaded journey definition
- * @param {object} options  { baseUrl, viewport, includeErrors, sections, handoff, quality, onProgress }
+ * @param {object} options  { baseUrl, viewport, includeErrors, sections, handoff, stamp, quality, onProgress }
  *   viewport is a key of VIEWPORTS ('desktop' by default); includeErrors
  *   (true by default) also captures each form's error state; sections
- *   ('main' and group ids, all by default) picks which parts to capture
+ *   ('main' and group ids, all by default) picks which parts to capture;
+ *   stamp marks each screen with today's date
  * @returns {Promise<Array<{ file: string, buffer: Buffer }>>}
  */
 async function captureScreens(journey, options = {}) {
   const baseUrl = trimBaseUrl(options.baseUrl)
   const quality = options.quality || 85
   const onProgress = options.onProgress || (() => {})
+  const stamp = options.stamp ? stampText() : null
   let screens = exportScreens(journey, {
     includeErrors: options.includeErrors !== false,
     sections: options.sections
@@ -116,7 +199,7 @@ async function captureScreens(journey, options = {}) {
   return withPage(options.viewport, async (page) => {
     const results = []
     for (const screen of screens) {
-      const buffer = await shoot(page, baseUrl, screen, quality)
+      const buffer = await shoot(page, baseUrl, screen, quality, stamp)
       results.push({ file: screen.file, buffer })
       onProgress(screen, results.length, screens.length)
     }
@@ -166,12 +249,13 @@ function asHandedOver(journey, screens) {
  * each card of the screen wall.
  *
  * @param {object} journey  loaded journey definition
- * @param {object} options  { baseUrl, viewport, pageId, error, variant, copy, handoff, quality }
+ * @param {object} options  { baseUrl, viewport, pageId, error, variant, copy, handoff, stamp, quality }
  *   error captures the page's error state (`1` or `required` for the default
  *   one, or a key of its `errors:` block such as `max`); variant names one of the page's
  *   preview variants; copy one of its copy variants (`b` for
  *   pages/<id>~b.md); handoff captures the page's frozen copy, as handed
- *   over (see snapshots.js), in the same state
+ *   over (see snapshots.js), in the same state; stamp marks it with
+ *   today's date
  * @returns {Promise<{ file: string, buffer: Buffer }>}  or null when the
  *   page (or the requested state of it) is not one the export knows about
  */
@@ -193,7 +277,7 @@ async function captureScreen(journey, options = {}) {
     return null
   }
   const buffer = await withPage(options.viewport, (page) =>
-    shoot(page, baseUrl, screen, quality)
+    shoot(page, baseUrl, screen, quality, options.stamp ? stampText() : null)
   )
   // Drop the section folder and the ordering prefix: one file needs neither
   const file = screen.file.split('/').pop().replace(/^\d+-/, '')

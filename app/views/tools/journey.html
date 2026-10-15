@@ -75,6 +75,8 @@
   .wall-card__views input { margin: 0; width: 16px; height: 16px; accent-color: #0b0c0c; }
   .wall-card__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin: 0 0 10px; padding: 0 0 10px; border-bottom: 1px solid #b1b4b6; }
   .wall-card__actions .govuk-link { font-size: 14px; }
+  .wall-card__stamp { order: -1; display: flex; flex-basis: 100%; align-items: center; gap: 8px; padding: 3px 0; font-size: 14px; color: #0b0c0c; cursor: pointer; }
+  .wall-card__stamp input { margin: 0; width: 16px; height: 16px; accent-color: #0b0c0c; }
   .wall-card__file { margin: 0; color: #505a5f; font-size: 13px; word-break: break-all; }
   .wall-card__error-pick { display: block; width: calc(100% - 24px); margin: 2px 0 6px 24px; padding: 3px 4px; border: 1px solid #505a5f; border-radius: 0; background: #fff; font-family: "GDS Transport", arial, sans-serif; font-size: 13px; color: #0b0c0c; }
   .wall-card__error-pick:focus-visible { outline: 3px solid #ffdd00; outline-offset: 0; box-shadow: inset 0 0 0 2px #0b0c0c; }
@@ -227,7 +229,7 @@
           <p class="wall-card__actions">
             <a class="govuk-link wall-card__open" href="{{ page.path }}?preview=1" target="_blank" rel="noopener">Open in new tab</a>
             <button type="button" class="wall-card__copy wall-card__copy--text" data-copy-url="{{ publicBaseUrl }}{{ page.path }}" data-feedback="" title="Copy link" aria-label="Copy link to {{ page.id }}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Copy link</button>
-            {% if canExportScreens %}<a class="wall-card__copy wall-card__copy--text wall-card__export" href="{{ exportBase }}" download data-feedback="" title="Export screen as JPG" aria-label="Export {{ page.id }} as JPG"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export JPG</a>{% endif %}
+            {% if canExportScreens %}<a class="wall-card__copy wall-card__copy--text wall-card__export" href="{{ exportBase }}" download data-feedback="" title="Export screen as JPG" aria-label="Export {{ page.id }} as JPG"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export JPG</a><label class="wall-card__stamp"><input type="checkbox" checked> Stamp with today's date</label>{% endif %}
             {% if page.compareUrl %}<a class="govuk-link wall-card__compare" href="{{ page.compareUrl }}">Compare side by side</a>{% endif %}
           </p>
           <p class="wall-card__file" title="{{ page.contentFile }}">{% if page.shared %}{{ page.contentFile | replace("content/", "") }}{% else %}{{ page.id }}.md{% endif %}</p>
@@ -257,7 +259,7 @@
           <p class="wall-card__actions">
             <a class="govuk-link wall-card__open" href="{{ page.path }}?preview=1&_copy={{ copy.id }}" target="_blank" rel="noopener">Open in new tab</a>
             <button type="button" class="wall-card__copy wall-card__copy--text" data-copy-url="{{ publicBaseUrl }}{{ page.path }}?copy={{ copy.id }}" data-feedback="" title="Copy link (shows this copy for the whole session)" aria-label="Copy link to {{ page.id }} (copy: {{ copy.label }})"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Copy link</button>
-            {% if canExportScreens %}<a class="wall-card__copy wall-card__copy--text wall-card__export" href="/tools/journeys/{{ journey.id }}/screens/{{ page.id }}.jpg?copy={{ copy.id }}" download data-feedback="" title="Export screen as JPG" aria-label="Export {{ page.id }} (copy: {{ copy.label }}) as JPG"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export JPG</a>{% endif %}
+            {% if canExportScreens %}<a class="wall-card__copy wall-card__copy--text wall-card__export" href="/tools/journeys/{{ journey.id }}/screens/{{ page.id }}.jpg?copy={{ copy.id }}" download data-feedback="" title="Export screen as JPG" aria-label="Export {{ page.id }} (copy: {{ copy.label }}) as JPG"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export JPG</a><label class="wall-card__stamp"><input type="checkbox" checked> Stamp with today's date</label>{% endif %}
             <a class="govuk-link wall-card__compare" href="{{ page.compareUrl }}">Compare side by side</a>
           </p>
           <p class="wall-card__file" title="{{ copy.contentFile }}">{{ page.id }}~{{ copy.id }}.md</p>
@@ -283,7 +285,7 @@
         <div class="wall-card__panel">
           <p class="wall-card__actions">
             <a class="govuk-link wall-card__open" href="{{ page.path }}?preview=1&variant={{ variant.id }}" target="_blank" rel="noopener">Open in new tab</a>
-            {% if canExportScreens %}<a class="wall-card__copy wall-card__copy--text wall-card__export" href="/tools/journeys/{{ journey.id }}/screens/{{ page.id }}.jpg?variant={{ variant.id }}" download data-feedback="" title="Export screen as JPG" aria-label="Export {{ page.id }} ({{ variant.label }}) as JPG"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export JPG</a>{% endif %}
+            {% if canExportScreens %}<a class="wall-card__copy wall-card__copy--text wall-card__export" href="/tools/journeys/{{ journey.id }}/screens/{{ page.id }}.jpg?variant={{ variant.id }}" download data-feedback="" title="Export screen as JPG" aria-label="Export {{ page.id }} ({{ variant.label }}) as JPG"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export JPG</a><label class="wall-card__stamp"><input type="checkbox" checked> Stamp with today's date</label>{% endif %}
           </p>
           <p class="wall-card__file">variant: {{ variant.id }}</p>
         </div>
@@ -442,12 +444,21 @@
           { value: "1", text: "Include error states", checked: true }
         ]
       }) }}
+      {{ govukCheckboxes({
+        name: "stamp",
+        idPrefix: "wall-stamp",
+        classes: "govuk-checkboxes--small",
+        fieldset: { legend: { text: "Date stamp", classes: "govuk-visually-hidden" } },
+        items: [
+          { value: "1", text: "Stamp with today's date", checked: true }
+        ]
+      }) }}
       {{ govukButton({
         text: "Export screens as JPG",
         classes: "govuk-button--secondary govuk-!-margin-bottom-0",
         attributes: { id: "wall-export", "data-busy-text": "Exporting…" }
       }) }}
-      <span class="tools-legend tools-legend--inline">Captures each screen at the chosen width with the sample data into a zip. Untick error states for a quicker export with fewer files to drag onto a whiteboard.{% if handoffs | length %} "As handed over" captures only the screens handed to development, each from its frozen copy, with <code>--handoff</code> in the file name.{% endif %}{% if exportSections | length > 1 %} Untick sections to leave them out: the main journey on its own, or just one of the sign-in groups. Each section gets a folder in the zip.{% endif %}</span>
+      <span class="tools-legend tools-legend--inline">Captures each screen at the chosen width with the sample data into a zip. Untick error states for a quicker export with fewer files to drag onto a whiteboard. The date stamp marks each screen with the export date, such as "Exported: 15 Oct 2026", in the top right, level with the GOV.UK logo.{% if handoffs | length %} "As handed over" captures only the screens handed to development, each from its frozen copy, with <code>--handoff</code> in the file name.{% endif %}{% if exportSections | length > 1 %} Untick sections to leave them out: the main journey on its own, or just one of the sign-in groups. Each section gets a folder in the zip.{% endif %}</span>
     </form>
   {% endset %}
   <div class="tools-controls tools-controls--export">

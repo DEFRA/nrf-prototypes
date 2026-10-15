@@ -263,6 +263,7 @@ router.get('/tools/journeys/:journey/flow.mmd', (req, res) => {
 // journey and each group); everything when left out
 // ?screens=handoff exports only the pages handed to development, each from
 // its frozen copy (see snapshots.js), instead of every page live
+// ?stamp=1 marks each screen with today's date ("Exported: 15 Oct 2026")
 router.get('/tools/journeys/:journey/screens.zip', async (req, res) => {
   const journey = loadOr404(req, res)
   if (!journey) {
@@ -300,7 +301,8 @@ router.get('/tools/journeys/:journey/screens.zip', async (req, res) => {
       viewport,
       includeErrors,
       sections: chosen,
-      handoff
+      handoff,
+      stamp: req.query.stamp === '1'
     })
   } catch (error) {
     res.status(500).type('text/plain').send(error.message)
@@ -384,7 +386,8 @@ router.get('/tools/journeys/:journey/compare/:page', (req, res) => {
 // Always desktop width; ?error=1 captures the form's error state (or
 // ?error=<key> one of its other errors, such as max),
 // ?variant=<id> one of the page's preview variants, ?copy=<id> one of its
-// copy variants and ?handoff=1 the frozen copy of the page as handed over
+// copy variants, ?handoff=1 the frozen copy of the page as handed over and
+// ?stamp=1 marks it with today's date
 router.get('/tools/journeys/:journey/screens/:page.jpg', async (req, res) => {
   const journey = loadOr404(req, res)
   if (!journey) {
@@ -399,7 +402,8 @@ router.get('/tools/journeys/:journey/screens/:page.jpg', async (req, res) => {
       error: req.query.error ? String(req.query.error) : null,
       variant: req.query.variant ? String(req.query.variant) : null,
       copy: req.query.copy ? String(req.query.copy) : null,
-      handoff: req.query.handoff === '1'
+      handoff: req.query.handoff === '1',
+      stamp: req.query.stamp === '1'
     })
   } catch (error) {
     res.status(500).type('text/plain').send(error.message)
