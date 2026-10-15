@@ -720,6 +720,19 @@ test.describe('lpa-manage-1: manage commitments', () => {
         .length
     )
 
+    // Searching for one record focuses its link, so Enter opens it
+    await page.goto(
+      `${base}/dashboard?_q=${encodeURIComponent(records[0].reference)}`
+    )
+    await expect(rows).toHaveCount(1)
+    await expect(
+      page.getByRole('link', { name: records[0].reference })
+    ).toBeFocused()
+    await page.keyboard.press('Enter')
+    await expect(page).toHaveURL(
+      new RegExp(`ref=${encodeURIComponent(records[0].reference)}`)
+    )
+
     await page.goto(`${base}/dashboard?_q=no-such-record`)
     await expect(page.locator('main')).toContainText(
       text('dashboard', 'noResults')

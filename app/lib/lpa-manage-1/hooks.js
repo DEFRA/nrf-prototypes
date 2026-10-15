@@ -532,8 +532,10 @@ function sortRecords(records, query) {
 }
 
 // Rows of govukTable for the records, with the page's own column copy.
-// `headFor` makes a column heading sortable.
-function tableFor(records, text, journey, headFor) {
+// `headFor` makes a column heading sortable. `focusOnly` focuses the
+// reference link when it is the only row, so Enter opens the record.
+function tableFor(records, text, journey, headFor, focusOnly) {
+  const autofocus = focusOnly && records.length === 1 ? ' autofocus' : ''
   const viewPath = journey.routes.VIEW_RECORD
   const columns = text.columns || {}
   return {
@@ -545,7 +547,7 @@ function tableFor(records, text, journey, headFor) {
       {
         html:
           `<a class="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold" ` +
-          `href="${viewPath}?ref=${encodeURIComponent(record.reference)}">` +
+          `href="${viewPath}?ref=${encodeURIComponent(record.reference)}"${autofocus}>` +
           `${escapeHtml(record.reference)}</a>`
       },
       { text: record.developer },
@@ -1593,7 +1595,14 @@ const dashboard = {
     model.pagination = paginationFor(query, pages, path)
     model.filters = filtersFor(query, text, store, path)
     model.clearSearchHref = hrefFor(path, query, { q: '', page: 1 })
-    model.table = tableFor(shown, text, ctx.journey, sortableHead(query, path))
+    // A search that finds one record focuses its link, so Enter opens it
+    model.table = tableFor(
+      shown,
+      text,
+      ctx.journey,
+      sortableHead(query, path),
+      Boolean(query.q) && records.length === 1
+    )
   }
 }
 
