@@ -1,6 +1,6 @@
 ---
 type: radios
-hint: Options below include any variations to an existing permission.
+hint: Options below include any amendments to an existing permission.
 options:
   - label: Full planning permission
     value: full
