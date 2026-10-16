@@ -112,6 +112,7 @@ pages:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: housing
+    handoff: 2026-10-16
 
   - id: wrong-permission
 
@@ -141,6 +142,7 @@ pages:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: redline-map
+    handoff: 2026-10-16
 
   - id: redline-map
     field: has-redline-boundary-file
