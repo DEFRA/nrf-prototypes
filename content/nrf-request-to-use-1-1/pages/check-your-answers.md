@@ -10,11 +10,11 @@ rows:
     change: variation
     changeHidden: whether the development is an amendment
   # The two rows about the original application only show for a variation
-  - key: Original application committed to the levy
+  - key: Original planning permission committed to the levy
     value: '{{ originalCommitted }}'
     when: { key: isVariation, equals: 'Yes' }
     change: original-committed
-    changeHidden: whether the original application was committed to using the levy
+    changeHidden: whether the original planning permission was committed to using the levy
   - key: Original NRL reference
     when: { key: isVariation, equals: 'Yes' }
     value:
@@ -24,7 +24,7 @@ rows:
     change:
       - when: { key: originalCommitted, equals: 'Yes' }
         goto: original-reference
-    changeHidden: the NRL reference for the original planning application
+    changeHidden: the NRL reference for the original planning permission
   - key: Requesting to use the levy for
     # The option chosen on defra-account-user-type.md, shown as its label
     value: '{{ defraUserType }}'
