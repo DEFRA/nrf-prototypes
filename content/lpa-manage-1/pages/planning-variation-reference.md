@@ -9,4 +9,4 @@ errors:
 button: Continue
 ---
 
-# Enter the planning application reference for this variation
+# Enter the planning application reference for this amendment

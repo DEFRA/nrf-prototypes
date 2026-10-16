@@ -23,7 +23,7 @@ rows:
   - heading: Planning details
   - key: Planning type
     value: '{{ commitment.planningType }}'
-  - key: Planning variation
+  - key: Amendment
     value: 'Yes'
     when: { key: record.variation, truthy: true }
   - key: Planning application reference
@@ -109,7 +109,7 @@ text:
   timelineStatus: Status changed to
   timelineReviewLater: Marked to review and confirm later
   timelineStage: Planning application stage changed to
-  timelineVariation: Planning variation added
+  timelineVariation: Amendment added
   timelineReservedMatters: Reserved matters added
   # The success banner once reserved matters are saved on
   # add-reserved-matters; {reference} is the one just added
@@ -117,7 +117,7 @@ text:
   reservedMattersAdded: Reserved matters {reference} has been added to this developer record
   # After the NRL reference of a linked developer record, in brackets
   linkedOriginal: original planning application
-  linkedVariation: planning variation
+  linkedVariation: Amendment
   timelineComment: Comment
   by: by
   at: at
