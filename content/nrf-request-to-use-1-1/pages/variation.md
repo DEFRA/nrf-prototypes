@@ -6,12 +6,12 @@ options:
   - label: 'No'
     value: 'No'
 errors:
-  required: Select yes if the development is a variation (section 73 amendment) to a planning application
+  required: Select yes if the development is an amendment to an existing planning permission
 button: Continue
 ---
 
-# Is the development a variation (section 73 amendment) to a planning application?
+# Is the development an amendment to an existing planning permission?
 
-:::details What is a variation (section 73 amendment)?
-A section 73 amendment lets you apply to vary or remove conditions attached to a planning permission that has already been granted. If approved, the council grants a brand new, independent planning permission that sits alongside your original consent.
+:::details What is an amendment?
+An application made under section 73 of the Town and Country Planning Act 1990 can be used to make a material amendment by varying or removing conditions associated with a planning permission. [Learn more about amendments](https://www.gov.uk/guidance/flexible-options-for-planning-permissions#make-minor-material-amendments)
 :::
