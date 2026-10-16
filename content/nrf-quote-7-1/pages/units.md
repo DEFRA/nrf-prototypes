@@ -1,6 +1,6 @@
 ---
 type: number
-hint: A housing unit is a house or a flat. For variations on existing permissions, use the maximum number you are applying for under the variation application.
+hint: A housing unit is a house or a flat. For amendments on existing permissions, use the maximum number you are applying for under the amendment.
 width: 5
 errors:
   required: Enter the number of housing units
