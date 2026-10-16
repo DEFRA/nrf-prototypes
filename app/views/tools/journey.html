@@ -7,6 +7,8 @@
 {% block head %}
 {{ super() }}
 <style>
+  /* The screen wall and flow diagram want room: up to 1600px, not 960px */
+  .govuk-width-container { max-width: 1600px; }
   .tools-wrap { padding: 0 30px 60px; }
   .tools-header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 20px; }
   .tools-header .govuk-heading-l { margin-bottom: 10px; }

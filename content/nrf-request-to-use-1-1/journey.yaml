@@ -356,7 +356,7 @@ pages:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: accept-levy
-    handoff: 2026-10-14
+    handoff: 2026-10-16
 
   # The development details are changed on the quote journey's own pages:
   # the Change links on review-quote-details point at
@@ -381,6 +381,7 @@ pages:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: variation
+    handoff: 2026-10-16
 
   # A variation only needs the original NRL reference when the original
   # application was committed to using the levy
@@ -394,6 +395,7 @@ pages:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: defra-account-user-type
+    handoff: 2026-10-16
 
   - id: original-committed
     field: original-committed
@@ -406,7 +408,8 @@ pages:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: defra-account-user-type
-
+    handoff: 2026-10-16
+    
   # Behind the scenes the service checks the original application's red line
   # boundary matches this one. The prototype cannot, so the reference
   # NRL-222222 stands in for an original whose boundary does not match
@@ -421,11 +424,13 @@ pages:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: defra-account-user-type
-
+    handoff: 2026-10-16
+    
   # Placeholder copy: the original application's red line boundary does not
   # match this one, so the user tries again with the correct reference
   - id: original-reference-not-matched
     back: original-reference
+    handoff: 2026-10-16
 
   # Before signing in, the user says who they are requesting to use the levy
   # for and reads the Defra account guidance for that kind of user. The answer
