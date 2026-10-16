@@ -5,10 +5,10 @@ rows:
     value: '{{ acceptLevy }}'
     change: accept-levy
     changeHidden: whether you accept the levy amount
-  - key: Variation
+  - key: Amendment
     value: '{{ isVariation }}'
     change: variation
-    changeHidden: whether the development is a variation
+    changeHidden: whether the development is an amendment
   # The two rows about the original application only show for a variation
   - key: Original application committed to the levy
     value: '{{ originalCommitted }}'
