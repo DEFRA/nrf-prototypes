@@ -37,5 +37,5 @@ actions:
 # Review and amend your quote details
 
 :::warning
-Make sure the details of your development match your planning application. Updates may result in a recalculation of available capacity and the levy amount.
+Updates may result in a recalculation of available capacity and the levy amount.
 :::

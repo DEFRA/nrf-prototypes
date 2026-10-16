@@ -57,7 +57,7 @@ You will receive a commitment certificate that you can submit with your planning
 
 ## When to pay the nature restoration levy
 
-Once the planning application is approved and you are ready to start development, you must assume liability to pay the levy.
+If planning permission has been granted and you are ready to commence your development, you must assume liability to pay the levy.
 
 ## Get help with the nature restoration levy
 

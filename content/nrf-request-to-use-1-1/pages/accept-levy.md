@@ -29,7 +29,7 @@ The inflation-adjusted amount shows the indicative levy amount for the year this
 
 ## When to pay the nature restoration levy
 
-Once the planning application is approved and you are ready to start development, you must assume liability to pay the levy.
+If planning permission has been granted and you are ready to commence your development, you must assume liability to pay the levy.
 
 :::details How the nature restoration levy was calculated
 The levy has been calculated from the details you submitted and the charging schedule for the relevant EDP(s). [Read about the charging schedule for the EDP (opens in new tab)](#).
