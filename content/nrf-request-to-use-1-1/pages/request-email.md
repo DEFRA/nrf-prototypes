@@ -35,7 +35,7 @@ The relevant development is planned to have housing with a total of {{ residenti
 
 ## Environmental Delivery Plan (EDP)
 
-{{ edpName }}
+{{ edpName }}.
 
 ## Nature restoration levy amount
 
