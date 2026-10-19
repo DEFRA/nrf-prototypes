@@ -34,7 +34,7 @@ text:
 
 ## Details of the relevant development
 
-The relevant development is planned to have housing with a total of {{ residentialBuildingCount }} units.
+The relevant development is planned to have housing with a total of {{ residentialBuildingCount | plural "unit" }}.
 
 ### Red line boundary
 

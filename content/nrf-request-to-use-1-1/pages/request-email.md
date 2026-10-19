@@ -31,7 +31,7 @@ Environmental impacts of development not covered by this Environmental Delivery 
 
 ## Details of the relevant development
 
-The relevant development is planned to have housing with a total of {{ residentialBuildingCount }} unit(s).
+The relevant development is planned to have housing with a total of {{ residentialBuildingCount | plural "unit" }}.
 
 ## Environmental Delivery Plan (EDP)
 

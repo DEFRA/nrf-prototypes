@@ -148,6 +148,7 @@ Write the answer's name in double curly braces: `{{ estimateEmail }}`. The names
 - `{{ planningType | lower }}` lower-case
 - `{{ estimateEmail or "user@example.com" }}` fallback when there is no answer yet
 - `{{ redlineBoundaryPolygon.intersectingCatchment }}` a value inside a value
+- `{{ residentialBuildingCount | plural "unit" }}` the number with the right word: "1 unit", "120 units" (`plural "person" "people"` for a word that does not just add an s)
 
 ## Settings by page type
 

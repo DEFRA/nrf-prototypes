@@ -28,7 +28,9 @@
  * link on the Defra account emails) needs no page names in its copy.
  *
  * `{{ key }}` placeholders are substituted after rendering and HTML-escaped.
- * Supported forms: `{{ a.b }}`, `{{ key | lower }}`, `{{ key or "fallback" }}`.
+ * Supported forms: `{{ a.b }}`, `{{ key | lower }}`, `{{ key or "fallback" }}`,
+ * `{{ key | plural "unit" }}` (the number and the word, "1 unit" or
+ * "120 units"; `plural "person" "people"` for a word that does not add an s).
  */
 
 const MarkdownIt = require('markdown-it')
@@ -64,8 +66,14 @@ const FILTERS = {
   capitalize: (v) => {
     const s = String(v)
     return s.charAt(0).toUpperCase() + s.slice(1)
-  }
+  },
+  plural: (v, one = '', many = `${one}s`) =>
+    `${v} ${Number(v) === 1 ? one : many}`
 }
+
+// A filter's quoted arguments: `plural "person" "people"`. Placeholders are
+// substituted after rendering, so a double quote arrives as &quot;
+const FILTER_ARG = /(?:"|&quot;|')(.*?)(?:"|&quot;|')/g
 
 /**
  * An answer to a radios or checkboxes question is stored as the option's
@@ -106,9 +114,11 @@ function resolveExpression(expression, data, labels) {
   if (!isSet(value)) {
     return ''
   }
-  for (const name of filterParts) {
+  for (const filter of filterParts) {
+    const name = filter.split(/\s/)[0]
+    const args = [...filter.matchAll(FILTER_ARG)].map((m) => m[1])
     if (FILTERS[name]) {
-      value = FILTERS[name](value)
+      value = FILTERS[name](value, ...args)
     }
   }
   return value
