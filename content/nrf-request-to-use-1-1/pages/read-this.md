@@ -60,7 +60,7 @@ See guidance for local planning authorities for [more information on handling co
 
 If planning application has been granted and you are ready to commence your development, you must assume liability to pay the levy. [Learn more about paying the nature restoration levy (opens in new tab)](#)
 
-[Read about the published instalment plans](#) to understand your options for paying the levy. 
+[Read about nature restoration levy instalment plans](#) to understand your options for paying the levy. 
 
 ## Get help with the nature restoration levy
 
