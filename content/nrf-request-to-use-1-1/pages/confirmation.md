@@ -8,9 +8,8 @@ panel:
 
 ## What happens next
 
-You will be sent an email with a commitment certificate that you can send to your local planning authority to include in your planning application.
+You will be sent an email with a commitment certificate that you can send to your local planning authority to include with your planning application.
 
-The commitment certificate will disapply the relevant environmental obligations that arise because of the environmental impact of the development.
 
 ## Get help with the nature restoration levy
 
