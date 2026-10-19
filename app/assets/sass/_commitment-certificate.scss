@@ -98,8 +98,41 @@ body:not(.govuk-frontend-supported) .app-print-link__js,
   }
 }
 
+// The Natural England logo beside the heading is for paper only
+.app-certificate__logo {
+  display: none;
+}
+
 @media print {
   .app-certificate {
+    // The logo floats on the right, so the heading and the details under it
+    // run beside it rather than starting below it
+    .app-certificate__title .govuk-heading-l {
+      margin-bottom: 5mm;
+    }
+
+    .app-certificate__logo {
+      display: block;
+      float: right;
+      width: 25mm;
+      height: 25mm;
+      margin: 0 0 5mm 10mm;
+    }
+
+    // 18pt headings and 12pt text, smaller than govuk-frontend's print sizes
+    .govuk-heading-l,
+    .app-certificate__body :is(h1, h2) {
+      font-size: 18pt;
+    }
+
+    .app-certificate__body h3 {
+      font-size: 14pt;
+    }
+
+    .app-certificate__body :is(p, li, dt, dd, th, td, caption) {
+      font-size: 12pt;
+    }
+
     .govuk-header,
     .govuk-service-navigation,
     .govuk-phase-banner,

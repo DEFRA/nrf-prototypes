@@ -18,8 +18,9 @@
   section is hidden, unless `printLinkNoJs` gives copy to show under its
   heading instead.
 
-  Printing leaves only the certificate, on A4 with 20mm margins and
-  govuk-frontend's print type sizes (_commitment-certificate.scss).
+  Printing leaves only the certificate, on A4 with 20mm margins, with the
+  Natural England logo to the right of the heading, 12pt body text and
+  18pt headings (_commitment-certificate.scss).
 #}
 {% extends "journey-engine/_page.html" %}
 
@@ -38,7 +39,16 @@
 
 {% block content %}
 {% set hasAside = contents.length or text.printLink %}
-{% if not content.headingInBody %}<h1 class="govuk-heading-l">{{ content.heading }}</h1>{% endif %}
+{% if not content.headingInBody %}
+{#
+  The Natural England logo sits to the right of the heading on paper only.
+  It comes first so that the heading and the details under it wrap beside it
+#}
+<div class="app-certificate__title">
+  <img class="app-certificate__logo" src="/public/images/natural-england-logo.jpg" alt="Natural England">
+  <h1 class="govuk-heading-l">{{ content.heading }}</h1>
+</div>
+{% endif %}
 <div class="govuk-grid-row">
   {% if hasAside %}
   <div class="govuk-grid-column-one-third-from-desktop app-certificate__aside">
