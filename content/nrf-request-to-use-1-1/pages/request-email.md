@@ -29,15 +29,10 @@ This commitment certificate will disapply the relevant environmental obligations
 Environmental impacts of development not covered by this Environmental Delivery Plan (EDP) will need to be addressed through other environmental assessment processes such as a habitats regulations assessment.  
 
 
-## Details of your relevant development
+## Details of the relevant development
 
-You told us the relevant development is planned to have:
+The relevant development is planned to have housing with a total of {{ residentialBuildingCount }} unit(s)
 
-:::if residentialBuildingCount
-
-- housing with a total of {{ residentialBuildingCount }} unit(s)
-
-:::
 ## Environmental Delivery Plan (EDP)
 
 {{ edpName }}
