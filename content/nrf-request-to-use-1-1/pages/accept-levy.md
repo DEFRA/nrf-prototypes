@@ -26,6 +26,7 @@ The provisional amount is calculated from the charging schedule in the relevant 
 ### Inflation-adjusted nature restoration levy amount: £{{ levyAmount }} (excluding VAT)
 
 The inflation-adjusted amount shows the indicative levy amount for the year this commitment was issued.
+Inflation adjustment will continue to be made until the total levy amount has been paid. 
 
 ## When to pay the nature restoration levy
 
