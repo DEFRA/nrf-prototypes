@@ -317,6 +317,12 @@ pages:
             A planning variation the developer made its own commitment for,
             for review. It links to the original application's record, which links back.
           data: { recordReference: NRL-101412 }
+        - id: original-linked
+          label: Original application with a linked amendment
+          description: >-
+            The original planning application's record (NRL-101178), linking
+            to the amendment the developer made its own commitment for
+          data: { recordReference: NRL-101178 }
         - id: planning
           label: Reviewed outline with planning stages
           description: >-
