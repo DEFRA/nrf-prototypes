@@ -29,7 +29,7 @@ rows:
   - key: Planning application reference
     value: '{{ record.planningReference }}'
     when: { key: record.originalPlanningReference, falsy: true }
-  - key: Variation planning application reference
+  - key: Amendment planning application reference
     value: '{{ record.planningReference }}'
     when: { key: record.originalPlanningReference, truthy: true }
   - key: Original planning application reference
@@ -93,7 +93,7 @@ text:
   addedLinked: A new developer record has been created for review and linked with existing developer record {reference}
   # Once a planning variation's reference is added
   variationAddedTitle: Developer record updated
-  variationAdded: Variation planning application reference added
+  variationAdded: Amendment planning application reference added
   viewCertificate: View full certificate
   statusLegend: Have you reviewed these commitment details?
   # Once the commitment details are reviewed
@@ -117,7 +117,7 @@ text:
   reservedMattersAdded: Reserved matters {reference} has been added to this developer record
   # After the NRL reference of a linked developer record, in brackets
   linkedOriginal: original planning application
-  linkedVariation: Amendment
+  linkedVariation: amendment
   timelineComment: Comment
   by: by
   at: at
