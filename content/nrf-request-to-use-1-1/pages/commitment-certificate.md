@@ -61,22 +61,20 @@ The inflation-adjusted amount shows the indicative levy amount for the year this
 
 ## Commitment details
 
-This commitment may be relied upon through the planning application process to disapply the relevant environmental obligations that arise because of the environmental impact of the development.
+This commitment may be relied upon through the planning application process to disapply the relevant environmental obligations that would otherwise have arisen because of the environmental impact of the development. 
 
-Other environmental impacts of development not covered by {{ edpName }} will need to be addressed through project specific mitigation.
+Environmental impacts of development not covered by this EDP will need to be addressed through other environmental assessment processes such as a habitats regulations assessment. 
 
 
 ### What this commitment enables
 
-For the purposes of section 72 of the Planning and Infrastructure Act 2025, this certificate provides you with a commitment to pay the nature restoration levy. 
+For the purposes of section 72 of the Planning and Infrastructure Act 2025, this certificate confirms you have committed to pay the nature restoration levy. 
 
 A local planning authority will accept this commitment certificate as part of any planning and decision-making processes, provided the details that were given to inform this commitment cover the relevant development for which a planning application is made.
 
 Your commitment will expire after 6 months from the date of issue stated above, unless an application for planning permission is made.
 
 ### Planning conditions to be imposed 
-
-There are planning condition requirements to meet this commitment; a statutory pre-commencement condition requiring payment prior to commencement, and additional conditions to impose as conservation measures.
 
 Regulation 5 of the nature restoration levy regulations ("Levy Regulations") 2026, requires the local planning authority to impose the statutory pre-commencement planning condition, requiring payment of the levy in full or the first instalment prior to commencement. This applies to any grant of permission relying on a commitment to pay the nature restoration levy.
 
