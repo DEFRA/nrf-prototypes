@@ -381,7 +381,7 @@ pages:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: variation
-    handoff: 2026-10-16
+    handoff: 2026-10-19
 
   # A variation only needs the original NRL reference when the original
   # application was committed to using the levy
@@ -425,7 +425,7 @@ pages:
         goto: $summary
       - goto: defra-account-user-type
     handoff: 2026-10-16
-    
+
   # Placeholder copy: the original application's red line boundary does not
   # match this one, so the user tries again with the correct reference
   - id: original-reference-not-matched

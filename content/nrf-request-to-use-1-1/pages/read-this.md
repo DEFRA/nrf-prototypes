@@ -20,7 +20,7 @@ Your commitment certificate will expire after 6 months from the date of issue, u
 
 ## The Environmental Delivery Plan (EDP) your development is planned in 
 
-{{ edpName }}
+{{ edpName }}.
 
 This commitment may be relied upon through the planning application process to disapply the relevant environmental obligations that would otherwise have arisen because of the environmental impact of the development.
 
