@@ -58,6 +58,7 @@ The provisional amount is calculated from the charging schedule in the relevant 
 £{{ levyAmount }} (excluding VAT)
 
 The inflation-adjusted amount shows the indicative levy amount for the year this commitment was issued.
+Inflation adjustment will continue to be made until the total levy amount has been paid. 
 
 ## Commitment details
 

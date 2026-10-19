@@ -35,6 +35,7 @@ The provisional amount is calculated from the charging schedule in the relevant 
 ### Inflation-adjusted nature restoration levy amount: £{{ levyAmount }} (excluding VAT)
 
 The inflation-adjusted amount shows the indicative levy amount for the year this commitment was issued.
+Inflation adjustment will continue to be made until the total levy amount has been paid. 
 
 :::details How the nature restoration levy was calculated
 The levy has been calculated from the details you submitted and the charging schedule for the relevant EDP(s). [Read about the charging schedule for the EDP (opens in new tab)](#).
@@ -58,7 +59,7 @@ See guidance for local planning authorities for [more information on handling co
 
 ## When you need to pay the nature restoration levy
 
-If planning application has been granted and you are ready to commence your development, you must assume liability to pay the levy. [Learn more about paying the nature restoration levy (opens in new tab)](#)
+If planning permission has been granted and you are ready to commence your development, you must assume liability to pay the levy. [Learn more about paying the nature restoration levy (opens in new tab)](#)
 
 [Read about nature restoration levy instalment plans](#) to understand your options for paying the levy. 
 

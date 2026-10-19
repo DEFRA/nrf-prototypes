@@ -31,7 +31,7 @@ Environmental impacts of development not covered by this Environmental Delivery 
 
 ## Details of the relevant development
 
-The relevant development is planned to have housing with a total of {{ residentialBuildingCount }} unit(s)
+The relevant development is planned to have housing with a total of {{ residentialBuildingCount }} unit(s).
 
 ## Environmental Delivery Plan (EDP)
 
@@ -50,6 +50,7 @@ The provisional amount is calculated from the charging schedule in the relevant 
 £{{ levyAmount }} (excluding VAT)
 
 The inflation-adjusted amount shows the indicative levy amount for the year this commitment was issued.
+Inflation adjustment will continue to be made until the total levy amount has been paid. 
 
 ## How the nature restoration levy was calculated
 
@@ -67,7 +68,7 @@ EDPs set out measures needed to address the environmental impacts of development
 
 ## Preparing to pay the nature restoration levy
 
-If planning permission or any other type of consent, permission (or authorisation as appropriate) is granted and you are ready to commence development, you will need to assume liability to pay the levy in line with Regulation 8 of the Levy Regulations. 
+If planning permission (or any other type of consent, permission or authorisation as appropriate) is granted and you are ready to commence development, you will need to assume liability to pay the levy in line with Regulation 8 of the Levy Regulations. 
 The assumption of liability notice should be submitted only when you are ready to commence development, because this will trigger payment of the levy.
 [View the liability forms for the nature restoration levy](#).
 
