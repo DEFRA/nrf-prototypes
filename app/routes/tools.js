@@ -155,6 +155,13 @@ function loadOr404(req, res) {
   }
 }
 
+// Whether a checkbox in a GET form was ticked. The kit's auto-store-data.js
+// adds a hidden `_unchecked` input for every checkbox on submit, so a
+// ticked box arrives as ['1', '_unchecked'] rather than '1'
+function ticked(value) {
+  return [].concat(value).includes('1')
+}
+
 // The homepage, opened on the tab that holds the journey's card
 function homeUrl(journey) {
   const family = (journey.homepage || {}).family
@@ -272,7 +279,7 @@ router.get('/tools/journeys/:journey/screens.zip', async (req, res) => {
   const viewport = VIEWPORTS[req.query.viewport]
     ? req.query.viewport
     : 'desktop'
-  const includeErrors = req.query.errors === '1'
+  const includeErrors = ticked(req.query.errors)
   const available = exportSections(journey).map((section) => section.id)
   const chosen = []
     .concat(req.query.section === undefined ? available : req.query.section)
@@ -302,7 +309,7 @@ router.get('/tools/journeys/:journey/screens.zip', async (req, res) => {
       includeErrors,
       sections: chosen,
       handoff,
-      stamp: req.query.stamp === '1'
+      stamp: ticked(req.query.stamp)
     })
   } catch (error) {
     res.status(500).type('text/plain').send(error.message)
@@ -403,7 +410,7 @@ router.get('/tools/journeys/:journey/screens/:page.jpg', async (req, res) => {
       variant: req.query.variant ? String(req.query.variant) : null,
       copy: req.query.copy ? String(req.query.copy) : null,
       handoff: req.query.handoff === '1',
-      stamp: req.query.stamp === '1'
+      stamp: ticked(req.query.stamp)
     })
   } catch (error) {
     res.status(500).type('text/plain').send(error.message)
