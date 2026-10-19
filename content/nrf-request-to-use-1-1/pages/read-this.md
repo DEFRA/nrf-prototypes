@@ -18,13 +18,13 @@ You will receive an email within 5 minutes of submitting your request.
 
 Your commitment certificate will expire after 6 months from the date of issue, unless an application for planning permission is made.
 
-## The Environmental Delivery Plan (EDP) your development is in 
+## The Environmental Delivery Plan (EDP) your development is planned in 
 
 {{ edpName }}
 
-This commitment may be relied upon through the planning application process to disapply the relevant environmental obligations that arise because of the environmental impact of the development.
+This commitment may be relied upon through the planning application process to disapply the relevant environmental obligations that would otherwise have arisen because of the environmental impact of the development.
 
-Other environmental impacts of development not covered by this EDP will need to be addressed through project specific mitigation.
+Environmental impacts of development not covered by this EDP will need to be addressed through other environmental assessment processes such as a habitats regulations assessment.
 
 ## Details of your levy amount
 
@@ -40,11 +40,11 @@ The inflation-adjusted amount shows the indicative levy amount for the year this
 The levy has been calculated from the details you submitted and the charging schedule for the relevant EDP(s). [Read about the charging schedule for the EDP (opens in new tab)](#).
 :::
 
-## Planning condition requirements
+## Planning conditions to be imposed
 
-In accordance with the requirements of Regulation 5 of the nature restoration levy Regulations ("Levy Regulations") 2026, the local planning authority must impose the statutory pre-commencement planning condition, requiring payment of the levy in full or the first instalment prior to commencement. This applies to any grant of permission relying on a commitment to pay the nature restoration levy.
+Regulation 5 of the nature restoration levy Regulations ("Levy Regulations") 2026 requires the local planning authority to impose the statutory pre-commencement planning condition, requiring payment of the levy in full or the first instalment prior to commencement. This applies to any grant of planning permission, where development has not yet commenced, relying on a commitment to pay the nature restoration levy.
 
-In accordance with the requirements of the Environmental Delivery Plan(s) the local planning authority may need to impose additional conditions as conservation measures where they are applicable to the relevant development, to meet the requirements under this commitment.
+In accordance with the requirements of the Environmental Delivery Plan set out above the local planning authority may be required to impose additional conditions as conservation measures where relevant. 
 
 | Planning condition                              | Condition to be imposed\*                                                                                                                                                                                                                                                                                                    |
 | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -54,11 +54,13 @@ In accordance with the requirements of the Environmental Delivery Plan(s) the lo
 \*Planning decision-makers may make limited and reasonable amendments to planning conditions (with the exception of the statutory pre-commencement condition), to ensure conditions are operable for specific developments providing the intended outcome is maintained.
 
 
-[See guidance for local planning authorities for more information on imposing conditions](#)
+See guidance for local planning authorities for [more information on handling commitments through the planning process](#)
 
 ## When you need to pay the nature restoration levy
 
-Once your planning application is approved and you are ready to start development, you must assume liability to pay the levy. [Learn more about paying the nature restoration levy (opens in new tab)](#)
+If planning application has been granted and you are ready to commence your development, you must assume liability to pay the levy. [Learn more about paying the nature restoration levy (opens in new tab)](#)
+
+[Read about the published ‘NRL Instalment Plans’](#) to understand your options for paying the levy. 
 
 ## Get help with the nature restoration levy
 
