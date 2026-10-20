@@ -344,7 +344,7 @@ pages:
   # from the link in the email, so it has no Back link
   - id: link-expired
     back: []
-    handoff: 2026-10-06
+    handoff: 2026-10-20
 
   # Reached from the link in the quote email, so it has no Back link
   - id: review-quote-details
