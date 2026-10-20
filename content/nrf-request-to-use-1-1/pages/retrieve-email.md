@@ -12,7 +12,7 @@ title: Email sent from the Nature Restoration Fund service
 
 # Nature restoration levy – retrieve your quote details
 
-You can use the details you previously gave us for your quote to fill in the information needed to request to use the nature restoration levy.
+Retrieve the details you previously gave us for your quote. Use them to provide the information needed to request to use the nature restoration levy.
 
 [Retrieve the quote details](/nrf-request-to-use-1-1/review-quote-details)
 
