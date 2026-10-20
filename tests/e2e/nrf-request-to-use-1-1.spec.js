@@ -1393,11 +1393,11 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     await expect(page).toHaveURL(`${base}/quote-reference`)
   })
 
-  test('the stand-in original reference NRL-222222 has a red line boundary that does not match', async ({
+  test('the stand-in original reference NRL-000000 does not match our records', async ({
     page
   }) => {
     await page.goto(`${base}/original-reference`)
-    await fillAnswer(page, 'original-reference', 'NRL-222222')
+    await fillAnswer(page, 'original-reference', 'NRL-000000')
     await submit(page, 'original-reference')
     await expect(page).toHaveURL(`${base}/original-reference-not-matched`)
     await expectHeading(page, 'original-reference-not-matched')
@@ -1410,6 +1410,34 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
       './original-reference'
     )
     await expect(page).toHaveURL(`${base}/original-reference`)
+  })
+
+  test('the stand-in original reference NRL-222222 has a red line boundary that does not match', async ({
+    page
+  }) => {
+    await retrieveQuote(page)
+    await page.goto(`${base}/original-reference`)
+    await fillAnswer(page, 'original-reference', 'NRL-222222')
+    await submit(page, 'original-reference')
+    await expect(page).toHaveURL(`${base}/original-boundary-not-matched`)
+    await expectHeading(page, 'original-boundary-not-matched')
+    await expect(page.locator('main')).toContainText('NRL-222222')
+    await page.getByRole('link', { name: 'Back' }).click()
+    await expect(page).toHaveURL(`${base}/original-reference`)
+    await page.goto(`${base}/original-boundary-not-matched`)
+    await followLink(
+      page,
+      'original-boundary-not-matched',
+      './original-reference'
+    )
+    await expect(page).toHaveURL(`${base}/original-reference`)
+    await page.goto(`${base}/original-boundary-not-matched`)
+    await followLink(
+      page,
+      'original-boundary-not-matched',
+      './review-quote-details'
+    )
+    await expect(page).toHaveURL(review)
   })
 
   test('the email page says the email with the link has been sent', async ({

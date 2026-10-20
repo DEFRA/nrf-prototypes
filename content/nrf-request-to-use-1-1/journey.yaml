@@ -55,6 +55,7 @@ homepage:
     - the "levy increased" page is gone; everyone sees the accept levy page
     - the confirmation email links to a commitment certificate page to print or save as a PDF
     - a drop-out page when the NRL reference already has a commitment (try NRL-111111)
+    - a drop-out page when the original NRL reference does not match our records (try NRL-000000 as the original NRL reference)
     - a drop-out page when the original application's red line boundary does not match (try NRL-222222 as the original NRL reference)
     - a success page once the email with the link to retrieve the quote has been sent
 
@@ -410,27 +411,37 @@ pages:
       - goto: defra-account-user-type
     handoff: 2026-10-16
     
-  # Behind the scenes the service checks the original application's red line
-  # boundary matches this one. The prototype cannot, so the reference
-  # NRL-222222 stands in for an original whose boundary does not match
+  # Behind the scenes the service looks up the original NRL reference and
+  # checks the original application's red line boundary matches this one by
+  # at least 95%. The prototype cannot, so NRL-000000 stands in for a
+  # reference that does not match our records and NRL-222222 for an original
+  # whose boundary does not match
   - id: original-reference
     field: original-reference
     sessionKey: originalReference
     changeable: true
     handler: custom # checks the reference format, see hooks.js
     next:
-      - when: { key: originalReference, equals: NRL-222222 }
+      - when: { key: originalReference, equals: NRL-000000 }
         goto: original-reference-not-matched
+      - when: { key: originalReference, equals: NRL-222222 }
+        goto: original-boundary-not-matched
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: defra-account-user-type
     handoff: 2026-10-16
 
-  # Placeholder copy: the original application's red line boundary does not
-  # match this one, so the user tries again with the correct reference
+  # The original NRL reference does not match our records, so the user tries
+  # again with the correct reference
   - id: original-reference-not-matched
     back: original-reference
     handoff: 2026-10-16
+
+  # The original application's red line boundary does not match this one, so
+  # the user checks the reference or goes back to review-quote-details to
+  # amend their boundary
+  - id: original-boundary-not-matched
+    back: original-reference
 
   # Before signing in, the user says who they are requesting to use the levy
   # for and reads the Defra account guidance for that kind of user. The answer
