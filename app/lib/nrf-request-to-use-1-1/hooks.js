@@ -649,6 +649,24 @@ function headingId(label, taken) {
   return id
 }
 
+// Give each of the certificate's `##` headings an id and list them for the
+// contents list beside it. The LPA's copy of the certificate
+// (app/lib/lpa-manage-1/hooks.js) uses this too.
+function certificateContents(model) {
+  const taken = new Set()
+  const sections = []
+  model.content.html = model.content.html.replace(
+    /<h2 class="govuk-heading-m">([\s\S]*?)<\/h2>/g,
+    (whole, inner) => {
+      const label = inner.replace(/<[^>]+>/g, '').trim()
+      const id = headingId(label, taken)
+      sections.push({ id, label })
+      return `<h2 class="govuk-heading-m" id="${id}">${inner}</h2>`
+    }
+  )
+  return sections
+}
+
 // The commitment certificate's sidebar, all optional under `text:` in
 // pages/commitment-certificate.md:
 //   contentsTitle    a contents list headed with this, linking to each of
@@ -664,17 +682,7 @@ function headingId(label, taken) {
 const commitmentCertificate = {
   get(ctx, model) {
     const { text } = model.content
-    const taken = new Set()
-    const sections = []
-    model.content.html = model.content.html.replace(
-      /<h2 class="govuk-heading-m">([\s\S]*?)<\/h2>/g,
-      (whole, inner) => {
-        const label = inner.replace(/<[^>]+>/g, '').trim()
-        const id = headingId(label, taken)
-        sections.push({ id, label })
-        return `<h2 class="govuk-heading-m" id="${id}">${inner}</h2>`
-      }
-    )
+    const sections = certificateContents(model)
     model.contents = text.contentsTitle ? sections : []
     model.asideOrder = text.contentsBelowShare
       ? ['print', 'contents']
@@ -714,6 +722,7 @@ module.exports = {
   'defra-business-check-answers': completeRegistration,
   'check-your-answers': checkYourAnswers,
   'commitment-certificate': commitmentCertificate,
+  certificateContents,
   // For tests
   accountFor,
   registeredAccount,

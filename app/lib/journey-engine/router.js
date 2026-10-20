@@ -22,6 +22,12 @@
  *                                                 put its answers in the
  *                                                 session (see startScenario),
  *                                                 e.g. to sign the user in
+ *   hooks.preview(ctx)                          when a page is opened with
+ *                                                 `?preview=1` (not embedded),
+ *                                                 with the session as `data`
+ *                                                 and the sample answers as
+ *                                                 `sample`, so its links and
+ *                                                 buttons can carry on
  */
 
 const multer = require('multer')
@@ -632,6 +638,15 @@ function keepSampleAnswers(ctx) {
 async function handleGet(req, res, journey, page, hooks) {
   const ctx = buildContext(req, res, journey, page)
   keepSampleAnswers(ctx)
+  if (ctx.preview && !ctx.embed && typeof hooks.preview === 'function') {
+    await hooks.preview({
+      req,
+      journey,
+      page,
+      data: req.session.data,
+      sample: ctx.data
+    })
+  }
   if (!ctx.preview && page.guard && !evaluate(page.guard, ctx)) {
     return res.redirect(toPath(page.guard.redirect, journey))
   }

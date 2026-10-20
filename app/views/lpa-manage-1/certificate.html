@@ -1,16 +1,33 @@
 {#
-  Every detail of a record's commitment
-  (content/lpa-manage-1/pages/certificate.md), opened from "View full
-  certificate" on the record page: the page's `rows` and the red line
-  boundary (the page's copy). Breadcrumbs in place of a back link lead to
-  the dashboard and the record, then name this page without a link; a
-  button at the bottom goes back to the record too. The
-  hook finds the record from ?ref=.
+  A record's commitment certificate (content/lpa-manage-1/pages/certificate.md),
+  opened from "View full certificate" on the record page. It is laid out as
+  the developer's certificate is (nrf-request-to-use-1-1/commitment-certificate):
+  the heading across the page, then a one-third column beside the
+  two-thirds certificate. The column holds a contents list linking to the
+  certificate's `##` headings (`contentsTitle`, ids added by the hook) and,
+  where the developer's has its print link, a button back to the record.
+  Breadcrumbs in place of a back link lead to the dashboard and the record,
+  then name this page without a link. The hook finds the record from ?ref=.
+
+  There is no print link, but printing leaves only the certificate, as the
+  developer's does: A4 with 20mm margins and the Natural England logo
+  beside the heading (_commitment-certificate.scss).
 #}
 {% extends "journey-engine/_page.html" %}
 
 {% set text = content.text %}
 {% set record = data.record %}
+{% set bodyClasses = "app-certificate" %}
+
+{% block head %}
+{{ super() }}
+<style>
+  @page {
+    size: A4;
+    margin: 20mm;
+  }
+</style>
+{% endblock %}
 
 {% block beforeContent %}
 {{ super() }}
@@ -24,28 +41,39 @@
 {% endblock %}
 
 {% block content %}
+{#
+  The Natural England logo sits to the right of the heading on paper only.
+  It comes first so that the heading and the details under it wrap beside it
+#}
+<div class="app-certificate__title">
+  <img class="app-certificate__logo" src="/public/images/natural-england-logo.jpg" alt="Natural England">
+  <h1 class="govuk-heading-l">{{ content.heading }}</h1>
+</div>
 <div class="govuk-grid-row">
-  <div class="govuk-grid-column-two-thirds-from-desktop">
-    {% if content.caption %}<span class="govuk-caption-l">{{ content.caption }}</span>{% endif %}
-    <h1 class="govuk-heading-l">{{ content.heading }}</h1>
-
-    {% for group in content.rowGroups %}
-      {% if group.heading %}<h2 class="govuk-heading-m">{{ group.heading }}</h2>{% endif %}
-      {% if group.rows | length %}
-        {{ govukSummaryList({ classes: "govuk-!-margin-bottom-9", rows: group.rows }) }}
-      {% endif %}
-    {% endfor %}
-
-    <div class="app-staff-record__map">
-      {{ content.html | safe }}
-    </div>
-
+  <div class="govuk-grid-column-one-third-from-desktop app-certificate__aside">
+    {% if contents.length %}
+    {# GOV.UK Publishing's contents_list component #}
+    <nav class="app-contents-list" aria-label="{{ text.contentsTitle }}">
+      <h2 class="govuk-heading-m">{{ text.contentsTitle }}</h2>
+      <ol class="app-contents-list__list">
+        {% for section in contents %}
+        <li class="app-contents-list__item">
+          <a class="govuk-link app-contents-list__link" href="#{{ section.id }}">{{ section.label | safe }}</a>
+        </li>
+        {% endfor %}
+      </ol>
+    </nav>
+    {% endif %}
     {% if record %}
       {{ govukButton({
         text: text.backToRecord,
+        classes: "govuk-button--secondary",
         href: routes.VIEW_RECORD + "?ref=" + (record.reference | urlencode)
       }) }}
     {% endif %}
+  </div>
+  <div class="govuk-grid-column-two-thirds-from-desktop app-certificate__body">
+    {{ content.html | safe }}
   </div>
 </div>
 {% endblock %}

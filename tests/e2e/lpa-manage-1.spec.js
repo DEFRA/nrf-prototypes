@@ -289,7 +289,7 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await crumbs.getByRole('link', { name: recorded.reference }).click()
     await expectHeading(page, 'view-record', { record: recorded })
 
-    // The button at the bottom leads back to the record too
+    // The button beside the certificate leads back to the record too
     await page.goto(`${base}/certificate?ref=${recorded.reference}`)
     await page
       .getByRole('button', { name: text('certificate', 'backToRecord') })

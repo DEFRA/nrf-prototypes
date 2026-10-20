@@ -43,6 +43,7 @@ const { message } = require('../journey-engine/validation')
 const { loadJourney } = require('../journey-engine/loader')
 const { buildContext, buildModel } = require('../journey-engine/router')
 const { participantOf } = require('../nrf-request-to-use-1/hooks')
+const { certificateContents } = require('../nrf-request-to-use-1-1/hooks')
 
 const RECORDS_FILE = path.join(
   __dirname,
@@ -218,7 +219,9 @@ function commitmentOf(entry, store) {
       line1: address[0] || '',
       line2: address[1] || '',
       line3: address[2] || '',
-      line4: address[3] || ''
+      line4: address[3] || '',
+      // On one line, as the certificate gives it
+      text: address.filter(Boolean).join(', ')
     },
     planningType: entry.planningType,
     units: entry.units,
@@ -790,6 +793,34 @@ function scenario(ctx) {
   const { data } = ctx
   data.signInEmail = data.signInEmail || officerEmail(MOCK_OFFICER, loadStore())
   oneLoginSignIn.process(ctx)
+}
+
+// The pages that show one record, and keep it when they are posted
+const RECORD_PAGES = [
+  'view-record',
+  'reject-commitment',
+  'certificate',
+  'add-reserved-matters'
+]
+
+// A page opened from the screen wall (`?preview=1`) shows sample answers,
+// but its links and buttons carry on with the session. So when nobody is
+// signed in the officer is, as the participant or the stand-in, with the
+// stand-in's email (another journey's sign in may have left one that
+// would open a council with no records), and a record's page opens the
+// record shown. Clicking on then carries on from the screen rather than
+// at sign in.
+function preview(ctx) {
+  const { data, sample, page } = ctx
+  if (!data.officer) {
+    const signInEmail = data.signInEmail
+    data.signInEmail = officerEmail(MOCK_OFFICER, loadStore())
+    oneLoginSignIn.process({ data })
+    data.signInEmail = signInEmail
+  }
+  if (RECORD_PAGES.includes(page.id) && sample.recordReference) {
+    data.recordReference = sample.recordReference
+  }
 }
 
 // Sign out, registered once at boot; the header's `$signOut` link. It
@@ -1485,7 +1516,6 @@ const rejectCommitment = {
   }
 }
 
-// Every detail of a record's commitment, behind the record page
 // Reserved matters on a page of their own, opened from the record's Add a
 // reserved matters application button:
 // add-reserved-matters?ref=NRL-100958, for a granted outline application
@@ -1526,8 +1556,16 @@ const addReservedMattersPage = {
   }
 }
 
+// A record's commitment certificate, behind the record page, laid out as
+// the developer's certificate is (nrf-request-to-use-1-1), with
+// a contents list beside it (`contentsTitle`) and a button back to the
+// record in place of its print link
 const certificate = {
-  load: loadRecord
+  load: loadRecord,
+  get(ctx, model) {
+    const sections = certificateContents(model)
+    model.contents = model.content.text.contentsTitle ? sections : []
+  }
 }
 
 // The landing page: counts that open the table filtered to them, and
@@ -1620,6 +1658,8 @@ module.exports = {
   dashboard,
   // Journey-wide: a live scenario's sign in (see journey-engine/router.js)
   scenario,
+  // Journey-wide: a page opened from the screen wall
+  preview,
   // For tests
   loadStore,
   allRecords,

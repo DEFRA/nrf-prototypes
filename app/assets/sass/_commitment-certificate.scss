@@ -1,5 +1,6 @@
 // The commitment certificate (nrf-request-to-use-1-1): the certificate on the
-// service's own layout with a print link beside it. Printing, or saving as a
+// service's own layout with a print link beside it. The LPA's copy of it
+// (lpa-manage-1/certificate) prints the same way. Printing, or saving as a
 // PDF from the print window, leaves only the certificate, on A4 with the
 // 20mm margins of the page's @page rule; govuk-frontend sets its print font
 // and type sizes.
@@ -139,6 +140,8 @@ body:not(.govuk-frontend-supported) .app-print-link__js,
     }
 
     .govuk-header,
+    .app-staff-header,
+    .govuk-breadcrumbs,
     .govuk-service-navigation,
     .govuk-phase-banner,
     .app-organisation-bar,

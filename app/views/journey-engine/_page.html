@@ -26,8 +26,9 @@ inline SVG drawn by the engine stays.
 #}
 {% extends "layouts/main.html" %}
 
+{# A page's own body class (the certificate's print styles) stays alongside #}
 {% if page.layout == 'staff' %}
-  {% set bodyClasses = "app-staff" %}
+  {% set bodyClasses = ("app-staff " + bodyClasses) if bodyClasses else "app-staff" %}
 {% endif %}
 {% set hasMap = hasMap or (content and content.html and "app-boundary-map" in content.html) %}
 {% set interactiveMapAssets = "/plugin-assets/%40defra%2Finteractive-map" %}
