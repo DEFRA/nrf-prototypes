@@ -119,9 +119,14 @@ body:not(.govuk-frontend-supported) .app-print-link__js,
       margin: 0 0 5mm 10mm;
     }
 
-    // 18pt headings and 12pt text, smaller than govuk-frontend's print sizes
+    // A 24pt title, 18pt headings and 12pt text, smaller than
+    // govuk-frontend's print sizes
     .govuk-heading-l,
-    .app-certificate__body :is(h1, h2) {
+    .app-certificate__body h1 {
+      font-size: 24pt;
+    }
+
+    .app-certificate__body h2 {
       font-size: 18pt;
     }
 
