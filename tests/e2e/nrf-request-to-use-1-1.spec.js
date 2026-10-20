@@ -1049,6 +1049,36 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     await expect(page).toHaveURL(review)
   })
 
+  test('a drop-out answer left in place shows the drop-out again on Continue', async ({
+    page
+  }) => {
+    const housing = `${quotePath}/housing`
+    const housingRow = page
+      .locator('.govuk-summary-list__row')
+      .filter({ has: changeLink(page, 'review-quote-details', housing) })
+      .locator('dd')
+      .first()
+    await retrieveQuote(page)
+    await changeLink(page, 'review-quote-details', housing).click()
+    await quote.answer(page, 'housing', 'No')
+    await quote.submit(page, 'housing')
+    await quote.expectHeading(page, 'not-housing')
+    // Back to the question, then Back again to the review page: the answer
+    // stays as the user left it
+    await page.getByRole('link', { name: 'Back' }).click()
+    await page.getByRole('link', { name: 'Back' }).click()
+    await expect(page).toHaveURL(review)
+    await expect(housingRow).toHaveText(
+      rowValue('review-quote-details', housing, { isHousing: 'No' })
+    )
+    // Continue cannot go on with it, and Back returns to the review page
+    await submit(page, 'review-quote-details')
+    await expect(page).toHaveURL(`${quotePath}/not-housing?nav=${review}`)
+    await quote.expectHeading(page, 'not-housing')
+    await page.getByRole('link', { name: 'Back' }).click()
+    await expect(page).toHaveURL(review)
+  })
+
   test('changing the boundary starts at draw or upload and comes back', async ({
     page
   }) => {
@@ -1486,9 +1516,11 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     expect(borrowed.map((node) => node.path).sort()).toEqual([
       `${quotePath}/delete-quote`,
       `${quotePath}/housing`,
+      `${quotePath}/not-housing`,
       `${quotePath}/planning-type`,
       `${quotePath}/redline-map`,
-      `${quotePath}/units`
+      `${quotePath}/units`,
+      `${quotePath}/wrong-permission`
     ])
   })
 })
