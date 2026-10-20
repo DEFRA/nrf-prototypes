@@ -539,18 +539,13 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(details).toContainText(existing.description)
     const entries = await page.locator('.app-timeline__item').count()
 
-    // The description is optional; the reference, stage and matters are not
+    // The description is optional; the reference and matters are not
     await addReservedMatters()
     await save.click()
     await expectError(
       page,
       'add-reserved-matters',
       'reservedMattersReferenceRequired'
-    )
-    await expectError(
-      page,
-      'add-reserved-matters',
-      'reservedMattersStatusRequired'
     )
     await expectError(
       page,
@@ -563,7 +558,6 @@ test.describe('lpa-manage-1: manage commitments', () => {
       exact: true
     })
     await label('reservedMattersReferenceLabel').fill(existing.reference)
-    await page.getByLabel(store.planningStages.applied, { exact: true }).check()
     await matter.check()
     await label('reservedMattersDescriptionLabel').fill('Phase 2 (120 homes)')
     await save.click()

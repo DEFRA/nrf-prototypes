@@ -88,6 +88,7 @@ homepage:
     - a granted outline application has an "Add a reserved matters application" button below its planning details in place of a radio; the placeholder option is gone
     - adding a reserved matters application asks for the planning application reference and stage, the matters it is for (checkboxes) and an optional description
     - the developer record history is sentence case, and Manage developer records is a link
+    - adding a reserved matters application no longer asks for its stage (it shows as applied)
 
 # The answers the copy can show, as {{ name }} (see content/README.md).
 # `commitment` is the commitment on screen and `record` the record.

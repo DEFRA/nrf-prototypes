@@ -68,14 +68,14 @@ const REVIEW_LATER = 'review-later'
 const PLANNING_STEP = 'planning'
 const GRANTED_STAGE = 'granted'
 // An outline planning application, once granted, takes reserved matters
-// applications on the add-reserved-matters page: each a reference, a
-// status (a planning stage), the matters it is for and an optional short
-// description of no more than DESCRIPTION_LIMIT characters
+// applications on the add-reserved-matters page: each a reference, the
+// matters it is for and an optional short description of no more than
+// DESCRIPTION_LIMIT characters. One added here has no stage, so it shows
+// as applied (records.yaml's can give theirs a `status`)
 const OUTLINE_TYPE = 'Outline planning permission'
 const RESERVED_MATTERS = 'reserved-matters'
 const RESERVED_MATTERS_FIELDS = {
   reference: 'reserved-matters-reference',
-  status: 'reserved-matters-status',
   matters: 'reserved-matters',
   description: 'reserved-matters-description'
 }
@@ -1114,8 +1114,8 @@ function sameReference(a, b) {
 }
 
 /**
- * The add-reserved-matters page's form, its status radios the planning
- * stages in records.yaml and its checkboxes the reserved matters there.
+ * The add-reserved-matters page's form, its checkboxes the reserved
+ * matters in records.yaml.
  * Null for a record that takes none.
  */
 function reservedMattersModel(ctx, record, { values = {}, errors = [] }) {
@@ -1137,11 +1137,6 @@ function reservedMattersModel(ctx, record, { values = {}, errors = [] }) {
     limit: DESCRIPTION_LIMIT,
     values,
     errors: errorFor,
-    statuses: Object.entries(store.planningStages).map(([value, label]) => ({
-      value,
-      text: label,
-      checked: values.status === value
-    })),
     matters: Object.entries(store.reservedMatters).map(([value, label]) => ({
       value,
       text: label,
@@ -1178,10 +1173,6 @@ function checkReservedMatters(page, body, record) {
   ) {
     problem('reference', 'reservedMattersReferenceAdded')
   }
-  if (!(values.status in store.planningStages)) {
-    values.status = ''
-    problem('status', 'reservedMattersStatusRequired')
-  }
   if (!values.matters.length) {
     problem('matters', 'reservedMattersMattersRequired')
   }
@@ -1195,7 +1186,6 @@ function checkReservedMatters(page, body, record) {
 const RESERVED_MATTERS_ERRORS = {
   reservedMattersReferenceRequired: RESERVED_MATTERS_FIELDS.reference,
   reservedMattersReferenceAdded: RESERVED_MATTERS_FIELDS.reference,
-  reservedMattersStatusRequired: RESERVED_MATTERS_FIELDS.status,
   reservedMattersMattersRequired: RESERVED_MATTERS_FIELDS.matters,
   reservedMattersDescriptionTooLong: RESERVED_MATTERS_FIELDS.description
 }
@@ -1460,7 +1450,6 @@ function addReservedMatters(req, res, journey) {
         ...(found.record.reservedMatters || []),
         {
           reference: values.reference,
-          status: values.status,
           matters: values.matters,
           description: values.description
         }
