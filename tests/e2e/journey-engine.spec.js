@@ -499,3 +499,47 @@ test.describe('journey engine: markdown tables', () => {
     expect(out).not.toContain('style=')
   })
 })
+
+test.describe('journey engine: Back links from emails', () => {
+  const RTU = 'nrf-request-to-use-1-1'
+
+  function problemsWith(edit) {
+    return withContentCopy((contentDir) => {
+      const file = path.join(contentDir, RTU, 'journey.yaml')
+      const yaml = fs.readFileSync(file, 'utf8')
+      const edited = edit(yaml)
+      expect(edited).not.toBe(yaml)
+      fs.writeFileSync(file, edited)
+      try {
+        loadJourney(RTU, { contentDir })
+        return ''
+      } catch (error) {
+        return error.message
+      }
+    })
+  }
+
+  test('a Back link to an email page is refused', () => {
+    const message = problemsWith((yaml) =>
+      yaml.replace(/(- id: link-expired\n {4}back: )\[\]/, '$1retrieve-email')
+    )
+    expect(message).toContain(
+      "pages 'link-expired': its Back link goes to the email 'retrieve-email'"
+    )
+  })
+
+  test('so is the default Back link to the email whose link led here', () => {
+    const message = problemsWith((yaml) =>
+      yaml.replace(/(- id: review-quote-details\n) {4}back: \[\]\n/, '$1')
+    )
+    expect(message).toContain(
+      "pages 'review-quote-details': its Back link goes to the email 'retrieve-email'"
+    )
+  })
+
+  test('a back rule list may end without a default: no Back link', () => {
+    const journey = loadJourney(RTU)
+    const signIn = journey.byId.get('sign-in-method')
+    expect(signIn.back[signIn.back.length - 1].when).toBeTruthy()
+  })
+})

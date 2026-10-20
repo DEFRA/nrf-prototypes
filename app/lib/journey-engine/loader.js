@@ -95,7 +95,7 @@ const LAYOUTS = [
 ]
 
 // A `goto` of `$summary` returns to whichever summary page the user came from
-const { SUMMARY_TARGET } = require('./back-link')
+const { SUMMARY_TARGET, findReferrer } = require('./back-link')
 
 const cache = new Map()
 
@@ -189,7 +189,12 @@ function signatureFor(journeyId, contentDir = CONTENT_DIR) {
     .join('|')
 }
 
-function normaliseRules(raw, where, problems) {
+/**
+ * A rule list for `next`, `back` and the like. Every list ends with a
+ * default except `back` (`options.noDefault`): when none of its rules match
+ * the page has no Back link, as for a user who came from a link in an email.
+ */
+function normaliseRules(raw, where, problems, options = {}) {
   if (raw === undefined || raw === null) {
     return undefined
   }
@@ -211,7 +216,7 @@ function normaliseRules(raw, where, problems) {
     problems.push(...validateCondition(rule.when, `${where}[${i}].when`))
     return rule
   })
-  if (rules.length && rules[rules.length - 1].when) {
+  if (!options.noDefault && rules.length && rules[rules.length - 1].when) {
     problems.push(`${where}: the last rule must have no 'when' (a default)`)
   }
   return rules
@@ -452,7 +457,9 @@ function buildPage(entry, journey, problems, from = {}) {
   const back =
     typeof entry.back === 'string'
       ? entry.back
-      : normaliseRules(entry.back, `${where}.back`, problems)
+      : normaliseRules(entry.back, `${where}.back`, problems, {
+          noDefault: true
+        })
 
   if (entry.guard) {
     const { redirect, ...condition } = entry.guard
@@ -1021,6 +1028,11 @@ function build(journeyId, options = {}) {
     }
   })
   validateChoiceValues(journey, problems)
+  // A frozen handoff copy (mounted at its own basePath) keeps working as it
+  // was handed over
+  if (!options.basePath) {
+    validateEmailBackLinks(journey, problems)
+  }
 
   const pagesDir = path.join(dir, 'pages')
   if (fs.existsSync(pagesDir)) {
@@ -1049,6 +1061,41 @@ function build(journeyId, options = {}) {
     )
   }
   return journey
+}
+
+/**
+ * A user who follows a link in an email arrives with nothing of the
+ * service's to go back to, so a Back link must never lead to an email page
+ * (`layout: email`): the page they land on needs `back: []`, or a page of
+ * the service the user really did come from. Checks the page's `back` and,
+ * when it has none, the page whose `next` leads here (the default Back
+ * link, see back-link.js).
+ */
+function validateEmailBackLinks(journey, problems) {
+  const isEmail = (id) => {
+    const target = journey.byId.get(id)
+    return Boolean(target && target.layout === 'email')
+  }
+  for (const page of journey.pages) {
+    let targets = []
+    if (typeof page.back === 'string') {
+      targets = [page.back]
+    } else if (Array.isArray(page.back)) {
+      targets = page.back.map((rule) => rule.goto)
+    } else if (
+      page.type !== 'confirmation' &&
+      page.layout !== 'document' &&
+      page.id !== journey.start
+    ) {
+      const referrer = findReferrer(page, journey)
+      targets = referrer ? [referrer.id] : []
+    }
+    for (const target of targets.filter(isEmail)) {
+      problems.push(
+        `pages '${page.id}': its Back link goes to the email '${target}', but a user who follows a link in an email has no page to go back to. Set 'back: []' (or name the page of the service they came from)`
+      )
+    }
+  }
 }
 
 /**

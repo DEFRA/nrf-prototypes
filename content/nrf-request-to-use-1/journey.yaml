@@ -323,11 +323,13 @@ pages:
     next: review-quote-details
 
   # Placeholder copy: the retrieval link has expired, so the user asks for
-  # a new one
+  # a new one. Reached from the link in the email, so it has no Back link
   - id: link-expired
-    back: retrieve-email
+    back: []
 
+  # Reached from the link in the quote email, so it has no Back link
   - id: review-quote-details
+    back: []
     guard: { key: quoteReference, isSet: true, redirect: quote-reference }
     handler: custom # loads the quote, recalculates the levy, see hooks.js
     next:
@@ -484,13 +486,14 @@ pages:
     guard: { key: defraUserType, equals: agent, redirect: defra-account-user-type }
     next: sign-in-method
 
+  # An agent arrives from the link in the invitation email, so no rule
+  # matches and there is no Back link
   - id: sign-in-method
     back:
       - when: { key: defraUserType, equals: individual }
         goto: defra-account-individual
       - when: { key: defraUserType, equals: organisation }
         goto: defra-account-organisation
-      - goto: defra-account-agent-email
     field: sign-in-method
     sessionKey: signInMethod
     handler: custom # registers the sign-out route, see hooks.js

@@ -385,10 +385,8 @@ test.describe('nrf-request-to-use-1-1 happy paths', () => {
     )
     await followLink(page, 'defra-account-agent-email', './$next')
     await expect(page).toHaveURL(`${base}/sign-in-method`)
-    await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
-      'href',
-      `${base}/defra-account-agent-email`
-    )
+    // Reached from the link in the invitation email: nothing to go back to
+    await expect(page.getByRole('link', { name: 'Back' })).toHaveCount(0)
 
     // The account type follows the answer, not the email
     await signIn(page, 'company@example.com')
@@ -1464,8 +1462,8 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     await expired.click()
     await expect(page).toHaveURL(`${base}/link-expired`)
     await expectHeading(page, 'link-expired')
-    await page.getByRole('link', { name: 'Back' }).click()
-    await expect(page).toHaveURL(`${base}/retrieve-email`)
+    // Reached from the link in the email, so there is nothing to go back to
+    await expect(page.getByRole('link', { name: 'Back' })).toHaveCount(0)
     // Asking for a new link sends the email again
     await page.goto(`${base}/link-expired`)
     await followLink(page, 'link-expired', './email-sent')

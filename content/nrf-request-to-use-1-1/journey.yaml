@@ -340,10 +340,10 @@ pages:
         newTab: false
     next: review-quote-details
 
-  # the retrieval link has expired, so the user asks for
-  # a new one
+  # The retrieval link has expired, so the user asks for a new one. Reached
+  # from the link in the email, so it has no Back link
   - id: link-expired
-    back: retrieve-email
+    back: []
     handoff: 2026-10-06
 
   # Reached from the link in the quote email, so it has no Back link
@@ -520,13 +520,14 @@ pages:
     guard: { key: defraUserType, equals: agent, redirect: defra-account-user-type }
     next: sign-in-method
 
+  # An agent arrives from the link in the invitation email, so no rule
+  # matches and there is no Back link
   - id: sign-in-method
     back:
       - when: { key: defraUserType, equals: individual }
         goto: defra-account-individual
       - when: { key: defraUserType, equals: organisation }
         goto: defra-account-organisation
-      - goto: defra-account-agent-email
     field: sign-in-method
     sessionKey: signInMethod
     handler: custom # registers the sign-out route, see hooks.js
