@@ -356,7 +356,7 @@ pages:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: accept-levy
-    handoff: 2026-10-16
+    handoff: 2026-10-20
 
   # The development details are changed on the quote journey's own pages:
   # the Change links on review-quote-details point at
