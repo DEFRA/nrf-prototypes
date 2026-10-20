@@ -1466,7 +1466,7 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     await expect(page.getByRole('link', { name: 'Back' })).toHaveCount(0)
     // Asking for a new link sends the email again
     await page.goto(`${base}/link-expired`)
-    await followLink(page, 'link-expired', './email-sent')
+    await act(page, 'link-expired', 'submit')
     await expect(page).toHaveURL(`${base}/email-sent`)
   })
 
