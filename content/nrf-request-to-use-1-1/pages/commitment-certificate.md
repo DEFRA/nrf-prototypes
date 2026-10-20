@@ -64,7 +64,7 @@ Inflation adjustment will continue to be made until the total levy amount has be
 
 This commitment may be relied upon through the planning application process to disapply the relevant environmental obligations that would otherwise have arisen because of the environmental impact of the development. 
 
-Environmental impacts of development not covered by this EDP will need to be addressed through other environmental assessment processes such as a habitats regulations assessment. 
+Environmental impacts of development not covered by the EDPs specified in this commitment will need to be addressed through other environmental assessment processes such as a habitats regulations assessment.
 
 
 ### What this commitment enables
