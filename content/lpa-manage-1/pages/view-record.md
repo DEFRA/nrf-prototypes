@@ -97,7 +97,7 @@ text:
   viewCertificate: View full certificate
   statusLegend: Have you reviewed these commitment details?
   # Once the commitment details are reviewed
-  planningLegend: What stage is the planning permission at?
+  planningLegend: What was the outcome of the planning application?
   # Below the planning details of a granted outline application
   addReservedMatters: Add a reserved matters application
   # In place of the radios once rejected, under its own heading
