@@ -8,6 +8,7 @@
  *   whole      not a whole number
  *   min, max   number out of range
  *   format     email in the wrong shape
+ *   tooLong    more characters than a textarea's maxLength
  *   tooLarge   file over the size limit
  *   wrongType  file extension not allowed
  *   empty      zero-byte file
@@ -50,6 +51,18 @@ function validateInput(page, body) {
   const value = String(body[page.field] || '').trim()
   if (!value) {
     return fail(page, 'required')
+  }
+  return { ok: true, value }
+}
+
+// A `type: textarea` page with `optional: true` may be left empty
+function validateTextarea(page, body) {
+  const value = String(body[page.field] || '').trim()
+  if (!value && !page.content.optional) {
+    return fail(page, 'required')
+  }
+  if (page.content.maxLength && value.length > page.content.maxLength) {
+    return fail(page, 'tooLong')
   }
   return { ok: true, value }
 }
@@ -179,6 +192,8 @@ function validatePage(page, body = {}, file, multerError) {
     case 'input':
     case 'password':
       return validateInput(page, body)
+    case 'textarea':
+      return validateTextarea(page, body)
     case 'form':
       return validateForm(page, body)
     case 'number':

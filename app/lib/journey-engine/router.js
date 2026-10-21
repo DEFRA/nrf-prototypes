@@ -412,6 +412,8 @@ function renderContent(page, ctx) {
     width: c.width,
     autocomplete: c.autocomplete,
     spellcheck: c.spellcheck,
+    lines: c.lines,
+    maxLength: c.maxLength,
     errors: c.errors,
     // Named strings a custom template renders itself (`text:` frontmatter)
     text: c.text || {},

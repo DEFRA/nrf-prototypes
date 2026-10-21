@@ -23,6 +23,9 @@ const {
   answer,
   fillAnswer,
   submit,
+  act,
+  changeLink,
+  answerBox,
   actionLocator,
   optionLocator,
   option,
@@ -41,6 +44,22 @@ const recorded = store.commitments.find((entry) => entry.record)
 
 // Signing in lands on the dashboard, or on "Enter an NRL reference" for a
 // council with no records yet (an email with "new" in it)
+// Granted asks for the planning decision details; this answers them and
+// confirms, back on the dashboard
+async function answerDecision(page, planningType = 'outline') {
+  await expectHeading(page, 'decision-reference')
+  await submit(page, 'decision-reference')
+  await fillAnswer(page, 'decision-units', '48')
+  await submit(page, 'decision-units')
+  await answer(page, 'decision-planning-type', planningType)
+  await submit(page, 'decision-planning-type')
+  await fillAnswer(page, 'decision-address', '3 Mill Lane\nScarfolk\nSC2 9ML')
+  await submit(page, 'decision-address')
+  await submit(page, 'decision-description')
+  await act(page, 'decision-check-answers', 'submit')
+  await expectHeading(page, 'dashboard')
+}
+
 async function signIn(page, email = 'officer@scarfolk.gov.uk') {
   await page.goto(`${base}/one-login-email`)
   await expectOnPage(page, 'one-login-email')
@@ -476,6 +495,76 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(optionLocator(page, 'view-record', 'refused')).toHaveCount(1)
   })
 
+  test('granted asks for the planning decision details first', async ({
+    page
+  }) => {
+    const applied = store.commitments.find(
+      (entry) =>
+        entry.record &&
+        entry.record.status === 'reviewed' &&
+        entry.record.planningStage === 'applied'
+    )
+    const viewPath = `${base}/view-record?ref=${applied.reference}`
+    const items = page.locator('.app-timeline__item')
+    await signIn(page)
+    await page.goto(viewPath)
+    const entries = await items.count()
+    await answer(page, 'view-record', 'granted')
+    await submit(page, 'view-record')
+
+    // The reference starts as the planning application's
+    await expectHeading(page, 'decision-reference')
+    await expect(page.locator('.govuk-caption-l')).toContainText(
+      applied.reference
+    )
+    await expect(answerBox(page, 'decision-reference')).toHaveValue(
+      applied.record.planningReference
+    )
+    await submit(page, 'decision-reference')
+
+    // Units and planning type start blank
+    await expect(answerBox(page, 'decision-units')).toHaveValue('')
+    await submit(page, 'decision-units')
+    await expectError(page, 'decision-units')
+    await fillAnswer(page, 'decision-units', '48')
+    await submit(page, 'decision-units')
+    await submit(page, 'decision-planning-type')
+    await expectError(page, 'decision-planning-type')
+    await answer(page, 'decision-planning-type', 'full')
+    await submit(page, 'decision-planning-type')
+
+    // The address is a box to paste into; the description is optional
+    await submit(page, 'decision-address')
+    await expectError(page, 'decision-address')
+    await fillAnswer(page, 'decision-address', '3 Mill Lane\nScarfolk\nSC2 9ML')
+    await submit(page, 'decision-address')
+    await submit(page, 'decision-description')
+    await expectHeading(page, 'decision-check-answers')
+    const summary = page.locator('.govuk-summary-list')
+    await expect(summary).toContainText(applied.record.planningReference)
+    await expect(summary).toContainText(
+      option('decision-planning-type', 'full')
+    )
+
+    // A change returns to the check page
+    await changeLink(page, 'decision-check-answers', 'decision-units').click()
+    await fillAnswer(page, 'decision-units', '52')
+    await submit(page, 'decision-units')
+    await expectHeading(page, 'decision-check-answers')
+    await expect(summary).toContainText('52')
+
+    // Nothing changes until Confirm, which sets the stage to Granted
+    await page.goto(viewPath)
+    await expect(items).toHaveCount(entries)
+    await page.goBack()
+    await act(page, 'decision-check-answers', 'submit')
+    await expectHeading(page, 'dashboard')
+    await page.goto(viewPath)
+    await expect(items.first()).toContainText(
+      `${text('view-record', 'timelineStage')} ${store.planningStages.granted.toLowerCase()}`
+    )
+  })
+
   test('a granted outline application takes reserved matters', async ({
     page
   }) => {
@@ -512,7 +601,7 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(addButton).toHaveCount(0)
     await answer(page, 'view-record', 'granted')
     await submit(page, 'view-record')
-    await expectHeading(page, 'dashboard')
+    await answerDecision(page)
     await page.goto(`${base}/view-record?ref=${notGranted.reference}`)
     await expect(addButton).toHaveCount(1)
 

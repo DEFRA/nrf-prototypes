@@ -1,0 +1,41 @@
+{#
+  `type: textarea`: one question answered in a box of several lines (an
+  address to paste in, a description). The question is the box's label,
+  as on an input page. `lines` sets the box's height; `maxLength` adds a
+  character count; `optional: true` lets it be left empty.
+#}
+{% extends "journey-engine/_page.html" %}
+
+{% block pageBody %}
+<form action="{{ page.path }}" method="post" novalidate>
+  {% include "journey-engine/_change-inputs.html" %}
+  {% include "journey-engine/_error-summary.html" %}
+
+  {% set box = {
+    id: page.field,
+    name: page.field,
+    rows: content.lines or 5,
+    maxlength: content.maxLength,
+    spellcheck: content.spellcheck,
+    label: {
+      html: ('<span class="govuk-caption-l">' + (content.caption | escape) + '</span> ' if content.caption else '') + (content.heading | escape),
+      classes: "govuk-label--l",
+      isPageHeading: true
+    },
+    hint: { text: content.hint } if content.hint,
+    value: data[page.sessionKey],
+    errorMessage: { text: error } if error
+  } %}
+  {% if content.maxLength %}
+    {{ govukCharacterCount(box) }}
+  {% else %}
+    {{ govukTextarea(box) }}
+  {% endif %}
+
+  {{ content.html | safe }}
+
+  {% include "journey-engine/_question-actions.html" %}
+
+  {{ content.htmlAfter | safe }}
+</form>
+{% endblock %}

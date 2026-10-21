@@ -27,6 +27,9 @@
  *   - the record page's audit timeline and its review options, which post
  *     back to the page and return to the dashboard, and the full
  *     certificate behind it
+ *   - choosing Granted asks for the planning decision details (reference,
+ *     units, planning type, address and description) and checks them
+ *     before the stage changes
  *   - once the commitment details are reviewed the record page offers the
  *     planning stages possible from the stage the application is at; a
  *     granted outline application has a button to the add-reserved-matters
@@ -80,6 +83,15 @@ const RESERVED_MATTERS_FIELDS = {
   description: 'reserved-matters-description'
 }
 const DESCRIPTION_LIMIT = 200
+// Choosing Granted asks for the planning decision details first; the
+// answers each page keeps, cleared when the questions start again
+const DECISION_KEYS = [
+  'decisionReference',
+  'decisionUnits',
+  'decisionPlanningType',
+  'decisionAddress',
+  'decisionDescription'
+]
 // "Is this a planning variation?"
 const IS_VARIATION = 'yes'
 const SESSION_KEYS = ['officer', 'signInEmail']
@@ -331,6 +343,8 @@ function recordOf({ entry, record }, store, today = new Date()) {
     originalReference: entry.originalReference || '',
     originalPlanningReference: record.originalPlanningReference || '',
     planningStage: planningStageOf(record.planningStage || ADDED_STAGE, store),
+    // The details given with Granted (decision-check-answers)
+    planningDecision: record.planningDecision || null,
     reservedMatters: (record.reservedMatters || []).map((item) => ({
       reference: item.reference,
       status: planningStageOf(item.status || ADDED_STAGE, store),
@@ -820,6 +834,10 @@ function preview(ctx) {
   }
   if (RECORD_PAGES.includes(page.id) && sample.recordReference) {
     data.recordReference = sample.recordReference
+  }
+  // The planning decision questions carry on for the record shown
+  if (page.id.startsWith('decision-') && !data.decisionRecord) {
+    data.decisionRecord = sample.decisionRecord
   }
 }
 
@@ -1389,9 +1407,12 @@ const viewRecord = {
     if (!found || !value) {
       return { redirect: dashboardPath }
     }
+    // Rejecting asks why, and Granted asks for the planning decision
+    // details: journey.yaml's rules on newStatus lead there
     if (value.choice === REJECTED_STATUS) {
       delete data.rejectReason
-      return { redirect: ctx.journey.routes.REJECT_COMMITMENT }
+      data.newStatus = value.choice
+      return null
     }
     const record = found.record
     const changes = {}
@@ -1399,6 +1420,17 @@ const viewRecord = {
     if (value.step === PLANNING_STEP) {
       if ((record.planningStage || ADDED_STAGE) === value.choice) {
         return { redirect: dashboardPath }
+      }
+      // Granted asks for the planning decision details first, starting
+      // with the record's planning application reference
+      if (value.choice === GRANTED_STAGE) {
+        for (const key of DECISION_KEYS) {
+          delete data[key]
+        }
+        data.decisionRecord = reference
+        data.decisionReference = record.planningReference
+        data.newStatus = value.choice
+        return null
       }
       changes.planningStage = value.choice
       event = { event: 'stage', stage: value.choice }
@@ -1502,6 +1534,53 @@ const rejectCommitment = {
     }
     updateRecord(data, found, { status: REJECTED_STATUS }, event)
     return { redirect: ctx.journey.routes.DASHBOARD }
+  }
+}
+
+// The planning decision details given with Granted. The address keeps its
+// lines; Confirm sets the stage to Granted and keeps the details on the
+// record and its history; journey.yaml returns to the dashboard, which says
+// the record was updated.
+const decisionCheckAnswers = {
+  get(ctx, model) {
+    const address = String(ctx.data.decisionAddress || '')
+    for (const row of model.content.rows) {
+      if (address && row.value.text === address) {
+        row.value = {
+          html: address
+            .split(/\r?\n/)
+            .map((line) => escapeHtml(line.trim()))
+            .filter(Boolean)
+            .join('<br>')
+        }
+      }
+    }
+  },
+  process(ctx) {
+    const { data } = ctx
+    const reference = data.decisionRecord
+    const found = allEntries(data).find(
+      (item) => item.entry.reference === reference
+    )
+    const decision = {
+      reference: data.decisionReference,
+      units: data.decisionUnits,
+      planningType: data.decisionPlanningType,
+      address: data.decisionAddress,
+      description: data.decisionDescription || ''
+    }
+    for (const key of ['decisionRecord', ...DECISION_KEYS]) {
+      delete data[key]
+    }
+    if (found) {
+      updateRecord(
+        data,
+        found,
+        { planningStage: GRANTED_STAGE, planningDecision: decision },
+        { event: 'stage', stage: GRANTED_STAGE }
+      )
+      data.recordReference = reference
+    }
   }
 }
 
@@ -1642,6 +1721,7 @@ module.exports = {
   'planning-variation-reference': addVariation,
   'view-record': viewRecord,
   'reject-commitment': rejectCommitment,
+  'decision-check-answers': decisionCheckAnswers,
   certificate,
   'add-reserved-matters': addReservedMattersPage,
   dashboard,

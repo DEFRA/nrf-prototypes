@@ -125,7 +125,19 @@ function copyOf(journeyId) {
   // The label of a page with one input: `label:` when set, else the question
   function answerLabel(id) {
     const content = pageOf(id).content
-    return content.label || plain(content.heading)
+    if (content.label) {
+      return content.label
+    }
+    // A caption ("NRL-100676") sits inside a heading that is the label, so
+    // the label ends with the heading
+    if (content.caption) {
+      const heading = plain(content.heading).replace(
+        /[.*+?^${}()|[\]\\]/g,
+        '\\$&'
+      )
+      return new RegExp(`${heading}\\s*$`)
+    }
+    return plain(content.heading)
   }
 
   // The text of the button that submits the page: a question's `button`, or

@@ -161,6 +161,7 @@ Write the answer's name in double curly braces: `{{ estimateEmail }}`. The names
 | `input`         | `hint`, `errors`, `button`, `width`, `label` (see "A label under the heading")                                   |
 | `number`        | as input                                                                                                         |
 | `email`         | as input                                                                                                         |
+| `textarea`      | `hint`, `errors`, `button`, `lines` (box height), `maxLength` (adds a count, `tooLong` error), `optional: true`  |
 | `password`      | `hint`, `errors`, `button`; has a Show/Hide toggle, never stored                                                 |
 | `form`          | `hint`, `fields`, `button`, `actions` (see "Several fields")                                                     |
 | `select`        | `label`, `placeholder`, `options`, `errors`, `button`, `actions`; a dropdown under the heading and body copy     |
