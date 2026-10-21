@@ -1537,25 +1537,10 @@ const rejectCommitment = {
   }
 }
 
-// The planning decision details given with Granted. The address keeps its
-// lines; Confirm sets the stage to Granted and keeps the details on the
-// record and its history; journey.yaml returns to the dashboard, which says
-// the record was updated.
+// The planning decision details given with Granted. Confirm sets the stage
+// to Granted and keeps the details on the record and its history;
+// journey.yaml returns to the dashboard, which says the record was updated.
 const decisionCheckAnswers = {
-  get(ctx, model) {
-    const address = String(ctx.data.decisionAddress || '')
-    for (const row of model.content.rows) {
-      if (address && row.value.text === address) {
-        row.value = {
-          html: address
-            .split(/\r?\n/)
-            .map((line) => escapeHtml(line.trim()))
-            .filter(Boolean)
-            .join('<br>')
-        }
-      }
-    }
-  },
   process(ctx) {
     const { data } = ctx
     const reference = data.decisionRecord

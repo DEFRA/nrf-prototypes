@@ -426,7 +426,6 @@ pages:
 
   - id: decision-address
     group: planning-decision
-    field: decision-address
     sessionKey: decisionAddress
     guard: *deciding
     changeable: true
@@ -457,10 +456,10 @@ pages:
         <<: *decision-preview
         decisionUnits: 48
         decisionPlanningType: full
-        decisionAddress: |-
-          3 Mill Lane
-          Scarfolk
-          SC2 9ML
+        decisionAddress:
+          addressLine1: 3 Mill Lane
+          town: Scarfolk
+          postcode: SC2 9ML
         decisionDescription: Erection of 48 dwellings with access, parking and landscaping
 
   # Every detail of a record's commitment: certificate?ref=NRL-123456.

@@ -22,6 +22,7 @@ const {
   base,
   answer,
   fillAnswer,
+  fillField,
   submit,
   act,
   changeLink,
@@ -33,6 +34,7 @@ const {
   expectHeading,
   heading,
   expectError,
+  expectFieldError,
   expectOnPage,
   pageOf
 } = copyOf('lpa-manage-1')
@@ -53,11 +55,18 @@ async function answerDecision(page, planningType = 'outline') {
   await submit(page, 'decision-units')
   await answer(page, 'decision-planning-type', planningType)
   await submit(page, 'decision-planning-type')
-  await fillAnswer(page, 'decision-address', '3 Mill Lane\nScarfolk\nSC2 9ML')
+  await fillAddress(page)
   await submit(page, 'decision-address')
   await submit(page, 'decision-description')
   await act(page, 'decision-check-answers', 'submit')
   await expectHeading(page, 'dashboard')
+}
+
+// The address of the proposed development, line by line
+async function fillAddress(page) {
+  await fillField(page, 'decision-address', 'address-line-1', '3 Mill Lane')
+  await fillField(page, 'decision-address', 'town', 'Scarfolk')
+  await fillField(page, 'decision-address', 'postcode', 'SC2 9ML')
 }
 
 async function signIn(page, email = 'officer@scarfolk.gov.uk') {
@@ -533,10 +542,11 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await answer(page, 'decision-planning-type', 'full')
     await submit(page, 'decision-planning-type')
 
-    // The address is a box to paste into; the description is optional
+    // The address starts blank; the description is optional
     await submit(page, 'decision-address')
-    await expectError(page, 'decision-address')
-    await fillAnswer(page, 'decision-address', '3 Mill Lane\nScarfolk\nSC2 9ML')
+    await expectFieldError(page, 'decision-address', 'address-line-1')
+    await expectFieldError(page, 'decision-address', 'postcode')
+    await fillAddress(page)
     await submit(page, 'decision-address')
     await submit(page, 'decision-description')
     await expectHeading(page, 'decision-check-answers')
@@ -545,6 +555,7 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(summary).toContainText(
       option('decision-planning-type', 'full')
     )
+    await expect(summary).toContainText('SC2 9ML')
 
     // A change returns to the check page
     await changeLink(page, 'decision-check-answers', 'decision-units').click()
