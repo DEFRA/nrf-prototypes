@@ -7,4 +7,4 @@ lines: 5
 button: Continue
 ---
 
-# Describe the proposed development (optional)
+# Describe the relevant development (optional)

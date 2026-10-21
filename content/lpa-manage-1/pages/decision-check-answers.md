@@ -16,7 +16,7 @@ rows:
     value: '{{ decisionPlanningType }}'
     change: decision-planning-type
     changeHidden: planning permission type
-  - key: Address of the proposed development
+  - key: Address of the relevant development
     value:
       lines:
         - '{{ decisionAddress.addressLine1 }}'
@@ -25,14 +25,14 @@ rows:
         - '{{ decisionAddress.county }}'
         - '{{ decisionAddress.postcode }}'
     change: decision-address
-    changeHidden: address of the proposed development
-  - key: Description of the proposed development
+    changeHidden: address of the relevant development
+  - key: Description of the relevant development
     value:
       when: { key: decisionDescription, truthy: true }
       then: '{{ decisionDescription }}'
       else: Not given
     change: decision-description
-    changeHidden: description of the proposed development
+    changeHidden: description of the relevant development
 actions:
   - text: Confirm
     kind: submit
@@ -43,4 +43,4 @@ actions:
 
 # Check the planning decision details
 
-Confirming will change the planning application stage to granted.
+Confirming will update the developer record to show planning permission as granted.

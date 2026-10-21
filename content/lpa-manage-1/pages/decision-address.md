@@ -30,4 +30,4 @@ fields:
 button: Continue
 ---
 
-# What is the address of the proposed development?
+# What is the address of the relevant development?
