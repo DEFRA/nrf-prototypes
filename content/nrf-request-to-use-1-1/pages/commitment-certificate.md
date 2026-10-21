@@ -58,7 +58,7 @@ The provisional amount is calculated from the charging schedule in the relevant 
 £{{ levyAmount }} (excluding VAT)
 
 The inflation-adjusted amount shows the indicative levy amount for the year this commitment was issued.
-Inflation adjustment will continue to be made until the total levy amount has been paid. 
+Inflation adjustments will continue to apply until the total levy amount has been paid.
 
 ## Commitment details
 
@@ -74,6 +74,8 @@ For the purposes of section 72 of the Planning and Infrastructure Act 2025, this
 A local planning authority will accept this commitment certificate as part of any planning and decision-making processes, provided the details that were given to inform this commitment cover the relevant development for which a planning application is made.
 
 Your commitment will expire after 6 months from the date of issue stated above, unless an application for planning permission is made.
+
+[Read our guidance on cancelling your commitment](*) and the options available to you.
 
 ### Planning conditions to be imposed 
 
