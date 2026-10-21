@@ -34,7 +34,6 @@ const {
   expectHeading,
   heading,
   expectError,
-  expectFieldError,
   expectOnPage,
   pageOf
 } = copyOf('lpa-manage-1')
@@ -237,6 +236,57 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(page.locator('.app-timeline__item').first()).toContainText(
       text('view-record', 'timelineVariation')
     )
+  })
+
+  test('an NRL reference already in the records for an outline application may be reserved matters', async ({
+    page
+  }) => {
+    // One not granted yet, which only this route opens the page for
+    const outline = store.commitments.find(
+      (entry) =>
+        entry.record &&
+        entry.record.status !== 'rejected' &&
+        entry.record.planningStage === 'applied' &&
+        store.planningTypes[entry.planningType] === 'Outline'
+    )
+    const label = (key) =>
+      page.getByLabel(text('add-reserved-matters', key), { exact: true })
+    await signIn(page)
+
+    // No: back to the NRL reference, holding the one typed
+    await page.goto(`${base}/retrieve-commitment`)
+    await retrieve(page, outline.reference)
+    await expectHeading(page, 'planning-reserved-matters')
+    await submit(page, 'planning-reserved-matters')
+    await expectError(page, 'planning-reserved-matters', 'required')
+    await answer(page, 'planning-reserved-matters', 'no')
+    await submit(page, 'planning-reserved-matters')
+    await expectHeading(page, 'retrieve-commitment')
+    await expect(
+      page.locator('input[name="commitment-reference"]')
+    ).toHaveValue(outline.reference)
+
+    // Yes: add the reserved matters, then the record says so
+    await retrieve(page, outline.reference)
+    await answer(page, 'planning-reserved-matters', 'yes')
+    await submit(page, 'planning-reserved-matters')
+    await expectHeading(page, 'add-reserved-matters')
+    await label('reservedMattersReferenceLabel').fill('2026/0888/REM')
+    await page.getByLabel(store.reservedMatters.layout, { exact: true }).check()
+    await page
+      .getByRole('button', {
+        name: text('add-reserved-matters', 'reservedMattersSave'),
+        exact: true
+      })
+      .click()
+    await expect(page).toHaveURL(`${base}/view-record?ref=${outline.reference}`)
+    await expect(page.locator('.govuk-notification-banner')).toContainText(
+      text('view-record', 'reservedMattersAdded').replace(
+        '{reference}',
+        '2026/0888/REM'
+      )
+    )
+    await expect(page.locator('main')).toContainText('2026/0888/REM')
   })
 
   test('the history gives each officer’s email', async ({ page }) => {
@@ -542,10 +592,11 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await answer(page, 'decision-planning-type', 'full')
     await submit(page, 'decision-planning-type')
 
-    // The address starts blank; the description is optional
+    // The address starts blank and every line is optional, as is the
+    // description
     await submit(page, 'decision-address')
-    await expectFieldError(page, 'decision-address', 'address-line-1')
-    await expectFieldError(page, 'decision-address', 'postcode')
+    await expectHeading(page, 'decision-description')
+    await page.goBack()
     await fillAddress(page)
     await submit(page, 'decision-address')
     await submit(page, 'decision-description')

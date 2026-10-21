@@ -19,7 +19,9 @@
  *     filters, sortable columns and pages
  *   - a reference the council already has a record for asks whether it is
  *     a planning variation; one that is takes the new planning application
- *     reference and keeps the original on the record
+ *     reference and keeps the original on the record. One for an outline
+ *     application asks whether it is reserved matters instead; Yes opens
+ *     add-reserved-matters for it, whatever stage it is at
  *   - a commitment the developer made for a variation names the original
  *     application's NRL reference (`originalReference`, from
  *     nrf-request-to-use-1 or records.yaml): the two records link to each
@@ -94,6 +96,7 @@ const DECISION_KEYS = [
 ]
 // "Is this a planning variation?"
 const IS_VARIATION = 'yes'
+const IS_RESERVED_MATTERS = 'yes'
 const SESSION_KEYS = ['officer', 'signInEmail']
 // Signing in with an email containing this is a council with no records yet
 const NEW_COUNCIL = 'new'
@@ -859,7 +862,8 @@ const signOut = {
 
 // "Retrieve commitment details": NRL-123456 (or just the six digits). One
 // the council already has a record for asks whether it is a planning
-// variation (journey.yaml) rather than adding it again.
+// variation, or reserved matters for an outline application (journey.yaml),
+// rather than adding it again.
 const retrieveCommitment = {
   // With no records there is no dashboard to go back to
   get(ctx, model) {
@@ -895,7 +899,11 @@ const retrieveCommitment = {
     data.commitmentEntry = entry
     data.commitment = commitmentOf(entry, loadStore())
     data.commitmentRecorded = Boolean(recorded)
+    data.commitmentOutline = Boolean(
+      recorded && recorded.planningType === OUTLINE_TYPE
+    )
     delete data.planningVariation
+    delete data.planningReservedMatters
     if (recorded) {
       data.record = recorded
     }
@@ -916,6 +924,28 @@ const planningVariation = {
       ]) {
         delete data[key]
       }
+    }
+  }
+}
+
+// "Are you adding a reserved matters application to this developer record?" for an
+// outline application the council already has a record for. Yes opens
+// add-reserved-matters for the record (journey.yaml); No returns to "Enter
+// an NRL reference", as planningVariation does.
+const planningReservedMatters = {
+  process(ctx, answer) {
+    const { data } = ctx
+    if (answer === IS_RESERVED_MATTERS) {
+      data.recordReference = data.commitmentEntry.reference
+      return
+    }
+    for (const key of [
+      'commitmentEntry',
+      'commitmentRecorded',
+      'commitmentOutline',
+      'planningReservedMatters'
+    ]) {
+      delete data[key]
     }
   }
 }
@@ -1087,6 +1117,24 @@ function takesReservedMatters(record) {
   )
 }
 
+// An outline application's record the officer has just said Yes to
+// "Are you adding a reserved matters application to this developer record?" for, from
+// "Enter an NRL reference": it takes reserved matters whatever its stage
+function addingReservedMattersTo(data, record) {
+  return Boolean(
+    record &&
+      record.planningType === OUTLINE_TYPE &&
+      data.planningReservedMatters === IS_RESERVED_MATTERS &&
+      data.commitmentEntry &&
+      data.commitmentEntry.reference === record.reference
+  )
+}
+
+// Whether the add-reserved-matters page opens for a record
+function opensReservedMatters(data, record) {
+  return takesReservedMatters(record) || addingReservedMattersTo(data, record)
+}
+
 // "Appearance, layout and scale"
 function mattersText(labels) {
   const words = labels.map((label, index) =>
@@ -1137,7 +1185,7 @@ function sameReference(a, b) {
  * Null for a record that takes none.
  */
 function reservedMattersModel(ctx, record, { values = {}, errors = [] }) {
-  if (!takesReservedMatters(record)) {
+  if (!opensReservedMatters(ctx.data, record)) {
     return null
   }
   const routes = ctx.journey.routes
@@ -1465,7 +1513,7 @@ function addReservedMatters(req, res, journey) {
   const found = allEntries(data).find(
     (item) => item.entry.reference === data.record.reference
   )
-  if (!found || !takesReservedMatters(data.record)) {
+  if (!found || !opensReservedMatters(data, data.record)) {
     return res.redirect(303, recordPath)
   }
   const { values, errors } = checkReservedMatters(page, ctx.body, data.record)
@@ -1491,6 +1539,16 @@ function addReservedMatters(req, res, journey) {
   )
   data.lpaFlash = RESERVED_MATTERS
   data.lpaFlashReference = values.reference
+  // From "Enter an NRL reference": "Create a developer record" starts afresh
+  for (const key of [
+    'commitmentReference',
+    'commitmentEntry',
+    'commitmentRecorded',
+    'commitmentOutline',
+    'planningReservedMatters'
+  ]) {
+    delete data[key]
+  }
   req.session.save(() => res.redirect(303, recordPath))
 }
 
@@ -1572,7 +1630,8 @@ const decisionCheckAnswers = {
 // Reserved matters on a page of their own, opened from the record's Add a
 // reserved matters application button:
 // add-reserved-matters?ref=NRL-100958, for a granted outline application
-// only (any other record opens instead). Its form posts to this page's
+// only (any other record opens instead), or from "Are you adding a reserved
+// matters to this developer record?" for any outline application. Its form posts to this page's
 // path, which viewRecord.routes handles.
 const addReservedMattersPage = {
   load(ctx) {
@@ -1584,7 +1643,7 @@ const addReservedMattersPage = {
     for (const field of Object.values(RESERVED_MATTERS_FIELDS)) {
       delete data[field]
     }
-    if (!ctx.preview && !takesReservedMatters(data.record)) {
+    if (!ctx.preview && !opensReservedMatters(data, data.record)) {
       return {
         redirect: `${ctx.journey.routes.VIEW_RECORD}?ref=${encodeURIComponent(data.record.reference)}`
       }
@@ -1704,6 +1763,7 @@ module.exports = {
   'planning-reference': addRecord,
   'planning-variation': planningVariation,
   'planning-variation-reference': addVariation,
+  'planning-reserved-matters': planningReservedMatters,
   'view-record': viewRecord,
   'reject-commitment': rejectCommitment,
   'decision-check-answers': decisionCheckAnswers,

@@ -92,6 +92,7 @@ homepage:
     - the developer record history is sentence case, and Manage developer records is a link
     - adding a reserved matters application no longer asks for its stage (it shows as applied)
     - choosing Granted asks for the planning decision details (reference, units, planning type, address and an optional description) and checks them before the stage changes
+    - an NRL reference already in the records for an outline application asks whether reserved matters are being added; Yes opens "Add a reserved matters application" and returns to the record with a success banner
 
 # The answers the copy can show, as {{ name }} (see content/README.md).
 # `commitment` is the commitment on screen and `record` the record.
@@ -101,6 +102,8 @@ session:
   - commitmentEntry
   - commitment
   - commitmentRecorded
+  - commitmentOutline
+  - planningReservedMatters
   - planningReference
   - planningVariation
   - planningVariationReference
@@ -207,7 +210,8 @@ pages:
   # Create a developer record. The reference finds the commitment in
   # records.yaml (or the one made in nrf-request-to-use-1 this session).
   # One the council already has a record for asks whether it is a planning
-  # variation. See hooks.js. With no records yet there is no Back link.
+  # variation, or for an outline application whether it is reserved
+  # matters. See hooks.js. With no records yet there is no Back link.
   - id: retrieve-commitment
     field: commitment-reference
     sessionKey: commitmentReference
@@ -215,6 +219,8 @@ pages:
     back: dashboard
     handler: custom
     next:
+      - when: { key: commitmentOutline, truthy: true }
+        goto: planning-reserved-matters
       - when: { key: commitmentRecorded, truthy: true }
         goto: planning-variation
       - goto: planning-reference
@@ -230,6 +236,13 @@ pages:
             this a planning variation?"
           live: true
           data: { commitmentReference: NRL-100681 }
+        - id: existing-outline-record
+          label: NRL reference for an outline application the council already has a record for
+          description: >-
+            Prepopulates input with NRL-100958. Next page shown is "Are you
+            adding a reserved matters application to this developer record?"
+          live: true
+          data: { commitmentReference: NRL-100958 }
 
   # Placeholder copy. No returns to "Enter an NRL reference", holding the
   # reference typed, so the officer can correct it.
@@ -245,6 +258,20 @@ pages:
     preview:
       data:
         record: { planningReference: 2026/0412/FUL }
+
+  # An outline application's record asks about reserved matters instead.
+  # Yes opens add-reserved-matters for the record, whatever its stage, and
+  # saving returns to it with a success banner; No returns to "Enter an NRL
+  # reference" to correct it (hooks.js).
+  - id: planning-reserved-matters
+    field: planning-reserved-matters
+    sessionKey: planningReservedMatters
+    guard: { key: commitmentOutline, truthy: true, redirect: retrieve-commitment }
+    handler: custom
+    next:
+      - when: { key: planningReservedMatters, equals: 'yes' }
+        goto: add-reserved-matters
+      - goto: retrieve-commitment
 
   # The variation's new planning application reference: the record takes it
   # and keeps the original, then opens and says so (hooks.js)
