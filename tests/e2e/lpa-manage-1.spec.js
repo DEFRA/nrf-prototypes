@@ -34,7 +34,6 @@ const {
   expectHeading,
   heading,
   expectError,
-  expectFieldError,
   expectOnPage,
   pageOf
 } = copyOf('lpa-manage-1')
@@ -593,10 +592,11 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await answer(page, 'decision-planning-type', 'full')
     await submit(page, 'decision-planning-type')
 
-    // The address starts blank; the description is optional
+    // The address starts blank and every line is optional, as is the
+    // description
     await submit(page, 'decision-address')
-    await expectFieldError(page, 'decision-address', 'address-line-1')
-    await expectFieldError(page, 'decision-address', 'postcode')
+    await expectHeading(page, 'decision-description')
+    await page.goBack()
     await fillAddress(page)
     await submit(page, 'decision-address')
     await submit(page, 'decision-description')
