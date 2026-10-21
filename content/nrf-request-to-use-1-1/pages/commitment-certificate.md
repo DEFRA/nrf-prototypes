@@ -62,7 +62,7 @@ Inflation adjustments will continue to apply until the total levy amount has bee
 
 ## Commitment details
 
-TThis commitment may be relied upon through the planning application process to disapply the relevant environmental obligations that would otherwise have arisen because of the environmental impact of the development. 
+This commitment may be relied upon through the planning application process to disapply the relevant environmental obligations that would otherwise have arisen because of the environmental impact of the development. 
 
 For the purposes of this commitment, that obligation is the requirement to carry out a habitats regulations assessment in respect of nutrient pollution, specifically the wastewater, surface water runoff or both from new dwellinghouses (including flats), affecting one or more of the following: the Broads Special Area of Conservation, the Broadland Ramsar and the River Wensum Special Area of Conservation, under the Habitats Regulations 2017.
 
