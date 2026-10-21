@@ -115,6 +115,15 @@ pages:
     handoff: 2026-10-16
 
   - id: wrong-permission
+    # From a Change link, Back steps back to the question still in the
+    # detour; from Continue on a summary page whose answers lead here (the
+    # request-to-use review page), Back returns to that page
+    back:
+      - when: { key: $isChange, truthy: true }
+        goto: planning-type
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: planning-type
 
   # Only the request-to-use journey changes this answer (from its review
   # page), so the return rule matters there rather than on the quote's own
@@ -131,6 +140,15 @@ pages:
       - goto: units
 
   - id: not-housing
+    # From a Change link, Back steps back to the question still in the
+    # detour; from Continue on a summary page whose answers lead here (the
+    # request-to-use review page), Back returns to that page
+    back:
+      - when: { key: $isChange, truthy: true }
+        goto: housing
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: housing
 
   - id: units
     field: unit-count

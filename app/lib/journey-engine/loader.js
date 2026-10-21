@@ -1195,6 +1195,26 @@ function resolveSummaryPath(target) {
       return { journey, page: journey.byId.get(pageId) }
     }
   }
+  return resolveFrozenSummaryPath(target)
+}
+
+/**
+ * The same for a page of a frozen handoff copy
+ * (/handoffs/<journey>/<date>/<page>), so its Change links to another
+ * journey's pages come back to the frozen copy just as the live ones do
+ */
+function resolveFrozenSummaryPath(target) {
+  const match = /^\/handoffs\/([^/]+)\/([^/]+)\/([^/?#]+)$/.exec(target)
+  if (!match || !getJourneyIds().includes(match[1])) {
+    return null
+  }
+  // Required here: snapshots.js requires this file
+  const { loadFrozenJourney } = require('./snapshots')
+  const [, journeyId, date, pageId] = match
+  const { journey } = loadFrozenJourney(journeyId, date, pageId)
+  if (journey && journey.byId.has(pageId)) {
+    return { journey, page: journey.byId.get(pageId) }
+  }
   return null
 }
 
