@@ -29,6 +29,8 @@ name: Manage commitments to the nature restoration levy
 serviceName: Manage commitments to the nature restoration levy
 start: start
 layout: staff
+# The planning decision details' Change links return here
+summaryPage: decision-check-answers
 
 # The staff header. Its account dropdown lists the menu links, then the
 # account links. Links are page ids, absolute paths or `$signOut`.
@@ -89,6 +91,7 @@ homepage:
     - adding a reserved matters application asks for the planning application reference and stage, the matters it is for (checkboxes) and an optional description
     - the developer record history is sentence case, and Manage developer records is a link
     - adding a reserved matters application no longer asks for its stage (it shows as applied)
+    - choosing Granted asks for the planning decision details (reference, units, planning type, address and an optional description) and checks them before the stage changes
 
 # The answers the copy can show, as {{ name }} (see content/README.md).
 # `commitment` is the commitment on screen and `record` the record.
@@ -105,6 +108,12 @@ session:
   - record
   - newStatus
   - rejectReason
+  - decisionRecord
+  - decisionReference
+  - decisionUnits
+  - decisionPlanningType
+  - decisionAddress
+  - decisionDescription
   - lpaRecords
   - lpaFlash
 
@@ -150,6 +159,8 @@ preview:
 groups:
   one-login:
     title: GOV.UK One Login
+  planning-decision:
+    title: Planning decision details
 
 # The Scenarios tab on the tools page shows the NRL reference of each
 # scenario on the record page and "Enter an NRL reference" beside its name
@@ -268,6 +279,13 @@ pages:
     guard: *signed-in
     back: dashboard
     handler: custom
+    # Every other option changes the record there and then (hooks.js)
+    next:
+      - when: { key: newStatus, equals: rejected }
+        goto: reject-commitment
+      - when: { key: newStatus, equals: granted }
+        goto: decision-reference
+      - goto: dashboard
     # Each variant's description says what it shows, on the tools page's
     # Scenarios tab; the record numbers are in records.yaml
     preview:
@@ -355,6 +373,95 @@ pages:
     guard: { key: recordReference, isSet: true, redirect: dashboard }
     back: view-record
     handler: custom
+
+  # --------------------------------------------------------------------
+  # The planning decision details, asked once Granted is chosen on a
+  # record (hooks.js remembers the record as decisionRecord and starts the
+  # reference with its planning application reference). Nothing changes
+  # until Confirm on decision-check-answers, which sets the stage to
+  # Granted, keeps the details on the record and returns to the dashboard.
+  - id: decision-reference
+    group: planning-decision
+    field: decision-reference
+    sessionKey: decisionReference
+    guard: &deciding { key: decisionRecord, isSet: true, redirect: dashboard }
+    back: view-record
+    changeable: true
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: decision-units
+    preview:
+      data: &decision-preview
+        decisionRecord: NRL-100676
+        decisionReference: 2026/0355/FUL
+
+  - id: decision-units
+    group: planning-decision
+    field: decision-units
+    sessionKey: decisionUnits
+    min: 1
+    max: 50000
+    guard: *deciding
+    changeable: true
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: decision-planning-type
+    preview:
+      data: *decision-preview
+
+  - id: decision-planning-type
+    group: planning-decision
+    field: decision-planning-type
+    sessionKey: decisionPlanningType
+    guard: *deciding
+    changeable: true
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: decision-address
+    preview:
+      data: *decision-preview
+
+  - id: decision-address
+    group: planning-decision
+    field: decision-address
+    sessionKey: decisionAddress
+    guard: *deciding
+    changeable: true
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: decision-description
+    preview:
+      data: *decision-preview
+
+  - id: decision-description
+    group: planning-decision
+    field: decision-description
+    sessionKey: decisionDescription
+    guard: *deciding
+    changeable: true
+    next: decision-check-answers
+    preview:
+      data: *decision-preview
+
+  - id: decision-check-answers
+    group: planning-decision
+    guard: *deciding
+    handler: custom
+    next: dashboard
+    preview:
+      data:
+        <<: *decision-preview
+        decisionUnits: 48
+        decisionPlanningType: full
+        decisionAddress: |-
+          3 Mill Lane
+          Scarfolk
+          SC2 9ML
+        decisionDescription: Erection of 48 dwellings with access, parking and landscaping
 
   # Every detail of a record's commitment: certificate?ref=NRL-123456.
   # Breadcrumbs lead back to the dashboard and the record.

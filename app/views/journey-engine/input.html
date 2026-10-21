@@ -28,7 +28,7 @@
     spellcheck: false if page.type == "email" else content.spellcheck,
     classes: inputClasses,
     label: { text: content.label } if content.label else {
-      text: content.heading,
+      html: ('<span class="govuk-caption-l">' + (content.caption | escape) + '</span> ' if content.caption else '') + (content.heading | escape),
       classes: "govuk-label--l",
       isPageHeading: true
     },

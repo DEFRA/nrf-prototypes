@@ -53,10 +53,10 @@ rows:
 options:
   - label: I have reviewed these commitment details
     value: reviewed
-    hint: The details match the planning application
+    hint: The details match a validated planning application
   - label: I want to reject these commitment details
     value: rejected
-    hint: The details are incorrect or don't match the planning application
+    hint: The details are incorrect or don't match a validated planning application
   - label: I want to review these later
     value: review-later
   # Once the commitment details are reviewed: each shows only while the
