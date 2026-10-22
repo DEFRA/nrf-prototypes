@@ -97,11 +97,10 @@ actions:
 ---
 
 # Check your answers
+To update the details of this development, [review your quote](./review-quote-details?nav=check-your-answers).
 
 :::warning
 Updates may result in a recalculation of available capacity and the levy amount.
-
-To update the details of this development, [review your quote](./review-quote-details?nav=check-your-answers).
 :::
 
 ## Requesting to use the nature restoration levy
