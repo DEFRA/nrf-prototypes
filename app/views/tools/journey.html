@@ -79,6 +79,23 @@
   .wall-card__actions .govuk-link { font-size: 14px; }
   .wall-card__stamp { display: flex; flex-basis: 100%; align-items: center; gap: 8px; padding: 3px 0; font-size: 14px; color: #0b0c0c; cursor: pointer; }
   .wall-card__stamp input { margin: 0; width: 16px; height: 16px; accent-color: #0b0c0c; }
+  .wall-card__mark { margin: 0 0 10px; padding: 0 0 10px; border-bottom: 1px solid #b1b4b6; }
+  .wall-card__mark p { font-family: "GDS Transport", arial, sans-serif; font-size: 14px; line-height: 1.4; }
+  .wall-card__mark-title { margin: 0 0 4px; font-weight: 700; color: #0b0c0c; }
+  .wall-card__mark-text { margin: 0 0 6px; color: #0b0c0c; }
+  .wall-card__mark-row { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+  .wall-card__mark-button { margin: 0 0 2px; padding: 5px 10px 4px; border: 2px solid transparent; border-radius: 0; background: #00703c; box-shadow: 0 2px 0 #002d18; color: #fff; font-family: "GDS Transport", arial, sans-serif; font-size: 14px; line-height: 1.3; cursor: pointer; }
+  .wall-card__mark-button:hover { background: #005a30; }
+  .wall-card__mark-button:focus-visible { outline: 3px solid transparent; border-color: #ffdd00; background: #ffdd00; box-shadow: inset 0 0 0 1px #ffdd00, 0 2px 0 #0b0c0c; color: #0b0c0c; }
+  .wall-card__mark-button[disabled] { opacity: 0.5; cursor: progress; }
+  .wall-card__mark-hint { color: #505a5f; font-size: 13px; }
+  .wall-card__mark-hint code { font-size: 12px; }
+  .wall-card__mark-link { padding: 0; border: 0; background: none; color: #1d70b8; font-family: "GDS Transport", arial, sans-serif; font-size: 14px; line-height: 1.4; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+  .wall-card__mark-link:hover { color: #003078; }
+  .wall-card__mark-link:focus-visible { outline: 3px solid transparent; background: #ffdd00; box-shadow: 0 -2px #ffdd00, 0 4px #0b0c0c; color: #0b0c0c; text-decoration: none; }
+  .wall-card__mark-pending { margin: 8px 0 0; padding: 6px 8px; border-left: 4px solid #ffdd00; background: #fff7bf; color: #0b0c0c; }
+  .wall-card__mark-status { margin: 4px 0 0; color: #d4351c; }
+  .wall-card__mark-status:empty { display: none; }
   .wall-card__file { margin: 0; color: #505a5f; font-size: 13px; word-break: break-all; }
   .wall-card__error-pick { display: block; width: calc(100% - 24px); margin: 2px 0 6px 24px; padding: 3px 4px; border: 1px solid #505a5f; border-radius: 0; background: #fff; font-family: "GDS Transport", arial, sans-serif; font-size: 13px; color: #0b0c0c; }
   .wall-card__error-pick:focus-visible { outline: 3px solid #ffdd00; outline-offset: 0; box-shadow: inset 0 0 0 2px #0b0c0c; }
@@ -240,6 +257,38 @@
             {% if canExportScreens %}<label class="wall-card__stamp"><input type="checkbox" checked> Stamp with today's date</label><a class="wall-card__copy wall-card__copy--text wall-card__export" href="{{ exportBase }}" download data-feedback="" title="Export screen as JPG" aria-label="Export {{ page.id }} as JPG"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export JPG</a>{% endif %}
             {% if page.compareUrl %}<a class="govuk-link wall-card__compare" href="{{ page.compareUrl }}">Compare side by side</a>{% endif %}
           </p>
+          {#- Running locally, the page can be marked ready for dev here: the
+              buttons write its `handoff:` line in journey.yaml and Undo puts
+              back the line as last committed. See handoff-marks.js -#}
+          {% if page.handoffMark %}
+          {% set mark = page.handoffMark %}
+          <div class="wall-card__mark" data-mark-url="{{ mark.url }}">
+            <p class="wall-card__mark-title">Ready for dev</p>
+            {% if mark.on and mark.pending %}
+            <p class="wall-card__mark-text">Marked ready for dev on {{ mark.on }}.</p>
+            {% elif mark.on %}
+            <p class="wall-card__mark-text">Handed over on {{ mark.on }}.{% if page.handoff.changed %} The copy has changed since.{% endif %}</p>
+            {% elif mark.committedOn %}
+            <p class="wall-card__mark-text">Handoff of {{ mark.committedOn }} removed.</p>
+            {% endif %}
+            <p class="wall-card__mark-row">
+              {% if not mark.on %}
+              <button type="button" class="wall-card__mark-button" data-mark-action="mark">Mark ready for dev</button>
+              <span class="wall-card__mark-hint">Adds <code>handoff: {{ mark.today }}</code> to journey.yaml</span>
+              {% elif not mark.pending and page.handoff.changed and mark.on != mark.today %}
+              <button type="button" class="wall-card__mark-button" data-mark-action="mark">Hand over again</button>
+              <span class="wall-card__mark-hint">Dates it {{ mark.today }}</span>
+              {% endif %}
+              {% if mark.on and not mark.pending %}
+              <button type="button" class="wall-card__mark-link" data-mark-action="remove">Remove</button>
+              {% endif %}
+            </p>
+            {% if mark.pending %}
+            <p class="wall-card__mark-pending">Not committed yet. Commit and push journey.yaml to {{ "hand it over" if mark.on else "take the handoff back" }}. <button type="button" class="wall-card__mark-link" data-mark-action="undo">Undo</button></p>
+            {% endif %}
+            <p class="wall-card__mark-status" aria-live="polite"></p>
+          </div>
+          {% endif %}
           <p class="wall-card__file" title="{{ page.contentFile }}">{% if page.shared %}{{ page.contentFile | replace("content/", "") }}{% else %}{{ page.id }}.md{% endif %}</p>
         </div>
       </details>
@@ -352,7 +401,7 @@
   {% set screensPanel %}
   {% if handoffs | length %}
   {% set handoffHtml %}
-    <p class="tools-legend">Pages marked <code>handoff: &lt;date&gt;</code> in <code>journey.yaml</code>. A page turns yellow when its copy changes after the handoff; re-stamp it to hand the change over. Each handoff is tagged in git as <code>handoff/{{ journey.id }}/&lt;date&gt;</code> when it lands on main, so the copy as handed over stays linkable. "Frozen page" opens the page as handed over, however much the live copy moves after; the link appears once the date is committed. It points at <code>/handoffs/{{ journey.id }}/latest/&lt;page&gt;</code>, which follows each page's newest handoff, so it is the one to put on a story; the dated form in its tooltip pins one handoff for good.</p>
+    <p class="tools-legend">Pages marked <code>handoff: &lt;date&gt;</code> in <code>journey.yaml</code>. A page turns yellow when its copy changes after the handoff; re-stamp it to hand the change over.{% if canMarkHandoffs %} Running locally, a card's ⋯ menu writes the date for you; commit and push journey.yaml to hand it over.{% endif %} Each handoff is tagged in git as <code>handoff/{{ journey.id }}/&lt;date&gt;</code> when it lands on main, so the copy as handed over stays linkable. "Frozen page" opens the page as handed over, however much the live copy moves after; the link appears once the date is committed. It points at <code>/handoffs/{{ journey.id }}/latest/&lt;page&gt;</code>, which follows each page's newest handoff, so it is the one to put on a story; the dated form in its tooltip pins one handoff for good.</p>
     {% set handoffRows = [] %}
     {% for item in handoffs %}
       {% set statusHtml %}

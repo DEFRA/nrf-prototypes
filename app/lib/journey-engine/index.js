@@ -50,6 +50,13 @@ const {
   LATEST
 } = require('./history')
 const {
+  canMarkHandoffs,
+  handoffMark,
+  setHandoff,
+  committedHandoff,
+  today
+} = require('./handoff-marks')
+const {
   loadFrozenJourney,
   resolveHandoffCommit,
   extractSnapshot,
@@ -93,6 +100,11 @@ module.exports = {
   interpolate,
   pageHandoff,
   journeyHandoffs,
+  canMarkHandoffs,
+  handoffMark,
+  setHandoff,
+  committedHandoff,
+  today,
   isHandoffDate,
   LATEST,
   loadFrozenJourney,

@@ -195,3 +195,52 @@ test.describe('handoff history', () => {
     expect(result.label).toBe(LABELS.changed)
   })
 })
+
+// Marking a page from its card writes journey.yaml as text, so only the
+// one line may change: the files carry far more comments than js-yaml
+// would keep. These work on the text in memory; nothing is written
+test.describe('marking ready for dev from the wall', () => {
+  const {
+    readHandoff,
+    writeHandoff
+  } = require('../../app/lib/journey-engine/handoff-marks')
+  const text = fs.readFileSync(yamlFile, 'utf8')
+  const pages = yaml.load(text).pages
+  const unstamped = pages.find((page) => !page.handoff).id
+
+  test('adds the date to the end of the page entry and nothing else', () => {
+    const marked = writeHandoff(text, unstamped, '2026-10-22')
+    const before = text.split('\n')
+    const added = marked.split('\n').filter((line) => !before.includes(line))
+    expect(added).toEqual(['    handoff: 2026-10-22'])
+    expect(readHandoff(marked, unstamped)).toBe('2026-10-22')
+    const after = yaml.load(marked).pages
+    expect(after.filter((page) => page.id !== unstamped)).toEqual(
+      pages.filter((page) => page.id !== unstamped)
+    )
+    expect(writeHandoff(marked, unstamped, null)).toBe(text)
+  })
+
+  test('moves an existing date in place', () => {
+    const id = stamped[0]
+    const moved = writeHandoff(text, id, '2030-01-01')
+    expect(moved.split('\n')).toHaveLength(text.split('\n').length)
+    expect(readHandoff(moved, id)).toBe('2030-01-01')
+    expect(writeHandoff(moved, id, readHandoff(text, id))).toBe(text)
+  })
+
+  test('refuses a page the journey does not have, or a bad date', () => {
+    expect(() => writeHandoff(text, 'no-such-page', '2026-10-22')).toThrow()
+    expect(() => writeHandoff(text, unstamped, '22/10/2026')).toThrow()
+  })
+
+  test('the card menu offers to mark an unstamped page', async ({ page }) => {
+    await gotoTools(page, journeyId)
+    await page.getByRole('tab', { name: 'Screens' }).click()
+    const card = page.locator(`#screen-${unstamped}`)
+    await card.locator('summary').click()
+    await expect(
+      card.getByRole('button', { name: 'Mark ready for dev' })
+    ).toBeVisible()
+  })
+})

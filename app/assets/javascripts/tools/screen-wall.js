@@ -358,9 +358,108 @@
     refresh()
   }
 
+  // Marking a page ready for dev (local only) writes its journey.yaml and
+  // reloads the wall, which has to come back where it was: scrolled to the
+  // same place, each wall at the same sideways scroll, the card's menu open
+  const RESTORE_KEY = 'journey-tools-wall-restore'
+
+  function remember(card) {
+    try {
+      window.sessionStorage.setItem(
+        RESTORE_KEY,
+        JSON.stringify({
+          path: window.location.pathname,
+          x: window.scrollX,
+          y: window.scrollY,
+          walls: Array.from(document.querySelectorAll('.screen-wall')).map(
+            function (element) {
+              return element.scrollLeft
+            }
+          ),
+          card: card.id
+        })
+      )
+    } catch (error) {
+      // sessionStorage unavailable; the wall reloads at the top
+    }
+  }
+
+  function restore() {
+    let saved = null
+    try {
+      saved = JSON.parse(window.sessionStorage.getItem(RESTORE_KEY))
+      window.sessionStorage.removeItem(RESTORE_KEY)
+    } catch (error) {
+      return
+    }
+    if (!saved || saved.path !== window.location.pathname) {
+      return
+    }
+    document.querySelectorAll('.screen-wall').forEach(function (element, i) {
+      element.scrollLeft = saved.walls[i] || 0
+    })
+    window.scrollTo(saved.x, saved.y)
+    const card = saved.card && document.getElementById(saved.card)
+    const menu = card && card.querySelector('.wall-card__menu')
+    if (menu) {
+      menu.open = true
+      const focus = menu.querySelector('.wall-card__mark-title')
+      if (focus) {
+        focus.setAttribute('tabindex', '-1')
+        focus.focus({ preventScroll: true })
+      }
+    }
+  }
+
+  function markHandoff(button) {
+    const section = button.closest('.wall-card__mark')
+    const status = section.querySelector('.wall-card__mark-status')
+    const action = button.getAttribute('data-mark-action')
+    if (button.disabled) {
+      return
+    }
+    section.querySelectorAll('[data-mark-action]').forEach(function (other) {
+      other.disabled = true
+    })
+    const idleText = button.textContent
+    status.textContent = ''
+    button.textContent = 'Saving…'
+    window
+      .fetch(section.getAttribute('data-mark-url') + '/' + action, {
+        method: 'POST'
+      })
+      .then(function (response) {
+        if (!response.ok) {
+          return response.text().then(function (text) {
+            throw new Error(text || response.statusText)
+          })
+        }
+        remember(button.closest('.wall-card'))
+        window.location.reload()
+      })
+      .catch(function (error) {
+        status.textContent = 'Could not save: ' + error.message
+        window.console.error('Marking ready for dev failed', error)
+        button.textContent = idleText
+        section
+          .querySelectorAll('[data-mark-action]')
+          .forEach(function (other) {
+            other.disabled = false
+          })
+      })
+  }
+
+  restore()
+
   // Group sections have walls of their own below the main one, so listen
   // on the document rather than the main wall
   document.addEventListener('click', function (event) {
+    const markButton = event.target.closest('[data-mark-action]')
+    if (markButton) {
+      event.preventDefault()
+      markHandoff(markButton)
+      return
+    }
     const exportButton = event.target.closest('.wall-card__export')
     if (exportButton) {
       if (!window.fetch || !window.URL || !window.URL.createObjectURL) {

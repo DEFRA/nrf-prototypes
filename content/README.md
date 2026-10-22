@@ -401,14 +401,16 @@ Variants are for experiments, not handoffs. A variant never appears in a frozen 
 
 ## Handing pages to development
 
-There is no "ready for dev" button. When a page's design is ready to build, put the date on its entry in `journey.yaml`:
+When a page's design is ready to build, put the date on its entry in `journey.yaml`:
 
 ```yaml
 - id: upload-redline
   handoff: 2026-09-17
 ```
 
-That one line is the handoff. Anyone can add it, in an editor or on GitHub, and it is fine to hand over one page while the rest of the journey is still moving. A shared page (the start page, "What would you like to do?") is stamped on the journey handing it over.
+That one line is the handoff. Anyone can add it, in an editor or on GitHub, and it is fine to hand over one page while the rest of the journey is still moving.
+
+Running the prototype locally, the screen wall can write the line for you: open a card's ⋯ menu and choose **Mark ready for dev** (or **Hand over again** once the copy has changed since). The menu then says the handoff is not committed yet, with an **Undo** that puts the line back as it was in the last commit; **Remove** takes a committed date out. Nothing is handed over until you commit `journey.yaml` and push it to `main`, as with a date typed by hand. The deployed prototype has no such menu section. A shared page (the start page, "What would you like to do?") is stamped on the journey handing it over.
 
 What happens next:
 

@@ -18,8 +18,25 @@ const RELOAD_FILE = path.join(
   '../../../.tmp/public/journey-engine-reload.txt'
 )
 const DEBOUNCE_MS = 150
+// How long a write made by the app itself is kept from reloading the tabs
+const SKIP_MS = 1000
 
 let started = false
+const skipped = new Map()
+
+/**
+ * Keep the next change to a file under content/ (relative to it) from
+ * reloading the open tabs, for a write the app makes itself and whose page
+ * reloads in its own way (marking a page ready for dev on the wall)
+ */
+function skipReload(file) {
+  skipped.set(path.normalize(file), Date.now() + SKIP_MS)
+}
+
+function isSkipped(filename) {
+  const until = filename && skipped.get(path.normalize(filename))
+  return Boolean(until) && Date.now() < until
+}
 
 function isDevelopment() {
   const env = (process.env.NODE_ENV || 'development').toLowerCase()
@@ -53,6 +70,9 @@ function watchContent() {
       CONTENT_DIR,
       { recursive: true },
       (eventType, filename) => {
+        if (isSkipped(filename)) {
+          return
+        }
         lastChanged = filename || eventType
         clearTimeout(timer)
         timer = setTimeout(() => pokeBrowserSync(lastChanged), DEBOUNCE_MS)
@@ -70,4 +90,4 @@ function watchContent() {
   return true
 }
 
-module.exports = { watchContent, RELOAD_FILE }
+module.exports = { watchContent, skipReload, RELOAD_FILE }

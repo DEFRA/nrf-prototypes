@@ -27,7 +27,12 @@ const {
   canExportScreens,
   VIEWPORTS,
   pageHandoff,
-  journeyHandoffs
+  journeyHandoffs,
+  canMarkHandoffs,
+  handoffMark,
+  setHandoff,
+  committedHandoff,
+  today
 } = require('../lib/journey-engine')
 const { getFamilies } = require('../config/shared/journeys')
 const { getPath } = require('../lib/journey-engine/expressions')
@@ -60,7 +65,9 @@ function pageView(page, journey, via) {
     shared: page.shared,
     contentFile: page.contentFile,
     // `handoff: <date>` in journey.yaml: ready for dev, or changed since
-    handoff: pageHandoff(journey, page)
+    handoff: pageHandoff(journey, page),
+    // The menu's "Mark ready for dev", when running locally
+    handoffMark: handoffMark(journey, page)
   }
 }
 
@@ -234,6 +241,8 @@ router.get('/tools/journeys/:journey', (req, res) => {
     publicBaseUrl: PUBLIC_BASE_URL,
     // Playwright is a dev dependency, so the export is local-only
     canExportScreens: canExportScreens(),
+    // Marking pages ready for dev from the wall writes journey.yaml
+    canMarkHandoffs: canMarkHandoffs(),
     // Pages handed to development, newest first
     handoffs: journeyHandoffs(journey),
     scenarios: scenarioViews(journey),
@@ -388,6 +397,49 @@ router.get('/tools/journeys/:journey/compare/:page', (req, res) => {
     publicBaseUrl: PUBLIC_BASE_URL
   })
 })
+
+// Mark a page ready for dev from its card on the wall, by writing its
+// `handoff:` line in journey.yaml (local only, see handoff-marks.js).
+// `mark` dates it today, `remove` takes it out and `undo` puts back the
+// line as last committed
+router.post(
+  '/tools/journeys/:journey/pages/:page/handoff/:action',
+  (req, res) => {
+    if (!canMarkHandoffs()) {
+      res.status(404).type('text/plain').send('Not available here')
+      return
+    }
+    let journey
+    try {
+      journey = loadJourney(req.params.journey)
+    } catch (error) {
+      res.status(404).type('text/plain').send(error.message)
+      return
+    }
+    const page = journey.byId.get(req.params.page)
+    if (!page) {
+      res.status(404).type('text/plain').send('No such page')
+      return
+    }
+    const dates = {
+      mark: () => today(),
+      remove: () => null,
+      undo: () => committedHandoff(journey.id, page.id)
+    }
+    if (!dates[req.params.action]) {
+      res.status(400).type('text/plain').send('Unknown action')
+      return
+    }
+    const on = dates[req.params.action]()
+    try {
+      setHandoff(journey.id, page.id, on)
+    } catch (error) {
+      res.status(500).type('text/plain').send(error.message)
+      return
+    }
+    res.json({ page: page.id, handoff: on })
+  }
+)
 
 // One screen as a JPG, for the export button on each card of the wall.
 // Always desktop width; ?error=1 captures the form's error state (or
