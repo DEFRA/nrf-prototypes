@@ -530,6 +530,7 @@ pages:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: defra-account-agent-email
+    handoff: 2026-10-22
 
   - id: defra-account-agent-email
     guard: { key: defraUserType, equals: agent, redirect: defra-account-user-type }
