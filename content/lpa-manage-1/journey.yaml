@@ -281,7 +281,7 @@ pages:
 
   # The variation's new planning application reference: the record takes it
   # and keeps the original, then opens and says so (hooks.js). Also opened
-  # from the record page's Add a planning amendment button, whose Back
+  # from the record page's Add an amendment button, whose Back
   # returns to the record.
   - id: planning-variation-reference
     field: planning-variation-reference
