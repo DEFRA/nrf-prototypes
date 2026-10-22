@@ -381,6 +381,12 @@ pages:
             An outline application record, reviewed but waiting
             on its planning decision
           data: { recordReference: NRL-100903 }
+        - id: outline-granted
+          label: Granted outline application, no reserved matters
+          description: >-
+            A granted outline application with no reserved matters
+            application made under it yet
+          data: { recordReference: NRL-100792 }
         - id: outline
           label: Granted outline application with reserved matters
           description: >-

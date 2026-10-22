@@ -419,6 +419,15 @@ boundaries:
     - [0.917702, 52.675275]
     - [0.917723, 52.675136]
     - [0.917643, 52.674663]
+  mattishall-mill-road:
+    - [1.021336, 52.663848]
+    - [1.022049, 52.662379]
+    - [1.025057, 52.662058]
+    - [1.026284, 52.663157]
+    - [1.026015, 52.663337]
+    - [1.026177, 52.663720]
+    - [1.021460, 52.664030]
+    - [1.021419, 52.663884]
 
 commitments:
   # ------------------------------------------------ Waiting to be added
@@ -712,6 +721,36 @@ commitments:
           stage: granted
           by: Tom Barker
           at: 2026-09-18T10:45
+
+  # An outline application granted, with no reserved matters application
+  # under it yet: the record page offers to add the first
+  - reference: NRL-100792
+    developer: Larkspur Homes
+    address: [Larkspur House, 6 Bridge Street, Scarfolk, SC3 4LH]
+    planningType: Outline planning permission
+    units: 180
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-08-03
+    expires: 2027-02-03
+    boundary: mattishall-mill-road
+    record:
+      planningReference: 2026/0296/OUT
+      planningStage: granted
+      officer: Priya Shah
+      status: reviewed
+      history:
+        - event: added
+          by: Priya Shah
+          at: 2026-08-04T11:05
+        - event: status
+          status: reviewed
+          by: Priya Shah
+          at: 2026-08-07T09:50
+        - event: stage
+          stage: granted
+          by: Priya Shah
+          at: 2026-10-06T14:25
 
   # An outline application already granted, with one reserved matters
   # application under it: the record page offers to add more
