@@ -16,7 +16,7 @@
 # has an Add a reserved matters application button below its planning
 # details, opening add-reserved-matters. The reserved matters saved are
 # listed in the planning details. A full planning application not linked
-# with another record (and not rejected) has an Add a planning amendment
+# with another record (and not rejected) has an Add an amendment
 # button there instead, opening "Enter the planning application reference
 # for this amendment".
 type: custom
@@ -105,7 +105,7 @@ text:
   addReservedMatters: Add a reserved matters application
   # Below the planning details of a full planning application not linked
   # with another developer record
-  addAmendment: Add a planning amendment
+  addAmendment: Add an amendment
   # In place of the radios once rejected, under its own heading
   rejectedHeading: Review options
   rejectedFinal: This developer record has been rejected. Its status cannot be changed.

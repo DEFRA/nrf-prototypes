@@ -1598,7 +1598,7 @@ const viewRecord = {
   }
 }
 
-// The record page's Add a planning amendment button: the record's
+// The record page's Add an amendment button: the record's
 // commitment goes to "Enter the planning application reference for this
 // amendment" as if the officer had retrieved its NRL reference and said it
 // was an amendment. Back returns to the record (journey.yaml), and saving
