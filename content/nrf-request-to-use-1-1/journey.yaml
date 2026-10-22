@@ -480,6 +480,7 @@ pages:
       - when: { key: defraUserType, equals: organisation }
         goto: defra-account-organisation
       - goto: defra-account-agent
+    handoff: 2026-10-22
 
   - id: defra-account-individual
     guard: { key: defraUserType, equals: individual, redirect: defra-account-user-type }
@@ -488,6 +489,7 @@ pages:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: sign-in-method
+    handoff: 2026-10-22
 
   # Whoever continues from here is taken to be the organisation's account
   # admin and registers a Defra account after signing in. User research aid
@@ -506,6 +508,7 @@ pages:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: sign-in-method
+    handoff: 2026-10-22
 
   # The same email as the agent's for now, in its own file so the copy can
   # diverge. Its "Start your secure registration process" link (`./$next`)
@@ -514,6 +517,7 @@ pages:
     guard: { key: defraUserType, equals: organisation, redirect: defra-account-user-type }
     handler: custom # remembers the invitation was opened, see hooks.js
     next: sign-in-method
+    handoff: 2026-10-22
 
   # An agent then sees the invitation email their client's Defra account
   # sends them (addressed to the email they gave to retrieve the quote, from
