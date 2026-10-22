@@ -428,6 +428,14 @@ boundaries:
     - [1.026177, 52.663720]
     - [1.021460, 52.664030]
     - [1.021419, 52.663884]
+  north-walsham-happisburgh-road:
+    - [1.409199, 52.813783]
+    - [1.409156, 52.814155]
+    - [1.409124, 52.814441]
+    - [1.410800, 52.814488]
+    - [1.410677, 52.813848]
+    - [1.410132, 52.813849]
+    - [1.410142, 52.813800]
 
 commitments:
   # ------------------------------------------------ Waiting to be added
@@ -487,6 +495,20 @@ commitments:
     expires: 2027-03-29
     boundary: reepham-dereham-road
     originalReference: NRL-100619
+
+  # A variation of NRL-101305's planning application, waiting to be added:
+  # adding it links the two records (NRL-101305 has no other links)
+  - reference: NRL-678901
+    developer: Bure Valley Homes
+    address: [Weavers Court, 9 Bacton Road, Scarfolk, SC8 2BV]
+    planningType: Full planning permission
+    units: 30
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-10-15
+    expires: 2027-04-15
+    boundary: north-walsham-happisburgh-road
+    originalReference: NRL-101305
 
   # --------------------------------------- Already in the council's records
   - reference: NRL-100231
@@ -862,6 +884,36 @@ commitments:
         - event: added
           by: Tom Barker
           at: 2026-10-01T10:20
+
+  # The original planning application NRL-678901 (waiting to be added) is a
+  # variation of
+  - reference: NRL-101305
+    developer: Bure Valley Homes
+    address: [Weavers Court, 9 Bacton Road, Scarfolk, SC8 2BV]
+    planningType: Full planning permission
+    units: 26
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-08-03
+    expires: 2027-02-03
+    boundary: north-walsham-happisburgh-road
+    record:
+      planningReference: 2026/0372/FUL
+      planningStage: granted
+      officer: Priya Shah
+      status: reviewed
+      history:
+        - event: added
+          by: Priya Shah
+          at: 2026-08-04T11:10
+        - event: status
+          status: reviewed
+          by: Priya Shah
+          at: 2026-08-07T14:45
+        - event: stage
+          stage: granted
+          by: Priya Shah
+          at: 2026-09-22T10:30
 
   - reference: NRL-101236
     developer: Scarfolk Homes Ltd
