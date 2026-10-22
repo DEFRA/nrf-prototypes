@@ -51,7 +51,7 @@ The relevant development is planned to have housing with a total of {{ residenti
 
 £{{ levyAmount }} (excluding VAT)
 
-The provisional amount is calculated from the charging schedule in the relevant EDP(s).
+The provisional amount is calculated from the charging schedule in the relevant EDP.
 
 ### Inflation-adjusted nature restoration levy amount
 
@@ -83,7 +83,7 @@ Your commitment will expire after 6 months from the date of issue stated above, 
 
 Regulation 5 of the nature restoration levy regulations ("Levy Regulations") 2026, requires the local planning authority to impose the statutory pre-commencement planning condition, requiring payment of the levy in full or the first instalment prior to commencement. This applies to any grant of permission relying on a commitment to pay the nature restoration levy.
 
-In accordance with the requirements of the Environmental Delivery Plan(s) set out above the local planning authority may be required to impose additional conditions as conservation measures where relevant.
+In accordance with the requirements of the Environmental Delivery Plan set out above the local planning authority may be required to impose additional conditions as conservation measures where relevant.
 
 | Planning condition                              | Condition to be imposed\*                                                                                                                                                                                                                                                                                                    |
 | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
