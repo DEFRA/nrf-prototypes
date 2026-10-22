@@ -15,7 +15,10 @@
 # `linkedVariation` say which way. A granted outline planning application
 # has an Add a reserved matters application button below its planning
 # details, opening add-reserved-matters. The reserved matters saved are
-# listed in the planning details.
+# listed in the planning details. A full planning application not linked
+# with another record (and not rejected) has an Add a planning amendment
+# button there instead, opening "Enter the planning application reference
+# for this amendment".
 type: custom
 rows:
   - heading: Commitment details
@@ -100,6 +103,9 @@ text:
   planningLegend: What was the outcome of the planning application?
   # Below the planning details of a granted outline application
   addReservedMatters: Add a reserved matters application
+  # Below the planning details of a full planning application not linked
+  # with another developer record
+  addAmendment: Add a planning amendment
   # In place of the radios once rejected, under its own heading
   rejectedHeading: Review options
   rejectedFinal: This developer record has been rejected. Its status cannot be changed.

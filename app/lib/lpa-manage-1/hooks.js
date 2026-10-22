@@ -39,7 +39,10 @@
  *     planning stages possible from the stage the application is at; a
  *     granted outline application has a button to the add-reserved-matters
  *     page, whose form adds a reserved matters application to the record
- *     (its own post route)
+ *     (its own post route); a full planning application not linked with
+ *     another record has a button to "Enter the planning application
+ *     reference for this amendment" (add-amendment), as if its NRL
+ *     reference had been retrieved and said to be an amendment
  *
  * Nothing here is real: no passwords are checked or stored.
  */
@@ -81,6 +84,9 @@ const GRANTED_STAGE = 'granted'
 // DESCRIPTION_LIMIT characters. One added here has no stage, so it shows
 // as applied (records.yaml's can give theirs a `status`)
 const OUTLINE_TYPE = 'Outline planning permission'
+// A full planning application's record takes a planning amendment from its
+// record page
+const FULL_TYPE = 'Full planning permission'
 const RESERVED_MATTERS = 'reserved-matters'
 const RESERVED_MATTERS_FIELDS = {
   reference: 'reserved-matters-reference',
@@ -977,6 +983,7 @@ const retrieveCommitment = {
     )
     delete data.planningVariation
     delete data.planningReservedMatters
+    delete data.amendmentFromRecord
     if (recorded) {
       data.record = recorded
     }
@@ -1077,7 +1084,8 @@ const addVariation = {
       'commitmentEntry',
       'commitmentRecorded',
       'planningVariation',
-      'planningVariationReference'
+      'planningVariationReference',
+      'amendmentFromRecord'
     ]) {
       delete data[key]
     }
@@ -1200,6 +1208,19 @@ function addingReservedMattersTo(data, record) {
       data.planningReservedMatters === IS_RESERVED_MATTERS &&
       data.commitmentEntry &&
       data.commitmentEntry.reference === record.reference
+  )
+}
+
+// A full planning application not linked with another developer record
+// (a variation the developer made its own commitment for, or the original
+// application's) takes a planning amendment from its record page, unless
+// it is rejected
+function takesAmendment(data, record) {
+  return Boolean(
+    record &&
+      record.planningType === FULL_TYPE &&
+      record.status.value !== REJECTED_STATUS &&
+      !linkedRecords(data, record).length
   )
 }
 
@@ -1393,8 +1414,16 @@ const viewRecord = {
   // page, and saving returns to the record, which says so
   routes(router, journey) {
     const routes = {
-      ADD_RESERVED_MATTERS: `${journey.basePath}/add-reserved-matters`
+      ADD_RESERVED_MATTERS: `${journey.basePath}/add-reserved-matters`,
+      ADD_AMENDMENT: `${journey.basePath}/add-amendment`
     }
+    router.get(routes.ADD_AMENDMENT, (req, res, next) => {
+      try {
+        addAmendment(req, res, loadJourney(journey.id))
+      } catch (error) {
+        next(error)
+      }
+    })
     router.post(routes.ADD_RESERVED_MATTERS, (req, res, next) => {
       try {
         addReservedMatters(req, res, loadJourney(journey.id))
@@ -1476,6 +1505,9 @@ const viewRecord = {
     model.planningStep = stepOf(data.record) === PLANNING_STEP
     if (takesReservedMatters(data.record)) {
       model.reservedMattersHref = `${ctx.journey.routes.ADD_RESERVED_MATTERS}?ref=${encodeURIComponent(data.record.reference)}`
+    }
+    if (takesAmendment(data, data.record)) {
+      model.amendmentHref = `${ctx.journey.routes.ADD_AMENDMENT}?ref=${encodeURIComponent(data.record.reference)}`
     }
     // The screen wall's error states, as a post would show them
     if (ctx.preview && ctx.previewError) {
@@ -1564,6 +1596,38 @@ const viewRecord = {
     updateRecord(data, found, changes, event)
     return { redirect: dashboardPath }
   }
+}
+
+// The record page's Add a planning amendment button: the record's
+// commitment goes to "Enter the planning application reference for this
+// amendment" as if the officer had retrieved its NRL reference and said it
+// was an amendment. Back returns to the record (journey.yaml), and saving
+// returns to it with the success banner (addVariation).
+function addAmendment(req, res, journey) {
+  const page = journey.byId.get('view-record')
+  const ctx = buildContext(req, res, journey, page)
+  const { data } = ctx
+  if (!data.officer) {
+    return res.redirect(journey.routes.DASHBOARD)
+  }
+  const redirect = loadRecord(ctx)
+  if (redirect) {
+    return res.redirect(redirect.redirect)
+  }
+  const found = allEntries(data).find(
+    (item) => item.entry.reference === data.record.reference
+  )
+  if (!found || !takesAmendment(data, data.record)) {
+    return res.redirect(
+      `${journey.routes.VIEW_RECORD}?ref=${encodeURIComponent(data.record.reference)}`
+    )
+  }
+  data.commitmentEntry = found.entry
+  data.commitmentRecorded = true
+  data.planningVariation = IS_VARIATION
+  data.amendmentFromRecord = true
+  delete data.planningVariationReference
+  return res.redirect(journey.routes.PLANNING_VARIATION_REFERENCE)
 }
 
 // The add-reserved-matters page's form: each reserved matters application

@@ -779,6 +779,91 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(addButton).toHaveCount(1)
   })
 
+  test('a full planning application not linked with another record takes an amendment', async ({
+    page
+  }) => {
+    const full = (entry) =>
+      entry.record && store.planningTypes[entry.planningType] === 'Full'
+    const linked = store.commitments.find(
+      (entry) => full(entry) && entry.originalReference
+    )
+    const original = store.commitments.find(
+      (entry) => entry.reference === linked.originalReference
+    )
+    const rejected = store.commitments.find(
+      (entry) => full(entry) && entry.record.status === 'rejected'
+    )
+    const outline = store.commitments.find(
+      (entry) =>
+        entry.record && store.planningTypes[entry.planningType] === 'Outline'
+    )
+    const unlinked = store.commitments.find(
+      (entry) =>
+        full(entry) &&
+        entry.record.status !== 'rejected' &&
+        !entry.record.originalPlanningReference &&
+        !entry.originalReference &&
+        !store.commitments.some(
+          (other) => other.record && other.originalReference === entry.reference
+        )
+    )
+    const addButton = page.getByRole('button', {
+      name: text('view-record', 'addAmendment')
+    })
+    const { rows } = pageOf('view-record').content
+    const variationKey = rows.find(
+      (row) =>
+        row.when &&
+        row.when.key === 'record.originalPlanningReference' &&
+        row.when.truthy &&
+        String(row.value).includes('record.planningReference }}')
+    ).key
+    await signIn(page)
+
+    // Not for a record linked with another, a rejected one or an outline
+    // application
+    for (const entry of [linked, original, rejected, outline]) {
+      await page.goto(`${base}/view-record?ref=${entry.reference}`)
+      await expectHeading(page, 'view-record', { record: entry })
+      await expect(addButton).toHaveCount(0)
+    }
+
+    // Back returns to the record
+    const viewPath = `${base}/view-record?ref=${unlinked.reference}`
+    await page.goto(viewPath)
+    const entries = await page.locator('.app-timeline__item').count()
+    await addButton.click()
+    await expectHeading(page, 'planning-variation-reference')
+    await page.getByRole('link', { name: 'Back' }).click()
+    await expectHeading(page, 'view-record', { record: unlinked })
+
+    await addButton.click()
+    await submit(page, 'planning-variation-reference')
+    await expectError(page, 'planning-variation-reference', 'required')
+    await fillAnswer(page, 'planning-variation-reference', '2026/0610/VAR')
+    await submit(page, 'planning-variation-reference')
+
+    await expect(page).toHaveURL(viewPath)
+    await expect(page.locator('.govuk-notification-banner')).toContainText(
+      text('view-record', 'variationAdded')
+    )
+    await expect(
+      page
+        .locator('.govuk-summary-list__row')
+        .filter({ hasText: '2026/0610/VAR' })
+        .locator('.govuk-summary-list__key')
+    ).toHaveText(variationKey)
+    await expect(page.locator('main')).toContainText(
+      unlinked.record.planningReference
+    )
+    const items = page.locator('.app-timeline__item')
+    await expect(items).toHaveCount(entries + 1)
+    await expect(items.first()).toContainText(
+      text('view-record', 'timelineVariation')
+    )
+    await expect(items.first()).toContainText('2026/0610/VAR')
+  })
+
   test('the dashboard’s cards open the table filtered to them', async ({
     page
   }) => {

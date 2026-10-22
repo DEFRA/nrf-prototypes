@@ -280,12 +280,18 @@ pages:
       - goto: retrieve-commitment
 
   # The variation's new planning application reference: the record takes it
-  # and keeps the original, then opens and says so (hooks.js)
+  # and keeps the original, then opens and says so (hooks.js). Also opened
+  # from the record page's Add a planning amendment button, whose Back
+  # returns to the record.
   - id: planning-variation-reference
     field: planning-variation-reference
     sessionKey: planningVariationReference
     guard: { key: planningVariation, equals: 'yes', redirect: planning-variation }
     handler: custom
+    back:
+      - when: { key: amendmentFromRecord, truthy: true }
+        goto: view-record
+      - goto: planning-variation
     next: view-record
 
   # Continuing adds the record to the session's records and opens its page.

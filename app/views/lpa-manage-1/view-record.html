@@ -11,9 +11,11 @@
   planning application reference. Rejecting asks why on reject-commitment; a rejected record
   shows a warning in place of the radios. A granted outline application
   has an Add a reserved matters application button below its planning
-  details. The history's lines are sentence case: "Status changed to
-  reviewed". Model extras from app/lib/lpa-manage-1/hooks.js: flash,
-  flashTitle, flashText, planningStep, reservedMattersHref, data.record.
+  details, and a full planning application not linked with another record
+  an Add a planning amendment button. The history's lines are sentence
+  case: "Status changed to reviewed". Model extras from
+  app/lib/lpa-manage-1/hooks.js: flash, flashTitle, flashText,
+  planningStep, reservedMattersHref, amendmentHref, data.record.
 #}
 {% extends "journey-engine/_page.html" %}
 
@@ -55,7 +57,7 @@
 
     {% for group in content.rowGroups %}
       {% if group.heading %}<h2 class="govuk-heading-m">{{ group.heading }}</h2>{% endif %}
-      {% set buttonBelow = (loop.first and record) or (loop.last and reservedMattersHref) %}
+      {% set buttonBelow = (loop.first and record) or (loop.last and (reservedMattersHref or amendmentHref)) %}
       {% if group.rows | length %}
         {{ govukSummaryList({ classes: "govuk-!-margin-bottom-6" if buttonBelow else "govuk-!-margin-bottom-9", rows: group.rows }) }}
       {% endif %}
@@ -69,6 +71,12 @@
         {{ govukButton({
           text: text.addReservedMatters,
           href: reservedMattersHref,
+          classes: "govuk-button--secondary govuk-!-margin-bottom-9"
+        }) }}
+      {% elif loop.last and amendmentHref %}
+        {{ govukButton({
+          text: text.addAmendment,
+          href: amendmentHref,
           classes: "govuk-button--secondary govuk-!-margin-bottom-9"
         }) }}
       {% endif %}
