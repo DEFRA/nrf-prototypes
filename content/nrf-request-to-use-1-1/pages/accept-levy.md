@@ -33,5 +33,5 @@ Inflation adjustments will continue to apply until the total levy amount has bee
 If planning permission has been granted and you are ready to commence your development, you must assume liability to pay the levy.
 
 :::details How the nature restoration levy was calculated
-The levy has been calculated from the details you submitted and the charging schedule for the relevant EDP(s). [Read about the charging schedule for the EDP (opens in new tab)](#).
+The levy has been calculated from the details you submitted and the charging schedule for the relevant EDP. [Read about the charging schedule for the EDP (opens in new tab)](#).
 :::
