@@ -393,7 +393,7 @@ pages:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: variation
-    handoff: 2026-10-22
+    handoff: 2026-10-22 # added full stop
 
   # A variation only needs the original NRL reference when the original
   # application was committed to using the levy
