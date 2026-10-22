@@ -337,11 +337,19 @@ function createMarkdown() {
     return defaultRender(tokens, idx, options, env, self)
   }
   md.renderer.rules.paragraph_open = (tokens, idx, options, env, self) => {
+    // Warning text is phrasing content inside a <strong>, as in the design
+    // system: no <p> (its default margins push the text off the icon), and
+    // a line break between paragraphs
+    if (env.inWarning) {
+      return env.warningParagraphs++ ? '<br><br>\n' : ''
+    }
     if (!env.inPanel) {
       addClass(tokens, idx, 'govuk-body')
     }
     return defaultRender(tokens, idx, options, env, self)
   }
+  md.renderer.rules.paragraph_close = (tokens, idx, options, env, self) =>
+    env.inWarning ? '\n' : defaultRender(tokens, idx, options, env, self)
   md.renderer.rules.bullet_list_open = (tokens, idx, options, env, self) => {
     addClass(tokens, idx, 'govuk-list govuk-list--bullet')
     return defaultRender(tokens, idx, options, env, self)
@@ -494,7 +502,8 @@ function createMarkdown() {
   md.use(container, 'warning', {
     render: (tokens, idx, options, env) => {
       if (tokens[idx].nesting === 1) {
-        env.inPanel = true
+        env.inWarning = true
+        env.warningParagraphs = 0
         return (
           '<div class="govuk-warning-text">\n' +
           '<span class="govuk-warning-text__icon" aria-hidden="true">!</span>\n' +
@@ -502,7 +511,7 @@ function createMarkdown() {
           '<span class="govuk-visually-hidden">Warning</span>\n'
         )
       }
-      env.inPanel = false
+      env.inWarning = false
       return '</strong>\n</div>\n'
     }
   })
