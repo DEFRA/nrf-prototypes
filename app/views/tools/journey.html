@@ -94,6 +94,12 @@
   .handoffs .govuk-table { font-size: 16px; margin-bottom: 10px; }
   .handoffs .govuk-table__cell, .handoffs .govuk-table__header { padding-top: 8px; padding-bottom: 8px; }
   .handoffs .govuk-tag { white-space: nowrap; }
+  .handoffs__pick-cell { width: 24px; padding-right: 10px; }
+  .handoffs__pick-cell .govuk-checkboxes__item { float: none; margin: 0; }
+  .handoffs__actions { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; }
+  .handoffs__actions .govuk-button { margin-bottom: 0; }
+  .handoffs__status { font-size: 16px; color: #00703c; }
+  .handoffs__status--failed { color: #d4351c; }
   .wall-card--group .wall-card__frame { display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; border: 2px solid #4c2c92; box-shadow: none; background: #efe6f7; }
   .wall-card__group { font-family: "GDS Transport", arial, sans-serif; font-size: 19px; font-weight: 700; line-height: 1.3; color: #0b0c0c; text-align: center; }
   .wall-card__group small { display: block; margin-top: 10px; font-size: 16px; font-weight: 400; color: #505a5f; }
@@ -359,7 +365,16 @@
         <a class="govuk-link" href="{{ item.fileUrl }}" target="_blank" rel="noopener">Copy at handoff</a> ·
         {% if item.frozenUrl %}<a class="govuk-link handoffs__frozen" href="{{ item.frozenUrl }}?preview=1" target="_blank" rel="noopener" title="{{ publicBaseUrl }}{{ item.frozenUrl }} (pinned: {{ publicBaseUrl }}{{ item.datedUrl }})">Frozen page</a>{% else %}<span class="tools-section__count">commit to freeze</span>{% endif %}
       {% endset %}
+      {% set pickHtml %}
+        {%- if item.frozenUrl -%}
+        <div class="govuk-checkboxes govuk-checkboxes--small"><div class="govuk-checkboxes__item">
+          <input class="govuk-checkboxes__input handoffs__pick" id="handoff-pick-{{ item.id }}" type="checkbox" value="{{ publicBaseUrl }}{{ item.frozenUrl }}">
+          <label class="govuk-label govuk-checkboxes__label" for="handoff-pick-{{ item.id }}"><span class="govuk-visually-hidden">Select the frozen page for {{ item.id }}</span></label>
+        </div></div>
+        {%- endif -%}
+      {% endset %}
       {% set _ = handoffRows.push([
+        { html: pickHtml, classes: "handoffs__pick-cell" },
         { html: '<span class="wall-card__id">' ~ item.id ~ '</span>' },
         { text: item.on },
         { html: statusHtml },
@@ -367,10 +382,23 @@
         { html: linksHtml }
       ]) %}
     {% endfor %}
+    {#- Tick the frozen pages to put on a story and copy their links in
+        one go, one per line; only committed handoffs have a box -#}
+    <div class="handoffs__actions">
+      <button type="button" class="govuk-button govuk-button--secondary" id="handoffs-copy" disabled aria-disabled="true">Copy frozen URLs</button>
+      <span class="handoffs__status" id="handoffs-copy-status" aria-live="polite"></span>
+    </div>
+    {% set pickAllHtml %}
+      <div class="govuk-checkboxes govuk-checkboxes--small"><div class="govuk-checkboxes__item">
+        <input class="govuk-checkboxes__input" id="handoff-pick-all" type="checkbox">
+        <label class="govuk-label govuk-checkboxes__label" for="handoff-pick-all"><span class="govuk-visually-hidden">Select every frozen page</span></label>
+      </div></div>
+    {% endset %}
     {{ govukTable({
       classes: "handoffs__table",
       firstCellIsHeader: false,
       head: [
+        { html: pickAllHtml, classes: "handoffs__pick-cell" },
         { text: "Page" },
         { text: "Handed over" },
         { text: "Status" },

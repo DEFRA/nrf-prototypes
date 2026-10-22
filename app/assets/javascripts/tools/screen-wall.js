@@ -292,6 +292,72 @@
       })
   })
 
+  // The "Ready for dev" table: tick frozen pages and copy their links in
+  // one go, one per line in table order, to paste onto a story
+  const copyFrozen = document.getElementById('handoffs-copy')
+  const copyStatus = document.getElementById('handoffs-copy-status')
+  const pickAll = document.getElementById('handoff-pick-all')
+  if (copyFrozen) {
+    const picks = Array.from(document.querySelectorAll('.handoffs__pick'))
+    const picked = function () {
+      return picks.filter(function (box) {
+        return box.checked
+      })
+    }
+    const refresh = function () {
+      const count = picked().length
+      copyFrozen.textContent =
+        count === 0
+          ? 'Copy frozen URLs'
+          : 'Copy ' + count + ' frozen URL' + (count === 1 ? '' : 's')
+      copyFrozen.disabled = count === 0
+      copyFrozen.setAttribute('aria-disabled', String(count === 0))
+      if (pickAll) {
+        pickAll.checked = count > 0 && count === picks.length
+        pickAll.indeterminate = count > 0 && count < picks.length
+      }
+    }
+    const status = function (text, failed) {
+      window.clearTimeout(copyStatus.feedbackTimer)
+      copyStatus.textContent = text
+      copyStatus.classList.toggle('handoffs__status--failed', !!failed)
+      copyStatus.feedbackTimer = window.setTimeout(function () {
+        copyStatus.textContent = ''
+      }, FEEDBACK_MS * 2)
+    }
+    if (pickAll) {
+      pickAll.disabled = picks.length === 0
+      pickAll.addEventListener('change', function () {
+        picks.forEach(function (box) {
+          box.checked = pickAll.checked
+        })
+        refresh()
+      })
+    }
+    picks.forEach(function (box) {
+      box.addEventListener('change', refresh)
+    })
+    copyFrozen.addEventListener('click', function () {
+      const urls = picked().map(function (box) {
+        return box.value
+      })
+      if (!urls.length) {
+        return
+      }
+      writeClipboard(urls.join('\n')).then(
+        function () {
+          status(
+            'Copied ' + urls.length + ' URL' + (urls.length === 1 ? '' : 's')
+          )
+        },
+        function () {
+          status('Copy failed', true)
+        }
+      )
+    })
+    refresh()
+  }
+
   // Group sections have walls of their own below the main one, so listen
   // on the document rather than the main wall
   document.addEventListener('click', function (event) {
