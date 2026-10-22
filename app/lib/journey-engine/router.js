@@ -660,6 +660,14 @@ async function handleGet(req, res, journey, page, hooks) {
     })
   }
   if (!ctx.preview && page.guard && !evaluate(page.guard, ctx)) {
+    // A frozen handoff page is linked straight from a story, with no
+    // answers behind it: show it with its sample answers rather than
+    // sending the reader back to sign in
+    if (journey.frozen) {
+      const url = new URL(req.originalUrl, 'http://localhost')
+      url.searchParams.set('preview', '1')
+      return res.redirect(url.pathname + url.search)
+    }
     return res.redirect(toPath(page.guard.redirect, journey))
   }
   const hook = hooks[page.id]

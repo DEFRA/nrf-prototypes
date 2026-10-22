@@ -58,6 +58,23 @@ test.describe('frozen copy of a handoff', () => {
     )
   })
 
+  test('a guarded page opened straight from a link shows its sample answers', async ({
+    page
+  }) => {
+    // Linked from a story with no answers behind it, so the guard fails:
+    // the frozen copy shows the preview rather than bouncing to its redirect
+    const guarded = journeyHandoffs(journey).find(
+      (item) => item.frozenUrl && journey.byId.get(item.id).guard
+    )
+    test.skip(!guarded, 'no committed handoff of a guarded page')
+    const response = await page.goto(guarded.frozenUrl)
+    expect(response.status()).toBe(200)
+    await expect(page).toHaveURL(
+      new RegExp(`${guarded.frozenUrl}\\?preview=1$`)
+    )
+    await expect(page.locator('.app-frozen-banner')).toBeVisible()
+  })
+
   test('the dated URL pins the same copy', async ({ page }) => {
     expect(frozen.datedUrl).toBe(
       `/handoffs/${journeyId}/${frozen.on}/${frozen.id}`
