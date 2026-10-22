@@ -906,12 +906,14 @@ pages:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: review-developer-details
+    handoff: 2026-10-22
 
   - id: review-developer-details
     guard: { key: developerDetails, isSet: true, redirect: developer-details }
     next:
       - goto: read-this
         set: { detailsConfirmed: 'Yes' }
+    handoff: 2026-10-22
 
   # Companies and individuals each have their own address page (the hint
   # differs); both keep the address in yourAddress for the review page
@@ -929,6 +931,7 @@ pages:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: review-your-details
+    handoff: 2026-10-22
 
   - id: individual-address
     sessionKey: yourAddress
@@ -943,6 +946,7 @@ pages:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: review-your-details
+    handoff: 2026-10-22
 
   - id: review-your-details
     guard: { key: yourAddress, isSet: true, redirect: org-address }
@@ -955,6 +959,7 @@ pages:
     next:
       - goto: read-this
         set: { detailsConfirmed: 'Yes' }
+    handoff: 2026-10-22
 
   # What the levy commits the developer to, read before checking the answers
   - id: read-this
@@ -976,6 +981,7 @@ pages:
     back: read-this
     handler: custom # mints the NRL reference and certificate dates, see hooks.js
     next: confirmation
+    handoff: 2026-10-22
 
   # User research aids in the footer: the email and the commitment
   # certificate the submission sends
@@ -985,9 +991,11 @@ pages:
         href: request-email
       - text: View the commitment certificate
         href: commitment-certificate
+    handoff: 2026-10-22
 
   - id: request-email
     back: confirmation
+    handoff: 2026-10-22
 
   # The certificate, linked from the email, on the service's own layout with a
   # print link beside it (printing or saving as a PDF gives the certificate
@@ -995,3 +1003,4 @@ pages:
   - id: commitment-certificate
     layout: default
     template: nrf-request-to-use-1-1/commitment-certificate
+    handoff: 2026-10-22
