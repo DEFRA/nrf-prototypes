@@ -964,7 +964,7 @@ pages:
         goto: review-developer-details
       - goto: review-your-details
     next: check-your-answers
-    handoff: read-this
+    handoff: 2026-10-22
 
   # The declaration is the confirmation checkbox on this page (it stores
   # 'Yes', its `value` in check-your-answers.md); the Delete link is the way
