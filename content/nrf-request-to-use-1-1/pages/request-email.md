@@ -43,7 +43,7 @@ The relevant development is planned to have housing with a total of {{ residenti
 
 £{{ levyAmount }} (excluding VAT)
 
-The provisional amount is calculated from the charging schedule in the relevant EDP(s).
+The provisional amount is calculated from the charging schedule in the relevant EDP.
 
 ### Inflation-adjusted nature restoration levy amount
 

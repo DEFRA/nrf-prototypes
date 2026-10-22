@@ -21,7 +21,7 @@ Your relevant development is planned in: {{ edpName }}
 
 ### Provisional nature restoration levy amount: £{{ levyAmount }} (excluding VAT)
 
-The provisional amount is calculated from the charging schedule in the relevant EDP(s).
+The provisional amount is calculated from the charging schedule in the relevant EDP.
 
 ### Inflation-adjusted nature restoration levy amount: £{{ levyAmount }} (excluding VAT)
 
