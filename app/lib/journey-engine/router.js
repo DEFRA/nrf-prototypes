@@ -18,6 +18,11 @@
  *     process(ctx, value)     → { redirect | error }?  after validation
  *   }
  * and one for the whole journey:
+ *   hooks.context(ctx)                          on every page, before
+ *                                                 anything else, e.g. to
+ *                                                 derive data the pages
+ *                                                 print (a preview's sample
+ *                                                 answers included)
  *   hooks.scenario(ctx)                         after a live scenario has
  *                                                 put its answers in the
  *                                                 session (see startScenario),
@@ -641,6 +646,9 @@ function keepSampleAnswers(ctx) {
 
 async function handleGet(req, res, journey, page, hooks) {
   const ctx = buildContext(req, res, journey, page)
+  if (typeof hooks.context === 'function') {
+    await hooks.context(ctx)
+  }
   keepSampleAnswers(ctx)
   if (ctx.preview && !ctx.embed && typeof hooks.preview === 'function') {
     await hooks.preview({
@@ -676,6 +684,9 @@ async function handlePost(req, res, journey, page, hooks) {
     await runUpload(page, req, res)
   }
   const ctx = buildContext(req, res, journey, page, { isPost: true })
+  if (typeof hooks.context === 'function') {
+    await hooks.context(ctx)
+  }
   const hook = hooks[page.id] || {}
   const data = ctx.data
 

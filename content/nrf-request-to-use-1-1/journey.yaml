@@ -86,6 +86,7 @@ session:
   - quotedLevyAmount
   - levyAmount
   - edpName
+  - edp
   - acceptLevy
   - isVariation
   - originalCommitted

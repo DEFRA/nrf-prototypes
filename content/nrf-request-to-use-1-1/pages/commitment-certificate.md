@@ -64,7 +64,7 @@ Inflation adjustments will continue to apply until the total levy amount has bee
 
 This commitment may be relied upon through the planning application process to disapply the relevant environmental obligations that would otherwise have arisen because of the environmental impact of the development. 
 
-For the purposes of this commitment, that obligation is the requirement to carry out a habitats regulations assessment in respect of nutrient pollution, specifically the wastewater, surface water runoff or both from new dwellinghouses (including flats), affecting one or more of the following: the Broads Special Area of Conservation, the Broadland Ramsar and the River Wensum Special Area of Conservation, under the Habitats Regulations 2017.
+For the purposes of this commitment, that obligation is the {{ edp.obligation }}.
 
 All other environmental impacts of the development will need to be addressed through other environmental assessment processes such as a [habitats regulations assessment](https://www.gov.uk/guidance/habitats-regulations-assessments-protecting-a-european-site). 
 

@@ -37,6 +37,9 @@
  * Nothing here is real: no passwords are checked or stored.
  */
 
+const fs = require('fs')
+const path = require('path')
+const yaml = require('js-yaml')
 const { message } = require('../journey-engine/validation')
 const { interpolate, createRenderer } = require('../journey-engine/markdown')
 
@@ -44,6 +47,33 @@ const certificateRenderer = createRenderer()
 
 const EDP_NAME =
   'Norfolk: Broads Special Area of Conservation (SAC) (Yare and Bure), Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2027 to 2037)'
+const EDPS_FILE = path.join(__dirname, '../../../content/shared/edps.yaml')
+
+let edpsCache = null
+
+// content/shared/edps.yaml's EDPs, re-read whenever it changes so edits
+// show on the next page load without a restart
+function loadEdps() {
+  let mtime = 0
+  try {
+    mtime = fs.statSync(EDPS_FILE).mtimeMs
+  } catch (error) {
+    return []
+  }
+  if (!edpsCache || edpsCache.mtime !== mtime) {
+    const raw = yaml.load(fs.readFileSync(EDPS_FILE, 'utf8')) || {}
+    edpsCache = { mtime, edps: raw.edps || [] }
+  }
+  return edpsCache.edps
+}
+
+// The EDP the pages show as `{{ edp.name }}` and `{{ edp.obligation }}`.
+// One edps.yaml does not list takes the first one's obligation.
+function edpFor(name) {
+  const edps = loadEdps()
+  const found = edps.find((edp) => edp.name === name) || edps[0] || {}
+  return { ...found, name }
+}
 // No levy rate is agreed yet, so every amount is the placeholder the quote
 // journey's email shows (content/nrf-quote-7-1)
 const LEVY_AMOUNT = 'X,XXX'
@@ -702,6 +732,10 @@ const commitmentCertificate = {
 }
 
 module.exports = {
+  // Every page: the EDP behind `edpName`, with its obligation
+  context(ctx) {
+    ctx.data.edp = edpFor(ctx.data.edpName || EDP_NAME)
+  },
   'what-would-you-like-to-do': whatWouldYouLikeToDo,
   'quote-reference': quoteReference,
   'original-reference': originalReference,

@@ -1,0 +1,17 @@
+# The Environmental Delivery Plans (EDPs) a development can be planned in,
+# with what the pages say about each.
+#
+# Pages show the EDP the red line boundary falls in as `{{ edp.name }}` and
+# its obligation as `{{ edp.obligation }}` (`{{ edpName }}` still works for
+# the name). Edits show on the next page load (no restart). The code that
+# reads it is app/lib/nrf-request-to-use-1-1/hooks.js.
+#
+#   name        the EDP's full published name, as the boundary check gives it
+#   obligation  the environmental obligation a commitment disapplies, worded
+#               to follow "that obligation is the" with no full stop
+#
+# A boundary in an EDP not listed here (the prototype's own nutrient EDPs
+# away from Norfolk) shows its own name with the first EDP's obligation.
+edps:
+  - name: 'Norfolk: Broads Special Area of Conservation (SAC) (Yare and Bure), Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2027 to 2037)'
+    obligation: 'requirement to carry out a habitats regulations assessment in respect of nutrient pollution, specifically the wastewater, surface water runoff or both from new dwellinghouses (including flats), affecting one or more of the following: the Broads Special Area of Conservation, the Broadland Ramsar and the River Wensum Special Area of Conservation, under the Habitats Regulations 2017'
