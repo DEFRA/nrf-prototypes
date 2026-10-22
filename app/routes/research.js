@@ -6,7 +6,9 @@
 // The facilitator types the participant's name and the organisation or
 // client they are acting for, once, and the mock accounts use them in place
 // of the stand-in names ("Trevor Barker", Fenland Homes…): see
-// app/lib/nrf-request-to-use-1/hooks.js. The details live in the session
+// app/lib/nrf-request-to-use-1/hooks.js. On the LPA journey the box asks
+// for the local planning authority instead, shown in the staff header and
+// the addresses (app/lib/lpa-manage-1/hooks.js). The details live in the session
 // as `researchParticipant`, so Clear data forgets them and Sign out does
 // not. Nothing here is part of the service under test.
 //
@@ -17,11 +19,16 @@ const router = govukPrototypeKit.requests.setupRouter()
 const PARTICIPANT_PATH = '/research/participant'
 
 // Form field → session key. The fields start with _ so the kit's automatic
-// session storage leaves them alone and only the trimmed object is kept
+// session storage leaves them alone and only the trimmed object is kept.
+// The box asks for the organisation or, on a journey for local planning
+// authority staff (`participant: local-planning-authority` in its
+// journey.yaml), the council instead; the other rides along hidden so
+// neither is lost
 const FIELDS = {
   firstName: '_first-name',
   lastName: '_last-name',
-  organisation: '_organisation'
+  organisation: '_organisation',
+  lpa: '_lpa'
 }
 
 /**

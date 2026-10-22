@@ -12,11 +12,20 @@
 
   Model: journey.serviceName, journey.header ({ organisation, homePage,
   account[], menu: { links[] } }), signedIn, data.officer.
+
+  On a journey whose Participant details box asks for the council
+  (`participant: local-planning-authority`), the participant's name and
+  council take the officer's and the organisation's place, even when the
+  facilitator gave them after the officer signed in.
 #}
 {% from "govuk/macros/logo.njk" import govukLogo %}
 {% set staffHeader = journey.header if journey and journey.header else {} %}
 {% set staffHome = staffHeader.homePage or (journey.basePath if journey else "/") %}
 {% set officerName = data.officer.fullName if data and data.officer else "" %}
+{% set staffParticipant = data.researchParticipant if journey and journey.participant == 'local-planning-authority' and data and data.researchParticipant else {} %}
+{% set staffParticipantName = ((staffParticipant.firstName or "") + " " + (staffParticipant.lastName or "")) | trim %}
+{% set officerName = staffParticipantName or officerName %}
+{% set staffOrganisation = staffParticipant.lpa or staffHeader.organisation %}
 {% macro chevron() %}<svg class="app-staff-header__chevron" width="16" height="10" viewBox="0 0 16 10" aria-hidden="true" focusable="false"><path d="M1.5 1.5 8 8l6.5-6.5" fill="none" stroke="currentColor" stroke-width="2.5"/></svg>{% endmacro %}
 <div class="app-staff-header" data-module="app-staff-header">
   <div class="app-staff-header__container govuk-width-container">
@@ -36,7 +45,7 @@
           <svg class="app-staff-header__person" width="32" height="32" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><circle cx="16" cy="16" r="14.5" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="16" cy="12.5" r="5" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M6.8 26.5c1.8-4 5.3-6 9.2-6s7.4 2 9.2 6" fill="none" stroke="currentColor" stroke-width="2.5"/></svg>
           <span class="app-staff-header__account-text">
             {% if officerName %}<span class="app-staff-header__account-name">{{ officerName }}</span>{% endif %}
-            <span class="app-staff-header__account-organisation">{{ staffHeader.organisation }}</span>
+            <span class="app-staff-header__account-organisation">{{ staffOrganisation }}</span>
           </span>
         </button>
         <nav id="app-staff-header-account" class="app-staff-header__panel app-staff-header__panel--account" aria-label="Menu">

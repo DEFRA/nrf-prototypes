@@ -990,6 +990,10 @@ function build(journeyId, options = {}) {
     // The staff layout's header: the organisation under the user's name, and
     // the links in its account and Menu panels (see staff-header.html)
     header: raw.header || {},
+    // What the footer's Participant details box asks for besides the name:
+    // the organisation (left out) or `local-planning-authority`, the
+    // council (see includes/research-participant.html)
+    participant: raw.participant,
     // Titles for the groups the tools page carves out (`groups: { one-login:
     // { title: GOV.UK One Login } }`); see flow.js journeyGroups()
     groups: raw.groups || {},

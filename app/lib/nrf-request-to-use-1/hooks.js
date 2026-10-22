@@ -123,7 +123,9 @@ function participantOf(data) {
     firstName,
     lastName,
     fullName: [firstName, lastName].filter(Boolean).join(' '),
-    organisation: String(given.organisation || '').trim()
+    organisation: String(given.organisation || '').trim(),
+    // The local planning authority, asked for on the LPA journey
+    lpa: String(given.lpa || '').trim()
   }
 }
 

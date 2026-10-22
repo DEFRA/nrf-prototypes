@@ -521,6 +521,8 @@ function buildModel(ctx, extra = {}) {
       chromeBasePath: chrome.basePath,
       // The staff layout's account and Menu panels
       header: resolveHeader(chrome),
+      // What the Participant details box asks for besides the name
+      participant: chrome.participant,
       summaryPage: journey.summaryPage,
       summaryPages: journey.summaryPages,
       start: journey.start

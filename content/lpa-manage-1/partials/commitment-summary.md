@@ -15,4 +15,5 @@ rows:
         - '{{ commitment.address.line2 }}'
         - '{{ commitment.address.line3 }}'
         - '{{ commitment.address.line4 }}'
+        - '{{ commitment.address.line5 }}'
 ---

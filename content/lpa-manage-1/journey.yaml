@@ -32,8 +32,14 @@ layout: staff
 # The planning decision details' Change links return here
 summaryPage: decision-check-answers
 
+# The footer's Participant details box asks for the participant's local
+# planning authority: it takes Scarfolk Council's place in the header, and
+# its county joins the addresses on the commitment details and certificate
+participant: local-planning-authority
+
 # The staff header. Its account dropdown lists the menu links, then the
-# account links. Links are page ids, absolute paths or `$signOut`.
+# account links. Links are page ids, absolute paths or `$signOut`. The
+# organisation is the participant's council when the facilitator gave one.
 header:
   organisation: Scarfolk Council
   homePage: dashboard

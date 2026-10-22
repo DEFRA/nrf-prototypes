@@ -5,7 +5,10 @@
  *
  *   - the officer signing in with the mock GOV.UK One Login: the name the
  *     facilitator gave in the footer's "Participant details" box, or a
- *     stand-in, shown in the staff header over "Scarfolk Council". An
+ *     stand-in, shown in the staff header over "Scarfolk Council" (or the
+ *     participant's local planning authority, given in the same box, whose
+ *     county then joins every commitment's address and whose name makes
+ *     the council's email domain). An
  *     email with "new" in it stands for a council that has no records yet:
  *     records.yaml's records are hidden and the officer lands on "Enter an
  *     NRL reference" rather than the dashboard
@@ -102,6 +105,12 @@ const SESSION_KEYS = ['officer', 'signInEmail']
 const NEW_COUNCIL = 'new'
 // The council's email domain, for an officer records.yaml gives no email
 const COUNCIL_DOMAIN = 'scarfolk.gov.uk'
+// The words around a council's place name: "Norfolk County Council",
+// "Royal Borough of Greenwich", "City of York Council", "Broads Authority"
+const COUNCIL_PREFIX = /^(the\s+)?(((royal|london)\s+)?borough|city)\s+of\s+/i
+const COUNCIL_SUFFIX =
+  /\s+(((metropolitan\s+)?(county|city|district|borough)\s+)?council|(national\s+park\s+)?authority)$/i
+const POSTCODE = /^[a-z]{1,2}\d[a-z\d]?\s*\d[a-z]{2}$/i
 
 // ------------------------------------------------------------ The data
 
@@ -143,6 +152,35 @@ function loadStore() {
     }
   }
   return cached.store
+}
+
+/**
+ * The council the officer works for: the local planning authority the
+ * facilitator gave in the Participant details box, with the county the
+ * addresses gain and the email domain its officers have. Without one the
+ * council is records.yaml's Scarfolk, which adds no county
+ */
+function councilOf(data) {
+  const name = participantOf(data).lpa
+  if (!name) {
+    return { name: '', county: '', domain: COUNCIL_DOMAIN }
+  }
+  const county =
+    name.replace(COUNCIL_PREFIX, '').replace(COUNCIL_SUFFIX, '').trim() || name
+  const domain = county.toLowerCase().replace(/[^a-z]/g, '')
+  return {
+    name,
+    county,
+    domain: domain ? `${domain}.gov.uk` : COUNCIL_DOMAIN
+  }
+}
+
+/**
+ * records.yaml as the pages show it to this session's officer: the file,
+ * with their council (see councilOf)
+ */
+function storeFor(data) {
+  return { ...loadStore(), council: councilOf(data) }
 }
 
 // YAML reads 2026-09-05 as a Date (midnight UTC) and 2026-09-05T10:12 as a
@@ -222,11 +260,31 @@ function boundaryOf(entry, store) {
 }
 
 /**
+ * An address with the participant's county (see councilOf) before its
+ * postcode, or at the end when it has none, unless a line already says it
+ */
+function withCounty(address, council) {
+  const county = council && council.county
+  const lines = address.filter(Boolean).map(String)
+  if (
+    !county ||
+    lines.some((line) => line.toLowerCase() === county.toLowerCase())
+  ) {
+    return lines
+  }
+  const last = lines.length - 1
+  if (last >= 0 && POSTCODE.test(lines[last].trim())) {
+    return [...lines.slice(0, last), county, lines[last]]
+  }
+  return [...lines, county]
+}
+
+/**
  * A commitment as the pages show it (see partials/commitment-details.md):
  * dates written out, address lines apart, the boundary ready for `:::map`
  */
 function commitmentOf(entry, store) {
-  const address = [].concat(entry.address || [])
+  const address = withCounty([].concat(entry.address || []), store.council)
   return {
     reference: entry.reference,
     developer: entry.developer,
@@ -235,6 +293,7 @@ function commitmentOf(entry, store) {
       line2: address[1] || '',
       line3: address[2] || '',
       line4: address[3] || '',
+      line5: address[4] || '',
       // On one line, as the certificate gives it
       text: address.filter(Boolean).join(', ')
     },
@@ -271,16 +330,29 @@ function officerEmail(name, store) {
   if (!name) {
     return ''
   }
+  const domain = (store.council && store.council.domain) || COUNCIL_DOMAIN
   const listed = store.officers[name]
   if (listed) {
-    return listed
+    // At the participant's council when the facilitator gave one
+    return String(listed).replace(`@${COUNCIL_DOMAIN}`, `@${domain}`)
   }
   const local = String(name)
     .trim()
     .toLowerCase()
     .replace(/[^a-z\s-]/g, '')
     .replace(/\s+/g, '.')
-  return local ? `${local}@${COUNCIL_DOMAIN}` : ''
+  return local ? `${local}@${domain}` : ''
+}
+
+// Who the officer is: the participant, even when the facilitator gave
+// their name after signing in (as the staff header shows them), or the
+// name they signed in with, or the stand-in
+function officerName(data) {
+  return (
+    participantOf(data).fullName ||
+    (data.officer && data.officer.fullName) ||
+    MOCK_OFFICER
+  )
 }
 
 // The email the officer signed in with, for the history of what they do
@@ -418,12 +490,12 @@ function linkedRecords(data, record) {
 }
 
 function allRecords(data) {
-  const store = loadStore()
+  const store = storeFor(data)
   return allEntries(data).map((item) => recordOf(item, store))
 }
 
 function findRecord(data, reference) {
-  const store = loadStore()
+  const store = storeFor(data)
   const found = allEntries(data).find(
     (item) => item.entry.reference === reference
   )
@@ -808,7 +880,8 @@ const oneLoginSignIn = {
 // scenario gives or the stand-in's
 function scenario(ctx) {
   const { data } = ctx
-  data.signInEmail = data.signInEmail || officerEmail(MOCK_OFFICER, loadStore())
+  data.signInEmail =
+    data.signInEmail || officerEmail(MOCK_OFFICER, storeFor(data))
   oneLoginSignIn.process(ctx)
 }
 
@@ -831,7 +904,7 @@ function preview(ctx) {
   const { data, sample, page } = ctx
   if (!data.officer) {
     const signInEmail = data.signInEmail
-    data.signInEmail = officerEmail(MOCK_OFFICER, loadStore())
+    data.signInEmail = officerEmail(MOCK_OFFICER, storeFor(data))
     oneLoginSignIn.process({ data })
     data.signInEmail = signInEmail
   }
@@ -897,7 +970,7 @@ const retrieveCommitment = {
           .entry
       : findCommitmentEntry(data, reference)
     data.commitmentEntry = entry
-    data.commitment = commitmentOf(entry, loadStore())
+    data.commitment = commitmentOf(entry, storeFor(data))
     data.commitmentRecorded = Boolean(recorded)
     data.commitmentOutline = Boolean(
       recorded && recorded.planningType === OUTLINE_TYPE
@@ -1024,7 +1097,7 @@ const addRecord = {
     if (!entry) {
       return { redirect: ctx.journey.routes.RETRIEVE_COMMITMENT }
     }
-    const officer = (data.officer && data.officer.fullName) || MOCK_OFFICER
+    const officer = officerName(data)
     const email = signedInEmail(data)
     data.lpaRecords = data.lpaRecords || {}
     data.lpaRecords[entry.reference] = {
@@ -1276,7 +1349,7 @@ const REQUIRED_ERRORS = {
 // Writes a change to a record: its new fields and the event for its
 // history, by the officer now
 function updateRecord(data, found, changes, event) {
-  const officer = (data.officer && data.officer.fullName) || MOCK_OFFICER
+  const officer = officerName(data)
   const { record } = found
   data.lpaRecords = data.lpaRecords || {}
   data.lpaRecords[found.entry.reference] = {
@@ -1781,6 +1854,7 @@ module.exports = {
   findCommitmentEntry,
   linkedRecords,
   commitmentOf,
+  councilOf,
   MOCK_OFFICER,
   RECORDS_PER_PAGE
 }

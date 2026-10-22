@@ -17,22 +17,37 @@
   lookups). Opened by the flag it is rendered straight into the page, open,
   so it shows without JavaScript too.
 
+  On a journey for local planning authority staff (`participant:
+  local-planning-authority` in its journey.yaml) the participant fills it
+  in themselves, so it speaks to them, and it asks for their council in
+  place of the organisation: the staff header shows it over the officer's
+  name and the addresses gain its county (app/lib/lpa-manage-1/hooks.js).
+  Whichever of the two the box does not ask for is kept in a hidden field.
+
   The markup is a macro because it is rendered in one of those two ways.
   Macros cannot see the template context in this nunjucks, so the
-  participant and the page's URL (query string and all, so a previewed
-  page comes back in preview) are passed in.
+  participant, the page's URL (query string and all, so a previewed page
+  comes back in preview) and whether to ask for the council are passed in.
 #}
-{% macro participantDialog(participant, returnTo, open) %}
+{% macro participantDialog(participant, returnTo, open, askLpa) %}
 <dialog class="app-participant" id="research-participant" aria-labelledby="research-participant-title" data-module="research-participant"{% if open %} open data-open="true"{% endif %}>
   <form class="app-participant__form" method="post" action="/research/participant" novalidate>
     <input type="hidden" name="_return" value="{{ returnTo }}">
     <p class="app-participant__label">User research</p>
+    {% if askLpa %}
+    <h2 class="app-participant__title" id="research-participant-title">Tell us about you</h2>
+    <p class="app-participant__lead">
+      We'll use your name and council in this prototype, so it looks more like the service you would use at work.
+      You can leave any box blank.
+    </p>
+    {% else %}
     <h2 class="app-participant__title" id="research-participant-title">Who is taking part?</h2>
     <p class="app-participant__lead">
       The prototype reads these back wherever it would otherwise make a name up:
       the Defra account pages, the emails it sends and the certificate.
       A blank box keeps the prototype's own stand-in.
     </p>
+    {% endif %}
     <div class="app-participant__fields">
       <div class="app-participant__field">
         <label class="app-participant__field-label" for="participant-first-name">First name</label>
@@ -42,27 +57,42 @@
         <label class="app-participant__field-label" for="participant-last-name">Last name</label>
         <input class="app-participant__input" id="participant-last-name" name="_last-name" type="text" autocomplete="off" value="{{ participant.lastName or '' }}">
       </div>
+      {% if askLpa %}
+      <div class="app-participant__field app-participant__field--wide">
+        <label class="app-participant__field-label" for="participant-lpa">Local planning authority</label>
+        <span class="app-participant__hint" id="participant-lpa-hint">The council you work for, for example South Norfolk Council</span>
+        <input class="app-participant__input" id="participant-lpa" name="_lpa" type="text" autocomplete="off" aria-describedby="participant-lpa-hint" value="{{ participant.lpa or '' }}">
+      </div>
+      <input type="hidden" name="_organisation" value="{{ participant.organisation or '' }}">
+      {% else %}
       <div class="app-participant__field app-participant__field--wide">
         <label class="app-participant__field-label" for="participant-organisation">Organisation or client</label>
         <span class="app-participant__hint" id="participant-organisation-hint">The business they work for, or the developer an agent is acting for</span>
         <input class="app-participant__input" id="participant-organisation" name="_organisation" type="text" autocomplete="off" aria-describedby="participant-organisation-hint" value="{{ participant.organisation or '' }}">
       </div>
+      <input type="hidden" name="_lpa" value="{{ participant.lpa or '' }}">
+      {% endif %}
     </div>
     <div class="app-participant__actions">
       <button class="app-participant__button" type="submit">Use these details</button>
       <button class="app-participant__button app-participant__button--quiet" type="button" data-participant-close>Not now</button>
-      {% if participant.fullName or participant.organisation %}
-        <button class="app-participant__button app-participant__button--quiet" type="submit" name="_forget" value="true">Forget them</button>
+      {% if participant.fullName or participant.organisation or participant.lpa %}
+        <button class="app-participant__button app-participant__button--quiet" type="submit" name="_forget" value="true">{{ "Remove my details" if askLpa else "Forget them" }}</button>
       {% endif %}
     </div>
+    {% if askLpa %}
+    <p class="app-participant__note">We only use these in this prototype and do not share them with anyone.</p>
+    {% else %}
     <p class="app-participant__note">Kept for this browser session only. Clear data forgets them too.</p>
+    {% endif %}
   </form>
 </dialog>
 {% endmacro %}
 {% set participant = data.researchParticipant if data and data.researchParticipant else {} %}
+{% set askLpa = journey and journey.participant == 'local-planning-authority' %}
 {% if participantModal %}
-  {{ participantDialog(participant, currentUrl or currentPath or '/', true) }}
+  {{ participantDialog(participant, currentUrl or currentPath or '/', true, askLpa) }}
 {% else %}
-  <template id="research-participant-template">{{ participantDialog(participant, currentUrl or currentPath or '/', false) }}</template>
+  <template id="research-participant-template">{{ participantDialog(participant, currentUrl or currentPath or '/', false, askLpa) }}</template>
 {% endif %}
 <script src="/public/javascripts/research-participant.js"></script>

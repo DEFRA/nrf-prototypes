@@ -120,6 +120,40 @@ test.describe('lpa-manage-1: manage commitments', () => {
     }
   })
 
+  // The footer's Participant details box asks for the council here, in
+  // place of the organisation. Its labels are prototype chrome, not copy
+  test('the participant’s name and council replace the stand-ins', async ({
+    page
+  }) => {
+    await page.goto(`${base}/${journey.start}?participant`)
+    const dialog = page.locator('#research-participant')
+    await expect(dialog).toBeVisible()
+    await expect(dialog.getByLabel('Organisation or client')).toHaveCount(0)
+    await dialog.getByLabel('First name').fill('Ada')
+    await dialog.getByLabel('Last name').fill('Lovelace')
+    await dialog
+      .getByLabel('Local planning authority')
+      .fill('Breckland District Council')
+    await dialog.getByRole('button', { name: 'Use these details' }).click()
+    await expect(dialog).toBeHidden()
+
+    await signIn(page)
+    const header = page.locator('.app-staff-header')
+    await expect(header).toContainText('Ada Lovelace')
+    await expect(header).toContainText('Breckland District Council')
+    await expect(header).not.toContainText(journey.header.organisation)
+
+    // The council's county joins the developer's address, before the
+    // postcode, on the record and its certificate
+    const postcode = [].concat(recorded.address).pop()
+    await page.goto(`${base}/view-record?ref=${recorded.reference}`)
+    await expect(page.locator('main')).toContainText(
+      new RegExp(`Breckland\\s*${postcode}`)
+    )
+    await page.goto(`${base}/certificate?ref=${recorded.reference}`)
+    await expect(page.locator('main')).toContainText(`Breckland, ${postcode}`)
+  })
+
   test('adds a developer record from an NRL reference', async ({ page }) => {
     await signIn(page)
     await page
