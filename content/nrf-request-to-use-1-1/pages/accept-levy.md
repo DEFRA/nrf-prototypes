@@ -17,7 +17,7 @@ The amount of the levy may have changed since your quote. You might have updated
 
 ## Details of the levy amount
 
-Your relevant development is planned in: {{ edpName }}
+Your relevant development is planned in: {{ edpName }}.
 
 ### Provisional nature restoration levy amount: £{{ levyAmount }} (excluding VAT)
 
