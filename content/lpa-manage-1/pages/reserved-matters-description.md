@@ -2,7 +2,7 @@
 type: textarea
 caption: '{{ reservedMattersRecord }}'
 hint: For example, which phase of the development it covers.
-lines: 3
+lines: 6
 maxLength: 1000
 errors:
   required: Enter a description of the reserved matters application
