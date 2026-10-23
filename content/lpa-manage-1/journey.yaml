@@ -55,6 +55,11 @@ header:
       - text: Create a developer record
         href: retrieve-commitment
 
+# The "User research" section of every page's footer
+research:
+  - text: User tasks
+    href: https://docs.google.com/document/d/1yr_CBzP0bs_Mtk9FOw2AxkzaWPAfA_NOwesU6y88wwg/edit?usp=sharing
+
 # When this holds the header shows the officer's account dropdown
 signedIn: { key: officer, isSet: true }
 

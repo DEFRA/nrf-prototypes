@@ -497,6 +497,8 @@ Other page keys: `handoff: YYYY-MM-DD` (the page's design was handed to developm
       href: /nrf-quote-7/estimate-email-content?preview=1
 ```
 
+A `research:` list at the top of `journey.yaml`, beside `id` and `name`, puts its links on every page of the journey, before the page's own (the LPA journey's "User tasks" document).
+
 `?research=false` on any page hides the section for the session (`?research=true` shows it again). Embedded previews (`?preview=1&embed=1`: the screen wall's thumbnails, screenshots and the JPG export) never show it; a page opened from the screen wall (`?preview=1`) does.
 
 A `next` rule or an action whose `goto` leaves for another journey can add `return: <page id>` so that journey's page comes back here (see "Borrowing a page from another journey"). `$summary` is allowed wherever a `goto` is: `next`, `back` and `actions`.

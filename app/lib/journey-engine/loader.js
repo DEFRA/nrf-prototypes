@@ -432,7 +432,10 @@ function buildPage(entry, journey, problems, from = {}) {
       : frontmatter.remember !== false
 
   const fields = buildFields(frontmatter.fields, type, where, problems)
-  const research = buildResearchLinks(entry.research, journey, where, problems)
+  // The journey's own research links come first on every page
+  const research = (journey.research || []).concat(
+    buildResearchLinks(entry.research, journey, where, problems)
+  )
   let sessionKey =
     entry.sessionKey ||
     frontmatter.sessionKey ||
@@ -693,6 +696,9 @@ function checkCopyOnly(page, variant, where, problems) {
  *     - text: Employee invitation email
  *       href: defra-account-employee-email
  *       newTab: false
+ *
+ * `research:` at the top of journey.yaml lists links every page of the
+ * journey shows, before the page's own (the LPA journey's user tasks).
  */
 function buildResearchLinks(entries, journey, where, problems) {
   if (entries === undefined) {
@@ -1006,6 +1012,14 @@ function build(journeyId, options = {}) {
     byId: new Map(),
     routes: {}
   }
+  // User research links every page shows in its footer (see
+  // buildResearchLinks)
+  journey.research = buildResearchLinks(
+    raw.research,
+    journey,
+    'journey',
+    problems
+  )
 
   if (!Array.isArray(raw.pages) || raw.pages.length === 0) {
     problems.push('pages: journey.yaml needs a non-empty list of pages')
