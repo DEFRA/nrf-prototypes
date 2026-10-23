@@ -77,7 +77,7 @@ A local planning authority will accept this commitment certificate as part of an
 
 Your commitment will expire after 6 months from the date of issue stated above, unless an application for planning permission is made.
 
-[Read our guidance on cancelling your commitment](*) and the options available to you.
+[Read our guidance on cancelling your commitment (opens in new tab)](*) and the options available to you.
 
 ### Planning conditions to be imposed 
 
@@ -93,7 +93,7 @@ In accordance with the requirements of the Environmental Delivery Plan set out a
 \*Planning decision-makers may make limited and reasonable amendments to planning conditions (with the exception of the statutory pre-commencement condition), to ensure conditions are operable for specific developments providing the intended outcome is maintained.
 
 
-[See guidance for local planning authorities on handling commitment certificates throughout the planning process](#)
+[See guidance for local planning authorities on handling commitment certificates throughout the planning process (opens in new tab)](#)
 
 ## Get help with the nature restoration levy
 

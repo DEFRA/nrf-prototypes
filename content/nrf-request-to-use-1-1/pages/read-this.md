@@ -55,7 +55,7 @@ In accordance with the requirements of the Environmental Delivery Plan set out a
 \*Planning decision-makers may make limited and reasonable amendments to planning conditions (with the exception of the statutory pre-commencement condition), to ensure conditions are operable for specific developments providing the intended outcome is maintained.
 
 
-See guidance for local planning authorities for [more information on handling commitments through the planning process](#)
+See guidance for local planning authorities for [more information on handling commitments through the planning process (opens in new tab)](#)
 
 ## When you need to pay the nature restoration levy
 
