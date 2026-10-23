@@ -26,7 +26,7 @@ Your commitment will expire after 6 months from the date of issue stated above, 
 
 This commitment certificate will disapply the relevant environmental obligations that would otherwise have arisen because of the environmental impact of the development. 
 
-Environmental impacts of development not covered by this Environmental Delivery Plan (EDP) will need to be addressed through other environmental assessment processes such as a [habitats regulations assessment(opens in new tab)](https://www.gov.uk/guidance/habitats-regulations-assessments-protecting-a-european-site). 
+Environmental impacts of development not covered by this Environmental Delivery Plan (EDP) will need to be addressed through other environmental assessment processes such as a [habitats regulations assessment (opens in new tab)](https://www.gov.uk/guidance/habitats-regulations-assessments-protecting-a-european-site). 
 
 
 ## Details of the relevant development
