@@ -66,7 +66,7 @@ This commitment may be relied upon through the planning application process to d
 
 For the purposes of this commitment, that obligation is the {{ edp.obligation }}.
 
-All other environmental impacts of the development will need to be addressed through other environmental assessment processes such as a [habitats regulations assessment](https://www.gov.uk/guidance/habitats-regulations-assessments-protecting-a-european-site). 
+All other environmental impacts of the development will need to be addressed through other environmental assessment processes such as a [habitats regulations assessment(opens in new tab)](https://www.gov.uk/guidance/habitats-regulations-assessments-protecting-a-european-site). 
 
 
 ### What this commitment enables

@@ -18,7 +18,7 @@ Thank you for submitting details of the relevant development on [Request to use 
 
 ## Next steps
 
-[Download your commitment certificate](/nrf-request-to-use-1-1/commitment-certificate)
+[Download your commitment certificate (opens in new tab)](/nrf-request-to-use-1-1/commitment-certificate)
 
 Submit this certificate with your planning application.
 
@@ -26,7 +26,7 @@ Your commitment will expire after 6 months from the date of issue stated above, 
 
 This commitment certificate will disapply the relevant environmental obligations that would otherwise have arisen because of the environmental impact of the development. 
 
-Environmental impacts of development not covered by this Environmental Delivery Plan (EDP) will need to be addressed through other environmental assessment processes such as a habitats regulations assessment.  
+Environmental impacts of development not covered by this Environmental Delivery Plan (EDP) will need to be addressed through other environmental assessment processes such as a [habitats regulations assessment(opens in new tab)](https://www.gov.uk/guidance/habitats-regulations-assessments-protecting-a-european-site). 
 
 
 ## Details of the relevant development
@@ -54,7 +54,7 @@ Inflation adjustments will continue to apply until the total levy amount has bee
 
 ## How the nature restoration levy was calculated
 
-The levy has been calculated from the details you submitted and the charging schedule for the relevant EDP. [Read about the charging schedule for the EDP](#).
+The levy has been calculated from the details you submitted and the charging schedule for the relevant EDP. [Read about the charging schedule for the EDP (opens in new tab)](#).
 
 The levy amount is shown excluding VAT, which is charged at 20%.
 
@@ -70,17 +70,17 @@ EDPs set out measures needed to address the environmental impacts of development
 
 If planning permission (or any other type of consent, permission or authorisation as appropriate) is granted and you are ready to commence development, you will need to assume liability to pay the levy in line with Regulation 8 of the Levy Regulations. 
 The assumption of liability notice should be submitted only when you are ready to commence development, because this will trigger payment of the levy.
-[View the liability forms for the nature restoration levy](#).
+[View the liability forms for the nature restoration levy (opens in new tab)](#).
 
 Your levy liability arises when you assume liability to pay. Natural England will issue a liability notice that sets out your total levy liability and payment terms. 
 
-During the assumption of liability process, you will confirm if you will be paying the levy in full or through an instalment plan where available. [Read about paying by instalments](#).
+During the assumption of liability process, you will confirm if you will be paying the levy in full or through an instalment plan where available. [Read about paying by instalments (opens in new tab)](#).
 
 We will adjust your levy amount for inflation based on the calendar year in which your levy liability arises. We will also apply annual inflation to each instalment payment.
 
-You must pay the levy in full, or make your first instalment payment, before commencement of development. We will then notify the local planning authority that the condition has been met. [Read about paying the nature restoration levy](#).
+You must pay the levy in full, or make your first instalment payment, before commencement of development. We will then notify the local planning authority that the condition has been met. [Read about paying the nature restoration levy (opens in new tab)](#).
 
-There are possible consequences if the levy is not paid. [Learn about the nature restoration levy enforcement policy](#).
+There are possible consequences if the levy is not paid. [Learn about the nature restoration levy enforcement policy (opens in new tab)](#).
 
 ## Get help with the nature restoration levy
 
