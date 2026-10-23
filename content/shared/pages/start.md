@@ -7,13 +7,15 @@ serviceName: Manage the nature restoration levy
 
 # Nature restoration levy
 
-## Using the nature restoration levy to meet your environmental obligations
+## Using the nature restoration levy to disapply relevant environmental obligations
 
 Use this service to find out if your relevant development is in an area with an [Environmental Delivery Plan (EDP) (opens in new tab)](https://www.gov.uk/government/collections/environmental-delivery-plans).
 
-If your development falls into an area with an EDP, you can get a quote and request to use [the nature restoration levy (opens in new tab)](https://www.gov.uk/guidance/understanding-the-nature-restoration-fund) to meet the environmental obligations covered by this EDP.
+If your development falls into an area with an EDP, you can get a quote and request to use [the nature restoration levy (opens in new tab)](https://www.gov.uk/guidance/understanding-the-nature-restoration-fund)
 
-If you choose not to use the nature restoration levy, you will still need to [meet your environmental obligations in other ways (opens in new tab)](https://www.gov.uk/guidance/habitats-regulations-assessments-protecting-a-european-site).
+You will receive a commitment certificate that may be relied upon through the planning application process to disapply the relevant environmental obligations that would otherwise have arisen because of the environmental impact of the development.
+
+Environmental impacts of development not covered by this EDP will need to be addressed through other environmental assessment processes such as a [habitats regulations assessment (opens in new tab)](https://www.gov.uk/guidance/habitats-regulations-assessments-protecting-a-european-site).
 
 :::button Start now
 :::
@@ -46,18 +48,22 @@ To request to use nature restoration levy you will need to:
 - enter the NRL reference from your quote
 - confirm the details of your development
 - review and agree the cost of the levy
-- confirm if it is a variation
+- confirm if it is a amendment to a previous planning permission
 - create a Defra ID account [Learn more about creating a Defra ID account (opens in new tab)](#)
 - review your company details
-- submit your details to receive a commitment certificate
+- confirm and submit your details to receive a commitment certificate
 
 ### What to do with your commitment certificate
 
-You will receive a commitment certificate that you can submit with your planning application. If the commitment certificate is not submitted with a planning application within 6 months it will expire. You will need to request to use nature restoration levy again.
+Once Natural England accepts your request to use this levy, you will be issued a commitment certificate. 
+You will receive an email within 5 minutes of submitting your request. 
+You should submit this certificate with your planning application.
+Your commitment certificate will expire after 6 months from the date of issue, unless an application for planning permission is made.
 
 ## When to pay the nature restoration levy
 
-If planning permission has been granted and you are ready to commence your development, you must assume liability to pay the levy.
+If planning permission (or any other type of consent, permission or authorisation as appropriate) is granted and you are ready to commence development, you will need to assume liability to pay the levy. 
+The assumption of liability notice should be submitted only when you are ready to commence development, because this will trigger payment of the levy.
 
 ## Get help with the nature restoration levy
 
