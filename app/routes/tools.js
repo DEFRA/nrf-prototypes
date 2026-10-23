@@ -32,7 +32,8 @@ const {
   handoffMark,
   setHandoff,
   committedHandoff,
-  today
+  today,
+  againNote
 } = require('../lib/journey-engine')
 const { getFamilies } = require('../config/shared/journeys')
 const { getPath } = require('../lib/journey-engine/expressions')
@@ -401,7 +402,8 @@ router.get('/tools/journeys/:journey/compare/:page', (req, res) => {
 // Mark a page ready for dev from its card on the wall, by writing its
 // `handoff:` line in journey.yaml (local only, see handoff-marks.js).
 // `mark` dates it today, `remove` takes it out and `undo` puts back the
-// line as last committed
+// line as last committed. Marking a page already handed over today adds a
+// comment to the line instead, as the date cannot change
 router.post(
   '/tools/journeys/:journey/pages/:page/handoff/:action',
   (req, res) => {
@@ -421,18 +423,22 @@ router.post(
       res.status(404).type('text/plain').send('No such page')
       return
     }
-    const dates = {
-      mark: () => today(),
-      remove: () => null,
+    const lines = {
+      mark: () => {
+        const on = today()
+        const again = committedHandoff(journey.id, page.id).on === on
+        return { on, note: again ? againNote() : null }
+      },
+      remove: () => ({ on: null, note: null }),
       undo: () => committedHandoff(journey.id, page.id)
     }
-    if (!dates[req.params.action]) {
+    if (!lines[req.params.action]) {
       res.status(400).type('text/plain').send('Unknown action')
       return
     }
-    const on = dates[req.params.action]()
+    const { on, note } = lines[req.params.action]()
     try {
-      setHandoff(journey.id, page.id, on)
+      setHandoff(journey.id, page.id, on, note)
     } catch (error) {
       res.status(500).type('text/plain').send(error.message)
       return

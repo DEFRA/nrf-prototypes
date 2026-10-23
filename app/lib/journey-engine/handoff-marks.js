@@ -34,10 +34,20 @@ function canMarkHandoffs() {
   return env !== 'production' && hasGit()
 }
 
+const pad = (n) => String(n).padStart(2, '0')
+
 // Today in the local time zone, written YYYY-MM-DD
 function today(now = new Date()) {
-  const pad = (n) => String(n).padStart(2, '0')
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+}
+
+/**
+ * The comment that hands a page over again on the day it was already
+ * handed over: the date cannot change, and a handoff is the commit that
+ * last wrote the line, so the line needs something new on it
+ */
+function againNote(now = new Date()) {
+  return `handed over again at ${pad(now.getHours())}:${pad(now.getMinutes())}`
 }
 
 const indentOf = (line) => line.match(/^\s*/)[0].length
@@ -98,26 +108,38 @@ function findEntry(lines, pageId) {
 }
 
 /**
- * The page's `handoff:` date in the text of a journey.yaml, or null
+ * The page's `handoff:` line in the text of a journey.yaml, as its date
+ * and the comment after it (or null): { on, note }. Both null when the page
+ * has no such line
  */
-function readHandoff(text, pageId) {
+function readHandoffLine(text, pageId) {
   const lines = text.split('\n')
   const entry = findEntry(lines, pageId)
   if (!entry || entry.handoffAt === -1) {
-    return null
+    return { on: null, note: null }
   }
   const match = lines[entry.handoffAt].match(
-    /handoff:\s*['"]?(\d{4}-\d{2}-\d{2})['"]?/
+    /handoff:\s*['"]?(\d{4}-\d{2}-\d{2})?['"]?\s*(?:#\s*(.*?)\s*)?$/
   )
-  return match ? match[1] : null
+  return {
+    on: (match && match[1]) || null,
+    note: (match && match[2]) || null
+  }
+}
+
+/**
+ * The page's `handoff:` date in the text of a journey.yaml, or null
+ */
+function readHandoff(text, pageId) {
+  return readHandoffLine(text, pageId).on
 }
 
 /**
  * The text of a journey.yaml with the page's `handoff:` set to `on`, or
  * taken out when `on` is null. A new line goes at the end of the entry,
- * where the hand-typed ones sit.
+ * where the hand-typed ones sit. `note` is written after it as a comment.
  */
-function writeHandoff(text, pageId, on) {
+function writeHandoff(text, pageId, on, note = null) {
   if (on !== null && !isHandoffDate(on)) {
     throw new Error(`'${on}' is not a date written YYYY-MM-DD`)
   }
@@ -126,7 +148,8 @@ function writeHandoff(text, pageId, on) {
   if (!entry) {
     throw new Error(`journey.yaml has no page '${pageId}'`)
   }
-  const line = `${' '.repeat(entry.keyColumn)}handoff: ${on}`
+  const comment = note ? ` # ${note}` : ''
+  const line = `${' '.repeat(entry.keyColumn)}handoff: ${on}${comment}`
   if (entry.handoffAt !== -1) {
     lines.splice(entry.handoffAt, 1, ...(on === null ? [] : [line]))
   } else if (on !== null) {
@@ -140,10 +163,10 @@ function writeHandoff(text, pageId, on) {
  * The write is kept from reloading the open tabs: the wall reloads itself
  * and puts back where you were
  */
-function setHandoff(journeyId, pageId, on) {
+function setHandoff(journeyId, pageId, on, note = null) {
   const file = path.join(REPO_ROOT, yamlPath(journeyId))
   const text = fs.readFileSync(file, 'utf8')
-  const next = writeHandoff(text, pageId, on)
+  const next = writeHandoff(text, pageId, on, note)
   if (next !== text) {
     skipReload(path.join(journeyId, 'journey.yaml'))
     fs.writeFileSync(file, next)
@@ -164,29 +187,42 @@ function committedText(journeyId) {
 }
 
 /**
- * The page's handoff date as last committed, to undo a mark not yet
- * committed
+ * The page's handoff line as last committed, { on, note }, to undo a mark
+ * not yet committed
  */
 function committedHandoff(journeyId, pageId) {
-  return readHandoff(committedText(journeyId), pageId)
+  return readHandoffLine(committedText(journeyId), pageId)
+}
+
+/**
+ * The page's handoff line as it is on disk, { on, note }
+ */
+function currentHandoff(journeyId, pageId) {
+  const file = path.join(REPO_ROOT, yamlPath(journeyId))
+  return readHandoffLine(fs.readFileSync(file, 'utf8'), pageId)
 }
 
 /**
  * What the card's menu needs to mark the page, or null when marking is
  * not available here. `pending` is an edit not yet committed, which Undo
- * reverts to `committedOn`
+ * reverts to the committed line. `again` is a mark not yet committed that
+ * hands the page over again on the day it was already handed over
  */
 function handoffMark(journey, page) {
   if (!canMarkHandoffs()) {
     return null
   }
   const on = isHandoffDate(page.handoff) ? page.handoff : null
-  const committedOn = committedHandoff(journey.id, page.id)
+  const committed = committedHandoff(journey.id, page.id)
+  const pending =
+    on !== committed.on ||
+    (on !== null && currentHandoff(journey.id, page.id).note !== committed.note)
   return {
     url: `/tools/journeys/${journey.id}/pages/${page.id}/handoff`,
     on,
-    committedOn,
-    pending: on !== committedOn,
+    committedOn: committed.on,
+    pending,
+    again: pending && on !== null && on === committed.on,
     today: today()
   }
 }
@@ -194,7 +230,9 @@ function handoffMark(journey, page) {
 module.exports = {
   canMarkHandoffs,
   today,
+  againNote,
   findEntry,
+  readHandoffLine,
   readHandoff,
   writeHandoff,
   setHandoff,
