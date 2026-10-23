@@ -202,6 +202,7 @@ test.describe('handoff history', () => {
 test.describe('marking ready for dev from the wall', () => {
   const {
     readHandoff,
+    readHandoffLine,
     writeHandoff
   } = require('../../app/lib/journey-engine/handoff-marks')
   const text = fs.readFileSync(yamlFile, 'utf8')
@@ -227,6 +228,20 @@ test.describe('marking ready for dev from the wall', () => {
     expect(moved.split('\n')).toHaveLength(text.split('\n').length)
     expect(readHandoff(moved, id)).toBe('2030-01-01')
     expect(writeHandoff(moved, id, readHandoff(text, id))).toBe(text)
+  })
+
+  test('hands over again on the same day with a comment on the line', () => {
+    const id = stamped[0]
+    const on = readHandoff(text, id)
+    const again = writeHandoff(text, id, on, 'handed over again at 14:32')
+    const before = text.split('\n')
+    const added = again.split('\n').filter((line) => !before.includes(line))
+    expect(added).toEqual([`    handoff: ${on} # handed over again at 14:32`])
+    expect(readHandoffLine(again, id)).toEqual({
+      on,
+      note: 'handed over again at 14:32'
+    })
+    expect(writeHandoff(again, id, on)).toBe(text)
   })
 
   test('refuses a page the journey does not have, or a bad date', () => {

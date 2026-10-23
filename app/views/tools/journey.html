@@ -259,13 +259,15 @@
           </p>
           {#- Running locally, the page can be marked ready for dev here: the
               buttons write its `handoff:` line in journey.yaml and Undo puts
-              back the line as last committed. See handoff-marks.js -#}
+              back the line as last committed. Handing a page over again on
+              the day it was handed over adds a comment to the line, so the
+              commit still rewrites it. See handoff-marks.js -#}
           {% if page.handoffMark %}
           {% set mark = page.handoffMark %}
           <div class="wall-card__mark" data-mark-url="{{ mark.url }}">
             <p class="wall-card__mark-title">Ready for dev</p>
             {% if mark.on and mark.pending %}
-            <p class="wall-card__mark-text">Marked ready for dev on {{ mark.on }}.</p>
+            <p class="wall-card__mark-text">Marked ready for dev {% if mark.again %}again {% endif %}on {{ mark.on }}.</p>
             {% elif mark.on %}
             <p class="wall-card__mark-text">Handed over on {{ mark.on }}.{% if page.handoff.changed %} The copy has changed since.{% endif %}</p>
             {% elif mark.committedOn %}
@@ -275,9 +277,9 @@
               {% if not mark.on %}
               <button type="button" class="wall-card__mark-button" data-mark-action="mark">Mark ready for dev</button>
               <span class="wall-card__mark-hint">Adds <code>handoff: {{ mark.today }}</code> to journey.yaml</span>
-              {% elif not mark.pending and page.handoff.changed and mark.on != mark.today %}
+              {% elif not mark.pending and page.handoff.changed %}
               <button type="button" class="wall-card__mark-button" data-mark-action="mark">Hand over again</button>
-              <span class="wall-card__mark-hint">Dates it {{ mark.today }}</span>
+              <span class="wall-card__mark-hint">{% if mark.on == mark.today %}Already dated today, so adds a comment to the line{% else %}Dates it {{ mark.today }}{% endif %}</span>
               {% endif %}
               {% if mark.on and not mark.pending %}
               <button type="button" class="wall-card__mark-link" data-mark-action="remove">Remove</button>
