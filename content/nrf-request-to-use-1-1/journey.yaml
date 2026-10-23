@@ -974,7 +974,7 @@ pages:
         goto: review-developer-details
       - goto: review-your-details
     next: check-your-answers
-    handoff: 2026-10-22
+    handoff: 2026-10-23
 
   # The declaration is the confirmation checkbox on this page (it stores
   # 'Yes', its `value` in check-your-answers.md); the Delete link is the way
@@ -1000,7 +1000,7 @@ pages:
 
   - id: request-email
     back: confirmation
-    handoff: 2026-10-22
+    handoff: 2026-10-23
 
   # The certificate, linked from the email, on the service's own layout with a
   # print link beside it (printing or saving as a PDF gives the certificate
@@ -1008,4 +1008,4 @@ pages:
   - id: commitment-certificate
     layout: default
     template: nrf-request-to-use-1-1/commitment-certificate
-    handoff: 2026-10-22
+    handoff: 2026-10-23
