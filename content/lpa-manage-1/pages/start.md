@@ -6,7 +6,7 @@ type: start
 
 # Manage the developer records for the nature restoration levy
 
-Use this service to add developer records for the nature restoration levy. 
+Use this service to create developer records for the nature restoration levy. 
 
 You will need:
 
