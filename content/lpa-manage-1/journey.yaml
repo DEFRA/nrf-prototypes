@@ -29,8 +29,11 @@ name: Manage commitments to the nature restoration levy
 serviceName: Manage commitments to the nature restoration levy
 start: start
 layout: staff
-# The planning decision details' Change links return here
-summaryPage: decision-check-answers
+# The planning decision details' and the reserved matters application's
+# Change links return to their own check answers page
+summaryPages:
+  - decision-check-answers
+  - reserved-matters-check-answers
 
 # The footer's Participant details box asks for the participant's local
 # planning authority: it takes Scarfolk Council's place in the header, and
@@ -104,6 +107,7 @@ homepage:
     - adding a reserved matters application no longer asks for its stage (it shows as applied)
     - choosing Granted asks for the planning decision details (reference, units, planning type, address and an optional description) and checks them before the stage changes
     - an NRL reference already in the records for an outline application asks whether reserved matters are being added; Yes opens "Add a reserved matters application" and returns to the record with a success banner
+    - adding a reserved matters application is a question per page (reference, matters, number of units when layout or scale is ticked, a description that is no longer optional) with a check answers page before saving
 
 # The answers the copy can show, as {{ name }} (see content/README.md).
 # `commitment` is the commitment on screen and `record` the record.
@@ -128,6 +132,11 @@ session:
   - decisionPlanningType
   - decisionAddress
   - decisionDescription
+  - reservedMattersRecord
+  - reservedMattersReference
+  - reservedMattersMatters
+  - reservedMattersUnits
+  - reservedMattersDescription
   - lpaRecords
   - lpaFlash
 
@@ -175,6 +184,8 @@ groups:
     title: GOV.UK One Login
   planning-decision:
     title: Planning decision details
+  reserved-matters:
+    title: Add a reserved matters application
 
 # The Scenarios tab on the tools page shows the NRL reference of each
 # scenario on the record page and "Enter an NRL reference" beside its name
@@ -271,9 +282,9 @@ pages:
         record: { planningReference: 2026/0412/FUL }
 
   # An outline application's record asks about reserved matters instead.
-  # Yes opens add-reserved-matters for the record, whatever its stage, and
-  # saving returns to it with a success banner; No returns to "Enter an NRL
-  # reference" to correct it (hooks.js).
+  # Yes asks the reserved matters questions for the record, whatever its
+  # stage, and saving returns to it with a success banner; No returns to
+  # "Enter an NRL reference" to correct it (hooks.js).
   - id: planning-reserved-matters
     field: planning-reserved-matters
     sessionKey: planningReservedMatters
@@ -281,7 +292,7 @@ pages:
     handler: custom
     next:
       - when: { key: planningReservedMatters, equals: 'yes' }
-        goto: add-reserved-matters
+        goto: reserved-matters-reference
       - goto: retrieve-commitment
 
   # The variation's new planning application reference: the record takes it
@@ -314,8 +325,8 @@ pages:
   # post back here; the change goes on the audit timeline and Confirm
   # returns to the dashboard (hooks.js). Rejecting asks why first. Once
   # reviewed the options are the planning stages possible from the current
-  # one; a granted outline application has a button to
-  # add-reserved-matters.
+  # one; a granted outline application has a button to the reserved
+  # matters questions.
   - id: view-record
     template: lpa-manage-1/view-record
     field: new-status
@@ -518,16 +529,101 @@ pages:
     template: lpa-manage-1/certificate
     guard: *signed-in
 
-  # Reserved matters added on a page of their own, from the record's Add a
-  # reserved matters application button: add-reserved-matters?ref=NRL-100958.
-  # Breadcrumbs lead back to the dashboard and the record; saving adds them
-  # to the record and returns to it (hooks.js).
-  - id: add-reserved-matters
-    template: lpa-manage-1/add-reserved-matters
-    guard: *signed-in
-    back: []
+  # --------------------------------------------------------------------
+  # A reserved matters application for an outline application's record,
+  # from its Add a reserved matters application button
+  # (add-reserved-matters?ref=NRL-100958, a route in hooks.js that
+  # remembers the record as reservedMattersRecord) or from "Are you adding
+  # a reserved matters application to this developer record?". Nothing
+  # changes until Save on reserved-matters-check-answers, which adds it to
+  # the record and returns there with a success banner.
+  - id: reserved-matters-reference
+    group: reserved-matters
+    field: reserved-matters-reference
+    sessionKey: reservedMattersReference
+    guard: &adding-reserved-matters
+      { key: reservedMattersRecord, isSet: true, redirect: dashboard }
+    handler: custom # refuses a reference the record already has
+    back:
+      - when: { key: reservedMattersFromRecord, truthy: true }
+        goto: view-record
+      - goto: planning-reserved-matters
+    changeable: true
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: reserved-matters-matters
     preview:
-      data: { recordReference: NRL-100958 }
+      data: &reserved-matters-preview
+        reservedMattersRecord: NRL-100958
+
+  # Layout or scale settles how many homes the application is for, so
+  # either asks for the number of units; the other matters do not
+  - id: reserved-matters-matters
+    group: reserved-matters
+    field: reserved-matters-matters
+    sessionKey: reservedMattersMatters
+    guard: *adding-reserved-matters
+    changeable: true
+    next:
+      - when:
+          all:
+            - { key: $navFromSummary, truthy: true }
+            - any:
+                - not: { key: reservedMattersMatters, includes: [layout, scale] }
+                - { key: reservedMattersUnits, isSet: true }
+        goto: $summary
+      - when: { key: reservedMattersMatters, includes: [layout, scale] }
+        goto: reserved-matters-units
+      - goto: reserved-matters-description
+    preview:
+      data: *reserved-matters-preview
+
+  - id: reserved-matters-units
+    group: reserved-matters
+    field: reserved-matters-units
+    sessionKey: reservedMattersUnits
+    min: 1
+    max: 50000
+    guard: *adding-reserved-matters
+    changeable: true
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: reserved-matters-description
+    preview:
+      data:
+        <<: *reserved-matters-preview
+        reservedMattersMatters: [layout, scale]
+
+  - id: reserved-matters-description
+    group: reserved-matters
+    field: reserved-matters-description
+    sessionKey: reservedMattersDescription
+    guard: *adding-reserved-matters
+    back:
+      - when: { key: reservedMattersMatters, includes: [layout, scale] }
+        goto: reserved-matters-units
+      - goto: reserved-matters-matters
+    changeable: true
+    next: reserved-matters-check-answers
+    preview:
+      data:
+        <<: *reserved-matters-preview
+        reservedMattersMatters: [layout, scale]
+
+  - id: reserved-matters-check-answers
+    group: reserved-matters
+    guard: *adding-reserved-matters
+    handler: custom # adds it to the record, see hooks.js
+    next: view-record
+    preview:
+      data:
+        <<: *reserved-matters-preview
+        reservedMattersReference: 2026/0577/REM
+        reservedMattersMatters: [appearance, layout, scale]
+        reservedMattersUnits: 120
+        reservedMattersDescription: Phase 2 (120 homes)
 
   # The records the council has: counts, then a table searched, filtered,
   # sorted and paged. The landing page, so no Back link; a council with no

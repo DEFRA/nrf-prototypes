@@ -802,14 +802,14 @@ function validateTargets(journey, problems) {
  * option label must never change where the journey goes. Every option on a
  * radios or checkboxes page stores its `value` (through `store:` when there
  * is one), and here every condition that compares such an answer with a
- * literal (`equals`, `notEquals`, `in`, `notIn`) is checked against the
+ * literal (`equals`, `notEquals`, `in`, `notIn`, `includes`) is checked against the
  * values those pages can store, along with `store:` keys, `set:` values and
  * the preview's sample answers. Keys no choice page writes (hooks, `set:`
  * only, `$` engine values, dotted paths into objects) are left alone, as are
  * `select` pages: their lists are fixtures (addresses), not branches.
  */
 const CHOICE_TYPES = ['radios', 'checkboxes']
-const VALUE_OPERATORS = ['equals', 'notEquals', 'in', 'notIn']
+const VALUE_OPERATORS = ['equals', 'notEquals', 'in', 'notIn', 'includes']
 
 function validateChoiceValues(journey, problems) {
   const list = (values) => [...values].map((v) => `'${v}'`).join(', ')

@@ -14,7 +14,7 @@
 # for, and the original application's) links to it; `linkedOriginal` and
 # `linkedVariation` say which way. A granted outline planning application
 # has an Add a reserved matters application button below its planning
-# details, opening add-reserved-matters. The reserved matters saved are
+# details, opening the reserved matters questions. Those saved are
 # listed in the planning details. A full planning application not linked
 # with another record (and not rejected) has an Add an amendment
 # button there instead, opening "Enter the planning application reference
@@ -117,8 +117,11 @@ text:
   timelineStage: Planning application stage changed to
   timelineVariation: Amendment added
   timelineReservedMatters: Reserved matters added
+  # PLACEHOLDER COPY: a reserved matters application's number of units in
+  # the planning details; {units} is the number
+  reservedMattersUnits: '{units} units'
   # The success banner once reserved matters are saved on
-  # add-reserved-matters; {reference} is the one just added
+  # reserved-matters-check-answers; {reference} is the one just added
   reservedMattersAddedTitle: Success
   reservedMattersAdded: Reserved matters {reference} has been added to this developer record
   # After the NRL reference of a linked developer record, in brackets

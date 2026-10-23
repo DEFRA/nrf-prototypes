@@ -45,6 +45,24 @@ const recorded = store.commitments.find((entry) => entry.record)
 
 // Signing in lands on the dashboard, or on "Enter an NRL reference" for a
 // council with no records yet (an email with "new" in it)
+// Answers the reserved matters questions from the first, and saves them
+// on their check answers page, back on the record
+async function addReservedMatters(page, answers) {
+  await fillAnswer(page, 'reserved-matters-reference', answers.reference)
+  await submit(page, 'reserved-matters-reference')
+  for (const matter of answers.matters) {
+    await answer(page, 'reserved-matters-matters', matter)
+  }
+  await submit(page, 'reserved-matters-matters')
+  if (answers.units) {
+    await fillAnswer(page, 'reserved-matters-units', answers.units)
+    await submit(page, 'reserved-matters-units')
+  }
+  await fillAnswer(page, 'reserved-matters-description', answers.description)
+  await submit(page, 'reserved-matters-description')
+  await act(page, 'reserved-matters-check-answers', 'submit')
+}
+
 // Granted asks for the planning decision details; this answers them and
 // confirms, back on the dashboard
 async function answerDecision(page, planningType = 'outline') {
@@ -283,8 +301,6 @@ test.describe('lpa-manage-1: manage commitments', () => {
         entry.record.planningStage === 'applied' &&
         store.planningTypes[entry.planningType] === 'Outline'
     )
-    const label = (key) =>
-      page.getByLabel(text('add-reserved-matters', key), { exact: true })
     await signIn(page)
 
     // No: back to the NRL reference, holding the one typed
@@ -304,16 +320,17 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await retrieve(page, outline.reference)
     await answer(page, 'planning-reserved-matters', 'yes')
     await submit(page, 'planning-reserved-matters')
-    await expectHeading(page, 'add-reserved-matters')
-    await label('reservedMattersReferenceLabel').fill('2026/0888/REM')
-    await page.getByLabel(store.reservedMatters.layout, { exact: true }).check()
-    await page
-      .getByRole('button', {
-        name: text('add-reserved-matters', 'reservedMattersSave'),
-        exact: true
-      })
-      .click()
-    await expect(page).toHaveURL(`${base}/view-record?ref=${outline.reference}`)
+    await expectHeading(page, 'reserved-matters-reference')
+    await page.getByRole('link', { name: 'Back' }).click()
+    await expectHeading(page, 'planning-reserved-matters')
+    await submit(page, 'planning-reserved-matters')
+    await addReservedMatters(page, {
+      reference: '2026/0888/REM',
+      matters: ['layout'],
+      units: '40',
+      description: 'Phase 1 (40 homes)'
+    })
+    await expect(page).toHaveURL(`${base}/view-record`)
     await expect(page.locator('.govuk-notification-banner')).toContainText(
       text('view-record', 'reservedMattersAdded').replace(
         '{reference}',
@@ -680,15 +697,9 @@ test.describe('lpa-manage-1: manage commitments', () => {
     const addButton = page.getByRole('button', {
       name: text('view-record', 'addReservedMatters')
     })
-    const save = page.getByRole('button', {
-      name: text('add-reserved-matters', 'reservedMattersSave'),
-      exact: true
-    })
-    const label = (key) =>
-      page.getByLabel(text('add-reserved-matters', key), { exact: true })
-    const addReservedMatters = async () => {
+    const startReservedMatters = async () => {
       await addButton.click()
-      await expectHeading(page, 'add-reserved-matters')
+      await expectHeading(page, 'reserved-matters-reference')
     }
     await signIn(page)
 
@@ -701,17 +712,12 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await page.goto(`${base}/view-record?ref=${notGranted.reference}`)
     await expect(addButton).toHaveCount(1)
 
-    // Its own page, with breadcrumbs back to the record; Cancel returns
-    // there
-    await addReservedMatters()
-    await expect(page.locator('.govuk-breadcrumbs')).toContainText(
+    // A question a page, captioned with the record; Back returns to it
+    await startReservedMatters()
+    await expect(page.locator('.govuk-caption-l')).toContainText(
       notGranted.reference
     )
-    await page
-      .getByRole('link', {
-        name: text('add-reserved-matters', 'reservedMattersCancel')
-      })
-      .click()
+    await page.getByRole('link', { name: 'Back' }).click()
     await expectHeading(page, 'view-record', { record: notGranted })
 
     // One already granted lists its reserved matters in the planning
@@ -724,40 +730,54 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(details).toContainText(existing.description)
     const entries = await page.locator('.app-timeline__item').count()
 
-    // The description is optional; the reference and matters are not
-    await addReservedMatters()
-    await save.click()
-    await expectError(
-      page,
-      'add-reserved-matters',
-      'reservedMattersReferenceRequired'
-    )
-    await expectError(
-      page,
-      'add-reserved-matters',
-      'reservedMattersMattersRequired'
-    )
+    // Every question needs an answer; the same reference twice is refused
+    await startReservedMatters()
+    await submit(page, 'reserved-matters-reference')
+    await expectError(page, 'reserved-matters-reference', 'required')
+    await fillAnswer(page, 'reserved-matters-reference', existing.reference)
+    await submit(page, 'reserved-matters-reference')
+    await expectError(page, 'reserved-matters-reference', 'added')
+    await fillAnswer(page, 'reserved-matters-reference', '2026/0577/REM')
+    await submit(page, 'reserved-matters-reference')
+    await submit(page, 'reserved-matters-matters')
+    await expectError(page, 'reserved-matters-matters', 'required')
 
-    // The same reference twice is refused; the answers are kept
-    const matter = page.getByLabel(store.reservedMatters.landscaping, {
-      exact: true
-    })
-    await label('reservedMattersReferenceLabel').fill(existing.reference)
-    await matter.check()
-    await label('reservedMattersDescriptionLabel').fill('Phase 2 (120 homes)')
-    await save.click()
-    await expectError(
+    // Landscaping alone does not change the number of units, so it is not
+    // asked
+    await answer(page, 'reserved-matters-matters', 'landscaping')
+    await submit(page, 'reserved-matters-matters')
+    await submit(page, 'reserved-matters-description')
+    await expectError(page, 'reserved-matters-description', 'required')
+    await fillAnswer(
       page,
-      'add-reserved-matters',
-      'reservedMattersReferenceAdded'
-    )
-    await expect(label('reservedMattersDescriptionLabel')).toHaveValue(
+      'reserved-matters-description',
       'Phase 2 (120 homes)'
     )
-    await expect(matter).toBeChecked()
+    await submit(page, 'reserved-matters-description')
+    await expectHeading(page, 'reserved-matters-check-answers')
+    await expect(
+      changeLink(
+        page,
+        'reserved-matters-check-answers',
+        'reserved-matters-units'
+      )
+    ).toHaveCount(0)
 
-    await label('reservedMattersReferenceLabel').fill('2026/0577/REM')
-    await save.click()
+    // Adding layout asks for them, then returns to check the answers
+    await changeLink(
+      page,
+      'reserved-matters-check-answers',
+      'reserved-matters-matters'
+    ).click()
+    await answer(page, 'reserved-matters-matters', 'layout')
+    await submit(page, 'reserved-matters-matters')
+    await expectHeading(page, 'reserved-matters-units')
+    await fillAnswer(page, 'reserved-matters-units', '120')
+    await submit(page, 'reserved-matters-units')
+    await expectHeading(page, 'reserved-matters-check-answers')
+    await expect(page.locator('main')).toContainText('120')
+
+    await act(page, 'reserved-matters-check-answers', 'submit')
     await expectHeading(page, 'view-record', { record: granted })
     await expect(page.locator('.govuk-notification-banner')).toContainText(
       text('view-record', 'reservedMattersAdded').replace(
@@ -768,6 +788,9 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(details).toContainText(existing.reference)
     await expect(details).toContainText('2026/0577/REM')
     await expect(details).toContainText(store.reservedMatters.landscaping)
+    await expect(details).toContainText(
+      text('view-record', 'reservedMattersUnits').replace('{units}', '120')
+    )
     await expect(details).toContainText('Phase 2 (120 homes)')
     const items = page.locator('.app-timeline__item')
     await expect(items).toHaveCount(entries + 1)

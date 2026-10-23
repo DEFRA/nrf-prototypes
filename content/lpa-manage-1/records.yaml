@@ -59,9 +59,10 @@
 #                      granted, the reserved matters applications made
 #                      under it: each a `reference`, a `status` (one of the
 #                      planningStages), the `matters` it is for (from
-#                      reservedMatters above) and an optional short
-#                      `description`. The add-reserved-matters page adds
-#                      more
+#                      reservedMatters above), the number of `units` when
+#                      those include layout or scale, and a short
+#                      `description`. The record's Add a reserved matters
+#                      application button adds more
 #   overdue            true when an action on the record is overdue (the
 #                      dashboard's third count card and the table's filter)
 #   officer            who added it (the table's Officer column)
@@ -795,6 +796,7 @@ commitments:
         - reference: 2026/0498/REM
           status: applied
           matters: [appearance, layout, scale]
+          units: 85
           description: Phase 1 (85 homes)
       history:
         - event: added

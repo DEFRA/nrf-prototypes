@@ -149,6 +149,7 @@ Write the answer's name in double curly braces: `{{ estimateEmail }}`. The names
 - `{{ estimateEmail or "user@example.com" }}` fallback when there is no answer yet
 - `{{ redlineBoundaryPolygon.intersectingCatchment }}` a value inside a value
 - `{{ residentialBuildingCount | plural "unit" }}` the number with the right word: "1 unit", "120 units" (`plural "person" "people"` for a word that does not just add an s)
+- `{{ reservedMattersMatters | list | lower | capitalize }}` a checkboxes answer as a sentence: "Appearance, layout and scale"
 
 ## Settings by page type
 
@@ -483,7 +484,7 @@ header:
 
 Canned data a journey's pages look things up in (the LPA journey's `records.yaml`: the commitments and records its tables show) can sit beside `journey.yaml`; its hooks read it, re-reading it when it changes.
 
-Condition operators: `equals`, `notEquals`, `in`, `notIn`, `gt`, `gte`, `lt`, `lte`, `between`, `truthy`, `falsy`, `isSet`. Combine with `all:`, `any:`, `not:`. Engine values: `$navFromSummary`, `$isChange`, `$preview`, `$borrowed` (the page was opened from another journey's summary page, see "Borrowing a page from another journey").
+Condition operators: `equals`, `notEquals`, `in`, `notIn`, `includes` (a checkboxes answer has any of the values ticked), `gt`, `gte`, `lt`, `lte`, `between`, `truthy`, `falsy`, `isSet`. Combine with `all:`, `any:`, `not:`. Engine values: `$navFromSummary`, `$isChange`, `$preview`, `$borrowed` (the page was opened from another journey's summary page, see "Borrowing a page from another journey").
 
 Other page keys: `handoff: YYYY-MM-DD` (the page's design was handed to development on that date; see "Handing pages to development"), `shared: true` (copy comes from `content/shared/pages/<id>.md`) or `shared: <folder>` (from `content/shared/<folder>/<id>.md`, see "Pages shared by more than one journey"), `back` (page id, absolute path, or a rule list; it wins over the Back-to-the-summary shortcut a `changeable` page gets, so a change detour that runs through several pages can step back through them with rules on `$navFromSummary` or `$borrowed`, as the quote's map does; `back: []`, or a rule list where no rule matches, means no Back link; see "Back links" below), `guard` (condition plus `redirect`), `store` (map an option's `value` to what the session stores, for booleans and the like; prefer a `value` on the option in the page file), `set` (write values on submit; also allowed on a rule), `clears` (list of keys, or `$session`), `handler: custom` (page has hooks), `template` (a hand-written view for `type: custom`), `layout` (`default`, `staff`, `one-login`, `government-gateway`, `defra-id`, `defra-account`, `document` or `email`), `remember: false` (never write the answer to the session; pair it with a field name starting `_` so the kit's own auto-store skips it too, as the password page does), `accept` and `maxSize` for uploads, `min` and `max` for numbers, `research` (see below).
 

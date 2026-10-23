@@ -30,7 +30,8 @@
  * `{{ key }}` placeholders are substituted after rendering and HTML-escaped.
  * Supported forms: `{{ a.b }}`, `{{ key | lower }}`, `{{ key or "fallback" }}`,
  * `{{ key | plural "unit" }}` (the number and the word, "1 unit" or
- * "120 units"; `plural "person" "people"` for a word that does not add an s).
+ * "120 units"; `plural "person" "people"` for a word that does not add an s),
+ * `{{ key | list }}` (a checkboxes answer as "Access, Layout and Scale").
  */
 
 const MarkdownIt = require('markdown-it')
@@ -68,7 +69,13 @@ const FILTERS = {
     return s.charAt(0).toUpperCase() + s.slice(1)
   },
   plural: (v, one = '', many = `${one}s`) =>
-    `${v} ${Number(v) === 1 ? one : many}`
+    `${v} ${Number(v) === 1 ? one : many}`,
+  list: (v) => {
+    const items = [].concat(v).map(String)
+    return items.length > 1
+      ? `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`
+      : items.join('')
+  }
 }
 
 // A filter's quoted arguments: `plural "person" "people"`. Placeholders are

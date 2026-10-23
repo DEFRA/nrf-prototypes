@@ -10,6 +10,10 @@
  *   { key: planningType, equals: Other }
  *   { key: residentialBuildingCount, gt: 15000, lt: 20000 }
  *   { any: [{ key: a, truthy: true }, { key: b, isSet: true }] }
+ *   { key: reservedMattersMatters, includes: [layout, scale] }
+ *
+ * `includes` is for a checkboxes answer (a list): any of the values given
+ * was ticked.
  */
 
 const OPERATORS = [
@@ -17,6 +21,7 @@ const OPERATORS = [
   'notEquals',
   'in',
   'notIn',
+  'includes',
   'gt',
   'gte',
   'lt',
@@ -123,6 +128,10 @@ function evaluate(condition, ctx) {
       pass = [].concat(expected).some((e) => looseEquals(value, e))
     } else if (op === 'notIn') {
       pass = ![].concat(expected).some((e) => looseEquals(value, e))
+    } else if (op === 'includes') {
+      pass = []
+        .concat(isSet(value) ? value : [])
+        .some((v) => [].concat(expected).some((e) => looseEquals(v, e)))
     } else if (op === 'gt') {
       pass = compareNumber(value, expected, (a, b) => a > b)
     } else if (op === 'gte') {
@@ -227,6 +236,7 @@ function describeCondition(condition) {
     notEquals: 'is not',
     in: 'is one of',
     notIn: 'is not one of',
+    includes: 'includes',
     gt: '>',
     gte: '>=',
     lt: '<',
