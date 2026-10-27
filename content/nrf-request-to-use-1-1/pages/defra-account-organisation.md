@@ -17,7 +17,7 @@ If you are creating a Defra account for the organisation you work for, you need 
 ## If your organisation already has a Defra account
 
 :::details How to request to join the existing account
-If your organisation has already registered for a Defra account you cannot create a new one. You need to contact the account admin and request to join the account. If you do not know who the account admin is we can forward them your request.
+If your organisation has already registered for a Defra account you cannot create a new one. You need ask the account admin and request to join the account.
 :::
 
 ## Inviting other people to the Defra account
