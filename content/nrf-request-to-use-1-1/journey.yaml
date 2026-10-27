@@ -508,7 +508,7 @@ pages:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: sign-in-method
-    handoff: 2026-10-22
+    handoff: 2026-10-27
 
   # The same email as the agent's for now, in its own file so the copy can
   # diverge. Its "Start your secure registration process" link (`./$next`)
