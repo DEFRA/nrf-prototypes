@@ -911,7 +911,7 @@ pages:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: review-developer-details
-    handoff: 2026-10-22
+    handoff: 2026-10-28
 
   - id: review-developer-details
     guard: { key: developerDetails, isSet: true, redirect: developer-details }
