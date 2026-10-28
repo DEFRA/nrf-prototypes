@@ -1,12 +1,12 @@
 ---
 type: form
-hint: If you are an agent requesting to use the nature restoration levy on behalf of someone else, enter their full name and address. 
+hint: If you are an agent requesting to use the nature restoration levy on behalf of someone else, enter the developer's full name and address. 
 fields:
   - name: full-name
     label: Full name
     autocomplete: name
     errors:
-      required: Enter the developer's full name
+      required: Enter the full name
   - name: address-line-1
     label: Address line 1
     autocomplete: address-line1
