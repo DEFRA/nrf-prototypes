@@ -911,14 +911,14 @@ pages:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: review-developer-details
-    handoff: 2026-10-28
+    handoff: 2026-11-02
 
   - id: review-developer-details
     guard: { key: developerDetails, isSet: true, redirect: developer-details }
     next:
       - goto: read-this
         set: { detailsConfirmed: 'Yes' }
-    handoff: 2026-10-22
+    handoff: 2026-11-02
 
   # Companies and individuals each have their own address page (the hint
   # differs); both keep the address in yourAddress for the review page
