@@ -58,6 +58,7 @@ const ANSWER_KEYS = [
   'signatures',
   'signAgreement',
   'youSigned',
+  'useYourDetails',
   'payerDetails'
 ]
 
@@ -567,6 +568,27 @@ const signAssumption = {
   }
 }
 
+// Yes puts the user's name and email into the payment details; No takes
+// them out again if they were the user's, leaving the address alone
+const useYourDetails = {
+  process(ctx) {
+    const { account = {} } = ctx.data
+    const payer = { ...(ctx.data.payerDetails || {}) }
+    if (ctx.data.useYourDetails === 'yes') {
+      payer.payerName = account.fullName
+      payer.email = account.email
+    } else {
+      if (payer.payerName === account.fullName) {
+        delete payer.payerName
+      }
+      if (payer.email === account.email) {
+        delete payer.email
+      }
+    }
+    ctx.data.payerDetails = payer
+  }
+}
+
 // Confirm and submit: the record's liability is assumed
 const reviewLiability = {
   process(ctx) {
@@ -587,5 +609,6 @@ module.exports = {
   'liable-people-check': liablePeopleCheck,
   'assumption-document': assumptionDocument,
   'sign-assumption': signAssumption,
+  'use-your-details': useYourDetails,
   'review-liability': reviewLiability
 }
