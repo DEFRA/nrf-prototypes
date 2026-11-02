@@ -6,7 +6,7 @@
  * diagram.
  */
 
-const { describeCondition } = require('./expressions')
+const { describeCondition, evaluate } = require('./expressions')
 const { isQuestionType, SUMMARY_TARGET } = require('./loader')
 
 /**
@@ -288,7 +288,9 @@ function journeySections(journey) {
   return {
     main: {
       levels: layoutLevels(collapsed),
-      graph: toFlowGraph(collapsed)
+      graph: toFlowGraph(collapsed),
+      // The journey the rows were laid out from, for sampleVia
+      journey: collapsed
     },
     groups: journeyGroups(journey).map((group) => {
       const scope = groupScope(journey, group)
@@ -298,7 +300,8 @@ function journeySections(journey) {
         anchor: groupAnchor(group.id),
         count: group.pages.length,
         levels: layoutLevels(scope),
-        graph: toFlowGraph(scope)
+        graph: toFlowGraph(scope),
+        journey: scope
       }
     })
   }
@@ -467,6 +470,50 @@ function externalNodes(journey) {
   return nodes
 }
 
+// "a, b or c"
+function orList(names) {
+  return names.length > 1
+    ? `${names.slice(0, -1).join(', ')} or ${names.at(-1)}`
+    : names[0]
+}
+
+/**
+ * The caption for one state of a page on the screen wall: of the pages a
+ * form submission reaches it from, the ones its sample answers could have
+ * come through (the rule's condition holds, and so does one of the rules
+ * into that page). The business account's review page comes from
+ * org-address, the individual's from individual-address. Null when the
+ * answers rule none of them out, so the layout's caption stands.
+ */
+function sampleVia(journey, pageId, data) {
+  const ctx = { data }
+  const rulesInto = (id) =>
+    journey.pages.flatMap((page) =>
+      (page.next || [])
+        .filter(
+          (rule) =>
+            rule.goto === id &&
+            !JSON.stringify(rule.when || {}).includes('$navFromSummary')
+        )
+        .map((rule) => ({ fromId: page.id, rule }))
+    )
+  const into = rulesInto(pageId)
+  const sources = [...new Set(into.map((entry) => entry.fromId))]
+  const holds = (entries) =>
+    entries.some((entry) => evaluate(entry.rule.when, ctx))
+  const reached = (id) => {
+    const rules = rulesInto(id)
+    return !rules.length || holds(rules)
+  }
+  const matching = sources.filter(
+    (id) => holds(into.filter((entry) => entry.fromId === id)) && reached(id)
+  )
+  if (!matching.length || matching.length === sources.length) {
+    return null
+  }
+  return `From ${orList(matching)}`
+}
+
 /**
  * Rows for the screen wall: one row per main-chain page, in chain order.
  * Each row lists the main-chain page first, then every page that branches
@@ -516,7 +563,7 @@ function layoutLevels(journey) {
     if (sources.length < 2) {
       return null
     }
-    const names = `${sources.slice(0, -1).join(', ')} or ${sources.at(-1)}`
+    const names = orList(sources)
     const conditions = new Set(
       into.map((edge) => (edge.label || '').replace(/ ?\(via [^)]*\)$/, ''))
     )
@@ -1116,6 +1163,7 @@ module.exports = {
   signedInPages,
   externalNodes,
   layoutLevels,
+  sampleVia,
   mainChain,
   exportScreens,
   toMermaid,

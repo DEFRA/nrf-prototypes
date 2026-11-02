@@ -21,6 +21,7 @@ const {
   copyVariants,
   journeyScenarios,
   previewData,
+  sampleVia,
   previewErrorStates,
   captureScreens,
   captureScreen,
@@ -44,9 +45,19 @@ const PUBLIC_BASE_URL = (
   'https://nrf-prototypes.ext-test.cdp.defra.gov.uk'
 ).replace(/\/$/, '')
 
-function pageView(page, journey, via) {
+// `layout` is the journey the wall's rows came from (groups folded in).
+// A page shown in several states (preview variants) captions each card with
+// the page its sample answers arrive from, when the page has a caption at
+// all (main-chain pages have none); a page with one card stands for every
+// way in
+function pageView(page, journey, via, layout) {
+  const viaFor = (variant) =>
+    layout &&
+    via &&
+    previewVariants(page).length > 0 &&
+    sampleVia(layout, page.id, previewData(journey, page, variant))
   return {
-    via: via || '',
+    via: viaFor() || via || '',
     id: page.id,
     path: page.path,
     type: page.type,
@@ -54,7 +65,10 @@ function pageView(page, journey, via) {
     isQuestion: isQuestionType(page.type),
     isCustom: page.type === 'custom',
     isExit: !(page.next && page.next.length),
-    variants: previewVariants(page),
+    variants: previewVariants(page).map((variant) => ({
+      ...variant,
+      via: viaFor(variant.id)
+    })),
     // Alternative copy for the same page (pages/<id>~<variant>.md), each a
     // card of its own beside the page and compared at compareUrl
     copies: copyVariants(page),
@@ -97,7 +111,7 @@ function groupView(page, via) {
   }
 }
 
-function levelViews(levels, journey) {
+function levelViews(levels, journey, layout) {
   return levels.map((row) => ({
     unreachable: Boolean(row.unreachable),
     pages: row.pages.map((entry) => {
@@ -107,7 +121,7 @@ function levelViews(levels, journey) {
       const page = journey.byId.get(entry.id)
       return page.type === 'group'
         ? groupView(page, entry.via)
-        : pageView(page, journey.source || journey, entry.via)
+        : pageView(page, journey.source || journey, entry.via, layout)
     })
   }))
 }
@@ -213,13 +227,17 @@ router.get('/tools/journeys/:journey', (req, res) => {
       })
     }
   }
-  const levels = levelViews(sections.main.levels, collapsed)
+  const levels = levelViews(
+    sections.main.levels,
+    collapsed,
+    sections.main.journey
+  )
   const groups = sections.groups.map((group) => ({
     id: group.id,
     title: group.title,
     anchor: group.anchor.slice(1),
     count: group.count,
-    levels: levelViews(group.levels, journey)
+    levels: levelViews(group.levels, journey, group.journey)
   }))
   const graphs = {
     main: sections.main.graph,
