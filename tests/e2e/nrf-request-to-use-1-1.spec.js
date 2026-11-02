@@ -5,7 +5,8 @@ const {
   journeySections,
   exportSections,
   exportScreens,
-  copyVariants
+  copyVariants,
+  previewVariants
 } = require('../../app/lib/journey-engine')
 const { copyOf, gotoTools } = require('./helpers/journey')
 const { LEVY_AMOUNT } = require('../../app/lib/nrf-request-to-use-1-1/hooks')
@@ -437,31 +438,14 @@ test.describe('nrf-request-to-use-1-1 happy paths', () => {
     await expect(page.locator('.govuk-summary-list')).toContainText(
       'A Developer'
     )
-    // The business name is the organisation chosen, and its Change link
-    // goes back to the Defra ID page and returns here
+    // The business name is the organisation chosen, which the agent cannot
+    // change here (the header's Change organisation is the way)
     await expect(page.locator('.govuk-summary-list')).toContainText(
       option('defra-choose-organisation', 'oakwood')
     )
-    await changeLink(
-      page,
-      'review-developer-details',
-      'defra-choose-organisation'
-    ).click()
-    await expect(page).toHaveURL(
-      `${base}/defra-choose-organisation?change=true&nav=review-developer-details`
-    )
     await expect(
-      optionLocator(page, 'defra-choose-organisation', 'oakwood')
-    ).toBeChecked()
-    await answer(page, 'defra-choose-organisation', 'riverside')
-    await submit(page, 'defra-choose-organisation')
-    await expect(page).toHaveURL(`${base}/review-developer-details`)
-    await expect(page.locator('.govuk-summary-list')).toContainText(
-      option('defra-choose-organisation', 'riverside')
-    )
-    await expect(page.locator('.app-organisation-bar')).toContainText(
-      option('defra-choose-organisation', 'riverside')
-    )
+      page.locator('.govuk-summary-list a[href*="defra-choose-organisation"]')
+    ).toHaveCount(0)
     await submit(page, 'review-developer-details')
     await expect(page).toHaveURL(`${base}/read-this`)
     await submit(page, 'read-this')
@@ -1565,9 +1549,10 @@ test.describe('journey tools', () => {
   }) => {
     const response = await gotoTools(page, journey.id)
     expect(response.status()).toBe(200)
-    // One card per page, plus one per copy variant a page has
+    // One card per page, plus one per preview or copy variant a page has
     const cards = journey.pages.reduce(
-      (count, page) => count + 1 + copyVariants(page).length,
+      (count, page) =>
+        count + 1 + previewVariants(page).length + copyVariants(page).length,
       0
     )
     await expect(page.locator('iframe')).toHaveCount(cards)
@@ -1600,15 +1585,20 @@ test.describe('journey tools', () => {
       'main',
       ...groups.map((group) => group.id)
     ])
-    // Everything, once, filed by section (a copy variant adds a screen of
-    // its own beside its page)
+    // Everything, once, filed by section (a preview or copy variant adds a
+    // screen of its own beside its page)
     const all = exportScreens(journey, { includeErrors: false })
     expect(
       all
-        .filter((screen) => !screen.copy)
+        .filter((screen) => !screen.copy && !screen.variant)
         .map((screen) => screen.id)
         .sort()
     ).toEqual(journey.pages.map((page) => page.id).sort())
+    expect(
+      all.filter((screen) => screen.variant).map((screen) => screen.id)
+    ).toEqual(
+      journey.pages.flatMap((page) => previewVariants(page).map(() => page.id))
+    )
     expect(
       all.filter((screen) => screen.copy).map((screen) => screen.id)
     ).toEqual(
