@@ -936,7 +936,7 @@ pages:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: review-your-details
-    handoff: 2026-10-22
+    handoff: 2026-11-02
 
   - id: individual-address
     sessionKey: yourAddress
