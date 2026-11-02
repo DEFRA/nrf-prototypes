@@ -1,0 +1,441 @@
+# Flow and logic for the "Assume liability" journey: a developer whose
+# planning permission has been granted takes on the liability to pay the
+# nature restoration levy before starting development.
+#
+# Copy lives in pages/*.md. This file decides the order of pages, where each
+# answer leads and what is remembered in the session. See content/README.md.
+#
+# The journey opens on the email the service sends once planning permission
+# is granted. Its link leads to "How do you want to sign in?" and the mock
+# GOV.UK One Login or Government Gateway (shared with the other journeys:
+# content/shared/one-login and government-gateway). Signing in lands on the
+# developer's records (records.yaml: one where they are the primary user,
+# two where they are a secondary user). The primary user of a record whose
+# planning permission is granted answers "Are you ready to assume liability
+# to pay the nature restoration levy?" at the bottom of its page, chooses
+# how to pay, names anyone jointly liable (one person at a time, name then
+# email, checked after each), waits for everyone to sign the assumption
+# document, adds the payment details, reviews and submits. The confirmation
+# page leads to the assumption email with its Pay now link.
+#
+# Behaviour that needs code (the signed-in account, the records, the list of
+# jointly liable people, the signatures) is in
+# app/lib/assume-liability-1/hooks.js.
+
+id: assume-liability-1
+name: Assume liability to pay the nature restoration levy
+serviceName: Manage the nature restoration levy
+start: permission-email
+
+summaryPages:
+  - review-liability
+
+# When this holds the header shows Sign out
+signedIn: { key: account, isSet: true }
+
+homepage:
+  family: assume-liability
+  version: 1
+  status: in-progress
+  title: Assume liability to pay the nature restoration levy (V1)
+  description: >-
+    Once planning permission is granted, the developer signs in, finds the
+    developer record, assumes liability to pay the levy, chooses how to pay,
+    names anyone jointly liable, waits for everyone to sign the assumption
+    document and adds the payment details.
+  changes:
+    - first cut of the whole flow, with placeholder copy on the payment, assumption document, confirmation and email pages
+    - three records on "Manage the nature restoration levy"; only the primary user of a granted record is asked to assume liability
+    - jointly liable people are added one at a time (name, then email) and checked after each
+    - the assumption document waits for everyone to sign; the "Everyone has signed" link in the footer signs for them
+
+# Every session key this journey writes
+session:
+  - signInMethod
+  - signInEmail
+  - account
+  - chosenOrganisation
+  - recordReference
+  - record
+  - records
+  - liabilityProgress
+  - assumeLiability
+  - howToPay
+  - jointlyLiable
+  - liablePerson
+  - liablePersonEmail
+  - liablePersonIndex
+  - liablePeople
+  - signatures
+  - signAgreement
+  - youSigned
+  - signatories
+  - sharedLiability
+  - recordAnswers
+  - payerDetails
+
+# Sample answers for the screen wall and ?preview=1
+preview:
+  # The signing page is reached from the assumption document's button (in
+  # its template), so the flow does not find it on its own
+  signedInFrom:
+    - manage-levy
+    - sign-assumption
+  data:
+    signInEmail: trevor.barker@fenlandhomes.co.uk
+    account:
+      fullName: Trevor Barker
+      businessName: Fenland Homes
+      organisationName: Fenland Homes
+      organisationPage: choose-organisation
+      email: trevor.barker@fenlandhomes.co.uk
+    recordReference: NRL-123456
+    assumeLiability: 'yes'
+    howToPay: instalments
+    jointlyLiable: 'yes'
+    liablePerson:
+      fullName: Sam Patel
+      sameOrganisation: 'no'
+      organisation: Patel Land Ltd
+    liablePersonEmail: sam.patel@patelland.co.uk
+    liablePeople:
+      - fullName: Sam Patel
+        organisation: Patel Land Ltd
+        email: sam.patel@patelland.co.uk
+      - fullName: Jo Wright
+        organisation: ''
+        email: jo.wright@example.com
+    payerDetails:
+      payerName: Fenland Homes
+      email: accounts@fenlandhomes.co.uk
+      addressLine1: 12 Station Road
+      town: March
+      postcode: PE15 8AA
+
+pages:
+  # The email the service sends once planning permission is granted. Its
+  # link (`./$next`) carries on to signing in.
+  - id: permission-email
+    layout: email
+    back: []
+    next: sign-in-method
+
+  # Reached from the link in the email, so no Back link
+  - id: sign-in-method
+    field: sign-in-method
+    sessionKey: signInMethod
+    back: []
+    handler: custom # registers the sign-out route, see hooks.js
+    next:
+      - when: { key: signInMethod, equals: government-gateway }
+        goto: government-gateway-sign-in
+      - goto: one-login-email
+
+  # Mock GOV.UK One Login, shared with other journeys. Developers already
+  # have an account (they made the commitment), so it opens on the sign in
+  # page itself. Signing in makes the participant (or a stand-in) the
+  # account holder (hooks.js).
+  - id: one-login-email
+    shared: one-login
+    back: sign-in-method
+    next: one-login-password
+
+  - id: one-login-password
+    shared: one-login
+    guard: { key: signInEmail, isSet: true, redirect: one-login-email }
+    handler: custom
+    next: choose-organisation
+
+  - id: government-gateway-sign-in
+    shared: government-gateway
+    back: sign-in-method
+    handler: custom
+    next: choose-organisation
+
+  # Defra ID's "Who do you want to represent?", in this journey's own copy
+  # (its first option is the participant's organisation, or Fenland Homes).
+  # The organisation chosen shows in the header on every page after, whose
+  # Change organisation link comes back here (hooks.js). Signed in already,
+  # so no Back link.
+  - id: choose-organisation
+    field: represent
+    sessionKey: chosenOrganisation
+    guard: { key: account, isSet: true, redirect: sign-in-method }
+    back: []
+    handler: custom
+    next: manage-levy
+
+  # The account's home: every developer record the user is a primary or
+  # secondary user of (records.yaml). The landing page, so no Back link.
+  # Each record's NRL reference links to its page; `next` only draws that
+  # on the tools page (there is no form to submit).
+  - id: manage-levy
+    template: assume-liability-1/manage-levy
+    guard: &signed-in { key: account, isSet: true, redirect: sign-in-method }
+    back: []
+    next: developer-record
+
+  # A record: developer-record?ref=NRL-123456. The question at the bottom
+  # shows only to the primary user of a record whose planning permission is
+  # granted; everyone else sees why not (hooks.js, `text:` in the page).
+  - id: developer-record
+    template: assume-liability-1/developer-record
+    field: assume-liability
+    sessionKey: assumeLiability
+    guard: *signed-in
+    handler: custom # opens the record named by ?ref=
+    back: manage-levy
+    next:
+      - when: { key: assumeLiability, equals: 'yes' }
+        goto: how-to-pay
+      - when: { key: assumeLiability, equals: someone-else }
+        goto: someone-else-liable
+      - goto: manage-levy
+    preview:
+      label: Ready to assume liability
+      description: >-
+        The primary user's record, planning permission granted: the
+        question shows at the bottom
+      variants:
+        - id: secondary-sign
+          label: Secondary user, named as jointly liable
+          description: >-
+            A granted record where someone else is the primary user and has
+            named the user as jointly liable: they open the assumption
+            document to sign it
+          data: { recordReference: NRL-234567 }
+        - id: secondary-liable
+          label: Secondary user, liability assumed
+          description: >-
+            A record where someone else is the primary user and has
+            already assumed liability
+          data: { recordReference: NRL-345678 }
+        - id: signatures
+          label: Waiting for signatures
+          description: >-
+            The primary user's record once the assumption document has gone
+            out to the jointly liable people
+          data:
+            liabilityProgress: { NRL-123456: { status: signatures } }
+
+  # PLACEHOLDER: drop-out when someone else is already liable
+  - id: someone-else-liable
+    guard: *signed-in
+    back: developer-record
+
+  - id: how-to-pay
+    field: how-to-pay
+    sessionKey: howToPay
+    guard: &assuming { key: recordReference, isSet: true, redirect: manage-levy }
+    back: developer-record
+    changeable: true
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - when: { key: howToPay, equals: instalments }
+        goto: instalment-details
+      - goto: one-off-payment-details
+
+  # PLACEHOLDER: dummy copy on both payment pages
+  - id: instalment-details
+    guard: *assuming
+    back: how-to-pay
+    next: anyone-else
+
+  - id: one-off-payment-details
+    guard: *assuming
+    back: how-to-pay
+    next: anyone-else
+
+  # No forgets anyone added before (hooks.js). Yes goes on adding people,
+  # or to the list when there are some already.
+  - id: anyone-else
+    field: jointly-liable
+    sessionKey: jointlyLiable
+    guard: *assuming
+    handler: custom
+    back:
+      - when: { key: howToPay, equals: instalments }
+        goto: instalment-details
+      - goto: one-off-payment-details
+    next:
+      - when:
+          all:
+            - { key: jointlyLiable, equals: 'yes' }
+            - { key: liablePeople, isSet: true }
+        goto: liable-people-check
+      - when: { key: jointlyLiable, equals: 'yes' }
+        goto: liable-person-name
+      - goto: assumption-document
+
+  # --------------------------------------------------------------------
+  # Adding the jointly liable people, one at a time: name and whether they
+  # are part of the user's organisation (and if not, which), then email, then the list of everyone added. "Add another person"
+  # (liable-person-name?_new=1) starts again; a person's Change link
+  # (liable-person-name?_edit=<n>) edits them in place (hooks.js).
+  - id: liable-person-name
+    group: liable-people
+    template: assume-liability-1/liable-person-name
+    sessionKey: liablePerson
+    guard: { key: jointlyLiable, equals: 'yes', redirect: anyone-else }
+    handler: custom
+    back:
+      - when: { key: liablePeople, isSet: true }
+        goto: liable-people-check
+      - goto: anyone-else
+    next: liable-person-email
+
+  # Continuing adds the person to the list, or updates the one being
+  # changed (hooks.js)
+  - id: liable-person-email
+    group: liable-people
+    field: liable-person-email
+    sessionKey: liablePersonEmail
+    guard: { key: liablePerson, isSet: true, redirect: liable-person-name }
+    handler: custom
+    back: liable-person-name
+    next: liable-people-check
+
+  # Everyone added, each with Change and Remove links; Save and continue
+  # sends the assumption document to them (hooks.js). Also opened from the
+  # assumption document's "Change who is jointly liable" link, so once the
+  # document has gone out (`signatures` is kept) Back returns there.
+  - id: liable-people-check
+    group: liable-people
+    template: assume-liability-1/liable-people-check
+    guard: { key: liablePeople, isSet: true, redirect: anyone-else }
+    handler: custom
+    back:
+      - when: { key: signatures, isSet: true }
+        goto: assumption-document
+      - goto: anyone-else
+    next: assumption-document
+
+  # --------------------------------------------------------------------
+  # PLACEHOLDER: the assumption document and who it is waiting on. Until
+  # the user has signed it, "Assume liability" leads to sign-assumption;
+  # Continue shows once everyone has signed. User research aids in the
+  # footer: the email the jointly liable people get, and a link that signs
+  # for them all (not for the user).
+  - id: assumption-document
+    template: assume-liability-1/assumption-document
+    guard: *assuming
+    handler: custom
+    back:
+      - when: { key: record.primary, falsy: true }
+        goto: developer-record
+      - when: { key: liablePeople, isSet: true }
+        goto: liable-people-check
+      - goto: anyone-else
+    research:
+      - text: Email to the jointly liable people
+        href: joint-liability-email
+        newTab: false
+      - text: Everyone has signed
+        href: assumption-document?_signed=all
+        newTab: false
+    next: add-payment-details
+    preview:
+      label: Not signed yet
+      description: >-
+        Two jointly liable people have been sent the document; nobody has
+        signed yet, so the user is asked to assume liability
+      variants:
+        - id: you-signed
+          label: Signed by the user, waiting for others
+          description: >-
+            The user has signed; the two jointly liable people have not
+          data: { youSigned: 2026-11-02 }
+        - id: signed
+          label: Everyone has signed
+          description: >-
+            Everyone has signed, so the primary user can continue to the
+            payment details
+          data:
+            youSigned: 2026-11-02
+            signatures:
+              sam.patel@patelland.co.uk: 2026-10-30
+              jo.wright@example.com: 2026-10-31
+        - id: only-you
+          label: No one else is jointly liable
+          description: >-
+            The primary user alone: nobody else to wait for
+          data: { jointlyLiable: 'no', liablePeople: null }
+        - id: only-you-signed
+          label: No one else is jointly liable, signed
+          description: >-
+            The primary user alone, signed: Continue to the payment details
+          data: { jointlyLiable: 'no', liablePeople: null, youSigned: 2026-11-02 }
+        - id: secondary
+          label: Named as jointly liable, not signed yet
+          description: >-
+            A secondary user's record (NRL-234567): the primary user has
+            signed and named them as jointly liable, so they sign too
+          data: { recordReference: NRL-234567, liablePeople: null }
+
+  # PLACEHOLDER: the user signs the assumption document. Agreeing signs it
+  # (hooks.js) and returns to the document.
+  - id: sign-assumption
+    field: sign-agreement
+    sessionKey: signAgreement
+    guard: *assuming
+    handler: custom
+    back: assumption-document
+    next: assumption-document
+
+  # PLACEHOLDER: the email each jointly liable person gets. Its link carries
+  # on to the assumption document.
+  - id: joint-liability-email
+    layout: email
+    guard: { key: liablePeople, isSet: true, redirect: assumption-document }
+    back: []
+    next: assumption-document
+
+  - id: add-payment-details
+    sessionKey: payerDetails
+    guard: *assuming
+    back: assumption-document
+    changeable: true
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: review-liability
+
+  # The payment details, then everyone liable: a table when others are
+  # jointly liable, the user's own details when it is them alone
+  - id: review-liability
+    template: assume-liability-1/review-liability
+    guard: { key: payerDetails, isSet: true, redirect: add-payment-details }
+    handler: custom # marks the record's liability assumed, see hooks.js
+    back: add-payment-details
+    next: confirmation
+    preview:
+      data:
+        youSigned: 2026-11-02
+        signatures:
+          sam.patel@patelland.co.uk: 2026-10-30
+          jo.wright@example.com: 2026-10-31
+      variants:
+        - id: only-you
+          label: No one else is jointly liable
+          description: >-
+            The primary user alone: their details in place of the table
+          data: { jointlyLiable: 'no', liablePeople: null }
+
+  # PLACEHOLDER copy. User research aid in the footer: the assumption email.
+  - id: confirmation
+    guard: *assuming
+    back: []
+    research:
+      - text: View the assumption email
+        href: assumption-email
+        newTab: false
+
+  # PLACEHOLDER: the email confirming liability, with its Pay now link
+  - id: assumption-email
+    layout: email
+    back: confirmation
+
+groups:
+  liable-people:
+    title: Add the jointly liable people

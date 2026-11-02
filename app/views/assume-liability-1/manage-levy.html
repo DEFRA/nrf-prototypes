@@ -1,0 +1,43 @@
+{#
+  The account's home (content/assume-liability-1/pages/manage-levy.md): the
+  heading and hint, then a table of every developer record the user is a
+  primary or secondary user of, each NRL reference linking to its record.
+  data.records comes from app/lib/assume-liability-1/hooks.js.
+#}
+{% extends "journey-engine/_page.html" %}
+
+{% set text = content.text %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <h1 class="govuk-heading-xl govuk-!-margin-bottom-3">{{ content.heading }}</h1>
+    <p class="govuk-body-l">{{ content.hint }}</p>
+    {{ content.html | safe }}
+  </div>
+</div>
+
+{% set rows = [] %}
+{% for record in data.records %}
+  {% set rows = (rows.push([
+    { html: '<a class="govuk-link" href="' + routes.DEVELOPER_RECORD + '?ref=' + (record.reference | urlencode) + '">' + record.reference + '</a>' },
+    { text: record.site },
+    { text: text.primary if record.primary else text.secondary },
+    { text: record.lastUpdated },
+    { html: '<strong class="govuk-tag govuk-tag--' + record.status.colour + '">' + (record.status.label | escape) + '</strong>' }
+  ]), rows) %}
+{% endfor %}
+
+{{ govukTable({
+  caption: text.tableCaption,
+  captionClasses: "govuk-table__caption--m",
+  head: [
+    { text: text.columns.reference },
+    { text: text.columns.site },
+    { text: text.columns.role },
+    { text: text.columns.lastUpdated },
+    { text: text.columns.status }
+  ],
+  rows: rows
+}) }}
+{% endblock %}

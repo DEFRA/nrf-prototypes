@@ -1,0 +1,149 @@
+# Canned data for the "Assume liability" journey: the developer records the
+# signed-in developer is a primary or secondary user of, listed on "Manage
+# the nature restoration levy".
+#
+# This is data, not page copy: the words on the pages are in pages/*.md.
+# Edits show on the next page load (no restart). The code that reads it is
+# app/lib/assume-liability-1/hooks.js.
+#
+#   statuses   every status a record can have: its tag label and the
+#              govuk-tag colour (grey, green, turquoise, blue, light-blue,
+#              purple, pink, red, orange, yellow). A record starts at the
+#              status given below; assuming liability in the journey moves
+#              the primary user's record on to `signatures` (when others
+#              must sign) and then `liable`. A secondary user's record at
+#              `sign` (they have been named as jointly liable) moves on to
+#              `signatures` once they sign, or `signed` when nobody else is
+#              left to
+#   records    in the order the table lists them. `role` is the signed-in
+#              user's: `primary` (the developer is their organisation, and
+#              only they can assume liability) or `secondary` (someone
+#              else, `primaryUser`, is the primary user). A primary record
+#              with no `developer` shows the signed-in user's organisation.
+#              `boundary` is the red line boundary, an open ring of
+#              [longitude, latitude] pairs. Dates are YYYY-MM-DD.
+#              A secondary user's record at `sign` lists its assumption
+#              document's `signatories` in order: each a `fullName`,
+#              `organisation` (the signed-in user's when left out), `email`
+#              and the date they `signed` (left out while the document waits
+#              for them), and `you: true` where the signed-in user signs
+
+statuses:
+  ready: { label: Ready to assume liability, colour: blue }
+  sign: { label: Waiting for your signature, colour: orange }
+  awaiting-permission: { label: Waiting for planning permission, colour: grey }
+  signatures: { label: Waiting for signatures, colour: yellow }
+  signed: { label: Signed by everyone, colour: turquoise }
+  liable: { label: Liability assumed, colour: green }
+
+edp: &edp 'Norfolk: Broads Special Area of Conservation (SAC) (Yare and Bure), Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2027 to 2037)'
+
+records:
+  - reference: NRL-123456
+    role: primary
+    status: ready
+    site: Land off Frogshall Lane, Wymondham
+    planningReference: 2026/0412/FUL
+    planningType: Full planning permission
+    units: 120
+    lpa: South Norfolk Council
+    edp: *edp
+    levyAmount: 'X,XXX'
+    permissionGranted: 2026-10-28
+    lastUpdated: 2026-10-28
+    boundary:
+      - [1.103662, 52.574687]
+      - [1.105894, 52.574153]
+      - [1.106850, 52.573891]
+      - [1.107017, 52.574124]
+      - [1.107070, 52.574297]
+      - [1.107060, 52.574435]
+      - [1.106995, 52.574579]
+      - [1.106598, 52.575102]
+      - [1.106533, 52.575225]
+      - [1.106583, 52.575577]
+      - [1.106008, 52.575752]
+      - [1.104735, 52.576038]
+      - [1.104662, 52.575947]
+      - [1.104472, 52.575997]
+      - [1.103847, 52.574914]
+
+  # Priya Shah has named the signed-in user as jointly liable: they sign in,
+  # open it and sign the assumption document
+  - reference: NRL-234567
+    role: secondary
+    status: sign
+    primaryUser: Priya Shah
+    developer: Broadland Estates
+    site: Land off Furze Lane, Reepham
+    planningReference: 2026/0577/OUT
+    planningType: Outline planning permission
+    units: 45
+    lpa: Broadland District Council
+    edp: *edp
+    levyAmount: 'X,XXX'
+    permissionGranted: 2026-10-09
+    lastUpdated: 2026-10-30
+    signatories:
+      - fullName: Priya Shah
+        organisation: Broadland Estates
+        email: priya.shah@broadlandestates.co.uk
+        signed: 2026-10-30
+      - you: true
+      - fullName: Mark Ellis
+        organisation: Ellis Land Ltd
+        email: mark.ellis@ellisland.co.uk
+    boundary:
+      - [1.121438, 52.757251]
+      - [1.121297, 52.757260]
+      - [1.121264, 52.757293]
+      - [1.121355, 52.757319]
+      - [1.121379, 52.757349]
+      - [1.121328, 52.757539]
+      - [1.121130, 52.757651]
+      - [1.122403, 52.758552]
+      - [1.123058, 52.758763]
+      - [1.124336, 52.758149]
+      - [1.124336, 52.758096]
+      - [1.123144, 52.757773]
+      - [1.121806, 52.757339]
+
+  - reference: NRL-345678
+    role: secondary
+    status: liable
+    primaryUser: Daniel Okafor
+    developer: Hethersett Homes
+    site: Land off Norwich Road, Hethersett
+    planningReference: 2026/0198/FUL
+    planningType: Full planning permission
+    units: 64
+    lpa: South Norfolk Council
+    edp: *edp
+    levyAmount: 'X,XXX'
+    permissionGranted: 2026-08-19
+    liabilityAssumed: 2026-09-02
+    lastUpdated: 2026-09-02
+    boundary:
+      - [1.187101, 52.597333]
+      - [1.189108, 52.595531]
+      - [1.190300, 52.595992]
+      - [1.191357, 52.596331]
+      - [1.192206, 52.596672]
+      - [1.192241, 52.596645]
+      - [1.193179, 52.597064]
+      - [1.193385, 52.597167]
+      - [1.193480, 52.597255]
+      - [1.193784, 52.597434]
+      - [1.194040, 52.597733]
+      - [1.194956, 52.598199]
+      - [1.193586, 52.599319]
+      - [1.193473, 52.599432]
+      - [1.193262, 52.599727]
+      - [1.193052, 52.599950]
+      - [1.189996, 52.598709]
+      - [1.189961, 52.598752]
+      - [1.189090, 52.598370]
+      - [1.188162, 52.598531]
+      - [1.187852, 52.598302]
+      - [1.187519, 52.597973]
+      - [1.187316, 52.597727]

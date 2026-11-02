@@ -1,0 +1,64 @@
+{#
+  A developer record (content/assume-liability-1/pages/developer-record.md):
+  the NRL reference with its status, the levy, development and developer
+  details (the page's `rows`), the red line boundary (the page's copy), then
+  "Are you ready to assume liability...?" for the primary user of a record
+  whose planning permission is granted. A secondary user named as jointly
+  liable is sent to the assumption document to sign it; anyone else sees
+  why not. The messages are the page's `text:`. data.record comes from app/lib/assume-liability-1/hooks.js.
+#}
+{% extends "journey-engine/_page.html" %}
+
+{% set text = content.text %}
+{% set record = data.record %}
+
+{% block pageBody %}
+{% include "journey-engine/_error-summary.html" %}
+
+<h1 class="govuk-heading-l">
+  {{ content.heading }}
+  {% if record %}
+    <strong class="govuk-tag govuk-tag--{{ record.status.colour }} govuk-!-margin-left-2">{{ record.status.label }}</strong>
+  {% endif %}
+</h1>
+
+{% for group in content.rowGroups %}
+  {% if group.heading %}<h2 class="govuk-heading-m">{{ group.heading }}</h2>{% endif %}
+  {% if group.rows | length %}
+    {{ govukSummaryList({ classes: "govuk-!-margin-bottom-9", rows: group.rows }) }}
+  {% endif %}
+{% endfor %}
+
+{{ content.html | safe }}
+
+{% if record and record.canAssume %}
+<form action="{{ page.path }}" method="post" novalidate>
+  {{ govukRadios({
+    name: page.field,
+    idPrefix: page.field,
+    fieldset: { legend: { text: text.question, classes: "govuk-fieldset__legend--m" } },
+    items: content.items,
+    errorMessage: { text: error } if error
+  }) }}
+  {{ govukButton({ text: content.button }) }}
+</form>
+{% elif record %}
+  {% if record.status.value == 'sign' %}
+    {{ govukInsetText({ text: text.named | replace("{name}", record.primaryUser) }) }}
+    {{ govukButton({ text: text.viewDocument, href: routes.ASSUMPTION_DOCUMENT }) }}
+  {% elif record.status.value == 'signatures' %}
+    {{ govukInsetText({ text: text.signatures }) }}
+    {{ govukButton({ text: text.viewDocument, href: routes.ASSUMPTION_DOCUMENT }) }}
+  {% elif record.status.value == 'signed' %}
+    {{ govukInsetText({ text: text.signed | replace("{name}", record.primaryUser) }) }}
+    {{ govukButton({ text: text.viewDocument, href: routes.ASSUMPTION_DOCUMENT, classes: "govuk-button--secondary" }) }}
+  {% elif record.status.value == 'liable' %}
+    {{ govukInsetText({ text: text.liable }) }}
+  {% elif not record.primary %}
+    {{ govukInsetText({ text: text.secondary | replace("{name}", record.primaryUser) }) }}
+  {% else %}
+    {{ govukInsetText({ text: text.awaitingPermission }) }}
+  {% endif %}
+  <p class="govuk-body"><a class="govuk-link" href="{{ routes.MANAGE_LEVY }}">{{ text.back }}</a></p>
+{% endif %}
+{% endblock %}

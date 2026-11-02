@@ -1,0 +1,78 @@
+{#
+  Review liability (content/assume-liability-1/pages/review-liability.md):
+  the page's rows (development and payment, with Change links), then
+  everyone liable: a table of the jointly liable people who signed, or the
+  user's own details when nobody else is liable. Confirm and submit posts
+  back here. data.signatories comes from app/lib/assume-liability-1/hooks.js.
+#}
+{% extends "journey-engine/_page.html" %}
+
+{% set text = content.text %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+<h1 class="govuk-heading-l">{{ content.heading }}</h1>
+
+{% for group in content.rowGroups %}
+  {% if group.heading %}<h2 class="govuk-heading-m">{{ group.heading }}</h2>{% endif %}
+  {% if group.rows | length %}
+    {{ govukSummaryList({ classes: "govuk-!-margin-bottom-9", rows: group.rows }) }}
+  {% endif %}
+{% endfor %}
+
+  </div>
+</div>
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-{{ 'full' if data.signatories | length > 1 else 'two-thirds' }}">
+{% if data.signatories | length > 1 %}
+  {% set rows = [] %}
+  {% for person in data.signatories %}
+    {% set rows = (rows.push([
+      { text: person.fullName + (" " + text.you if person.you else "") },
+      { text: person.organisation },
+      { text: person.email },
+      { text: person.signedOn }
+    ]), rows) %}
+  {% endfor %}
+  {{ govukTable({
+    caption: text.peopleHeading,
+    captionClasses: "govuk-table__caption--m",
+    classes: "govuk-!-margin-bottom-9",
+    head: [
+      { text: text.columns.name },
+      { text: text.columns.organisation },
+      { text: text.columns.email },
+      { text: text.columns.signed }
+    ],
+    rows: rows
+  }) }}
+{% else %}
+  {% set you = data.signatories[0] %}
+  {{ govukSummaryList({
+    card: { title: { text: text.youHeading } },
+    classes: "govuk-!-margin-bottom-9",
+    rows: [
+      { key: { text: text.fullName }, value: { text: you.fullName } },
+      { key: { text: text.organisation }, value: { text: you.organisation } },
+      { key: { text: text.email }, value: { text: you.email } },
+      { key: { text: text.signed }, value: { text: you.signedOn } }
+    ]
+  }) }}
+{% endif %}
+  </div>
+</div>
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+{{ content.html | safe }}
+
+<form action="{{ page.path }}" method="post" novalidate>
+  {% for action in content.actions %}
+    {{ govukButton({ text: action.text }) }}
+  {% endfor %}
+</form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,88 @@
+{#
+  The assumption of liability document
+  (content/assume-liability-1/pages/assumption-document.md): the document's
+  words (the page's body) in a bordered box, then who has signed and who it
+  is still waiting on. On a secondary user's record (one they were named
+  as jointly liable on) there is no way to change who signs and no
+  Continue. Until the user has signed, Assume liability leads to
+  sign-assumption; Continue shows once everyone has signed, and until then
+  a link returns to the user's records. Model extras from
+  app/lib/assume-liability-1/hooks.js: primary, youSigned, waitingCount,
+  allSigned, data.signatories.
+#}
+{% extends "journey-engine/_page.html" %}
+
+{% set text = content.text %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+<span class="govuk-caption-l">{{ text.caption | replace("{reference}", data.recordReference) }}</span>
+<h1 class="govuk-heading-l">
+  {{ content.heading }}
+  <strong class="govuk-tag govuk-tag--{{ 'green' if allSigned else 'yellow' }} govuk-!-margin-left-2">{{ text.signedTag if allSigned else text.waitingTag }}</strong>
+</h1>
+
+<div class="app-assumption-document">
+  {{ content.html | safe }}
+</div>
+
+  </div>
+</div>
+
+{% set rows = [] %}
+{% for person in data.signatories %}
+  {% set rows = (rows.push([
+    { text: person.fullName + (" " + text.you if person.you else "") },
+    { text: person.organisation },
+    { text: person.email },
+    { html: '<strong class="govuk-tag govuk-tag--' + ('green' if person.signedOn else 'yellow') + '">' + (text.signed if person.signedOn else text.waiting) + '</strong>' }
+  ]), rows) %}
+{% endfor %}
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+{{ govukTable({
+  caption: text.signaturesHeading,
+  captionClasses: "govuk-table__caption--m",
+  head: [
+    { text: text.columns.name },
+    { text: text.columns.organisation },
+    { text: text.columns.email },
+    { text: text.columns.status }
+  ],
+  rows: rows
+}) }}
+{# The primary user only: back to the list of jointly liable people to
+   remove or add someone, or to "Is there anyone else...?" when nobody else
+   is listed #}
+{% if not primary %}
+{% elif data.liablePeople and data.liablePeople | length %}
+  <p class="govuk-body govuk-!-margin-bottom-8"><a class="govuk-link" href="{{ routes.LIABLE_PEOPLE_CHECK }}">{{ text.changePeople }}</a></p>
+{% else %}
+  <p class="govuk-body govuk-!-margin-bottom-8"><a class="govuk-link" href="{{ routes.ANYONE_ELSE }}">{{ text.addPeople }}</a></p>
+{% endif %}
+  </div>
+</div>
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+{% if allSigned and primary %}
+<form action="{{ page.path }}" method="post" novalidate>
+  {{ govukButton({ text: content.button }) }}
+</form>
+{% elif allSigned %}
+  {{ govukInsetText({ text: text.allSignedSecondary | replace("{name}", data.record.primaryUser) }) }}
+  <p class="govuk-body"><a class="govuk-link" href="{{ routes.MANAGE_LEVY }}">{{ text.back }}</a></p>
+{% elif not youSigned %}
+  <div class="govuk-button-group">
+    {{ govukButton({ text: text.assume, href: routes.SIGN_ASSUMPTION }) }}
+    <a class="govuk-link" href="{{ routes.MANAGE_LEVY }}">{{ text.back }}</a>
+  </div>
+{% else %}
+  {{ govukInsetText({ text: ((text.waitingOne if waitingCount == 1 else text.waitingMany) | replace("{count}", waitingCount)) + (" " + text.paymentAfter if primary else "") }) }}
+  <p class="govuk-body"><a class="govuk-link" href="{{ routes.MANAGE_LEVY }}">{{ text.back }}</a></p>
+{% endif %}
+  </div>
+</div>
+{% endblock %}

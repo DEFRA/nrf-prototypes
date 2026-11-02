@@ -1,0 +1,86 @@
+{#
+  The name page of each jointly liable person
+  (content/assume-liability-1/pages/liable-person-name.md): Full name, then
+  "Is this person also part of <organisation>?" with the organisation's name
+  revealed under No. The fields' labels and errors are the page's
+  `fields:`, in order, and the Yes and No answers its `options`;
+  app/lib/assume-liability-1/hooks.js validates them (the organisation is
+  required once No is chosen).
+#}
+{% extends "journey-engine/_page.html" %}
+
+{% set nameField = content.fields[0] %}
+{% set sameField = content.fields[1] %}
+{% set orgField = content.fields[2] %}
+{% set saved = data[page.sessionKey] or {} %}
+
+{% block pageBody %}
+{% if values %}
+  {% set nameValue = values[nameField.name] %}
+  {% set sameValue = values[sameField.name] %}
+  {% set orgValue = values[orgField.name] %}
+{% else %}
+  {% set nameValue = saved.fullName %}
+  {% set sameValue = saved.sameOrganisation %}
+  {% set orgValue = saved.organisation %}
+{% endif %}
+
+{% set nameError = false %}
+{% set sameError = false %}
+{% set orgError = false %}
+{% for item in errors %}
+  {% if item.field == nameField.name %}{% set nameError = item.message %}{% endif %}
+  {% if item.field == sameField.name %}{% set sameError = item.message %}{% endif %}
+  {% if item.field == orgField.name %}{% set orgError = item.message %}{% endif %}
+{% endfor %}
+
+<form action="{{ page.path }}" method="post" novalidate>
+  {% include "journey-engine/_change-inputs.html" %}
+  {% include "journey-engine/_error-summary.html" %}
+
+  <h1 class="govuk-heading-l">{{ content.heading }}</h1>
+  {% if content.hint %}<p class="govuk-body">{{ content.hint }}</p>{% endif %}
+  {{ content.html | safe }}
+
+  {{ govukInput({
+    id: nameField.name,
+    name: nameField.name,
+    label: { text: nameField.label },
+    value: nameValue,
+    autocomplete: "name",
+    spellcheck: false,
+    errorMessage: { text: nameError } if nameError
+  }) }}
+
+  {% set orgInput = govukInput({
+    id: orgField.name,
+    name: orgField.name,
+    label: { text: orgField.label },
+    value: orgValue,
+    autocomplete: "organization",
+    errorMessage: { text: orgError } if orgError
+  }) %}
+
+  {{ govukRadios({
+    name: sameField.name,
+    idPrefix: sameField.name,
+    fieldset: { legend: { text: sameField.label, classes: "govuk-fieldset__legend--s" } },
+    errorMessage: { text: sameError } if sameError,
+    items: [
+      {
+        text: content.items[0].text,
+        value: content.items[0].value,
+        checked: sameValue == content.items[0].value
+      },
+      {
+        text: content.items[1].text,
+        value: content.items[1].value,
+        checked: sameValue == content.items[1].value,
+        conditional: { html: orgInput }
+      }
+    ]
+  }) }}
+
+  {{ govukButton({ text: content.button }) }}
+</form>
+{% endblock %}

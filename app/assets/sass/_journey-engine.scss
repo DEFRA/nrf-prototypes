@@ -97,6 +97,15 @@
   }
 }
 
+// The assumption of liability document (assume-liability-1), set apart from
+// the page around it like a page of a document
+.app-assumption-document {
+  margin-bottom: govuk-spacing(7);
+  padding: govuk-spacing(4) govuk-spacing(4) govuk-spacing(1);
+  border: 1px solid $govuk-border-colour;
+  background: govuk-colour('black', $variant: 'tint-95');
+}
+
 // The mock emails end in a plain grey band instead of the GOV.UK footer
 .app-email-footer {
   padding: govuk-spacing(6) 0;
@@ -136,4 +145,3 @@
 
 // Strip above a frozen copy of a handoff (/handoffs/<journey>/<date>/...),
 // see journey-engine/_frozen-banner.html
-

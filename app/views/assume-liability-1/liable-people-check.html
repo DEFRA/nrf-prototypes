@@ -1,0 +1,43 @@
+{#
+  Everyone added as jointly liable so far
+  (content/assume-liability-1/pages/liable-people-check.md): a summary card
+  each, with Change (liable-person-name?_edit=<n>) and Remove
+  (liable-people-check/remove?_index=<n>, a route in
+  app/lib/assume-liability-1/hooks.js), then Add another person and Save
+  and continue.
+#}
+{% extends "journey-engine/_page.html" %}
+
+{% set text = content.text %}
+
+{% block pageBody %}
+<h1 class="govuk-heading-l">{{ content.heading }}</h1>
+{{ content.html | safe }}
+
+{% for person in data.liablePeople %}
+  {% set index = loop.index0 %}
+  {{ govukSummaryList({
+    card: {
+      title: { text: person.fullName },
+      actions: {
+        items: [
+          { href: routes.LIABLE_PERSON_NAME + "?_edit=" + index, text: text.change },
+          { href: routes.REMOVE_LIABLE_PERSON + "?_index=" + index, text: text.remove }
+        ]
+      }
+    },
+    rows: [
+      { key: { text: text.fullName }, value: { text: person.fullName } },
+      { key: { text: text.organisation }, value: { text: person.organisation or data.account.businessName } },
+      { key: { text: text.email }, value: { text: person.email } }
+    ]
+  }) }}
+{% endfor %}
+
+<form action="{{ page.path }}" method="post" novalidate>
+  <div class="govuk-button-group">
+    {{ govukButton({ text: text.save }) }}
+    {{ govukButton({ text: text.addAnother, href: routes.LIABLE_PERSON_NAME + "?_new=1", classes: "govuk-button--secondary" }) }}
+  </div>
+</form>
+{% endblock %}

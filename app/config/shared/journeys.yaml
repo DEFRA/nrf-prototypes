@@ -27,6 +27,8 @@ families:
     label: Quote
   - id: request-to-use
     label: Request to use
+  - id: assume-liability
+    label: Assume liability
   - id: lpa
     label: LPA
   - id: other
