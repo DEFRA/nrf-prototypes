@@ -189,9 +189,9 @@ preview:
       accountType: agent
       fullName: Trevor Barker
       businessName: Fenland Homes
-      organisationName: Organisation name
+      organisationName: Greenfield Developments Ltd
       email: agent@example.com
-    representedOrganisation: participant
+    representedOrganisation: greenfield
     developerDetails:
       fullName: Trevor Barker
       addressLine1: Development Road
@@ -955,12 +955,29 @@ pages:
 
   - id: review-your-details
     guard: { key: yourAddress, isSet: true, redirect: org-address }
+    back:
+      - when: { key: account.accountType, equals: individual }
+        goto: individual-address
+      - goto: org-address
+    # Agents review the developer they act for on review-developer-details
     preview:
-      account:
-        accountType: company
-        fullName: Trevor Barker
-        businessName: Fenland Homes
-        email: company@example.com
+      label: Business account
+      data:
+        account:
+          accountType: company
+          fullName: Trevor Barker
+          businessName: Fenland Homes
+          email: company@example.com
+      variants:
+        - id: individual
+          label: Individual account
+          description: >-
+            No business name; Change goes back to individual-address
+          data:
+            account:
+              accountType: individual
+              fullName: Trevor Barker
+              email: individual@example.com
     next:
       - goto: read-this
         set: { detailsConfirmed: 'Yes' }

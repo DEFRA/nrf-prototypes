@@ -1,6 +1,6 @@
 ---
 type: form
-hint: If you are an agent requesting to use the nature restoration levy on behalf of someone else, enter the developer's full name and address. 
+hint: If you are an agent requesting to use the nature restoration levy on behalf of someone else, enter the developer's full name and address.
 fields:
   - name: full-name
     label: Full name
@@ -35,4 +35,4 @@ fields:
 button: Confirm
 ---
 
-# What are the developer details?
+# What are the details for {{ account.organisationName }}?

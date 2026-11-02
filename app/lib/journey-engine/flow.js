@@ -497,25 +497,83 @@ function layoutLevels(journey) {
     rowOf.set(id, rowIndex)
     rows[rowIndex].pages.push({ id, via })
   }
+  const nextEdges = (id) =>
+    (outgoing.get(id) || []).filter((edge) => edge.kind === 'next')
+  // Every page a form submission reaches each page from, so a page several
+  // branches lead to names them all, not just the first one walked. The
+  // condition is kept when every way in shares it (a group's "(via ...)"
+  // aside, naming the screen inside it, does not count)
+  const incoming = new Map()
+  for (const edge of edges.filter((e) => e.kind === 'next')) {
+    if (!incoming.has(edge.toId)) {
+      incoming.set(edge.toId, [])
+    }
+    incoming.get(edge.toId).push(edge)
+  }
+  const fromAll = (id) => {
+    const into = incoming.get(id)
+    const sources = [...new Set(into.map((edge) => edge.fromId))]
+    if (sources.length < 2) {
+      return null
+    }
+    const names = `${sources.slice(0, -1).join(', ')} or ${sources.at(-1)}`
+    const conditions = new Set(
+      into.map((edge) => (edge.label || '').replace(/ ?\(via [^)]*\)$/, ''))
+    )
+    const [condition] = conditions
+    return conditions.size === 1 && condition
+      ? `From ${names}, if ${condition}`
+      : `From ${names}`
+  }
+  // The row a branch page lines up with: a branch that rejoins the chain
+  // further on runs alongside it, so a page n submissions short of a chain
+  // page sits n rows above it (the address pages beside developer-details,
+  // the review page beside review-developer-details). The earliest such row
+  // wins, and never one above the row the branch left from
+  const alignedRow = (id, fromRow) => {
+    let best = Infinity
+    const seen = new Set([id])
+    let frontier = [id]
+    for (let distance = 1; frontier.length; distance++) {
+      const following = []
+      for (const current of frontier) {
+        for (const edge of nextEdges(current)) {
+          if (onChain.has(edge.toId)) {
+            const row = rowOf.get(edge.toId)
+            if (row > fromRow) {
+              best = Math.min(best, row - distance)
+            }
+          } else if (!seen.has(edge.toId)) {
+            seen.add(edge.toId)
+            following.push(edge.toId)
+          }
+        }
+      }
+      frontier = following
+    }
+    return best === Infinity ? fromRow : Math.max(fromRow, best)
+  }
   // Pass 1: form-submission branches off each main-chain page, followed
   // depth-first through pages that are not on the chain themselves
-  chain.forEach((chainId, rowIndex) => {
-    const walk = (fromId, depth) => {
-      for (const edge of (outgoing.get(fromId) || []).filter(
-        (e) => e.kind === 'next'
-      )) {
+  chain.forEach((chainId, chainRow) => {
+    const walk = (fromId, fromRow) => {
+      for (const edge of nextEdges(fromId)) {
         if (onChain.has(edge.toId) || rowOf.has(edge.toId)) {
           continue
         }
-        const via =
-          depth === 0
-            ? `If ${edge.label}`
-            : `From ${fromId}${edge.label ? `, if ${edge.label}` : ''}`
+        const rowIndex = alignedRow(edge.toId, fromRow)
+        // "If ..." only reads right beside the page the answer is given on
+        let via =
+          fromAll(edge.toId) ||
+          `From ${fromId}${edge.label ? `, if ${edge.label}` : ''}`
+        if (via.startsWith(`From ${chainId},`) && rowIndex === chainRow) {
+          via = `If ${edge.label}`
+        }
         place(edge.toId, rowIndex, via)
-        walk(edge.toId, depth + 1)
+        walk(edge.toId, rowIndex)
       }
     }
-    walk(chainId, 0)
+    walk(chainId, chainRow)
   })
   // Pass 2: pages only reached by change links or in-page links join the
   // row of the placed page that links to them. When several do, the one
