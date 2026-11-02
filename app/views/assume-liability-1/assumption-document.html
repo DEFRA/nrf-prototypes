@@ -1,7 +1,7 @@
 {#
   The assumption of liability document
   (content/assume-liability-1/pages/assumption-document.md): the document's
-  words (the page's body) in a bordered box, then who has signed and who it
+  words (the page's body), then who has signed and who it
   is still waiting on. On a secondary user's record (one they were named
   as jointly liable on) there is no way to change who signs and no
   Continue. Until the user has signed, Assume liability leads to
@@ -23,9 +23,7 @@
   <strong class="govuk-tag govuk-tag--{{ 'green' if allSigned else 'yellow' }} govuk-!-margin-left-2">{{ text.signedTag if allSigned else text.waitingTag }}</strong>
 </h1>
 
-<div class="app-assumption-document">
-  {{ content.html | safe }}
-</div>
+{{ content.html | safe }}
 
   </div>
 </div>
