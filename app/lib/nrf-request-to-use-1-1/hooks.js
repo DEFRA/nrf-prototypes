@@ -731,11 +731,33 @@ const commitmentCertificate = {
   }
 }
 
+// The pages each kind of account gives its details on
+const ACCOUNT_PAGES = ['individual-address', 'org-address', 'developer-details']
+
+// A page opened from the screen wall (`?preview=1`) shows its sample
+// account, but Confirm carries on with the session's. So on the details
+// pages, when the session has no account or one of another kind, the
+// sample's takes its place, and the review page that follows is the one
+// for the page shown (the individual's after individual-address)
+function preview(ctx) {
+  const { data, sample, page } = ctx
+  if (!ACCOUNT_PAGES.includes(page.id) || !sample.account) {
+    return
+  }
+  if (
+    !data.account ||
+    data.account.accountType !== sample.account.accountType
+  ) {
+    data.account = withParticipant({ ...sample.account }, data)
+  }
+}
+
 module.exports = {
   // Every page: the EDP behind `edpName`, with its obligation
   context(ctx) {
     ctx.data.edp = edpFor(ctx.data.edpName || EDP_NAME)
   },
+  preview,
   'what-would-you-like-to-do': whatWouldYouLikeToDo,
   'quote-reference': quoteReference,
   'original-reference': originalReference,
