@@ -1116,17 +1116,19 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
 
     await answer(page, 'accept-levy', 'No')
     await submit(page, 'accept-levy')
-    await expect(page).toHaveURL(`${quotePath}/delete-quote?nav=${review}`)
+    // Back and Cancel return to the question that led here
+    const acceptLevy = `${base}/accept-levy`
+    await expect(page).toHaveURL(`${quotePath}/delete-quote?nav=${acceptLevy}`)
     await expect(page.locator(serviceNav)).toContainText(
       `PROTOTYPE - ${journey.serviceName}`
     )
     await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
       'href',
-      review
+      acceptLevy
     )
     await expect(
       quote.actionLocator(page, 'delete-quote', 'link')
-    ).toHaveAttribute('href', review)
+    ).toHaveAttribute('href', acceptLevy)
 
     await quote.submit(page, 'delete-quote')
     await expect(page).toHaveURL(`${quotePath}/delete-confirmation`)

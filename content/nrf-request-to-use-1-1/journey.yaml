@@ -389,7 +389,7 @@ pages:
     next:
       - when: { key: acceptLevy, equals: 'No' }
         goto: /nrf-quote-7-1/delete-quote
-        return: review-quote-details
+        return: accept-levy
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: variation
