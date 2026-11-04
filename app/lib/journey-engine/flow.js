@@ -755,21 +755,27 @@ function toMermaid(journey, options = {}) {
 /**
  * The default path through the journey: from the start page, follow each
  * page's default next rule (the one without a `when`) until a page has no
- * default target. This is what the flow diagram keeps on a single row.
+ * default target. A default that loops back to a page already on the chain
+ * (a record page whose "not now" returns to the list) is not the way on, so
+ * the chain carries on through the first conditional rule that leads
+ * somewhere new. This is what the flow diagram keeps on a single row.
  */
 function mainChain(journey) {
   const chain = []
   const seen = new Set()
+  const isNew = (rule) =>
+    rule && isPageTarget(rule.goto, journey) && !seen.has(rule.goto)
   let id = journey.start
   while (id && journey.byId.has(id) && !seen.has(id)) {
     chain.push(id)
     seen.add(id)
-    const page = journey.byId.get(id)
-    const defaultRule = (page.next || []).find((r) => !r.when)
-    id =
-      defaultRule && isPageTarget(defaultRule.goto, journey)
-        ? defaultRule.goto
-        : null
+    const rules = journey.byId.get(id).next || []
+    const defaultRule = rules.find((r) => !r.when)
+    const onward =
+      defaultRule && seen.has(defaultRule.goto)
+        ? rules.find((r) => r.when && isNew(r))
+        : defaultRule
+    id = isNew(onward) ? onward.goto : null
   }
   return chain
 }
