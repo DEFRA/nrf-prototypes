@@ -67,7 +67,7 @@ session:
   - liablePersonIndex
   - liablePeople
   - signatures
-  - signAgreement
+  - signature
   - youSigned
   - signatories
   - reminderSent
@@ -78,8 +78,8 @@ session:
 
 # Sample answers for the screen wall and ?preview=1
 preview:
-  # The signing page is reached from the assumption document's button (in
-  # its template), so the flow does not find it on its own
+  # The signing page is reached from the Sign link in the assumption
+  # document's table (its template), which the flow does not follow
   signedInFrom:
     - manage-levy
     - sign-assumption
@@ -351,6 +351,10 @@ pages:
       - text: Everyone has signed
         href: assumption-document?_signed=all
         newTab: false
+    # The Sign link on the user's row of the table (in the template)
+    links:
+      - goto: sign-assumption
+        text: Sign
     next: use-your-details
     preview:
       label: Not signed yet
@@ -390,15 +394,24 @@ pages:
             signed and named them as jointly liable, so they sign too
           data: { recordReference: NRL-234567, liablePeople: null }
 
-  # PLACEHOLDER: the user signs the assumption document. Agreeing signs it
-  # (hooks.js) and returns to the document.
+  # PLACEHOLDER: the user signs the assumption document by typing their
+  # name (`type: signature`). Signing (hooks.js) returns to the document.
   - id: sign-assumption
-    field: sign-agreement
-    sessionKey: signAgreement
+    field: signature
+    sessionKey: signature
     guard: *assuming
     handler: custom
     back: assumption-document
     next: assumption-document
+    preview:
+      label: Not signed yet
+      description: The box is empty, so the signature line is blank
+      variants:
+        - id: typed
+          label: Name typed
+          description: >-
+            The user has typed their name, so it shows on the signature line
+          data: { signature: Trevor Barker }
 
   # PLACEHOLDER: the email each jointly liable person gets. Its link carries
   # on to the assumption document.

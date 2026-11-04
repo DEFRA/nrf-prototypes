@@ -56,7 +56,7 @@ const ANSWER_KEYS = [
   'liablePersonIndex',
   'liablePeople',
   'signatures',
-  'signAgreement',
+  'signature',
   'youSigned',
   'useYourDetails',
   'payerDetails'
