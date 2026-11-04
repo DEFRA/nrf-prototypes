@@ -49,7 +49,7 @@ actions:
   - text: Confirm and submit
     kind: submit
 text:
-  peopleHeading: People jointly liable
+  peopleHeading: Jointly liable people
   youHeading: Your details
   columns:
     name: Name
