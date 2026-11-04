@@ -544,7 +544,7 @@ const liablePeopleCheck = {
 
 // The research link that signs for everyone else on the document
 // (?_signed=all; the user signs for themselves on sign-assumption, from
-// the Sign link on their row) and each Remind link on the main liable
+// Continue to sign) and each Remind link on the main liable
 // person's record (?_remind=<n>, a mock: the page says a reminder went to
 // them). Continue only once everyone has
 // signed.
@@ -575,6 +575,10 @@ const assumptionDocument = {
     const { data } = ctx
     model.primary = Boolean(data.record && data.record.primary)
     const waiting = data.signatories.filter((person) => !person.signedOn)
+    const you = data.signatories.find((person) => person.you)
+    model.youSigned = Boolean(you && you.signedOn)
+    // The main liable person can remind anyone else still to sign
+    model.canRemind = model.primary && waiting.some((person) => !person.you)
     model.waitingCount = waiting.length
     model.allSigned = waiting.length === 0
     // The tags come from records.yaml, like the record's own: the

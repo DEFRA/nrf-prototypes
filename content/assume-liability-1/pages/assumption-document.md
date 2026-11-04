@@ -1,9 +1,10 @@
 ---
 # PLACEHOLDER COPY: the assumption of liability document and who it is
 # waiting on (app/views/assume-liability-1/assumption-document.html). The
-# document's words are the page's body. The user's own row has a Sign link
-# to the signing page until they have signed, everyone else's a Remind
-# link; Continue shows once everyone has signed. The tags (the document's
+# document's words are the page's body. Continue to sign leads to the
+# signing page until the user has signed; on the main liable person's
+# record everyone else's row has a Remind link. Continue shows once
+# everyone has signed. The tags (the document's
 # and each person's) are the statuses in records.yaml.
 type: custom
 button: Continue
@@ -25,10 +26,11 @@ text:
     date: Date
   you: (you)
   signed: Signed
-  # The Actions column; the hidden words finish the link for screen
-  # readers, {name} is the person
-  sign: Sign
-  signHidden: the assumption of liability document
+  # Until the user has signed: the button to the signing page
+  continueToSign: Sign the assumption of liability
+  # The main liable person's Remind links (their column's heading is only
+  # for screen readers); the hidden words finish the link, {name} is the
+  # person
   remind: Remind
   remindHidden: '{name}'
   # PLACEHOLDER: after a Remind link; {name} is the person reminded
