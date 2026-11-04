@@ -61,6 +61,7 @@ session:
   - liabilityProgress
   - assumeLiability
   - howToPay
+  - acceptLevy
   - jointlyLiable
   - liablePerson
   - liablePersonEmail
@@ -237,16 +238,25 @@ pages:
         goto: instalment-details
       - goto: one-off-payment-details
 
-  # PLACEHOLDER: dummy copy on both payment pages
+  # Do you accept this levy amount? The same copy on both for now. No
+  # returns to the records until there is a page for deleting the
+  # commitment.
   - id: instalment-details
+    field: accept-levy
+    sessionKey: acceptLevy
     guard: *assuming
     back: how-to-pay
-    next: anyone-else
+    next: &accept-levy
+      - when: { key: acceptLevy, equals: 'No' }
+        goto: manage-levy
+      - goto: anyone-else
 
   - id: one-off-payment-details
+    field: accept-levy
+    sessionKey: acceptLevy
     guard: *assuming
     back: how-to-pay
-    next: anyone-else
+    next: *accept-levy
 
   # No forgets anyone added before (hooks.js). Yes goes on adding people,
   # or to the list when there are some already.

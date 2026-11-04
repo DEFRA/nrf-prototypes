@@ -50,6 +50,7 @@ const MOCK_BUSINESS = 'Fenland Homes'
 const ANSWER_KEYS = [
   'assumeLiability',
   'howToPay',
+  'acceptLevy',
   'jointlyLiable',
   'liablePerson',
   'liablePersonEmail',

@@ -1,19 +1,45 @@
 ---
-# PLACEHOLDER COPY
-type: content
-actions:
-  - text: Continue
-    kind: submit
+type: radios
+# The levy details sit between the question and the options
+bodyFirst: true
+options:
+  - label: Yes, accept this amount
+    value: 'Yes'
+  - label: No, delete my commitment details
+    value: 'No'
+errors:
+  required: Select yes if you accept the nature restoration levy amount
+button: Continue
 ---
 
-# Instalment details
+# Do you accept this nature restoration levy amount?
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+The amount of the levy may have changed since your quote. You might have updated the development details, the charging schedule may have been updated or inflation might have been applied.
 
-- Ut enim ad minim veniam
-- Quis nostrud exercitation ullamco
-- Laboris nisi ut aliquip ex ea commodo
+## Details of the Environmental Delivery Plan (EDP)
 
-## Lorem ipsum dolor
+Your relevant development is planned in: {{ record.edp }}.
 
-Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident.
+## Total levy amounts
+
+### Provisional nature restoration levy amount: £{{ record.levyAmount }} (excluding VAT)
+
+The provisional amount is calculated from the charging schedule in the relevant EDP.
+
+### Inflation-adjusted nature restoration levy amount: £{{ record.levyAmount }} (excluding VAT)
+
+The inflation-adjusted amount shows the indicative levy amount for the year this commitment was issued.
+
+Inflation adjustments will continue to apply until the total levy amount has been paid, including on all instalments.
+
+## Instalment amounts
+
+If you confirm you want to pay in intstalments, your payment will be made up of 22 instalments.
+
+### Provisional nature restoration levy instalment amount: £{{ record.levyAmount }} (excluding VAT)
+
+### Inflation-adjusted nature restoration levy instalment amount: £{{ record.levyAmount }} (excluding VAT)
+
+:::details How the nature restoration levy was calculated
+The levy has been calculated from the details you submitted and the charging schedule for the relevant EDP. [Read about the charging schedule for the EDP (opens in new tab)](#).
+:::
