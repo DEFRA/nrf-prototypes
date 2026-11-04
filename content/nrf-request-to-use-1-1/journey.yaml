@@ -1003,6 +1003,37 @@ pages:
     guard: { key: account, isSet: true, redirect: sign-in-method }
     back: read-this
     handler: custom # mints the NRL reference and certificate dates, see hooks.js
+    # The journey's sample answers are an agent's; the variants clear the
+    # developer details so the name and address come from the account
+    preview:
+      label: Agent account
+      description: >-
+        Business name is the organisation chosen; Change on full name and
+        address goes to developer-details
+      variants:
+        - id: business
+          label: Business account
+          description: >-
+            Business name from the account; only the address can be changed
+          data:
+            defraUserType: organisation
+            developerDetails: {}
+            account:
+              accountType: company
+              fullName: Trevor Barker
+              businessName: Fenland Homes
+              email: company@example.com
+        - id: individual
+          label: Individual account
+          description: >-
+            No business name; only the address can be changed
+          data:
+            defraUserType: individual
+            developerDetails: {}
+            account:
+              accountType: individual
+              fullName: Trevor Barker
+              email: individual@example.com
     next: confirmation
     handoff: 2026-10-22
 
@@ -1026,4 +1057,36 @@ pages:
   - id: commitment-certificate
     layout: default
     template: nrf-request-to-use-1-1/commitment-certificate
-    handoff: 2026-10-23 # change in same day
+    handoff: 2026-11-04
+    # As check-your-answers: the sample answers are an agent's, and the
+    # variants clear the developer details so the name and address come
+    # from the account
+    preview:
+      label: Agent account
+      description: >-
+        The developer's name and address, and the organisation chosen as the
+        business name
+      variants:
+        - id: business
+          label: Business account
+          description: >-
+            The account's name, address and business name
+          data:
+            defraUserType: organisation
+            developerDetails: {}
+            account:
+              accountType: company
+              fullName: Trevor Barker
+              businessName: Fenland Homes
+              email: company@example.com
+        - id: individual
+          label: Individual account
+          description: >-
+            The account's name and address; no business name
+          data:
+            defraUserType: individual
+            developerDetails: {}
+            account:
+              accountType: individual
+              fullName: Trevor Barker
+              email: individual@example.com

@@ -26,11 +26,22 @@ text:
 
 # Nature restoration levy – commitment certificate
 
+:::if account.accountType in agent,company
+**Full name:** {{ developerDetails.fullName or yourAddress.fullName or account.fullName }}\
+**Business name:** {{ account.organisationName or account.businessName }}\
+**Address:** {{ developerDetails.addressLine1 or yourAddress.addressLine1 }}, {{ developerDetails.town or yourAddress.town }}, {{ developerDetails.postcode or yourAddress.postcode }}\
+**NRL reference:** {{ nrlReference }}\
+**Date of issue:** {{ certificate.issueDate }}\
+**Expiry date:** {{ certificate.expiryDate }}
+:::
+
+:::if account.accountType notIn agent,company
 **Full name:** {{ developerDetails.fullName or yourAddress.fullName or account.fullName }}\
 **Address:** {{ developerDetails.addressLine1 or yourAddress.addressLine1 }}, {{ developerDetails.town or yourAddress.town }}, {{ developerDetails.postcode or yourAddress.postcode }}\
 **NRL reference:** {{ nrlReference }}\
 **Date of issue:** {{ certificate.issueDate }}\
 **Expiry date:** {{ certificate.expiryDate }}
+:::
 
 ## Details of the relevant development
 

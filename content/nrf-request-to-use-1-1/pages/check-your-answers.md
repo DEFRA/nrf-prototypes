@@ -28,17 +28,18 @@ rows:
   - key: Requesting to use the levy for
     # The option chosen on defra-account-user-type.md, shown as its label
     value: '{{ defraUserType }}'
-    change: defra-account-user-type
-    changeHidden: who you are requesting to use the levy for
+  # As the review details pages: only an agent can change the developer's
+  # name; the business name comes from the account (the organisation an
+  # agent chose) and an individual has none
   - key: Full name
     value: '{{ developerDetails.fullName or yourAddress.fullName or account.fullName }}'
     change:
       - when: { key: account.accountType, equals: agent }
         goto: developer-details
-      - when: { key: account.accountType, equals: individual }
-        goto: individual-address
-      - goto: org-address
     changeHidden: full name
+  - key: Business name
+    value: '{{ account.organisationName or account.businessName }}'
+    when: { key: account.accountType, in: [agent, company] }
   - key: Address
     value:
       lines:
