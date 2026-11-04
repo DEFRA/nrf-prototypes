@@ -1,9 +1,9 @@
 ---
 # PLACEHOLDER COPY
 type: confirmation
-title: Application complete
+title: Liability assumed for nature restoration levy
 panel:
-  title: Application complete
+  title: Liability assumed for nature restoration levy
   body: 'NRL reference: **{{ recordReference }}**'
 ---
 
