@@ -11,3 +11,4 @@ button: Continue
 ---
 
 # How would you like to pay the nature restoration levy?
+Select whether you will pay the total nature restoration levy amount in full or by instalments. [Learn about instalment plan(s)](*)to check eligibility. 
