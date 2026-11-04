@@ -709,8 +709,20 @@ function certificateContents(model) {
 //                    when JavaScript is off; without it the section hides
 //   contentsBelowShare  true puts the contents list below the print link
 //                       rather than above it
+// The certificate opens from the email, so it has no Back link, unless it
+// was opened from somewhere in the service that names itself in ?_from=
+// (the assume liability journey's records). Only the places listed here
+// get one, so the link can never lead anywhere else.
+const CERTIFICATE_OPENED_FROM = {
+  'manage-levy': '/assume-liability-1/manage-levy'
+}
+
 const commitmentCertificate = {
   get(ctx, model) {
+    const from = CERTIFICATE_OPENED_FROM[String(ctx.query._from || '')]
+    if (from) {
+      model.backLink = from
+    }
     const { text } = model.content
     const sections = certificateContents(model)
     model.contents = text.contentsTitle ? sections : []
