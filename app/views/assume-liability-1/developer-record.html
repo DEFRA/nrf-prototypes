@@ -1,7 +1,7 @@
 {#
   A developer record (content/assume-liability-1/pages/developer-record.md):
-  the NRL reference with its status, the levy, development and developer
-  details (the page's `rows`), the red line boundary (the page's copy), then
+  the NRL reference with its status, the levy and development details, the
+  red line boundary (the page's copy), the developer details, then
   "Are you ready to assume liability...?" for the primary user of a record
   whose planning permission is granted. A secondary user named as jointly
   liable is sent to the assumption document to sign it; anyone else sees
@@ -23,13 +23,13 @@
 </h1>
 
 {% for group in content.rowGroups %}
+  {# The red line boundary sits between the development and developer details #}
+  {% if loop.last %}{{ content.html | safe }}{% endif %}
   {% if group.heading %}<h2 class="govuk-heading-m">{{ group.heading }}</h2>{% endif %}
   {% if group.rows | length %}
     {{ govukSummaryList({ classes: "govuk-!-margin-bottom-9", rows: group.rows }) }}
   {% endif %}
 {% endfor %}
-
-{{ content.html | safe }}
 
 {% if record and record.canAssume %}
 <form action="{{ page.path }}" method="post" novalidate>
