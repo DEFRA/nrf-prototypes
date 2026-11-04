@@ -10,6 +10,10 @@ A **GOV.UK Prototype Kit 13** app (Node.js/Express, Nunjucks, govuk-frontend 5.1
 
 `.cursor/rules/*.mdc` are the authoritative, always-on project conventions (there is a `read-rules-first` rule). Read the relevant ones before touching `app/`. The most important are `project.mdc`, `core-development.mdc`, `journeys-and-routes.mdc`, `views-and-templates.mdc`, `validation-and-errors.mdc`, `mapping-components.mdc` and `written-copy.mdc`. The detail below summarises them; defer to the rule files on conflict.
 
+## Work in the latest version of a journey
+
+Journeys come in versions of a family (`nrf-quote-7` → `nrf-quote-7-1`, `nrf-request-to-use-1` → `nrf-request-to-use-1-1`; `family` and `version` in each `journey.yaml`'s `homepage:` block). **Unless the user names an older version, change the latest one** — and check the URL or screen-wall in their screenshot before editing; a page name like "check your answers" exists in every version. `.claude/hooks/guard-latest-version.sh` turns any write under an older version's `content/<id>/` into a permission prompt naming the latest.
+
 ## Written copy is off limits without explicit instruction
 
 **Never edit a `.md` file under `content/` or `prompts/` unless the user has explicitly asked for that specific copy change in the current conversation.** These files are the content designer's words (page copy, shared pages such as `content/shared/pages/start.md`, mock sign-in pages, journey specifications). A code, routing or test task is not permission to reword, reformat or "tidy" them; if a change seems to need it, propose the exact before/after wording and wait. `journey.yaml` is flow logic, not copy, and is not covered; nor is any `README.md` in those folders (developer documentation). See `.cursor/rules/written-copy.mdc`.
