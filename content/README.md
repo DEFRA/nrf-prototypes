@@ -141,6 +141,18 @@ A link written as `[text](./page-id)` points at a page of whichever journey the 
 
 Leave a blank line before a closing `:::` when the block ends with a list, otherwise the formatter folds it into the last item.
 
+`:::each person in key` repeats a block once for every item of a list answer, with `person` (any name you like) standing for the item inside `{{ }}` and `:::if` lines. The assume liability journey's "Emails sent" page lists everyone the assumption document went to:
+
+```markdown
+:::each person in liablePeople
+
+- {{ person.email }}
+
+:::
+```
+
+The copies join up into one list. When the list is empty the block shows nothing.
+
 ### Showing an answer the user gave
 
 Write the answer's name in double curly braces: `{{ estimateEmail }}`. The names are listed under `session:` in `journey.yaml`. An answer to a radios or checkboxes question shows as the option's label (see "Labels and values"). Useful variations:

@@ -19,6 +19,9 @@
  *   :::if key                → conditional block (see expressions.js)
  *   :::if key equals value
  *   :::if not key
+ *   :::each person in key    → the block once for every item of a list
+ *                              answer, `{{ person.email }}` naming the
+ *                              item (see expandEach)
  *
  * A link whose target starts with `./` names a page of the current journey
  * (`[Create sign in details](./government-gateway-email)`), so a shared page
@@ -181,6 +184,73 @@ function parseIfParams(params) {
     return { [op]: raw.split(',').map((s) => s.trim()), key }
   }
   return { key, [op]: raw }
+}
+
+const EACH_OPEN = /^\s*:{3,}\s*each\s+(\w+)\s+in\s+([\w.]+)\s*$/
+const FENCE_OPEN = /^\s*:{3,}\s*\S/
+const FENCE_CLOSE = /^\s*:{3,}\s*$/
+
+/**
+ * Repeat each `:::each person in key` block once for every item of the list
+ * at `key`, before the markdown is rendered, so the copies read as one
+ * list. Inside the block `person` names the item in `{{ }}` placeholders
+ * and `:::if` lines (`{{ person.email }}` becomes `{{ key.0.email }}`, then
+ * `{{ key.1.email }}`). A missing or empty list drops the block, and
+ * blank lines at its start and end are ignored. Blocks inside the block
+ * (an `:::if`) are matched with its closing fence.
+ */
+function expandEach(markdown, data) {
+  const lines = String(markdown).split('\n')
+  const out = []
+  let i = 0
+  while (i < lines.length) {
+    const open = lines[i].match(EACH_OPEN)
+    if (!open) {
+      out.push(lines[i])
+      i += 1
+      continue
+    }
+    const [, name, key] = open
+    const inner = []
+    let depth = 1
+    i += 1
+    while (i < lines.length) {
+      if (FENCE_CLOSE.test(lines[i])) {
+        depth -= 1
+        if (depth === 0) {
+          break
+        }
+      } else if (FENCE_OPEN.test(lines[i])) {
+        depth += 1
+      }
+      inner.push(lines[i])
+      i += 1
+    }
+    i += 1
+    // Blank lines around the copy (left there for the formatter) would
+    // loosen a list of copies into paragraphs
+    while (inner.length && !inner[inner.length - 1].trim()) {
+      inner.pop()
+    }
+    while (inner.length && !inner[0].trim()) {
+      inner.shift()
+    }
+    const items = getPath(data, key)
+    const block = expandEach(inner.join('\n'), data)
+    const term = new RegExp(`(^|[\\s|(])${name}(?=\\.|\\s|$|\\|)`, 'g')
+    ;(Array.isArray(items) ? items : []).forEach((item, index) => {
+      const rename = (text) => text.replace(term, `$1${key}.${index}`)
+      out.push(
+        block
+          .replace(/\{\{([^}]*)\}\}/g, (match, expr) => `{{${rename(expr)}}}`)
+          .replace(
+            /^(\s*:{3,}\s*if\s+)(.*)$/gm,
+            (match, fence, params) => fence + rename(params)
+          )
+      )
+    })
+  }
+  return out.join('\n')
 }
 
 /**
@@ -651,7 +721,7 @@ function createRenderer(options = {}) {
       return ''
     }
     const env = { ctx, page: ctx.page, inPanel: false }
-    const html = md.render(String(markdown), env)
+    const html = md.render(expandEach(markdown, ctx.data), env)
     return fill(mergeAdjacentLists(applyConditionals(html)), ctx.data)
   }
 
@@ -688,6 +758,7 @@ module.exports = {
   createRenderer,
   createMarkdown,
   applyConditionals,
+  expandEach,
   mergeAdjacentLists,
   interpolate,
   extractHeading,
