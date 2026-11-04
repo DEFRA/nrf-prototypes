@@ -409,6 +409,10 @@ function renderContent(page, ctx) {
     hint: c.hint ? plain(c.hint) : undefined,
     label: c.label ? plain(c.label) : undefined,
     placeholder: c.placeholder ? plain(c.placeholder) : undefined,
+    // The checkbox under a `type: signature` page's signature
+    agreement: c.agreement
+      ? { ...c.agreement, label: plain(c.agreement.label) }
+      : undefined,
     html: body.html,
     // Copy inside `:::after-button`, shown below the button
     htmlAfter: body.after,
@@ -502,7 +506,11 @@ function buildModel(ctx, extra = {}) {
   // `errors` lists one problem per field (form pages); `error` is the single
   // message every other question type shows
   let errors = extra.errors
-  if (!errors && ctx.previewError && page.type === 'form') {
+  if (
+    !errors &&
+    ctx.previewError &&
+    ['form', 'signature'].includes(page.type)
+  ) {
     errors = previewErrors(page, ctx.previewError)
   }
   const error =

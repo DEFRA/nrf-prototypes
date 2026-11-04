@@ -422,6 +422,17 @@ function getEdges(journey) {
         })
       }
     }
+    // Links a hand-written template makes (`links:` in journey.yaml)
+    for (const link of page.links || []) {
+      if (isPageTarget(link.goto, journey)) {
+        add({
+          fromId: page.id,
+          toId: link.goto,
+          label: link.text,
+          kind: 'link'
+        })
+      }
+    }
     // User research links (`research:` in journey.yaml) to pages of this
     // journey, so a page only opened that way still hangs off the page
     // that offers it; links elsewhere are facilitator shortcuts, not flow

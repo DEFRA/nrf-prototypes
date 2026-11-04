@@ -36,6 +36,7 @@ const TYPES = [
   'textarea',
   'file-upload',
   'password',
+  'signature',
   'form',
   'select',
   'check-answers',
@@ -52,6 +53,7 @@ const QUESTION_TYPES = [
   'email',
   'textarea',
   'password',
+  'signature',
   'form',
   'select',
   'file-upload'
@@ -67,6 +69,7 @@ const TEMPLATE_BY_TYPE = {
   email: 'journey-engine/input',
   textarea: 'journey-engine/textarea',
   password: 'journey-engine/password',
+  signature: 'journey-engine/signature',
   form: 'journey-engine/form',
   select: 'journey-engine/select',
   'file-upload': 'journey-engine/file-upload',
@@ -540,6 +543,9 @@ function buildPage(entry, journey, problems, from = {}) {
     max: entry.max !== undefined ? entry.max : frontmatter.max,
     preview: entry.preview || frontmatter.preview || {},
     research,
+    // Pages a hand-written template links to (a Sign link in a table, say),
+    // so the flow diagram and screen wall can place them: [{ goto, text }]
+    links: buildLinks(entry.links, `${where}.links`, problems),
     content: {
       title: frontmatter.title || heading || bodyHeading || id,
       heading: heading || bodyHeading || frontmatter.title || id,
@@ -554,6 +560,9 @@ function buildPage(entry, journey, problems, from = {}) {
       // heading is an h1)
       label: frontmatter.label,
       placeholder: frontmatter.placeholder,
+      // A `type: signature` page's checkbox under the signature:
+      // { label, errors: { required } }, ticked to agree to what is signed
+      agreement: frontmatter.agreement,
       options,
       errors,
       button: frontmatter.button || 'Continue',
@@ -725,6 +734,31 @@ function buildResearchLinks(entries, journey, where, problems) {
   })
 }
 
+/**
+ * `links:` on a page entry: the pages its hand-written template links to,
+ * each a page id or `{ goto, text }` (the text labels the arrow on the
+ * flow diagram). They only draw the flow; the template makes the links.
+ */
+function buildLinks(raw, where, problems) {
+  if (raw === undefined) {
+    return []
+  }
+  if (!Array.isArray(raw)) {
+    problems.push(`${where}: expected a list of page ids or { goto, text }`)
+    return []
+  }
+  return raw.map((link, i) => {
+    const goto = typeof link === 'string' ? link : link && link.goto
+    if (!goto) {
+      problems.push(`${where}[${i}]: needs a 'goto' page id`)
+    }
+    return {
+      goto: String(goto || ''),
+      text: link && link.text ? String(link.text) : 'link'
+    }
+  })
+}
+
 function validateTargets(journey, problems) {
   const ids = new Set(journey.pages.map((p) => p.id))
   const check = (target, where) => {
@@ -765,6 +799,9 @@ function validateTargets(journey, problems) {
   }
   for (const page of journey.pages) {
     const where = `pages.${page.id}`
+    ;(page.links || []).forEach((link, i) => {
+      check(link.goto, `${where}.links[${i}]`)
+    })
     ;(page.next || []).forEach((rule, i) => {
       check(rule.goto, `${where}.next[${i}]`)
       checkReturn(rule, `${where}.next[${i}]`)

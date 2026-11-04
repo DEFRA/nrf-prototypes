@@ -165,28 +165,50 @@ Write the answer's name in double curly braces: `{{ estimateEmail }}`. The names
 
 ## Settings by page type
 
-| `type`          | Settings you can use                                                                                             |
-| --------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `start`         | `title`                                                                                                          |
-| `content`       | `title`, `actions`                                                                                               |
-| `radios`        | `hint`, `options` (each with optional `hint`), `errors`, `button`, `bodyFirst` (body copy above the options)     |
-| `checkboxes`    | as radios, plus `actions` of kind `link` or `destructive` beside the button (a Delete link on an agreement page) |
-| `input`         | `hint`, `errors`, `button`, `width`, `label` (see "A label under the heading")                                   |
-| `number`        | as input                                                                                                         |
-| `email`         | as input                                                                                                         |
-| `textarea`      | `hint`, `errors`, `button`, `lines` (box height), `maxLength` (adds a count, `tooLong` error), `optional: true`  |
-| `password`      | `hint`, `errors`, `button`; has a Show/Hide toggle, never stored                                                 |
-| `form`          | `hint`, `fields`, `button`, `actions` (see "Several fields")                                                     |
-| `select`        | `label`, `placeholder`, `options`, `errors`, `button`, `actions`; a dropdown under the heading and body copy     |
-| `file-upload`   | `hint`, `errors`, `button`                                                                                       |
-| `check-answers` | `rows`, `actions`                                                                                                |
-| `confirmation`  | `title`, `panel` (with `title` and `body`)                                                                       |
-| `document`      | `title`; a full-width document with no banner or back link                                                       |
-| `custom`        | a developer-built screen; `hint`, `errors` and `text:` (named strings the template renders) still come from here |
+| `type`          | Settings you can use                                                                                                 |
+| --------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `start`         | `title`                                                                                                              |
+| `content`       | `title`, `actions`                                                                                                   |
+| `radios`        | `hint`, `options` (each with optional `hint`), `errors`, `button`, `bodyFirst` (body copy above the options)         |
+| `checkboxes`    | as radios, plus `actions` of kind `link` or `destructive` beside the button (a Delete link on an agreement page)     |
+| `input`         | `hint`, `errors`, `button`, `width`, `label` (see "A label under the heading")                                       |
+| `number`        | as input                                                                                                             |
+| `email`         | as input                                                                                                             |
+| `textarea`      | `hint`, `errors`, `button`, `lines` (box height), `maxLength` (adds a count, `tooLong` error), `optional: true`      |
+| `password`      | `hint`, `errors`, `button`; has a Show/Hide toggle, never stored                                                     |
+| `signature`     | `label` ("Type your full name" by default), `hint`, `errors`, `button`, `agreement` (see "Signing by typing a name") |
+| `form`          | `hint`, `fields`, `button`, `actions` (see "Several fields")                                                         |
+| `select`        | `label`, `placeholder`, `options`, `errors`, `button`, `actions`; a dropdown under the heading and body copy         |
+| `file-upload`   | `hint`, `errors`, `button`                                                                                           |
+| `check-answers` | `rows`, `actions`                                                                                                    |
+| `confirmation`  | `title`, `panel` (with `title` and `body`)                                                                           |
+| `document`      | `title`; a full-width document with no banner or back link                                                           |
+| `custom`        | a developer-built screen; `hint`, `errors` and `text:` (named strings the template renders) still come from here     |
 
 Every page can also set `layout` to change its chrome: `default` (the prototype header and banner), `one-login` (the GOV.UK One Login look used by the shared sign-in pages), `government-gateway` (the Government Gateway look: a "Government Gateway" bar, the language toggle, no banner), `defra-id` (the Defra ID look: bare header with a Sign out bar and the Defra footer, used by the mock "register a Defra account" pages), `defra-account` (as `defra-id` with the "Your Defra account" bar showing the user's name, Manage account and Sign out) `document` (bare crown header, full width, no banner or back link; `type: document` pages get this automatically) `email` (the same bare header at the usual reading width, for the emails the service sends, so they do not look like a page of the service) or `staff` (an internal service for the people who run it, such as the LPA's: a blue GOV.UK header with the service name and the signed-in user's account, a dropdown holding the menu and account links, the Prototype banner, and a page up to 1440px wide so tables have room). `layout:` at the top of `journey.yaml` sets the layout for every page of that journey that does not name its own; the shared sign-in pages keep theirs.
 
 A `caption` ("Register Defra account", say) shows in grey above the heading of content, radios, form, select and check your answers pages.
+
+### Signing by typing a name
+
+A `signature` page is signed the way a DocuSign document is: the user types their full name and it shows under the box in a handwriting font, on a signature line, as they type. The name is the page's answer. `agreement:` adds a checkbox under the signature that must be ticked to sign, with its own error:
+
+```markdown
+---
+type: signature
+label: Type your full name
+hint: This will be your signature.
+errors:
+  required: Enter your full name to sign the assumption of liability
+agreement:
+  label: I agree to assume liability to pay the nature restoration levy for this development
+  errors:
+    required: Select that you agree to assume liability to pay the nature restoration levy
+button: Sign
+---
+```
+
+The heading and body copy sit above the box. The font is Dancing Script, served by the prototype itself (`app/assets/fonts/dancing-script`, under the SIL Open Font Licence), so it looks the same offline and in the JPG export.
 
 ### A label under the heading
 
@@ -498,7 +520,7 @@ Canned data a journey's pages look things up in (the LPA journey's `records.yaml
 
 Condition operators: `equals`, `notEquals`, `in`, `notIn`, `includes` (a checkboxes answer has any of the values ticked), `gt`, `gte`, `lt`, `lte`, `between`, `truthy`, `falsy`, `isSet`. Combine with `all:`, `any:`, `not:`. Engine values: `$navFromSummary`, `$isChange`, `$preview`, `$borrowed` (the page was opened from another journey's summary page, see "Borrowing a page from another journey").
 
-Other page keys: `handoff: YYYY-MM-DD` (the page's design was handed to development on that date; see "Handing pages to development"), `shared: true` (copy comes from `content/shared/pages/<id>.md`) or `shared: <folder>` (from `content/shared/<folder>/<id>.md`, see "Pages shared by more than one journey"), `back` (page id, absolute path, or a rule list; it wins over the Back-to-the-summary shortcut a `changeable` page gets, so a change detour that runs through several pages can step back through them with rules on `$navFromSummary` or `$borrowed`, as the quote's map does; `back: []`, or a rule list where no rule matches, means no Back link; see "Back links" below), `guard` (condition plus `redirect`), `store` (map an option's `value` to what the session stores, for booleans and the like; prefer a `value` on the option in the page file), `set` (write values on submit; also allowed on a rule), `clears` (list of keys, or `$session`), `handler: custom` (page has hooks), `template` (a hand-written view for `type: custom`), `layout` (`default`, `staff`, `one-login`, `government-gateway`, `defra-id`, `defra-account`, `document` or `email`), `remember: false` (never write the answer to the session; pair it with a field name starting `_` so the kit's own auto-store skips it too, as the password page does), `accept` and `maxSize` for uploads, `min` and `max` for numbers, `research` (see below).
+Other page keys: `handoff: YYYY-MM-DD` (the page's design was handed to development on that date; see "Handing pages to development"), `shared: true` (copy comes from `content/shared/pages/<id>.md`) or `shared: <folder>` (from `content/shared/<folder>/<id>.md`, see "Pages shared by more than one journey"), `back` (page id, absolute path, or a rule list; it wins over the Back-to-the-summary shortcut a `changeable` page gets, so a change detour that runs through several pages can step back through them with rules on `$navFromSummary` or `$borrowed`, as the quote's map does; `back: []`, or a rule list where no rule matches, means no Back link; see "Back links" below), `guard` (condition plus `redirect`), `store` (map an option's `value` to what the session stores, for booleans and the like; prefer a `value` on the option in the page file), `set` (write values on submit; also allowed on a rule), `clears` (list of keys, or `$session`), `handler: custom` (page has hooks), `template` (a hand-written view for `type: custom`), `layout` (`default`, `staff`, `one-login`, `government-gateway`, `defra-id`, `defra-account`, `document` or `email`), `remember: false` (never write the answer to the session; pair it with a field name starting `_` so the kit's own auto-store skips it too, as the password page does), `accept` and `maxSize` for uploads, `min` and `max` for numbers, `research` (see below), `links` (the pages a hand-written template links to, each a page id or `{ goto, text }`, so the flow diagram and screen wall place a page reached only that way beside the page that links to it; the assume liability journey's assumption document lists its Sign link).
 
 `research` lists shortcuts for the research facilitator, shown in a "User research" section at the top of the page's footer, under the crown, each opening in a new tab. They are not part of the flow: the tools page draws one that points at a page of this journey as a dashed link from the page that offers it (so the linked page is not "not reached") and ignores the rest. A hook's `load` on the linked page can remember that it was opened (the request-to-use journey's employee invitation email). `newTab: false` opens a link in the same tab, for one the participant follows instead of the page's button. An `href` is a page of this journey (a query string is fine), a path into another journey when it starts with `/`, or a full URL:
 

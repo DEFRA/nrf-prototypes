@@ -131,12 +131,59 @@ function validateForm(page, body) {
   return { ok: true, value }
 }
 
+// The checkbox under a `type: signature` page's signature, named after
+// the page's field
+function agreementField(page) {
+  return `${page.field}-agreement`
+}
+
+function agreementMessage(page) {
+  const agreement = page.content.agreement || {}
+  return (
+    (agreement.errors && agreement.errors.required) || 'Select that you agree'
+  )
+}
+
+/**
+ * A `type: signature` page: the typed name, and the agreement checkbox
+ * ticked when the page has one (see the page's `agreement:`). Returns
+ * every problem, as a form page does, and stores the name.
+ */
+function validateSignature(page, body) {
+  const errors = []
+  const value = String(body[page.field] || '').trim()
+  if (!value) {
+    errors.push({ field: page.field, message: message(page, 'required') })
+  }
+  if (page.content.agreement) {
+    const ticked = [].concat(body[agreementField(page)] || [])
+    if (!ticked.includes('agree')) {
+      errors.push({
+        field: agreementField(page),
+        message: agreementMessage(page)
+      })
+    }
+  }
+  if (errors.length) {
+    return { ok: false, errors, error: errors[0].message, values: body }
+  }
+  return { ok: true, value }
+}
+
 /**
  * Error list shown when a form page is previewed with ?error=1 (every
  * required field's `required` message) or ?error=<key> (the fields whose
  * errors name that key, falling back to the required list when none do).
  */
 function previewErrors(page, key = 'required') {
+  if (page.type === 'signature') {
+    return [
+      { field: page.field, message: message(page, key) },
+      ...(page.content.agreement
+        ? [{ field: agreementField(page), message: agreementMessage(page) }]
+        : [])
+    ]
+  }
   const fields = page.content.fields || []
   if (key !== 'required') {
     const named = fields.filter((field) => field.errors && field.errors[key])
@@ -192,6 +239,8 @@ function validatePage(page, body = {}, file, multerError) {
     case 'input':
     case 'password':
       return validateInput(page, body)
+    case 'signature':
+      return validateSignature(page, body)
     case 'textarea':
       return validateTextarea(page, body)
     case 'form':

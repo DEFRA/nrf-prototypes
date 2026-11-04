@@ -1,0 +1,74 @@
+{#
+  `type: signature`: the user signs by typing their full name, which shows
+  below the box in a handwriting font on a signature line, as it would on
+  a signed document (signature.js keeps it in step as they type; the
+  server fills it in when the page is shown again). The heading is an h1
+  with the body copy under it; `label:` names the box ("Type your full
+  name" by default) and `hint:` goes under it. `agreement:` adds a
+  checkbox under the signature (`label`, `errors.required`), which must be
+  ticked to sign. `:::after-button` copy renders below the button.
+#}
+{% extends "journey-engine/_page.html" %}
+
+{% set agreement = content.agreement %}
+{% set agreementName = page.field + "-agreement" %}
+{% if values %}
+  {% set signatureValue = values[page.field] %}
+  {% set agreed = "agree" in ([].concat(values[agreementName]) if values[agreementName] else []) %}
+{% else %}
+  {% set signatureValue = data[page.sessionKey] %}
+  {% set agreed = data[page.sessionKey] %}
+{% endif %}
+
+{% set nameError = false %}
+{% set agreementError = false %}
+{% for item in errors %}
+  {% if item.field == page.field %}{% set nameError = item.message %}{% endif %}
+  {% if item.field == agreementName %}{% set agreementError = item.message %}{% endif %}
+{% endfor %}
+
+{% block pageBody %}
+<form action="{{ page.path }}" method="post" novalidate>
+  {% include "journey-engine/_change-inputs.html" %}
+  {% include "journey-engine/_error-summary.html" %}
+
+  <h1 class="govuk-heading-l">{% include "journey-engine/_caption.html" %}{{ content.heading }}</h1>
+  {{ content.html | safe }}
+
+  {{ govukInput({
+    id: page.field,
+    name: page.field,
+    autocomplete: "name",
+    spellcheck: false,
+    label: { text: content.label or "Type your full name", classes: "govuk-label--s" },
+    hint: { text: content.hint } if content.hint,
+    value: signatureValue,
+    errorMessage: { text: nameError } if nameError,
+    attributes: { "data-signature-input": page.field }
+  }) }}
+
+  {# A picture of the name the box holds, so it is hidden from screen
+     readers #}
+  <div class="app-signature" data-signature-for="{{ page.field }}" aria-hidden="true">
+    <span class="app-signature__name">{{ signatureValue }}</span>
+  </div>
+
+  {% if agreement %}
+    {{ govukCheckboxes({
+      name: agreementName,
+      idPrefix: agreementName,
+      errorMessage: { text: agreementError } if agreementError,
+      items: [{ value: "agree", text: agreement.label, checked: agreed }]
+    }) }}
+  {% endif %}
+
+  {% include "journey-engine/_question-actions.html" %}
+
+  {{ content.htmlAfter | safe }}
+</form>
+{% endblock %}
+
+{% block pageScripts %}
+{{ super() }}
+<script src="/public/javascripts/signature.js"></script>
+{% endblock %}
