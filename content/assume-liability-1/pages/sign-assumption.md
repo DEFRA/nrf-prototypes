@@ -1,27 +1,8 @@
 ---
-# PLACEHOLDER COPY: the user signs the assumption of liability document
-#
-# Typing a name to sign is switched off for now. To bring it back, swap the
-# settings below for these (uncommented) and set `field` and `sessionKey`
-# of sign-assumption in journey.yaml to `signature` (its preview there is
-# ready to uncomment too). See "Signing by typing a name" in
-# content/README.md.
-#
-# type: signature
-# label: Type your full name
-# hint: This will be your signature.
-# errors:
-#   required: Enter your full name to sign the assumption of liability
-# # The checkbox under the signature, which must be ticked to sign
-# agreement:
-#   label: I agree to assume liability to pay the nature restoration levy for this development
-#   errors:
-#     required: Select that you agree to assume liability to pay the nature restoration levy
-# button: Sign
 type: checkboxes
 bodyFirst: true
 options:
-  - label: I agree to assume liability to pay the nature restoration levy for this development
+  - label: Pursuant to Regulation 8 of the Nature Restoration Levy Regulations 2026, I hereby declare that I agree to assume liability to pay the nature restoration levy charged under Part 3 of the Planning and Infrastructure Act 2025 in relation to the relevant development set out above.
     value: agree
 errors:
   required: Select that you agree to assume liability to pay the nature restoration levy
@@ -39,5 +20,9 @@ You will be jointly liable with the other people named on the assumption of liab
 :::
 
 :::warning
-Once you have signed, you cannot withdraw from this liability. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+The assumption of liability notice is not complete until all liable persons have signed both declarations in Part A and Part B of the notice. 
 :::
+
+## Sign the assumption of liability
+
+By checking the box, you become legally liable to pay the nature restoration levy

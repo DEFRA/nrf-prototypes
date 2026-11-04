@@ -1,5 +1,6 @@
 ---
 type: radios
+hint: Select whether you will pay the total nature restoration levy amount in full or by instalments.
 options:
   - label: Pay in instalments
     value: instalments
@@ -11,4 +12,7 @@ button: Continue
 ---
 
 # How would you like to pay the nature restoration levy?
-Select whether you will pay the total nature restoration levy amount in full or by instalments. [Learn about instalment plan(s)](*)to check eligibility. 
+
+:::details Paying in instalments
+[Learn about instalments (opens in new tab)](#) to find out if you are eligible.
+:::
