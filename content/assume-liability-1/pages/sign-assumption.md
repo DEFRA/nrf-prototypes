@@ -1,16 +1,30 @@
 ---
-# PLACEHOLDER COPY: the user signs the assumption of liability document by
-# typing their full name, shown below the box as a signature
-type: signature
-label: Type your full name
-hint: This will be your signature.
+# PLACEHOLDER COPY: the user signs the assumption of liability document
+#
+# Typing a name to sign is switched off for now. To bring it back, swap the
+# settings below for these (uncommented) and set `field` and `sessionKey`
+# of sign-assumption in journey.yaml to `signature` (its preview there is
+# ready to uncomment too). See "Signing by typing a name" in
+# content/README.md.
+#
+# type: signature
+# label: Type your full name
+# hint: This will be your signature.
+# errors:
+#   required: Enter your full name to sign the assumption of liability
+# # The checkbox under the signature, which must be ticked to sign
+# agreement:
+#   label: I agree to assume liability to pay the nature restoration levy for this development
+#   errors:
+#     required: Select that you agree to assume liability to pay the nature restoration levy
+# button: Sign
+type: checkboxes
+bodyFirst: true
+options:
+  - label: I agree to assume liability to pay the nature restoration levy for this development
+    value: agree
 errors:
-  required: Enter your full name to sign the assumption of liability
-# The checkbox under the signature, which must be ticked to sign
-agreement:
-  label: I agree to assume liability to pay the nature restoration levy for this development
-  errors:
-    required: Select that you agree to assume liability to pay the nature restoration levy
+  required: Select that you agree to assume liability to pay the nature restoration levy
 button: Sign
 ---
 

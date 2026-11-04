@@ -35,7 +35,7 @@
 
 statuses:
   ready: { label: Not started, colour: blue }
-  sign: { label: Signatures needed, one: Signature needed, colour: orange }
+  sign: { label: Signature needed, colour: orange }
   awaiting-permission: { label: Waiting for planning permission, colour: grey }
   signatures: { label: Signatures needed, one: Signature needed, colour: yellow }
   signed: { label: Signed by everyone, colour: turquoise }

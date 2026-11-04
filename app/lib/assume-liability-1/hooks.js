@@ -57,6 +57,7 @@ const ANSWER_KEYS = [
   'liablePersonIndex',
   'liablePeople',
   'signatures',
+  'signAgreement',
   'signature',
   'youSigned',
   'payerDetails'
@@ -543,8 +544,9 @@ const liablePeopleCheck = {
 
 // The research link that signs for everyone else on the document
 // (?_signed=all; the user signs for themselves on sign-assumption, from
-// the Sign link on their row) and each Remind link (?_remind=<n>, a mock:
-// the page says a reminder went to them). Continue only once everyone has
+// the Sign link on their row) and each Remind link on the main liable
+// person's record (?_remind=<n>, a mock: the page says a reminder went to
+// them). Continue only once everyone has
 // signed.
 const assumptionDocument = {
   load(ctx) {
@@ -552,8 +554,9 @@ const assumptionDocument = {
     if (preview) {
       return
     }
+    // Only the main liable person reminds the others
     const reminded = data.signatories[Number.parseInt(query._remind, 10)]
-    if (reminded && !reminded.you) {
+    if (reminded && !reminded.you && data.record && data.record.primary) {
       data.reminderSent = reminded.fullName
       return { redirect: page.path }
     }

@@ -5,7 +5,8 @@
   is still waiting on. On a secondary user's record (one they were named
   as jointly liable on) there is no way to change who signs and no
   Continue. The user's own row has a Sign link (to sign-assumption) until
-  they have signed, everyone else's a Remind link until they have. Once
+  they have signed; on the main liable person's record everyone else's
+  row has a Remind link until they have. Once
   everyone has signed that column is the date each of them signed.
   Continue shows once everyone has signed, and until then a link returns
   to the user's records. Model extras from
@@ -43,8 +44,10 @@
     {% set action = "" %}
   {% elif person.you %}
     {% set action = '<a class="govuk-link" href="' + routes.SIGN_ASSUMPTION + '">' + text.sign + '<span class="govuk-visually-hidden"> ' + text.signHidden + '</span></a>' %}
-  {% else %}
+  {% elif primary %}
     {% set action = '<a class="govuk-link" href="' + page.path + '?_remind=' + loop.index0 + '">' + text.remind + '<span class="govuk-visually-hidden"> ' + (text.remindHidden | replace("{name}", person.fullName) | escape) + '</span></a>' %}
+  {% else %}
+    {% set action = "" %}
   {% endif %}
   {% set rows = (rows.push([
     { text: person.fullName + (" " + text.you if person.you else "") },

@@ -68,6 +68,7 @@ session:
   - liablePersonIndex
   - liablePeople
   - signatures
+  - signAgreement
   - signature
   - youSigned
   - signatories
@@ -402,24 +403,27 @@ pages:
             signed and named them as jointly liable, so they sign too
           data: { recordReference: NRL-234567, liablePeople: null }
 
-  # PLACEHOLDER: the user signs the assumption document by typing their
-  # name (`type: signature`). Signing (hooks.js) returns to the document.
+  # PLACEHOLDER: the user signs the assumption document by ticking that they
+  # agree. Signing (hooks.js) returns to the document. Typing a name to sign
+  # (`type: signature`) is switched off for now: to bring it back, follow
+  # the note in pages/sign-assumption.md, set `field` and `sessionKey`
+  # below to `signature` and uncomment the preview.
   - id: sign-assumption
-    field: signature
-    sessionKey: signature
+    field: sign-agreement
+    sessionKey: signAgreement
     guard: *assuming
     handler: custom
     back: assumption-document
     next: assumption-document
-    preview:
-      label: Not signed yet
-      description: The box is empty, so the signature line is blank
-      variants:
-        - id: typed
-          label: Name typed
-          description: >-
-            The user has typed their name, so it shows on the signature line
-          data: { signature: Trevor Barker }
+    # preview:
+    #   label: Not signed yet
+    #   description: The box is empty, so the signature line is blank
+    #   variants:
+    #     - id: typed
+    #       label: Name typed
+    #       description: >-
+    #         The user has typed their name, so it shows on the signature line
+    #       data: { signature: Trevor Barker }
 
   # PLACEHOLDER: the email each jointly liable person gets. Its link carries
   # on to the assumption document.
