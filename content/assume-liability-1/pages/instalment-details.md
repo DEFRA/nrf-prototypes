@@ -3,9 +3,9 @@ type: radios
 # The levy details sit between the question and the options
 bodyFirst: true
 options:
-  - label: Yes, accept this amount
+  - label: Yes, accept this amount and agree to pay in instalments
     value: 'Yes'
-  - label: No, delete my commitment details
+  - label: No, pay in a one-off payment
     value: 'No'
 errors:
   required: Select yes if you accept the nature restoration levy amount
@@ -14,7 +14,7 @@ button: Continue
 
 # Do you accept this nature restoration levy amount?
 
-The amount of the levy may have changed since your quote. You might have updated the development details, the charging schedule may have been updated or inflation might have been applied.
+The amount of the levy may have changed since your commitment. The charging schedule may have been updated or inflation might have been applied.
 
 ## Details of the Environmental Delivery Plan (EDP)
 
