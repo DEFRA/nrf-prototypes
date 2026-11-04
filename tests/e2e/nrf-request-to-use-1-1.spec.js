@@ -453,37 +453,25 @@ test.describe('nrf-request-to-use-1-1 happy paths', () => {
     await expect(page.locator('.govuk-summary-list').first()).toContainText(
       'NRL-000001'
     )
-    await expect(page.locator('.govuk-summary-list').first()).toContainText(
-      rowValue('check-your-answers', 'defra-account-user-type', {
-        defraUserType: 'agent'
-      })
+    // Who the levy is for shows as its answer, with no Change link; as on
+    // the review page, the agent can change the developer's name but not
+    // the business name (the organisation chosen)
+    const answers = page.locator('.govuk-summary-list').first()
+    await expect(answers).toContainText(
+      option('defra-account-user-type', 'agent')
     )
-
-    // Changing who the levy is for goes through the guidance and back, and
-    // moves the signed-in account to the new type (still signed in: becoming
-    // an individual here does not send them back to register)
-    await changeLink(
-      page,
-      'check-your-answers',
-      'defra-account-user-type'
-    ).click()
-    await expect(page).toHaveURL(
-      `${base}/defra-account-user-type?change=true&nav=check-your-answers`
+    await expect(
+      answers.locator('a[href*="defra-account-user-type"]')
+    ).toHaveCount(0)
+    await expect(answers).toContainText(
+      option('defra-choose-organisation', 'oakwood')
     )
-    await answer(page, 'defra-account-user-type', 'individual')
-    await submit(page, 'defra-account-user-type')
-    await expect(page).toHaveURL(
-      `${base}/defra-account-individual?change=true&nav=check-your-answers`
-    )
-    await expectHeading(page, 'defra-account-individual')
-    await submit(page, 'defra-account-individual')
-    await expect(page).toHaveURL(`${base}/check-your-answers`)
-    await expect(page.locator('.govuk-summary-list').first()).toContainText(
-      rowValue('check-your-answers', 'defra-account-user-type', {
-        defraUserType: 'individual'
-      })
-    )
-    await expect(page.locator('.app-organisation-bar')).toHaveCount(0)
+    await expect(
+      answers.locator('a[href*="defra-choose-organisation"]')
+    ).toHaveCount(0)
+    await expect(
+      changeLink(page, 'check-your-answers', 'developer-details')
+    ).toBeVisible()
 
     await page
       .locator('.govuk-service-navigation')
