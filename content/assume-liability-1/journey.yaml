@@ -73,7 +73,6 @@ session:
   - reminderSent
   - sharedLiability
   - recordAnswers
-  - useYourDetails
   - payerDetails
 
 # Sample answers for the screen wall and ?preview=1
@@ -107,10 +106,9 @@ preview:
       - fullName: Jo Wright
         organisation: ''
         email: jo.wright@example.com
-    useYourDetails: 'no'
     payerDetails:
-      payerName: Fenland Homes
-      email: accounts@fenlandhomes.co.uk
+      payerName: Trevor Barker
+      businessName: Fenland Homes
       addressLine1: 12 Station Road
       town: March
       postcode: PE15 8AA
@@ -355,7 +353,7 @@ pages:
     links:
       - goto: sign-assumption
         text: Sign
-    next: use-your-details
+    next: add-payment-details
     preview:
       label: Not signed yet
       description: >-
@@ -421,20 +419,10 @@ pages:
     back: []
     next: assumption-document
 
-  # Yes fills the payment details' name and email with the user's own
-  # (hooks.js); No clears them if they were the user's
-  - id: use-your-details
-    field: use-your-details
-    sessionKey: useYourDetails
-    guard: *assuming
-    handler: custom
-    back: assumption-document
-    next: add-payment-details
-
   - id: add-payment-details
     sessionKey: payerDetails
     guard: *assuming
-    back: use-your-details
+    back: assumption-document
     changeable: true
     next:
       - when: { key: $navFromSummary, truthy: true }

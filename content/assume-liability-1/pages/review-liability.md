@@ -20,10 +20,10 @@ rows:
     value: '{{ payerDetails.payerName }}'
     change: add-payment-details
     changeHidden: who is paying
-  - key: Email address
-    value: '{{ payerDetails.email }}'
+  - key: Business name
+    value: '{{ payerDetails.businessName }}'
     change: add-payment-details
-    changeHidden: payment email address
+    changeHidden: business name
   - key: Address
     value:
       lines:
@@ -33,6 +33,18 @@ rows:
         - '{{ payerDetails.postcode }}'
     change: add-payment-details
     changeHidden: payment address
+  - key: Company Registration Number (CRN)
+    value: '{{ payerDetails.companyRegistrationNumber or "Not provided" }}'
+    change: add-payment-details
+    changeHidden: Company Registration Number
+  - key: VAT registration number
+    value: '{{ payerDetails.vatRegistrationNumber or "Not provided" }}'
+    change: add-payment-details
+    changeHidden: VAT registration number
+  - key: Purchase order number
+    value: '{{ payerDetails.purchaseOrderNumber or "Not provided" }}'
+    change: add-payment-details
+    changeHidden: purchase order number
 actions:
   - text: Confirm and submit
     kind: submit

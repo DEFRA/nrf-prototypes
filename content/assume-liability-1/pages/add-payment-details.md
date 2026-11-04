@@ -1,19 +1,17 @@
 ---
 # PLACEHOLDER FIELDS: who pays and where invoices go
 type: form
-hint: Enter the payment details for the nature restoration levy.
+hint: Enter the payment details for the person or organisation paying for the nature restoration levy.
 fields:
   - name: payer-name
     label: Name of the person or organisation paying
     errors:
       required: Enter the name of the person or organisation paying
-  - name: email
-    label: Email address
-    type: email
-    autocomplete: email
-    hint: We will send payment reminders and receipts to this address.
+  - name: business-name
+    label: Business name
+    autocomplete: organization
     errors:
-      required: Enter an email address
+      required: Enter the business name
   - name: address-line-1
     label: Address line 1
     autocomplete: address-line1
@@ -35,6 +33,15 @@ fields:
     autocomplete: postal-code
     errors:
       required: Enter a postcode
+  - name: company-registration-number
+    label: Company Registration Number (CRN)
+    optional: true
+  - name: vat-registration-number
+    label: VAT registration number
+    optional: true
+  - name: purchase-order-number
+    label: Purchase order number
+    optional: true
 button: Continue
 ---
 
