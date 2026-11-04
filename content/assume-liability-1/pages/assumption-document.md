@@ -1,29 +1,38 @@
 ---
 # PLACEHOLDER COPY: the assumption of liability document and who it is
 # waiting on (app/views/assume-liability-1/assumption-document.html). The
-# document's words are the page's body. "Assume liability" leads to the
-# signing page until the user has signed; Continue shows once everyone has.
+# document's words are the page's body. The user's own row has a Sign link
+# to the signing page until they have signed, everyone else's a Remind
+# link; Continue shows once everyone has signed. The tags (the document's
+# and each person's) are the statuses in records.yaml.
 type: custom
 button: Continue
 text:
-  assume: Assume liability
   # Below the signatures: back to the list of jointly liable people (Remove
   # and Add another person), or to "Is there anyone else...?" when nobody
   # else is listed
   changePeople: Change who is jointly liable
   addPeople: Add someone who is jointly liable
   caption: '{reference}'
-  waitingTag: Waiting for signatures
-  signedTag: Signed by everyone
-  signaturesHeading: Signatures
+  signaturesHeading: Jointly liable people
   columns:
     name: Name
     organisation: Organisation
     email: Email address
     status: Status
+    actions: Action
+    # In place of Action once everyone has signed: the date each signed
+    date: Date
   you: (you)
   signed: Signed
-  waiting: Waiting to sign
+  # The Actions column; the hidden words finish the link for screen
+  # readers, {name} is the person
+  sign: Sign
+  signHidden: the assumption of liability document
+  remind: Remind
+  remindHidden: '{name}'
+  # PLACEHOLDER: after a Remind link; {name} is the person reminded
+  reminderSent: We have sent a reminder to {name}.
   # {count} is the number of people still to sign
   waitingOne: We are waiting for 1 person to sign.
   waitingMany: We are waiting for {count} people to sign.

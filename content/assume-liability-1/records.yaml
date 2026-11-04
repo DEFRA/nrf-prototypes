@@ -8,10 +8,15 @@
 #
 #   statuses   every status a record can have: its tag label and the
 #              govuk-tag colour (grey, green, turquoise, blue, light-blue,
-#              purple, pink, red, orange, yellow). A record starts at the
+#              purple, pink, red, orange, yellow), and `one`, the label
+#              while only one person is left to sign. The same tags show on
+#              the records, the record pages and the assumption document
+#              (its own status, and each person's while it waits for them,
+#              from `signatures`). A record starts at the
 #              status given below; assuming liability in the journey moves
-#              the primary user's record on to `signatures` (when others
-#              must sign) and then `liable`. A secondary user's record at
+#              the primary user's record on to `signatures` (the document
+#              waits for signatures), `signed` once everyone has signed
+#              and then `liable`. A secondary user's record at
 #              `sign` (they have been named as jointly liable) moves on to
 #              `signatures` once they sign, or `signed` when nobody else is
 #              left to
@@ -29,12 +34,12 @@
 #              for them), and `you: true` where the signed-in user signs
 
 statuses:
-  ready: { label: Ready to assume liability, colour: blue }
-  sign: { label: Waiting for your signature, colour: orange }
+  ready: { label: Not started, colour: blue }
+  sign: { label: Signatures needed, one: Signature needed, colour: orange }
   awaiting-permission: { label: Waiting for planning permission, colour: grey }
-  signatures: { label: Waiting for signatures, colour: yellow }
+  signatures: { label: Signatures needed, one: Signature needed, colour: yellow }
   signed: { label: Signed by everyone, colour: turquoise }
-  liable: { label: Liability assumed, colour: green }
+  liable: { label: Signed by everyone, colour: green }
 
 edp: &edp 'Norfolk: Broads Special Area of Conservation (SAC) (Yare and Bure), Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2027 to 2037)'
 

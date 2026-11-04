@@ -12,4 +12,6 @@ text:
   save: Save and continue
 ---
 
-# Check the details of the jointly liable people
+# Check and add details for jointly liable people
+
+We will send an email to these people with assumption of liability document they can sign.

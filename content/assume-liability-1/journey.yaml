@@ -70,6 +70,7 @@ session:
   - signAgreement
   - youSigned
   - signatories
+  - reminderSent
   - sharedLiability
   - recordAnswers
   - useYourDetails
@@ -299,7 +300,8 @@ pages:
     next: liable-people-check
 
   # Everyone added, each with Change and Remove links; Save and continue
-  # sends the assumption document to them (hooks.js). Also opened from the
+  # sends the assumption document to them (hooks.js) and says so on
+  # emails-sent. Also opened from the
   # assumption document's "Change who is jointly liable" link, so once the
   # document has gone out (`signatures` is kept) Back returns there.
   - id: liable-people-check
@@ -311,12 +313,25 @@ pages:
       - when: { key: signatures, isSet: true }
         goto: assumption-document
       - goto: anyone-else
+    next: emails-sent
+
+  # PLACEHOLDER: the assumption document has gone out to everyone on the
+  # list. Sent already, so no Back link. User research aid in the footer:
+  # the email they get.
+  - id: emails-sent
+    guard: { key: liablePeople, isSet: true, redirect: anyone-else }
+    back: []
+    research:
+      - text: Email to the jointly liable people
+        href: joint-liability-email
+        newTab: false
     next: assumption-document
 
   # --------------------------------------------------------------------
   # PLACEHOLDER: the assumption document and who it is waiting on. Until
-  # the user has signed it, "Assume liability" leads to sign-assumption;
-  # Continue shows once everyone has signed. User research aids in the
+  # the user has signed it, the Sign link on their row leads to
+  # sign-assumption; everyone else's row has a Remind link (a mock: the
+  # page says a reminder was sent). Continue shows once everyone has signed. User research aids in the
   # footer: the email the jointly liable people get, and a link that signs
   # for them all (not for the user).
   - id: assumption-document
@@ -341,7 +356,7 @@ pages:
       label: Not signed yet
       description: >-
         Two jointly liable people have been sent the document; nobody has
-        signed yet, so the user is asked to assume liability
+        signed yet, so the user can sign or remind the others
       variants:
         - id: you-signed
           label: Signed by the user, waiting for others

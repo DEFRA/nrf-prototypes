@@ -12,8 +12,8 @@ text:
     role: Your role
     lastUpdated: Last updated
     status: Status
-  primary: Primary user
-  secondary: Secondary user
+  primary: Main liable person
+  secondary: Other liable person
 ---
 
 # Manage the nature restoration levy

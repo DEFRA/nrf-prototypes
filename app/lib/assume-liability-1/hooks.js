@@ -94,7 +94,8 @@ function loadStore() {
   return cache.store
 }
 
-function formatDate(value) {
+// `month: 'short'` writes it as 2 Nov 2026
+function formatDate(value, month = 'long') {
   if (!value) {
     return ''
   }
@@ -104,7 +105,7 @@ function formatDate(value) {
   }
   return new Intl.DateTimeFormat('en-GB', {
     day: 'numeric',
-    month: 'long',
+    month,
     year: 'numeric'
   }).format(date)
 }
@@ -159,7 +160,8 @@ function answersFor(reference, data) {
 
 /**
  * Everyone who signs a record's assumption document, each with the date
- * they signed or '' while the document waits for them. On the primary
+ * they signed (`signedOn`, and `signedShort` as 2 Nov 2026) or '' while
+ * the document waits for them. On the primary
  * user's record that is the signed-in user (signed on sign-assumption,
  * `youSigned`) then each jointly liable person they named (signed once
  * `signatures` holds their email). On a secondary user's record it is the
@@ -174,13 +176,15 @@ function signatoriesFor(raw, answers, account) {
     organisation: account.businessName,
     email: account.email,
     you: true,
-    signedOn: formatDate(answers.youSigned)
+    signedOn: formatDate(answers.youSigned),
+    signedShort: formatDate(answers.youSigned, 'short')
   }
   const other = (person) => ({
     fullName: person.fullName,
     organisation: person.organisation || account.businessName,
     email: person.email,
-    signedOn: formatDate(person.signed || signatures[person.email])
+    signedOn: formatDate(person.signed || signatures[person.email]),
+    signedShort: formatDate(person.signed || signatures[person.email], 'short')
   })
   if (raw.role !== 'primary') {
     return (raw.signatories || []).map((person) =>
@@ -189,6 +193,20 @@ function signatoriesFor(raw, answers, account) {
   }
   const people = Array.isArray(answers.liablePeople) ? answers.liablePeople : []
   return [you, ...people.map(other)]
+}
+
+/**
+ * A status from records.yaml as a tag shows it: its `one` label while
+ * the document waits for a single signature, when it has one
+ */
+function statusFor(store, value, signatories) {
+  const status = store.statuses[value] || {}
+  const waiting = signatories.filter((person) => !person.signedOn).length
+  return {
+    value,
+    label: (waiting === 1 && status.one) || status.label || value,
+    colour: status.colour || 'grey'
+  }
 }
 
 /**
@@ -204,26 +222,24 @@ function recordFor(raw, store, data) {
   const primary = raw.role === 'primary'
   const answers = answersFor(raw.reference, data)
   const signatories = signatoriesFor(raw, answers, account)
+  const allSigned = signatories.every((person) => person.signedOn)
   let statusValue = progress.status || raw.status
   // A secondary user asked to sign: once they have, the document waits for
   // the others, then it is signed by everyone
   if (!primary && raw.status === 'sign' && answers.youSigned) {
-    statusValue = signatories.every((person) => person.signedOn)
-      ? 'signed'
-      : 'signatures'
+    statusValue = allSigned ? 'signed' : 'signatures'
   }
-  const status = store.statuses[statusValue] || {}
+  // The primary user's document, once everyone has signed it
+  if (primary && statusValue === 'signatures' && allSigned) {
+    statusValue = 'signed'
+  }
   return {
     ...raw,
     primary,
     signatories,
     developer: raw.developer || (primary ? account.businessName : ''),
     primaryUser: primary ? account.fullName : raw.primaryUser,
-    status: {
-      value: statusValue,
-      label: status.label || statusValue,
-      colour: status.colour || 'grey'
-    },
+    status: statusFor(store, statusValue, signatories),
     // Only the primary user of a record whose planning permission is
     // granted is asked to assume liability
     canAssume: primary && statusValue === 'ready',
@@ -380,6 +396,8 @@ const anyoneElse = {
     if (data.jointlyLiable !== 'yes') {
       delete data.liablePeople
       delete data.signatures
+      // Nobody else to send it to: the document waits for the user alone
+      setProgress(data, 'signatures')
     }
     forgetLiablePerson(data)
   }
@@ -524,12 +542,22 @@ const liablePeopleCheck = {
 }
 
 // The research link that signs for everyone else on the document
-// (?_signed=all; the user signs for themselves on sign-assumption).
-// Continue only once everyone has signed.
+// (?_signed=all; the user signs for themselves on sign-assumption, from
+// the Sign link on their row) and each Remind link (?_remind=<n>, a mock:
+// the page says a reminder went to them). Continue only once everyone has
+// signed.
 const assumptionDocument = {
   load(ctx) {
     const { data, query, preview, page } = ctx
-    if (preview || query._signed !== 'all') {
+    if (preview) {
+      return
+    }
+    const reminded = data.signatories[Number.parseInt(query._remind, 10)]
+    if (reminded && !reminded.you) {
+      data.reminderSent = reminded.fullName
+      return { redirect: page.path }
+    }
+    if (query._signed !== 'all') {
       return
     }
     data.signatures = data.signatures || {}
@@ -541,12 +569,23 @@ const assumptionDocument = {
     return { redirect: page.path }
   },
   get(ctx, model) {
-    model.primary = Boolean(ctx.data.record && ctx.data.record.primary)
-    const waiting = ctx.data.signatories.filter((person) => !person.signedOn)
-    const you = ctx.data.signatories.find((person) => person.you)
-    model.youSigned = Boolean(you && you.signedOn)
+    const { data } = ctx
+    model.primary = Boolean(data.record && data.record.primary)
+    const waiting = data.signatories.filter((person) => !person.signedOn)
     model.waitingCount = waiting.length
     model.allSigned = waiting.length === 0
+    // The tags come from records.yaml, like the record's own: the
+    // document's, and each person's while it waits for them
+    const store = loadStore()
+    model.documentStatus = statusFor(
+      store,
+      model.allSigned ? 'signed' : 'signatures',
+      data.signatories
+    )
+    model.personWaiting = statusFor(store, 'signatures', [{}])
+    // Shown once, after a Remind link
+    model.reminderSent = data.reminderSent
+    delete data.reminderSent
   },
   // Only the primary user goes on to the payment details
   process(ctx) {

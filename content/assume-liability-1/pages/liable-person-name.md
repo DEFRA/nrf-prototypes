@@ -5,7 +5,7 @@
 # are not, their organisation's name (required then; see
 # app/lib/assume-liability-1/hooks.js)
 type: form
-hint: Add the names and email addresses for the people that are jointly liable for the nature restoration levy.
+hint: You will be able to add others later if there is more than one.
 fields:
   - name: full-name
     label: Full name
@@ -32,4 +32,4 @@ options:
 button: Continue
 ---
 
-# Add the details for the other liable people
+# Add details for another liable person

@@ -4,11 +4,14 @@
   words (the page's body), then who has signed and who it
   is still waiting on. On a secondary user's record (one they were named
   as jointly liable on) there is no way to change who signs and no
-  Continue. Until the user has signed, Assume liability leads to
-  sign-assumption; Continue shows once everyone has signed, and until then
-  a link returns to the user's records. Model extras from
-  app/lib/assume-liability-1/hooks.js: primary, youSigned, waitingCount,
-  allSigned, data.signatories.
+  Continue. The user's own row has a Sign link (to sign-assumption) until
+  they have signed, everyone else's a Remind link until they have. Once
+  everyone has signed that column is the date each of them signed.
+  Continue shows once everyone has signed, and until then a link returns
+  to the user's records. Model extras from
+  app/lib/assume-liability-1/hooks.js: primary, waitingCount, allSigned,
+  documentStatus and personWaiting (tags from records.yaml), reminderSent,
+  data.signatories.
 #}
 {% extends "journey-engine/_page.html" %}
 
@@ -17,10 +20,16 @@
 {% block content %}
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-two-thirds">
+{% if reminderSent %}
+{{ govukNotificationBanner({
+  type: "success",
+  html: '<p class="govuk-notification-banner__heading">' + (text.reminderSent | replace("{name}", reminderSent) | escape) + '</p>'
+}) }}
+{% endif %}
 <span class="govuk-caption-l">{{ text.caption | replace("{reference}", data.recordReference) }}</span>
 <h1 class="govuk-heading-l">
   {{ content.heading }}
-  <strong class="govuk-tag govuk-tag--{{ 'green' if allSigned else 'yellow' }} govuk-!-margin-left-2">{{ text.signedTag if allSigned else text.waitingTag }}</strong>
+  <strong class="govuk-tag govuk-tag--{{ documentStatus.colour }} govuk-!-margin-left-2">{{ documentStatus.label }}</strong>
 </h1>
 
 {{ content.html | safe }}
@@ -30,11 +39,19 @@
 
 {% set rows = [] %}
 {% for person in data.signatories %}
+  {% if person.signedOn %}
+    {% set action = "" %}
+  {% elif person.you %}
+    {% set action = '<a class="govuk-link" href="' + routes.SIGN_ASSUMPTION + '">' + text.sign + '<span class="govuk-visually-hidden"> ' + text.signHidden + '</span></a>' %}
+  {% else %}
+    {% set action = '<a class="govuk-link" href="' + page.path + '?_remind=' + loop.index0 + '">' + text.remind + '<span class="govuk-visually-hidden"> ' + (text.remindHidden | replace("{name}", person.fullName) | escape) + '</span></a>' %}
+  {% endif %}
   {% set rows = (rows.push([
     { text: person.fullName + (" " + text.you if person.you else "") },
     { text: person.organisation },
     { text: person.email },
-    { html: '<strong class="govuk-tag govuk-tag--' + ('green' if person.signedOn else 'yellow') + '">' + (text.signed if person.signedOn else text.waiting) + '</strong>' }
+    { html: '<strong class="govuk-tag govuk-tag--' + ('green' if person.signedOn else personWaiting.colour) + '">' + (text.signed if person.signedOn else personWaiting.label) + '</strong>' },
+    { text: person.signedShort } if allSigned else { html: action }
   ]), rows) %}
 {% endfor %}
 
@@ -47,7 +64,8 @@
     { text: text.columns.name },
     { text: text.columns.organisation },
     { text: text.columns.email },
-    { text: text.columns.status }
+    { text: text.columns.status },
+    { text: text.columns.date if allSigned else text.columns.actions }
   ],
   rows: rows
 }) }}
@@ -72,11 +90,6 @@
 {% elif allSigned %}
   {{ govukInsetText({ text: text.allSignedSecondary | replace("{name}", data.record.primaryUser) }) }}
   <p class="govuk-body"><a class="govuk-link" href="{{ routes.MANAGE_LEVY }}">{{ text.back }}</a></p>
-{% elif not youSigned %}
-  <div class="govuk-button-group">
-    {{ govukButton({ text: text.assume, href: routes.SIGN_ASSUMPTION }) }}
-    <a class="govuk-link" href="{{ routes.MANAGE_LEVY }}">{{ text.back }}</a>
-  </div>
 {% else %}
   {{ govukInsetText({ text: ((text.waitingOne if waitingCount == 1 else text.waitingMany) | replace("{count}", waitingCount)) + (" " + text.paymentAfter if primary else "") }) }}
   <p class="govuk-body"><a class="govuk-link" href="{{ routes.MANAGE_LEVY }}">{{ text.back }}</a></p>
