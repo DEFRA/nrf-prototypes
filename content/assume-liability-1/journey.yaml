@@ -30,6 +30,10 @@ start: permission-email
 summaryPages:
   - review-liability
 
+# The service name in the header links to the user's records
+header:
+  homePage: manage-levy
+
 # When this holds the header shows Sign out
 signedIn: { key: account, isSet: true }
 
@@ -79,8 +83,8 @@ session:
 
 # Sample answers for the screen wall and ?preview=1
 preview:
-  # The signing page is reached from the Sign link in the assumption
-  # document's table (its template), which the flow does not follow
+  # The signing page is reached from the assumption document's Continue to
+  # sign button (in its template), which the flow does not follow
   signedInFrom:
     - manage-levy
     - sign-assumption
@@ -338,9 +342,10 @@ pages:
 
   # --------------------------------------------------------------------
   # PLACEHOLDER: the assumption document and who it is waiting on. Until
-  # the user has signed it, the Sign link on their row leads to
-  # sign-assumption; everyone else's row has a Remind link (a mock: the
-  # page says a reminder was sent). Continue shows once everyone has signed. User research aids in the
+  # the user has signed it, Continue to sign leads to sign-assumption; on
+  # the main liable person's record everyone else's row has a Remind link
+  # (a mock: the page says a reminder was sent). Continue shows once
+  # everyone has signed. User research aids in the
   # footer: the email the jointly liable people get, and a link that signs
   # for them all (not for the user).
   - id: assumption-document
@@ -360,10 +365,10 @@ pages:
       - text: Everyone has signed
         href: assumption-document?_signed=all
         newTab: false
-    # The Sign link on the user's row of the table (in the template)
+    # The Continue to sign button (in the template)
     links:
       - goto: sign-assumption
-        text: Sign
+        text: Sign the assumption of liability
     next: add-payment-details
     preview:
       label: Not signed yet

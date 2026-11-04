@@ -5,6 +5,8 @@
   Uses the journey engine's journey.serviceName when a journey model is
   present, otherwise the global serviceName from app/config.json. The
   "PROTOTYPE - " prefix marks the page as a prototype in user research.
+  The service name links to the journey's `header.homePage` when it has
+  one, otherwise its /start page.
 
   When the journey engine reports the user as signed in (`signedIn` in
   journey.yaml) a Sign out link joins the service navigation; the hook that
@@ -13,7 +15,13 @@
   Use with: {% block header %}{% include "includes/service-header.html" %}{% endblock %}
 #}
 {% set appServiceName = journey.serviceName if journey and journey.serviceName else serviceName %}
-{% set appServiceUrl = journey.basePath + "/start" if journey and journey.basePath else "/" %}
+{% if journey and journey.header and journey.header.homePage %}
+  {% set appServiceUrl = journey.header.homePage %}
+{% elif journey and journey.basePath %}
+  {% set appServiceUrl = journey.basePath + "/start" %}
+{% else %}
+  {% set appServiceUrl = "/" %}
+{% endif %}
 {% set appNavigation = [] %}
 {% if signedIn %}
   {% set appNavigation = [{

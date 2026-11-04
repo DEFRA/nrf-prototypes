@@ -501,7 +501,7 @@ pages:
       - goto: housing
 ```
 
-Journey keys beside `pages`: `id`, `name`, `serviceName`, `start` (the first page's id), `basePath`, `summaryPages`, `signedIn` (a condition: the header shows the user as signed in), `session`, `preview`, `groups`, `homepage`, `layout` (the default for every page), and `header` for the `staff` layout:
+Journey keys beside `pages`: `id`, `name`, `serviceName`, `start` (the first page's id), `basePath`, `summaryPages`, `signedIn` (a condition: the header shows the user as signed in), `session`, `preview`, `groups`, `homepage`, `layout` (the default for every page), and `header` for the `staff` layout (`header: { homePage: <page> }` on its own also sets where the service name links in the usual header, which is otherwise the journey's `/start` page):
 
 ```yaml
 header:
