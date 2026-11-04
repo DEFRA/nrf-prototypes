@@ -2,8 +2,8 @@
   A developer record (content/lpa-manage-1/pages/view-record.md): a success
   banner after adding it, the NRL reference with its
   status, the first commitment details with a link to the full certificate,
-  the planning details (the page's `rows`), the red line boundary (the
-  page's copy), the audit timeline and the review options (the hook leaves
+  the red line boundary (the page's copy), the planning details (the
+  page's `rows`), the audit timeline and the review options (the hook leaves
   only those for the record's step in content.items), which post back to
   this page. Once the commitment details are reviewed they are the planning
   stage options possible from the stage the application is at (none once
@@ -56,6 +56,12 @@
   <div class="govuk-grid-column-two-thirds-from-desktop">
 
     {% for group in content.rowGroups %}
+      {# The red line boundary sits between the commitment and planning details #}
+      {% if loop.last %}
+        <div class="app-staff-record__map">
+          {{ content.html | safe }}
+        </div>
+      {% endif %}
       {% if group.heading %}<h2 class="govuk-heading-m">{{ group.heading }}</h2>{% endif %}
       {% set buttonBelow = (loop.first and record) or (loop.last and (reservedMattersHref or amendmentHref)) %}
       {% if group.rows | length %}
@@ -81,10 +87,6 @@
         }) }}
       {% endif %}
     {% endfor %}
-
-    <div class="app-staff-record__map">
-      {{ content.html | safe }}
-    </div>
 
     {% if record %}
       <h2 class="govuk-heading-m">{{ text.timelineHeading }}</h2>
