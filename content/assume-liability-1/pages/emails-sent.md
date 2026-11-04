@@ -19,4 +19,4 @@ We have sent an email to:
 
 :::
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. You can see who has signed on the assumption of liability document.
+You will be able to see who has signed on the assumption of liability document and send reminders.

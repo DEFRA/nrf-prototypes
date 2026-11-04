@@ -12,7 +12,7 @@ title: Email sent from the Nature Restoration Fund service
 **Subject:** Nature restoration levy – sign the assumption of liability
 :::
 
-# You have been asked to sign an assumption of liability
+# You have been asked to sign an assumption of liability document
 
 Hello {{ liablePeople.0.fullName }},
 
@@ -20,8 +20,7 @@ Hello {{ liablePeople.0.fullName }},
 
 ## NRL reference: {{ recordReference }}
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+Create an account and sign in to view and accept the amount, view the assumption document and sign it. 
 
-:::inset
-**[Sign in to sign the assumption of liability](./$next)**
-:::
+
+**[Sign the assumption of liability document](./$next)**

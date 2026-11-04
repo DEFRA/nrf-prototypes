@@ -4,7 +4,7 @@ type: form
 hint: Enter the payment details for the person or organisation paying for the nature restoration levy.
 fields:
   - name: payer-name
-    label: Name of the person or organisation paying
+    label: Full name
     errors:
       required: Enter the name of the person or organisation paying
   - name: business-name

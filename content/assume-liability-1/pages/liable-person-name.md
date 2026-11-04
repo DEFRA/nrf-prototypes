@@ -5,7 +5,7 @@
 # are not, their organisation's name (required then; see
 # app/lib/assume-liability-1/hooks.js)
 type: form
-hint: You will be able to add others later if there is more than one.
+hint: You will be able to add others later if there is more than one. Where more than one person agrees to assume liability they will each be jointly and severally liable.
 fields:
   - name: full-name
     label: Full name
@@ -18,10 +18,10 @@ fields:
       required: Select yes if this person is also part of {{ account.organisationName }}
   # Shown when they are not part of the user's organisation, and required then
   - name: organisation
-    label: Organisation name
+    label: Business name
     optional: true
     errors:
-      required: Enter the name of their organisation
+      required: Enter the name of their Business
 # The answers to "Is this person also part of...?"; No reveals the
 # organisation's name
 options:

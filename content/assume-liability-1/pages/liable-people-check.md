@@ -4,7 +4,7 @@
 type: custom
 text:
   fullName: Full name
-  organisation: Organisation
+  organisation: Business name
   email: Email address
   change: Change
   remove: Remove
@@ -12,6 +12,7 @@ text:
   save: Save and continue
 ---
 
-# Check and add details for jointly liable people
+# Check and add details for all liable people
 
-We will send an email to these people with assumption of liability document they can sign.
+
+We will send an email with the assumption of liability document which they can sign. Where more than one person agrees to assume liability they will each be jointly and severally liable.
