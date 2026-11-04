@@ -1,8 +1,12 @@
 {#
   The account's home (content/assume-liability-1/pages/manage-levy.md): the
   heading and hint, then a table of every developer record the user is a
-  primary or secondary user of, each NRL reference linking to its record.
-  data.records comes from app/lib/assume-liability-1/hooks.js.
+  primary or secondary user of, each NRL reference linking to its record,
+  then one of their quotes and commitments, each with a link to use it
+  (a quote's to request to use the levy, a commitment's to its
+  certificate). Either table is left out when it would be empty.
+  data.records and data.quotesAndCommitments come from
+  app/lib/assume-liability-1/hooks.js.
 #}
 {% extends "journey-engine/_page.html" %}
 
@@ -17,6 +21,7 @@
   </div>
 </div>
 
+{% if data.records | length %}
 {% set rows = [] %}
 {% for record in data.records %}
   {% set rows = (rows.push([
@@ -40,4 +45,38 @@
   ],
   rows: rows
 }) }}
+{% endif %}
+
+{% if data.quotesAndCommitments | length %}
+{% set otherRows = [] %}
+{% for item in data.quotesAndCommitments %}
+  {% if item.type == "quote" %}
+    {% set href = item.href %}
+    {% set linkText = text.requestToUse %}
+  {% else %}
+    {% set href = routes.VIEW_CERTIFICATE + "?ref=" + (item.reference | urlencode) %}
+    {% set linkText = text.viewCertificate %}
+  {% endif %}
+  {% set otherRows = (otherRows.push([
+    { text: item.reference },
+    { text: item.site },
+    { text: text.types[item.type] },
+    { text: item.date },
+    { html: '<a class="govuk-link" href="' + href + '">' + linkText + '<span class="govuk-visually-hidden"> ' + (text.linkHidden | replace("{reference}", item.reference)) + '</span></a>' }
+  ]), otherRows) %}
+{% endfor %}
+
+{{ govukTable({
+  caption: text.otherCaption,
+  captionClasses: "govuk-table__caption--m",
+  head: [
+    { text: text.otherColumns.reference },
+    { text: text.otherColumns.site },
+    { text: text.otherColumns.type },
+    { text: text.otherColumns.date },
+    { html: '<span class="govuk-visually-hidden">' + text.otherColumns.action + '</span>' }
+  ],
+  rows: otherRows
+}) }}
+{% endif %}
 {% endblock %}

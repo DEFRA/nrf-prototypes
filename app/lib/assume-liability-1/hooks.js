@@ -70,7 +70,14 @@ const SIGN_IN_KEYS = [
   'chosenOrganisation'
 ]
 
-let cache = { mtime: 0, store: { statuses: {}, records: [] } }
+// The request to use journey a quote is used in and a commitment's
+// certificate shown by. When a newer version takes over, change it here.
+const REQUEST_TO_USE = '/nrf-request-to-use-1-1'
+
+let cache = {
+  mtime: 0,
+  store: { statuses: {}, records: [], quotes: [], commitments: [] }
+}
 
 /**
  * records.yaml, re-read whenever it changes so edits show on the next page
@@ -85,7 +92,9 @@ function loadStore() {
         mtime: mtimeMs,
         store: {
           statuses: parsed.statuses || {},
-          records: parsed.records || []
+          records: parsed.records || [],
+          quotes: parsed.quotes || [],
+          commitments: parsed.commitments || []
         }
       }
     }
@@ -254,6 +263,28 @@ function recordFor(raw, store, data) {
 }
 
 /**
+ * The quotes and commitments under the records, each with the link that
+ * uses it: a quote's to the request to use journey with its reference
+ * filled in, a commitment's to its certificate (see manageLevy)
+ */
+function quotesAndCommitmentsFor(store) {
+  const quotes = store.quotes.map((quote) => ({
+    type: 'quote',
+    reference: quote.reference,
+    site: quote.site,
+    date: formatDate(quote.created),
+    href: `${REQUEST_TO_USE}/quote-reference?_nrl=${encodeURIComponent(quote.reference)}`
+  }))
+  const commitments = store.commitments.map((commitment) => ({
+    type: 'commitment',
+    reference: commitment.reference,
+    site: commitment.site,
+    date: formatDate(commitment.issued)
+  }))
+  return [...quotes, ...commitments]
+}
+
+/**
  * The records, the record on screen and who signs it, worked out afresh on
  * every page (a preview's sample answers included). `sharedLiability`: the
  * record has more than one person liable (the signing page says so).
@@ -261,6 +292,7 @@ function recordFor(raw, store, data) {
 function refresh(data) {
   const store = loadStore()
   data.records = store.records.map((raw) => recordFor(raw, store, data))
+  data.quotesAndCommitments = quotesAndCommitmentsFor(store)
   data.record =
     data.records.find((record) => record.reference === data.recordReference) ||
     null
@@ -387,6 +419,44 @@ const developerRecord = {
     if (!ctx.data.record || !ctx.data.record.canAssume) {
       return { redirect: ctx.page.path }
     }
+  }
+}
+
+// A commitment's "View commitment certificate" link
+// (view-commitment-certificate?ref=NRL-567890): its details go where the
+// request to use journey's certificate reads them, then that page opens
+// with a Back link to the records (?_from=manage-levy, see
+// app/lib/nrf-request-to-use-1-1/hooks.js)
+const manageLevy = {
+  routes(router, journey) {
+    const routes = {
+      VIEW_CERTIFICATE: `${journey.basePath}/view-commitment-certificate`
+    }
+    router.get(routes.VIEW_CERTIFICATE, (req, res) => {
+      const data = (req.session && req.session.data) || {}
+      const commitment = loadStore().commitments.find(
+        (item) => item.reference === String(req.query.ref || '')
+      )
+      if (!commitment) {
+        return res.redirect(`${journey.basePath}/manage-levy`)
+      }
+      const account = data.account || {}
+      data.nrlReference = commitment.reference
+      data.certificate = {
+        issueDate: formatDate(commitment.issued),
+        expiryDate: formatDate(commitment.expires)
+      }
+      data.levyAmount = commitment.levyAmount
+      data.edpName = commitment.edp
+      data.residentialBuildingCount = commitment.units
+      data.redlineBoundaryPolygon = { coordinates: commitment.boundary || [] }
+      data.developerDetails = {
+        fullName: account.fullName,
+        ...(commitment.address || {})
+      }
+      res.redirect(`${REQUEST_TO_USE}/commitment-certificate?_from=manage-levy`)
+    })
+    return routes
   }
 }
 
@@ -627,6 +697,7 @@ module.exports = {
   'one-login-password': oneLoginSignIn,
   'government-gateway-sign-in': governmentGatewaySignIn,
   'choose-organisation': chooseOrganisation,
+  'manage-levy': manageLevy,
   'developer-record': developerRecord,
   'anyone-else': anyoneElse,
   'liable-person-name': liablePersonName,

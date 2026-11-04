@@ -152,3 +152,47 @@ records:
       - [1.187852, 52.598302]
       - [1.187519, 52.597973]
       - [1.187316, 52.597727]
+
+# Quotes and commitments the signed-in developer has that are not developer
+# records yet, in one table under the records, in this order. A quote's link
+# opens the request to use journey's "Enter your NRL reference" with its
+# reference filled in. A commitment's link opens the request to use
+# journey's commitment certificate for it: `issued` and `expires` are the
+# certificate's dates, `address` the developer's, `units` the homes and
+# `boundary` the red line boundary its map draws.
+quotes:
+  - reference: NRL-456789
+    site: Land off Station Road, Attleborough
+    created: 2026-10-21
+
+commitments:
+  - reference: NRL-567890
+    site: Land off London Road, Wymondham
+    units: 100
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-09-15
+    expires: 2027-03-15
+    address:
+      addressLine1: 12 Station Road
+      town: March
+      postcode: PE15 8AA
+    boundary:
+      - [1.091643, 52.559405]
+      - [1.094002, 52.558738]
+      - [1.09425, 52.559242]
+      - [1.094565, 52.559712]
+      - [1.094892, 52.56029]
+      - [1.094548, 52.560345]
+      - [1.094457, 52.560486]
+      - [1.094237, 52.560453]
+      - [1.093986, 52.560489]
+      - [1.093307, 52.560823]
+      - [1.093235, 52.560778]
+      - [1.092969, 52.560882]
+      - [1.09291, 52.560885]
+      - [1.092598, 52.56083]
+      - [1.092469, 52.560841]
+      - [1.092315, 52.560307]
+      - [1.092124, 52.559852]
+      - [1.091981, 52.559662]
