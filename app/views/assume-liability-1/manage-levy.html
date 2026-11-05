@@ -5,8 +5,8 @@
   then one of their quotes and commitments, each with a link to use it
   (a quote's to request to use the levy, a commitment's to its
   certificate). Either table is left out when it would be empty. Both
-  give their reference and site columns the same widths so they line up,
-  and keep each date on one line.
+  give their reference, site and role or type columns the same widths so
+  the dates line up too, and keep each date on one line.
   data.records and data.quotesAndCommitments come from
   app/lib/assume-liability-1/hooks.js.
 #}
@@ -41,7 +41,7 @@
   head: [
     { text: text.columns.reference, classes: "app-table__reference" },
     { text: text.columns.site, classes: "govuk-!-width-one-quarter" },
-    { text: text.columns.role },
+    { text: text.columns.role, classes: "app-table__kind" },
     { text: text.columns.lastUpdated, classes: "app-table__date" },
     { text: text.columns.status }
   ],
@@ -74,7 +74,7 @@
   head: [
     { text: text.otherColumns.reference, classes: "app-table__reference" },
     { text: text.otherColumns.site, classes: "govuk-!-width-one-quarter" },
-    { text: text.otherColumns.type },
+    { text: text.otherColumns.type, classes: "app-table__kind" },
     { text: text.otherColumns.date, classes: "app-table__date" },
     { html: '<span class="govuk-visually-hidden">' + text.otherColumns.action + '</span>' }
   ],
