@@ -14,7 +14,13 @@
 
 const fs = require('fs')
 const path = require('path')
-const { REPO_ROOT, git, hasGit, isHandoffDate } = require('./history')
+const {
+  REPO_ROOT,
+  git,
+  hasGit,
+  isHandoffDate,
+  findEntry
+} = require('./history')
 const { skipReload } = require('./watch')
 
 // How long a read of the committed journey.yaml is reused
@@ -48,63 +54,6 @@ function today(now = new Date()) {
  */
 function againNote(now = new Date()) {
   return `handed over again at ${pad(now.getHours())}:${pad(now.getMinutes())}`
-}
-
-const indentOf = (line) => line.match(/^\s*/)[0].length
-const isBlank = (line) => !line.trim()
-
-/**
- * Where a page's entry sits in the lines of journey.yaml: the index of its
- * `- id:` line, the index after its last line, the column its keys start
- * at and the index of its own `handoff:` line (or -1). Only entries in the
- * top-level `pages:` list count, so a preview variant's `- id:` is never
- * mistaken for a page. Null when the page has no entry.
- */
-function findEntry(lines, pageId) {
-  const pagesAt = lines.findIndex((line) => /^pages:\s*(#.*)?$/.test(line))
-  if (pagesAt === -1) {
-    return null
-  }
-  const idPattern = /^(\s*-\s+)id:\s*['"]?([^'"#\s]+)['"]?\s*(#.*)?$/
-  let dashIndent = null
-  for (let i = pagesAt + 1; i < lines.length; i++) {
-    const line = lines[i]
-    if (/^\S/.test(line) && !line.startsWith('#')) {
-      return null
-    }
-    const match = line.match(idPattern)
-    if (!match) {
-      continue
-    }
-    if (dashIndent === null) {
-      dashIndent = indentOf(line)
-    }
-    if (indentOf(line) !== dashIndent || match[2] !== pageId) {
-      continue
-    }
-    const keyColumn = match[1].length
-    // The entry runs until a line no deeper than its dash: the next entry,
-    // a comment above it or the next top-level key
-    let end = i + 1
-    while (
-      end < lines.length &&
-      (isBlank(lines[end]) || indentOf(lines[end]) > dashIndent)
-    ) {
-      end++
-    }
-    while (end > i + 1 && isBlank(lines[end - 1])) {
-      end--
-    }
-    const keyPattern = new RegExp(`^ {${keyColumn}}handoff:`)
-    let handoffAt = -1
-    for (let j = i + 1; j < end; j++) {
-      if (keyPattern.test(lines[j])) {
-        handoffAt = j
-      }
-    }
-    return { start: i, end, keyColumn, handoffAt }
-  }
-  return null
 }
 
 /**

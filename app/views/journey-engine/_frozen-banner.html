@@ -9,8 +9,10 @@
 #}
 {% if frozen %}
 {% set own = frozen.pages[page.id] %}
+{#- Viewing sample answers, the working copy shows the same ones -#}
+{% set workingQuery = ("?preview=1" + ("&variant=" + (variant | urlencode) if variant else "")) if preview else "" %}
 {% set frozenLinks %}
-  <a class="govuk-link" href="{{ frozen.liveBasePath }}/{{ page.id }}">Working copy</a>
+  <a class="govuk-link" href="{{ frozen.liveBasePath }}/{{ page.id }}{{ workingQuery }}">Working copy</a>
   {%- if frozen.commitUrl %} ·
   <a class="govuk-link" href="{{ frozen.commitUrl }}" target="_blank" rel="noopener">Commit {{ frozen.commit | truncate(7, true, '') }}</a>
   {%- endif %} ·

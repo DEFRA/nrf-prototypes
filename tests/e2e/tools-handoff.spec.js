@@ -135,6 +135,21 @@ test.describe('handoff history', () => {
     expect(handoffLine(text, 'start')).toBeNull()
   })
 
+  test('a preview variant id does not end the page entry', () => {
+    const text = [
+      'pages:',
+      '  - id: check-your-answers',
+      '    preview:',
+      '      variants:',
+      '        - id: business',
+      '          label: Business account',
+      '    handoff: 2026-10-22',
+      '  - id: confirmation'
+    ].join('\n')
+    expect(handoffLine(text, 'check-your-answers')).toBe(7)
+    expect(handoffLine(text, 'business')).toBeNull()
+  })
+
   test('pages without a handoff report nothing', () => {
     expect(pageHandoff(journey, { ...samplePage, handoff: null })).toBeNull()
   })

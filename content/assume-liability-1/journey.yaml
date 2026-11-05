@@ -440,10 +440,15 @@ pages:
     #       data: { signature: Trevor Barker }
 
   # PLACEHOLDER: the email each jointly liable person gets. Its link carries
-  # on to the assumption document.
+  # on to the assumption document. Until someone else is named it shows the
+  # sample people instead (the research link is on every assumption
+  # document, so it always has something to show).
   - id: joint-liability-email
     layout: email
-    guard: { key: liablePeople, isSet: true, redirect: assumption-document }
+    guard:
+      key: liablePeople
+      isSet: true
+      redirect: /assume-liability-1/joint-liability-email?preview=1
     back: []
     next: assumption-document
 

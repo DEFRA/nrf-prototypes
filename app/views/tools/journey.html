@@ -342,8 +342,18 @@
       <details class="wall-card__menu">
         <summary class="wall-card__menu-button" title="Options"><span class="govuk-visually-hidden">Options for {{ page.id }} ({{ variant.label }})</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="19" cy="12" r="2.2"/></svg></summary>
         <div class="wall-card__panel">
+          {#- The state as handed over: the frozen page with this state's
+              sample answers (see snapshots.js borrowSampleStates) -#}
+          {% if page.handoff and page.handoff.frozenUrl %}
+          <fieldset class="wall-card__views">
+            <legend>Show</legend>
+            <label><input type="radio" name="view-{{ page.id }}-{{ variant.id }}" value="live" checked data-url="{{ page.path }}?preview=1&variant={{ variant.id }}" data-copy="{{ publicBaseUrl }}{{ page.path }}?preview=1&variant={{ variant.id }}" data-export="/tools/journeys/{{ journey.id }}/screens/{{ page.id }}.jpg?variant={{ variant.id }}" data-label=""> Latest</label>
+            <label><input type="radio" name="view-{{ page.id }}-{{ variant.id }}" value="handoff" data-url="{{ page.handoff.frozenUrl }}?preview=1&variant={{ variant.id }}" data-copy="{{ publicBaseUrl }}{{ page.handoff.frozenUrl }}?preview=1&variant={{ variant.id }}" data-export="/tools/journeys/{{ journey.id }}/screens/{{ page.id }}.jpg?variant={{ variant.id }}&handoff=1" data-label="As handed over on {{ page.handoff.on }}"> As handed over on {{ page.handoff.on }}</label>
+          </fieldset>
+          {% endif %}
           <p class="wall-card__actions">
             <a class="govuk-link wall-card__open" href="{{ page.path }}?preview=1&variant={{ variant.id }}" target="_blank" rel="noopener">Open in new tab</a>
+            <button type="button" class="wall-card__copy wall-card__copy--text" data-copy-url="{{ publicBaseUrl }}{{ page.path }}?preview=1&variant={{ variant.id }}" data-feedback="" title="Copy link" aria-label="Copy link to {{ page.path }}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Copy link</button>
             {% if canExportScreens %}<label class="wall-card__stamp"><input type="checkbox" checked> Stamp with today's date</label><a class="wall-card__copy wall-card__copy--text wall-card__export" href="/tools/journeys/{{ journey.id }}/screens/{{ page.id }}.jpg?variant={{ variant.id }}" download data-feedback="" title="Export screen as JPG" aria-label="Export {{ page.id }} ({{ variant.label }}) as JPG"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export JPG</a>{% endif %}
           </p>
           <p class="wall-card__file">variant: {{ variant.id }}</p>
@@ -351,6 +361,7 @@
       </details>
     </div>
     <div class="wall-card__frame">
+      <span class="wall-card__showing" hidden></span>
       <iframe src="{{ page.path }}?preview=1&embed=1&variant={{ variant.id }}" loading="lazy" title="{{ page.heading }} ({{ variant.label }})" tabindex="-1"></iframe>
       <a class="wall-card__shield" href="{{ page.path }}?preview=1&variant={{ variant.id }}" target="_blank" rel="noopener" aria-label="Open {{ page.heading }} ({{ variant.label }}) in a new tab"></a>
     </div>
