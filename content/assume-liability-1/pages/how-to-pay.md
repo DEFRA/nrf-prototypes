@@ -13,6 +13,6 @@ button: Continue
 
 # How would you like to pay the nature restoration levy?
 
-:::details Paying in instalments
+:::inset
 [Learn about instalments (opens in new tab)](#) to find out if you are eligible.
 :::
