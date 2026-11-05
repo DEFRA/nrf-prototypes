@@ -168,6 +168,34 @@ function longDate(on) {
 }
 
 /**
+ * A page's sample states (`preview: variants:` in journey.yaml) are sample
+ * answers, not copy, so a state added to the live journey after the handoff
+ * still opens on the frozen page (`?preview=1&variant=<id>`), showing the
+ * copy as handed over with those answers. States the snapshot has keep
+ * their own answers.
+ */
+function borrowSampleStates(journey, live) {
+  for (const page of journey.pages) {
+    const livePage = live.byId.get(page.id)
+    const liveStates =
+      (livePage && livePage.preview && livePage.preview.variants) || []
+    if (!liveStates.length) {
+      continue
+    }
+    const preview = page.preview || {}
+    const structured = ['data', 'variants', 'label', 'description'].some(
+      (key) => key in preview
+    )
+    const own = structured ? preview : { data: preview }
+    const have = new Set((own.variants || []).map((state) => state.id))
+    const added = liveStates.filter((state) => !have.has(state.id))
+    if (added.length) {
+      page.preview = { ...own, variants: [...(own.variants || []), ...added] }
+    }
+  }
+}
+
+/**
  * A frozen copy of the journey, mounted at /handoffs/<journey>/<date>, or
  * { error, status } when there is nothing to show. `journey.frozen` carries
  * what the banner says.
@@ -228,6 +256,7 @@ function loadFrozenJourney(journeyId, date, pageId, options = {}) {
       status: 500
     }
   }
+  borrowSampleStates(journey, live)
   // Hook endpoints (the map's boundary check) are registered once on the
   // live journey; the frozen copy points at the same ones
   Object.assign(journey.routes, live.hookRoutes || {})
