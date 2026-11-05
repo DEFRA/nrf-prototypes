@@ -1,0 +1,7 @@
+// "Manage the nature restoration levy" (app/views/assume-liability-1/
+// manage-levy.html): both tables give the NRL reference this width, narrower
+// than any GOV.UK width class, so their columns line up
+
+.app-table__reference {
+  width: 16%;
+}
