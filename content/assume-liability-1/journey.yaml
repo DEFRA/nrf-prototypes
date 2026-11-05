@@ -20,7 +20,9 @@
 #
 # Behaviour that needs code (the signed-in account, the records, the list of
 # jointly liable people, the signatures) is in
-# app/lib/assume-liability-1/hooks.js.
+# app/lib/assume-liability-1/hooks.js. Any page after signing in can be
+# opened straight from its address: hooks.js signs the user in as the
+# participant (or stand-in) and opens NRL-123456 when no record is open.
 
 id: assume-liability-1
 name: Assume liability to pay the nature restoration levy
@@ -167,7 +169,6 @@ pages:
   - id: choose-organisation
     field: represent
     sessionKey: chosenOrganisation
-    guard: { key: account, isSet: true, redirect: sign-in-method }
     back: []
     handler: custom
     next: manage-levy
@@ -178,7 +179,6 @@ pages:
   # on the tools page (there is no form to submit).
   - id: manage-levy
     template: assume-liability-1/manage-levy
-    guard: &signed-in { key: account, isSet: true, redirect: sign-in-method }
     back: []
     next: developer-record
 
@@ -189,7 +189,6 @@ pages:
     template: assume-liability-1/developer-record
     field: assume-liability
     sessionKey: assumeLiability
-    guard: *signed-in
     handler: custom # opens the record named by ?ref=
     back: manage-levy
     next:
@@ -227,7 +226,6 @@ pages:
 
   # PLACEHOLDER: drop-out when someone else is already liable
   - id: someone-else-liable
-    guard: *signed-in
     back: developer-record
 
   - id: how-to-pay

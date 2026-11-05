@@ -33,6 +33,7 @@ const path = require('path')
 const yaml = require('js-yaml')
 const { interpolate } = require('../journey-engine/markdown')
 const { validatePage } = require('../journey-engine/validation')
+const { signedInPages } = require('../journey-engine/flow')
 
 const RECORDS_FILE = path.join(
   __dirname,
@@ -341,8 +342,34 @@ function forgetLiablePerson(data) {
   delete data.liablePersonIndex
 }
 
+/**
+ * A page past signing in opened straight from its address (the tools page,
+ * a bookmark, a research facilitator jumping ahead) signs the user in as
+ * the participant or stand-in, and a page about the record being assumed
+ * opens the primary user's granted record, rather than sending them back
+ * to sign in
+ */
 function context(ctx) {
-  refresh(ctx.data)
+  const { data, journey, page, preview } = ctx
+  if (!preview && !data.account) {
+    const pages = signedInPages(journey)
+    if (page.id === 'choose-organisation' || (pages && pages.has(page.id))) {
+      data.account = accountFor('', data)
+    }
+  }
+  refresh(data)
+  if (
+    !preview &&
+    !data.recordReference &&
+    page.guard &&
+    page.guard.key === 'recordReference'
+  ) {
+    const ready = data.records.find((record) => record.canAssume)
+    if (ready) {
+      switchRecord(data, ready.reference)
+      refresh(data)
+    }
+  }
 }
 
 // Sign out forgets the account and returns to "How do you want to sign in?"
