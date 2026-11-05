@@ -68,6 +68,7 @@ session:
   - assumeLiability
   - howToPay
   - acceptLevy
+  - agreePayInFull
   - jointlyLiable
   - liablePerson
   - liablePersonEmail
@@ -99,7 +100,8 @@ preview:
       organisationName: Fenland Homes
       organisationPage: choose-organisation
       email: trevor.barker@fenlandhomes.co.uk
-    recordReference: NRL-123456
+    # The record whose levy can be paid in instalments, as the sample does
+    recordReference: NRL-789012
     assumeLiability: 'yes'
     howToPay: instalments
     jointlyLiable: 'yes'
@@ -193,6 +195,14 @@ pages:
     handler: custom # opens the record named by ?ref=
     back: manage-levy
     next:
+      # A levy under £25,000 cannot be paid in instalments (hooks.js), so
+      # it skips "How would you like to pay?" and is paid in full
+      - when:
+          all:
+            - { key: assumeLiability, equals: 'yes' }
+            - { key: record.instalments, falsy: true }
+        goto: pay-in-full
+        set: { howToPay: one-off }
       - when: { key: assumeLiability, equals: 'yes' }
         goto: how-to-pay
       - when: { key: assumeLiability, equals: someone-else }
@@ -204,6 +214,12 @@ pages:
         The primary user's record, planning permission granted: the
         question shows at the bottom
       variants:
+        - id: pay-in-full
+          label: Levy under £25,000
+          description: >-
+            The primary user's record with a £24,000 levy: Yes goes straight
+            to agreeing to pay in full, without "How would you like to pay?"
+          data: { recordReference: NRL-123456 }
         - id: secondary-sign
           label: Secondary user, named as jointly liable
           description: >-
@@ -223,7 +239,7 @@ pages:
             The primary user's record once the assumption document has gone
             out to the jointly liable people
           data:
-            liabilityProgress: { NRL-123456: { status: signatures } }
+            liabilityProgress: { NRL-789012: { status: signatures } }
 
   # PLACEHOLDER: drop-out when someone else is already liable
   - id: someone-else-liable
@@ -233,6 +249,7 @@ pages:
     field: how-to-pay
     sessionKey: howToPay
     guard: &assuming { key: recordReference, isSet: true, redirect: manage-levy }
+    handler: custom # skipped for a levy under £25,000, see hooks.js
     back: developer-record
     changeable: true
     next:
@@ -267,6 +284,18 @@ pages:
         set: { howToPay: instalments, acceptLevy: null }
       - goto: anyone-else
 
+  # A levy under £25,000 is paid in full: the same terms as
+  # one-off-payment-details, agreed with a single checkbox as there is
+  # nothing else to choose
+  - id: pay-in-full
+    field: agree-pay-in-full
+    sessionKey: agreePayInFull
+    guard: *assuming
+    back: developer-record
+    next: anyone-else
+    preview:
+      data: { recordReference: NRL-123456, howToPay: one-off }
+
   # No forgets anyone added before (hooks.js). Yes goes on adding people,
   # or to the list when there are some already.
   - id: anyone-else
@@ -275,6 +304,8 @@ pages:
     guard: *assuming
     handler: custom
     back:
+      - when: { key: record.instalments, falsy: true }
+        goto: pay-in-full
       - when: { key: howToPay, equals: instalments }
         goto: instalment-details
       - goto: one-off-payment-details

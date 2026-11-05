@@ -41,6 +41,9 @@ const RECORDS_FILE = path.join(
 )
 const REFERENCE = /^NRL-\d{6}$/i
 
+// A levy under this many pounds is paid in full: no instalments
+const INSTALMENTS_FROM = 25000
+
 // The stand-in developer, until the facilitator gives the participant's
 // details
 const MOCK_NAME = 'Trevor Barker'
@@ -52,6 +55,7 @@ const ANSWER_KEYS = [
   'assumeLiability',
   'howToPay',
   'acceptLevy',
+  'agreePayInFull',
   'jointlyLiable',
   'liablePerson',
   'liablePersonEmail',
@@ -237,6 +241,15 @@ function statusFor(store, value, signatories) {
 }
 
 /**
+ * Whether a levy can be paid in instalments. A placeholder amount
+ * ('X,XXX') can, as every record could before the amounts were filled in.
+ */
+function offersInstalments(levyAmount) {
+  const pounds = Number(String(levyAmount || '').replace(/[£,\s]/g, ''))
+  return !Number.isFinite(pounds) || pounds >= INSTALMENTS_FROM
+}
+
+/**
  * A record from records.yaml as the pages show it: who signs, its status
  * (moved on by the journey: the primary user's record as they assume
  * liability, a secondary user's once they have signed), dates written
@@ -270,6 +283,8 @@ function recordFor(raw, store, data) {
     // Only the primary user of a record whose planning permission is
     // granted is asked to assume liability
     canAssume: primary && statusValue === 'ready',
+    // A levy under £25,000 skips "How would you like to pay?" (journey.yaml)
+    instalments: offersInstalments(raw.levyAmount),
     permissionGranted: formatDate(raw.permissionGranted),
     liabilityAssumed: formatDate(progress.assumedOn || raw.liabilityAssumed),
     lastUpdated: tableDate(
@@ -500,6 +515,18 @@ const manageLevy = {
       res.redirect(`${REQUEST_TO_USE}/commitment-certificate?_from=manage-levy`)
     })
     return routes
+  }
+}
+
+// A levy under £25,000 is never asked how it will be paid (its review
+// page's Change link included): it is paid in full
+const howToPay = {
+  load(ctx) {
+    const { data, preview, journey } = ctx
+    if (!preview && data.record && !data.record.instalments) {
+      data.howToPay = 'one-off'
+      return { redirect: journey.routes.PAY_IN_FULL }
+    }
   }
 }
 
@@ -753,6 +780,7 @@ module.exports = {
   'choose-organisation': chooseOrganisation,
   'manage-levy': manageLevy,
   'developer-record': developerRecord,
+  'how-to-pay': howToPay,
   'anyone-else': anyoneElse,
   'liable-person-name': liablePersonName,
   'liable-person-email': liablePersonEmail,

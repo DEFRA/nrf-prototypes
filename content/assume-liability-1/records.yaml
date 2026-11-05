@@ -27,6 +27,9 @@
 #              with no `developer` shows the signed-in user's organisation.
 #              `boundary` is the red line boundary, an open ring of
 #              [longitude, latitude] pairs. Dates are YYYY-MM-DD.
+#              A `levyAmount` under £25,000 cannot be paid in
+#              instalments: assuming liability skips "How would you like
+#              to pay?" and agrees to pay in full (hooks.js).
 #              A secondary user's record at `sign` lists its assumption
 #              document's `signatories` in order: each a `fullName`,
 #              `organisation` (the signed-in user's when left out), `email`
@@ -53,7 +56,7 @@ records:
     units: 120
     lpa: South Norfolk Council
     edp: *edp
-    levyAmount: 'X,XXX'
+    levyAmount: '24,000'
     permissionGranted: 2026-10-28
     lastUpdated: 2026-10-28
     boundary:
@@ -72,6 +75,48 @@ records:
       - [1.104662, 52.575947]
       - [1.104472, 52.575997]
       - [1.103847, 52.574914]
+
+  # A bigger development: its levy can be paid in instalments
+  - reference: NRL-789012
+    role: primary
+    status: ready
+    site: Land west of the B1146, Dereham
+    planningReference: 2026/0731/OUT
+    planningType: Outline planning permission
+    units: 250
+    lpa: Breckland Council
+    edp: *edp
+    levyAmount: '50,000'
+    permissionGranted: 2026-10-21
+    lastUpdated: 2026-10-21
+    boundary:
+      - [0.917633, 52.673934]
+      - [0.917666, 52.673779]
+      - [0.919442, 52.673589]
+      - [0.922919, 52.673172]
+      - [0.923625, 52.673096]
+      - [0.923912, 52.673087]
+      - [0.923998, 52.673162]
+      - [0.924029, 52.673416]
+      - [0.924144, 52.673659]
+      - [0.924686, 52.674267]
+      - [0.924938, 52.674493]
+      - [0.925630, 52.674961]
+      - [0.925787, 52.675108]
+      - [0.925837, 52.675197]
+      - [0.925853, 52.675303]
+      - [0.925789, 52.675890]
+      - [0.925516, 52.676544]
+      - [0.924785, 52.676401]
+      - [0.922453, 52.675866]
+      - [0.920462, 52.675496]
+      - [0.919991, 52.675446]
+      - [0.919224, 52.675487]
+      - [0.918543, 52.675393]
+      - [0.917731, 52.675349]
+      - [0.917702, 52.675275]
+      - [0.917723, 52.675136]
+      - [0.917643, 52.674663]
 
   # Priya Shah has named the signed-in user as jointly liable: they sign in,
   # open it and sign the assumption document
