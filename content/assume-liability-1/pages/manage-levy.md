@@ -13,8 +13,8 @@ text:
     role: Your role
     lastUpdated: Last updated
     status: Status
-  primary: Main liable person
-  secondary: Other liable person
+  primary: Lead developer
+  secondary: Developer
   # The quotes and commitments under the records (records.yaml)
   otherCaption: Your quotes and commitments
   otherColumns:
