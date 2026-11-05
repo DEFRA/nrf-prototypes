@@ -79,6 +79,7 @@ session:
   - youSigned
   - signatories
   - reminderSent
+  - justSigned
   - sharedLiability
   - recordAnswers
   - payerDetails
@@ -349,8 +350,9 @@ pages:
   # the main liable person's record everyone else's row has a Remind link
   # (a mock: the page says a reminder was sent). Continue shows once
   # everyone has signed. User research aids in the
-  # footer: the email the jointly liable people get, and a link that signs
-  # for them all (not for the user).
+  # footer: the email the jointly liable people get, a link that signs
+  # for them all (not for the user) and one that takes the user's own
+  # signature off so they can sign again.
   - id: assumption-document
     template: assume-liability-1/assumption-document
     guard: *assuming
@@ -368,6 +370,9 @@ pages:
       - text: Everyone has signed
         href: assumption-document?_signed=all
         newTab: false
+      - text: Remove my signature
+        href: assumption-document?_unsign=you
+        newTab: false
     # The Continue to sign button (in the template)
     links:
       - goto: sign-assumption
@@ -382,8 +387,9 @@ pages:
         - id: you-signed
           label: Signed by the user, waiting for others
           description: >-
-            The user has signed; the two jointly liable people have not
-          data: { youSigned: 2026-11-02 }
+            Back from signing: the user has signed, so a success banner
+            says so; the two jointly liable people have not
+          data: { youSigned: 2026-11-02, justSigned: true }
         - id: signed
           label: Everyone has signed
           description: >-
@@ -449,7 +455,15 @@ pages:
     next:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
-      - goto: review-liability
+      - goto: read-this
+
+  # PLACEHOLDER copy, adapted from the request to use journey's page of the
+  # same name: what assuming liability commits the user to, read before
+  # checking the answers
+  - id: read-this
+    guard: { key: payerDetails, isSet: true, redirect: add-payment-details }
+    back: add-payment-details
+    next: review-liability
 
   # The payment details, then everyone liable: a table when others are
   # jointly liable, the user's own details when it is them alone
@@ -457,7 +471,7 @@ pages:
     template: assume-liability-1/review-liability
     guard: { key: payerDetails, isSet: true, redirect: add-payment-details }
     handler: custom # marks the record's liability assumed, see hooks.js
-    back: add-payment-details
+    back: read-this
     next: confirmation
     preview:
       data:

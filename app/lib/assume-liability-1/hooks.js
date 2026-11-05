@@ -655,9 +655,10 @@ const liablePeopleCheck = {
   }
 }
 
-// The research link that signs for everyone else on the document
+// The research links that sign for everyone else on the document
 // (?_signed=all; the user signs for themselves on sign-assumption, from
-// Continue to sign) and each Remind link on the main liable
+// Continue to sign) and that take the user's own signature off it again
+// (?_unsign=you), and each Remind link on the main liable
 // person's record (?_remind=<n>, a mock: the page says a reminder went to
 // them). Continue only once everyone has
 // signed.
@@ -671,6 +672,12 @@ const assumptionDocument = {
     const reminded = data.signatories[Number.parseInt(query._remind, 10)]
     if (reminded && !reminded.you && data.record && data.record.primary) {
       data.reminderSent = reminded.fullName
+      return { redirect: page.path }
+    }
+    if (query._unsign === 'you') {
+      delete data.youSigned
+      delete data.signAgreement
+      delete data.signature
       return { redirect: page.path }
     }
     if (query._signed !== 'all') {
@@ -703,9 +710,11 @@ const assumptionDocument = {
       data.signatories
     )
     model.personWaiting = statusFor(store, 'signatures', [{}])
-    // Shown once, after a Remind link
+    // Shown once, after a Remind link or signing
     model.reminderSent = data.reminderSent
     delete data.reminderSent
+    model.justSigned = Boolean(data.justSigned)
+    delete data.justSigned
   },
   // Only the primary user goes on to the payment details
   process(ctx) {
@@ -720,10 +729,12 @@ const assumptionDocument = {
   }
 }
 
-// Agreeing signs the assumption document for the user
+// Agreeing signs the assumption document for the user, who returns to
+// it with a success banner
 const signAssumption = {
   process(ctx) {
     ctx.data.youSigned = today()
+    ctx.data.justSigned = true
   }
 }
 
