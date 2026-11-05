@@ -121,6 +121,22 @@ function formatDate(value, month = 'long') {
   }).format(date)
 }
 
+const MONTHS = 'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec'.split(' ')
+
+// DD MMM YYYY (02 Nov 2026), as the records table writes it. Built by hand
+// since Intl's en-GB short month is "Sept"
+function tableDate(value) {
+  if (!value) {
+    return ''
+  }
+  const date = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return String(value)
+  }
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${day} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`
+}
+
 function today() {
   return new Date().toISOString().slice(0, 10)
 }
@@ -256,7 +272,7 @@ function recordFor(raw, store, data) {
     canAssume: primary && statusValue === 'ready',
     permissionGranted: formatDate(raw.permissionGranted),
     liabilityAssumed: formatDate(progress.assumedOn || raw.liabilityAssumed),
-    lastUpdated: formatDate(
+    lastUpdated: tableDate(
       answers.youSigned || progress.updatedOn || raw.lastUpdated
     ),
     boundary: { coordinates: raw.boundary || [] }
@@ -273,14 +289,14 @@ function quotesAndCommitmentsFor(store) {
     type: 'quote',
     reference: quote.reference,
     site: quote.site,
-    date: formatDate(quote.created),
+    date: tableDate(quote.created),
     href: `${REQUEST_TO_USE}/quote-reference?_nrl=${encodeURIComponent(quote.reference)}`
   }))
   const commitments = store.commitments.map((commitment) => ({
     type: 'commitment',
     reference: commitment.reference,
     site: commitment.site,
-    date: formatDate(commitment.issued)
+    date: tableDate(commitment.issued)
   }))
   return [...quotes, ...commitments]
 }
