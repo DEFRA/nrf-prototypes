@@ -270,6 +270,8 @@ The error summary lists one link per field that is missing. A `link` or `destruc
 
 Any key you leave out falls back to `required`.
 
+A `form` field with `autocomplete: postal-code` is checked against the shape of a full UK postcode only when its `errors:` gives a `format` message (`format: Enter a full UK postcode`). Lower case and missing spaces are accepted, and the answer is kept in capitals with one space (`sw1a1aa` becomes `SW1A 1AA`).
+
 ### Check your answers rows
 
 ```yaml

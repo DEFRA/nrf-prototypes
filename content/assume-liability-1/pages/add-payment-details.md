@@ -33,6 +33,7 @@ fields:
     autocomplete: postal-code
     errors:
       required: Enter a postcode
+      format: Enter a full UK postcode
   - name: company-registration-number
     label: Company Registration Number (CRN)
     optional: true

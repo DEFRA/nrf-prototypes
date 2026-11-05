@@ -32,6 +32,7 @@ fields:
     autocomplete: postal-code
     errors:
       required: Enter postcode
+      format: Enter a full UK postcode
 button: Confirm
 ---
 
