@@ -15,3 +15,34 @@
 .app-table__date {
   white-space: nowrap;
 }
+
+// On a phone each row stacks into a block, with its column heading (the
+// cell's data-label) beside each value, as NHS.UK's responsive table does.
+// The heading row stays for screen readers. A cell with no data-label (the
+// quote or commitment's link) takes the full width.
+@include govuk-media-query($until: tablet) {
+  .app-table--stacked {
+    .govuk-table__head {
+      @include govuk-visually-hidden;
+    }
+
+    .govuk-table__row {
+      display: block;
+      padding: govuk-spacing(2) 0;
+      border-bottom: 1px solid $govuk-border-colour;
+    }
+
+    .govuk-table__cell {
+      display: flex;
+      padding: govuk-spacing(1) 0;
+      border-bottom: 0;
+    }
+
+    .govuk-table__cell[data-label]::before {
+      content: attr(data-label);
+      flex: 0 0 45%;
+      padding-right: govuk-spacing(2);
+      font-weight: $govuk-font-weight-bold;
+    }
+  }
+}

@@ -6,7 +6,9 @@
   (a quote's to request to use the levy, a commitment's to its
   certificate). Either table is left out when it would be empty. Both
   give their reference, site and role or type columns the same widths so
-  the dates line up too, and keep each date on one line.
+  the dates line up too, and keep each date on one line. On a phone each
+  row stacks, every value under its column heading (data-label, see
+  app/assets/sass/_assume-liability.scss).
   data.records and data.quotesAndCommitments come from
   app/lib/assume-liability-1/hooks.js.
 #}
@@ -27,17 +29,18 @@
 {% set rows = [] %}
 {% for record in data.records %}
   {% set rows = (rows.push([
-    { html: '<a class="govuk-link" href="' + routes.DEVELOPER_RECORD + '?ref=' + (record.reference | urlencode) + '">' + record.reference + '</a>' },
-    { text: record.site },
-    { text: text.primary if record.primary else text.secondary },
-    { text: record.lastUpdated, classes: "app-table__date" },
-    { html: '<strong class="govuk-tag govuk-tag--' + record.status.colour + '">' + (record.status.label | escape) + '</strong>' }
+    { html: '<a class="govuk-link" href="' + routes.DEVELOPER_RECORD + '?ref=' + (record.reference | urlencode) + '">' + record.reference + '</a>', attributes: { "data-label": text.columns.reference } },
+    { text: record.site, attributes: { "data-label": text.columns.site } },
+    { text: text.primary if record.primary else text.secondary, attributes: { "data-label": text.columns.role } },
+    { text: record.lastUpdated, classes: "app-table__date", attributes: { "data-label": text.columns.lastUpdated } },
+    { html: '<strong class="govuk-tag govuk-tag--' + record.status.colour + '">' + (record.status.label | escape) + '</strong>', attributes: { "data-label": text.columns.status } }
   ]), rows) %}
 {% endfor %}
 
 {{ govukTable({
   caption: text.tableCaption,
   captionClasses: "govuk-table__caption--m",
+  classes: "app-table--stacked",
   head: [
     { text: text.columns.reference, classes: "app-table__reference" },
     { text: text.columns.site, classes: "govuk-!-width-one-quarter" },
@@ -60,10 +63,10 @@
     {% set linkText = text.viewCertificate %}
   {% endif %}
   {% set otherRows = (otherRows.push([
-    { text: item.reference },
-    { text: item.site },
-    { text: text.types[item.type] },
-    { text: item.date, classes: "app-table__date" },
+    { text: item.reference, attributes: { "data-label": text.otherColumns.reference } },
+    { text: item.site, attributes: { "data-label": text.otherColumns.site } },
+    { text: text.types[item.type], attributes: { "data-label": text.otherColumns.type } },
+    { text: item.date, classes: "app-table__date", attributes: { "data-label": text.otherColumns.date } },
     { html: '<a class="govuk-link" href="' + href + '">' + linkText + '<span class="govuk-visually-hidden"> ' + (text.linkHidden | replace("{reference}", item.reference)) + '</span></a>' }
   ]), otherRows) %}
 {% endfor %}
@@ -71,6 +74,7 @@
 {{ govukTable({
   caption: text.otherCaption,
   captionClasses: "govuk-table__caption--m",
+  classes: "app-table--stacked",
   head: [
     { text: text.otherColumns.reference, classes: "app-table__reference" },
     { text: text.otherColumns.site, classes: "govuk-!-width-one-quarter" },
