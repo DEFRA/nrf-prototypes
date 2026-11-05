@@ -3,16 +3,16 @@ type: radios
 # The levy details sit between the question and the options
 bodyFirst: true
 options:
-  - label: Yes, accept this amount and agree to pay a one-off payment
+  - label: Yes, I agree with these payment terms and will pay in full
     value: 'Yes'
   - label: No, pay in instalments
     value: 'No'
 errors:
-  required: Select yes if you accept the nature restoration levy amount and will pay a one-off payment
-button: Continue
+  required: Select yes if you agree with these payment terms and will pay in full
+button: Confirm
 ---
 
-# Do you accept this nature restoration levy amount?
+# Confirm these payment terms
 
 The amount of the levy may have changed since your commitment. The charging schedule may have been updated or inflation might have been applied.
 
