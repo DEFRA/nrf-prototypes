@@ -50,9 +50,10 @@ test.describe('frozen copy of a handoff', () => {
     await expect(banner).toContainText(
       `handed over on ${copy.frozen.pages[frozen.id].onText}`
     )
+    // Viewing sample answers, the working copy shows them too
     await expect(
       banner.getByRole('link', { name: 'Working copy' })
-    ).toHaveAttribute('href', `${journey.basePath}/${frozen.id}`)
+    ).toHaveAttribute('href', `${journey.basePath}/${frozen.id}?preview=1`)
     await expect(page.locator('h1').first()).toContainText(
       plain(copy.byId.get(frozen.id).content.heading)
     )
@@ -115,7 +116,7 @@ test.describe('frozen copy of a handoff', () => {
       await expect(banner).not.toContainText('Copy as handed over')
       await expect(
         banner.getByRole('link', { name: 'Working copy' })
-      ).toHaveAttribute('href', `${journey.basePath}/${other.id}`)
+      ).toHaveAttribute('href', `${journey.basePath}/${other.id}?preview=1`)
     }
   })
 
