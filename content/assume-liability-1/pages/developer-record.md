@@ -39,7 +39,7 @@ options:
     value: 'yes'
   - label: No, do this later
     value: later
-  - label: No, someone else is already liable to pay
+  - label: No, Someone else needs to assume liability
     value: someone-else
 errors:
   required: Select if you are ready to assume liability to pay the nature restoration levy
