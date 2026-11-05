@@ -242,16 +242,17 @@ pages:
       - goto: one-off-payment-details
 
   # Do you accept this levy amount? The same copy on both for now. No
-  # returns to the records until there is a page for deleting the
-  # commitment.
+  # switches to the other way of paying and asks again there (the answer
+  # is cleared so the other page starts empty).
   - id: instalment-details
     field: accept-levy
     sessionKey: acceptLevy
     guard: *assuming
     back: how-to-pay
-    next: &accept-levy
+    next:
       - when: { key: acceptLevy, equals: 'No' }
-        goto: manage-levy
+        goto: one-off-payment-details
+        set: { howToPay: one-off, acceptLevy: null }
       - goto: anyone-else
 
   - id: one-off-payment-details
@@ -259,7 +260,11 @@ pages:
     sessionKey: acceptLevy
     guard: *assuming
     back: how-to-pay
-    next: *accept-levy
+    next:
+      - when: { key: acceptLevy, equals: 'No' }
+        goto: instalment-details
+        set: { howToPay: instalments, acceptLevy: null }
+      - goto: anyone-else
 
   # No forgets anyone added before (hooks.js). Yes goes on adding people,
   # or to the list when there are some already.
