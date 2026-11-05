@@ -5,7 +5,8 @@
   then one of their quotes and commitments, each with a link to use it
   (a quote's to request to use the levy, a commitment's to its
   certificate). Either table is left out when it would be empty. Both
-  give their reference and site columns the same widths so they line up.
+  give their reference and site columns the same widths so they line up,
+  and keep each date on one line.
   data.records and data.quotesAndCommitments come from
   app/lib/assume-liability-1/hooks.js.
 #}
@@ -29,7 +30,7 @@
     { html: '<a class="govuk-link" href="' + routes.DEVELOPER_RECORD + '?ref=' + (record.reference | urlencode) + '">' + record.reference + '</a>' },
     { text: record.site },
     { text: text.primary if record.primary else text.secondary },
-    { text: record.lastUpdated },
+    { text: record.lastUpdated, classes: "app-table__date" },
     { html: '<strong class="govuk-tag govuk-tag--' + record.status.colour + '">' + (record.status.label | escape) + '</strong>' }
   ]), rows) %}
 {% endfor %}
@@ -39,9 +40,9 @@
   captionClasses: "govuk-table__caption--m",
   head: [
     { text: text.columns.reference, classes: "app-table__reference" },
-    { text: text.columns.site, classes: "govuk-!-width-one-third" },
+    { text: text.columns.site, classes: "govuk-!-width-one-quarter" },
     { text: text.columns.role },
-    { text: text.columns.lastUpdated },
+    { text: text.columns.lastUpdated, classes: "app-table__date" },
     { text: text.columns.status }
   ],
   rows: rows
@@ -62,7 +63,7 @@
     { text: item.reference },
     { text: item.site },
     { text: text.types[item.type] },
-    { text: item.date },
+    { text: item.date, classes: "app-table__date" },
     { html: '<a class="govuk-link" href="' + href + '">' + linkText + '<span class="govuk-visually-hidden"> ' + (text.linkHidden | replace("{reference}", item.reference)) + '</span></a>' }
   ]), otherRows) %}
 {% endfor %}
@@ -72,9 +73,9 @@
   captionClasses: "govuk-table__caption--m",
   head: [
     { text: text.otherColumns.reference, classes: "app-table__reference" },
-    { text: text.otherColumns.site, classes: "govuk-!-width-one-third" },
+    { text: text.otherColumns.site, classes: "govuk-!-width-one-quarter" },
     { text: text.otherColumns.type },
-    { text: text.otherColumns.date },
+    { text: text.otherColumns.date, classes: "app-table__date" },
     { html: '<span class="govuk-visually-hidden">' + text.otherColumns.action + '</span>' }
   ],
   rows: otherRows
