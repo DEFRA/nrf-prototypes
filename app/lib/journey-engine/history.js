@@ -78,26 +78,71 @@ function hasGit(options = {}) {
   return gitAvailable
 }
 
+const indentOf = (line) => line.match(/^\s*/)[0].length
+const isBlank = (line) => !line.trim()
+
+/**
+ * Where a page's entry sits in the lines of journey.yaml: the index of its
+ * `- id:` line, the index after its last line, the column its keys start
+ * at and the index of its own `handoff:` line (or -1). Only entries in the
+ * top-level `pages:` list count, so a preview variant's `- id:` is never
+ * mistaken for a page. Null when the page has no entry.
+ */
+function findEntry(lines, pageId) {
+  const pagesAt = lines.findIndex((line) => /^pages:\s*(#.*)?$/.test(line))
+  if (pagesAt === -1) {
+    return null
+  }
+  const idPattern = /^(\s*-\s+)id:\s*['"]?([^'"#\s]+)['"]?\s*(#.*)?$/
+  let dashIndent = null
+  for (let i = pagesAt + 1; i < lines.length; i++) {
+    const line = lines[i]
+    if (/^\S/.test(line) && !line.startsWith('#')) {
+      return null
+    }
+    const match = line.match(idPattern)
+    if (!match) {
+      continue
+    }
+    if (dashIndent === null) {
+      dashIndent = indentOf(line)
+    }
+    if (indentOf(line) !== dashIndent || match[2] !== pageId) {
+      continue
+    }
+    const keyColumn = match[1].length
+    // The entry runs until a line no deeper than its dash: the next entry,
+    // a comment above it or the next top-level key
+    let end = i + 1
+    while (
+      end < lines.length &&
+      (isBlank(lines[end]) || indentOf(lines[end]) > dashIndent)
+    ) {
+      end++
+    }
+    while (end > i + 1 && isBlank(lines[end - 1])) {
+      end--
+    }
+    const keyPattern = new RegExp(`^ {${keyColumn}}handoff:`)
+    let handoffAt = -1
+    for (let j = i + 1; j < end; j++) {
+      if (keyPattern.test(lines[j])) {
+        handoffAt = j
+      }
+    }
+    return { start: i, end, keyColumn, handoffAt }
+  }
+  return null
+}
+
 /**
  * The 1-based line number of the `handoff:` key inside a page's entry in
  * journey.yaml, or null when the page has none. Works on the raw text so
  * the line can be blamed.
  */
 function handoffLine(yamlText, pageId) {
-  const lines = yamlText.split('\n')
-  const idPattern = /^\s*-\s+id:\s*['"]?([^'"#\s]+)['"]?\s*(#.*)?$/
-  let inside = false
-  for (let i = 0; i < lines.length; i++) {
-    const match = lines[i].match(idPattern)
-    if (match) {
-      inside = match[1] === pageId
-      continue
-    }
-    if (inside && /^\s+handoff:/.test(lines[i])) {
-      return i + 1
-    }
-  }
-  return null
+  const entry = findEntry(yamlText.split('\n'), pageId)
+  return entry && entry.handoffAt !== -1 ? entry.handoffAt + 1 : null
 }
 
 /**
@@ -338,6 +383,7 @@ module.exports = {
   datedUrlFor,
   git,
   hasGit,
+  findEntry,
   handoffLine,
   tagCommit,
   pageHandoff,
