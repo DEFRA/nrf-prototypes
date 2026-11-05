@@ -24,6 +24,8 @@ fields:
     optional: true
     width: 10
     autocomplete: postal-code
+    errors:
+      format: Enter a full UK postcode
 button: Continue
 ---
 

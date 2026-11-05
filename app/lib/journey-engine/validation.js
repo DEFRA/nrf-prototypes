@@ -7,7 +7,8 @@
  *   invalid    not a number
  *   whole      not a whole number
  *   min, max   number out of range
- *   format     email in the wrong shape
+ *   format     email in the wrong shape, or not a full UK postcode in a
+ *              form field with `autocomplete: postal-code`
  *   tooLong    more characters than a textarea's maxLength
  *   tooLarge   file over the size limit
  *   wrongType  file extension not allowed
@@ -106,8 +107,24 @@ function fieldMessage(field, key) {
   )
 }
 
+// A full UK postcode: outward code (A9, A99, A9A, AA9, AA99, AA9A) then
+// inward code (9AA), in any case, with or without spaces
+const UK_POSTCODE = /^[a-z]{1,2}\d[a-z\d]?\d[a-z]{2}$/i
+
+// Only checked when the field's `errors:` gives the `format` message
+function isCheckedPostcode(field) {
+  return field.autocomplete === 'postal-code' && field.errors.format
+}
+
+// Upper case with one space before the inward code: "sw1a1aa" → "SW1A 1AA"
+function formatPostcode(raw) {
+  const compact = raw.replace(/\s+/g, '').toUpperCase()
+  return `${compact.slice(0, -3)} ${compact.slice(-3)}`
+}
+
 /**
- * A `type: form` page: every non-optional field must be filled in. Returns
+ * A `type: form` page: every non-optional field must be filled in, and a
+ * postcode field with a `format` error must hold a full UK postcode. Returns
  * every problem so the error summary can list one link per field, and the
  * submitted values so the form can be redrawn with them.
  */
@@ -121,6 +138,15 @@ function validateForm(page, body) {
         field: field.name,
         message: fieldMessage(field, 'required')
       })
+    } else if (raw && isCheckedPostcode(field)) {
+      if (UK_POSTCODE.test(raw.replace(/\s+/g, ''))) {
+        value[field.key] = formatPostcode(raw)
+      } else {
+        errors.push({
+          field: field.name,
+          message: field.errors.format
+        })
+      }
     } else if (raw) {
       value[field.key] = raw
     }
