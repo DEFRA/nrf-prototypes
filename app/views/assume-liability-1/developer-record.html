@@ -26,8 +26,13 @@
   {# The red line boundary sits between the development and developer details #}
   {% if loop.last %}{{ content.html | safe }}{% endif %}
   {% if group.heading %}<h2 class="govuk-heading-m">{{ group.heading }}</h2>{% endif %}
+  {# The levy comes first: below it, warn that its amount may have changed #}
+  {% set levyWarning = loop.first and text.levyWarning %}
   {% if group.rows | length %}
-    {{ govukSummaryList({ classes: "govuk-!-margin-bottom-9", rows: group.rows }) }}
+    {{ govukSummaryList({ classes: "govuk-!-margin-bottom-6" if levyWarning else "govuk-!-margin-bottom-9", rows: group.rows }) }}
+  {% endif %}
+  {% if levyWarning %}
+    {{ govukWarningText({ text: text.levyWarning, classes: "govuk-!-margin-bottom-9" }) }}
   {% endif %}
 {% endfor %}
 

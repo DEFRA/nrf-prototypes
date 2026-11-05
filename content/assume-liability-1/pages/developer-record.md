@@ -45,6 +45,8 @@ errors:
   required: Select if you are ready to assume liability to pay the nature restoration levy
 button: Continue
 text:
+  # Below the Levy rows
+  levyWarning: The amount of the levy may have changed since your commitment. The charging schedule may have been updated or inflation might have been applied.
   question: Are you ready to assume liability to pay the nature restoration levy?
   # In place of the question; {name} is the primary user
   secondary: '{name} is the primary user for this developer record. Only they can assume liability to pay the nature restoration levy.'
