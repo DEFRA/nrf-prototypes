@@ -4,7 +4,8 @@
   primary or secondary user of, each NRL reference linking to its record,
   then one of their quotes and commitments, each with a link to use it
   (a quote's to request to use the levy, a commitment's to its
-  certificate). Either table is left out when it would be empty.
+  certificate). Either table is left out when it would be empty. Both
+  give their reference and site columns the same widths so they line up.
   data.records and data.quotesAndCommitments come from
   app/lib/assume-liability-1/hooks.js.
 #}
@@ -37,8 +38,8 @@
   caption: text.tableCaption,
   captionClasses: "govuk-table__caption--m",
   head: [
-    { text: text.columns.reference },
-    { text: text.columns.site },
+    { text: text.columns.reference, classes: "govuk-!-width-one-quarter" },
+    { text: text.columns.site, classes: "govuk-!-width-one-third" },
     { text: text.columns.role },
     { text: text.columns.lastUpdated },
     { text: text.columns.status }
@@ -70,8 +71,8 @@
   caption: text.otherCaption,
   captionClasses: "govuk-table__caption--m",
   head: [
-    { text: text.otherColumns.reference },
-    { text: text.otherColumns.site },
+    { text: text.otherColumns.reference, classes: "govuk-!-width-one-quarter" },
+    { text: text.otherColumns.site, classes: "govuk-!-width-one-third" },
     { text: text.otherColumns.type },
     { text: text.otherColumns.date },
     { html: '<span class="govuk-visually-hidden">' + text.otherColumns.action + '</span>' }
