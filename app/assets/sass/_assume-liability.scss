@@ -44,5 +44,12 @@
       padding-right: govuk-spacing(2);
       font-weight: $govuk-font-weight-bold;
     }
+
+    // The status tags match the table's smaller text
+    // (govuk-table--small-text-until-tablet)
+    .govuk-tag {
+      font-size: inherit;
+      line-height: inherit;
+    }
   }
 }

@@ -20,7 +20,7 @@
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-two-thirds">
     <h1 class="govuk-heading-l govuk-!-margin-bottom-3">{{ content.heading }}</h1>
-    <p class="govuk-body">{{ content.hint }}</p>
+    <p class="govuk-body govuk-!-margin-bottom-8">{{ content.hint }}</p>
     {{ content.html | safe }}
   </div>
 </div>
@@ -40,7 +40,7 @@
 {{ govukTable({
   caption: text.tableCaption,
   captionClasses: "govuk-table__caption--m",
-  classes: "app-table--stacked",
+  classes: "app-table--stacked govuk-table--small-text-until-tablet govuk-!-margin-bottom-9",
   head: [
     { text: text.columns.reference, classes: "app-table__reference" },
     { text: text.columns.site, classes: "govuk-!-width-one-quarter" },
@@ -74,7 +74,7 @@
 {{ govukTable({
   caption: text.otherCaption,
   captionClasses: "govuk-table__caption--m",
-  classes: "app-table--stacked",
+  classes: "app-table--stacked govuk-table--small-text-until-tablet govuk-!-margin-bottom-9",
   head: [
     { text: text.otherColumns.reference, classes: "app-table__reference" },
     { text: text.otherColumns.site, classes: "govuk-!-width-one-quarter" },
