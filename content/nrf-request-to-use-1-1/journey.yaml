@@ -912,7 +912,7 @@ pages:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: review-developer-details
-    handoff: 2026-11-02
+    handoff: 2026-11-05
 
   - id: review-developer-details
     guard: { key: developerDetails, isSet: true, redirect: developer-details }
@@ -937,7 +937,7 @@ pages:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: review-your-details
-    handoff: 2026-11-02
+    handoff: 2026-11-05
 
   - id: individual-address
     sessionKey: yourAddress
@@ -952,7 +952,7 @@ pages:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
       - goto: review-your-details
-    handoff: 2026-10-22
+    handoff: 2026-11-05
 
   - id: review-your-details
     guard: { key: yourAddress, isSet: true, redirect: org-address }
