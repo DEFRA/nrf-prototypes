@@ -65,11 +65,9 @@ Inflation adjustments will continue to apply until the total levy amount has bee
 
 ## Instalment amounts
 
-If you confirm you want to pay in intstalments, your payment will be made up of 3 instalments.
+If you confirm you want to pay using an instalment plan, your payment will be made up of 3 instalments.
 
-### Provisional nature restoration levy instalment amount: £{{ record.levyAmount }} (excluding VAT)
-
-### Inflation-adjusted nature restoration levy instalment amount: £{{ record.levyAmount }} (excluding VAT)
+### Levy instalment amounts based on inflation-adjusted nature restoration levy amount: £{{ record.levyAmount }} (excluding VAT)
 :::
 
 :::details How the nature restoration levy was calculated

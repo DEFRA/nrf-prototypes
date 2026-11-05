@@ -1,10 +1,10 @@
 ---
 type: radios
-hint: Select whether you will pay the total nature restoration levy amount in full or by instalments.
+hint: Select whether you will pay the total nature restoration levy amount in full or with a instalment plan.
 options:
-  - label: Pay in instalments
+  - label: Pay in the nature restoration with an instalment plan
     value: instalments
-  - label: Pay in a one-off payment
+  - label: Pay in the nature restoration levy in full
     value: one-off
 errors:
   required: Select how you would like to pay the nature restoration levy
