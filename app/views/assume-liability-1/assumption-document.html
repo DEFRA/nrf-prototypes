@@ -13,7 +13,7 @@
   to the user's records. Model extras from
   app/lib/assume-liability-1/hooks.js: primary, youSigned, canRemind,
   waitingCount, allSigned, documentStatus and personWaiting (tags from
-  records.yaml), reminderSent, data.signatories.
+  records.yaml), reminderSent, justSigned, data.signatories.
 #}
 {% extends "journey-engine/_page.html" %}
 
@@ -26,6 +26,11 @@
 {{ govukNotificationBanner({
   type: "success",
   html: '<p class="govuk-notification-banner__heading">' + (text.reminderSent | replace("{name}", reminderSent) | escape) + '</p>'
+}) }}
+{% elif justSigned %}
+{{ govukNotificationBanner({
+  type: "success",
+  html: '<p class="govuk-notification-banner__heading">' + (text.youSigned | escape) + '</p>'
 }) }}
 {% endif %}
 <span class="govuk-caption-l">{{ text.caption | replace("{reference}", data.recordReference) }}</span>

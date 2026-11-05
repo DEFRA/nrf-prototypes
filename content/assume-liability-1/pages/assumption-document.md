@@ -28,6 +28,8 @@ text:
   remindHidden: '{name}'
   # PLACEHOLDER: after a Remind link; {name} is the person reminded
   reminderSent: We have sent a reminder to {name}.
+  # PLACEHOLDER: back from the signing page, once the user has signed
+  youSigned: You have signed the assumption of liability document.
   # {count} is the number of people still to sign
   waitingOne: We are waiting for 1 person to sign.
   waitingMany: We are waiting for {count} people to sign.
