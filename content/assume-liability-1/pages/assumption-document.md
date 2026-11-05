@@ -1,11 +1,4 @@
 ---
-# PLACEHOLDER COPY: the assumption of liability document and who it is
-# waiting on (app/views/assume-liability-1/assumption-document.html). The
-# document's words are the page's body. Continue to sign leads to the
-# signing page until the user has signed; on the main liable person's
-# record everyone else's row has a Remind link. Continue shows once
-# everyone has signed. The tags (the document's
-# and each person's) are the statuses in records.yaml.
 type: custom
 button: Continue
 text:
@@ -47,16 +40,24 @@ text:
 
 # Assumption of liability
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+The amount of the levy may have changed since your commitment. The charging schedule may have been updated or inflation might have been applied.
 
-## 1. Lorem ipsum
+## Details of the Environmental Delivery Plan (EDP)
 
-Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+Your relevant development is planned in: {{ record.edp }}.
 
-## 2. Dolor sit amet
+## Total levy amounts
 
-Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+### Provisional nature restoration levy amount: £{{ record.levyAmount }} (excluding VAT)
 
-- Sed ut perspiciatis unde omnis iste natus
-- Nemo enim ipsam voluptatem quia voluptas
-- Neque porro quisquam est qui dolorem ipsum
+The provisional amount is calculated from the charging schedule in the relevant EDP.
+
+### Inflation-adjusted nature restoration levy amount: £{{ record.levyAmount }} (excluding VAT)
+
+The inflation-adjusted amount shows the indicative levy amount for the year this commitment was issued.
+
+Inflation adjustments will continue to apply until the total levy amount has been paid.
+
+:::details How the nature restoration levy was calculated
+The levy has been calculated from the details you submitted and the charging schedule for the relevant EDP. [Read about the charging schedule for the EDP (opens in new tab)](#).
+:::
