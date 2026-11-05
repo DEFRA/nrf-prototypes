@@ -63,4 +63,5 @@ text:
   signed: Signed
 ---
 
-# Review liability
+# Review liability and payment details
+
