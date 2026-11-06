@@ -289,10 +289,9 @@ test.describe('nrf-quote-7-1 happy path', () => {
     await expect(page.locator('#boundary-map')).toBeAttached()
     await submit(page, 'file-preview')
     await expect(page).toHaveURL(/estimate-email$/)
-    await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
-      'href',
-      `${base}/file-preview`
-    )
+    await expect(
+      page.getByRole('link', { name: 'Back', exact: true })
+    ).toHaveAttribute('href', `${base}/file-preview`)
 
     // Nothing is checked: a file that is not GeoJSON still reaches the
     // preview, plotted with the sample boundary
@@ -379,10 +378,9 @@ test.describe('nrf-quote-7-1 happy path', () => {
       `${base}/redline-map?change=true&nav=check-your-answers`
     )
     await changeLink(page, 'check-your-answers', 'redline-map').click()
-    await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
-      'href',
-      `${base}/check-your-answers`
-    )
+    await expect(
+      page.getByRole('link', { name: 'Back', exact: true })
+    ).toHaveAttribute('href', `${base}/check-your-answers`)
     // Drawing instead steps back to the choice, not straight to the summary,
     // and the choice still returns to the summary
     const detour = 'change=true&nav=check-your-answers'
@@ -401,10 +399,9 @@ test.describe('nrf-quote-7-1 happy path', () => {
     await expect(page).toHaveURL(
       /upload-redline\?change=true&nav=check-your-answers/
     )
-    await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
-      'href',
-      `${base}/redline-map?${detour}`
-    )
+    await expect(
+      page.getByRole('link', { name: 'Back', exact: true })
+    ).toHaveAttribute('href', `${base}/redline-map?${detour}`)
     await page.locator('input[type="file"]').setInputFiles({
       name: 'site.geojson',
       mimeType: 'application/geo+json',
@@ -416,10 +413,9 @@ test.describe('nrf-quote-7-1 happy path', () => {
       /file-preview\?change=true&nav=check-your-answers/,
       { timeout: 10000 }
     )
-    await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
-      'href',
-      `${base}/upload-redline?${detour}`
-    )
+    await expect(
+      page.getByRole('link', { name: 'Back', exact: true })
+    ).toHaveAttribute('href', `${base}/upload-redline?${detour}`)
     await submit(page, 'file-preview')
     await expect(page).toHaveURL(/check-your-answers$/)
     await expect(page.locator('.govuk-summary-list')).toContainText(
@@ -428,10 +424,9 @@ test.describe('nrf-quote-7-1 happy path', () => {
 
     await changeLink(page, 'check-your-answers', 'units').click()
     await expect(page).toHaveURL(/units\?change=true&nav=check-your-answers/)
-    await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
-      'href',
-      `${base}/check-your-answers`
-    )
+    await expect(
+      page.getByRole('link', { name: 'Back', exact: true })
+    ).toHaveAttribute('href', `${base}/check-your-answers`)
     await fillAnswer(page, 'units', '25')
     await submit(page, 'units')
     await expect(page).toHaveURL(/check-your-answers$/)
@@ -441,10 +436,9 @@ test.describe('nrf-quote-7-1 happy path', () => {
     // (`$summary` with no `nav` from another journey)
     await act(page, 'check-your-answers', 'destructive')
     await expect(page).toHaveURL(`${base}/delete-quote`)
-    await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
-      'href',
-      `${base}/check-your-answers`
-    )
+    await expect(
+      page.getByRole('link', { name: 'Back', exact: true })
+    ).toHaveAttribute('href', `${base}/check-your-answers`)
     await expect(actionLocator(page, 'delete-quote', 'link')).toHaveAttribute(
       'href',
       `${base}/check-your-answers`

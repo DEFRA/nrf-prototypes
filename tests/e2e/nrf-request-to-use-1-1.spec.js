@@ -356,10 +356,9 @@ test.describe('nrf-request-to-use-1-1 happy paths', () => {
     // questions and walks back through them
     await expect(page).toHaveURL(`${base}/defra-account-user-type`)
     await expectHeading(page, 'defra-account-user-type')
-    await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
-      'href',
-      `${base}/original-reference`
-    )
+    await expect(
+      page.getByRole('link', { name: 'Back', exact: true })
+    ).toHaveAttribute('href', `${base}/original-reference`)
     // The answer is required
     await submit(page, 'defra-account-user-type')
     await expectError(page, 'defra-account-user-type')
@@ -367,10 +366,9 @@ test.describe('nrf-request-to-use-1-1 happy paths', () => {
     await submit(page, 'defra-account-user-type')
     await expect(page).toHaveURL(`${base}/defra-account-agent`)
     await expectHeading(page, 'defra-account-agent')
-    await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
-      'href',
-      `${base}/defra-account-user-type`
-    )
+    await expect(
+      page.getByRole('link', { name: 'Back', exact: true })
+    ).toHaveAttribute('href', `${base}/defra-account-user-type`)
     await submit(page, 'defra-account-agent')
 
     // The invitation email from the client's Defra account, addressed to
@@ -387,7 +385,9 @@ test.describe('nrf-request-to-use-1-1 happy paths', () => {
     await followLink(page, 'defra-account-agent-email', './$next')
     await expect(page).toHaveURL(`${base}/sign-in-method`)
     // Reached from the link in the invitation email: nothing to go back to
-    await expect(page.getByRole('link', { name: 'Back' })).toHaveCount(0)
+    await expect(
+      page.getByRole('link', { name: 'Back', exact: true })
+    ).toHaveCount(0)
 
     // The account type follows the answer, not the email
     await signIn(page, 'company@example.com')
@@ -411,10 +411,9 @@ test.describe('nrf-request-to-use-1-1 happy paths', () => {
 
     // The organisation chosen shows in the header from here on
     await expect(page).toHaveURL(`${base}/developer-details`)
-    await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
-      'href',
-      `${base}/defra-choose-organisation`
-    )
+    await expect(
+      page.getByRole('link', { name: 'Back', exact: true })
+    ).toHaveAttribute('href', `${base}/defra-choose-organisation`)
     await expect(page.locator('.app-organisation-bar')).toContainText(
       option('defra-choose-organisation', 'oakwood')
     )
@@ -847,18 +846,16 @@ test.describe('nrf-request-to-use-1-1 Defra ID registration', () => {
 
     await expect(page).toHaveURL(`${base}/read-this`)
     await expectHeading(page, 'read-this')
-    await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
-      'href',
-      `${base}/review-your-details`
-    )
+    await expect(
+      page.getByRole('link', { name: 'Back', exact: true })
+    ).toHaveAttribute('href', `${base}/review-your-details`)
     await submit(page, 'read-this')
 
     // ...and check your answers goes Back to it
     await expect(page).toHaveURL(`${base}/check-your-answers`)
-    await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
-      'href',
-      `${base}/read-this`
-    )
+    await expect(
+      page.getByRole('link', { name: 'Back', exact: true })
+    ).toHaveAttribute('href', `${base}/read-this`)
   })
 
   test('an individual always registers, whatever their email', async ({
@@ -986,10 +983,9 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     await expect(page.locator(serviceNav)).toContainText(
       `PROTOTYPE - ${journey.serviceName}`
     )
-    await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
-      'href',
-      review
-    )
+    await expect(
+      page.getByRole('link', { name: 'Back', exact: true })
+    ).toHaveAttribute('href', review)
     await quote.fillAnswer(page, 'units', '120')
     await quote.submit(page, 'units')
     await expect(page).toHaveURL(review)
@@ -1014,7 +1010,7 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     await quote.submit(page, 'housing')
     await expect(page).toHaveURL(`${quotePath}/not-housing?${detour}`)
     await quote.expectHeading(page, 'not-housing')
-    await page.getByRole('link', { name: 'Back' }).click()
+    await page.getByRole('link', { name: 'Back', exact: true }).click()
     await expect(page).toHaveURL(`${quotePath}/housing?${detour}`)
     await quote.answer(page, 'housing', 'Yes')
     await quote.submit(page, 'housing')
@@ -1037,8 +1033,8 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     await quote.expectHeading(page, 'not-housing')
     // Back to the question, then Back again to the review page: the answer
     // stays as the user left it
-    await page.getByRole('link', { name: 'Back' }).click()
-    await page.getByRole('link', { name: 'Back' }).click()
+    await page.getByRole('link', { name: 'Back', exact: true }).click()
+    await page.getByRole('link', { name: 'Back', exact: true }).click()
     await expect(page).toHaveURL(review)
     await expect(housingRow).toHaveText(
       rowValue('review-quote-details', housing, { isHousing: 'No' })
@@ -1047,7 +1043,7 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     await submit(page, 'review-quote-details')
     await expect(page).toHaveURL(`${quotePath}/not-housing?nav=${review}`)
     await quote.expectHeading(page, 'not-housing')
-    await page.getByRole('link', { name: 'Back' }).click()
+    await page.getByRole('link', { name: 'Back', exact: true }).click()
     await expect(page).toHaveURL(review)
   })
 
@@ -1055,7 +1051,7 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     page
   }) => {
     const detour = `change=true&nav=${review}`
-    const back = page.getByRole('link', { name: 'Back' })
+    const back = page.getByRole('link', { name: 'Back', exact: true })
     await retrieveQuote(page)
     await changeLink(
       page,
@@ -1110,10 +1106,9 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     await expect(page.locator(serviceNav)).toContainText(
       `PROTOTYPE - ${journey.serviceName}`
     )
-    await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
-      'href',
-      acceptLevy
-    )
+    await expect(
+      page.getByRole('link', { name: 'Back', exact: true })
+    ).toHaveAttribute('href', acceptLevy)
     await expect(
       quote.actionLocator(page, 'delete-quote', 'link')
     ).toHaveAttribute('href', acceptLevy)
@@ -1379,7 +1374,7 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     await submit(page, 'email')
     await expect(page).toHaveURL(`${base}/reference-not-matched`)
     await expectHeading(page, 'reference-not-matched')
-    await page.getByRole('link', { name: 'Back' }).click()
+    await page.getByRole('link', { name: 'Back', exact: true }).click()
     await expect(page).toHaveURL(`${base}/email`)
   })
 
@@ -1391,7 +1386,7 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     await submit(page, 'quote-reference')
     await expect(page).toHaveURL(`${base}/already-committed`)
     await expectHeading(page, 'already-committed')
-    await page.getByRole('link', { name: 'Back' }).click()
+    await page.getByRole('link', { name: 'Back', exact: true }).click()
     await expect(page).toHaveURL(`${base}/quote-reference`)
   })
 
@@ -1403,7 +1398,7 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     await submit(page, 'original-reference')
     await expect(page).toHaveURL(`${base}/original-reference-not-matched`)
     await expectHeading(page, 'original-reference-not-matched')
-    await page.getByRole('link', { name: 'Back' }).click()
+    await page.getByRole('link', { name: 'Back', exact: true }).click()
     await expect(page).toHaveURL(`${base}/original-reference`)
     await page.goto(`${base}/original-reference-not-matched`)
     await followLink(
@@ -1424,7 +1419,7 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     await expect(page).toHaveURL(`${base}/original-boundary-not-matched`)
     await expectHeading(page, 'original-boundary-not-matched')
     await expect(page.locator('main')).toContainText('NRL-222222')
-    await page.getByRole('link', { name: 'Back' }).click()
+    await page.getByRole('link', { name: 'Back', exact: true }).click()
     await expect(page).toHaveURL(`${base}/original-reference`)
     await page.goto(`${base}/original-boundary-not-matched`)
     await followLink(
@@ -1467,7 +1462,9 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     await expect(page).toHaveURL(`${base}/link-expired`)
     await expectHeading(page, 'link-expired')
     // Reached from the link in the email, so there is nothing to go back to
-    await expect(page.getByRole('link', { name: 'Back' })).toHaveCount(0)
+    await expect(
+      page.getByRole('link', { name: 'Back', exact: true })
+    ).toHaveCount(0)
     // Asking for a new link sends the email again
     await page.goto(`${base}/link-expired`)
     await act(page, 'link-expired', 'submit')

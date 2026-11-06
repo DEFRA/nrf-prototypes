@@ -86,11 +86,10 @@ test.describe('funnel between journeys', () => {
 
     // The back link stays inside the journey we landed in, on its own copy
     // of the shared funnel page, with the answer still selected
-    await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
-      'href',
-      `${requestToUse.base}/what-would-you-like-to-do`
-    )
-    await page.getByRole('link', { name: 'Back' }).click()
+    await expect(
+      page.getByRole('link', { name: 'Back', exact: true })
+    ).toHaveAttribute('href', `${requestToUse.base}/what-would-you-like-to-do`)
+    await page.getByRole('link', { name: 'Back', exact: true }).click()
     await expect(
       requestToUse.optionLocator(
         page,
@@ -110,10 +109,9 @@ test.describe('funnel between journeys', () => {
     await requestToUse.answer(page, 'what-would-you-like-to-do', 'quote')
     await requestToUse.submit(page, 'what-would-you-like-to-do')
     await expect(page).toHaveURL(`${quote.base}/planning-type`)
-    await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
-      'href',
-      `${quote.base}/what-would-you-like-to-do`
-    )
+    await expect(
+      page.getByRole('link', { name: 'Back', exact: true })
+    ).toHaveAttribute('href', `${quote.base}/what-would-you-like-to-do`)
   })
 })
 
