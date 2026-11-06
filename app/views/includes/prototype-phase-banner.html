@@ -1,10 +1,15 @@
 {#
   Prototype phase banner. Takes the place of production's Beta banner on
   prototype pages. Include it at the top of the beforeContent block, above
-  the back link.
+  the back link. A journey with `feedbackUrl:` in its journey.yaml adds
+  production's "give your feedback" survey link.
 #}
+{% set phaseBannerHtml = "This is a prototype. No real data is processed." %}
+{% if journey and journey.feedbackUrl %}
+  {% set phaseBannerHtml = phaseBannerHtml + ' Help us improve it and <a class="govuk-link" href="' + journey.feedbackUrl + '" target="_blank" rel="noopener noreferrer">give your feedback (opens in new tab)</a>.' %}
+{% endif %}
 {{ govukPhaseBanner({
   tag: { text: "Prototype" },
-  text: "This is a prototype. No real data is processed.",
+  html: phaseBannerHtml,
   attributes: { role: "region", "aria-label": "Prototype notice" }
 }) }}

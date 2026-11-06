@@ -27,6 +27,10 @@
 id: assume-liability-1
 name: Assume liability to pay the nature restoration levy
 serviceName: Manage the nature restoration levy
+
+# The survey the phase banner's "give your feedback" link opens
+feedbackUrl: https://defragroup.eu.qualtrics.com/jfe/form/SV_9yRhrdtbb3vmw86
+
 start: permission-email
 
 summaryPages:

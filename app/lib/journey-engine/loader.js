@@ -1018,6 +1018,8 @@ function build(journeyId, options = {}) {
     contentDir,
     name: raw.name || journeyId,
     serviceName: raw.serviceName || raw.name || journeyId,
+    // The survey the phase banner links to (see prototype-phase-banner.html)
+    feedbackUrl: raw.feedbackUrl,
     start: raw.start || 'start',
     summaryPage: summaryPages[0],
     summaryPages,

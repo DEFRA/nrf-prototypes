@@ -8,8 +8,7 @@ panel:
 
 ## What happens next
 
-You will be sent an email with a commitment certificate that you can send to your local planning authority to include with your planning application. You should receive the email within 5 minutes. 
-
+You will be sent an email with a commitment certificate that you can send to your local planning authority to include with your planning application. You should receive the email within 5 minutes.
 
 ## Get help with the nature restoration levy
 
@@ -21,4 +20,4 @@ Monday to Friday, 10am to 4pm, except bank holidays
 
 [Find out about call charges (opens in new tab)](https://www.gov.uk/call-charges)
 
-[What did you think of this service?](#) (takes 30 seconds)
+[What did you think of this service? (opens in new tab)](https://defragroup.eu.qualtrics.com/jfe/form/SV_9yRhrdtbb3vmw86) (takes 30 seconds)

@@ -24,6 +24,10 @@
 id: nrf-request-to-use-1-1
 name: Request to use the nature restoration levy
 serviceName: Request to use the nature restoration levy
+
+# The survey the phase banner's "give your feedback" link opens
+feedbackUrl: https://defragroup.eu.qualtrics.com/jfe/form/SV_9yRhrdtbb3vmw86
+
 start: start
 
 # Pages with Change links. A `goto: $summary` returns to whichever of these the
@@ -1045,7 +1049,7 @@ pages:
         href: request-email
       - text: View the commitment certificate
         href: commitment-certificate
-    handoff: 2026-10-22
+    handoff: 2026-11-06
 
   - id: request-email
     back: confirmation

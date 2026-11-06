@@ -12,6 +12,10 @@
 id: nrf-quote-7-1
 name: Get a quote for the nature restoration levy
 serviceName: Get a quote for the nature restoration levy
+
+# The survey the phase banner's "give your feedback" link opens
+feedbackUrl: https://defragroup.eu.qualtrics.com/jfe/form/SV_9yRhrdtbb3vmw86
+
 start: start
 summaryPage: check-your-answers
 
@@ -340,6 +344,7 @@ pages:
     research:
       - text: View the email content
         href: estimate-email-content
+    handoff: 2026-11-06
 
   - id: estimate-email-content
     back: confirmation
