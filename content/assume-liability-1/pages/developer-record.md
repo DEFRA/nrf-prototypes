@@ -56,6 +56,12 @@ text:
   named: '{name} has named you as jointly liable to pay the nature restoration levy for this development. Read and sign the assumption of liability document.'
   signatures: The assumption of liability document is waiting for signatures.
   signed: Everyone has signed the assumption of liability document. {name} will add the payment details.
+  # The primary user's own record, once everyone has signed
+  payment: Everyone has signed the assumption of liability document. You can now add the payment details.
+  # ...and once they have added the payment details
+  submit: You have added the payment details. Check your answers and submit.
+  # The button under either of those
+  continue: Continue
   viewDocument: View the assumption of liability document
   liable: Liability to pay the nature restoration levy has been assumed for this development.
   back: Return to manage the nature restoration levy

@@ -269,9 +269,10 @@ function recordFor(raw, store, data) {
   if (!primary && raw.status === 'sign' && answers.youSigned) {
     statusValue = allSigned ? 'signed' : 'signatures'
   }
-  // The primary user's document, once everyone has signed it
+  // The primary user's document, once everyone has signed it: the payment
+  // details are next, then checking and submitting
   if (primary && statusValue === 'signatures' && allSigned) {
-    statusValue = 'signed'
+    statusValue = answers.payerDetails ? 'submit' : 'payment'
   }
   return {
     ...raw,

@@ -57,6 +57,14 @@
   {% elif record.status.value == 'signed' %}
     {{ govukInsetText({ text: text.signed | replace("{name}", record.primaryUser) }) }}
     {{ govukButton({ text: text.viewDocument, href: routes.ASSUMPTION_DOCUMENT, classes: "govuk-button--secondary" }) }}
+  {# The primary user's own: Continue goes to the payment details, and once
+     they are added to check your answers #}
+  {% elif record.status.value == 'payment' %}
+    {{ govukInsetText({ text: text.payment }) }}
+    {{ govukButton({ text: text.continue, href: routes.ADD_PAYMENT_DETAILS }) }}
+  {% elif record.status.value == 'submit' %}
+    {{ govukInsetText({ text: text.submit }) }}
+    {{ govukButton({ text: text.continue, href: routes.REVIEW_LIABILITY }) }}
   {% elif record.status.value == 'liable' %}
     {{ govukInsetText({ text: text.liable }) }}
   {% elif not record.primary %}

@@ -15,8 +15,9 @@
 #              from `signatures`). A record starts at the
 #              status given below; assuming liability in the journey moves
 #              the primary user's record on to `signatures` (the document
-#              waits for signatures), `signed` once everyone has signed
-#              and then `liable`. A secondary user's record at
+#              waits for signatures), `payment` once everyone has signed,
+#              `submit` once they have added the payment details and then
+#              `liable`. A secondary user's record at
 #              `sign` (they have been named as jointly liable) moves on to
 #              `signatures` once they sign, or `signed` when nobody else is
 #              left to
@@ -39,10 +40,11 @@
 statuses:
   ready: { label: Not started, colour: blue }
   sign: { label: Signature needed, colour: orange }
-  awaiting-permission: { label: Waiting for planning permission, colour: grey }
-  signatures: { label: Signatures needed, one: Signature needed, colour: yellow }
+  signatures: { label: Signatures needed, one: Signature needed, colour: orange }
   signed: { label: Signed by everyone, colour: turquoise }
-  liable: { label: Signed by everyone, colour: green }
+  payment: { label: Payment details needed, colour: orange }
+  submit: { label: Ready to submit, colour: orange }
+  liable: { label: Ready for payment, colour: green }
 
 edp: &edp 'Norfolk: Broads Special Area of Conservation (SAC) (Yare and Bure), Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2027 to 2037)'
 
