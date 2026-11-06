@@ -27,7 +27,7 @@
 #              with no `developer` shows the signed-in user's organisation.
 #              `boundary` is the red line boundary, an open ring of
 #              [longitude, latitude] pairs. Dates are YYYY-MM-DD.
-#              A `levyAmount` under £25,000 cannot be paid in
+#              A `levyAmount` under £50,000 cannot be paid in
 #              instalments: assuming liability skips "How would you like
 #              to pay?" and agrees to pay in full (hooks.js).
 #              A secondary user's record at `sign` lists its assumption
@@ -86,7 +86,7 @@ records:
     units: 250
     lpa: Breckland Council
     edp: *edp
-    levyAmount: '50,000'
+    levyAmount: '75,000'
     permissionGranted: 2026-10-21
     lastUpdated: 2026-10-21
     boundary:

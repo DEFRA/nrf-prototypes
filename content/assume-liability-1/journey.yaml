@@ -195,7 +195,7 @@ pages:
     handler: custom # opens the record named by ?ref=
     back: manage-levy
     next:
-      # A levy under £25,000 cannot be paid in instalments (hooks.js), so
+      # A levy under £50,000 cannot be paid in instalments (hooks.js), so
       # it skips "How would you like to pay?" and is paid in full
       - when:
           all:
@@ -215,7 +215,7 @@ pages:
         question shows at the bottom
       variants:
         - id: pay-in-full
-          label: Levy under £25,000
+          label: Levy under £50,000
           description: >-
             The primary user's record with a £24,000 levy: Yes goes straight
             to agreeing to pay in full, without "How would you like to pay?"
@@ -249,7 +249,7 @@ pages:
     field: how-to-pay
     sessionKey: howToPay
     guard: &assuming { key: recordReference, isSet: true, redirect: manage-levy }
-    handler: custom # skipped for a levy under £25,000, see hooks.js
+    handler: custom # skipped for a levy under £50,000, see hooks.js
     back: developer-record
     changeable: true
     next:
@@ -284,7 +284,7 @@ pages:
         set: { howToPay: instalments, acceptLevy: null }
       - goto: anyone-else
 
-  # A levy under £25,000 is paid in full: the same terms as
+  # A levy under £50,000 is paid in full: the same terms as
   # one-off-payment-details, agreed with a single checkbox as there is
   # nothing else to choose
   - id: pay-in-full

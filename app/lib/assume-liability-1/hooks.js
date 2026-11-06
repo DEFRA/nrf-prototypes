@@ -42,7 +42,7 @@ const RECORDS_FILE = path.join(
 const REFERENCE = /^NRL-\d{6}$/i
 
 // A levy under this many pounds is paid in full: no instalments
-const INSTALMENTS_FROM = 25000
+const INSTALMENTS_FROM = 50000
 
 // The stand-in developer, until the facilitator gives the participant's
 // details
@@ -283,7 +283,7 @@ function recordFor(raw, store, data) {
     // Only the primary user of a record whose planning permission is
     // granted is asked to assume liability
     canAssume: primary && statusValue === 'ready',
-    // A levy under £25,000 skips "How would you like to pay?" (journey.yaml)
+    // A levy under £50,000 skips "How would you like to pay?" (journey.yaml)
     instalments: offersInstalments(raw.levyAmount),
     permissionGranted: formatDate(raw.permissionGranted),
     liabilityAssumed: formatDate(progress.assumedOn || raw.liabilityAssumed),
@@ -518,7 +518,7 @@ const manageLevy = {
   }
 }
 
-// A levy under £25,000 is never asked how it will be paid (its review
+// A levy under £50,000 is never asked how it will be paid (its review
 // page's Change link included): it is paid in full
 const howToPay = {
   load(ctx) {

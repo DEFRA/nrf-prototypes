@@ -1,5 +1,5 @@
 ---
-# For a levy under £25,000, which cannot be paid in instalments: the same
+# For a levy under £50,000, which cannot be paid in instalments: the same
 # terms as one-off-payment-details, agreed with a single checkbox. The
 # words below the heading are copied from that page, so change both.
 type: checkboxes
