@@ -105,6 +105,7 @@
   <div class="govuk-grid-column-two-thirds">
 {% if allSigned and primary %}
 <form action="{{ page.path }}" method="post" novalidate>
+  {% include "journey-engine/_change-inputs.html" %}
   {{ govukButton({ text: content.button }) }}
 </form>
 {% elif allSigned %}

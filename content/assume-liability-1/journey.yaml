@@ -88,6 +88,7 @@ session:
   - sharedLiability
   - recordAnswers
   - payerDetails
+  - detailsRead
 
 # Sample answers for the screen wall and ?preview=1
 preview:
@@ -392,7 +393,11 @@ pages:
     template: assume-liability-1/assumption-document
     guard: *assuming
     handler: custom
+    # Opened from "View the assumption of liability document" on
+    # review-liability (?nav=review-liability), Back and Continue return there
     back:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
       - when: { key: record.primary, falsy: true }
         goto: developer-record
       - when: { key: liablePeople, isSet: true }
@@ -412,7 +417,10 @@ pages:
     links:
       - goto: sign-assumption
         text: Sign the assumption of liability
-    next: add-payment-details
+    next:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: add-payment-details
     preview:
       label: Not signed yet
       description: >-
@@ -499,11 +507,18 @@ pages:
 
   # PLACEHOLDER copy, adapted from the request to use journey's page of the
   # same name: what assuming liability commits the user to, read before
-  # checking the answers
+  # checking the answers. Continue stores 'Yes' for the "Details read" row
+  # on review-liability, whose Change link comes back here, as the request
+  # to use journey's "Details confirmed"
   - id: read-this
     guard: { key: payerDetails, isSet: true, redirect: add-payment-details }
-    back: add-payment-details
-    next: review-liability
+    back:
+      - when: { key: $navFromSummary, truthy: true }
+        goto: $summary
+      - goto: add-payment-details
+    next:
+      - goto: review-liability
+        set: { detailsRead: 'Yes' }
 
   # The payment details, then everyone liable: a table when others are
   # jointly liable, the user's own details when it is them alone
@@ -513,8 +528,13 @@ pages:
     handler: custom # marks the record's liability assumed, see hooks.js
     back: read-this
     next: confirmation
+    # The template links to the assumption document under the signatures
+    links:
+      - goto: assumption-document
+        text: View the assumption of liability document
     preview:
       data:
+        detailsRead: 'Yes'
         youSigned: 2026-11-02
         signatures:
           sam.patel@patelland.co.uk: 2026-10-30

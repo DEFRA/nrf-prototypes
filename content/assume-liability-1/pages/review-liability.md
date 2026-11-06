@@ -1,7 +1,8 @@
 ---
 # The details to submit (app/views/assume-liability-1/review-liability.html):
 # the rows below, then everyone liable: a table when others are jointly
-# liable, the user's own details when it is them alone
+# liable, the user's own details when it is them alone, with a link to the
+# assumption document they signed
 type: check-answers
 rows:
   - heading: Development
@@ -11,6 +12,10 @@ rows:
     value: '{{ record.site }}'
   - key: Levy amount
     value: '£{{ record.levyAmount }}'
+  - key: Details read
+    value: '{{ detailsRead }}'
+    change: read-this
+    changeHidden: the details to read before you assume liability
   - heading: Payment
   - key: How you will pay
     value: '{{ howToPay }}'
@@ -61,7 +66,8 @@ text:
   organisation: Organisation
   email: Email address
   signed: Signed
+  # Under the signatures: the assumption document, opened from here
+  viewDocument: View the assumption of liability document
 ---
 
 # Review liability and payment details
-

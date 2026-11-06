@@ -2,7 +2,9 @@
   Review liability (content/assume-liability-1/pages/review-liability.md):
   the page's rows (development and payment, with Change links), then
   everyone liable: a table of the jointly liable people who signed, or the
-  user's own details when nobody else is liable. Confirm and submit posts
+  user's own details when nobody else is liable, and under them a link to
+  the assumption document they signed (whose Back and Continue return here,
+  see journey.yaml). Confirm and submit posts
   back here. data.signatories comes from app/lib/assume-liability-1/hooks.js.
 #}
 {% extends "journey-engine/_page.html" %}
@@ -39,7 +41,7 @@
   {{ govukTable({
     caption: text.peopleHeading,
     captionClasses: "govuk-table__caption--m",
-    classes: "govuk-!-margin-bottom-9",
+    classes: "govuk-!-margin-bottom-4",
     head: [
       { text: text.columns.name },
       { text: text.columns.organisation },
@@ -52,7 +54,7 @@
   {% set you = data.signatories[0] %}
   {{ govukSummaryList({
     card: { title: { text: text.youHeading } },
-    classes: "govuk-!-margin-bottom-9",
+    classes: "govuk-!-margin-bottom-4",
     rows: [
       { key: { text: text.fullName }, value: { text: you.fullName } },
       { key: { text: text.organisation }, value: { text: you.organisation } },
@@ -61,6 +63,7 @@
     ]
   }) }}
 {% endif %}
+<p class="govuk-body govuk-!-margin-bottom-9"><a class="govuk-link" href="{{ routes.ASSUMPTION_DOCUMENT }}?nav={{ page.id }}">{{ text.viewDocument }}</a></p>
   </div>
 </div>
 
