@@ -523,6 +523,9 @@ function buildPage(entry, journey, problems, from = {}) {
     // in below for the default copy, always empty on a variant
     copyVariants: [],
     serviceName: entry.serviceName || frontmatter.serviceName,
+    // The page's own survey for the phase banner, in place of the journey's
+    // `feedbackUrl` (the shared start page's generic one)
+    feedbackUrl: entry.feedbackUrl,
     type,
     layout,
     field,

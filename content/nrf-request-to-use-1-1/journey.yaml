@@ -26,7 +26,7 @@ name: Request to use the nature restoration levy
 serviceName: Request to use the nature restoration levy
 
 # The survey the phase banner's "give your feedback" link opens
-feedbackUrl: https://defragroup.eu.qualtrics.com/jfe/form/SV_9yRhrdtbb3vmw86
+feedbackUrl: https://defragroup.eu.qualtrics.com/jfe/form/SV_9yRhrdtbb3vmw86?Journey=RequestToUse
 
 start: start
 
@@ -244,6 +244,8 @@ pages:
   # target.
   - id: start
     shared: true
+    # Shared by the quote and request to use, so the generic survey
+    feedbackUrl: https://defragroup.eu.qualtrics.com/jfe/form/SV_9yRhrdtbb3vmw86?Journey=Generic
     next: what-would-you-like-to-do
     handoff: 2026-10-06
 
@@ -1049,11 +1051,11 @@ pages:
         href: request-email
       - text: View the commitment certificate
         href: commitment-certificate
-    handoff: 2026-11-06
+    handoff: 2026-11-06 # survey link follows the journey's feedbackUrl
 
   - id: request-email
     back: confirmation
-    handoff: 2026-10-23 # change in same day
+    handoff: 2026-11-06
 
   # The certificate, linked from the email, on the service's own layout with a
   # print link beside it (printing or saving as a PDF gives the certificate

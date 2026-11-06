@@ -22,12 +22,11 @@ Thank you for submitting details of the relevant development on [Request to use 
 
 Submit this certificate with your planning application.
 
-Your commitment will expire after 6 months from the date of issue stated above, unless an application for planning permission is made. 
+Your commitment will expire after 6 months from the date of issue stated above, unless an application for planning permission is made.
 
-This commitment certificate will disapply the relevant environmental obligations that would otherwise have arisen because of the environmental impact of the development. 
+This commitment certificate will disapply the relevant environmental obligations that would otherwise have arisen because of the environmental impact of the development.
 
-Environmental impacts of development not covered by this Environmental Delivery Plan (EDP) will need to be addressed through other environmental assessment processes such as a [habitats regulations assessment (opens in new tab)](https://www.gov.uk/guidance/habitats-regulations-assessments-protecting-a-european-site). 
-
+Environmental impacts of development not covered by this Environmental Delivery Plan (EDP) will need to be addressed through other environmental assessment processes such as a [habitats regulations assessment (opens in new tab)](https://www.gov.uk/guidance/habitats-regulations-assessments-protecting-a-european-site).
 
 ## Details of the relevant development
 
@@ -62,17 +61,17 @@ The amount includes annual inflation in line with the Royal Institution of Chart
 
 ## What your levy will pay for
 
-Your levy will fund conservation measures delivered under the relevant EDPs, including their long-term management, monitoring and maintenance as well as scheme administration costs. 
+Your levy will fund conservation measures delivered under the relevant EDPs, including their long-term management, monitoring and maintenance as well as scheme administration costs.
 
 EDPs set out measures needed to address the environmental impacts of development in an area and deliver an overall improvement in the conservation status of the environmental feature(s) set out in the EDP.
 
 ## Preparing to pay the nature restoration levy
 
-If planning permission (or any other type of consent, permission or authorisation as appropriate) is granted and you are ready to commence development, you will need to assume liability to pay the levy in line with Regulation 8 of the Levy Regulations. 
+If planning permission (or any other type of consent, permission or authorisation as appropriate) is granted and you are ready to commence development, you will need to assume liability to pay the levy in line with Regulation 8 of the Levy Regulations.
 The assumption of liability notice should be submitted only when you are ready to commence development, because this will trigger payment of the levy.
 [View the liability forms for the nature restoration levy (opens in new tab)](#).
 
-Your levy liability arises when you assume liability to pay. Natural England will issue a liability notice that sets out your total levy liability and payment terms. 
+Your levy liability arises when you assume liability to pay. Natural England will issue a liability notice that sets out your total levy liability and payment terms.
 
 During the assumption of liability process, you will confirm if you will be paying the levy in full or through an instalment plan where available. [Read about paying by instalments (opens in new tab)](#).
 
@@ -91,3 +90,5 @@ Telephone: 0300 060 3900\
 Monday to Friday, 10am to 4pm, except bank holidays
 
 [Find out about call charges (opens in new tab)](https://www.gov.uk/call-charges)
+
+[What did you think of this service? (opens in new tab)](./$feedback) (takes 30 seconds)

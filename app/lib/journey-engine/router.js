@@ -536,8 +536,9 @@ function buildModel(ctx, extra = {}) {
       header: resolveHeader(chrome),
       // What the Participant details box asks for besides the name
       participant: chrome.participant,
-      // The survey the phase banner links to
-      feedbackUrl: chrome.feedbackUrl,
+      // The survey the phase banner links to: the page's own, else the
+      // journey's
+      feedbackUrl: page.feedbackUrl || chrome.feedbackUrl,
       summaryPage: journey.summaryPage,
       summaryPages: journey.summaryPages,
       start: journey.start

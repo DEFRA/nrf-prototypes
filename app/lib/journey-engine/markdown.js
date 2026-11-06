@@ -44,6 +44,9 @@ const { toPath } = require('./back-link')
 
 // A link target that follows the page's `next` rules
 const NEXT_TARGET = './$next'
+// A link target that opens the page's survey: its own `feedbackUrl`, else
+// the journey's (the one the phase banner links to)
+const FEEDBACK_TARGET = './$feedback'
 
 // Conditional blocks are marked in the rendered HTML with NUL-delimited
 // tokens that applyConditionals() strips out again. NUL never appears in
@@ -457,6 +460,12 @@ function createMarkdown() {
       tokens[idx].attrSet(
         'href',
         nextPath(env.ctx) || (env.page && env.page.path) || '#'
+      )
+    } else if (href === FEEDBACK_TARGET && journey) {
+      const chrome = env.ctx.returnJourney || journey
+      tokens[idx].attrSet(
+        'href',
+        (env.page && env.page.feedbackUrl) || chrome.feedbackUrl || '#'
       )
     } else if (href.startsWith('./') && journey && journey.basePath) {
       tokens[idx].attrSet('href', `${journey.basePath}/${href.slice(2)}`)
