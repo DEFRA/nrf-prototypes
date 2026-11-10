@@ -340,7 +340,7 @@ pages:
   # opens, in this tab in place of the email's link
   - id: retrieve-email
     back: email-sent
-    handoff: 2026-10-20
+    handoff: 2026-11-10
     research:
       - text: Expired link
         href: link-expired

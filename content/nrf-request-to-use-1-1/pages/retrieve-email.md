@@ -12,6 +12,8 @@ title: Email sent from the Nature Restoration Fund service
 
 # Nature restoration levy – retrieve your quote details
 
+## NRL reference: {{ quoteReference }}
+
 Retrieve the details you previously gave us for your quote. Use them to provide the information needed to request to use the nature restoration levy.
 
 [Retrieve the quote details](/nrf-request-to-use-1-1/review-quote-details)
