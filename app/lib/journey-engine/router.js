@@ -564,6 +564,12 @@ function buildModel(ctx, extra = {}) {
     // The header shows Sign out (and the agent's organisation) when the
     // journey's `signedIn` condition holds
     signedIn: isSignedIn(chrome, page, ctx),
+    // Whether this page shows the agent's organisation bar: a journey can
+    // keep it to a few pages (`organisationBarPages`), so a page borrowed
+    // from another journey only shows it when listed there
+    showOrganisationBar:
+      !chrome.organisationBarPages ||
+      (chrome === journey && chrome.organisationBarPages.includes(page.id)),
     account: ctx.data.account,
     isChange: ctx.isChange,
     navFromSummary: ctx.navFromSummary,

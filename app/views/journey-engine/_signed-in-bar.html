@@ -5,8 +5,9 @@
   A journey whose users pick an organisation once signed in (Defra ID's "Who
   do you want to represent?") shows it for everyone: its hook names that page
   in the account as `organisationPage`, and Change organisation goes there.
+  `organisationBarPages` in journey.yaml keeps it to the pages listed.
 #}
-{% if signedIn and account and (account.accountType == 'agent' or account.organisationPage) %}
+{% if signedIn and showOrganisationBar and account and (account.accountType == 'agent' or account.organisationPage) %}
 <div class="app-organisation-bar">
   <p class="govuk-body-s govuk-!-margin-bottom-0">
     <strong>{{ account.organisationName or "Organisation name" }}</strong>

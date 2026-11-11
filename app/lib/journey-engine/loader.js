@@ -976,6 +976,11 @@ function validateChoiceValues(journey, problems) {
       problems.push(`preview.signedInFrom: unknown page '${id}'`)
     }
   }
+  for (const id of journey.organisationBarPages || []) {
+    if (!pageIds.has(id)) {
+      problems.push(`organisationBarPages: unknown page '${id}'`)
+    }
+  }
 
   // The sample answers stand in for real ones in preview and ?errors=false
   const sample = (journey.preview && journey.preview.data) || {}
@@ -1028,6 +1033,9 @@ function build(journeyId, options = {}) {
     summaryPages,
     // Condition (see expressions.js) for showing the signed-in header state
     signedIn: raw.signedIn,
+    // The only pages that show the agent's organisation bar, when given
+    // (see _signed-in-bar.html); every signed-in page otherwise
+    organisationBarPages: raw.organisationBarPages,
     session: raw.session || [],
     preview: raw.preview || { data: {} },
     // Homepage card metadata (family, version, status, description, changes).

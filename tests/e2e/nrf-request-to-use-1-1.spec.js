@@ -434,6 +434,8 @@ test.describe('nrf-request-to-use-1-1 happy paths', () => {
     await fillField(page, 'developer-details', 'postcode', 'DV1 6RP')
     await submit(page, 'developer-details')
     await expect(page).toHaveURL(`${base}/review-developer-details`)
+    // The organisation bar is on the developer details page only
+    await expect(page.locator('.app-organisation-bar')).toHaveCount(0)
     await expect(page.locator('.govuk-summary-list')).toContainText(
       'A Developer'
     )
@@ -1317,13 +1319,10 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     await expect(page).toHaveURL(cya)
     await act(page, 'check-your-answers', 'destructive')
     await expect(page).toHaveURL(`${quotePath}/delete-quote?nav=${cya}`)
-    // Signed in as an agent: the borrowed page keeps the organisation bar
-    await expect(page.locator('.app-organisation-bar')).toContainText(
-      'Organisation name'
-    )
-    await expect(
-      page.getByRole('link', { name: 'Change organisation' })
-    ).toHaveAttribute('href', `${base}/sign-in-method`)
+    // Signed in as an agent, but the organisation bar is only on the
+    // developer details page
+    await expect(page.getByRole('link', { name: 'Sign out' })).toHaveCount(1)
+    await expect(page.locator('.app-organisation-bar')).toHaveCount(0)
     await quote.act(page, 'delete-quote', 'link')
     await expect(page).toHaveURL(cya)
   })

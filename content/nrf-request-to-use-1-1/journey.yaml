@@ -44,6 +44,11 @@ summaryPages:
 # they are acting for
 signedIn: { key: account, isSet: true }
 
+# The organisation and its Change organisation link show only where the
+# agent enters the developer's name and address
+organisationBarPages:
+  - developer-details
+
 # Card shown on the homepage. `family` picks the tab, `version` orders it
 # against the other versions in that family. See app/config/shared/journeys.yaml.
 homepage:
@@ -925,7 +930,7 @@ pages:
     next:
       - goto: read-this
         set: { detailsConfirmed: 'Yes' }
-    handoff: 2026-11-02
+    handoff: 2026-11-11
 
   # Companies and individuals each have their own address page (the hint
   # differs); both keep the address in yourAddress for the review page
@@ -998,7 +1003,7 @@ pages:
         goto: review-developer-details
       - goto: review-your-details
     next: check-your-answers
-    handoff: 2026-10-23 # change in same day
+    handoff: 2026-11-11
 
   # The declaration is the confirmation checkbox on this page (it stores
   # 'Yes', its `value` in check-your-answers.md); the Delete link is the way
@@ -1041,7 +1046,7 @@ pages:
               fullName: Trevor Barker
               email: individual@example.com
     next: confirmation
-    handoff: 2026-10-22
+    handoff: 2026-11-11
 
   # User research aids in the footer: the email and the commitment
   # certificate the submission sends
