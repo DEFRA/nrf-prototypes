@@ -1056,7 +1056,7 @@ pages:
         href: request-email
       - text: View the commitment certificate
         href: commitment-certificate
-    handoff: 2026-11-06 # survey link follows the journey's feedbackUrl
+    handoff: 2026-11-11
 
   - id: request-email
     back: confirmation
@@ -1068,7 +1068,7 @@ pages:
   - id: commitment-certificate
     layout: default
     template: nrf-request-to-use-1-1/commitment-certificate
-    handoff: 2026-11-04
+    handoff: 2026-11-11
     # As check-your-answers: the sample answers are an agent's, and the
     # variants clear the developer details so the name and address come
     # from the account
