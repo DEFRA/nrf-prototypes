@@ -105,7 +105,6 @@ const DECISION_KEYS = [
   'decisionReference',
   'decisionUnits',
   'decisionPlanningType',
-  'decisionAddress',
   'decisionDescription'
 ]
 // "Is this a planning variation?"
@@ -1740,11 +1739,19 @@ const decisionCheckAnswers = {
     const found = allEntries(data).find(
       (item) => item.entry.reference === reference
     )
+    // The planning type as the question words it, for the record's
+    // planning details
+    const { options = [] } = ctx.journey.pages.find(
+      (page) => page.id === 'decision-planning-type'
+    ).content
+    const typeOption = options.find(
+      (option) => String(option.value) === String(data.decisionPlanningType)
+    )
     const decision = {
       reference: data.decisionReference,
       units: data.decisionUnits,
       planningType: data.decisionPlanningType,
-      address: data.decisionAddress,
+      planningTypeLabel: typeOption ? typeOption.label : '',
       description: data.decisionDescription || ''
     }
     for (const key of ['decisionRecord', ...DECISION_KEYS]) {

@@ -16,16 +16,6 @@ rows:
     value: '{{ decisionPlanningType }}'
     change: decision-planning-type
     changeHidden: planning permission type
-  - key: Address of the relevant development
-    value:
-      lines:
-        - '{{ decisionAddress.addressLine1 }}'
-        - '{{ decisionAddress.addressLine2 }}'
-        - '{{ decisionAddress.town }}'
-        - '{{ decisionAddress.county }}'
-        - '{{ decisionAddress.postcode }}'
-    change: decision-address
-    changeHidden: address of the relevant development
   - key: Description of the relevant development
     value:
       when: { key: decisionDescription, truthy: true }

@@ -26,8 +26,12 @@ rows:
   - key: Number of housing units
     value: '{{ commitment.units }}'
   - heading: Planning details
+  # Once granted, the planning type the officer gave with the decision
   - key: Planning type
-    value: '{{ commitment.planningType }}'
+    value:
+      when: { key: record.planningDecision.planningTypeLabel, truthy: true }
+      then: '{{ record.planningDecision.planningTypeLabel }}'
+      else: '{{ commitment.planningType }}'
   - key: Amendment
     value: 'Yes'
     when: { key: record.variation, truthy: true }
@@ -45,6 +49,16 @@ rows:
     when: { key: record.linkedText, truthy: true }
   - key: Planning application stage
     value: '{{ record.planningStage.label }}'
+  # The planning decision details given with Granted
+  - key: Planning decision reference
+    value: '{{ record.planningDecision.reference }}'
+    when: { key: record.planningDecision.reference, truthy: true }
+  - key: Number of units
+    value: '{{ record.planningDecision.units }}'
+    when: { key: record.planningDecision.units, truthy: true }
+  - key: Description of the relevant development
+    value: '{{ record.planningDecision.description }}'
+    when: { key: record.planningDecision.description, truthy: true }
   - key: Reserved matters applications
     value: '{{ record.reservedMattersText }}'
     when: { key: record.reservedMattersText, truthy: true }

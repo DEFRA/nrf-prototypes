@@ -108,6 +108,7 @@ homepage:
     - choosing Granted asks for the planning decision details (reference, units, planning type, address and an optional description) and checks them before the stage changes
     - an NRL reference already in the records for an outline application asks whether reserved matters are being added; Yes opens "Add a reserved matters application" and returns to the record with a success banner
     - adding a reserved matters application is a question per page (reference, matters, number of units when layout or scale is ticked, a description that is no longer optional) with a check answers page before saving
+    - granting no longer asks for the address of the relevant development; the planning decision details show in the record's planning details
 
 # The answers the copy can show, as {{ name }} (see content/README.md).
 # `commitment` is the commitment on screen and `record` the record.
@@ -130,7 +131,6 @@ session:
   - decisionReference
   - decisionUnits
   - decisionPlanningType
-  - decisionAddress
   - decisionDescription
   - reservedMattersRecord
   - reservedMattersReference
@@ -481,18 +481,6 @@ pages:
     next:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
-      - goto: decision-address
-    preview:
-      data: *decision-preview
-
-  - id: decision-address
-    group: planning-decision
-    sessionKey: decisionAddress
-    guard: *deciding
-    changeable: true
-    next:
-      - when: { key: $navFromSummary, truthy: true }
-        goto: $summary
       - goto: decision-description
     preview:
       data: *decision-preview
@@ -517,10 +505,6 @@ pages:
         <<: *decision-preview
         decisionUnits: 48
         decisionPlanningType: full
-        decisionAddress:
-          addressLine1: 3 Mill Lane
-          town: Scarfolk
-          postcode: SC2 9ML
         decisionDescription: Erection of 48 dwellings with access, parking and landscaping
 
   # Every detail of a record's commitment: certificate?ref=NRL-123456.
