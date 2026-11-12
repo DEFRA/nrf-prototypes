@@ -623,7 +623,10 @@ const defraAddressManual = {
 // picks goes into the header's organisation bar and the developer details
 // review page. The labels are the page's copy; the last option's label
 // names the research participant's organisation (or the stand-in), so
-// filling it in gives the name the page showed
+// filling it in gives the name the page showed. A different organisation
+// empties the developer details and sets `organisationChanged`, which
+// journey.yaml reads to send a Change from check your answers on to
+// developer-details rather than straight back
 const chooseOrganisation = {
   process(ctx, value) {
     const { data, page } = ctx
@@ -631,10 +634,14 @@ const chooseOrganisation = {
     const chosen = options.find(
       (option) => String(option.value) === String(value)
     )
+    data.organisationChanged = false
     if (chosen && data.account) {
-      data.account.organisationName = interpolate(chosen.label, data, {
-        escape: false
-      }).trim()
+      const name = interpolate(chosen.label, data, { escape: false }).trim()
+      if (name !== data.account.organisationName) {
+        delete data.developerDetails
+        data.organisationChanged = true
+      }
+      data.account.organisationName = name
     }
   }
 }

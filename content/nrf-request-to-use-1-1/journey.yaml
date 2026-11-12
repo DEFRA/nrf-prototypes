@@ -900,7 +900,9 @@ pages:
   # pick which one this request is for. The last option is the research
   # participant's own organisation (the footer's "Participant details" box).
   # The organisation chosen shows in the header and as the business name on
-  # the developer details review page, whose Change link comes back here.
+  # the developer details review page and check your answers, whose Change
+  # link comes back here. A different organisation empties the developer
+  # details, so the agent enters them again before returning.
   - id: defra-choose-organisation
     shared: defra-id
     field: represent
@@ -909,7 +911,10 @@ pages:
     guard: { key: account.accountType, equals: agent, redirect: sign-in-method }
     handler: custom # puts the organisation chosen in the header, see hooks.js
     next:
-      - when: { key: $navFromSummary, truthy: true }
+      - when:
+          all:
+            - { key: $navFromSummary, truthy: true }
+            - { not: { key: organisationChanged, truthy: true } }
         goto: $summary
       - goto: developer-details
 
@@ -930,7 +935,7 @@ pages:
     next:
       - goto: read-this
         set: { detailsConfirmed: 'Yes' }
-    handoff: 2026-11-11
+    handoff: 2026-11-12
 
   # Companies and individuals each have their own address page (the hint
   # differs); both keep the address in yourAddress for the review page
@@ -1046,7 +1051,7 @@ pages:
               fullName: Trevor Barker
               email: individual@example.com
     next: confirmation
-    handoff: 2026-11-11
+    handoff: 2026-11-12
 
   # User research aids in the footer: the email and the commitment
   # certificate the submission sends

@@ -25,21 +25,26 @@ rows:
       - when: { key: originalCommitted, equals: 'Yes' }
         goto: original-reference
     changeHidden: the NRL reference for the original planning permission
-  - key: Requesting to use the levy for
+  - key: Requesting to use the levy as
     # The option chosen on defra-account-user-type.md, shown as its label
     value: '{{ defraUserType }}'
   # As the review details pages: only an agent can change the developer's
   # name; the business name comes from the account (the organisation an
-  # agent chose) and an individual has none
+  # agent chose, which they change on Defra ID's organisation picker) and an
+  # individual has none
   - key: Full name
     value: '{{ developerDetails.fullName or yourAddress.fullName or account.fullName }}'
     change:
       - when: { key: account.accountType, equals: agent }
         goto: developer-details
     changeHidden: full name
-  - key: Business name
+  - key: Developer business name
     value: '{{ account.organisationName or account.businessName }}'
     when: { key: account.accountType, in: [agent, company] }
+    change:
+      - when: { key: account.accountType, equals: agent }
+        goto: defra-choose-organisation
+    changeHidden: developer business name
   - key: Address
     value:
       lines:
@@ -55,13 +60,6 @@ rows:
         goto: individual-address
       - goto: org-address
     changeHidden: address
-  - key: Details confirmed
-    value: '{{ detailsConfirmed }}'
-    change:
-      - when: { key: account.accountType, equals: agent }
-        goto: review-developer-details
-      - goto: review-your-details
-    changeHidden: the confirmed details
   - heading: Development details
   # No Change links here: the development details are changed from
   # review-quote-details, linked from the warning below

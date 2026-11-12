@@ -8,6 +8,8 @@ rows:
     changeHidden: the developer's full name
   - key: Business name
     value: '{{ account.organisationName }}'
+    change: defra-choose-organisation
+    changeHidden: the developer business name
   - key: Address
     value:
       lines:
