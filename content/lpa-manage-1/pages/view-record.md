@@ -23,6 +23,8 @@ type: custom
 rows:
   - heading: Commitment details
   - include: commitment-summary
+  - key: Number of housing units
+    value: '{{ commitment.units }}'
   - heading: Planning details
   - key: Planning type
     value: '{{ commitment.planningType }}'
