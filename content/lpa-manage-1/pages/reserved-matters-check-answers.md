@@ -1,5 +1,5 @@
 ---
-# Save adds the reserved matters application to the developer record and
+# Submit adds the reserved matters application to the developer record and
 # returns to it, which says so (hooks.js)
 type: check-answers
 caption: '{{ reservedMattersRecord }}'
@@ -22,7 +22,7 @@ rows:
     change: reserved-matters-description
     changeHidden: description
 actions:
-  - text: Save
+  - text: Submit
     kind: submit
   - text: Cancel
     kind: link
@@ -30,3 +30,7 @@ actions:
 ---
 
 # Check the reserved matters application details
+
+:::warning
+XXX Helen to add
+:::

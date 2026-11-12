@@ -1635,7 +1635,7 @@ const reservedMattersReference = {
   }
 }
 
-// Save on the reserved matters check answers page: the application joins
+// Submit on the reserved matters check answers page: the application joins
 // the record's reserved matters and its history, and the record page says
 // so. The number of units is kept only while layout or scale is ticked.
 const reservedMattersCheckAnswers = {

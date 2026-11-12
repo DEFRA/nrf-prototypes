@@ -519,7 +519,7 @@ pages:
   # (add-reserved-matters?ref=NRL-100958, a route in hooks.js that
   # remembers the record as reservedMattersRecord) or from "Are you adding
   # a reserved matters application to this developer record?". Nothing
-  # changes until Save on reserved-matters-check-answers, which adds it to
+  # changes until Submit on reserved-matters-check-answers, which adds it to
   # the record and returns there with a success banner.
   - id: reserved-matters-reference
     group: reserved-matters
