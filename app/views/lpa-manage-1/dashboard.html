@@ -124,6 +124,8 @@
 {% else %}
   <p class="govuk-body">
     {{- text.noResults }}
+    {#- A search that finds nothing may be for a record not added yet #}
+    {%- if search.q %} <a class="govuk-link govuk-link--no-visited-state" href="{{ routes.RETRIEVE_COMMITMENT }}">{{ text.addRecord }}</a>{% endif %}
     {%- if filters.count %} <a class="govuk-link govuk-link--no-visited-state app-staff-table-footer__clear" href="{{ filters.clearHref }}">{{ text.clearFilters }}</a>{% endif -%}
   </p>
 {% endif %}
