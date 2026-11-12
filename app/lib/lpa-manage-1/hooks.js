@@ -599,6 +599,11 @@ const DEFAULT_SORT = 'lastModified'
 const DEFAULT_DIR = 'desc'
 const newestFirst = (a, b) => (b.lastModified || 0) - (a.lastModified || 0)
 
+// The ids of the dashboard's cards and its filter, which their links (and
+// the filter's form) scroll to
+const CARDS_ID = 'record-counts'
+const FILTER_ID = 'record-filters'
+
 // The filters' checkbox groups: each one's query key and the values it can
 // take, with their labels, from records.yaml
 const FILTERS = ['status', 'stage', 'type']
@@ -858,13 +863,14 @@ function filtersFor(query, text, store, path) {
   return {
     groups,
     count,
+    id: FILTER_ID,
     // Clear filters keeps the search and the sort
-    clearHref: hrefFor(path, {
+    clearHref: `${hrefFor(path, {
       ...blankQuery(),
       q: query.q,
       sort: query.sort,
       dir: query.dir
-    })
+    })}#${FILTER_ID}`
   }
 }
 
@@ -1790,11 +1796,20 @@ const dashboard = {
     }
     const path = ctx.journey.routes.DASHBOARD
     const all = allRecords(ctx.data)
-    // Each card counts the records the table shows with its filters set
+    const query = queryOf(ctx, store)
+    // Each card counts the records the table shows with its filters set.
+    // Its link scrolls the cards to the top of the window so the table
+    // shows beneath them, and the card is active while the table has
+    // exactly its filters (whatever is searched, sorted or paged).
+    const sameValues = (a = [], b = []) =>
+      a.length === b.length && a.every((value) => b.includes(value))
     const card = (label, filters, test) => ({
       count: all.filter(test).length,
       label,
-      href: hrefFor(path, blankQuery(), filters)
+      href: `${hrefFor(path, blankQuery(), filters)}#${CARDS_ID}`,
+      active:
+        FILTERS.every((name) => sameValues(query[name], filters[name])) &&
+        query.overdue === Boolean(filters.overdue)
     })
     const isStatus = (status) => (r) => r.status.shown === status
     model.cards = [
@@ -1812,7 +1827,6 @@ const dashboard = {
       card(text.overdueCount, { overdue: true }, (r) => r.overdue)
     ]
 
-    const query = queryOf(ctx, store)
     const records = sortRecords(
       all.filter(
         (record) => matches(record, query.q) && matchesFilters(record, query)

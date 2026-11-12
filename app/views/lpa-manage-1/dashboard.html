@@ -6,9 +6,10 @@
   column heading (?_sort=<column>&_dir=asc|desc) and paged (?_page=). Each
   form keeps what the other sets; searching, filtering or sorting starts
   again at page 1. Model extras from app/lib/lpa-manage-1/hooks.js: flash
-  (the banner after Confirm on a record page), cards [{ count, label, href }],
+  (the banner after Confirm on a record page), cards [{ count, label, href,
+  active }],
   search (the query), resultCount, showing, pagination,
-  filters { groups, count, clearHref }, clearSearchHref, table.
+  filters { groups, count, id, clearHref }, clearSearchHref, table.
 #}
 {% extends "journey-engine/_page.html" %}
 
@@ -57,10 +58,10 @@
   {{ keep(search, true) }}
 </form>
 
-<ul class="app-staff-cards">
+<ul class="app-staff-cards" id="record-counts">
   {% for card in cards %}
   <li class="app-staff-card">
-    <a class="app-staff-card__link" href="{{ card.href }}">
+    <a class="app-staff-card__link{% if card.active %} app-staff-card__link--active{% endif %}" href="{{ card.href }}"{% if card.active %} aria-current="true"{% endif %}>
       <span class="app-staff-card__count">{{ card.count }}</span>
       <span class="app-staff-card__label">{{ card.label }}</span>
     </a>
@@ -68,12 +69,14 @@
   {% endfor %}
 </ul>
 
-<details class="govuk-details app-staff-filter">
+<details class="govuk-details app-staff-filter" id="{{ filters.id }}">
   <summary class="govuk-details__summary">
     <span class="govuk-details__summary-text">{{ text.filterSummary }}{% if filters.count %} ({{ filters.count }}){% endif %}</span>
   </summary>
   <div class="govuk-details__text">
-    <form action="{{ routes.DASHBOARD }}" method="get" novalidate>
+    {# The fragment survives the GET, so the page comes back scrolled to
+       the filter with the table beneath it #}
+    <form action="{{ routes.DASHBOARD }}#{{ filters.id }}" method="get" novalidate>
       {{ keep(search, false) }}
       <div class="app-staff-filter__groups">
         {% for group in filters.groups %}

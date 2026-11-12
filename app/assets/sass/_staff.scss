@@ -308,6 +308,9 @@ $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
   margin: 0 0 govuk-spacing(8);
   padding: 0;
   list-style: none;
+  // A card's link (#record-counts) brings the cards to the top of the
+  // window, a little below its edge, so the table shows beneath them
+  scroll-margin-top: govuk-spacing(4);
 
   // Four side by side from desktop, two by two on tablets, stacked on
   // phones
@@ -382,6 +385,27 @@ $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
 .app-staff-card__link:focus .app-staff-card__label {
   color: $app-staff-black;
   text-decoration: none;
+}
+
+// The card whose filters the table has set: GOV.UK blue with white words
+.app-staff-card__link--active {
+  border-color: govuk-colour('blue');
+  border-bottom-color: govuk-colour('blue', $variant: 'shade-50');
+  background: govuk-colour('blue');
+
+  &:link,
+  &:visited,
+  .app-staff-card__label {
+    color: govuk-colour('white');
+  }
+
+  &:hover {
+    background: govuk-colour('blue', $variant: 'shade-25');
+  }
+
+  &:focus {
+    @include govuk-focused-text;
+  }
 }
 
 .app-staff-search {
@@ -490,6 +514,9 @@ $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
 // The records table's filter: its checkbox groups side by side from tablet
 .app-staff-filter {
   margin-bottom: govuk-spacing(4);
+  // Applying or clearing the filters (#record-filters) brings it to the
+  // top of the window with the table beneath it
+  scroll-margin-top: govuk-spacing(4);
 
   .govuk-details__text {
     padding-top: govuk-spacing(3);
