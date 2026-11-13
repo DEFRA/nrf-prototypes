@@ -428,8 +428,14 @@ function recordOf({ entry, record }, store, today = new Date()) {
     originalReference: entry.originalReference || '',
     originalPlanningReference: record.originalPlanningReference || '',
     planningStage: planningStageOf(record.planningStage || ADDED_STAGE, store),
-    // The details given with Granted (decision-check-answers)
-    planningDecision: record.planningDecision || null,
+    // The details given with Granted (decision-check-answers); a canned
+    // one in records.yaml words its planning type in `planningType`
+    planningDecision: record.planningDecision
+      ? {
+          planningTypeLabel: record.planningDecision.planningType,
+          ...record.planningDecision
+        }
+      : null,
     reservedMatters: (record.reservedMatters || []).map((item) => ({
       reference: item.reference,
       status: planningStageOf(item.status || ADDED_STAGE, store),

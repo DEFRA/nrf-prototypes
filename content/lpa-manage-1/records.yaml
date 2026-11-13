@@ -55,6 +55,10 @@
 #                      record is `applied` until its commitment details
 #                      are reviewed; the record page's radios then move it
 #                      on
+#   planningDecision   for a granted application, the details given with
+#                      Granted: the decision `reference`, number of
+#                      `units`, `planningType` (as the question words it,
+#                      such as Full planning permission) and `description`
 #   reservedMatters    for an outline planning application that has been
 #                      granted, the reserved matters applications made
 #                      under it: each a `reference`, a `status` (one of the
@@ -730,6 +734,13 @@ commitments:
     record:
       planningReference: 2026/0318/FUL
       planningStage: granted
+      planningDecision:
+        reference: 2026/0318/FUL
+        units: 36
+        planningType: Full planning permission
+        description: >-
+          Erection of 36 dwellings with associated access, parking and
+          landscaping
       officer: Tom Barker
       status: reviewed
       history:
