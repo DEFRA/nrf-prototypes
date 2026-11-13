@@ -730,9 +730,13 @@ function blankQuery() {
 // ?_q=, ?_sort=, ?_dir=, ?_page=, ?_status=, ?_stage=, ?_type= and
 // ?_overdue= (the kit never keeps a query key starting with `_` in the
 // session, so a search never follows the officer around). Values no
-// filter offers are dropped.
+// filter offers are dropped. A screen wall variant searches with
+// `lpaSearch` in its sample data.
 function queryOf(ctx, store) {
-  const raw = ctx.query || {}
+  const raw = {
+    ...(ctx.preview && ctx.data.lpaSearch ? { _q: ctx.data.lpaSearch } : {}),
+    ...ctx.query
+  }
   const options = filterOptions(store)
   const pick = (name) => {
     const allowed = new Set(options[name].map((option) => option.value))

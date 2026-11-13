@@ -626,3 +626,8 @@ pages:
             Back on the dashboard after choosing a review option on a record
             and confirming it, with the banner
           data: { lpaFlash: updated }
+        - id: no-results
+          label: Search with no results
+          description: >-
+            A search that matches no records
+          data: { lpaSearch: Kestrel Homes }
