@@ -154,11 +154,11 @@ actions:
 
 # {{ record.reference }}
 
-## Red line boundary from commitment certificate
+## Red line boundary from the commitment certificate
 
 ::::if record.status.shown equals for-review
 :::inset
-Compare this with the red line boundary on the planning application
+Compare this with the red line boundary on the planning application, it should match.
 :::
 ::::
 
