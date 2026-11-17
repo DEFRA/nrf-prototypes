@@ -5,7 +5,7 @@
 // diagram and the wall can never drift from the running prototype.
 //
 
-const archiver = require('archiver')
+const { ZipArchive } = require('archiver')
 const govukPrototypeKit = require('govuk-prototype-kit')
 const router = govukPrototypeKit.requests.setupRouter()
 const {
@@ -355,7 +355,7 @@ router.get('/tools/journeys/:journey/screens.zip', async (req, res) => {
     'Content-Disposition',
     `attachment; filename="${folder}-screens.zip"`
   )
-  const archive = archiver('zip', { zlib: { level: 6 } })
+  const archive = new ZipArchive({ zlib: { level: 6 } })
   archive.on('error', (error) => {
     res.destroy(error)
   })
