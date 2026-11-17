@@ -5,6 +5,13 @@
 
 // Add extra styles here
 
+// Stop a lone word wrapping onto the last line of a paragraph, heading,
+// hint or list item. Every element inherits it; browsers without it wrap
+// as usual.
+body {
+  text-wrap: pretty;
+}
+
 // Style a <button> to look like a GOV.UK link while preserving POST submission
 .govuk-link-button {
   background: none;
