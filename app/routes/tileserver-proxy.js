@@ -207,10 +207,10 @@ function sendTileError(res, error) {
  * Serve vector tiles directly from MBTiles files
  * Handles /tiles/data/{layer}/{z}/{x}/{y}.pbf
  */
-router.get('/tiles/*', async (req, res) => {
+router.get('/tiles/*splat', async (req, res) => {
   try {
     // Extract the path after /tiles/
-    const tilePath = req.params[0]
+    const tilePath = [].concat(req.params.splat || []).join('/')
 
     // Validate that the path matches expected tile URL patterns
     // This prevents path traversal attacks

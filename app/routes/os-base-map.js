@@ -102,7 +102,7 @@ async function proxyOsBaseMap(req, res) {
     return res.status(503).json({ error: 'OS_API_KEY is not set' })
   }
 
-  const subPath = req.params[0] || ''
+  const subPath = [].concat(req.params.splat || []).join('/')
 
   try {
     const upstream = await fetchUpstream(buildOsBaseMapUrl(subPath, req.query))
@@ -202,7 +202,7 @@ router.get(SEA_MASK_PATH, async (req, res) => {
 })
 
 router.get(BASE_MAP_PATH, proxyOsBaseMap)
-router.get(`${BASE_MAP_PATH}/*`, proxyOsBaseMap)
+router.get(`${BASE_MAP_PATH}/*splat`, proxyOsBaseMap)
 
 /**
  * OS Names search, used by the map's search plugin
