@@ -250,7 +250,7 @@ button: Confirm
 # What are the developer details?
 ```
 
-The error summary lists one link per field that is missing. A `link` or `destructive` entry under `actions:` on any question page adds a link beside its button (a Cancel link, say).
+The error summary lists one link per field that is missing. A `link` or `destructive` entry under `actions:` on any question page adds a link beside its button (a Cancel link, say), and a `warning` entry turns the button itself red with its own text (the assume liability journey's Cancel commitment).
 
 `title` is only needed when the browser tab title should differ from the heading.
 

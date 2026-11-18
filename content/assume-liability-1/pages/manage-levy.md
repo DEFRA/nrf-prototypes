@@ -2,7 +2,7 @@
 # The account's home (app/views/assume-liability-1/manage-levy.html): every
 # developer record the user is a primary or secondary user of, from
 # records.yaml, each NRL reference linking to the record; then their quotes
-# and commitments, each with a link to use it.
+# and commitments, each NRL reference linking to its page.
 type: custom
 hint: View and manage your nature restoration levy quotes, commitments and liabilities to pay.
 text:
@@ -20,17 +20,20 @@ text:
   otherColumns:
     reference: NRL reference
     site: Development
-    type: Type
+    type: Stage
     date: Date
-    # Only for screen readers
-    action: Action
+    status: Status
   types:
     quote: Quote
     commitment: Commitment
-  requestToUse: Request to use the nature restoration levy
-  viewCertificate: View commitment certificate
-  # Finishes each link for screen readers; {reference} is the NRL reference
-  linkHidden: for {reference}
+  # PLACEHOLDER: each one's tag in the Status column. A commitment near its
+  # expiry date (or past it) is `expiring` (or `expired`; records.yaml),
+  # and one the user has cancelled `cancelled`
+  statuses:
+    active: Active
+    expiring: Expires soon
+    expired: Expired
+    cancelled: Cancelled
 ---
 
 # Manage the nature restoration levy

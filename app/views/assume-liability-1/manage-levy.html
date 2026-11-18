@@ -2,12 +2,11 @@
   The account's home (content/assume-liability-1/pages/manage-levy.md): the
   heading and hint, then a table of every developer record the user is a
   primary or secondary user of, each NRL reference linking to its record,
-  then one of their quotes and commitments, each with a link to use it
-  (a quote's to request to use the levy, a commitment's to its
-  certificate). Either table is left out when it would be empty. Both
-  give their reference, site and role or type columns the same widths so
-  the dates line up too, and keep each date on one line. On a phone each
-  row stacks, every value under its column heading (data-label, see
+  then one of their quotes and commitments, each NRL reference linking to
+  its page (quote-details, commitment-details), where its actions are, its
+  stage (quote or commitment) and its status as a tag. Either table is
+  left out when it would be empty. Both give their columns the same
+  widths, so the dates and tags line up; each date stays on one line. On a phone each row stacks, every value under its column heading (data-label, see
   app/assets/sass/_assume-liability.scss).
   data.records and data.quotesAndCommitments come from
   app/lib/assume-liability-1/hooks.js.
@@ -55,19 +54,13 @@
 {% if data.quotesAndCommitments | length %}
 {% set otherRows = [] %}
 {% for item in data.quotesAndCommitments %}
-  {% if item.type == "quote" %}
-    {% set href = item.href %}
-    {% set linkText = text.requestToUse %}
-  {% else %}
-    {% set href = routes.VIEW_CERTIFICATE + "?ref=" + (item.reference | urlencode) %}
-    {% set linkText = text.viewCertificate %}
-  {% endif %}
+  {% set detailsHref = (routes.QUOTE_DETAILS if item.type == "quote" else routes.COMMITMENT_DETAILS) + "?ref=" + (item.reference | urlencode) %}
   {% set otherRows = (otherRows.push([
-    { text: item.reference, attributes: { "data-label": text.otherColumns.reference } },
+    { html: '<a class="govuk-link" href="' + detailsHref + '">' + item.reference + '</a>', attributes: { "data-label": text.otherColumns.reference } },
     { text: item.site, attributes: { "data-label": text.otherColumns.site } },
     { text: text.types[item.type], attributes: { "data-label": text.otherColumns.type } },
     { text: item.date, classes: "app-table__date", attributes: { "data-label": text.otherColumns.date } },
-    { html: '<a class="govuk-link" href="' + href + '">' + linkText + '<span class="govuk-visually-hidden"> ' + (text.linkHidden | replace("{reference}", item.reference)) + '</span></a>' }
+    { html: '<strong class="govuk-tag govuk-tag--' + item.colour + '">' + (text.statuses[item.status] | escape) + '</strong>', attributes: { "data-label": text.otherColumns.status } }
   ]), otherRows) %}
 {% endfor %}
 
@@ -80,7 +73,7 @@
     { text: text.otherColumns.site, classes: "govuk-!-width-one-quarter" },
     { text: text.otherColumns.type, classes: "app-table__kind" },
     { text: text.otherColumns.date, classes: "app-table__date" },
-    { html: '<span class="govuk-visually-hidden">' + text.otherColumns.action + '</span>' }
+    { text: text.otherColumns.status }
   ],
   rows: otherRows
 }) }}

@@ -69,6 +69,10 @@ session:
   - record
   - records
   - liabilityProgress
+  - quoteReference
+  - commitmentReference
+  - cancelReason
+  - cancelledCommitments
   - assumeLiability
   - howToPay
   - acceptLevy
@@ -182,13 +186,84 @@ pages:
     next: manage-levy
 
   # The account's home: every developer record the user is a primary or
-  # secondary user of (records.yaml). The landing page, so no Back link.
-  # Each record's NRL reference links to its page; `next` only draws that
-  # on the tools page (there is no form to submit).
+  # secondary user of (records.yaml), then their quotes and commitments.
+  # The landing page, so no Back link. Each NRL reference links to its
+  # page; `next` and `links` only draw that on the tools page (there is no
+  # form to submit).
   - id: manage-levy
     template: assume-liability-1/manage-levy
     back: []
     next: developer-record
+    links:
+      - goto: quote-details
+        text: A quote's NRL reference
+      - goto: commitment-details
+        text: A commitment's NRL reference
+
+  # A quote: quote-details?ref=NRL-456789 (hooks.js). Request to use opens
+  # the request to use journey with its NRL reference filled in; Delete
+  # borrows the quote journey's delete pages, whose Back and Cancel return
+  # here.
+  - id: quote-details
+    handler: custom
+    back: manage-levy
+    preview:
+      data: { quoteReference: NRL-456789 }
+
+  # A commitment: commitment-details?ref=NRL-567890 (hooks.js). Its
+  # certificate opens with a Back link to here. Near its expiry date, or
+  # past it, or once cancelled, a warning shows; an expired or cancelled
+  # one has no Cancel link.
+  - id: commitment-details
+    template: assume-liability-1/commitment-details
+    handler: custom
+    back: manage-levy
+    preview:
+      data: { commitmentReference: NRL-567890 }
+      variants:
+        - id: expiring
+          label: Expires soon
+          description: >-
+            A commitment within 30 days of its expiry date: an orange tag
+            and a warning
+          data: { commitmentReference: NRL-678912 }
+        - id: expired
+          label: Expired
+          description: >-
+            A commitment past its expiry date: a red tag, a warning and no
+            Cancel link
+          data: { commitmentReference: NRL-891234 }
+        - id: cancelled
+          label: Cancelled
+          description: >-
+            A commitment the user has cancelled: a grey tag, a warning, when
+            and why it was cancelled, and no Cancel link
+          data:
+            commitmentReference: NRL-567890
+            cancelledCommitments:
+              NRL-567890:
+                on: '2026-11-18'
+                reason: The planning application has been withdrawn.
+
+  # PLACEHOLDER: why they are cancelling, with a warning. The red button
+  # cancels the commitment (hooks.js): it stays in the table as cancelled,
+  # and its page says when and why.
+  - id: cancel-commitment
+    field: cancel-reason
+    sessionKey: cancelReason
+    guard: &commitment { key: commitmentReference, isSet: true, redirect: manage-levy }
+    handler: custom
+    back: commitment-details
+    next: commitment-cancelled
+    preview:
+      data: { commitmentReference: NRL-567890 }
+
+  # PLACEHOLDER. Cancelled already, so no Back link.
+  - id: commitment-cancelled
+    guard: *commitment
+    back: []
+    preview:
+      data: { commitmentReference: NRL-567890 }
 
   # A record: developer-record?ref=NRL-123456. The question at the bottom
   # shows only to the primary user of a record whose planning permission is

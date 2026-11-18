@@ -16,6 +16,13 @@
  *     (`liabilityProgress`) over the file's own
  *   - the record page opened by ?ref=NRL-123456; each record keeps its own
  *     answers, put aside while another is open (`recordAnswers`)
+ *   - the quote and commitment pages opened the same way, a quote's link to
+ *     request to use the levy and the commitments cancelled
+ *     (`cancelledCommitments`: when and why, by NRL reference), which stay
+ *     in the table as cancelled
+ *   - each commitment's dates (`issued: 60 days ago` counts back from
+ *     today; it expires 6 months later) and whether it expires soon or
+ *     has expired
  *   - a secondary user named as jointly liable signs the record's
  *     assumption document (its `signatories` in records.yaml)
  *   - the jointly liable people, added one at a time (name, then email)
@@ -43,6 +50,12 @@ const REFERENCE = /^NRL-\d{6}$/i
 
 // A levy under this many pounds is paid in full: no instalments
 const INSTALMENTS_FROM = 50000
+
+// A commitment expires this many months after it is issued
+const COMMITMENT_MONTHS = 6
+
+// `issued: 60 days ago` in records.yaml
+const DAYS_AGO = /^(\d+) days? ago$/i
 
 // The stand-in developer, until the facilitator gives the participant's
 // details
@@ -81,7 +94,14 @@ const REQUEST_TO_USE = '/nrf-request-to-use-1-1'
 
 let cache = {
   mtime: 0,
-  store: { statuses: {}, records: [], quotes: [], commitments: [] }
+  store: {
+    statuses: {},
+    tags: {},
+    expiringWithin: 30,
+    records: [],
+    quotes: [],
+    commitments: []
+  }
 }
 
 /**
@@ -97,6 +117,8 @@ function loadStore() {
         mtime: mtimeMs,
         store: {
           statuses: parsed.statuses || {},
+          tags: parsed.tags || {},
+          expiringWithin: parsed.expiringWithin || 30,
           records: parsed.records || [],
           quotes: parsed.quotes || [],
           commitments: parsed.commitments || []
@@ -143,6 +165,46 @@ function tableDate(value) {
 
 function today() {
   return new Date().toISOString().slice(0, 10)
+}
+
+// A date from records.yaml: YYYY-MM-DD, or `60 days ago`
+function dateOf(value) {
+  const match = DAYS_AGO.exec(String(value || '').trim())
+  if (match) {
+    const date = new Date()
+    date.setHours(0, 0, 0, 0)
+    date.setDate(date.getDate() - Number(match[1]))
+    return date
+  }
+  return value ? new Date(value) : null
+}
+
+/**
+ * A commitment's issue and expiry dates (6 months after it was issued,
+ * unless records.yaml gives one) and its status: `cancelled` once the
+ * user has cancelled it, else `active`, `expiring` within the file's
+ * `expiringWithin` days of expiring, or `expired`
+ */
+function commitmentDates(raw, store, data) {
+  const issued = dateOf(raw.issued)
+  let expires = dateOf(raw.expires)
+  if (!expires && issued) {
+    expires = new Date(issued)
+    expires.setMonth(expires.getMonth() + COMMITMENT_MONTHS)
+  }
+  const now = new Date()
+  now.setHours(0, 0, 0, 0)
+  const daysLeft = expires ? Math.round((expires - now) / 86400000) : Infinity
+  const cancelled = (data.cancelledCommitments || {})[raw.reference]
+  let status = 'active'
+  if (cancelled) {
+    status = 'cancelled'
+  } else if (daysLeft < 0) {
+    status = 'expired'
+  } else if (daysLeft <= store.expiringWithin) {
+    status = 'expiring'
+  }
+  return { issued, expires, status, cancelled }
 }
 
 /**
@@ -295,26 +357,73 @@ function recordFor(raw, store, data) {
   }
 }
 
+// The request to use journey's "Enter your NRL reference" with the quote's
+// reference filled in
+function requestToUseHref(reference) {
+  return `${REQUEST_TO_USE}/quote-reference?_nrl=${encodeURIComponent(reference)}`
+}
+
 /**
- * The quotes and commitments under the records, each with the link that
- * uses it: a quote's to the request to use journey with its reference
- * filled in, a commitment's to its certificate (see manageLevy)
+ * The quotes and commitments under the records, each opening its own page
+ * (quote-details, commitment-details), with its status and that status's
+ * tag colour from records.yaml (see commitmentDates; a quote is always
+ * active).
  */
-function quotesAndCommitmentsFor(store) {
+function quotesAndCommitmentsFor(store, data) {
+  const colour = (status) => store.tags[status] || 'grey'
   const quotes = store.quotes.map((quote) => ({
     type: 'quote',
+    status: 'active',
+    colour: colour('active'),
     reference: quote.reference,
     site: quote.site,
-    date: tableDate(quote.created),
-    href: `${REQUEST_TO_USE}/quote-reference?_nrl=${encodeURIComponent(quote.reference)}`
+    date: tableDate(quote.created)
   }))
-  const commitments = store.commitments.map((commitment) => ({
-    type: 'commitment',
-    reference: commitment.reference,
-    site: commitment.site,
-    date: tableDate(commitment.issued)
-  }))
+  const commitments = store.commitments.map((commitment) => {
+    const { issued, status } = commitmentDates(commitment, store, data)
+    return {
+      type: 'commitment',
+      status,
+      colour: colour(status),
+      reference: commitment.reference,
+      site: commitment.site,
+      date: tableDate(issued)
+    }
+  })
   return [...quotes, ...commitments]
+}
+
+/**
+ * A quote or commitment from records.yaml as its page shows it: dates
+ * written out, the boundary in the shape `:::map` draws and, for a
+ * commitment, its status (see commitmentDates) with its tag's colour, and
+ * when and why it was cancelled
+ */
+function detailsFor(raw, store, data) {
+  if (!raw) {
+    return null
+  }
+  const details = {
+    ...raw,
+    created: formatDate(raw.created),
+    boundary: { coordinates: raw.boundary || [] }
+  }
+  if (raw.issued) {
+    const { issued, expires, status, cancelled } = commitmentDates(
+      raw,
+      store,
+      data
+    )
+    details.issued = formatDate(issued)
+    details.expires = formatDate(expires)
+    details.status = status
+    details.colour = store.tags[status] || 'grey'
+    if (cancelled) {
+      details.cancelledOn = formatDate(cancelled.on)
+      details.cancelReason = cancelled.reason
+    }
+  }
+  return details
 }
 
 /**
@@ -325,7 +434,19 @@ function quotesAndCommitmentsFor(store) {
 function refresh(data) {
   const store = loadStore()
   data.records = store.records.map((raw) => recordFor(raw, store, data))
-  data.quotesAndCommitments = quotesAndCommitmentsFor(store)
+  data.quotesAndCommitments = quotesAndCommitmentsFor(store, data)
+  data.quote = detailsFor(
+    store.quotes.find((quote) => quote.reference === data.quoteReference),
+    store,
+    data
+  )
+  data.commitment = detailsFor(
+    store.commitments.find(
+      (commitment) => commitment.reference === data.commitmentReference
+    ),
+    store,
+    data
+  )
   data.record =
     data.records.find((record) => record.reference === data.recordReference) ||
     null
@@ -482,10 +603,11 @@ const developerRecord = {
 }
 
 // A commitment's "View commitment certificate" link
-// (view-commitment-certificate?ref=NRL-567890): its details go where the
-// request to use journey's certificate reads them, then that page opens
-// with a Back link to the records (?_from=manage-levy, see
-// app/lib/nrf-request-to-use-1-1/hooks.js)
+// (view-commitment-certificate?ref=NRL-567890, or the commitment open on
+// commitment-details): its details go where the request to use journey's
+// certificate reads them, then that page opens with a Back link to the
+// records, or to the commitment's page when it came from there
+// (?_from=commitment-details; see app/lib/nrf-request-to-use-1-1/hooks.js)
 const manageLevy = {
   routes(router, journey) {
     const routes = {
@@ -493,17 +615,24 @@ const manageLevy = {
     }
     router.get(routes.VIEW_CERTIFICATE, (req, res) => {
       const data = (req.session && req.session.data) || {}
-      const commitment = loadStore().commitments.find(
-        (item) => item.reference === String(req.query.ref || '')
+      const reference = String(req.query.ref || data.commitmentReference || '')
+      const from =
+        req.query._from === 'commitment-details'
+          ? 'commitment-details'
+          : 'manage-levy'
+      const store = loadStore()
+      const commitment = store.commitments.find(
+        (item) => item.reference === reference
       )
       if (!commitment) {
         return res.redirect(`${journey.basePath}/manage-levy`)
       }
       const account = data.account || {}
+      const { issued, expires } = commitmentDates(commitment, store, data)
       data.nrlReference = commitment.reference
       data.certificate = {
-        issueDate: formatDate(commitment.issued),
-        expiryDate: formatDate(commitment.expires)
+        issueDate: formatDate(issued),
+        expiryDate: formatDate(expires)
       }
       data.levyAmount = commitment.levyAmount
       data.edpName = commitment.edp
@@ -513,9 +642,72 @@ const manageLevy = {
         fullName: account.fullName,
         ...(commitment.address || {})
       }
-      res.redirect(`${REQUEST_TO_USE}/commitment-certificate?_from=manage-levy`)
+      res.redirect(`${REQUEST_TO_USE}/commitment-certificate?_from=${from}`)
     })
     return routes
+  }
+}
+
+/**
+ * A quote's or commitment's page opened by ?ref=NRL-456789: `key` is the
+ * session key that remembers which one is open, so the pages after it
+ * (and a Back link from the quote journey's delete pages) find it again.
+ * Anything not in records.yaml goes back to the records.
+ */
+function openDetails(key, item) {
+  return {
+    load(ctx) {
+      const { data, query, preview, journey } = ctx
+      if (preview) {
+        return
+      }
+      const ref = String(query.ref || '')
+        .trim()
+        .toUpperCase()
+      delete data.ref
+      if (REFERENCE.test(ref) && ref !== data[key]) {
+        data[key] = ref
+        refresh(data)
+      }
+      if (!data[item]) {
+        return { redirect: journey.routes.MANAGE_LEVY }
+      }
+    }
+  }
+}
+
+// Its Request to use button (quote-details/request-to-use) opens the request
+// to use journey with the quote's NRL reference filled in
+const quoteDetails = {
+  ...openDetails('quoteReference', 'quote'),
+  routes(router, journey) {
+    const routes = {
+      USE_QUOTE: `${journey.basePath}/quote-details/request-to-use`
+    }
+    router.get(routes.USE_QUOTE, (req, res) => {
+      const data = (req.session && req.session.data) || {}
+      if (!data.quoteReference) {
+        return res.redirect(`${journey.basePath}/manage-levy`)
+      }
+      res.redirect(requestToUseHref(data.quoteReference))
+    })
+    return routes
+  }
+}
+
+const commitmentDetails = openDetails('commitmentReference', 'commitment')
+
+// Cancel commitment: when and why are kept by NRL reference, so it stays
+// in "Your quotes and commitments" as cancelled. The reason box starts
+// empty for the next one.
+const cancelCommitment = {
+  process(ctx) {
+    const { data } = ctx
+    data.cancelledCommitments = {
+      ...(data.cancelledCommitments || {}),
+      [data.commitmentReference]: { on: today(), reason: data.cancelReason }
+    }
+    delete data.cancelReason
   }
 }
 
@@ -781,6 +973,9 @@ module.exports = {
   'choose-organisation': chooseOrganisation,
   'manage-levy': manageLevy,
   'developer-record': developerRecord,
+  'quote-details': quoteDetails,
+  'commitment-details': commitmentDetails,
+  'cancel-commitment': cancelCommitment,
   'how-to-pay': howToPay,
   'anyone-else': anyoneElse,
   'liable-person-name': liablePersonName,

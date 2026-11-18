@@ -46,6 +46,19 @@ statuses:
   submit: { label: Ready to submit, colour: orange }
   liable: { label: Ready for payment, colour: green }
 
+# The tag colour of each status in "Your quotes and commitments" and on a
+# commitment's page (the labels are in pages/manage-levy.md and
+# pages/commitment-details.md). Quotes and commitments are `active`; a
+# commitment within `expiringWithin` days of its expiry date is
+# `expiring`, after it `expired`, and once the user cancels it
+# `cancelled`.
+tags:
+  active: blue
+  expiring: orange
+  expired: red
+  cancelled: grey
+expiringWithin: 30
+
 edp: &edp 'Norfolk: Broads Special Area of Conservation (SAC) (Yare and Bure), Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2027 to 2037)'
 
 records:
@@ -201,25 +214,46 @@ records:
       - [1.187316, 52.597727]
 
 # Quotes and commitments the signed-in developer has that are not developer
-# records yet, in one table under the records, in this order. A quote's link
-# opens the request to use journey's "Enter your NRL reference" with its
-# reference filled in. A commitment's link opens the request to use
-# journey's commitment certificate for it: `issued` and `expires` are the
-# certificate's dates, `address` the developer's, `units` the homes and
-# `boundary` the red line boundary its map draws.
+# records yet, in one table under the records, in this order. Each NRL
+# reference opens a page of its details (quote-details, commitment-details)
+# with its red line boundary. A quote's "Request to use" link opens the
+# request to use journey's "Enter your NRL reference" with its reference
+# filled in. A commitment's link opens the request to use journey's
+# commitment certificate for it: `issued` and `expires` are the
+# certificate's dates (`issued` may be written as `60 days ago`, so the
+# canned commitments stay as far from their expiry as they are today;
+# `expires` is 6 months after `issued` unless given), `address` the
+# developer's, `units` the homes and
+# `boundary` the red line boundary its map draws (an open ring of
+# [longitude, latitude] pairs, as the records'). The quote's boundary is the
+# LPA journey's taverham-fleet-road field, inside the Norfolk EDP.
 quotes:
   - reference: NRL-456789
-    site: Land off Station Road, Attleborough
+    site: Land off Fleet Road, Taverham
     created: 2026-10-21
+    planningType: Full planning permission
+    units: 60
+    edp: *edp
+    levyAmount: 'X,XXX'
+    boundary:
+      - [1.183919, 52.672994]
+      - [1.184394, 52.672598]
+      - [1.184780, 52.672202]
+      - [1.185052, 52.671886]
+      - [1.185443, 52.671361]
+      - [1.186029, 52.671282]
+      - [1.186188, 52.671231]
+      - [1.186910, 52.672111]
+      - [1.184398, 52.673229]
 
 commitments:
   - reference: NRL-567890
     site: Land off London Road, Wymondham
+    planningType: Full planning permission
     units: 100
     edp: *edp
     levyAmount: 'X,XXX'
-    issued: 2026-09-15
-    expires: 2027-03-15
+    issued: 60 days ago
     address:
       addressLine1: 12 Station Road
       town: March
@@ -243,3 +277,45 @@ commitments:
       - [1.092315, 52.560307]
       - [1.092124, 52.559852]
       - [1.091981, 52.559662]
+
+  # Expires in a couple of weeks: an orange "Expires soon" tag
+  - reference: NRL-678912
+    site: Land off Cromer Road, Aylsham
+    planningType: Full planning permission
+    units: 24
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 165 days ago
+    address:
+      addressLine1: 12 Station Road
+      town: March
+      postcode: PE15 8AA
+    boundary:
+      - [1.249799, 52.799503]
+      - [1.251023, 52.799264]
+      - [1.251279, 52.799737]
+      - [1.250302, 52.799931]
+      - [1.250267, 52.799867]
+      - [1.250112, 52.799898]
+      - [1.250127, 52.799924]
+      - [1.250070, 52.799937]
+
+  # Expired a few weeks ago: a red "Expired" tag
+  - reference: NRL-891234
+    site: Land off Hawthorn Drive, Dereham
+    planningType: Full planning permission
+    units: 16
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 210 days ago
+    address:
+      addressLine1: 12 Station Road
+      town: March
+      postcode: PE15 8AA
+    boundary:
+      - [0.925019, 52.672962]
+      - [0.926479, 52.672862]
+      - [0.926533, 52.673016]
+      - [0.926392, 52.673203]
+      - [0.926058, 52.673499]
+      - [0.925634, 52.673338]

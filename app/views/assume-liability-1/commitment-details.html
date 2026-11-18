@@ -1,0 +1,47 @@
+{#
+  A commitment (content/assume-liability-1/pages/commitment-details.md):
+  its NRL reference with the same tag as the table's Status column, a
+  warning when it expires soon, has expired or was cancelled, the levy and
+  development details, the red line boundary (the page's copy), then its
+  actions. An expired or cancelled commitment has nothing left to cancel,
+  so its destructive link is left out. data.commitment comes from app/lib/assume-liability-1/hooks.js.
+#}
+{% extends "journey-engine/_page.html" %}
+
+{% set text = content.text %}
+{% set commitment = data.commitment %}
+
+{% block pageBody %}
+<h1 class="govuk-heading-l">
+  {% include "journey-engine/_caption.html" %}{{ content.heading }}
+  {% if commitment %}
+    <strong class="govuk-tag govuk-tag--{{ commitment.colour }} govuk-!-margin-left-2">{{ text.tags[commitment.status] }}</strong>
+  {% endif %}
+</h1>
+
+{% if commitment and text[commitment.status] %}
+  {% set warningDate = commitment.cancelledOn if commitment.status == 'cancelled' else commitment.expires %}
+  {{ govukWarningText({ text: text[commitment.status] | replace("{date}", warningDate) }) }}
+{% endif %}
+
+{% for group in content.rowGroups %}
+  {% if group.heading %}<h2 class="govuk-heading-m">{{ group.heading }}</h2>{% endif %}
+  {% if group.rows | length %}
+    {{ govukSummaryList({ classes: "govuk-!-margin-bottom-9", rows: group.rows }) }}
+  {% endif %}
+{% endfor %}
+
+{{ content.html | safe }}
+
+<div class="govuk-button-group">
+  {% for action in content.actions %}
+    {% if action.kind == 'destructive' %}
+      {% if commitment.status not in ['expired', 'cancelled'] %}
+        <a class="govuk-link govuk-link--destructive" href="{{ action.href }}">{{ action.text }}</a>
+      {% endif %}
+    {% else %}
+      {{ govukButton({ text: action.text, href: action.href }) }}
+    {% endif %}
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,8 +1,8 @@
 // "Manage the nature restoration levy" (app/views/assume-liability-1/
 // manage-levy.html): both tables give the NRL reference this width (narrower
-// than any GOV.UK width class) and the role or type column the same one, so
-// their columns and dates line up, and keep each date (02 Sep 2026) on one
-// line
+// than any GOV.UK width class), and the role or stage column and the date
+// the same ones, so their columns, dates and tags line up. Each date
+// (02 Sep 2026) stays on one line.
 
 .app-table__reference {
   width: 16%;
@@ -13,13 +13,13 @@
 }
 
 .app-table__date {
+  width: 17%;
   white-space: nowrap;
 }
 
 // On a phone each row stacks into a block, with its column heading (the
 // cell's data-label) beside each value, as NHS.UK's responsive table does.
-// The heading row stays for screen readers. A cell with no data-label (the
-// quote or commitment's link) takes the full width.
+// The heading row stays for screen readers.
 @include govuk-media-query($until: tablet) {
   .app-table--stacked {
     .govuk-table__head {

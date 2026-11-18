@@ -718,10 +718,12 @@ function certificateContents(model) {
 //                       rather than above it
 // The certificate opens from the email, so it has no Back link, unless it
 // was opened from somewhere in the service that names itself in ?_from=
-// (the assume liability journey's records). Only the places listed here
-// get one, so the link can never lead anywhere else.
+// (the assume liability journey's records, or a commitment's page there).
+// Only the places listed here get one, so the link can never lead anywhere
+// else.
 const CERTIFICATE_OPENED_FROM = {
-  'manage-levy': '/assume-liability-1/manage-levy'
+  'manage-levy': '/assume-liability-1/manage-levy',
+  'commitment-details': '/assume-liability-1/commitment-details'
 }
 
 const commitmentCertificate = {

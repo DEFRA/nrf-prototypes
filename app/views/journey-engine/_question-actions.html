@@ -1,17 +1,23 @@
 {#
   The submit button of a question page plus any `actions` of kind `link` or
   `destructive` from its frontmatter (a Cancel link, say), in one button group.
-  Submit-style actions are ignored here: the page already has its button.
+  A `warning` action turns the page's button red, with its own text (the
+  assume liability journey's Cancel commitment). Other submit-style actions
+  are ignored here: the page already has its button.
 #}
 {% set extraActions = [] %}
+{% set warningAction = false %}
 {% for action in content.actions %}
   {% if action.kind == 'link' or action.kind == 'destructive' %}
     {% set extraActions = (extraActions.push(action), extraActions) %}
+  {% elif action.kind == 'warning' and not warningAction %}
+    {% set warningAction = action %}
   {% endif %}
 {% endfor %}
+{% set submitButton = { text: warningAction.text, classes: "govuk-button--warning" } if warningAction else { text: content.button } %}
 {% if extraActions | length %}
 <div class="govuk-button-group">
-  {{ govukButton({ text: content.button }) }}
+  {{ govukButton(submitButton) }}
   {% for action in extraActions %}
     {% if action.kind == 'destructive' %}
       <a class="govuk-link govuk-link--destructive" href="{{ action.href }}">{{ action.text }}{% if action.hidden %}<span class="govuk-visually-hidden"> {{ action.hidden }}</span>{% endif %}</a>
@@ -21,5 +27,5 @@
   {% endfor %}
 </div>
 {% else %}
-{{ govukButton({ text: content.button }) }}
+{{ govukButton(submitButton) }}
 {% endif %}
