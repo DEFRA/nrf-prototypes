@@ -99,6 +99,8 @@ pages:
     next:
       - when: { key: journeyType, equals: request-to-use }
         goto: /nrf-request-to-use-1/have-nrl-reference
+      - when: { key: journeyType, equals: assume-liability }
+        goto: /assume-liability-1/sign-in-method
       - goto: planning-type
 
   # planning-type, housing, units and map are also the pages the

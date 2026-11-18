@@ -263,6 +263,8 @@ pages:
     next:
       - when: { key: journeyType, equals: quote }
         goto: /nrf-quote-7/planning-type
+      - when: { key: journeyType, equals: assume-liability }
+        goto: /assume-liability-1/sign-in-method
       - goto: have-nrl-reference
 
   # Without a reference there is no quote to use: the drop-out page sends
