@@ -24,3 +24,7 @@ Create an account and sign in to view and accept the amount, view the assumption
 
 
 **[Sign the assumption of liability document](./$next)**
+
+## If you did not expect this email
+
+If you think you should not be named as jointly liable for this development, contact {{ account.fullName }}, the lead developer. Only the lead developer can change who is jointly liable.
