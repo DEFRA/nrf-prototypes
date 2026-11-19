@@ -550,6 +550,9 @@ pages:
   # of the Public Guardian's "Sign your LPA".
   - id: sign-assumption
     template: assume-liability-1/sign-assumption
+    # Only the document's Sign button reaches it, so the screen wall would
+    # put it at the far end of the document's row
+    ownRow: true
     field: sign-agreement
     sessionKey: signAgreement
     guard: *assuming

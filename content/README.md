@@ -361,6 +361,8 @@ groups:
 
 Inside a group's section, a dashed box is a page of the journey outside the group ("Back in the journey"). The JPG export numbers the screens in the same order, the main journey first, then each group, with a folder per section in the zip; tick or untick sections on the export form to get the main journey on its own, or just one group.
 
+A page that is not on the default path sits on the screen wall in the row of the page that leads to it, after that page's other branches, so it can end up far to the right. Give its entry `ownRow: true` in `journey.yaml` to put it on a row of its own straight below that page instead (the assume liability journey's `sign-assumption`, which only the assumption document's Sign button reaches). It changes nothing but the wall and the JPG export's numbering.
+
 ## Borrowing a page from another journey
 
 Sharing is for a page both journeys walk through in order. When a journey only needs to send the user to another journey's page _and get them back_, borrow it instead of copying it. The request-to-use journey does this for the development details: "Review and amend your quote details" has Change links to the quote journey's planning type, housing, units and map pages, and "No, delete my quote details" leaves for the quote journey's delete flow. The request-to-use journey has no copies of those pages.
