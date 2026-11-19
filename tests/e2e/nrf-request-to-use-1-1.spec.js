@@ -1519,7 +1519,11 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
       expect(journey.byId.has(id)).toBe(false)
     }
     const graph = toFlowGraph(journey)
-    const borrowed = graph.nodes.filter((node) => node.external)
+    // The quote pages it borrows (its other exits, such as "pay the levy"
+    // on the funnel question, leave for other journeys)
+    const borrowed = graph.nodes.filter(
+      (node) => node.external && node.path.startsWith(`${quotePath}/`)
+    )
     expect(borrowed.map((node) => node.path).sort()).toEqual([
       `${quotePath}/delete-quote`,
       `${quotePath}/housing`,

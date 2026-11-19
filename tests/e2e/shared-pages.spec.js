@@ -17,7 +17,12 @@ const requestToUse = copyOf('nrf-request-to-use-1-1')
 const funnel = quote.journey.byId.get('what-would-you-like-to-do')
 // Where the funnel sends "request to use" answers: the request-to-use
 // journey's first question, read from the rule so the test follows the YAML
-const requestToUseEntry = funnel.next.find((rule) => rule.when).goto
+const requestToUseEntry = funnel.next.find(
+  (rule) => rule.when && rule.when.equals === 'request-to-use'
+).goto
+// Every answer that leaves the quote journey (request to use, pay the levy),
+// in the order of the rules
+const exits = funnel.next.filter((rule) => rule.when).map((rule) => rule.goto)
 const requestToUseEntryId = requestToUseEntry.split('/').pop()
 
 test.describe('shared start page', () => {
@@ -125,13 +130,15 @@ test.describe('journey tools show exits to other journeys', () => {
     expect(response.status()).toBe(200)
     const flow = await response.json()
     // The funnel question branches there
-    expect(flow.transitions.offPage).toEqual([
-      expect.objectContaining({
-        fromId: 'what-would-you-like-to-do',
-        toPath: requestToUseEntry,
-        kind: 'next'
-      })
-    ])
+    expect(flow.transitions.offPage).toEqual(
+      exits.map((toPath) =>
+        expect.objectContaining({
+          fromId: 'what-would-you-like-to-do',
+          toPath,
+          kind: 'next'
+        })
+      )
+    )
     // The exit is not a screen of this journey
     expect(flow.screens).toHaveLength(quote.journey.pages.length)
   })
@@ -142,13 +149,11 @@ test.describe('journey tools show exits to other journeys', () => {
       page.locator('#flow-diagram[data-rendered="true"]')
     ).toHaveCount(1, { timeout: 20000 })
     // The diagram draws one exit box per path left to; the wall has one
-    // placeholder card per page that leaves (the funnel question goes to
-    // the request-to-use entry)
-    await expect(page.locator('.flow-node--external')).toHaveCount(1)
-    await expect(page.locator('.wall-card--external')).toHaveCount(1)
-    await expect(page.locator('.wall-card--external')).toContainText([
-      requestToUseEntry
-    ])
+    // placeholder card for each (the funnel question goes to the
+    // request-to-use and assume liability entries)
+    await expect(page.locator('.flow-node--external')).toHaveCount(exits.length)
+    await expect(page.locator('.wall-card--external')).toHaveCount(exits.length)
+    await expect(page.locator('.wall-card--external')).toContainText(exits)
     // Placeholder cards carry no iframe, so the wall still has one per page
     // (plus one per preview variant and one per copy variant)
     const cards = quote.journey.pages.reduce(
@@ -165,9 +170,12 @@ test.describe('journey tools show exits to other journeys', () => {
     )
     expect(response.status()).toBe(200)
     const source = await response.text()
-    expect(source).toContain(
-      `ext0["${requestToUseEntry}<br/>Continues in another journey"]`
-    )
-    expect(source).toContain('class ext0 external')
+    exits.forEach((path, index) => {
+      expect(source).toContain(
+        `ext${index}["${path}<br/>Continues in another journey"]`
+      )
+    })
+    const ids = exits.map((path, index) => `ext${index}`).join(',')
+    expect(source).toContain(`class ${ids} external`)
   })
 })
