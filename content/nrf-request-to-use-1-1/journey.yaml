@@ -902,9 +902,10 @@ pages:
   # pick which one this request is for. The last option is the research
   # participant's own organisation (the footer's "Participant details" box).
   # The organisation chosen shows in the header and as the business name on
-  # the developer details review page and check your answers, whose Change
-  # link comes back here. A different organisation empties the developer
-  # details, so the agent enters them again before returning.
+  # the developer details review page and check your answers (neither has a
+  # Change link for it: the header's Change organisation comes back here). A
+  # different organisation empties the developer details, so the agent
+  # enters them again.
   - id: defra-choose-organisation
     shared: defra-id
     field: represent
@@ -937,7 +938,7 @@ pages:
     next:
       - goto: read-this
         set: { detailsConfirmed: 'Yes' }
-    handoff: 2026-11-12
+    handoff: 2026-11-19
 
   # Companies and individuals each have their own address page (the hint
   # differs); both keep the address in yourAddress for the review page
@@ -1053,7 +1054,7 @@ pages:
               fullName: Trevor Barker
               email: individual@example.com
     next: confirmation
-    handoff: 2026-11-12
+    handoff: 2026-11-19
 
   # User research aids in the footer: the email and the commitment
   # certificate the submission sends

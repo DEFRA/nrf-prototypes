@@ -30,8 +30,7 @@ rows:
     value: '{{ defraUserType }}'
   # As the review details pages: only an agent can change the developer's
   # name; the business name comes from the account (the organisation an
-  # agent chose, which they change on Defra ID's organisation picker) and an
-  # individual has none
+  # agent chose) and an individual has none
   - key: Full name
     value: '{{ developerDetails.fullName or yourAddress.fullName or account.fullName }}'
     change:
@@ -41,10 +40,6 @@ rows:
   - key: Developer business name
     value: '{{ account.organisationName or account.businessName }}'
     when: { key: account.accountType, in: [agent, company] }
-    change:
-      - when: { key: account.accountType, equals: agent }
-        goto: defra-choose-organisation
-    changeHidden: developer business name
   - key: Address
     value:
       lines:
@@ -96,6 +91,7 @@ actions:
 ---
 
 # Check your answers
+
 To update the details of this development, [review your quote](./review-quote-details?nav=check-your-answers).
 
 :::warning
