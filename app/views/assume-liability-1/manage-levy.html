@@ -5,8 +5,9 @@
   then one of their quotes and commitments, each NRL reference linking to
   its page (quote-details, commitment-details), where its actions are, its
   stage (quote or commitment) and its status as a tag. Either table is
-  left out when it would be empty. Both give their columns the same
-  widths, so the dates and tags line up; each date stays on one line. On a phone each row stacks, every value under its column heading (data-label, see
+  left out when it would be empty. Each table has a heading and intro
+  above it in place of a caption, named by aria-labelledby. Both give
+  their columns the same widths, so the dates and tags line up; each date stays on one line. On a phone each row stacks, every value under its column heading (data-label, see
   app/assets/sass/_assume-liability.scss).
   data.records and data.quotesAndCommitments come from
   app/lib/assume-liability-1/hooks.js.
@@ -19,8 +20,10 @@
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-two-thirds">
     <h1 class="govuk-heading-l govuk-!-margin-bottom-3">{{ content.heading }}</h1>
-    <p class="govuk-body govuk-!-margin-bottom-8">{{ content.hint }}</p>
-    {{ content.html | safe }}
+    <div class="govuk-!-margin-bottom-8">
+      <p class="govuk-body">{{ content.hint }}</p>
+      {{ content.html | safe }}
+    </div>
   </div>
 </div>
 
@@ -36,9 +39,15 @@
   ]), rows) %}
 {% endfor %}
 
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <h2 class="govuk-heading-m" id="developer-records">{{ text.tableHeading }}</h2>
+    <p class="govuk-body">{{ text.tableIntro }}</p>
+  </div>
+</div>
+
 {{ govukTable({
-  caption: text.tableCaption,
-  captionClasses: "govuk-table__caption--m",
+  attributes: { "aria-labelledby": "developer-records" },
   classes: "app-table--stacked govuk-table--small-text-until-tablet govuk-!-margin-bottom-9",
   head: [
     { text: text.columns.reference, classes: "app-table__reference" },
@@ -64,9 +73,15 @@
   ]), otherRows) %}
 {% endfor %}
 
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <h2 class="govuk-heading-m" id="quotes-and-commitments">{{ text.otherHeading }}</h2>
+    <p class="govuk-body">{{ text.otherIntro }}</p>
+  </div>
+</div>
+
 {{ govukTable({
-  caption: text.otherCaption,
-  captionClasses: "govuk-table__caption--m",
+  attributes: { "aria-labelledby": "quotes-and-commitments" },
   classes: "app-table--stacked govuk-table--small-text-until-tablet govuk-!-margin-bottom-9",
   head: [
     { text: text.otherColumns.reference, classes: "app-table__reference" },
