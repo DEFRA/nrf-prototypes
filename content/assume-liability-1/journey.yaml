@@ -545,8 +545,11 @@ pages:
   # agree. Signing (hooks.js) returns to the document. Typing a name to sign
   # (`type: signature`) is switched off for now: to bring it back, follow
   # the note in pages/sign-assumption.md, set `field` and `sessionKey`
-  # below to `signature` and uncomment the preview.
+  # below to `signature`, remove `template` and uncomment the preview. The
+  # template puts the checkbox in a "Your signature" box, as on the Office
+  # of the Public Guardian's "Sign your LPA".
   - id: sign-assumption
+    template: assume-liability-1/sign-assumption
     field: sign-agreement
     sessionKey: signAgreement
     guard: *assuming

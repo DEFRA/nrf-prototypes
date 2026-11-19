@@ -1,0 +1,57 @@
+{#
+  Signing the assumption of liability
+  (content/assume-liability-1/pages/sign-assumption.md), laid out like the
+  Office of the Public Guardian's "Sign your LPA": the page's body copy,
+  then a box headed "Your signature" (a summary card) holding the
+  declaration checkbox and what ticking it means, then a details on how
+  ticking the box acts as a legal signature, then the button. The box's
+  and the details' words are the page's `text:`; the checkbox, its error
+  and the button are the engine's checkboxes page as usual.
+#}
+{% extends "journey-engine/_page.html" %}
+
+{% set text = content.text %}
+
+{% block pageBody %}
+<form action="{{ page.path }}" method="post" novalidate>
+  {% include "journey-engine/_change-inputs.html" %}
+  {% include "journey-engine/_error-summary.html" %}
+
+  <h1 class="govuk-heading-l">{% include "journey-engine/_caption.html" %}{{ content.heading }}</h1>
+  {{ content.html | safe }}
+
+  <div class="govuk-summary-card app-signature-box">
+    <div class="govuk-summary-card__title-wrapper">
+      <h2 class="govuk-summary-card__title">{{ text.signatureTitle }}</h2>
+    </div>
+    <div class="govuk-summary-card__content">
+      {{ govukCheckboxes({
+        name: page.field,
+        idPrefix: page.field,
+        fieldset: {
+          legend: {
+            text: text.signatureLead,
+            classes: "govuk-fieldset__legend--s"
+          }
+        },
+        items: content.items,
+        errorMessage: { text: error } if error
+      }) }}
+      <p class="govuk-body govuk-!-margin-bottom-0">{{ text.signatureNote }}</p>
+    </div>
+  </div>
+
+  {% set detailsHtml = "" %}
+  {% for paragraph in text.details.paragraphs %}
+    {% set detailsHtml = detailsHtml + '<p class="govuk-body">' + (paragraph | escape) + '</p>' %}
+  {% endfor %}
+  {{ govukDetails({
+    summaryText: text.details.summary,
+    html: detailsHtml
+  }) }}
+
+  {% include "journey-engine/_question-actions.html" %}
+
+  {{ content.htmlAfter | safe }}
+</form>
+{% endblock %}
