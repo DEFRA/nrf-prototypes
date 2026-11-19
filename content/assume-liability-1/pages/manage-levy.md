@@ -5,7 +5,6 @@
 # and commitments, each NRL reference linking to its page.
 type: custom
 serviceName: Manage the nature restoration levy
-hint: View and manage your nature restoration levy quotes, commitments and liabilities to pay.
 text:
   tableHeading: View and manage your developer records
   tableIntro: Developer records are commitments with granted planning permission. Select a developer record to assume liability and pay.
@@ -41,4 +40,4 @@ text:
 
 # Manage the nature restoration levy
 
-[Get a new quote](/nrf-quote-7-1/planning-type)
+View and manage your nature restoration levy quotes, commitments and liabilities to pay. [Get a new quote](/nrf-quote-7-1/planning-type)
