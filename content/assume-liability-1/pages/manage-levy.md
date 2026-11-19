@@ -4,10 +4,10 @@
 # records.yaml, each NRL reference linking to the record; then their quotes
 # and commitments, each NRL reference linking to its page.
 type: custom
-hint: View and manage your nature restoration levy quotes, commitments and liabilities to pay.
+hint: View and manage your nature restoration levy quotes, commitments and developer records. Access your commitment certificates to submit with your planning applications and view and manage developer records to assume liability to pay the levy.
 text:
   tableHeading: View and manage your developer records
-  tableIntro: Developer records are commitments with granted planning permission. Select a developer record to assume liability and pay.
+  tableIntro: Developer records are commitments with granted planning permission. Select a developer record to assume liability and pay the levy.
   columns:
     reference: NRL reference
     site: Development
@@ -18,7 +18,7 @@ text:
   secondary: Developer
   # The quotes and commitments under the records (records.yaml)
   otherHeading: View and manage your quotes and commitments
-  otherIntro: Select a quote to request to use the nature restoration levy and turn it into a commitment. You can submit commitments with planning applications.
+  otherIntro: Select a quote to use it to request to use the nature restoration levy and turn it into a commitment. You can select and submit commitments with planning applications.
   otherColumns:
     reference: NRL reference
     site: Development
