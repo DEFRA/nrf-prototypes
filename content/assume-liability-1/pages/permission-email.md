@@ -12,13 +12,13 @@ title: Email sent from the Nature Restoration Fund service
 **Subject:** Nature restoration levy – planning permission granted
 :::
 
-# Planning permission has been granted for your development
+# Planning permission has been granted for your development, you can now assume liability to pay the nature restoration levy
 
 ## NRL reference: NRL-123456
 
 Planning permission has been granted for your development at Land off Frogshall Lane, Wymondham (planning application reference 2026/0412/FUL).
 
-Before you start development, you must assume liability to pay the nature restoration levy.
+You must only assume liability to pay the nature restoration levy when you are ready to commence development, because this will trigger payment of the levy.
 
 :::inset
 **[Sign in to manage the nature restoration levy](./$next)**

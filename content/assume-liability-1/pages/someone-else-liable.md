@@ -7,9 +7,9 @@ actions:
     goto: manage-levy
 ---
 
-# What to do if someone else should be assuming the liability to pay the nature restoration levy
+# What to do if someone else should be assuming liability
 
-If someone else should be assuming the liability to pay the nature restoration levy, contact Natural England.
+This might be because you are an agent representing someone else. If someone else should be assuming the liability to pay the nature restoration levy, contact Natural England.
 
 Email: [enquiries@naturalengland.org.uk](mailto:enquiries@naturalengland.org.uk)\
 Telephone: 0300 060 3900\

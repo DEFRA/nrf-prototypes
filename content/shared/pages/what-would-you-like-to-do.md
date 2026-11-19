@@ -11,9 +11,9 @@ options:
   - label: I am ready to request to use the nature restoration levy
     value: request-to-use
     hint: Do this as part of your planning application. You will need the NRL reference from your quote email.
-  - label: I am ready to assume liability to pay the nature restoration levy
+  - label: I am ready to pay the nature restoration levy
     value: assume-liability
-    hint: Do this once planning permission is granted and you are ready to commence development.
+    hint: Assume liability to pay the levy once planning permission is granted and you are ready to commence development.
 errors:
   required: Select what you would like to do
 button: Continue

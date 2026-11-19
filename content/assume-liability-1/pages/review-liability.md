@@ -73,5 +73,5 @@ text:
 # Review liability and payment details
 
 :::warning
-Once you submit, you will get an invoice.
+You must only assume liability to pay the nature restoration levy when you are ready to commence development, because this will trigger payment of the levy.
 :::

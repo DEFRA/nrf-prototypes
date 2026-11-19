@@ -48,7 +48,7 @@ text:
     cancelled: Cancelled
   # Under the heading; {date} is the expiry date, or the date it was
   # cancelled
-  expiring: This commitment expires on {date}, unless a planning application is made before then.
+  expiring: This commitment expires on {date}, unless a planning application is submitted before then.
   expired: This commitment expired on {date}. You cannot use it with a planning application. Get a new quote if you still want to use the nature restoration levy for this development.
   cancelled: This commitment was cancelled on {date}. You cannot use it with a planning application.
 ---
