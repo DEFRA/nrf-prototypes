@@ -21,7 +21,7 @@
   <div class="govuk-grid-column-two-thirds">
     <h1 class="govuk-heading-l govuk-!-margin-bottom-3">{{ content.heading }}</h1>
     <div class="govuk-!-margin-bottom-8">
-      <p class="govuk-body">{{ content.hint }}</p>
+      {% if content.hint %}<p class="govuk-body">{{ content.hint }}</p>{% endif %}
       {{ content.html | safe }}
     </div>
   </div>

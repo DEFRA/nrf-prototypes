@@ -4,6 +4,7 @@
 # records.yaml, each NRL reference linking to the record; then their quotes
 # and commitments, each NRL reference linking to its page.
 type: custom
+serviceName: Manage the nature restoration levy
 hint: View and manage your nature restoration levy quotes, commitments and developer records. Access your commitment certificates to submit with your planning applications and view and manage developer records to assume liability to pay the levy.
 text:
   tableHeading: View and manage your developer records

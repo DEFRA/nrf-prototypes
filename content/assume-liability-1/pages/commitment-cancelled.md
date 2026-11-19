@@ -1,6 +1,7 @@
 ---
 # PLACEHOLDER COPY: the commitment has been cancelled
 type: confirmation
+serviceName: Manage the nature restoration levy
 title: Your commitment has been cancelled
 panel:
   title: Your commitment has been cancelled

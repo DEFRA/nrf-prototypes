@@ -549,6 +549,10 @@ function buildPage(entry, journey, problems, from = {}) {
     // Pages a hand-written template links to (a Sign link in a table, say),
     // so the flow diagram and screen wall can place them: [{ goto, text }]
     links: buildLinks(entry.links, `${where}.links`, problems),
+    // The screen wall gives the page a row of its own, below the page that
+    // leads to it, instead of beside it (a page only a button reaches, which
+    // would otherwise sit far along that page's row)
+    ownRow: Boolean(entry.ownRow),
     content: {
       title: frontmatter.title || heading || bodyHeading || id,
       heading: heading || bodyHeading || frontmatter.title || id,

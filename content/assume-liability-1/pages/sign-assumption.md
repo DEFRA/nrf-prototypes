@@ -7,6 +7,17 @@ options:
 errors:
   required: Select that you agree to assume liability to pay the nature restoration levy
 button: Confirm
+# The box around the checkbox and the details under it
+# (app/views/assume-liability-1/sign-assumption.html)
+text:
+  signatureTitle: Your signature
+  signatureLead: By checking the box, you become legally liable to pay the nature restoration levy
+  signatureNote: When you tick this box and select 'Confirm' you are legally signing the assumption of liability.
+  details:
+    summary: How ticking the box acts as your legal signature
+    paragraphs:
+      - Electronic signatures are legally recognised in England and Wales. They make it easier for you to sign documents online.
+      - By ticking the box and selecting 'Confirm', you are providing your legal signature. This is just as safe and legally binding as signing the assumption of liability by hand.
 ---
 
 # Sign the assumption of liability
@@ -22,7 +33,3 @@ You will be jointly liable with the other people named on the assumption of liab
 :::warning
 The assumption of liability notice is not complete until all liable persons have signed. 
 :::
-
-## Sign the assumption of liability
-
-By checking the box, you become legally liable to pay the nature restoration levy

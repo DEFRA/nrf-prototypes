@@ -551,9 +551,22 @@ function layoutLevels(journey) {
   }
   const rows = chain.map((id) => ({ pages: [{ id, via: '' }] }))
   const rowOf = new Map(chain.map((id, index) => [id, index]))
+  // Puts a page in a row and says which: an `ownRow` page opens a new row
+  // straight below, and every row after it moves down one
   const place = (id, rowIndex, via) => {
+    const page = journey.byId.get(id)
+    if (page && page.ownRow) {
+      for (const [other, row] of rowOf) {
+        if (row > rowIndex) {
+          rowOf.set(other, row + 1)
+        }
+      }
+      rows.splice(rowIndex + 1, 0, { pages: [] })
+      rowIndex += 1
+    }
     rowOf.set(id, rowIndex)
     rows[rowIndex].pages.push({ id, via })
+    return rowIndex
   }
   const nextEdges = (id) =>
     (outgoing.get(id) || []).filter((edge) => edge.kind === 'next')
@@ -613,7 +626,8 @@ function layoutLevels(journey) {
   }
   // Pass 1: form-submission branches off each main-chain page, followed
   // depth-first through pages that are not on the chain themselves
-  chain.forEach((chainId, chainRow) => {
+  chain.forEach((chainId) => {
+    const chainRow = rowOf.get(chainId)
     const walk = (fromId, fromRow) => {
       for (const edge of nextEdges(fromId)) {
         if (onChain.has(edge.toId) || rowOf.has(edge.toId)) {
@@ -627,8 +641,7 @@ function layoutLevels(journey) {
         if (via.startsWith(`From ${chainId},`) && rowIndex === chainRow) {
           via = `If ${edge.label}`
         }
-        place(edge.toId, rowIndex, via)
-        walk(edge.toId, rowIndex)
+        walk(edge.toId, place(edge.toId, rowIndex, via))
       }
     }
     walk(chainId, chainRow)
