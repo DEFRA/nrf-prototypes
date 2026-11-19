@@ -9,7 +9,7 @@ panel:
 
 ## What happens next
 
-XXXX XXXX XXXX XXXX XXXX XXXX. We have sent an email to {{ account.email or "your email address" }} with the details of how to pay.
+We will contact youxxx. We have sent an email to {{ account.email or "your email address" }} with the details of how to pay.
 
 XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX. XXXX XXXX XXXX XXXX XXXX XXXX XXXX.
 
