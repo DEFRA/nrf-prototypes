@@ -439,17 +439,14 @@ test.describe('nrf-request-to-use-1-1 happy paths', () => {
     await expect(page.locator('.govuk-summary-list')).toContainText(
       'A Developer'
     )
-    // The business name is the organisation chosen, changed on the
-    // organisation picker
+    // The business name is the organisation chosen, which the agent cannot
+    // change here (the header's Change organisation is the way)
     await expect(page.locator('.govuk-summary-list')).toContainText(
       option('defra-choose-organisation', 'oakwood')
     )
     await expect(
-      changeLink(page, 'review-developer-details', 'defra-choose-organisation')
-    ).toHaveAttribute(
-      'href',
-      `${base}/defra-choose-organisation?change=true&nav=review-developer-details`
-    )
+      page.locator('.govuk-summary-list a[href*="defra-choose-organisation"]')
+    ).toHaveCount(0)
     await submit(page, 'review-developer-details')
     await expect(page).toHaveURL(`${base}/read-this`)
     await submit(page, 'read-this')
@@ -457,9 +454,9 @@ test.describe('nrf-request-to-use-1-1 happy paths', () => {
     await expect(page.locator('.govuk-summary-list').first()).toContainText(
       'NRL-000001'
     )
-    // Who the levy is for shows as its answer, with no Change link. The
-    // agent can change the developer's name, and the business name (the
-    // organisation chosen) on the organisation picker
+    // Who the levy is for shows as its answer, with no Change link; as on
+    // the review page, the agent can change the developer's name but not
+    // the business name (the organisation chosen)
     const answers = page.locator('.govuk-summary-list').first()
     await expect(answers).toContainText(
       option('defra-account-user-type', 'agent')
@@ -471,45 +468,11 @@ test.describe('nrf-request-to-use-1-1 happy paths', () => {
       option('defra-choose-organisation', 'oakwood')
     )
     await expect(
+      answers.locator('a[href*="defra-choose-organisation"]')
+    ).toHaveCount(0)
+    await expect(
       changeLink(page, 'check-your-answers', 'developer-details')
     ).toBeVisible()
-
-    // The same organisation goes straight back to check your answers
-    await changeLink(
-      page,
-      'check-your-answers',
-      'defra-choose-organisation'
-    ).click()
-    await expect(page).toHaveURL(
-      `${base}/defra-choose-organisation?change=true&nav=check-your-answers`
-    )
-    await submit(page, 'defra-choose-organisation')
-    await expect(page).toHaveURL(`${base}/check-your-answers`)
-
-    // A different one empties the developer details, which the agent enters
-    // again before returning
-    await changeLink(
-      page,
-      'check-your-answers',
-      'defra-choose-organisation'
-    ).click()
-    await answer(page, 'defra-choose-organisation', 'riverside')
-    await submit(page, 'defra-choose-organisation')
-    await expect(page).toHaveURL(
-      `${base}/developer-details?change=true&nav=check-your-answers`
-    )
-    await expect(page.locator('input[name="full-name"]')).toHaveValue('')
-    await fillField(page, 'developer-details', 'full-name', 'B Developer')
-    await fillField(page, 'developer-details', 'address-line-1', 'River Road')
-    await fillField(page, 'developer-details', 'town', 'Riverside')
-    await fillField(page, 'developer-details', 'postcode', 'RV1 2AB')
-    await submit(page, 'developer-details')
-    await expect(page).toHaveURL(`${base}/check-your-answers`)
-    await expect(answers).toContainText(
-      option('defra-choose-organisation', 'riverside')
-    )
-    await expect(answers).toContainText('B Developer')
-    await expect(answers).not.toContainText('Development Road')
 
     await page
       .locator('.govuk-service-navigation')
