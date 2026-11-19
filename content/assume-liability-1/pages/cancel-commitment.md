@@ -3,6 +3,7 @@
 # cancelling means. The red button cancels it (hooks.js), so it stays in
 # "Your quotes and commitments" as cancelled.
 type: textarea
+serviceName: Manage the nature restoration levy
 caption: '{{ commitment.reference }}'
 hint: 'Placeholder: XXXX XXXX XXXX XXXX XXXX XXXX'
 lines: 5

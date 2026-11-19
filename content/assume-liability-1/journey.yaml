@@ -26,7 +26,10 @@
 
 id: assume-liability-1
 name: Assume liability to pay the nature restoration levy
-serviceName: Manage the nature restoration levy
+# Signing in and everything from a developer record on pays the levy; the
+# account's home (manage-levy) and its quote and commitment pages name the
+# service "Manage the nature restoration levy" in their own copy
+serviceName: Pay the nature restoration levy
 
 # The survey the phase banner's "give your feedback" link opens
 feedbackUrl: https://defragroup.eu.qualtrics.com/jfe/form/SV_9yRhrdtbb3vmw86

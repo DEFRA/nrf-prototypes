@@ -4,6 +4,7 @@
 # records.yaml, each NRL reference linking to the record; then their quotes
 # and commitments, each NRL reference linking to its page.
 type: custom
+serviceName: Manage the nature restoration levy
 hint: View and manage your nature restoration levy quotes, commitments and liabilities to pay.
 text:
   tableHeading: View and manage your developer records

@@ -7,6 +7,7 @@
 # warning shows under the heading, and an expired or cancelled commitment
 # has no Cancel link.
 type: check-answers
+serviceName: Manage the nature restoration levy
 caption: Commitment
 title: Commitment {{ commitment.reference }}
 rows:
