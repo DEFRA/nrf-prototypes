@@ -1,17 +1,17 @@
 ---
 # PLACEHOLDER COPY
 type: confirmation
-title: Liability assumed for nature restoration levy
+title: Submitted liability and payment details
 panel:
-  title: Liability assumed for nature restoration levy
+  title: Submitted liability and payment details
   body: 'NRL reference: **{{ recordReference }}**'
 ---
 
 ## What happens next
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. We have sent an email to {{ account.email or "your email address" }} with the details of how to pay.
+XXXX XXXX XXXX XXXX XXXX XXXX. We have sent an email to {{ account.email or "your email address" }} with the details of how to pay.
 
-Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX. XXXX XXXX XXXX XXXX XXXX XXXX XXXX.
 
 [Return to manage the nature restoration levy](./manage-levy)
 

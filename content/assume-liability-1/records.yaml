@@ -59,6 +59,15 @@ tags:
   cancelled: grey
 expiringWithin: 30
 
+# The signed-in user's organisation, put into the payment details when they
+# answer Yes to "Do you want to use your details for payment?" (with their
+# name and organisation). The CRN is a placeholder.
+yourDetails:
+  addressLine1: 12 Station Road
+  town: March
+  postcode: PE15 8AA
+  companyRegistrationNumber: '01234567'
+
 edp: &edp 'Norfolk: Broads Special Area of Conservation (SAC) (Yare and Bure), Broadland Ramsar and River Wensum SAC Environmental Delivery Plan addressing nutrient pollution (2027 to 2037)'
 
 records:

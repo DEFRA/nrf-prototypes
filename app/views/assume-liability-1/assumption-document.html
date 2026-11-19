@@ -5,7 +5,9 @@
   is still waiting on. On a secondary user's record (one they were named
   as jointly liable on) there is no way to change who signs and no
   Continue. Until the user has signed, Continue to sign leads to
-  sign-assumption. On the main liable person's record everyone else's row
+  sign-assumption. Only the main liable person sees everyone's email
+  address (GDPR), so a secondary user's table has no Email address column.
+  On the main liable person's record everyone else's row
   has a Remind link until they have signed (the column's heading is only
   for screen readers); there is no such column on anyone else's. Once
   everyone has signed the last column is the date each of them signed.
@@ -50,10 +52,12 @@
 {% set lastColumn = "date" if allSigned else ("action" if canRemind else "") %}
 {% set head = [
   { text: text.columns.name },
-  { text: text.columns.organisation },
-  { text: text.columns.email },
-  { text: text.columns.status }
+  { text: text.columns.organisation }
 ] %}
+{% if primary %}
+  {% set head = (head.push({ text: text.columns.email }), head) %}
+{% endif %}
+{% set head = (head.push({ text: text.columns.status }), head) %}
 {% if lastColumn == "date" %}
   {% set head = (head.push({ text: text.columns.date }), head) %}
 {% elif lastColumn == "action" %}
@@ -64,10 +68,12 @@
 {% for person in data.signatories %}
   {% set row = [
     { text: person.fullName + (" " + text.you if person.you else "") },
-    { text: person.organisation },
-    { text: person.email },
-    { html: '<strong class="govuk-tag govuk-tag--' + ('green' if person.signedOn else personWaiting.colour) + '">' + (text.signed if person.signedOn else personWaiting.label) + '</strong>' }
+    { text: person.organisation }
   ] %}
+  {% if primary %}
+    {% set row = (row.push({ text: person.email }), row) %}
+  {% endif %}
+  {% set row = (row.push({ html: '<strong class="govuk-tag govuk-tag--' + ('green' if person.signedOn else personWaiting.colour) + '">' + (text.signed if person.signedOn else personWaiting.label) + '</strong>' }), row) %}
   {% if lastColumn == "date" %}
     {% set row = (row.push({ text: person.signedShort }), row) %}
   {% elif lastColumn == "action" %}

@@ -71,3 +71,7 @@ text:
 ---
 
 # Review liability and payment details
+
+:::warning
+Once you submit, you will get an invoice.
+:::

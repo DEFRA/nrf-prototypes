@@ -91,6 +91,7 @@ session:
   - justSigned
   - sharedLiability
   - recordAnswers
+  - useYourDetails
   - payerDetails
   - detailsRead
 
@@ -126,12 +127,14 @@ preview:
       - fullName: Jo Wright
         organisation: ''
         email: jo.wright@example.com
+    useYourDetails: 'yes'
     payerDetails:
       payerName: Trevor Barker
       businessName: Fenland Homes
       addressLine1: 12 Station Road
       town: March
       postcode: PE15 8AA
+      companyRegistrationNumber: '01234567'
 
 pages:
   # The email the service sends once planning permission is granted. Its
@@ -495,7 +498,7 @@ pages:
     next:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary
-      - goto: add-payment-details
+      - goto: use-your-details
     preview:
       label: Not signed yet
       description: >-
@@ -570,11 +573,34 @@ pages:
     back: []
     next: assumption-document
 
+  # Yes fills the payment details with the user's own name, organisation,
+  # address and Company Registration Number; No leaves them all blank
+  # (hooks.js)
+  - id: use-your-details
+    field: use-your-details
+    sessionKey: useYourDetails
+    guard: *assuming
+    handler: custom
+    back: assumption-document
+    next: add-payment-details
+
   - id: add-payment-details
     sessionKey: payerDetails
     guard: *assuming
-    back: assumption-document
+    back: use-your-details
     changeable: true
+    preview:
+      label: Using your details
+      description: >-
+        Yes to "Do you want to use your details for payment?": the user's
+        name, organisation, address and Company Registration Number
+      variants:
+        - id: blank
+          label: Someone else's details
+          description: >-
+            No to "Do you want to use your details for payment?": every
+            field is blank
+          data: { useYourDetails: 'no', payerDetails: null }
     next:
       - when: { key: $navFromSummary, truthy: true }
         goto: $summary

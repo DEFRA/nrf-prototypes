@@ -15,7 +15,7 @@ title: Email sent from the Nature Restoration Fund service
 
 ## NRL reference: {{ recordReference }}
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. You have assumed liability to pay the nature restoration levy for the development at {{ record.site }}.
+XXXX XXXX XXXX XXXX XXXX XXXX. You have assumed liability to pay the nature restoration levy for the development at {{ record.site }}.
 
 Amount to pay: **£{{ record.levyAmount }}**
 
@@ -23,4 +23,4 @@ Amount to pay: **£{{ record.levyAmount }}**
 **[Pay now](#)**
 :::
 
-Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX. XXXX XXXX XXXX XXXX XXXX XXXX XXXX.

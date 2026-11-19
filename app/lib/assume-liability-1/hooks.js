@@ -78,6 +78,7 @@ const ANSWER_KEYS = [
   'signAgreement',
   'signature',
   'youSigned',
+  'useYourDetails',
   'payerDetails'
 ]
 
@@ -98,6 +99,7 @@ let cache = {
     statuses: {},
     tags: {},
     expiringWithin: 30,
+    yourDetails: {},
     records: [],
     quotes: [],
     commitments: []
@@ -119,6 +121,7 @@ function loadStore() {
           statuses: parsed.statuses || {},
           tags: parsed.tags || {},
           expiringWithin: parsed.expiringWithin || 30,
+          yourDetails: parsed.yourDetails || {},
           records: parsed.records || [],
           quotes: parsed.quotes || [],
           commitments: parsed.commitments || []
@@ -958,6 +961,27 @@ const signAssumption = {
   }
 }
 
+// Yes fills the payment details with the user's own: their name and
+// organisation, and its address and Company Registration Number from
+// records.yaml (`yourDetails`), keeping any VAT registration or purchase
+// order number already entered. No leaves every field blank.
+const useYourDetails = {
+  process(ctx) {
+    const { data } = ctx
+    if (data.useYourDetails === 'yes') {
+      const account = data.account || accountFor('', data)
+      data.payerDetails = {
+        ...(data.payerDetails || {}),
+        payerName: account.fullName,
+        businessName: account.businessName,
+        ...loadStore().yourDetails
+      }
+    } else {
+      delete data.payerDetails
+    }
+  }
+}
+
 // Confirm and submit: the record's liability is assumed
 const reviewLiability = {
   process(ctx) {
@@ -983,5 +1007,6 @@ module.exports = {
   'liable-people-check': liablePeopleCheck,
   'assumption-document': assumptionDocument,
   'sign-assumption': signAssumption,
+  'use-your-details': useYourDetails,
   'review-liability': reviewLiability
 }
