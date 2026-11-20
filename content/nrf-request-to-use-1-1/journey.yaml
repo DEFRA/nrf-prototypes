@@ -252,7 +252,7 @@ pages:
     # Shared by the quote and request to use, so the generic survey
     feedbackUrl: https://defragroup.eu.qualtrics.com/jfe/form/SV_9yRhrdtbb3vmw86?Journey=Generic
     next: what-would-you-like-to-do
-    handoff: 2026-10-06
+    handoff: 2026-11-20
 
   - id: what-would-you-like-to-do
     shared: true
@@ -1011,7 +1011,7 @@ pages:
         goto: review-developer-details
       - goto: review-your-details
     next: check-your-answers
-    handoff: 2026-11-20
+    handoff: 2026-11-20 # handed over again at 09:57
 
   # The declaration is the confirmation checkbox on this page (it stores
   # 'Yes', its `value` in check-your-answers.md); the Delete link is the way
@@ -1064,7 +1064,7 @@ pages:
         href: request-email
       - text: View the commitment certificate
         href: commitment-certificate
-    handoff: 2026-11-20
+    handoff: 2026-11-20 # handed over again at 09:57
 
   - id: request-email
     back: confirmation
