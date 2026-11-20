@@ -177,7 +177,12 @@ async function shoot(page, baseUrl, screen, quality, stamp) {
   const isCustom = screen.type === 'custom'
   // Documents may carry a map, so give its tiles a moment too
   const waitForMap = isCustom || screen.type === 'document'
-  await page.goto(baseUrl + screen.url, { waitUntil: 'networkidle' })
+  // `load`, not `networkidle`: BrowserSync and map tiles keep connections
+  // open, so networkidle never fires and the export times out.
+  await page.goto(baseUrl + screen.url, {
+    waitUntil: 'load',
+    timeout: 60000
+  })
   if (waitForMap) {
     await page.waitForTimeout(CUSTOM_PAGE_WAIT_MS)
   }
