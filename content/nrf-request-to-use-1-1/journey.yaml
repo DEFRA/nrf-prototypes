@@ -1011,7 +1011,7 @@ pages:
         goto: review-developer-details
       - goto: review-your-details
     next: check-your-answers
-    handoff: 2026-11-11
+    handoff: 2026-11-20
 
   # The declaration is the confirmation checkbox on this page (it stores
   # 'Yes', its `value` in check-your-answers.md); the Delete link is the way
@@ -1064,11 +1064,11 @@ pages:
         href: request-email
       - text: View the commitment certificate
         href: commitment-certificate
-    handoff: 2026-11-11
+    handoff: 2026-11-20
 
   - id: request-email
     back: confirmation
-    handoff: 2026-11-06
+    handoff: 2026-11-20
 
   # The certificate, linked from the email, on the service's own layout with a
   # print link beside it (printing or saving as a PDF gives the certificate
