@@ -82,7 +82,9 @@ async function main() {
     }
   })
   for (const { file, buffer } of results) {
-    fs.writeFileSync(path.join(outDir, file), buffer)
+    const dest = path.join(outDir, file)
+    fs.mkdirSync(path.dirname(dest), { recursive: true })
+    fs.writeFileSync(dest, buffer)
   }
   console.log(`Saved ${results.length} files to ${outDir}`)
 }
