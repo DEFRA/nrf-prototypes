@@ -56,7 +56,7 @@ To request to use nature restoration levy you will need to:
 ### What to do with your commitment certificate
 
 Once Natural England accepts your request to use this levy, you will be issued a commitment certificate. 
-You will receive an email within 5 minutes of submitting your request. 
+You will receive this email on the same day you submit your request, if you don't receive it, check your spam folder.
 You should submit this certificate with your planning application.
 Your commitment certificate will expire after 6 months from the date of issue, unless an application for planning permission is made.
 
