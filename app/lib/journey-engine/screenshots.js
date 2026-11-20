@@ -6,6 +6,7 @@
  * prototype renders with the sample data in journey.yaml.
  */
 
+const fs = require('fs')
 const { exportScreens, previewErrorKey } = require('./flow')
 const { pageHandoff } = require('./history')
 
@@ -111,6 +112,27 @@ function loadChromium() {
 }
 
 /**
+ * Cursor sets PLAYWRIGHT_BROWSERS_PATH to an empty sandbox cache. Chromium
+ * is installed in the user cache (~/Library/Caches/ms-playwright), so drop
+ * the empty path before launch or export fails with "Executable doesn't exist".
+ */
+function useInstalledBrowsers() {
+  const dir = process.env.PLAYWRIGHT_BROWSERS_PATH
+  if (!dir) {
+    return
+  }
+  try {
+    const names = fs.readdirSync(dir)
+    if (names.some((name) => name.startsWith('chromium'))) {
+      return
+    }
+  } catch (error) {
+    // Missing or unreadable cache
+  }
+  delete process.env.PLAYWRIGHT_BROWSERS_PATH
+}
+
+/**
  * Whether the export can run here. Playwright is a dev dependency, so a
  * production install (`npm ci --omit=dev`, as the Dockerfile does for CDP)
  * has no Playwright and the screen wall hides the export instead of
@@ -131,6 +153,7 @@ function canExportScreens() {
  */
 async function withPage(viewportName, run) {
   const viewport = VIEWPORTS[viewportName] || VIEWPORTS.desktop
+  useInstalledBrowsers()
   const chromium = loadChromium()
   const browser = await chromium.launch({ headless: true })
   try {

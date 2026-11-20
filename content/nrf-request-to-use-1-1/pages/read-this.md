@@ -14,7 +14,7 @@ actions:
 
 Once Natural England accepts your request to use this levy, you will be issued a commitment certificate. 
 
-You will receive this email on the same day you submit your request, if you don't receive it, check your spam folder.
+You will receive this email on the same day you submit your request, if you don't receive it, check your spam or junk folder.
 
 Your commitment certificate will expire after 6 months from the date of issue, unless an application for planning permission is made.
 
