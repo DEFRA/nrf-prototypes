@@ -19,11 +19,11 @@ The amount of the levy may have changed since your quote. You might have updated
 
 Your relevant development is planned in: {{ edpName }}.
 
-### Provisional nature restoration levy amount: £{{ levyAmount }} (excluding VAT)
+### Provisional nature restoration levy amount: £{{ levyAmount }} (plus VAT)
 
 The provisional amount is calculated from the charging schedule in the relevant EDP.
 
-### Inflation-adjusted nature restoration levy amount: £{{ levyAmount }} (excluding VAT)
+### Inflation-adjusted nature restoration levy amount: £{{ levyAmount }} (plus VAT)
 
 The inflation-adjusted amount shows the indicative levy amount for the year this commitment was issued.
 Inflation adjustments will continue to apply until the total levy amount has been paid. 

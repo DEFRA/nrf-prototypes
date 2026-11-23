@@ -60,13 +60,13 @@ The relevant development is planned to have housing with a total of {{ residenti
 
 ### Provisional nature restoration levy amount
 
-£{{ levyAmount }} (excluding VAT)
+£{{ levyAmount }} (plus VAT)
 
 The provisional amount is calculated from the charging schedule in the relevant EDP.
 
 ### Inflation-adjusted nature restoration levy amount
 
-£{{ levyAmount }} (excluding VAT)
+£{{ levyAmount }} (plus VAT)
 
 The inflation-adjusted amount shows the indicative levy amount for the year this commitment was issued.
 Inflation adjustments will continue to apply until the total levy amount has been paid.

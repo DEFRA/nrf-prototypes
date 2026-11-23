@@ -28,11 +28,11 @@ Environmental impacts of development not covered by this EDP will need to be add
 
 ## Details of your levy amount
 
-### Provisional nature restoration levy amount: £{{ levyAmount }} (excluding VAT)
+### Provisional nature restoration levy amount: £{{ levyAmount }} (plus VAT)
 
 The provisional amount is calculated from the charging schedule in the relevant EDP.
 
-### Inflation-adjusted nature restoration levy amount: £{{ levyAmount }} (excluding VAT)
+### Inflation-adjusted nature restoration levy amount: £{{ levyAmount }} (plus VAT)
 
 The inflation-adjusted amount shows the indicative levy amount for the year this commitment was issued.
 Inflation adjustments will continue to apply until the total levy amount has been paid. 
