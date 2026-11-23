@@ -1068,7 +1068,7 @@ pages:
 
   - id: request-email
     back: confirmation
-    handoff: 2026-11-20
+    handoff: 2026-11-23
 
   # The certificate, linked from the email, on the service's own layout with a
   # print link beside it (printing or saving as a PDF gives the certificate
