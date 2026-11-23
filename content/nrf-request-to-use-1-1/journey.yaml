@@ -1076,7 +1076,7 @@ pages:
   - id: commitment-certificate
     layout: default
     template: nrf-request-to-use-1-1/commitment-certificate
-    handoff: 2026-11-11
+    handoff: 2026-11-23
     # As check-your-answers: the sample answers are an agent's, and the
     # variants clear the developer details so the name and address come
     # from the account
