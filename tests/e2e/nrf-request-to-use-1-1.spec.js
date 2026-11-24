@@ -9,7 +9,10 @@ const {
   previewVariants
 } = require('../../app/lib/journey-engine')
 const { copyOf, gotoTools } = require('./helpers/journey')
-const { LEVY_AMOUNT } = require('../../app/lib/nrf-request-to-use-1-1/hooks')
+const {
+  LEVY_AMOUNT,
+  loadCertificates
+} = require('../../app/lib/nrf-request-to-use-1-1/hooks')
 const {
   requestToUse,
   retrieveQuote,
@@ -1855,5 +1858,37 @@ test.describe('nrf-request-to-use-1-1 creating an account', () => {
     await submit(page, 'government-gateway-user-id')
     await chooseOrganisation(page)
     await expect(page).toHaveURL(`${base}/developer-details`)
+  })
+})
+
+test.describe('nrf-request-to-use-1-1 dummy certificates', () => {
+  // content/nrf-request-to-use-1-1/certificates.yaml: one link per
+  // certificate, for stakeholders
+  const { certificates } = loadCertificates()
+
+  test('?ref= shows that certificate and leaves the session alone', async ({
+    page
+  }) => {
+    test.skip(!certificates.length, 'certificates.yaml lists none')
+    const [first] = certificates
+    await page.goto(`${base}/commitment-certificate?ref=${first.reference}`)
+    await expectHeading(page, 'commitment-certificate')
+    const main = page.locator('main')
+    await expect(main).toContainText(first.reference)
+    await expect(main).toContainText(first.fullName)
+    await expect(main).toContainText(`${first.units} unit`)
+    await expect(page.locator('.app-boundary-map')).toHaveCount(1)
+
+    // Without ?ref= the page is the session's again: no certificate of the
+    // file's
+    await page.goto(`${base}/commitment-certificate`)
+    await expect(page.locator('main')).not.toContainText(first.reference)
+  })
+
+  test('a reference the file does not hold goes to the start', async ({
+    page
+  }) => {
+    await page.goto(`${base}/commitment-certificate?ref=NRL-000000`)
+    await expect(page).toHaveURL(`${base}/start`)
   })
 })

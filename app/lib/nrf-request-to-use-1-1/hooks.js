@@ -74,6 +74,89 @@ function edpFor(name) {
   const found = edps.find((edp) => edp.name === name) || edps[0] || {}
   return { ...found, name }
 }
+
+const CERTIFICATES_FILE = path.join(
+  __dirname,
+  '../../../content/nrf-request-to-use-1-1/certificates.yaml'
+)
+
+let certificatesCache = null
+
+// The dummy certificates in content/nrf-request-to-use-1-1/certificates.yaml,
+// re-read whenever it changes, as edps.yaml is
+function loadCertificates() {
+  let mtime = 0
+  try {
+    mtime = fs.statSync(CERTIFICATES_FILE).mtimeMs
+  } catch (error) {
+    return { certificates: [], boundaries: {} }
+  }
+  if (!certificatesCache || certificatesCache.mtime !== mtime) {
+    const raw = yaml.load(fs.readFileSync(CERTIFICATES_FILE, 'utf8')) || {}
+    certificatesCache = {
+      mtime,
+      store: {
+        boundaries: raw.boundaries || {},
+        certificates: raw.certificates || []
+      }
+    }
+  }
+  return certificatesCache.store
+}
+
+// A YYYY-MM-DD date from the file (YAML reads it as a Date), or today
+function certificateDate(value) {
+  const date = value instanceof Date ? value : new Date(value || Date.now())
+  return Number.isNaN(date.getTime()) ? new Date() : date
+}
+
+// One certificate from the file as the answers the certificate page prints,
+// or null when the file has no certificate with that reference
+function certificateAnswers(reference) {
+  const store = loadCertificates()
+  const wanted = String(reference || '')
+    .trim()
+    .toUpperCase()
+  const entry = store.certificates.find(
+    (certificate) =>
+      String(certificate.reference || '')
+        .trim()
+        .toUpperCase() === wanted
+  )
+  if (!entry) {
+    return null
+  }
+  const issued = certificateDate(entry.issued)
+  const expires = entry.expires
+    ? certificateDate(entry.expires)
+    : addMonths(issued, 6)
+  const ring =
+    entry.coordinates || store.boundaries[entry.boundary] || FIXTURE_RING
+  const edpName = entry.edp || EDP_NAME
+  return {
+    nrlReference: wanted,
+    account: {
+      accountType: entry.businessName ? 'company' : 'individual',
+      fullName: entry.fullName,
+      businessName: entry.businessName || ''
+    },
+    developerDetails: {
+      fullName: entry.fullName,
+      addressLine1: entry.addressLine1,
+      town: entry.town,
+      postcode: entry.postcode
+    },
+    residentialBuildingCount: entry.units,
+    redlineBoundaryPolygon: { coordinates: ring },
+    edpName,
+    edp: edpFor(edpName),
+    levyAmount: entry.levyAmount || levyFor(),
+    certificate: {
+      issueDate: formatDate(issued),
+      expiryDate: formatDate(expires)
+    }
+  }
+}
 // No levy rate is agreed yet, so every amount is the placeholder the quote
 // journey's email shows (content/nrf-quote-7-1)
 const LEVY_AMOUNT = 'X,XXX'
@@ -727,6 +810,22 @@ const CERTIFICATE_OPENED_FROM = {
 }
 
 const commitmentCertificate = {
+  // ?ref=NRL-900001 shows that dummy certificate from certificates.yaml in
+  // place of the session's answers, which it leaves alone. A reference the
+  // file doesn't hold goes to the start
+  load(ctx) {
+    const reference = ctx.query.ref
+    if (!reference) {
+      return null
+    }
+    delete ctx.req.session.data.ref
+    const found = certificateAnswers(reference)
+    if (!found) {
+      return { redirect: ctx.journey.routes.START }
+    }
+    ctx.data = found
+    return null
+  },
   get(ctx, model) {
     const from = CERTIFICATE_OPENED_FROM[String(ctx.query._from || '')]
     if (from) {
@@ -800,6 +899,7 @@ module.exports = {
   'check-your-answers': checkYourAnswers,
   'commitment-certificate': commitmentCertificate,
   certificateContents,
+  loadCertificates,
   // For tests
   accountFor,
   registeredAccount,

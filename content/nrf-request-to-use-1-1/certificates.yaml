@@ -1,0 +1,86 @@
+# Dummy commitment certificates for stakeholders: each one opens on its own
+# at commitment-certificate?ref=<reference>, for example
+#
+#   /nrf-request-to-use-1-1/commitment-certificate?ref=NRL-900001
+#
+# and the page's print link saves it as a PDF. Opening one never touches
+# the session, so it can be shared without a journey behind it, and a
+# research participant's answers are left alone.
+#
+# This is data, not page copy: the certificate's words are in
+# pages/commitment-certificate.md. Edits show on the next page load (no
+# restart). The code that reads it is app/lib/nrf-request-to-use-1-1/hooks.js.
+#
+#   boundaries    named red line boundaries: open rings of [longitude,
+#                 latitude] pairs. Each is a real field traced from the
+#                 Ordnance Survey MasterMap parcels the map draws (the same
+#                 fields as content/lpa-manage-1/records.yaml), inside the
+#                 Norfolk EDP and clear of its excluded areas
+#   certificates  one entry per certificate
+#
+# A certificate:
+#   reference      the NRL reference in its link and on the certificate
+#                  (NRL- and six digits)
+#   fullName       the developer's name
+#   businessName   the business the certificate is for; leave it out for an
+#                  individual, and the certificate has no Business name line
+#   addressLine1   the first line of the address, then its town and postcode
+#   town           (the certificate shows these three on one line)
+#   postcode
+#   units          the number of homes
+#   levyAmount     the levy, without the £ (quoted, so YAML keeps the comma);
+#                  leave it out for the £X,XXX placeholder
+#   issued         the date of issue, YYYY-MM-DD; leave it out for today
+#   expires        the expiry date, YYYY-MM-DD; leave it out for six months
+#                  after `issued`
+#   boundary       one of the boundaries below, or `coordinates:` with a
+#                  ring of its own
+#   edp            the EDP's full name as content/shared/edps.yaml gives it
+#                  (its obligation comes from there); leave it out for the
+#                  Norfolk EDP
+
+boundaries:
+  reepham-furze-lane:
+    - [1.121438, 52.757251]
+    - [1.121297, 52.757260]
+    - [1.121264, 52.757293]
+    - [1.121355, 52.757319]
+    - [1.121379, 52.757349]
+    - [1.121328, 52.757539]
+    - [1.121130, 52.757651]
+    - [1.122403, 52.758552]
+    - [1.123058, 52.758763]
+    - [1.124336, 52.758149]
+    - [1.124336, 52.758096]
+    - [1.123144, 52.757773]
+    - [1.121806, 52.757339]
+  aylsham-the-meadows:
+    - [1.251918, 52.800398]
+    - [1.252107, 52.799614]
+    - [1.252162, 52.799565]
+    - [1.252612, 52.799493]
+    - [1.252671, 52.799594]
+    - [1.252771, 52.799568]
+    - [1.253199, 52.800140]
+
+# Placeholders until the stakeholders' data arrives
+certificates:
+  - reference: NRL-900001
+    fullName: Priya Shah
+    businessName: Broadland Homes Ltd
+    addressLine1: 12 Market Place
+    town: Reepham
+    postcode: NR10 4JJ
+    units: 45
+    levyAmount: '48,600'
+    issued: 2026-11-20
+    boundary: reepham-furze-lane
+
+  - reference: NRL-900002
+    fullName: Tom Okafor
+    addressLine1: 3 Millgate
+    town: Aylsham
+    postcode: NR11 6HX
+    units: 18
+    issued: 2026-11-21
+    boundary: aylsham-the-meadows

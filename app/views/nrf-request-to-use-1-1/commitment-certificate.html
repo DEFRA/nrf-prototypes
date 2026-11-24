@@ -21,6 +21,9 @@
   Printing leaves only the certificate, on A4 with 20mm margins, with the
   Natural England logo to the right of the heading, a 24pt title, 18pt
   headings and 12pt body text (_commitment-certificate.scss).
+
+  `?ref=NRL-900001` shows a dummy certificate from
+  content/nrf-request-to-use-1-1/certificates.yaml.
 #}
 {% extends "journey-engine/_page.html" %}
 
@@ -78,8 +81,7 @@
     {% endfor %}
   </div>
   {% endif %}
-  <div class="govuk-grid-column-two-thirds-from-desktop app-certificate__body">
-    {{ content.html | safe }}
+  <div class="govuk-grid-column-two-thirds-from-desktop app-certificate__body">    {{ content.html | safe }}
   </div>
 </div>
 {% endblock %}
