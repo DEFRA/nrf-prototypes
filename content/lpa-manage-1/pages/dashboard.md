@@ -31,7 +31,7 @@ text:
   noResultsHint: If a developer has given you a new NRL reference, create a developer record for it.
   # Instead of noResults when the search is an NRL reference with no
   # developer record; {reference} is the reference searched for
-  unrecordedHeading: The reference {reference} does not have a developer record created yet.
+  unrecordedHeading: The reference {reference} does not have a developer record created for it yet.
   unrecordedBody: Create a developer record to retrieve the commitment certificate details the developer submitted with their planning application.
   clearSearch: Clear search
   columns:
