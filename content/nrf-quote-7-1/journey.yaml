@@ -16,7 +16,7 @@ serviceName: Get a quote for the nature restoration levy
 # The survey the phase banner's "give your feedback" link opens
 feedbackUrl: https://defragroup.eu.qualtrics.com/jfe/form/SV_9yRhrdtbb3vmw86?Journey=Quote
 
-start: start
+start: private-beta-signup
 summaryPage: check-your-answers
 
 # Card shown on the homepage. `family` picks the tab, `version` orders it
@@ -45,6 +45,7 @@ session:
   - boundaryFailureReason
   - mapReferrer
   - estimateEmail
+  - privateBetaEmail
   - nrfReference
   - levyAmount
   - intersectingCatchment
@@ -87,6 +88,16 @@ pages:
     # Shared by the quote and request to use, so the generic survey
     feedbackUrl: https://defragroup.eu.qualtrics.com/jfe/form/SV_9yRhrdtbb3vmw86?Journey=Generic
     next: what-would-you-like-to-do
+
+  # The way in, before the start page: an email box in place of "Start
+  # now". Every address gets through except those listed in
+  # private-beta.yaml (see hooks.js).
+  - id: private-beta-signup
+    field: email
+    sessionKey: privateBetaEmail
+    handler: custom
+    back: []
+    next: start
 
   - id: what-would-you-like-to-do
     shared: true

@@ -13,6 +13,9 @@
  * app/assets/javascripts/interactive-map/ stays diffable against production.
  */
 
+const fs = require('fs')
+const path = require('path')
+const yaml = require('js-yaml')
 const turf = require('@turf/turf')
 const { message, validatePage } = require('../journey-engine/validation')
 const edpData = require('../map/edp-data')
@@ -741,7 +744,45 @@ const estimateEmailContent = {
   }
 }
 
+// "Access the private beta": any well-formed email address gets through
+// unless content/nrf-quote-7-1/private-beta.yaml lists it as not invited (a
+// full address, or an @domain for everyone there). Read per submit so edits
+// need no restart.
+const PRIVATE_BETA_FILE = path.join(
+  __dirname,
+  '../../../content/nrf-quote-7-1/private-beta.yaml'
+)
+
+function notInvitedList() {
+  try {
+    const { notInvited } = yaml.load(fs.readFileSync(PRIVATE_BETA_FILE, 'utf8'))
+    return (notInvited || []).map((entry) => String(entry).trim().toLowerCase())
+  } catch (error) {
+    console.error('Error reading private beta list:', error)
+    return []
+  }
+}
+
+function isInPrivateBeta(email) {
+  const address = email.toLowerCase()
+  const domain = address.slice(address.lastIndexOf('@'))
+  return !notInvitedList().some(
+    (entry) => entry === address || entry === domain
+  )
+}
+
+const privateBetaSignup = {
+  validate(ctx) {
+    const result = validatePage(ctx.page, ctx.body)
+    if (result.ok && !isInPrivateBeta(result.value)) {
+      return { ok: false, error: message(ctx.page, 'notInBeta') }
+    }
+    return result
+  }
+}
+
 module.exports = {
+  'private-beta-signup': privateBetaSignup,
   map,
   'upload-redline': uploadRedline,
   'checking-file': checkingFile,

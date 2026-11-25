@@ -1,0 +1,9 @@
+# Who the "Access the private beta" page (private-beta-signup) turns away.
+#
+# Every email address gets through except these, which show the "not part
+# of the private beta" error. One entry per line: a full email address, or
+# an entry starting with @ for every address at that domain. Case does not
+# matter. Re-read on every submit, so no restart is needed.
+
+notInvited:
+  - not-invited@example.com
