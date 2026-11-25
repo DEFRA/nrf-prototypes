@@ -13,7 +13,7 @@ button: Continue
 
 ## Understanding how you will help shape our service in private beta
 
-We use private beta to learn about our service and improve it before it goes live.
+We use private beta to learn about our service and improve it before it is released to everyone.
 
 We do this by inviting a limited number of people to use our service. We listen to their feedback throughout and use it to make improvements.
 
