@@ -27,8 +27,12 @@ const requestToUseEntryId = requestToUseEntry.split('/').pop()
 
 test.describe('shared start page', () => {
   test('both journeys are marked as sharing the same content file', () => {
+    // The quote opens on its private beta sign-up, which leads here
+    expect(quote.journey.byId.get(quote.journey.start).next[0].goto).toBe(
+      'start'
+    )
+    expect(requestToUse.journey.start).toBe('start')
     for (const { journey } of [quote, requestToUse]) {
-      expect(journey.start).toBe('start')
       for (const id of ['start', 'what-would-you-like-to-do']) {
         const page = journey.byId.get(id)
         expect(page.shared).toBe(true)

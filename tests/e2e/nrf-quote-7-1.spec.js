@@ -2,6 +2,7 @@ const { test, expect } = require('@playwright/test')
 const fs = require('fs')
 const path = require('path')
 const turf = require('@turf/turf')
+const yaml = require('js-yaml')
 const {
   toFlowGraph,
   previewData,
@@ -142,6 +143,34 @@ test.describe('nrf-quote-7-1 validation', () => {
     const html = await response.text()
     expect(html).toContain('There is a problem')
     expect(html).toContain(planningType.content.errors.required)
+  })
+
+  test('the private beta sign-up turns away only the uninvited', async ({
+    page
+  }) => {
+    const signup = journey.byId.get('private-beta-signup')
+    const { notInvited } = yaml.load(
+      fs.readFileSync(
+        path.join(__dirname, '../../content/nrf-quote-7-1/private-beta.yaml'),
+        'utf8'
+      )
+    )
+    const post = (email) =>
+      page.request.post(signup.path, { form: { email }, maxRedirects: 0 })
+
+    for (const [email, key] of [
+      ['', 'required'],
+      ['not-an-email', 'format'],
+      [notInvited[0], 'notInBeta']
+    ]) {
+      const response = await post(email)
+      expect(response.status()).toBe(200)
+      expect(await response.text()).toContain(signup.content.errors[key])
+    }
+
+    const response = await post('anyone@example.org')
+    expect(response.status()).toBe(303)
+    expect(response.headers().location).toBe(journey.byId.get('start').path)
   })
 })
 
@@ -623,7 +652,7 @@ test.describe('journey tools', () => {
     )
     expect(response.status()).toBe(200)
     const flow = await response.json()
-    expect(flow.startNodeId).toBe('start')
+    expect(flow.startNodeId).toBe(journey.start)
     expect(flow.screens).toHaveLength(journey.pages.length)
     expect(flow.transitions.onPage.length).toBeGreaterThan(0)
   })
