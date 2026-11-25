@@ -1017,6 +1017,15 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(page.locator('main')).toContainText(
       text('dashboard', 'noResults')
     )
+
+    // An NRL reference with no record says so, typed however
+    await page.goto(`${base}/dashboard?_q=nrl%20999999`)
+    await expect(page.locator('main')).toContainText(
+      text('dashboard', 'unrecordedHeading').replace(
+        '{reference}',
+        'NRL-999999'
+      )
+    )
   })
 
   test('a council with no records yet goes straight to adding one', async ({

@@ -965,6 +965,15 @@ const signOut = {
 // variation, or reserved matters for an outline application (journey.yaml),
 // rather than adding it again.
 const retrieveCommitment = {
+  // The dashboard's "Create a developer record" button under a search
+  // that found nothing sends the search as ?_q=: an NRL reference fills in
+  // the box here, anything else (a developer's name) leaves it empty
+  load(ctx) {
+    if (ctx.preview || ctx.query._q === undefined) {
+      return
+    }
+    ctx.data[ctx.page.sessionKey] = typedReference(ctx.query._q)
+  },
   // With no records there is no dashboard to go back to
   get(ctx, model) {
     if (!ctx.preview && !allEntries(ctx.data).length) {
@@ -1213,9 +1222,9 @@ function stepOf(record) {
 function takesReservedMatters(record) {
   return Boolean(
     record &&
-      record.planningType === OUTLINE_TYPE &&
-      stepOf(record) === PLANNING_STEP &&
-      record.planningStage.value === GRANTED_STAGE
+    record.planningType === OUTLINE_TYPE &&
+    stepOf(record) === PLANNING_STEP &&
+    record.planningStage.value === GRANTED_STAGE
   )
 }
 
@@ -1225,10 +1234,10 @@ function takesReservedMatters(record) {
 function addingReservedMattersTo(data, record) {
   return Boolean(
     record &&
-      record.planningType === OUTLINE_TYPE &&
-      data.planningReservedMatters === IS_RESERVED_MATTERS &&
-      data.commitmentEntry &&
-      data.commitmentEntry.reference === record.reference
+    record.planningType === OUTLINE_TYPE &&
+    data.planningReservedMatters === IS_RESERVED_MATTERS &&
+    data.commitmentEntry &&
+    data.commitmentEntry.reference === record.reference
   )
 }
 
@@ -1239,9 +1248,9 @@ function addingReservedMattersTo(data, record) {
 function takesAmendment(data, record) {
   return Boolean(
     record &&
-      record.planningType === FULL_TYPE &&
-      record.status.value !== REJECTED_STATUS &&
-      !linkedRecords(data, record).length
+    record.planningType === FULL_TYPE &&
+    record.status.value !== REJECTED_STATUS &&
+    !linkedRecords(data, record).length
   )
 }
 
@@ -1791,6 +1800,16 @@ const certificate = {
   }
 }
 
+// What was typed in a search box as an NRL reference ("nrl 123456",
+// "NRL123456" or a bare "123456" is NRL-123456), or '' when it is not one
+function typedReference(typed) {
+  const digits = String(typed || '')
+    .toUpperCase()
+    .replace(/\s+/g, '')
+    .match(/^(?:NRL-?)?(\d{6})$/)
+  return digits ? `NRL-${digits[1]}` : ''
+}
+
 // The landing page: counts that open the table filtered to them, and
 // every record, searched, filtered, sorted by its column headings and paged
 const dashboard = {
@@ -1864,6 +1883,12 @@ const dashboard = {
     model.pagination = paginationFor(query, pages, path)
     model.filters = filtersFor(query, text, store, path)
     model.clearSearchHref = hrefFor(path, query, { q: '', page: 1 })
+    // A search for an NRL reference the council has no record of yet: the
+    // page says so and offers to create one
+    const searched = typedReference(query.q)
+    if (searched && !findRecord(ctx.data, searched)) {
+      model.unrecorded = searched
+    }
     // A search that finds one record focuses its link, so Enter opens it
     model.table = tableFor(
       shown,
