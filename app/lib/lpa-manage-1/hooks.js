@@ -965,14 +965,21 @@ const signOut = {
 // variation, or reserved matters for an outline application (journey.yaml),
 // rather than adding it again.
 const retrieveCommitment = {
-  // The dashboard's "Create a developer record" button under a search
-  // that found nothing sends the search as ?_q=: an NRL reference fills in
-  // the box here, anything else (a developer's name) leaves it empty
+  // The box shows the reference last typed in it, so Back and "No" (to
+  // correct it) keep it. The dashboard's "Create a developer record"
+  // button under a search that found nothing sends the search as ?_q=: an
+  // NRL reference fills in the box, anything else (a developer's name)
+  // empties it. Its other "Create a developer record" button and the
+  // menu's start afresh with ?_new=1, which empties it.
   load(ctx) {
-    if (ctx.preview || ctx.query._q === undefined) {
+    if (ctx.preview) {
       return
     }
-    ctx.data[ctx.page.sessionKey] = typedReference(ctx.query._q)
+    if (ctx.query._q !== undefined) {
+      ctx.data[ctx.page.sessionKey] = typedReference(ctx.query._q)
+    } else if (ctx.query._new) {
+      ctx.data[ctx.page.sessionKey] = ''
+    }
   },
   // With no records there is no dashboard to go back to
   get(ctx, model) {

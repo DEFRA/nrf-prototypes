@@ -58,7 +58,7 @@
   <h1 class="govuk-heading-xl">{{ content.heading }}</h1>
   {% if not searchFoundNothing %}
     {{ content.html | safe }}
-    {{ govukButton({ text: text.addRecord, href: routes.RETRIEVE_COMMITMENT }) }}
+    {{ govukButton({ text: text.addRecord, href: routes.RETRIEVE_COMMITMENT + "?_new=1" }) }}
   {% endif %}
 </div>
 

@@ -41,7 +41,8 @@ summaryPages:
 participant: local-planning-authority
 
 # The staff header. Its account dropdown lists the menu links, then the
-# account links. Links are page ids, absolute paths or `$signOut`. The
+# account links. Links are page ids (with any ?query), absolute paths or
+# `$signOut`. The
 # organisation is the participant's council when the facilitator gave one.
 header:
   organisation: Scarfolk Council
@@ -55,8 +56,9 @@ header:
     links:
       - text: Developer records
         href: dashboard
+      # ?_new=1 empties the NRL reference box (a fresh start, see hooks.js)
       - text: Create a developer record
-        href: retrieve-commitment
+        href: retrieve-commitment?_new=1
 
 # The "User research" section of every page's footer
 research:
