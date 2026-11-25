@@ -477,8 +477,9 @@ function renderContent(page, ctx) {
 
 /**
  * The staff layout's header (`header:` in journey.yaml) with each link's
- * `href` resolved: a page id becomes its path, `$signOut` the sign-out route
- * a hook registered, anything else (an absolute path, `#`) stays as written.
+ * `href` resolved: a page id becomes its path (keeping any `?query` after
+ * it), `$signOut` the sign-out route a hook registered, anything else (an
+ * absolute path, `#`) stays as written.
  */
 function resolveHeader(journey) {
   const header = journey.header || {}
@@ -487,7 +488,9 @@ function resolveHeader(journey) {
     if (href === '$signOut') {
       return { ...link, href: journey.routes.SIGN_OUT || journey.basePath }
     }
-    return { ...link, href: toPath(href, journey) || href }
+    const [target, query] = href.split('?')
+    const path = toPath(target, journey)
+    return { ...link, href: path ? path + (query ? `?${query}` : '') : href }
   }
   const menu = header.menu || {}
   return {
@@ -609,8 +612,8 @@ function saveAndRedirect(req, res, url) {
 function hasPost(page) {
   return Boolean(
     (page.next && page.next.length) ||
-      page.handler === 'custom' ||
-      isQuestionType(page.type)
+    page.handler === 'custom' ||
+    isQuestionType(page.type)
   )
 }
 

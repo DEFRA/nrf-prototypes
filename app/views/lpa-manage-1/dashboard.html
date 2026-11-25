@@ -1,6 +1,6 @@
 {#
   The landing page (content/lpa-manage-1/pages/dashboard.md): a button to add
-  a record, the search, counts of the council's records (each opening the
+  a record, counts of the council's records (each opening the
   table filtered to them) and every record the council has: searched
   (?_q=), filtered (?_status=, ?_stage=, ?_type=, ?_overdue=1), sorted by a
   column heading (?_sort=<column>&_dir=asc|desc) and paged (?_page=). Each
@@ -8,7 +8,8 @@
   again at page 1. Model extras from app/lib/lpa-manage-1/hooks.js: flash
   (the banner after Confirm on a record page), cards [{ count, label, href,
   active }],
-  search (the query), resultCount, showing, pagination,
+  search (the query), resultCount, showing, pagination, unrecorded (the
+  NRL reference searched for when the council has no record of it),
   filters { groups, count, id, clearHref }, clearSearchHref, table.
 #}
 {% extends "journey-engine/_page.html" %}
@@ -45,19 +46,23 @@
 </div>
 {% endif %}
 
-<div class="app-staff-page-header">
+{# A search that finds nothing hides the paragraphs under the heading and
+   their button, the search box, the cards and the filter (unless a filter
+   is set, and may be why), leaving what to do next #}
+{% set searchFoundNothing = search.q and not resultCount %}
+
+{# The heading and its paragraphs, then the button to create a record. A
+   search that found nothing keeps only the heading: what it offers says
+   the same and has the same button. #}
+<div class="app-staff-dashboard-header">
   <h1 class="govuk-heading-xl">{{ content.heading }}</h1>
-  {{ govukButton({ text: text.addRecord, href: routes.RETRIEVE_COMMITMENT }) }}
+  {% if not searchFoundNothing %}
+    {{ content.html | safe }}
+    {{ govukButton({ text: text.addRecord, href: routes.RETRIEVE_COMMITMENT + "?_new=1" }) }}
+  {% endif %}
 </div>
 
-{{ content.html | safe }}
-
-<form class="app-staff-search" action="{{ routes.DASHBOARD }}" method="get" role="search">
-  {% set searchValue = search.q %}
-  {% include "lpa-manage-1/_search.html" %}
-  {{ keep(search, true) }}
-</form>
-
+{% if not searchFoundNothing %}
 <ul class="app-staff-cards" id="record-counts">
   {% for card in cards %}
   <li class="app-staff-card">
@@ -68,7 +73,14 @@
   </li>
   {% endfor %}
 </ul>
+{% endif %}
 
+{# Over the table: the filter on the left under a heading level with the
+   search's label, and the search on the right #}
+{% if not searchFoundNothing or filters.count %}
+<div class="app-staff-table-controls">
+<div class="app-staff-table-controls__filter">
+<h2 class="govuk-heading-s app-staff-table-controls__heading">{{ text.filterHeading }}</h2>
 <details class="govuk-details app-staff-filter" id="{{ filters.id }}">
   <summary class="govuk-details__summary">
     <span class="govuk-details__summary-text">{{ text.filterSummary }}{% if filters.count %} ({{ filters.count }}){% endif %}</span>
@@ -102,6 +114,16 @@
     </form>
   </div>
 </details>
+</div>
+{% if not searchFoundNothing %}
+<form class="app-staff-search" action="{{ routes.DASHBOARD }}" method="get" role="search">
+  {% set searchValue = search.q %}
+  {% include "lpa-manage-1/_search.html" %}
+  {{ keep(search, true) }}
+</form>
+{% endif %}
+</div>
+{% endif %}
 
 {% if resultCount %}
   {{ govukTable({
@@ -121,17 +143,33 @@
       {{ govukPagination(pagination) }}
     {% endif %}
   </div>
+  {% if search.q %}
+    <p class="govuk-body">
+      <a class="govuk-link govuk-link--no-visited-state" href="{{ clearSearchHref }}">{{ text.clearSearch }}</a>
+    </p>
+  {% endif %}
 {% else %}
-  <p class="govuk-body">
-    {{- text.noResults }}
-    {#- A search that finds nothing may be for a record not added yet #}
-    {%- if search.q %} <a class="govuk-link govuk-link--no-visited-state" href="{{ routes.RETRIEVE_COMMITMENT }}">{{ text.addRecord }}</a>{% endif %}
-    {%- if filters.count %} <a class="govuk-link govuk-link--no-visited-state app-staff-table-footer__clear" href="{{ filters.clearHref }}">{{ text.clearFilters }}</a>{% endif -%}
-  </p>
-{% endif %}
-{% if search.q %}
-  <p class="govuk-body">
-    <a class="govuk-link govuk-link--no-visited-state" href="{{ clearSearchHref }}">{{ text.clearSearch }}</a>
-  </p>
+  <div class="app-staff-no-results">
+    {#- A search for an NRL reference with no record says so; any other
+        search that finds nothing may still be for a record not added yet #}
+    {% if unrecorded %}
+      <h2 class="govuk-heading-m">{{ text.unrecordedHeading | replace("{reference}", unrecorded) }}</h2>
+      <p class="govuk-body">{{ text.unrecordedBody }}</p>
+    {% else %}
+      <h2 class="govuk-heading-m">{{ text.noResults }}</h2>
+      {% if search.q %}
+        <p class="govuk-body">{{ text.noResultsHint }}</p>
+      {% endif %}
+    {% endif %}
+    <div class="govuk-button-group">
+      {% if search.q %}
+        {{ govukButton({ text: text.addRecord, href: routes.RETRIEVE_COMMITMENT + "?_q=" + (search.q | urlencode) }) }}
+        <a class="govuk-link govuk-link--no-visited-state" href="{{ clearSearchHref }}">{{ text.clearSearch }}</a>
+      {% endif %}
+      {% if filters.count %}
+        <a class="govuk-link govuk-link--no-visited-state" href="{{ filters.clearHref }}">{{ text.clearFilters }}</a>
+      {% endif %}
+    </div>
+  </div>
 {% endif %}
 {% endblock %}

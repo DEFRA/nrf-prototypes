@@ -10,7 +10,9 @@ text:
   updated: '{reference} has been updated'
   searchLabel: Search developer records
   searchButton: Search
-  filterSummary: Filter developer records
+  # The heading over the filter, and the link that opens it
+  filterHeading: Filter developer records
+  filterSummary: Show filters
   filterStatus: Status
   filterStage: Planning application stage
   filterType: Planning type
@@ -25,6 +27,12 @@ text:
   # {from}, {to} and {total} are filled in with the numbers
   showing: 'Showing {from} to {to} of {total} developer records'
   noResults: No developer records match your search.
+  # Under noResults when a search finds nothing, above addRecord
+  noResultsHint: If a developer has given you a new NRL reference, create a developer record for it.
+  # Instead of noResults when the search is an NRL reference with no
+  # developer record; {reference} is the reference searched for
+  unrecordedHeading: The reference {reference} does not have a developer record created yet.
+  unrecordedBody: Create a developer record to retrieve the commitment certificate details the developer submitted with their planning application.
   clearSearch: Clear search
   columns:
     reference: NRL reference
@@ -37,4 +45,8 @@ text:
     status: Status
 ---
 
-# Manage the developer records for nature restoration levy
+# Manage developer records
+
+Use this service to create and manage developer records for the nature restoration levy.
+
+Retrieve the commitment certificate details the developer submitted with their planning application to create a developer record.
