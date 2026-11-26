@@ -1878,8 +1878,8 @@ test.describe('nrf-request-to-use-1-1 dummy certificates', () => {
     await expect(main).toContainText(first.fullName)
     await expect(main).toContainText(`${first.units} unit`)
     await expect(page.locator('.app-boundary-map')).toHaveCount(1)
-    // Stakeholders' certificates show no price
-    await expect(main).not.toContainText('£')
+    // Stakeholders' certificates show no price, only the placeholder
+    await expect(main).toContainText('£X,XXX')
 
     // Without ?ref= the page is the session's again: no certificate of the
     // file's

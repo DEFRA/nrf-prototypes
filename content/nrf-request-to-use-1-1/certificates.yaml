@@ -6,7 +6,7 @@
 # and the page's print link saves it as a PDF. Opening one never touches
 # the session, so it can be shared without a journey behind it, and a
 # research participant's answers are left alone. They show no price: the
-# certificate's levy amount section is left out (the hook drops it).
+# levy amount is always the £X,XXX placeholder.
 #
 # This is data, not page copy: the certificate's words are in
 # pages/commitment-certificate.md. Edits show on the next page load (no
