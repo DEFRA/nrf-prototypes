@@ -9,11 +9,10 @@
 //   .app-staff-page-header  heading with a button to its right
 //   .app-staff-dashboard-header  the dashboard's heading, paragraphs and
 //                           button to create a record
-//   .app-staff-no-results   what a search that finds nothing offers
-//   .app-staff-table-controls  the filter with the search to its right
+//   .app-staff-table-controls  the search with the filter's button to its right
 //   .app-staff-cards        the dashboard's count cards, each a link
 //   .app-staff-search       search box with its lens button
-//   .app-staff-filter       the records table's filter (a details)
+//   .app-staff-filter       the records table's filter (a popover)
 //   .app-staff-table--sortable  column headings that sort the table
 //   .app-timeline           audit history (the MOJ timeline)
 
@@ -293,11 +292,8 @@ $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
   }
 }
 
-// The dashboard's heading, its paragraphs and the button to create a
-// record, and the block that replaces the table when a search or the
-// filters find nothing, keep to three fifths of the page from desktop
-.app-staff-dashboard-header,
-.app-staff-no-results {
+// The dashboard's heading keeps to three fifths of the page from desktop
+.app-staff-dashboard-header {
   @include govuk-media-query($from: desktop) {
     max-width: 60%;
   }
@@ -307,51 +303,33 @@ $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
   margin-bottom: govuk-spacing(4);
 }
 
-// When a search or the filters find nothing: a heading, what to do next
-// and the button to create a record, ruled off in GOV.UK blue
-.app-staff-no-results {
-  box-sizing: border-box;
-  margin-bottom: govuk-spacing(6);
-  padding: govuk-spacing(4) 0 0 govuk-spacing(4);
-  border-left: 5px solid govuk-colour('blue');
-
-  .govuk-button-group {
-    margin-bottom: 0;
-  }
-}
-
-// Over the records table: the filter on the left and the search on the
-// right, half the page each from desktop, their headings level. The filter
-// opens in its own column, so the search stays put. Stacked below desktop.
+// Over the records table: the search on the left and the button that
+// opens the filter on the right. Stacked below tablet.
 .app-staff-table-controls {
   margin-bottom: govuk-spacing(4);
   // A search (#record-search) brings the search to the top of the window,
   // a little below its edge, with the table beneath it
   scroll-margin-top: govuk-spacing(4);
 
-  .app-staff-filter,
   .app-staff-search {
     margin-bottom: govuk-spacing(4);
   }
 
-  // Spaced like the search's label, so the link that opens the filter
-  // sits level with the search box
-  .app-staff-table-controls__heading {
-    margin-bottom: govuk-spacing(1);
+  // The search keeps to half the page from tablet, and the filter's button
+  // sits at the right, level with the search box
+  @include govuk-media-query($from: tablet) {
+    display: flex;
+    align-items: flex-end;
+    gap: govuk-spacing(6);
+
+    .app-staff-search {
+      flex: 0 1 50%;
+    }
   }
 
-  @include govuk-media-query($from: desktop) {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: govuk-spacing(6);
-    align-items: start;
-
-    // The link that opens the filter, centred on the 40px search box
-    // beside it (its line is 25px tall). Padding, as a margin would merge
-    // with the heading's.
-    .app-staff-filter {
-      padding-top: 7px;
-    }
+  .app-staff-table-controls__filter {
+    margin-bottom: govuk-spacing(4);
+    margin-left: auto;
   }
 }
 
@@ -565,16 +543,59 @@ $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
   }
 }
 
-// The records table's filter: its checkbox groups side by side from tablet
+// The records table's filter, a popover opened by the Filters button over
+// the table: a white panel with its checkbox groups side by side from
+// tablet. The dashboard's script places it under the button.
 .app-staff-filter {
-  margin-bottom: govuk-spacing(4);
-  // Applying or clearing the filters (#record-filters) brings it to the
-  // top of the window with the table beneath it
-  scroll-margin-top: govuk-spacing(4);
+  box-sizing: border-box;
+  width: min(calc(100vw - #{govuk-spacing(6)}), 720px);
+  max-height: calc(100vh - #{govuk-spacing(6)});
+  padding: govuk-spacing(4) govuk-spacing(4) 0;
+  overflow-y: auto;
+  border: 1px solid govuk-colour('black', $variant: 'tint-80');
+  border-top: 5px solid govuk-colour('blue');
+  background: govuk-colour('white');
+  color: $govuk-text-colour;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 
-  .govuk-details__text {
-    padding-top: govuk-spacing(3);
+  &::backdrop {
+    background: transparent;
   }
+}
+
+// Its heading with the Close button at the top right, styled as a link
+.app-staff-filter__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: govuk-spacing(4);
+}
+
+.app-staff-filter__close {
+  @include govuk-font($size: 19);
+  @include govuk-link-common;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  // GOV.UK's link colours are set on :link, which a button never matches
+  color: $govuk-link-colour;
+  cursor: pointer;
+
+  &:hover {
+    color: $govuk-link-hover-colour;
+  }
+
+  &:focus {
+    color: $govuk-focus-text-colour;
+  }
+}
+
+.app-staff-filter--placed {
+  position: absolute;
+  inset: auto;
+  margin: 0;
 }
 
 .app-staff-filter__groups {

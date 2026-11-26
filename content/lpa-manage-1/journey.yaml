@@ -314,12 +314,18 @@ pages:
 
   # Continuing adds the record to the session's records and opens its page.
   # A variation the developer made a commitment for says which existing
-  # record it is linked with.
+  # record it is linked with. Also opened from the NRL reference of a
+  # commitment with no record yet in the dashboard's table, whose Back
+  # returns to the dashboard.
   - id: planning-reference
     field: planning-reference
     sessionKey: planningReference
     guard: { key: commitmentEntry, isSet: true, redirect: retrieve-commitment }
     handler: custom # adds the record, see hooks.js
+    back:
+      - when: { key: commitmentFromTable, truthy: true }
+        goto: dashboard
+      - goto: retrieve-commitment
     next: view-record
 
   # --------------------------------------------------------------------

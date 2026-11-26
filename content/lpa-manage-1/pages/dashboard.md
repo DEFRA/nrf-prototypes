@@ -4,15 +4,17 @@
 # record, searched, filtered, sorted by its column headings and paged.
 type: custom
 text:
-  addRecord: Create a developer record
   # The banner after Confirm on a record page; {reference} is its NRL reference
   successTitle: Success
   updated: '{reference} has been updated'
   searchLabel: Search developer records
+  searchHint: Search by NRL reference, developer, planning reference or officer
   searchButton: Search
-  # The heading over the filter, and the link that opens it
+  # The button that opens the filter, and the heading and close button
+  # inside it
   filterHeading: Filter developer records
-  filterSummary: Show filters
+  filterSummary: Filters
+  filterClose: Close
   filterStatus: Status
   filterStage: Planning application stage
   filterType: Planning type
@@ -26,13 +28,12 @@ text:
   overdueCount: Overdue actions
   # {from}, {to} and {total} are filled in with the numbers
   showing: 'Showing {from} to {to} of {total} developer records'
-  noResults: No developer records match your search.
-  # Under noResults when a search finds nothing, above addRecord
-  noResultsHint: If a developer has given you a new NRL reference, create a developer record for it.
-  # Instead of noResults when the search is an NRL reference with no
-  # developer record; {reference} is the reference searched for
-  unrecordedHeading: The reference {reference} does not have a developer record created for it yet.
-  unrecordedBody: Create a developer record to retrieve the commitment certificate details the developer submitted with their planning application.
+  # In the table beside a commitment sent to the council that has no
+  # developer record yet, across the developer, stage, type and officer
+  # columns (its NRL reference links to adding the planning reference)
+  planningReferenceNeeded: Planning application reference needed
+  # When a search or the filters find nothing
+  noResults: No results found
   clearSearch: Clear search
   columns:
     reference: NRL reference
@@ -46,7 +47,3 @@ text:
 ---
 
 # Manage developer records
-
-Use this service to create and manage developer records for the nature restoration levy.
-
-Retrieve the commitment certificate details the developer submitted with their planning application to create a developer record.

@@ -19,7 +19,10 @@
  *   - the records the officer adds, and every status they change, kept in
  *     the session (`lpaRecords`) over the file's own
  *   - the dashboard's counts and its table of every record, with search,
- *     filters, sortable columns and pages
+ *     filters, sortable columns and pages. Commitments sent to the council
+ *     that have no record yet (`listed: true` in records.yaml) are in the
+ *     table too, for review, their NRL reference linking to adding their
+ *     planning application reference
  *   - a reference the council already has a record for asks whether it is
  *     a planning variation; one that is takes the new planning application
  *     reference and keeps the original on the record. One for an outline
@@ -511,6 +514,48 @@ function allRecords(data) {
   return allEntries(data).map((item) => recordOf(item, store))
 }
 
+/**
+ * The commitments sent to the council that it has no record of yet
+ * (`listed: true` in records.yaml), as rows of the dashboard's table: the
+ * NRL reference, for review, last modified when the developer submitted
+ * it (when it was issued), and when it expires. Only their reference is
+ * searched; they have no planning stage or type to filter
+ * by. A council with no records yet has none.
+ */
+function pendingRecords(data) {
+  if (data && data.officer && data.officer.newCouncil) {
+    return []
+  }
+  const store = storeFor(data)
+  const recorded = new Set(allEntries(data).map((item) => item.entry.reference))
+  return store.commitments
+    .filter((entry) => entry.listed && !recorded.has(entry.reference))
+    .map((entry) => {
+      const expires = toDate(entry.expires)
+      return {
+        reference: entry.reference,
+        pending: true,
+        developer: '',
+        planningStage: { value: '', label: '' },
+        planningTypeShort: '',
+        reservedMatters: [],
+        officer: '',
+        overdue: false,
+        status: statusOf(ADDED_STATUS, store),
+        lastModified: toDate(entry.issued),
+        lastModifiedShort: formatDate(entry.issued, 'short'),
+        expires,
+        expiresShort: formatDate(expires, 'short')
+      }
+    })
+}
+
+// Every row of the dashboard's table: the records, then the commitments
+// waiting for a planning application reference
+function tableRecords(data) {
+  return [...allRecords(data), ...pendingRecords(data)]
+}
+
 function findRecord(data, reference) {
   const store = storeFor(data)
   const found = allEntries(data).find(
@@ -604,10 +649,12 @@ const DEFAULT_SORT = 'lastModified'
 const DEFAULT_DIR = 'desc'
 const newestFirst = (a, b) => (b.lastModified || 0) - (a.lastModified || 0)
 
-// The ids of the dashboard's cards and its filter, which their links (and
-// the filter's form) scroll to
+// The ids of the dashboard's cards, which their links scroll to, its
+// filter's popover, and the search and filter over the table, which
+// clearing the filters scrolls to
 const CARDS_ID = 'record-counts'
 const FILTER_ID = 'record-filters'
+const CONTROLS_ID = 'record-search'
 
 // The filters' checkbox groups: each one's query key and the values it can
 // take, with their labels, from records.yaml
@@ -647,35 +694,60 @@ function sortRecords(records, query) {
 
 // Rows of govukTable for the records, with the page's own column copy.
 // `headFor` makes a column heading sortable. `focusOnly` focuses the
-// reference link when it is the only row, so Enter opens the record.
+// reference link when it is the only row, so Enter opens the record. A
+// commitment with no record yet links its reference to adding its
+// planning application reference, says one is needed across the
+// developer, stage, type and officer columns, then gives its dates and
+// status.
 function tableFor(records, text, journey, headFor, focusOnly) {
   const autofocus = focusOnly && records.length === 1 ? ' autofocus' : ''
   const viewPath = journey.routes.VIEW_RECORD
+  const addPath = journey.routes.RETRIEVE_COMMITMENT
   const columns = text.columns || {}
+  const statusCell = (record) => ({
+    html:
+      `<strong class="govuk-tag govuk-tag--${escapeHtml(record.status.colour)}">` +
+      `${escapeHtml(record.status.label)}</strong>`
+  })
+  const referenceLink = (record, href) => ({
+    html:
+      `<a class="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold" ` +
+      `href="${href}"${autofocus}>${escapeHtml(record.reference)}</a>`
+  })
+  const pendingRow = (record) => [
+    referenceLink(
+      record,
+      `${addPath}?_add=${encodeURIComponent(record.reference)}`
+    ),
+    { text: text.planningReferenceNeeded, colspan: 4 },
+    { text: record.lastModifiedShort },
+    { text: record.expiresShort },
+    statusCell(record)
+  ]
   return {
     head: COLUMNS.map((column) => {
       const label = columns[column.key] || column.key
       return headFor ? headFor(column.key, label) : { text: label }
     }),
-    rows: records.map((record) => [
-      {
-        html:
-          `<a class="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold" ` +
-          `href="${viewPath}?ref=${encodeURIComponent(record.reference)}"${autofocus}>` +
-          `${escapeHtml(record.reference)}</a>`
-      },
+    rows: records.map((record) =>
+      record.pending ? pendingRow(record) : recordRow(record)
+    )
+  }
+
+  function recordRow(record) {
+    return [
+      referenceLink(
+        record,
+        `${viewPath}?ref=${encodeURIComponent(record.reference)}`
+      ),
       { text: record.developer },
       { text: record.planningStage.label },
       { text: record.planningTypeShort },
       { text: record.officer },
       { text: record.lastModifiedShort },
       { text: record.expiresShort },
-      {
-        html:
-          `<strong class="govuk-tag govuk-tag--${escapeHtml(record.status.colour)}">` +
-          `${escapeHtml(record.status.label)}</strong>`
-      }
-    ])
+      statusCell(record)
+    ]
   }
 }
 
@@ -687,11 +759,15 @@ function escapeHtml(value) {
     .replace(/"/g, '&quot;')
 }
 
-// Search matches the NRL reference, developer, planning reference or
-// officer, ignoring case and spaces
+// Search matches the NRL reference (typed however: "nrl 123456" finds
+// NRL-123456), developer, planning reference or officer, ignoring case and
+// spaces
 function matches(record, query) {
   const wanted = query.toLowerCase().replace(/\s+/g, '')
   if (!wanted) {
+    return true
+  }
+  if (typedReference(query) === record.reference) {
     return true
   }
   return [
@@ -865,7 +941,7 @@ function filtersFor(query, text, store, path) {
       checked: query[name].includes(option.value)
     }))
   }))
-  // One for each box ticked, shown beside the details' summary
+  // One for each box ticked, shown on the button that opens the filter
   const count =
     FILTERS.reduce((total, name) => total + query[name].length, 0) +
     (query.overdue ? 1 : 0)
@@ -879,7 +955,7 @@ function filtersFor(query, text, store, path) {
       q: query.q,
       sort: query.sort,
       dir: query.dir
-    })}#${FILTER_ID}`
+    })}#${CONTROLS_ID}`
   }
 }
 
@@ -966,18 +1042,31 @@ const signOut = {
 // rather than adding it again.
 const retrieveCommitment = {
   // The box shows the reference last typed in it, so Back and "No" (to
-  // correct it) keep it. The dashboard's "Create a developer record"
-  // button under a search that found nothing sends the search as ?_q=: an
-  // NRL reference fills in the box, anything else (a developer's name)
-  // empties it. Its other "Create a developer record" button and the
-  // menu's start afresh with ?_new=1, which empties it.
+  // correct it) keep it. The menu's "Create a developer record" starts
+  // afresh with ?_new=1, which empties it. In the dashboard's table, the
+  // NRL reference of a commitment with no record yet links here with
+  // ?_add=NRL-123456: it is retrieved as if typed here and the
+  // officer goes straight on to its planning application reference, whose
+  // Back returns to the dashboard.
   load(ctx) {
     if (ctx.preview) {
       return
     }
-    if (ctx.query._q !== undefined) {
-      ctx.data[ctx.page.sessionKey] = typedReference(ctx.query._q)
-    } else if (ctx.query._new) {
+    if (ctx.query._add !== undefined) {
+      const reference = typedReference(ctx.query._add)
+      if (
+        reference &&
+        !findRecord(ctx.data, reference) &&
+        findCommitmentEntry(ctx.data, reference)
+      ) {
+        retrieveCommitment.process(ctx, reference)
+        ctx.data[ctx.page.sessionKey] = reference
+        ctx.data.commitmentFromTable = true
+        return { redirect: ctx.journey.routes.PLANNING_REFERENCE }
+      }
+      return { redirect: ctx.journey.routes.DASHBOARD }
+    }
+    if (ctx.query._new) {
       ctx.data[ctx.page.sessionKey] = ''
     }
   },
@@ -1021,6 +1110,7 @@ const retrieveCommitment = {
     delete data.planningVariation
     delete data.planningReservedMatters
     delete data.amendmentFromRecord
+    delete data.commitmentFromTable
     if (recorded) {
       data.record = recorded
     }
@@ -1170,6 +1260,7 @@ const addRecord = {
     for (const key of [
       'commitmentReference',
       'commitmentEntry',
+      'commitmentFromTable',
       'planningReference'
     ]) {
       delete data[key]
@@ -1807,8 +1898,8 @@ const certificate = {
   }
 }
 
-// What was typed in a search box as an NRL reference ("nrl 123456",
-// "NRL123456" or a bare "123456" is NRL-123456), or '' when it is not one
+// What was typed as an NRL reference ("nrl 123456", "NRL123456" or a bare
+// "123456" is NRL-123456), or '' when it is not one
 function typedReference(typed) {
   const digits = String(typed || '')
     .toUpperCase()
@@ -1818,7 +1909,8 @@ function typedReference(typed) {
 }
 
 // The landing page: counts that open the table filtered to them, and
-// every record, searched, filtered, sorted by its column headings and paged
+// every record (with the commitments waiting for a planning application
+// reference), searched, filtered, sorted by its column headings and paged
 const dashboard = {
   // A council with no records yet adds its first one instead
   load(ctx) {
@@ -1838,7 +1930,7 @@ const dashboard = {
       delete ctx.data.lpaFlash
     }
     const path = ctx.journey.routes.DASHBOARD
-    const all = allRecords(ctx.data)
+    const all = tableRecords(ctx.data)
     const query = queryOf(ctx, store)
     // Each card counts the records the table shows with its filters set.
     // Its link scrolls the cards to the top of the window so the table
@@ -1890,12 +1982,6 @@ const dashboard = {
     model.pagination = paginationFor(query, pages, path)
     model.filters = filtersFor(query, text, store, path)
     model.clearSearchHref = hrefFor(path, query, { q: '', page: 1 })
-    // A search for an NRL reference the council has no record of yet: the
-    // page says so and offers to create one
-    const searched = typedReference(query.q)
-    if (searched && !findRecord(ctx.data, searched)) {
-      model.unrecorded = searched
-    }
     // A search that finds one record focuses its link, so Enter opens it
     model.table = tableFor(
       shown,
@@ -1929,6 +2015,7 @@ module.exports = {
   // For tests
   loadStore,
   allRecords,
+  tableRecords,
   findRecord,
   findCommitmentEntry,
   linkedRecords,

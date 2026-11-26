@@ -1,15 +1,13 @@
 {#
-  The landing page (content/lpa-manage-1/pages/dashboard.md): a button to add
-  a record, counts of the council's records (each opening the
-  table filtered to them) and every record the council has: searched
+  The landing page (content/lpa-manage-1/pages/dashboard.md): counts of the
+  council's records (each opening the table filtered to them) and every record the council has: searched
   (?_q=), filtered (?_status=, ?_stage=, ?_type=, ?_overdue=1), sorted by a
   column heading (?_sort=<column>&_dir=asc|desc) and paged (?_page=). Each
   form keeps what the other sets; searching, filtering or sorting starts
   again at page 1. Model extras from app/lib/lpa-manage-1/hooks.js: flash
   (the banner after Confirm on a record page), cards [{ count, label, href,
   active }],
-  search (the query), resultCount, showing, pagination, unrecorded (the
-  NRL reference searched for when the council has no record of it),
+  search (the query), resultCount, showing, pagination,
   filters { groups, count, id, clearHref }, clearSearchHref, table.
 #}
 {% extends "journey-engine/_page.html" %}
@@ -46,23 +44,12 @@
 </div>
 {% endif %}
 
-{# A search that finds nothing hides the paragraphs under the heading and
-   their button, the search box, the cards and the filter (unless a filter
-   is set, and may be why), leaving what to do next #}
-{% set searchFoundNothing = search.q and not resultCount %}
-
-{# The heading and its paragraphs, then the button to create a record. A
-   search that found nothing keeps only the heading: what it offers says
-   the same and has the same button. #}
+{# Creating a record is in the header's menu #}
 <div class="app-staff-dashboard-header">
   <h1 class="govuk-heading-xl">{{ content.heading }}</h1>
-  {% if not searchFoundNothing %}
-    {{ content.html | safe }}
-    {{ govukButton({ text: text.addRecord, href: routes.RETRIEVE_COMMITMENT + "?_new=1" }) }}
-  {% endif %}
+  {{ content.html | safe }}
 </div>
 
-{% if not searchFoundNothing %}
 <ul class="app-staff-cards" id="record-counts">
   {% for card in cards %}
   <li class="app-staff-card">
@@ -73,105 +60,83 @@
   </li>
   {% endfor %}
 </ul>
-{% endif %}
 
-{# Over the table: the filter on the left under a heading level with the
-   search's label, and the search on the right. Searching comes back
+{# Over the table: the search on the left and, on the right, a button
+   that opens the filter in a popover, closed by its Close button, Escape
+   or a click outside it. Searching or filtering comes back
    scrolled to them (#record-search), with the table beneath. #}
-{% if not searchFoundNothing or filters.count %}
 <div class="app-staff-table-controls" id="record-search">
-<div class="app-staff-table-controls__filter">
-<h2 class="govuk-heading-s app-staff-table-controls__heading">{{ text.filterHeading }}</h2>
-<details class="govuk-details app-staff-filter" id="{{ filters.id }}">
-  <summary class="govuk-details__summary">
-    <span class="govuk-details__summary-text">{{ text.filterSummary }}{% if filters.count %} ({{ filters.count }}){% endif %}</span>
-  </summary>
-  <div class="govuk-details__text">
-    {# The fragment survives the GET, so the page comes back scrolled to
-       the filter with the table beneath it #}
-    <form action="{{ routes.DASHBOARD }}#{{ filters.id }}" method="get" novalidate>
-      {{ keep(search, false) }}
-      <div class="app-staff-filter__groups">
-        {% for group in filters.groups %}
-          {{ govukCheckboxes({
-            name: group.name,
-            idPrefix: "filter" + group.name,
-            classes: "govuk-checkboxes--small",
-            fieldset: { legend: { text: group.legend, classes: "govuk-fieldset__legend--s" } },
-            items: group.items
-          }) }}
-        {% endfor %}
-      </div>
-      {{ govukCheckboxes({
-        name: "_overdue",
-        idPrefix: "filter_overdue",
-        classes: "govuk-checkboxes--small",
-        items: [{ value: "1", text: text.filterOverdue, checked: search.overdue }]
-      }) }}
-      <div class="govuk-button-group">
-        {{ govukButton({ text: text.applyFilters, classes: "govuk-button--secondary" }) }}
-        <a class="govuk-link govuk-link--no-visited-state" href="{{ filters.clearHref }}">{{ text.clearFilters }}</a>
-      </div>
-    </form>
-  </div>
-</details>
-</div>
-{% if not searchFoundNothing %}
 <form class="app-staff-search" action="{{ routes.DASHBOARD }}#record-search" method="get" role="search">
   {% set searchValue = search.q %}
   {% include "lpa-manage-1/_search.html" %}
   {{ keep(search, true) }}
 </form>
+{{ govukButton({
+  text: text.filterSummary + (" (" + filters.count + ")" if filters.count else ""),
+  type: "button",
+  classes: "govuk-button--secondary app-staff-table-controls__filter",
+  attributes: { popovertarget: filters.id, "aria-controls": filters.id }
+}) }}
+<div class="app-staff-filter" id="{{ filters.id }}" popover aria-labelledby="{{ filters.id }}-heading">
+  <div class="app-staff-filter__header">
+    <h2 class="govuk-heading-m" id="{{ filters.id }}-heading">{{ text.filterHeading }}</h2>
+    <button class="app-staff-filter__close" type="button" popovertarget="{{ filters.id }}" popovertargetaction="hide">{{ text.filterClose }}</button>
+  </div>
+  <form action="{{ routes.DASHBOARD }}#record-search" method="get" novalidate>
+    {{ keep(search, false) }}
+    <div class="app-staff-filter__groups">
+      {% for group in filters.groups %}
+        {{ govukCheckboxes({
+          name: group.name,
+          idPrefix: "filter" + group.name,
+          classes: "govuk-checkboxes--small",
+          fieldset: { legend: { text: group.legend, classes: "govuk-fieldset__legend--s" } },
+          items: group.items
+        }) }}
+      {% endfor %}
+    </div>
+    {{ govukCheckboxes({
+      name: "_overdue",
+      idPrefix: "filter_overdue",
+      classes: "govuk-checkboxes--small",
+      items: [{ value: "1", text: text.filterOverdue, checked: search.overdue }]
+    }) }}
+    <div class="govuk-button-group">
+      {{ govukButton({ text: text.applyFilters }) }}
+      <a class="govuk-link govuk-link--no-visited-state" href="{{ filters.clearHref }}">{{ text.clearFilters }}</a>
+    </div>
+  </form>
+</div>
+</div>
+
+{# A search or filter that finds nothing leaves the table's headings with
+   one row saying so #}
+{% if resultCount %}
+  {% set rows = table.rows %}
+{% else %}
+  {% set rows = [[{ text: text.noResults, colspan: table.head | length }]] %}
 {% endif %}
+{{ govukTable({
+  classes: "app-staff-table app-staff-table--sortable",
+  head: table.head,
+  rows: rows
+}) }}
+{% if resultCount or filters.count %}
+<div class="app-staff-table-footer">
+  <p class="govuk-body app-staff-table-footer__count">
+    {% if resultCount %}<span aria-live="polite">{{ showing }}</span>{% endif %}
+    {#- While filters are set, a way to clear them beside the count #}
+    {%- if filters.count %} <a class="govuk-link govuk-link--no-visited-state app-staff-table-footer__clear" href="{{ filters.clearHref }}">{{ text.clearFilters }}</a>{% endif %}
+  </p>
+  {% if resultCount and pagination %}
+    {{ govukPagination(pagination) }}
+  {% endif %}
 </div>
 {% endif %}
-
-{% if resultCount %}
-  {{ govukTable({
-    classes: "app-staff-table app-staff-table--sortable",
-    head: table.head,
-    rows: table.rows
-  }) }}
-  <div class="app-staff-table-footer">
-    {% if showing %}
-      <p class="govuk-body app-staff-table-footer__count">
-        <span aria-live="polite">{{ showing }}</span>
-        {#- While filters are set, a way to clear them beside the count #}
-        {%- if filters.count %} <a class="govuk-link govuk-link--no-visited-state app-staff-table-footer__clear" href="{{ filters.clearHref }}">{{ text.clearFilters }}</a>{% endif %}
-      </p>
-    {% endif %}
-    {% if pagination %}
-      {{ govukPagination(pagination) }}
-    {% endif %}
-  </div>
-  {% if search.q %}
-    <p class="govuk-body">
-      <a class="govuk-link govuk-link--no-visited-state" href="{{ clearSearchHref }}">{{ text.clearSearch }}</a>
-    </p>
-  {% endif %}
-{% else %}
-  <div class="app-staff-no-results">
-    {#- A search for an NRL reference with no record says so; any other
-        search that finds nothing may still be for a record not added yet #}
-    {% if unrecorded %}
-      <h2 class="govuk-heading-m">{{ text.unrecordedHeading | replace("{reference}", unrecorded) }}</h2>
-      <p class="govuk-body">{{ text.unrecordedBody }}</p>
-    {% else %}
-      <h2 class="govuk-heading-m">{{ text.noResults }}</h2>
-      {% if search.q %}
-        <p class="govuk-body">{{ text.noResultsHint }}</p>
-      {% endif %}
-    {% endif %}
-    <div class="govuk-button-group">
-      {% if search.q %}
-        {{ govukButton({ text: text.addRecord, href: routes.RETRIEVE_COMMITMENT + "?_q=" + (search.q | urlencode) }) }}
-        <a class="govuk-link govuk-link--no-visited-state" href="{{ clearSearchHref }}">{{ text.clearSearch }}</a>
-      {% endif %}
-      {% if filters.count %}
-        <a class="govuk-link govuk-link--no-visited-state" href="{{ filters.clearHref }}">{{ text.clearFilters }}</a>
-      {% endif %}
-    </div>
-  </div>
+{% if search.q %}
+  <p class="govuk-body">
+    <a class="govuk-link govuk-link--no-visited-state" href="{{ clearSearchHref }}">{{ text.clearSearch }}</a>
+  </p>
 {% endif %}
 {% endblock %}
 
@@ -181,7 +146,37 @@
    loaded and scrolled, without moving the scroll. #}
 {% block pageScripts %}
 {{ super() }}
+{# The filter's popover opens under its button, right-aligned to it and
+   kept inside the window; it scrolls with the page. Without this script
+   the browser centres it. #}
 <script>
+  ;(function () {
+    var panel = document.getElementById('{{ filters.id }}')
+    var toggle = document.querySelector('[popovertarget="{{ filters.id }}"]')
+    if (!panel || !toggle) {
+      return
+    }
+    function place() {
+      var box = toggle.getBoundingClientRect()
+      var gutter = 15
+      var room = document.documentElement.clientWidth - panel.offsetWidth - gutter
+      var left = Math.max(gutter, Math.min(box.right - panel.offsetWidth, room))
+      panel.style.top = box.bottom + window.scrollY + 10 + 'px'
+      panel.style.left = left + window.scrollX + 'px'
+    }
+    panel.classList.add('app-staff-filter--placed')
+    panel.addEventListener('toggle', function (event) {
+      if (event.newState === 'open') {
+        place()
+      }
+    })
+    window.addEventListener('resize', function () {
+      if (panel.matches(':popover-open')) {
+        place()
+      }
+    })
+  })()
+
   window.addEventListener('load', function () {
     setTimeout(function () {
       var link = document.querySelector('.app-staff-table [autofocus]')

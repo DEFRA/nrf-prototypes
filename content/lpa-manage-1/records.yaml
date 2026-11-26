@@ -41,7 +41,12 @@
 #                 `originalReference`: the two records link to each other.
 #                 A commitment with a `record:` is already in the council's
 #                 records (the dashboard and table show it, and retrieving
-#                 it again says so); one without is waiting to be added
+#                 it again says so); one without is waiting to be added.
+#                 One without a record that has `listed: true` was sent to
+#                 the council: the dashboard's table shows it for review,
+#                 its NRL reference linking to adding its planning
+#                 application reference, until the officer does. Its
+#                 `issued` date is its Last modified there
 #   fallback      the commitment any other well-formed NRL reference
 #                 retrieves (it takes the reference typed). Delete this
 #                 block to make an unknown reference an error instead
@@ -441,6 +446,45 @@ boundaries:
     - [1.410677, 52.813848]
     - [1.410132, 52.813849]
     - [1.410142, 52.813800]
+  long-stratton-st-marys-road:
+    - [1.226683, 52.481647]
+    - [1.229412, 52.481256]
+    - [1.229546, 52.481687]
+    - [1.229613, 52.482013]
+    - [1.229626, 52.482124]
+    - [1.229610, 52.482194]
+    - [1.229610, 52.482284]
+    - [1.228082, 52.482509]
+    - [1.227862, 52.482556]
+    - [1.227631, 52.482586]
+    - [1.227518, 52.482581]
+    - [1.227481, 52.482568]
+    - [1.227451, 52.482543]
+    - [1.227237, 52.482311]
+  horsford-pyehurn-lane:
+    - [1.237058, 52.702016]
+    - [1.237314, 52.702087]
+    - [1.238541, 52.702443]
+    - [1.238612, 52.702459]
+    - [1.238419, 52.702693]
+    - [1.238200, 52.702947]
+    - [1.238168, 52.702938]
+    - [1.237213, 52.702637]
+  swanton-morley-keith-road:
+    - [0.981059, 52.706356]
+    - [0.981094, 52.706328]
+    - [0.981612, 52.706190]
+    - [0.981337, 52.705439]
+    - [0.982104, 52.705370]
+    - [0.983101, 52.705311]
+    - [0.983416, 52.705320]
+    - [0.983630, 52.705345]
+    - [0.983182, 52.707277]
+    - [0.982570, 52.707207]
+    - [0.982433, 52.707218]
+    - [0.982056, 52.707336]
+    - [0.981381, 52.706710]
+    - [0.981068, 52.706383]
 
 commitments:
   # ------------------------------------------------ Waiting to be added
@@ -501,8 +545,9 @@ commitments:
     boundary: reepham-dereham-road
     originalReference: NRL-100619
 
-  # A variation of NRL-101305's planning application, waiting to be added:
-  # adding it links the two records (NRL-101305 has no other links)
+  # A variation of NRL-101305's planning application, waiting to be added
+  # and in the dashboard's table: adding it links the two records
+  # (NRL-101305 has no other links)
   - reference: NRL-678901
     developer: Bure Valley Homes
     address: [Weavers Court, 9 Bacton Road, Scarfolk, SC8 2BV]
@@ -514,6 +559,44 @@ commitments:
     expires: 2027-04-15
     boundary: north-walsham-happisburgh-road
     originalReference: NRL-101305
+    listed: true
+
+  # ------------ Sent to the council, in the table without a record yet
+  - reference: NRL-200101
+    developer: Oakfield Homes
+    address: [Oakfield House, 12 Station Road, Scarfolk, SC2 6OH]
+    planningType: Full planning permission
+    units: 60
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-10-03
+    expires: 2027-04-03
+    boundary: long-stratton-st-marys-road
+    listed: true
+
+  - reference: NRL-200102
+    developer: Kingfisher Developments
+    address: [2 Kingfisher Court, Scarfolk, SC7 4KD]
+    planningType: Full planning permission
+    units: 24
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-09-25
+    expires: 2027-03-25
+    boundary: horsford-pyehurn-lane
+    listed: true
+
+  - reference: NRL-200103
+    developer: Marsh Lane Estates
+    address: [The Old Granary, Marsh Lane, Scarfolk, SC9 1ML]
+    planningType: Outline planning permission
+    units: 90
+    edp: *edp
+    levyAmount: 'X,XXX'
+    issued: 2026-08-25
+    expires: 2027-02-25
+    boundary: swanton-morley-keith-road
+    listed: true
 
   # --------------------------------------- Already in the council's records
   - reference: NRL-100231

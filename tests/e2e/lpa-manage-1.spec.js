@@ -2,7 +2,7 @@ const { test, expect } = require('@playwright/test')
 const { copyOf } = require('./helpers/journey')
 const {
   loadStore,
-  allRecords,
+  tableRecords,
   MOCK_OFFICER,
   RECORDS_PER_PAGE
 } = require('../../app/lib/lpa-manage-1/hooks')
@@ -164,8 +164,14 @@ test.describe('lpa-manage-1: manage commitments', () => {
 
   test('adds a developer record from an NRL reference', async ({ page }) => {
     await signIn(page)
+    // From the header's menu
+    const create = journey.header.menu.links.find((link) =>
+      link.href.startsWith('retrieve-commitment')
+    )
+    await page.locator('.app-staff-header__toggle').click()
     await page
-      .getByRole('button', { name: text('dashboard', 'addRecord') })
+      .locator('#app-staff-header-account')
+      .getByRole('link', { name: create.text })
       .click()
     await expectHeading(page, 'retrieve-commitment')
     await expect(page.locator('.govuk-back-link')).toHaveAttribute(
@@ -887,7 +893,7 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expectHeading(page, 'dashboard')
     await expect(page.locator('.govuk-back-link')).toHaveCount(0)
 
-    const records = allRecords({})
+    const records = tableRecords({})
     const counted = [
       records.filter((r) => r.status.shown === 'for-review'),
       records.filter((r) => r.status.shown === 'rejected'),
@@ -918,14 +924,14 @@ test.describe('lpa-manage-1: manage commitments', () => {
     const rows = page.locator('.app-staff-table tbody tr')
     await expect(rows).toHaveCount(counted[3].length)
 
-    // The filter's summary counts the filters set; clearing them shows
+    // The filter's button counts the filters set; clearing them shows
     // every record again
-    const summary = page.getByText(text('dashboard', 'filterSummary'))
+    const summary = page.locator('.app-staff-table-controls__filter')
     await expect(summary).toHaveText(
       `${text('dashboard', 'filterSummary')} (1)`
     )
     // Clear filters sits beside the count (the filter's own is in its
-    // closed details)
+    // closed popover)
     const clear = page
       .locator('.app-staff-table-footer')
       .getByRole('link', { name: text('dashboard', 'clearFilters') })
@@ -955,7 +961,7 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await signIn(page)
     await page.goto(`${base}/dashboard`)
     await expectHeading(page, 'dashboard')
-    const records = allRecords({})
+    const records = tableRecords({})
     const rows = page.locator('.app-staff-table tbody tr')
     await expect(rows).toHaveCount(Math.min(records.length, RECORDS_PER_PAGE))
 
@@ -974,11 +980,23 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(page).toHaveURL(
       `${base}/dashboard?_sort=reference&_dir=desc&_page=2`
     )
-    await expect(rows).toHaveCount(records.length - RECORDS_PER_PAGE)
-    await expect(rows.last()).toContainText(references[0])
+    const second = references
+      .slice()
+      .reverse()
+      .slice(RECORDS_PER_PAGE, RECORDS_PER_PAGE * 2)
+    await expect(rows).toHaveCount(second.length)
+    await expect(rows.last()).toContainText(second[second.length - 1])
 
     // Filtering by planning application stage
-    await page.getByText(text('dashboard', 'filterSummary')).click()
+    await page.locator('.app-staff-table-controls__filter').click()
+    // Its Close button closes it again
+    const filter = page.locator('#record-filters')
+    await expect(filter).toBeVisible()
+    await filter
+      .getByRole('button', { name: text('dashboard', 'filterClose') })
+      .click()
+    await expect(filter).toBeHidden()
+    await page.locator('.app-staff-table-controls__filter').click()
     await page.getByLabel(store.planningStages.refused, { exact: true }).check()
     await page
       .getByRole('button', { name: text('dashboard', 'applyFilters') })
@@ -1020,14 +1038,57 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(page.locator('main')).toContainText(
       text('dashboard', 'noResults')
     )
-
-    // An NRL reference with no record says so, typed however
+    // An NRL reference nobody sent the council finds nothing too
     await page.goto(`${base}/dashboard?_q=nrl%20999999`)
     await expect(page.locator('main')).toContainText(
-      text('dashboard', 'unrecordedHeading').replace(
-        '{reference}',
-        'NRL-999999'
-      )
+      text('dashboard', 'noResults')
+    )
+  })
+
+  test('a commitment with no record yet is in the table, ready for its planning reference', async ({
+    page
+  }) => {
+    await signIn(page)
+    const pending = store.commitments.find(
+      (entry) => entry.listed && !entry.record
+    )
+    // Found by its reference, typed however: for review, saying its
+    // planning application reference is needed
+    await page.goto(
+      `${base}/dashboard?_q=${encodeURIComponent(pending.reference.replace('-', ' '))}`
+    )
+    const rows = page.locator('.app-staff-table tbody tr')
+    await expect(rows).toHaveCount(1)
+    await expect(rows.first()).toContainText(
+      text('dashboard', 'planningReferenceNeeded')
+    )
+    await expect(rows.first()).toContainText(store.statuses['for-review'].label)
+    const add = rows.first().getByRole('link', { name: pending.reference })
+    await expect(add).toBeFocused()
+
+    // Its reference goes straight to the planning application reference,
+    // whose Back returns to the dashboard
+    await add.click()
+    await expectHeading(page, 'planning-reference')
+    await expect(page.locator('.govuk-back-link')).toHaveAttribute(
+      'href',
+      `${base}/dashboard`
+    )
+    await fillAnswer(page, 'planning-reference', '26/00003/FUL')
+    await submit(page, 'planning-reference')
+    await expect(page).toHaveURL(
+      new RegExp(`ref=${encodeURIComponent(pending.reference)}`)
+    )
+
+    // Now it is a record, its reference opening it
+    await page.goto(
+      `${base}/dashboard?_q=${encodeURIComponent(pending.reference)}`
+    )
+    await expect(
+      rows.first().getByRole('link', { name: pending.reference })
+    ).toHaveAttribute('href', new RegExp('/view-record\\?ref='))
+    await expect(rows.first()).not.toContainText(
+      text('dashboard', 'planningReferenceNeeded')
     )
   })
 
