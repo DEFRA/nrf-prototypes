@@ -5,7 +5,8 @@
 #
 # and the page's print link saves it as a PDF. Opening one never touches
 # the session, so it can be shared without a journey behind it, and a
-# research participant's answers are left alone.
+# research participant's answers are left alone. They show no price: the
+# certificate's levy amount section is left out (the hook drops it).
 #
 # This is data, not page copy: the certificate's words are in
 # pages/commitment-certificate.md. Edits show on the next page load (no
@@ -29,8 +30,6 @@
 #   town           (the certificate shows these three on one line)
 #   postcode
 #   units          the number of homes
-#   levyAmount     the levy, without the £ (quoted, so YAML keeps the comma);
-#                  leave it out for the £X,XXX placeholder
 #   issued         the date of issue, YYYY-MM-DD; leave it out for today
 #   expires        the expiry date, YYYY-MM-DD; leave it out for six months
 #                  after `issued`
@@ -299,8 +298,7 @@ boundaries:
 # The sites in the stakeholders' planning applications (Planning
 # Applications.docx, November 2026), one certificate each. The developers,
 # their addresses and the dates are made up: each certificate was issued a
-# few weeks before its application was received (20 November 2026). Levy
-# amounts are £1,080 a home, as the first placeholder certificate had
+# few weeks before its application was received (20 November 2026).
 certificates:
   - reference: NRL-900001
     fullName: Sarah Whitfield
@@ -309,7 +307,6 @@ certificates:
     town: Norwich
     postcode: NR5 9JB
     units: 105
-    levyAmount: '113,400'
     issued: 2026-10-14
     boundary: norwich-goldsmith-street
 
@@ -320,7 +317,6 @@ certificates:
     town: Wymondham
     postcode: NR18 0AX
     units: 110
-    levyAmount: '118,800'
     issued: 2026-10-21
     boundary: wymondham-croft-way
 
@@ -330,7 +326,6 @@ certificates:
     town: Blofield Heath
     postcode: NR13 4QX
     units: 3
-    levyAmount: '3,240'
     issued: 2026-11-09
     boundary: blofield-heath-woodbastwick-road
 
@@ -341,7 +336,6 @@ certificates:
     town: Long Stratton
     postcode: NR15 2XP
     units: 15
-    levyAmount: '16,200'
     issued: 2026-10-30
     boundary: tacolneston-norwich-road
 
@@ -352,7 +346,6 @@ certificates:
     town: Costessey
     postcode: NR5 0JS
     units: 9
-    levyAmount: '9,720'
     issued: 2026-11-04
     boundary: costessey-voyager-road
 
@@ -363,7 +356,6 @@ certificates:
     town: Norwich
     postcode: NR1 1LL
     units: 55
-    levyAmount: '59,400'
     issued: 2026-10-08
     boundary: norwich-king-street
 
@@ -374,7 +366,6 @@ certificates:
     town: Fakenham
     postcode: NR21 9DX
     units: 55
-    levyAmount: '59,400'
     issued: 2026-11-02
     boundary: fakenham-barons-hall-lane
 
@@ -385,7 +376,6 @@ certificates:
     town: Aylsham
     postcode: NR11 6ER
     units: 3
-    levyAmount: '3,240'
     issued: 2026-11-12
     boundary: aylsham-the-old-mill
 
@@ -396,7 +386,6 @@ certificates:
     town: Norwich
     postcode: NR2 2PA
     units: 23
-    levyAmount: '24,840'
     issued: 2026-10-27
     boundary: norwich-eaton-grange
 
@@ -406,6 +395,5 @@ certificates:
     town: Dereham
     postcode: NR19 1JB
     units: 1
-    levyAmount: '1,080'
     issued: 2026-11-16
     boundary: toftwood-farmway

@@ -150,7 +150,6 @@ function certificateAnswers(reference) {
     redlineBoundaryPolygon: { coordinates: ring },
     edpName,
     edp: edpFor(edpName),
-    levyAmount: entry.levyAmount || levyFor(),
     certificate: {
       issueDate: formatDate(issued),
       expiryDate: formatDate(expires)
@@ -787,6 +786,16 @@ function certificateContents(model) {
   return sections
 }
 
+// The dummy certificates go to stakeholders without a price: drop each `##`
+// section of the certificate that shows an amount in pounds (the levy
+// amount), so the contents list loses it too
+function withoutLevyAmount(model) {
+  model.content.html = model.content.html.replace(
+    /<h2 class="govuk-heading-m">[\s\S]*?(?=<h2 class="govuk-heading-m">|$)/g,
+    (section) => (section.includes('£') ? '' : section)
+  )
+}
+
 // The commitment certificate's sidebar, all optional under `text:` in
 // pages/commitment-certificate.md:
 //   contentsTitle    a contents list headed with this, linking to each of
@@ -832,6 +841,9 @@ const commitmentCertificate = {
       model.backLink = from
     }
     const { text } = model.content
+    if (ctx.query.ref) {
+      withoutLevyAmount(model)
+    }
     const sections = certificateContents(model)
     model.contents = text.contentsTitle ? sections : []
     model.asideOrder = text.contentsBelowShare
