@@ -76,9 +76,10 @@
 {% endif %}
 
 {# Over the table: the filter on the left under a heading level with the
-   search's label, and the search on the right #}
+   search's label, and the search on the right. Searching comes back
+   scrolled to them (#record-search), with the table beneath. #}
 {% if not searchFoundNothing or filters.count %}
-<div class="app-staff-table-controls">
+<div class="app-staff-table-controls" id="record-search">
 <div class="app-staff-table-controls__filter">
 <h2 class="govuk-heading-s app-staff-table-controls__heading">{{ text.filterHeading }}</h2>
 <details class="govuk-details app-staff-filter" id="{{ filters.id }}">
@@ -116,7 +117,7 @@
 </details>
 </div>
 {% if not searchFoundNothing %}
-<form class="app-staff-search" action="{{ routes.DASHBOARD }}" method="get" role="search">
+<form class="app-staff-search" action="{{ routes.DASHBOARD }}#record-search" method="get" role="search">
   {% set searchValue = search.q %}
   {% include "lpa-manage-1/_search.html" %}
   {{ keep(search, true) }}
@@ -172,4 +173,22 @@
     </div>
   </div>
 {% endif %}
+{% endblock %}
+
+{# A search that finds one record focuses its link, so Enter opens it.
+   Browsers ignore autofocus when the URL has a fragment (#record-search),
+   and scrolling to it moves focus, so focus the link once the page has
+   loaded and scrolled, without moving the scroll. #}
+{% block pageScripts %}
+{{ super() }}
+<script>
+  window.addEventListener('load', function () {
+    setTimeout(function () {
+      var link = document.querySelector('.app-staff-table [autofocus]')
+      if (link) {
+        link.focus({ preventScroll: true })
+      }
+    })
+  })
+</script>
 {% endblock %}

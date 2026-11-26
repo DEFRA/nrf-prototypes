@@ -1001,9 +1001,12 @@ test.describe('lpa-manage-1: manage commitments', () => {
     )
 
     // Searching for one record focuses its link, so Enter opens it
-    await page.goto(
-      `${base}/dashboard?_q=${encodeURIComponent(records[0].reference)}`
-    )
+    await page.goto(`${base}/dashboard`)
+    await page
+      .getByLabel(text('dashboard', 'searchLabel'), { exact: true })
+      .fill(records[0].reference)
+    await page.keyboard.press('Enter')
+    await expect(page).toHaveURL(/#record-search$/)
     await expect(rows).toHaveCount(1)
     await expect(
       page.getByRole('link', { name: records[0].reference })

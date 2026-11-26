@@ -325,6 +325,9 @@ $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
 // opens in its own column, so the search stays put. Stacked below desktop.
 .app-staff-table-controls {
   margin-bottom: govuk-spacing(4);
+  // A search (#record-search) brings the search to the top of the window,
+  // a little below its edge, with the table beneath it
+  scroll-margin-top: govuk-spacing(4);
 
   .app-staff-filter,
   .app-staff-search {
