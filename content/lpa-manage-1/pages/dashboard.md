@@ -8,7 +8,6 @@ text:
   successTitle: Success
   updated: '{reference} has been updated'
   searchLabel: Search developer records
-  searchHint: Search by NRL reference, developer, planning reference or officer
   searchButton: Search
   # The button that opens the filter, and the heading and close button
   # inside it
@@ -31,7 +30,7 @@ text:
   # In the table beside a commitment sent to the council that has no
   # developer record yet, across the developer, stage, type and officer
   # columns (its NRL reference links to adding the planning reference)
-  planningReferenceNeeded: Planning application reference needed
+  addPlanningReference: Add planning application reference
   # When a search or the filters find nothing
   noResults: No results found
   clearSearch: Clear search

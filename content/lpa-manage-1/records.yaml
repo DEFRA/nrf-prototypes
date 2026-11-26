@@ -16,8 +16,10 @@
 #                 govuk-tag colour (grey, green, turquoise, blue, light-blue,
 #                 purple, pink, red, orange, yellow), or `shownAs` another
 #                 status to look like it in the tables, tags and filter.
-#                 `for-review` is the status of a record an officer has
-#                 just added (and stays so when they review it later),
+#                 `for-review` is the status of a commitment in the table
+#                 with no record yet; `in-review` is the status of a
+#                 record an officer has just added (and stays so when
+#                 they review it later),
 #                 and `rejected` is final. The radios on
 #                 pages/view-record.md offer reviewed and rejected; the
 #                 others (withdrawn, cancelled) are set outside this
@@ -114,6 +116,7 @@ officers:
 
 statuses:
   for-review: { label: For review, colour: light-blue }
+  in-review: { label: In review, colour: yellow }
   reviewed: { label: Reviewed, colour: green }
   rejected: { label: Rejected, colour: red }
   withdrawn: { label: Withdrawn, colour: purple }
@@ -614,7 +617,7 @@ commitments:
       planningStage: applied
       overdue: true
       officer: John Smith
-      status: for-review
+      status: in-review
       history:
         - event: added
           by: John Smith
@@ -668,7 +671,7 @@ commitments:
       planningStage: applied
       overdue: true
       officer: Tom Barker
-      status: for-review
+      status: in-review
       history:
         - event: added
           by: Tom Barker
@@ -744,7 +747,7 @@ commitments:
       planningReference: 2026/0287/FUL
       planningStage: applied
       officer: Priya Shah
-      status: for-review
+      status: in-review
       history:
         - event: added
           by: Priya Shah
@@ -924,7 +927,7 @@ commitments:
       planningStage: applied
       overdue: true
       officer: John Smith
-      status: for-review
+      status: in-review
       history:
         - event: added
           by: John Smith
@@ -975,7 +978,7 @@ commitments:
       planningReference: 2026/0503/VAR
       planningStage: applied
       officer: Tom Barker
-      status: for-review
+      status: in-review
       history:
         - event: added
           by: Tom Barker
@@ -1025,7 +1028,7 @@ commitments:
       planningReference: 2026/0189/REM
       planningStage: applied
       officer: Priya Shah
-      status: for-review
+      status: in-review
       history:
         - event: added
           by: Priya Shah

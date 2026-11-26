@@ -352,7 +352,7 @@ pages:
     # Each variant's description says what it shows, on the tools page's
     # Scenarios tab; the record numbers are in records.yaml
     preview:
-      label: For review
+      label: In review
       description: >-
         A record waiting for its commitment details to be reviewed
       variants:

@@ -2,9 +2,9 @@
 # A developer record (app/views/lpa-manage-1/view-record.html). The heading
 # is the record's NRL reference; `text:` holds the rest of the page's words.
 # The review options sit at the bottom of the page, none chosen, and
-# Confirm returns to the dashboard. A record For review offers the first
+# Confirm returns to the dashboard. A record In review offers the first
 # three options (rejecting asks why on reject-commitment and is final;
-# later keeps it For review and notes it on the timeline). Once its
+# later keeps it In review and notes it on the timeline). Once its
 # commitment details are reviewed the planning stage options (`step:
 # planning`) take their place: they set the planning application's stage
 # (see records.yaml), and each shows only at the stages in its `stages`.
@@ -156,7 +156,7 @@ actions:
 
 ## Red line boundary from the commitment certificate
 
-::::if record.status.shown equals for-review
+::::if record.status.shown equals in-review
 :::inset
 Compare this with the red line boundary on the planning application, it should match.
 :::

@@ -69,15 +69,16 @@ const REFERENCE = /^NRL-\d{6}$/
 const MOCK_OFFICER = 'John Smith'
 // How many records the dashboard's table shows, and the full table per page
 const RECORDS_PER_PAGE = 10
-// The status of a record an officer has just added, and the stage of its
-// planning application
-const ADDED_STATUS = 'for-review'
+// The status of a commitment in the table with no record yet, of a record
+// an officer has just added, and the stage of its planning application
+const PENDING_STATUS = 'for-review'
+const ADDED_STATUS = 'in-review'
 const ADDED_STAGE = 'applied'
 // Rejecting asks why on its own page, with an optional comment
 const REJECTED_STATUS = 'rejected'
 const COMMENT_FIELD = 'reject-comment'
 // Reviewing the commitment details moves a record on to its planning
-// application's stage; putting it off keeps it For review
+// application's stage; putting it off keeps it In review
 const REVIEWED_STATUS = 'reviewed'
 const REVIEW_LATER = 'review-later'
 const PLANNING_STEP = 'planning'
@@ -541,7 +542,7 @@ function pendingRecords(data) {
         reservedMatters: [],
         officer: '',
         overdue: false,
-        status: statusOf(ADDED_STATUS, store),
+        status: statusOf(PENDING_STATUS, store),
         lastModified: toDate(entry.issued),
         lastModifiedShort: formatDate(entry.issued, 'short'),
         expires,
@@ -695,10 +696,11 @@ function sortRecords(records, query) {
 // Rows of govukTable for the records, with the page's own column copy.
 // `headFor` makes a column heading sortable. `focusOnly` focuses the
 // reference link when it is the only row, so Enter opens the record. A
-// commitment with no record yet links its reference to adding its
-// planning application reference, says one is needed across the
-// developer, stage, type and officer columns, then gives its dates and
-// status.
+// commitment with no record yet links its reference and, across the
+// developer, stage, type and officer columns, the words to add its
+// planning application reference to the same page. They act as one
+// link: the second is hidden from keyboards and screen readers (the
+// first carries its words) and the two hover and focus together.
 function tableFor(records, text, journey, headFor, focusOnly) {
   const autofocus = focusOnly && records.length === 1 ? ' autofocus' : ''
   const viewPath = journey.routes.VIEW_RECORD
@@ -714,16 +716,28 @@ function tableFor(records, text, journey, headFor, focusOnly) {
       `<a class="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold" ` +
       `href="${href}"${autofocus}>${escapeHtml(record.reference)}</a>`
   })
-  const pendingRow = (record) => [
-    referenceLink(
-      record,
-      `${addPath}?_add=${encodeURIComponent(record.reference)}`
-    ),
-    { text: text.planningReferenceNeeded, colspan: 4 },
-    { text: record.lastModifiedShort },
-    { text: record.expiresShort },
-    statusCell(record)
-  ]
+  const pendingRow = (record) => {
+    const href = `${addPath}?_add=${encodeURIComponent(record.reference)}`
+    const link =
+      'govuk-link govuk-link--no-visited-state app-staff-pending-link'
+    return [
+      {
+        html:
+          `<a class="${link} govuk-!-font-weight-bold" href="${href}"${autofocus}>` +
+          `${escapeHtml(record.reference)}<span class="govuk-visually-hidden">: ` +
+          `${escapeHtml(text.addPlanningReference)}</span></a>`
+      },
+      {
+        html:
+          `<a class="${link}" href="${href}" tabindex="-1" aria-hidden="true">` +
+          `${escapeHtml(text.addPlanningReference)}</a>`,
+        colspan: 4
+      },
+      { text: record.lastModifiedShort },
+      { text: record.expiresShort },
+      statusCell(record)
+    ]
+  }
   return {
     head: COLUMNS.map((column) => {
       const label = columns[column.key] || column.key
@@ -1474,7 +1488,7 @@ const FLASHES = {
 // The record page: a flash message says a record was just added. The
 // review options open with none chosen and post back here; Confirm returns
 // to the dashboard, which says the record was updated. Reviewing the
-// details later keeps the record For review and notes it on the timeline;
+// details later keeps the record In review and notes it on the timeline;
 // reviewing them moves it on to its planning application's stage, and
 // choosing the stage it is at already changes nothing. Rejecting asks why
 // on reject-commitment and is final: a rejected record shows a warning in
@@ -1948,10 +1962,11 @@ const dashboard = {
     })
     const isStatus = (status) => (r) => r.status.shown === status
     model.cards = [
+      // Commitments waiting for a record and records waiting for review
       card(
         text.forReviewCount,
-        { status: ['for-review'] },
-        isStatus('for-review')
+        { status: [PENDING_STATUS, ADDED_STATUS] },
+        (r) => isStatus(PENDING_STATUS)(r) || isStatus(ADDED_STATUS)(r)
       ),
       card(text.rejectedCount, { status: ['rejected'] }, isStatus('rejected')),
       card(

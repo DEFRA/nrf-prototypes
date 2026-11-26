@@ -426,7 +426,7 @@ test.describe('lpa-manage-1: manage commitments', () => {
     page
   }) => {
     const forReview = store.commitments.find(
-      (entry) => entry.record && entry.record.status === 'for-review'
+      (entry) => entry.record && entry.record.status === 'in-review'
     )
     const viewPath = `${base}/view-record?ref=${forReview.reference}`
     const items = page.locator('.app-timeline__item')
@@ -435,7 +435,7 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await page.goto(viewPath)
     const entries = await items.count()
 
-    // For review: the three review options, none chosen
+    // In review: the three review options, none chosen
     await expect(radios).toHaveCount(3)
     await expect(page.locator('input[name="new-status"]:checked')).toHaveCount(
       0
@@ -443,7 +443,7 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await submit(page, 'view-record')
     await expectError(page, 'view-record', 'required')
 
-    // Later keeps it For review, notes it on the timeline and returns to
+    // Later keeps it In review, notes it on the timeline and returns to
     // the dashboard, which says so
     await answer(page, 'view-record', 'review-later')
     await submit(page, 'view-record')
@@ -453,7 +453,7 @@ test.describe('lpa-manage-1: manage commitments', () => {
     )
     const row = page.locator('.app-staff-table tbody tr').first()
     await expect(row).toContainText(forReview.reference)
-    await expect(row).toContainText(store.statuses['for-review'].label)
+    await expect(row).toContainText(store.statuses['in-review'].label)
     await page.goto(viewPath)
     await expect(items).toHaveCount(entries + 1)
     await expect(items.first()).toContainText(
@@ -507,7 +507,7 @@ test.describe('lpa-manage-1: manage commitments', () => {
 
   test('rejecting asks why and is final', async ({ page }) => {
     const forReview = store.commitments.find(
-      (entry) => entry.record && entry.record.status === 'for-review'
+      (entry) => entry.record && entry.record.status === 'in-review'
     )
     const viewPath = `${base}/view-record?ref=${forReview.reference}`
     await signIn(page)
@@ -895,7 +895,9 @@ test.describe('lpa-manage-1: manage commitments', () => {
 
     const records = tableRecords({})
     const counted = [
-      records.filter((r) => r.status.shown === 'for-review'),
+      records.filter((r) =>
+        ['for-review', 'in-review'].includes(r.status.shown)
+      ),
       records.filter((r) => r.status.shown === 'rejected'),
       records.filter(
         (r) =>
@@ -1060,7 +1062,7 @@ test.describe('lpa-manage-1: manage commitments', () => {
     const rows = page.locator('.app-staff-table tbody tr')
     await expect(rows).toHaveCount(1)
     await expect(rows.first()).toContainText(
-      text('dashboard', 'planningReferenceNeeded')
+      text('dashboard', 'addPlanningReference')
     )
     await expect(rows.first()).toContainText(store.statuses['for-review'].label)
     const add = rows.first().getByRole('link', { name: pending.reference })
@@ -1080,7 +1082,7 @@ test.describe('lpa-manage-1: manage commitments', () => {
       new RegExp(`ref=${encodeURIComponent(pending.reference)}`)
     )
 
-    // Now it is a record, its reference opening it
+    // Now it is a record, In review, its reference opening it
     await page.goto(
       `${base}/dashboard?_q=${encodeURIComponent(pending.reference)}`
     )
@@ -1088,8 +1090,9 @@ test.describe('lpa-manage-1: manage commitments', () => {
       rows.first().getByRole('link', { name: pending.reference })
     ).toHaveAttribute('href', new RegExp('/view-record\\?ref='))
     await expect(rows.first()).not.toContainText(
-      text('dashboard', 'planningReferenceNeeded')
+      text('dashboard', 'addPlanningReference')
     )
+    await expect(rows.first()).toContainText(store.statuses['in-review'].label)
   })
 
   test('a council with no records yet goes straight to adding one', async ({

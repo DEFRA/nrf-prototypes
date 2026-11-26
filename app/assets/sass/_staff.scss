@@ -500,6 +500,17 @@ $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
     max-width: none;
     white-space: nowrap;
   }
+
+  // A commitment with no record yet: its reference and the words to add
+  // its planning application reference hover and focus as one link
+  .govuk-table__row:has(.app-staff-pending-link:hover) .app-staff-pending-link {
+    color: $govuk-link-hover-colour;
+    text-decoration-thickness: max(3px, 0.1875rem, 0.12em);
+  }
+
+  .govuk-table__row:has(.app-staff-pending-link:focus) .app-staff-pending-link {
+    @include govuk-focused-text;
+  }
 }
 
 // Sortable column headings (after the MOJ sortable table): the heading is
