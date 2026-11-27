@@ -7,7 +7,7 @@
   only those for the record's step in content.items), which post back to
   this page. Once the commitment details are reviewed they are the planning
   stage options possible from the stage the application is at (none once
-  withdrawn). A planning variation's timeline entry shows its new
+  withdrawn; once granted, an inset with a judicial review link). A planning variation's timeline entry shows its new
   planning application reference. Rejecting asks why on reject-commitment; a rejected record
   shows a warning in place of the radios. A granted outline application
   has an Add a reserved matters application button below its planning
@@ -127,7 +127,13 @@
         {% endfor %}
       </div>
     {% elif not content.items | length %}
-      {# No stage to move on to (withdrawn) #}
+      {# No stage to move on to: granted asks to hear of a judicial review #}
+      {% if record and record.planningStage.value == 'granted' %}
+        <div class="govuk-inset-text">
+          <p class="govuk-body">{{ text.grantedText }}</p>
+          <p class="govuk-body"><a class="govuk-link" href="#">{{ text.judicialReview }}</a></p>
+        </div>
+      {% endif %}
       <div class="govuk-button-group">
         {% for action in content.actions %}
           <a class="govuk-link" href="{{ action.href }}">{{ action.text }}</a>

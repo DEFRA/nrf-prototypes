@@ -118,6 +118,11 @@ homepage:
     - granting no longer asks for the address of the relevant development; the planning decision details show in the record's planning details
     - the dashboard is a search, then cards with a caption (each a link with a blue border on hover), and "View all commitments" opens the table on a page of its own; the cards above the table are a copy variant
     - '"developer record" is now "commitment" throughout, and the service is Manage commitments for the nature restoration levy'
+    - the commitments table is headed Manage commitments for the nature restoration levy, like the dashboard
+    - a commitment shows the developer's full name and business name in place of the developer's address, and its certificate has the same details as the developer's
+    - once the planning application is granted, an inset asks to be told of a judicial review in place of the appeal and judicial review options
+    - a dashboard card for commitments with granted planning permission, before overdue actions; the active card is Commitments with active planning applications
+    - adding a reserved matters application returns to the dashboard with a success banner and a View commitment link
 
 # The answers the copy can show, as {{ name }} (see content/README.md).
 # `commitment` is the commitment on screen and `record` the record.
@@ -539,7 +544,8 @@ pages:
   # remembers the record as reservedMattersRecord) or from "Are you adding
   # a reserved matters application to this commitment?". Nothing
   # changes until Submit on reserved-matters-check-answers, which adds it to
-  # the record and returns there with a success banner.
+  # the record and returns to the dashboard with a success banner linking
+  # to the commitment.
   - id: reserved-matters-reference
     group: reserved-matters
     field: reserved-matters-reference
@@ -619,7 +625,7 @@ pages:
     group: reserved-matters
     guard: *adding-reserved-matters
     handler: custom # adds it to the record, see hooks.js
-    next: view-record
+    next: dashboard
     preview:
       data:
         <<: *reserved-matters-preview

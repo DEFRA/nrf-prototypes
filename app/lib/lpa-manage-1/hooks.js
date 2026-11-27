@@ -302,6 +302,11 @@ function commitmentOf(entry, store) {
   return {
     reference: entry.reference,
     developer: entry.developer,
+    // Who made the commitment, then the business it was made for (blank
+    // for one an individual made in nrf-request-to-use-1)
+    fullName: entry.fullName || '',
+    businessName:
+      entry.businessName === undefined ? entry.developer : entry.businessName,
     address: {
       line1: address[0] || '',
       line2: address[1] || '',
@@ -605,6 +610,11 @@ function requestToUseEntry(data) {
     reference: String(data.nrlReference),
     developer:
       account.businessName || developer.fullName || account.fullName || '',
+    fullName: developer.fullName || account.fullName || '',
+    // As the developer's certificate shows it: only for a business or agent
+    businessName: ['agent', 'company'].includes(account.accountType)
+      ? account.organisationName || account.businessName || ''
+      : '',
     address: [
       developer.addressLine1,
       developer.addressLine2,
@@ -1503,11 +1513,7 @@ function updateRecord(data, found, changes, event) {
 const FLASHES = {
   added: { title: 'successTitle', text: 'added' },
   linked: { title: 'successTitle', text: 'addedLinked' },
-  variation: { title: 'variationAddedTitle', text: 'variationAdded' },
-  [RESERVED_MATTERS]: {
-    title: 'reservedMattersAddedTitle',
-    text: 'reservedMattersAdded'
-  }
+  variation: { title: 'variationAddedTitle', text: 'variationAdded' }
 }
 
 // The record page: a flash message says a record was just added. The
@@ -1792,8 +1798,8 @@ const reservedMattersReference = {
 }
 
 // Submit on the reserved matters check answers page: the application joins
-// the record's reserved matters and its history, and the record page says
-// so. The number of units is kept only while layout or scale is ticked.
+// the record's reserved matters and its history, and the dashboard says the
+// commitment was updated. The number of units is kept only while layout or scale is ticked.
 const reservedMattersCheckAnswers = {
   process(ctx) {
     const { data } = ctx
@@ -1826,9 +1832,8 @@ const reservedMattersCheckAnswers = {
       { reservedMatters: [...(found.record.reservedMatters || []), added] },
       { event: RESERVED_MATTERS, planningReference: added.reference }
     )
+    // The dashboard says the commitment was updated, with a link back to it
     data.recordReference = reference
-    data.lpaFlash = RESERVED_MATTERS
-    data.lpaFlashReference = added.reference
     // From "Enter an NRL reference": "Create a commitment" starts afresh
     for (const key of [
       'commitmentReference',
@@ -2084,15 +2089,27 @@ const dashboard = {
       { status: ['reviewed'], stage: ['applied'] },
       (r) => isStatus('reviewed')(r) && r.planningStage.value === 'applied'
     )
+    // Only with a `grantedCount` in the page's copy
+    const granted =
+      text.grantedCount &&
+      card(
+        text.grantedCount,
+        text.grantedCaption,
+        { status: ['reviewed'], stage: [GRANTED_STAGE] },
+        (r) =>
+          isStatus('reviewed')(r) && r.planningStage.value === GRANTED_STAGE
+      )
     const overdue = card(
       text.overdueCount,
       text.overdueCaption,
       { overdue: true },
       (r) => r.overdue
     )
-    model.cards = split
-      ? [forReview, inReview, active, overdue, rejected]
-      : [forReview, rejected, active, overdue]
+    model.cards = (
+      split
+        ? [forReview, inReview, active, granted, overdue, rejected]
+        : [forReview, rejected, active, granted, overdue]
+    ).filter(Boolean)
     model.recordsPath = recordsPath
     fillTable(ctx, model, path, store, all, query)
   }

@@ -8,7 +8,8 @@
 # commitment details are reviewed the planning stage options (`step:
 # planning`) take their place: they set the planning application's stage
 # (see records.yaml), and each shows only at the stages in its `stages`.
-# A stage none lists (withdrawn) offers no options. A planning variation
+# A stage none lists (withdrawn) offers no options; a granted one shows
+# `grantedText` and the `judicialReview` link in an inset instead. A planning variation
 # shows the new planning application reference and the original one. A
 # record linked to another (a variation the developer made a commitment
 # for, and the original application's) links to it; `linkedOriginal` and
@@ -70,13 +71,13 @@ rows:
       then: '{{ record.reviewedBy }}'
       else: Not reviewed yet
 options:
-  - label: I have reviewed these commitment details
+  - label: I have reviewed this commitment
     value: reviewed
     hint: The details match a validated planning application
-  - label: I want to reject these commitment details
+  - label: I want to reject this commitment
     value: rejected
     hint: The details are incorrect or don't match a validated planning application
-  - label: I want to review these later
+  - label: I want to review this later
     value: review-later
   # Once the commitment details are reviewed: each shows only while the
   # planning application is at one of its `stages`
@@ -95,28 +96,32 @@ options:
   - label: Under appeal
     value: under-appeal
     step: planning
-    stages: [granted, refused]
+    stages: [refused]
   - label: Under judicial review
     value: judicial-review
     step: planning
-    stages: [granted, refused]
+    stages: [refused]
 errors:
   required: Select a new status for this commitment
   stageRequired: Select the stage the planning application has reached
 button: Confirm
 text:
-  successTitle: Commitment details retrieved
-  added: A new commitment has been created for review
+  successTitle: Success
+  added: This commitment is ready for review
   # A variation the developer made a commitment for; {reference} is the
   # existing commitment it is linked with
-  addedLinked: A new commitment has been created for review and linked with existing commitment {reference}
+  addedLinked: This commitment is ready for review and linked with existing commitment {reference}
   # Once a planning variation's reference is added
   variationAddedTitle: Commitment updated
   variationAdded: Amendment planning application reference added
   viewCertificate: View full certificate
-  statusLegend: Have you reviewed these commitment details?
+  statusLegend: Have you reviewed this commitment?
   # Once the commitment details are reviewed
   planningLegend: What was the outcome of the planning application?
+  # PLACEHOLDER COPY: in an inset in place of the radios once the planning
+  # application is granted, above a link (to # for now)
+  grantedText: Planning permission has been granted. You do not need to update this commitment unless the decision is challenged.
+  judicialReview: Tell us if this planning decision goes to judicial review
   # Below the planning details of a granted outline application
   addReservedMatters: Add a reserved matters application
   # Below the planning details of a full planning application not linked
@@ -127,7 +132,7 @@ text:
   rejectedFinal: This commitment has been rejected. Its status cannot be changed.
   warning: Warning
   timelineHeading: Commitment history
-  timelineAdded: Commitment details retrieved
+  timelineAdded: Planning application reference added to commitment
   timelineStatus: Status changed to
   timelineReviewLater: Marked to review and confirm later
   timelineStage: Planning application stage changed to

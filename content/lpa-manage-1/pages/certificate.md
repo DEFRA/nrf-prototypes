@@ -18,11 +18,22 @@ text:
 
 # Nature restoration levy – commitment certificate
 
-**Full name:** {{ commitment.developer }}\
+:::if commitment.businessName
+**Full name:** {{ commitment.fullName }}\
+**Business name:** {{ commitment.businessName }}\
 **Address:** {{ commitment.address.text }}\
 **NRL reference:** {{ commitment.reference }}\
 **Date of issue:** {{ commitment.issued }}\
 **Expiry date:** {{ commitment.expires }}
+:::
+
+:::if not commitment.businessName
+**Full name:** {{ commitment.fullName }}\
+**Address:** {{ commitment.address.text }}\
+**NRL reference:** {{ commitment.reference }}\
+**Date of issue:** {{ commitment.issued }}\
+**Expiry date:** {{ commitment.expires }}
+:::
 
 ## Details of the relevant development
 

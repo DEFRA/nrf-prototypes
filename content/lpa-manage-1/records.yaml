@@ -492,6 +492,7 @@ boundaries:
 commitments:
   # ------------------------------------------------ Waiting to be added
   - reference: NRL-123456
+    fullName: Sarah Whitlock
     developer: ACME Developments
     address: [1 Industrial Estate, Scarfolk, SC1 4AB]
     planningType: Full planning permission
@@ -503,6 +504,7 @@ commitments:
     boundary: wymondham-frogshall-lane
 
   - reference: NRL-234567
+    fullName: Gareth Pryce
     developer: Hollow Lane Builders
     address: [Hollow Lane Yard, Scarfolk, SC3 9LH]
     planningType: Outline planning permission
@@ -514,6 +516,7 @@ commitments:
     boundary: reepham-furze-lane
 
   - reference: NRL-345678
+    fullName: Priya Nair
     developer: Greenacre Living
     address: [Greenacre House, 4 Market Street, Scarfolk, SC2 1GL]
     planningType: Reserved matters
@@ -525,6 +528,7 @@ commitments:
     boundary: aylsham-the-meadows
 
   - reference: NRL-456789
+    fullName: Tom Ashworth
     developer: Mere Farm Homes
     address: [Mere Farm, Scarfolk Road, Scarfolk, SC5 2MF]
     planningType: Full planning permission
@@ -537,6 +541,7 @@ commitments:
 
   # A variation of NRL-100619's planning application
   - reference: NRL-567890
+    fullName: Helen Cartwright
     developer: Wensum Valley Estates
     address: [Riverside Offices, Mill Lane, Scarfolk, SC6 3WV]
     planningType: Full planning permission
@@ -552,6 +557,7 @@ commitments:
   # and in the dashboard's table: adding it links the two records
   # (NRL-101305 has no other links)
   - reference: NRL-678901
+    fullName: David Okafor
     developer: Bure Valley Homes
     address: [Weavers Court, 9 Bacton Road, Scarfolk, SC8 2BV]
     planningType: Full planning permission
@@ -566,6 +572,7 @@ commitments:
 
   # ------------ Sent to the council, in the table without a record yet
   - reference: NRL-200101
+    fullName: Rachel Lyons
     developer: Oakfield Homes
     address: [Oakfield House, 12 Station Road, Scarfolk, SC2 6OH]
     planningType: Full planning permission
@@ -578,6 +585,7 @@ commitments:
     listed: true
 
   - reference: NRL-200102
+    fullName: Martin Hale
     developer: Kingfisher Developments
     address: [2 Kingfisher Court, Scarfolk, SC7 4KD]
     planningType: Full planning permission
@@ -590,6 +598,7 @@ commitments:
     listed: true
 
   - reference: NRL-200103
+    fullName: Claire Dobson
     developer: Marsh Lane Estates
     address: [The Old Granary, Marsh Lane, Scarfolk, SC9 1ML]
     planningType: Outline planning permission
@@ -603,6 +612,7 @@ commitments:
 
   # --------------------------------------- Already in the council's records
   - reference: NRL-100231
+    fullName: Sarah Whitlock
     developer: ACME Developments
     address: [1 Industrial Estate, Scarfolk, SC1 4AB]
     planningType: Full planning permission
@@ -624,6 +634,7 @@ commitments:
           at: 2026-09-05T10:12
 
   - reference: NRL-100487
+    fullName: Trevor Barker
     developer: Scarfolk Homes Ltd
     address: [Unit 7, Kettle Hill Business Park, Scarfolk, SC4 7KH]
     planningType: Full planning permission
@@ -657,6 +668,7 @@ commitments:
           at: 2026-09-30T15:10
 
   - reference: NRL-100562
+    fullName: Amira Haddad
     developer: Broadland Housing Partnership
     address: [The Old Maltings, Scarfolk, SC2 8BH]
     planningType: Outline planning permission
@@ -678,6 +690,7 @@ commitments:
           at: 2026-08-21T11:20
 
   - reference: NRL-100619
+    fullName: Helen Cartwright
     developer: Wensum Valley Estates
     address: [Riverside Offices, Mill Lane, Scarfolk, SC6 3WV]
     planningType: Full planning permission
@@ -710,6 +723,7 @@ commitments:
           at: 2026-09-17T09:45
 
   - reference: NRL-100744
+    fullName: James Fenwick
     developer: Kettle Hill Developments
     address: [2 Kettle Hill, Scarfolk, SC4 1KD]
     planningType: Reserved matters
@@ -734,6 +748,7 @@ commitments:
           at: 2026-08-22T15:10
 
   - reference: NRL-100815
+    fullName: Robert Tattersall
     developer: Tattersall and Sons
     address: [14 Church Street, Scarfolk, SC1 2TS]
     planningType: Full planning permission
@@ -754,6 +769,7 @@ commitments:
           at: 2026-07-31T10:45
 
   - reference: NRL-100903
+    fullName: Lucy Marsh
     developer: Northfield Construction
     address: [Northfield Depot, Scarfolk, SC7 5NC]
     planningType: Outline planning permission
@@ -781,6 +797,7 @@ commitments:
   # page offers the planning stages (the screen wall's "Reviewed, full
   # planning" sample)
   - reference: NRL-100676
+    fullName: Owen Gilbert
     developer: Kettle Hill Homes
     address: [3 Mill Lane, Scarfolk, SC2 9ML]
     planningType: Full planning permission
@@ -808,6 +825,7 @@ commitments:
   # record page offers the granted options (the screen wall's "Granted"
   # sample)
   - reference: NRL-100681
+    fullName: Fiona Reid
     developer: Millbrook Developments
     address: [12 Station Road, Scarfolk, SC5 3SR]
     planningType: Full planning permission
@@ -845,6 +863,7 @@ commitments:
   # An outline application granted, with no reserved matters application
   # under it yet: the record page offers to add the first
   - reference: NRL-100792
+    fullName: Daniel Price
     developer: Larkspur Homes
     address: [Larkspur House, 6 Bridge Street, Scarfolk, SC3 4LH]
     planningType: Outline planning permission
@@ -875,6 +894,7 @@ commitments:
   # An outline application already granted, with one reserved matters
   # application under it: the record page offers to add more
   - reference: NRL-100958
+    fullName: Emma Sutton
     developer: Brightwater Homes
     address: [Brightwater House, 9 Quay Road, Scarfolk, SC8 2BW]
     planningType: Outline planning permission
@@ -913,6 +933,7 @@ commitments:
           at: 2026-09-29T11:55
 
   - reference: NRL-101044
+    fullName: Sarah Whitlock
     developer: ACME Developments
     address: [1 Industrial Estate, Scarfolk, SC1 4AB]
     planningType: Full planning permission
@@ -934,6 +955,7 @@ commitments:
           at: 2026-07-11T14:25
 
   - reference: NRL-101178
+    fullName: Priya Nair
     developer: Greenacre Living
     address: [Greenacre House, 4 Market Street, Scarfolk, SC2 1GL]
     planningType: Full planning permission
@@ -964,6 +986,7 @@ commitments:
   # A variation of NRL-101178's planning application: the developer made a
   # new commitment for it, and the two records link to each other
   - reference: NRL-101412
+    fullName: Priya Nair
     developer: Greenacre Living
     address: [Greenacre House, 4 Market Street, Scarfolk, SC2 1GL]
     planningType: Full planning permission
@@ -987,6 +1010,7 @@ commitments:
   # The original planning application NRL-678901 (waiting to be added) is a
   # variation of
   - reference: NRL-101305
+    fullName: David Okafor
     developer: Bure Valley Homes
     address: [Weavers Court, 9 Bacton Road, Scarfolk, SC8 2BV]
     planningType: Full planning permission
@@ -1015,6 +1039,7 @@ commitments:
           at: 2026-09-22T10:30
 
   - reference: NRL-101236
+    fullName: Trevor Barker
     developer: Scarfolk Homes Ltd
     address: [Unit 7, Kettle Hill Business Park, Scarfolk, SC4 7KH]
     planningType: Reserved matters
@@ -1039,6 +1064,7 @@ commitments:
 
   # Expired: past their expiry date (today in the prototype is the real date)
   - reference: NRL-099412
+    fullName: Gareth Pryce
     developer: Hollow Lane Builders
     address: [Hollow Lane Yard, Scarfolk, SC3 9LH]
     planningType: Full planning permission
@@ -1063,6 +1089,7 @@ commitments:
           at: 2026-02-25T12:00
 
   - reference: NRL-099307
+    fullName: Tom Ashworth
     developer: Mere Farm Homes
     address: [Mere Farm, Scarfolk Road, Scarfolk, SC5 2MF]
     planningType: Outline planning permission
@@ -1087,6 +1114,7 @@ commitments:
           at: 2026-03-02T11:15
 
   - reference: NRL-099188
+    fullName: Helen Cartwright
     developer: Wensum Valley Estates
     address: [Riverside Offices, Mill Lane, Scarfolk, SC6 3WV]
     planningType: Full planning permission
@@ -1111,6 +1139,7 @@ commitments:
           at: 2026-01-30T14:20
 
   - reference: NRL-099054
+    fullName: Lucy Marsh
     developer: Northfield Construction
     address: [Northfield Depot, Scarfolk, SC7 5NC]
     planningType: Full planning permission
@@ -1139,6 +1168,7 @@ commitments:
           at: 2026-05-20T15:40
 
 fallback:
+  fullName: Trevor Barker
   developer: Scarfolk Homes Ltd
   address: [Unit 7, Kettle Hill Business Park, Scarfolk, SC4 7KH]
   planningType: Full planning permission

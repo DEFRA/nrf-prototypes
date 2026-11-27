@@ -17,12 +17,15 @@ text:
   # caption under it. For review: sent to the council with no planning
   # application reference yet. In review: added, waiting to be reviewed.
   # Active: reviewed, with the planning application applied for.
-  forReviewCount: Commitments for review
+  # Granted: reviewed, with planning permission granted.
+  forReviewCount: New commitments for review
   forReviewCaption: Add a planning application reference and compare the commitment certificate with the planning application.
   inReviewCount: Commitments in review
   inReviewCaption: Compare the commitment certificate with the planning application.
-  reviewedActiveCount: Active commitments
+  reviewedActiveCount: Commitments with planning applications in progress
   reviewedActiveCaption: Update these commitments with the progress of the planning application.
+  grantedCount: Commitments with granted planning permission
+  grantedCaption: Tell us if any of these planning applications goes to judicial review.
   overdueCount: Commitments with an overdue action
   overdueCaption: View and update this commitment.
   rejectedCount: Rejected commitments
