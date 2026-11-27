@@ -11,6 +11,9 @@
 //                           button to create a record
 //   .app-staff-table-controls  the search with the filter's button to its right
 //   .app-staff-cards        the dashboard's count cards, each a link
+//   .app-staff-cards--captioned  the "Search and cards" variant's cards:
+//                           count, label and caption, left-aligned, three
+//                           to a row, each a link
 //   .app-staff-search       search box with its lens button
 //   .app-staff-filter       the records table's filter (a popover)
 //   .app-staff-table--sortable  column headings that sort the table
@@ -450,6 +453,70 @@ $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
   &:focus {
     @include govuk-focused-text;
   }
+}
+
+// The dashboard's "Search and cards" variant (pages/dashboard~cards.md):
+// the search under the heading, then cards holding a count, a link to the
+// records it counts and a caption, left-aligned and three to a row from
+// desktop
+.app-staff-search--lead {
+  margin-bottom: govuk-spacing(6);
+
+  @include govuk-media-query($from: tablet) {
+    max-width: 50%;
+  }
+}
+
+.app-staff-cards--captioned {
+  margin-bottom: govuk-spacing(6);
+
+  @include govuk-media-query($from: desktop) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+// Each card is one link, as on the dashboard, with its words on the left
+// and a thin grey border with no blue bottom. Hovering it draws a blue
+// border all round, and focusing it the focus state's: a yellow outline
+// round a black border. Both thicken the 1px border to 5px with an inset
+// shadow, so nothing moves.
+$app-staff-card-edge: 4px;
+
+@mixin app-staff-card-edges($colour) {
+  border-color: $colour;
+  box-shadow: inset 0 0 0 $app-staff-card-edge $colour;
+}
+
+.app-staff-card__link--captioned {
+  align-items: flex-start;
+  border-bottom-width: 1px;
+  border-bottom-color: govuk-colour('black', $variant: 'tint-80');
+  text-align: left;
+
+  &:hover {
+    background: $app-staff-grey;
+    @include app-staff-card-edges(govuk-colour('blue'));
+  }
+
+  &:focus {
+    outline: $govuk-focus-width solid $govuk-focus-colour;
+    outline-offset: 0;
+    background: $app-staff-grey;
+    color: $app-staff-black;
+    @include app-staff-card-edges($govuk-focus-text-colour);
+  }
+
+  &:focus .app-staff-card__label {
+    color: govuk-colour('blue');
+    text-decoration: underline;
+  }
+}
+
+.app-staff-card__caption {
+  display: block;
+  margin-top: govuk-spacing(2);
+  color: $govuk-secondary-text-colour;
+  @include govuk-font($size: 16);
 }
 
 .app-staff-search .govuk-form-group {

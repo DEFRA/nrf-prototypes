@@ -1,5 +1,5 @@
 ---
-# Rejecting a developer record's commitment details, after choosing to
+# Rejecting a commitment's details, after choosing to
 # reject them on the record page (app/views/lpa-manage-1/reject-commitment.html).
 # The reason is required, the comment below it is not. Rejecting is final.
 type: radios
@@ -12,13 +12,13 @@ errors:
   required: Select why this commitment is being rejected
 button: Confirm
 actions:
-  - text: Back to developer record
+  - text: Back to commitment
     kind: link
     goto: view-record
 text:
   commentLabel: Add a comment (optional)
   warning: Warning
-  rejectWarning: If you reject the commitment details, you will not be able to change the status of this developer record.
+  rejectWarning: If you reject the commitment details, you will not be able to change the status of this commitment.
 ---
 
 # Why is this commitment being rejected?

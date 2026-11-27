@@ -1,0 +1,23 @@
+{#
+  Every record the council has (content/lpa-manage-1/pages/records.md):
+  the dashboard's records table (_records-table.html) on a page of its own,
+  without the cards. Opened from the dashboard's `cards` copy variant: its
+  search, its cards (filtered) and its "View all" link.
+#}
+{% extends "journey-engine/_page.html" %}
+
+{% set text = content.text %}
+
+{% block content %}
+<div class="app-staff-dashboard-header">
+  <h1 class="govuk-heading-xl">{{ content.heading }}</h1>
+  {{ content.html | safe }}
+</div>
+
+{% include "lpa-manage-1/_records-table.html" %}
+{% endblock %}
+
+{% block pageScripts %}
+{{ super() }}
+{% include "lpa-manage-1/_records-table-script.html" %}
+{% endblock %}

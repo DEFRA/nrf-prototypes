@@ -6,11 +6,11 @@
 # (content/nrf-request-to-use-1-1/pages/commitment-certificate.md), filled
 # from the record's commitment, with a button back to the record where the
 # developer's has its print link. The breadcrumbs lead back to the
-# dashboard and the developer record.
+# dashboard and the commitment.
 type: custom
 text:
-  breadcrumbDashboard: Developer records
-  backToRecord: Back to developer record
+  breadcrumbDashboard: Commitments
+  backToRecord: Back to commitment
   # A contents list beside the certificate, linking to each of its ##
   # headings. Put a # in front of the line to hide it
   contentsTitle: Contents

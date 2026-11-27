@@ -1,5 +1,5 @@
 ---
-# A developer record (app/views/lpa-manage-1/view-record.html). The heading
+# A commitment (app/views/lpa-manage-1/view-record.html). The heading
 # is the record's NRL reference; `text:` holds the rest of the page's words.
 # The review options sit at the bottom of the page, none chosen, and
 # Confirm returns to the dashboard. A record In review offers the first
@@ -44,7 +44,7 @@ rows:
   - key: Original planning application reference
     value: '{{ record.originalPlanningReference }}'
     when: { key: record.originalPlanningReference, truthy: true }
-  - key: Linked developer record
+  - key: Linked commitment
     value: '{{ record.linkedText }}'
     when: { key: record.linkedText, truthy: true }
   - key: Planning application stage
@@ -101,17 +101,17 @@ options:
     step: planning
     stages: [granted, refused]
 errors:
-  required: Select a new status for this developer record
+  required: Select a new status for this commitment
   stageRequired: Select the stage the planning application has reached
 button: Confirm
 text:
   successTitle: Commitment details retrieved
-  added: A new developer record has been created for review
+  added: A new commitment has been created for review
   # A variation the developer made a commitment for; {reference} is the
-  # existing developer record it is linked with
-  addedLinked: A new developer record has been created for review and linked with existing developer record {reference}
+  # existing commitment it is linked with
+  addedLinked: A new commitment has been created for review and linked with existing commitment {reference}
   # Once a planning variation's reference is added
-  variationAddedTitle: Developer record updated
+  variationAddedTitle: Commitment updated
   variationAdded: Amendment planning application reference added
   viewCertificate: View full certificate
   statusLegend: Have you reviewed these commitment details?
@@ -120,13 +120,13 @@ text:
   # Below the planning details of a granted outline application
   addReservedMatters: Add a reserved matters application
   # Below the planning details of a full planning application not linked
-  # with another developer record
+  # with another commitment
   addAmendment: Add a planning amendment
   # In place of the radios once rejected, under its own heading
   rejectedHeading: Review options
-  rejectedFinal: This developer record has been rejected. Its status cannot be changed.
+  rejectedFinal: This commitment has been rejected. Its status cannot be changed.
   warning: Warning
-  timelineHeading: Developer record history
+  timelineHeading: Commitment history
   timelineAdded: Commitment details retrieved
   timelineStatus: Status changed to
   timelineReviewLater: Marked to review and confirm later
@@ -139,15 +139,15 @@ text:
   # The success banner once reserved matters are saved on
   # reserved-matters-check-answers; {reference} is the one just added
   reservedMattersAddedTitle: Success
-  reservedMattersAdded: Reserved matters {reference} has been added to this developer record
-  # After the NRL reference of a linked developer record, in brackets
+  reservedMattersAdded: Reserved matters {reference} has been added to this commitment
+  # After the NRL reference of a linked commitment, in brackets
   linkedOriginal: original planning application
   linkedVariation: amendment
   timelineComment: Comment
   by: by
   at: at
 actions:
-  - text: Manage developer records
+  - text: Manage commitments
     kind: link
     goto: dashboard
 ---

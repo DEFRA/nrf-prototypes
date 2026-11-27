@@ -1,5 +1,5 @@
 ---
-# Submit adds the reserved matters application to the developer record and
+# Submit adds the reserved matters application to the commitment and
 # returns to it, which says so (hooks.js)
 type: check-answers
 caption: '{{ reservedMattersRecord }}'

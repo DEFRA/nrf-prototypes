@@ -4,16 +4,16 @@
 type: start
 ---
 
-# Manage the developer records for the nature restoration levy
+# Manage commitments for the nature restoration levy
 
-Use this service to create developer records for the nature restoration levy. 
+Use this service to create commitments for the nature restoration levy. 
 
 You will need:
 
 - the NRL reference from the developers commitment certificate
 - the developers planning application reference
 
-Once the developer record is created and reviewed, you can use it to update Natural England on the progress of the planning application. 
+Once the commitment is created and reviewed, you can use it to update Natural England on the progress of the planning application. 
 
 :::button Start now
 :::

@@ -1,5 +1,5 @@
 {#
-  A developer record (content/lpa-manage-1/pages/view-record.md): a success
+  A commitment (content/lpa-manage-1/pages/view-record.md): a success
   banner after adding it, the NRL reference with its
   status, the first commitment details with a link to the full certificate,
   the red line boundary (the page's copy), the planning details (the
@@ -117,7 +117,7 @@
       </div>
     {% endif %}
 
-    {# The page's actions (Manage developer records) are links #}
+    {# The page's actions (Manage commitments) are links #}
     {% if record and record.status.value == 'rejected' %}
       <h2 class="govuk-heading-m">{{ text.rejectedHeading }}</h2>
       {{ govukWarningText({ text: text.rejectedFinal, iconFallbackText: text.warning }) }}

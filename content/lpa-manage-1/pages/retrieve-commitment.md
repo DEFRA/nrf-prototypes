@@ -5,7 +5,7 @@ width: 10
 errors:
   required: Enter the NRL reference
   format: Enter an NRL reference in the correct format, like NRL-123456
-  recorded: This commitment has already been added to your developer records
+  recorded: This commitment has already been added to your commitments
   notFound: No commitment matches this NRL reference
 button: Continue
 ---

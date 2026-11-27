@@ -9,7 +9,7 @@ const {
 
 /**
  * lpa-manage-1: a planning officer signs in with the mock GOV.UK One Login,
- * adds a developer record from an NRL reference, reviews it and sets its
+ * adds a commitment from an NRL reference, reviews it and sets its
  * planning application's stage, and
  * finds it in the dashboard’s table of records.
  *
@@ -162,7 +162,7 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(page.locator('main')).toContainText(`Breckland, ${postcode}`)
   })
 
-  test('adds a developer record from an NRL reference', async ({ page }) => {
+  test('adds a commitment from an NRL reference', async ({ page }) => {
     await signIn(page)
     // From the header's menu
     const create = journey.header.menu.links.find((link) =>

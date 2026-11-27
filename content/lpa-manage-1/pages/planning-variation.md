@@ -1,8 +1,8 @@
 ---
 # PLACEHOLDER COPY: the content designer has not written this page yet.
-# Shown when the NRL reference typed already has a developer record.
+# Shown when the NRL reference typed already has a commitment.
 type: radios
-hint: If this is an amendment, choose yes and the two planning applications will be connected under one developer record.
+hint: If this is an amendment, choose yes and the two planning applications will be connected under one commitment.
 bodyFirst: true
 options:
   - label: 'Yes – this is an amendment'

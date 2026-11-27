@@ -1056,7 +1056,7 @@ const signOut = {
 // rather than adding it again.
 const retrieveCommitment = {
   // The box shows the reference last typed in it, so Back and "No" (to
-  // correct it) keep it. The menu's "Create a developer record" starts
+  // correct it) keep it. The menu's "Create a commitment" starts
   // afresh with ?_new=1, which empties it. In the dashboard's table, the
   // NRL reference of a commitment with no record yet links here with
   // ?_add=NRL-123456: it is retrieved as if typed here and the
@@ -1149,7 +1149,7 @@ const planningVariation = {
   }
 }
 
-// "Are you adding a reserved matters application to this developer record?" for an
+// "Are you adding a reserved matters application to this commitment?" for an
 // outline application the council already has a record for. Yes asks the
 // reserved matters questions for the record (journey.yaml); No returns to
 // "Enter an NRL reference", as planningVariation does.
@@ -1270,7 +1270,7 @@ const addRecord = {
     } else {
       data.lpaFlash = 'added'
     }
-    // "Create a developer record" starts afresh
+    // "Create a commitment" starts afresh
     for (const key of [
       'commitmentReference',
       'commitmentEntry',
@@ -1341,7 +1341,7 @@ function takesReservedMatters(record) {
 }
 
 // An outline application's record the officer has just said Yes to
-// "Are you adding a reserved matters application to this developer record?" for, from
+// "Are you adding a reserved matters application to this commitment?" for, from
 // "Enter an NRL reference": it takes reserved matters whatever its stage
 function addingReservedMattersTo(data, record) {
   return Boolean(
@@ -1353,7 +1353,7 @@ function addingReservedMattersTo(data, record) {
   )
 }
 
-// A full planning application not linked with another developer record
+// A full planning application not linked with another commitment
 // (a variation the developer made its own commitment for, or the original
 // application's) takes a planning amendment from its record page, unless
 // it is rejected
@@ -1804,7 +1804,7 @@ const reservedMattersCheckAnswers = {
     data.recordReference = reference
     data.lpaFlash = RESERVED_MATTERS
     data.lpaFlashReference = added.reference
-    // From "Enter an NRL reference": "Create a developer record" starts afresh
+    // From "Enter an NRL reference": "Create a commitment" starts afresh
     for (const key of [
       'commitmentReference',
       'commitmentEntry',
@@ -1922,16 +1922,56 @@ function typedReference(typed) {
   return digits ? `NRL-${digits[1]}` : ''
 }
 
-// The landing page: counts that open the table filtered to them, and
-// every record (with the commitments waiting for a planning application
-// reference), searched, filtered, sorted by its column headings and paged
+// The records table on `path`: every record (with the commitments waiting
+// for a planning application reference), searched, filtered, sorted by its
+// column headings and paged, from the page's own `text:`. The dashboard and
+// the records page both show it.
+function fillTable(ctx, model, path, store, all, query) {
+  const { text } = model.content
+  const records = sortRecords(
+    all.filter(
+      (record) => matches(record, query.q) && matchesFilters(record, query)
+    ),
+    query
+  )
+  const pages = Math.max(1, Math.ceil(records.length / RECORDS_PER_PAGE))
+  query.page = Math.min(query.page, pages)
+  const from = (query.page - 1) * RECORDS_PER_PAGE
+  const shown = records.slice(from, from + RECORDS_PER_PAGE)
+  model.tablePath = path
+  model.search = query
+  model.resultCount = records.length
+  // "Showing 11 to 14 of 14 records", from the page's `showing` text
+  model.showing = String(text.showing || '')
+    .replace('{from}', String(from + 1))
+    .replace('{to}', String(from + shown.length))
+    .replace('{total}', String(records.length))
+  model.pagination = paginationFor(query, pages, path)
+  model.filters = filtersFor(query, text, store, path)
+  model.clearSearchHref = hrefFor(path, query, { q: '', page: 1 })
+  // A search that finds one record focuses its link, so Enter opens it
+  model.table = tableFor(
+    shown,
+    text,
+    ctx.journey,
+    sortableHead(query, path),
+    Boolean(query.q) && records.length === 1
+  )
+}
+
+// A council with no records yet adds its first one instead
+function loadRecords(ctx) {
+  if (!ctx.preview && !allEntries(ctx.data).length) {
+    return { redirect: ctx.journey.routes.RETRIEVE_COMMITMENT }
+  }
+}
+
+// The landing page: counts that open the table filtered to them, and the
+// records table. Its `cards` copy variant shows the counts as cards with a
+// caption, each opening the records page filtered to them, and links to
+// that page for the table.
 const dashboard = {
-  // A council with no records yet adds its first one instead
-  load(ctx) {
-    if (!ctx.preview && !allEntries(ctx.data).length) {
-      return { redirect: ctx.journey.routes.RETRIEVE_COMMITMENT }
-    }
-  },
+  load: loadRecords,
   get(ctx, model) {
     const store = loadStore()
     const { text } = model.content
@@ -1944,18 +1984,22 @@ const dashboard = {
       delete ctx.data.lpaFlash
     }
     const path = ctx.journey.routes.DASHBOARD
+    const recordsPath = ctx.journey.routes.RECORDS
     const all = tableRecords(ctx.data)
     const query = queryOf(ctx, store)
     // Each card counts the records the table shows with its filters set.
     // Its link scrolls the cards to the top of the window so the table
     // shows beneath them, and the card is active while the table has
     // exactly its filters (whatever is searched, sorted or paged).
+    // `recordsHref` opens the records page with the same filters.
     const sameValues = (a = [], b = []) =>
       a.length === b.length && a.every((value) => b.includes(value))
-    const card = (label, filters, test) => ({
+    const card = (label, caption, filters, test) => ({
       count: all.filter(test).length,
       label,
+      caption,
       href: `${hrefFor(path, blankQuery(), filters)}#${CARDS_ID}`,
+      recordsHref: hrefFor(recordsPath, blankQuery(), filters),
       active:
         FILTERS.every((name) => sameValues(query[name], filters[name])) &&
         query.overdue === Boolean(filters.overdue)
@@ -1965,45 +2009,48 @@ const dashboard = {
       // Commitments waiting for a record and records waiting for review
       card(
         text.forReviewCount,
+        text.forReviewCaption,
         { status: [PENDING_STATUS, ADDED_STATUS] },
         (r) => isStatus(PENDING_STATUS)(r) || isStatus(ADDED_STATUS)(r)
       ),
-      card(text.rejectedCount, { status: ['rejected'] }, isStatus('rejected')),
+      card(
+        text.rejectedCount,
+        text.rejectedCaption,
+        { status: ['rejected'] },
+        isStatus('rejected')
+      ),
       card(
         text.reviewedActiveCount,
+        text.reviewedActiveCaption,
         { status: ['reviewed'], stage: ['applied'] },
         (r) => isStatus('reviewed')(r) && r.planningStage.value === 'applied'
       ),
-      card(text.overdueCount, { overdue: true }, (r) => r.overdue)
+      card(
+        text.overdueCount,
+        text.overdueCaption,
+        { overdue: true },
+        (r) => r.overdue
+      )
     ]
+    model.recordsPath = recordsPath
+    fillTable(ctx, model, path, store, all, query)
+  }
+}
 
-    const records = sortRecords(
-      all.filter(
-        (record) => matches(record, query.q) && matchesFilters(record, query)
-      ),
-      query
-    )
-    const pages = Math.max(1, Math.ceil(records.length / RECORDS_PER_PAGE))
-    query.page = Math.min(query.page, pages)
-    const from = (query.page - 1) * RECORDS_PER_PAGE
-    const shown = records.slice(from, from + RECORDS_PER_PAGE)
-    model.search = query
-    model.resultCount = records.length
-    // "Showing 11 to 14 of 14 records", from the page's `showing` text
-    model.showing = String(text.showing || '')
-      .replace('{from}', String(from + 1))
-      .replace('{to}', String(from + shown.length))
-      .replace('{total}', String(records.length))
-    model.pagination = paginationFor(query, pages, path)
-    model.filters = filtersFor(query, text, store, path)
-    model.clearSearchHref = hrefFor(path, query, { q: '', page: 1 })
-    // A search that finds one record focuses its link, so Enter opens it
-    model.table = tableFor(
-      shown,
-      text,
-      ctx.journey,
-      sortableHead(query, path),
-      Boolean(query.q) && records.length === 1
+// Every record on a page of its own: the dashboard's table without the
+// cards, opened from the dashboard's `cards` copy variant
+const records = {
+  load: loadRecords,
+  get(ctx, model) {
+    const store = loadStore()
+    const path = ctx.journey.routes.RECORDS
+    fillTable(
+      ctx,
+      model,
+      path,
+      store,
+      tableRecords(ctx.data),
+      queryOf(ctx, store)
     )
   }
 }
@@ -2023,6 +2070,7 @@ module.exports = {
   'reserved-matters-check-answers': reservedMattersCheckAnswers,
   certificate,
   dashboard,
+  records,
   // Journey-wide: a live scenario's sign in (see journey-engine/router.js)
   scenario,
   // Journey-wide: a page opened from the screen wall

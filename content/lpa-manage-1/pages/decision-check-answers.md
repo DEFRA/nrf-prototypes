@@ -33,4 +33,4 @@ actions:
 
 # Check the planning decision details
 
-Confirming will update the developer record to show planning permission as granted.
+Confirming will update the commitment to show planning permission as granted.

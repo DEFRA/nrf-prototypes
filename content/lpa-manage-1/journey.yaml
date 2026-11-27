@@ -1,4 +1,4 @@
-# Flow and logic for the LPA journey "Manage commitments to the nature
+# Flow and logic for the LPA journey "Manage commitments for the nature
 # restoration levy".
 #
 # Copy lives in pages/*.md; the commitment details several pages show are in
@@ -25,8 +25,8 @@
 # pages keep their own look.
 
 id: lpa-manage-1
-name: Manage commitments to the nature restoration levy
-serviceName: Manage commitments to the nature restoration levy
+name: Manage commitments for the nature restoration levy
+serviceName: Manage commitments for the nature restoration levy
 start: start
 layout: staff
 # The planning decision details' and the reserved matters application's
@@ -54,10 +54,10 @@ header:
       href: $signOut
   menu:
     links:
-      - text: Developer records
+      - text: Commitments
         href: dashboard
       # ?_new=1 empties the NRL reference box (a fresh start, see hooks.js)
-      - text: Create a developer record
+      - text: Create a commitment
         href: retrieve-commitment?_new=1
 
 # The "User research" section of every page's footer
@@ -72,7 +72,7 @@ homepage:
   family: lpa
   version: 5
   status: in-progress
-  title: Manage commitments to the nature restoration levy (V5)
+  title: Manage commitments for the nature restoration levy (V5)
   description: >-
     A planning officer at the local planning authority signs in with GOV.UK
     One Login, retrieves a developer's commitment by its NRL reference, adds
@@ -81,8 +81,8 @@ homepage:
     searchable table on the dashboard.
   changes:
     - new service for LPA officers, with its own header and a wider page for tables
-    - add a developer record from an NRL reference
-    - record page with the developer record history and the review options
+    - add a commitment from an NRL reference
+    - record page with the commitment history and the review options
     - rejecting asks why on its own page, with an optional comment
     - review options start unchosen and Confirm returns to the dashboard; reviewing later is noted on the history
     - once the commitment details are reviewed, the options set the planning application's stage
@@ -98,19 +98,21 @@ homepage:
     - no "What would you like to do?" page: signing in opens the dashboard, or "Enter an NRL reference" for a council with no records yet (an email with "new" in it)
     - placeholder start page before signing in
     - choosing No on "Is this a planning variation?" returns to "Enter an NRL reference" to correct it
-    - success banners for a record linked with an existing developer record, and for a planning variation reference added; a variation's planning reference is labelled as the variation's
+    - success banners for a record linked with an existing commitment, and for a planning variation reference added; a variation's planning reference is labelled as the variation's
     - blue GOV.UK header with a GOV.UK-sized crown, still at the wider page width; the start page is a regular GOV.UK start page
     - signing out returns to the start page
     - once the planning permission is granted the record's options are judicial review, Add reserved matters (outline applications only, opening its own page) and a placeholder; the other reserved matters layouts are gone
     - the planning stage options are only those possible from the stage the application is at (granted, refused or withdrawn; then under appeal or under judicial review), under "What stage is the planning permission at?" with no hint
     - a granted outline application has an "Add a reserved matters application" button below its planning details in place of a radio; the placeholder option is gone
     - adding a reserved matters application asks for the planning application reference and stage, the matters it is for (checkboxes) and an optional description
-    - the developer record history is sentence case, and Manage developer records is a link
+    - the commitment history is sentence case, and Manage commitments is a link
     - adding a reserved matters application no longer asks for its stage (it shows as applied)
     - choosing Granted asks for the planning decision details (reference, units, planning type, address and an optional description) and checks them before the stage changes
     - an NRL reference already in the records for an outline application asks whether reserved matters are being added; Yes opens "Add a reserved matters application" and returns to the record with a success banner
     - adding a reserved matters application is a question per page (reference, matters, number of units when layout or scale is ticked, a description that is no longer optional) with a check answers page before saving
     - granting no longer asks for the address of the relevant development; the planning decision details show in the record's planning details
+    - the dashboard has a "Search and cards" copy variant: a search, then cards with a caption, and every commitment on a page of its own
+    - '"developer record" is now "commitment" throughout, and the service is Manage commitments for the nature restoration levy'
 
 # The answers the copy can show, as {{ name }} (see content/README.md).
 # `commitment` is the commitment on screen and `record` the record.
@@ -231,7 +233,7 @@ pages:
       - goto: retrieve-commitment
 
   # --------------------------------------------------------------------
-  # Create a developer record. The reference finds the commitment in
+  # Create a commitment. The reference finds the commitment in
   # records.yaml (or the one made in nrf-request-to-use-1 this session).
   # One the council already has a record for asks whether it is a planning
   # variation, or for an outline application whether it is reserved
@@ -264,7 +266,7 @@ pages:
           label: NRL reference for an outline application the council already has a record for
           description: >-
             Prepopulates input with NRL-100958. Next page shown is "Are you
-            adding a reserved matters application to this developer record?"
+            adding a reserved matters application to this commitment?"
           live: true
           data: { commitmentReference: NRL-100958 }
 
@@ -526,7 +528,7 @@ pages:
   # from its Add a reserved matters application button
   # (add-reserved-matters?ref=NRL-100958, a route in hooks.js that
   # remembers the record as reservedMattersRecord) or from "Are you adding
-  # a reserved matters application to this developer record?". Nothing
+  # a reserved matters application to this commitment?". Nothing
   # changes until Submit on reserved-matters-check-answers, which adds it to
   # the record and returns there with a success banner.
   - id: reserved-matters-reference
@@ -624,9 +626,14 @@ pages:
     template: lpa-manage-1/dashboard
     guard: *signed-in
     back: []
+    # The "Search and cards" copy variant (dashboard~cards.md) leaves the
+    # table to the records page
+    links:
+      - goto: records
+        text: View all commitments
     preview:
       description: >-
-        The dashboard of developer records
+        The dashboard of commitments
       variants:
         - id: updated
           label: Record updated
@@ -639,3 +646,15 @@ pages:
           description: >-
             A search that matches no records
           data: { lpaSearch: Kestrel Homes }
+
+  # Every record on a page of its own: the dashboard's table without the
+  # cards, opened from the dashboard's "Search and cards" copy variant (its
+  # search, a card's link filtered to the records it counts, or View all).
+  # A council with no records yet is sent to "Enter an NRL reference".
+  - id: records
+    template: lpa-manage-1/records
+    guard: *signed-in
+    back: dashboard
+    preview:
+      description: >-
+        Every commitment, with the search, filters and table

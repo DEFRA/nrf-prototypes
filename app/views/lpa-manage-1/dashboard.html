@@ -1,35 +1,20 @@
 {#
   The landing page (content/lpa-manage-1/pages/dashboard.md): counts of the
-  council's records (each opening the table filtered to them) and every record the council has: searched
-  (?_q=), filtered (?_status=, ?_stage=, ?_type=, ?_overdue=1), sorted by a
-  column heading (?_sort=<column>&_dir=asc|desc) and paged (?_page=). Each
-  form keeps what the other sets; searching, filtering or sorting starts
-  again at page 1. Model extras from app/lib/lpa-manage-1/hooks.js: flash
-  (the banner after Confirm on a record page), cards [{ count, label, href,
-  active }],
-  search (the query), resultCount, showing, pagination,
-  filters { groups, count, id, clearHref }, clearSearchHref, table.
+  council's records (each opening the table filtered to them) and the
+  records table (_records-table.html). Model extras from
+  app/lib/lpa-manage-1/hooks.js: flash (the banner after Confirm on a
+  record page), cards [{ count, label, caption, href, recordsHref, active }],
+  recordsPath, and the table's (see _records-table.html).
+
+  The `cards` copy variant (pages/dashboard~cards.md) is laid out
+  differently: the heading, a search box, the counts as cards (count,
+  label and caption, three to a row), each card a link opening the records
+  page filtered to them, and a link to every record on the records page in
+  place of the table.
 #}
 {% extends "journey-engine/_page.html" %}
 
 {% set text = content.text %}
-
-{# Hidden inputs carrying the filters (for the search form) or the search
-   (for the filter form), and the sort for both #}
-{% macro keep(search, filters) %}
-  {% if filters %}
-    {% for name in ['status', 'stage', 'type'] %}
-      {% for value in search[name] %}<input type="hidden" name="_{{ name }}" value="{{ value }}">{% endfor %}
-    {% endfor %}
-    {% if search.overdue %}<input type="hidden" name="_overdue" value="1">{% endif %}
-  {% elif search.q %}
-    <input type="hidden" name="_q" value="{{ search.q }}">
-  {% endif %}
-  {% if search.sort != 'lastModified' or search.dir != 'desc' %}
-    <input type="hidden" name="_sort" value="{{ search.sort }}">
-    <input type="hidden" name="_dir" value="{{ search.dir }}">
-  {% endif %}
-{% endmacro %}
 
 {% block content %}
 {% if flash %}
@@ -50,6 +35,28 @@
   {{ content.html | safe }}
 </div>
 
+{% if copy == "cards" %}
+<form class="app-staff-search app-staff-search--lead" action="{{ recordsPath }}" method="get" role="search">
+  {% set searchValue = "" %}
+  {% include "lpa-manage-1/_search.html" %}
+</form>
+
+<ul class="app-staff-cards app-staff-cards--captioned">
+  {% for card in cards %}
+  <li class="app-staff-card">
+    <a class="app-staff-card__link app-staff-card__link--captioned" href="{{ card.recordsHref }}">
+      <span class="app-staff-card__count">{{ card.count }}</span>
+      <span class="app-staff-card__label">{{ card.label }}</span>
+      {% if card.caption %}<span class="app-staff-card__caption">{{ card.caption }}</span>{% endif %}
+    </a>
+  </li>
+  {% endfor %}
+</ul>
+
+<p class="govuk-body">
+  <a class="govuk-link govuk-link--no-visited-state" href="{{ recordsPath }}">{{ text.viewAll }}</a>
+</p>
+{% else %}
 <ul class="app-staff-cards" id="record-counts">
   {% for card in cards %}
   <li class="app-staff-card">
@@ -61,129 +68,13 @@
   {% endfor %}
 </ul>
 
-{# Over the table: the search on the left and, on the right, a button
-   that opens the filter in a popover, closed by its Close button, Escape
-   or a click outside it. Searching or filtering comes back
-   scrolled to them (#record-search), with the table beneath. #}
-<div class="app-staff-table-controls" id="record-search">
-<form class="app-staff-search" action="{{ routes.DASHBOARD }}#record-search" method="get" role="search">
-  {% set searchValue = search.q %}
-  {% include "lpa-manage-1/_search.html" %}
-  {{ keep(search, true) }}
-</form>
-{{ govukButton({
-  text: text.filterSummary + (" (" + filters.count + ")" if filters.count else ""),
-  type: "button",
-  classes: "govuk-button--secondary app-staff-table-controls__filter",
-  attributes: { popovertarget: filters.id, "aria-controls": filters.id }
-}) }}
-<div class="app-staff-filter" id="{{ filters.id }}" popover aria-labelledby="{{ filters.id }}-heading">
-  <div class="app-staff-filter__header">
-    <h2 class="govuk-heading-m" id="{{ filters.id }}-heading">{{ text.filterHeading }}</h2>
-    <button class="app-staff-filter__close" type="button" popovertarget="{{ filters.id }}" popovertargetaction="hide">{{ text.filterClose }}</button>
-  </div>
-  <form action="{{ routes.DASHBOARD }}#record-search" method="get" novalidate>
-    {{ keep(search, false) }}
-    <div class="app-staff-filter__groups">
-      {% for group in filters.groups %}
-        {{ govukCheckboxes({
-          name: group.name,
-          idPrefix: "filter" + group.name,
-          classes: "govuk-checkboxes--small",
-          fieldset: { legend: { text: group.legend, classes: "govuk-fieldset__legend--s" } },
-          items: group.items
-        }) }}
-      {% endfor %}
-    </div>
-    {{ govukCheckboxes({
-      name: "_overdue",
-      idPrefix: "filter_overdue",
-      classes: "govuk-checkboxes--small",
-      items: [{ value: "1", text: text.filterOverdue, checked: search.overdue }]
-    }) }}
-    <div class="govuk-button-group">
-      {{ govukButton({ text: text.applyFilters }) }}
-      <a class="govuk-link govuk-link--no-visited-state" href="{{ filters.clearHref }}">{{ text.clearFilters }}</a>
-    </div>
-  </form>
-</div>
-</div>
-
-{# A search or filter that finds nothing leaves the table's headings with
-   one row saying so #}
-{% if resultCount %}
-  {% set rows = table.rows %}
-{% else %}
-  {% set rows = [[{ text: text.noResults, colspan: table.head | length }]] %}
-{% endif %}
-{{ govukTable({
-  classes: "app-staff-table app-staff-table--sortable",
-  head: table.head,
-  rows: rows
-}) }}
-{% if resultCount or filters.count %}
-<div class="app-staff-table-footer">
-  <p class="govuk-body app-staff-table-footer__count">
-    {% if resultCount %}<span aria-live="polite">{{ showing }}</span>{% endif %}
-    {#- While filters are set, a way to clear them beside the count #}
-    {%- if filters.count %} <a class="govuk-link govuk-link--no-visited-state app-staff-table-footer__clear" href="{{ filters.clearHref }}">{{ text.clearFilters }}</a>{% endif %}
-  </p>
-  {% if resultCount and pagination %}
-    {{ govukPagination(pagination) }}
-  {% endif %}
-</div>
-{% endif %}
-{% if search.q %}
-  <p class="govuk-body">
-    <a class="govuk-link govuk-link--no-visited-state" href="{{ clearSearchHref }}">{{ text.clearSearch }}</a>
-  </p>
+{% include "lpa-manage-1/_records-table.html" %}
 {% endif %}
 {% endblock %}
 
-{# A search that finds one record focuses its link, so Enter opens it.
-   Browsers ignore autofocus when the URL has a fragment (#record-search),
-   and scrolling to it moves focus, so focus the link once the page has
-   loaded and scrolled, without moving the scroll. #}
 {% block pageScripts %}
 {{ super() }}
-{# The filter's popover opens under its button, right-aligned to it and
-   kept inside the window; it scrolls with the page. Without this script
-   the browser centres it. #}
-<script>
-  ;(function () {
-    var panel = document.getElementById('{{ filters.id }}')
-    var toggle = document.querySelector('[popovertarget="{{ filters.id }}"]')
-    if (!panel || !toggle) {
-      return
-    }
-    function place() {
-      var box = toggle.getBoundingClientRect()
-      var gutter = 15
-      var room = document.documentElement.clientWidth - panel.offsetWidth - gutter
-      var left = Math.max(gutter, Math.min(box.right - panel.offsetWidth, room))
-      panel.style.top = box.bottom + window.scrollY + 10 + 'px'
-      panel.style.left = left + window.scrollX + 'px'
-    }
-    panel.classList.add('app-staff-filter--placed')
-    panel.addEventListener('toggle', function (event) {
-      if (event.newState === 'open') {
-        place()
-      }
-    })
-    window.addEventListener('resize', function () {
-      if (panel.matches(':popover-open')) {
-        place()
-      }
-    })
-  })()
-
-  window.addEventListener('load', function () {
-    setTimeout(function () {
-      var link = document.querySelector('.app-staff-table [autofocus]')
-      if (link) {
-        link.focus({ preventScroll: true })
-      }
-    })
-  })
-</script>
+{% if copy != "cards" %}
+  {% include "lpa-manage-1/_records-table-script.html" %}
+{% endif %}
 {% endblock %}

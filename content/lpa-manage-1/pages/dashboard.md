@@ -7,11 +7,11 @@ text:
   # The banner after Confirm on a record page; {reference} is its NRL reference
   successTitle: Success
   updated: '{reference} has been updated'
-  searchLabel: Search developer records
+  searchLabel: Search commitments
   searchButton: Search
   # The button that opens the filter, and the heading and close button
   # inside it
-  filterHeading: Filter developer records
+  filterHeading: Filter commitments
   filterSummary: Filters
   filterClose: Close
   filterStatus: Status
@@ -21,14 +21,14 @@ text:
   applyFilters: Apply filters
   clearFilters: Clear filters
   # The count cards, each under its number
-  forReviewCount: Developer records for review
-  rejectedCount: Rejected developer records
-  reviewedActiveCount: Developer records with active planning applications
+  forReviewCount: Commitments for review
+  rejectedCount: Rejected commitments
+  reviewedActiveCount: Commitments with active planning applications
   overdueCount: Overdue actions
   # {from}, {to} and {total} are filled in with the numbers
-  showing: 'Showing {from} to {to} of {total} developer records'
-  # In the table beside a commitment sent to the council that has no
-  # developer record yet, across the developer, stage, type and officer
+  showing: 'Showing {from} to {to} of {total} commitments'
+  # In the table beside a commitment sent to the council that it has not
+  # added yet, across the developer, stage, type and officer
   # columns (its NRL reference links to adding the planning reference)
   addPlanningReference: Add planning application reference
   # When a search or the filters find nothing
@@ -45,4 +45,4 @@ text:
     status: Status
 ---
 
-# Manage developer records
+# Manage commitments for the nature restoration levy

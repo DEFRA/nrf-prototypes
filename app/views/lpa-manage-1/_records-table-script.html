@@ -1,0 +1,47 @@
+{#
+  The script for _records-table.html. The filter's popover opens under its
+  button, right-aligned to it and kept inside the window; it scrolls with
+  the page. Without this script the browser centres it.
+
+  A search that finds one record focuses its link, so Enter opens it.
+  Browsers ignore autofocus when the URL has a fragment (#record-search),
+  and scrolling to it moves focus, so focus the link once the page has
+  loaded and scrolled, without moving the scroll.
+#}
+<script>
+  ;(function () {
+    var panel = document.getElementById('{{ filters.id }}')
+    var toggle = document.querySelector('[popovertarget="{{ filters.id }}"]')
+    if (!panel || !toggle) {
+      return
+    }
+    function place() {
+      var box = toggle.getBoundingClientRect()
+      var gutter = 15
+      var room = document.documentElement.clientWidth - panel.offsetWidth - gutter
+      var left = Math.max(gutter, Math.min(box.right - panel.offsetWidth, room))
+      panel.style.top = box.bottom + window.scrollY + 10 + 'px'
+      panel.style.left = left + window.scrollX + 'px'
+    }
+    panel.classList.add('app-staff-filter--placed')
+    panel.addEventListener('toggle', function (event) {
+      if (event.newState === 'open') {
+        place()
+      }
+    })
+    window.addEventListener('resize', function () {
+      if (panel.matches(':popover-open')) {
+        place()
+      }
+    })
+  })()
+
+  window.addEventListener('load', function () {
+    setTimeout(function () {
+      var link = document.querySelector('.app-staff-table [autofocus]')
+      if (link) {
+        link.focus({ preventScroll: true })
+      }
+    })
+  })
+</script>
