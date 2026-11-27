@@ -6,14 +6,15 @@ type: start
 
 # Manage commitments for the nature restoration levy
 
-Use this service to create commitments for the nature restoration levy. 
+Use this service to:
+
+- check a developer’s commitment to use the nature restoration levy against their planning application details
+- tell Natural England about the progress of the planning application
 
 You will need:
 
-- the NRL reference from the developers commitment certificate
-- the developers planning application reference
-
-Once the commitment is created and reviewed, you can use it to update Natural England on the progress of the planning application. 
+- the NRL reference from the developer’s commitment certificate
+- the planning application reference
 
 :::button Start now
 :::
