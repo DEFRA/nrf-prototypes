@@ -1,22 +1,16 @@
 ---
 type: radios
-legend: What would you like to do?
-# The email addresses sit between the heading and the options
-bodyFirst: true
+hint: You are using a different email address from the one you used when you got your quote.
 # `value` is what the journey branches on, so the labels can be reworded
 # without touching journey.yaml
 options:
   - label: Continue with {{ account.email }}
     value: continue
-  - label: Use a different email address to sign in
+  - label: Sign in again with a different email address
     value: different-email
 errors:
   required: Select if you want to continue with this email address
 button: Continue
 ---
 
-# Check your email address
-
-The email address you have signed in with ({{ account.email }}) is different to the email address you used to get your quote ({{ retrievalEmail }}). 
-
-Your commitment certificate will be sent to {{ account.email }}.
+# You have updated your email address

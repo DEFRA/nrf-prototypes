@@ -1923,7 +1923,6 @@ test.describe('nrf-request-to-use-1-1 signing in with another email', () => {
     await expect(page).toHaveURL(`${base}/check-email`)
     await expectHeading(page, 'check-email')
     await expect(page.locator('main')).toContainText('agent@example.com')
-    await expect(page.locator('main')).toContainText('jane@example.com')
     // Reached straight after signing in: nothing to go back to
     await expect(
       page.getByRole('link', { name: 'Back', exact: true })
