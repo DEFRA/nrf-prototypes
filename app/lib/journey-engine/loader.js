@@ -562,6 +562,9 @@ function buildPage(entry, journey, problems, from = {}) {
       // Radios: body copy sits between the heading and the options rather
       // than after them (the heading leaves the fieldset legend)
       bodyFirst: Boolean(frontmatter.bodyFirst),
+      // Radios and checkboxes: a question shown above the options, so the
+      // heading becomes a plain h1 of its own
+      legend: frontmatter.legend,
       hint: frontmatter.hint,
       // The label and placeholder of a `type: select` page's dropdown (the
       // heading is an h1)
@@ -975,9 +978,11 @@ function validateChoiceValues(journey, problems) {
 
   // Where signing in leads, for the header (see signedInPages)
   const pageIds = new Set(journey.pages.map((page) => page.id))
-  for (const id of (journey.preview && journey.preview.signedInFrom) || []) {
-    if (!pageIds.has(id)) {
-      problems.push(`preview.signedInFrom: unknown page '${id}'`)
+  for (const key of ['signedInFrom', 'signedOutAt']) {
+    for (const id of (journey.preview && journey.preview[key]) || []) {
+      if (!pageIds.has(id)) {
+        problems.push(`preview.${key}: unknown page '${id}'`)
+      }
     }
   }
   for (const id of journey.organisationBarPages || []) {

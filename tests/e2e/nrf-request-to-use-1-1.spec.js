@@ -20,6 +20,7 @@ const {
   acceptAndSkipVariation,
   chooseDefraUserType,
   signIn,
+  continueWithEmail,
   chooseOrganisation,
   reachSignIn
 } = require('./helpers/request-to-use')
@@ -112,6 +113,7 @@ test.describe('nrf-request-to-use-1-1 preview mode', () => {
   }) => {
     await reachSignIn(page)
     await signIn(page, 'agent@example.com')
+    await continueWithEmail(page, 'agent@example.com')
     await chooseOrganisation(page, 'oakwood')
     await expect(page).toHaveURL(`${base}/developer-details`)
     await expect(page.locator('.app-organisation-bar')).toHaveCount(1)
@@ -237,6 +239,7 @@ test.describe('nrf-request-to-use-1-1 happy paths', () => {
     await expect(page.locator('main')).toContainText('jane@example.com')
     await followLink(page, 'defra-account-employee-email', './$next')
     await signIn(page, 'company@example.com')
+    await continueWithEmail(page, 'company@example.com')
     await expect(page).toHaveURL(`${base}/org-address`)
     await expectBodyCopy(page, 'org-address', 'business or organisation')
 
@@ -394,6 +397,7 @@ test.describe('nrf-request-to-use-1-1 happy paths', () => {
 
     // The account type follows the answer, not the email
     await signIn(page, 'company@example.com')
+    await continueWithEmail(page, 'company@example.com')
 
     // Signed in as an agent: which organisation they represent, before the
     // developer details. The answer is required. The last option stands
@@ -620,6 +624,7 @@ test.describe('nrf-request-to-use-1-1 Defra ID registration', () => {
     )
     await expect(page.locator('main')).not.toContainText('on behalf of')
     await followLink(page, 'defra-registered-individual', './$next')
+    await continueWithEmail(page, 'new-individual@example.com')
     await expect(page).toHaveURL(`${base}/individual-address`)
     await expectBodyCopy(page, 'individual-address', 'your own address')
     await fillField(
@@ -730,6 +735,7 @@ test.describe('nrf-request-to-use-1-1 Defra ID registration', () => {
       'Contact Support ID'
     )
     await followLink(page, 'defra-registered-business', './$next')
+    await continueWithEmail(page, 'new-company@example.com')
     await expect(page).toHaveURL(`${base}/org-address`)
     await expectBodyCopy(page, 'org-address', 'business or organisation')
   })
@@ -770,6 +776,7 @@ test.describe('nrf-request-to-use-1-1 Defra ID registration', () => {
     await submit(page, 'defra-business-check-answers')
     await expect(page).toHaveURL(`${base}/defra-registered-business`)
     await followLink(page, 'defra-registered-business', './$next')
+    await continueWithEmail(page, 'new@example.com')
     await chooseOrganisation(page)
     await expect(page).toHaveURL(`${base}/developer-details`)
     await expect(page.locator('.app-organisation-bar')).toHaveCount(1)
@@ -821,6 +828,7 @@ test.describe('nrf-request-to-use-1-1 Defra ID registration', () => {
     )
     // They act for the business, so they get the company's pages
     await followLink(page, 'defra-registered-employee', './$next')
+    await continueWithEmail(page, 'new-employee@example.com')
     await expect(page).toHaveURL(`${base}/org-address`)
     await expectBodyCopy(page, 'org-address', 'business or organisation')
   })
@@ -843,6 +851,7 @@ test.describe('nrf-request-to-use-1-1 Defra ID registration', () => {
   }) => {
     await reachSignIn(page, 'employee')
     await signIn(page, 'company@example.com')
+    await continueWithEmail(page, 'company@example.com')
     await fillField(page, 'org-address', 'address-line-1', '53 Business Lane')
     await fillField(page, 'org-address', 'town', 'Business')
     await fillField(page, 'org-address', 'postcode', 'LP1 7RF')
@@ -888,6 +897,7 @@ test.describe('nrf-request-to-use-1-1 Defra ID registration', () => {
   }) => {
     await reachSignIn(page, 'employee')
     await signIn(page, 'company@example.com')
+    await continueWithEmail(page, 'company@example.com')
     await expect(page).toHaveURL(`${base}/org-address`)
     await submit(page, 'org-address')
     await expect(page).toHaveURL(`${base}/org-address`)
@@ -901,6 +911,7 @@ test.describe('nrf-request-to-use-1-1 Defra ID registration', () => {
     // work for: a company, which gives its own address
     await reachSignIn(page, 'employee')
     await signIn(page, 'individual@example.com')
+    await continueWithEmail(page, 'individual@example.com')
     await expect(page).toHaveURL(`${base}/org-address`)
     await expectBodyCopy(page, 'org-address', 'business or organisation')
   })
@@ -953,6 +964,9 @@ test.describe('nrf-request-to-use-1-1 with errors switched off', () => {
     await submit(page, 'one-login-email')
     await expect(page).toHaveURL(`${base}/one-login-password`)
     await submit(page, 'one-login-password')
+    // The sample sign-in email is not the one the quote was retrieved with
+    await expect(page).toHaveURL(`${base}/check-email`)
+    await submit(page, 'check-email')
     // The sample sign-in email is an agent's, and the sample answer picks
     // the participant's organisation
     await expect(page).toHaveURL(`${base}/defra-choose-organisation`)
@@ -1263,6 +1277,7 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     await acceptAndSkipVariation(page)
     await chooseDefraUserType(page, 'employee')
     await signIn(page, 'company@example.com')
+    await continueWithEmail(page, 'company@example.com')
     await fillField(page, 'org-address', 'address-line-1', '53 Business Lane')
     await fillField(page, 'org-address', 'town', 'Business')
     await fillField(page, 'org-address', 'postcode', 'LP1 7RF')
@@ -1288,6 +1303,7 @@ test.describe('nrf-request-to-use-1-1 amending the quote', () => {
     await acceptAndSkipVariation(page)
     await chooseDefraUserType(page, 'agent')
     await signIn(page, 'agent@example.com')
+    await continueWithEmail(page, 'agent@example.com')
     await chooseOrganisation(page)
     await fillField(page, 'developer-details', 'full-name', 'A Developer')
     await fillField(
@@ -1741,6 +1757,7 @@ test.describe('nrf-request-to-use-1-1 creating an account', () => {
     await submit(page, 'one-login-authenticator')
     await expect(page).toHaveURL(`${base}/one-login-created`)
     await submit(page, 'one-login-created')
+    await continueWithEmail(page, 'agent@example.com')
     // The email is an agent's, so on to choosing the organisation they
     // represent and the developer details, signed in
     await chooseOrganisation(page)
@@ -1856,6 +1873,7 @@ test.describe('nrf-request-to-use-1-1 creating an account', () => {
     )
     await expect(page.locator('main')).toContainText('agent@example.com')
     await submit(page, 'government-gateway-user-id')
+    await continueWithEmail(page, 'agent@example.com')
     await chooseOrganisation(page)
     await expect(page).toHaveURL(`${base}/developer-details`)
   })
@@ -1892,5 +1910,63 @@ test.describe('nrf-request-to-use-1-1 dummy certificates', () => {
   }) => {
     await page.goto(`${base}/commitment-certificate?ref=NRL-000000`)
     await expect(page).toHaveURL(`${base}/start`)
+  })
+})
+
+test.describe('nrf-request-to-use-1-1 signing in with another email', () => {
+  test('a different email is checked, and can be swapped by signing in again', async ({
+    page
+  }) => {
+    // The quote was retrieved with jane@example.com (retrieveQuote)
+    await reachSignIn(page)
+    await signIn(page, 'agent@example.com')
+    await expect(page).toHaveURL(`${base}/check-email`)
+    await expectHeading(page, 'check-email')
+    await expect(page.locator('main')).toContainText('agent@example.com')
+    await expect(page.locator('main')).toContainText('jane@example.com')
+    // Reached straight after signing in: nothing to go back to
+    await expect(
+      page.getByRole('link', { name: 'Back', exact: true })
+    ).toHaveCount(0)
+    await submit(page, 'check-email')
+    await expectError(page, 'check-email')
+
+    // A different email signs out and starts signing in again
+    await answer(page, 'check-email', 'different-email')
+    await submit(page, 'check-email')
+    await expect(page).toHaveURL(`${base}/sign-in-method`)
+    await expect(page.getByRole('link', { name: 'Sign out' })).toHaveCount(0)
+    await expect(
+      optionLocator(page, 'sign-in-method', 'one-login')
+    ).not.toBeChecked()
+
+    // The email the quote was retrieved with goes straight on
+    await signIn(page, 'jane@example.com')
+    await expect(page).toHaveURL(`${base}/defra-choose-organisation`)
+  })
+
+  test('continuing keeps the email signed in with', async ({ page }) => {
+    await reachSignIn(page)
+    await signIn(page, 'agent@example.com')
+    await continueWithEmail(page, 'agent@example.com')
+    await expect(page).toHaveURL(`${base}/defra-choose-organisation`)
+    await expect(page.getByRole('link', { name: 'Sign out' })).toHaveCount(1)
+  })
+
+  test('a Government Gateway user ID is not an email, so is not checked', async ({
+    page
+  }) => {
+    await reachSignIn(page)
+    await answer(page, 'sign-in-method', 'government-gateway')
+    await submit(page, 'sign-in-method')
+    await fillField(page, 'government-gateway-sign-in', '_user-id', 'agent')
+    await fillField(
+      page,
+      'government-gateway-sign-in',
+      '_password',
+      'not-a-real-password'
+    )
+    await submit(page, 'government-gateway-sign-in')
+    await expect(page).toHaveURL(`${base}/defra-choose-organisation`)
   })
 })

@@ -406,6 +406,7 @@ function renderContent(page, ctx) {
     headingInBody: c.headingInBody,
     caption: c.caption ? plain(c.caption) : undefined,
     bodyFirst: c.bodyFirst,
+    legend: c.legend ? plain(c.legend) : undefined,
     hint: c.hint ? plain(c.hint) : undefined,
     label: c.label ? plain(c.label) : undefined,
     placeholder: c.placeholder ? plain(c.placeholder) : undefined,

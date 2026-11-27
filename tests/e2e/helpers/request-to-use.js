@@ -108,6 +108,15 @@ async function signIn(page, email) {
   await submit(page, 'one-login-password')
 }
 
+// Signed in with an email other than the one the quote was retrieved with
+// (retrieveQuote's jane@example.com): carry on with it. The option's label
+// carries the email signed in with
+async function continueWithEmail(page, email) {
+  await expect(page).toHaveURL(`${base}/check-email`)
+  await answer(page, 'check-email', 'continue', { account: { email } })
+  await submit(page, 'check-email')
+}
+
 // Signed in as an agent: which organisation they represent (an option
 // value; 'participant' is the research participant's own organisation,
 // whose label is filled in from `data`)
@@ -136,6 +145,7 @@ module.exports = {
   acceptAndSkipVariation,
   chooseDefraUserType,
   signIn,
+  continueWithEmail,
   chooseOrganisation,
   reachSignIn
 }
