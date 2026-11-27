@@ -110,6 +110,7 @@ session:
   - governmentGatewayUserId
   - account
   - representedOrganisation
+  - checkEmail
   - developerDetails
   - yourAddress
   - detailsConfirmed
@@ -144,6 +145,9 @@ preview:
     - defra-choose-organisation
     - individual-address
     - org-address
+  # check-email signs out back to here
+  signedOutAt:
+    - sign-in-method
   data:
     journeyType: request-to-use
     hasNrlReference: 'Yes'
@@ -201,6 +205,7 @@ preview:
       organisationName: Greenfield Developments Ltd
       email: agent@example.com
     representedOrganisation: greenfield
+    checkEmail: continue
     developerDetails:
       fullName: Trevor Barker
       addressLine1: Development Road
@@ -584,12 +589,19 @@ pages:
   # the invitation email has been invited to the organisation's account and
   # skips it; for an agent a sign-in email containing "new" registers.
   # An agent then chooses which organisation they represent (a Defra ID page).
+  # Signing in (or registering) with an email other than the one the quote
+  # was retrieved with first asks which email the certificate goes to.
   - id: one-login-password
     shared: one-login
     handler: custom # decides the account type from the email, see hooks.js
     next: &signed-in
       - when: { key: account.needsDefraAccount, truthy: true }
         goto: defra-register
+      - when:
+          all:
+            - { key: account.differentEmail, truthy: true }
+            - { key: checkEmail, notEquals: continue }
+        goto: check-email
       - when: { key: account.accountType, equals: individual }
         goto: individual-address
       - when: { key: account.accountType, equals: company }
@@ -896,6 +908,26 @@ pages:
         invitedEmployee: true
         email: new-employee@example.com
     next: *signed-in
+
+  # Edge case: the account signed in with (or registered with) an email
+  # other than the one the quote was retrieved with (see hooks.js). The
+  # certificate goes to the email signed in with; "Use a different email
+  # address to sign in" signs out and starts signing in again. Reached
+  # straight after signing in, so it has no Back link.
+  - id: check-email
+    field: check-email
+    sessionKey: checkEmail
+    guard: { key: account.differentEmail, truthy: true, redirect: sign-in-method }
+    back: []
+    handler: custom # signs out for a different email, see hooks.js
+    next:
+      - when: { key: checkEmail, equals: different-email }
+        goto: sign-in-method
+      - when: { key: account.accountType, equals: individual }
+        goto: individual-address
+      - when: { key: account.accountType, equals: company }
+        goto: org-address
+      - goto: defra-choose-organisation
 
   # Defra ID's own "Who do you want to represent?": an agent's Defra account
   # is linked to the organisations they act for, and once signed in they

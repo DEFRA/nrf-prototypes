@@ -318,6 +318,21 @@ function accountTypeFromEmail(email) {
 }
 
 /**
+ * Whether the account signed in with an email address other than the one
+ * the quote was retrieved with, which check-email asks about. A Government
+ * Gateway user ID is not an email address, so it never asks.
+ */
+function signedInWithAnotherEmail(email, data = {}) {
+  const signedIn = String(email || '')
+    .trim()
+    .toLowerCase()
+  const quote = String(data.retrievalEmail || '')
+    .trim()
+    .toLowerCase()
+  return signedIn.includes('@') && Boolean(quote) && signedIn !== quote
+}
+
+/**
  * Which mock account an email address (or a Government Gateway user ID,
  * which has no @) signs in to. The answer to "Who are you requesting to use the levy for?"
  * decides the account type; the email decides it only when that question
@@ -341,7 +356,8 @@ function accountFor(email, userType, employeeInvited = false, data = {}) {
     // An employee invited to a business's account (new-employee@) registers
     // with their own details only and is told the administrator will finish
     // setting them up
-    invitedEmployee: local.includes('employee')
+    invitedEmployee: local.includes('employee'),
+    differentEmail: signedInWithAnotherEmail(email, data)
   }
   return withParticipant(account, data)
 }
@@ -386,7 +402,11 @@ function registeredAccount(data) {
   const name = data.defraName || {}
   const fullName = [name.firstName, name.lastName].filter(Boolean).join(' ')
   const participant = participantOf(data)
-  const account = { ...ACCOUNTS[type], email: String(email || '').trim() }
+  const account = {
+    ...ACCOUNTS[type],
+    email: String(email || '').trim(),
+    differentEmail: signedInWithAnotherEmail(email, data)
+  }
   if (fullName) {
     account.fullName = fullName
   } else if (participant.fullName) {
@@ -527,7 +547,8 @@ const SIGN_IN_KEYS = [
   'defraCrn',
   'defraBusinessContact',
   'defraAccountCreated',
-  'defraContactSupportId'
+  'defraContactSupportId',
+  'checkEmail'
 ]
 
 const signInMethod = {
@@ -541,6 +562,30 @@ const signInMethod = {
       res.redirect(`${journey.basePath}/start`)
     })
     return routes
+  },
+  // Choosing how to sign in again forgets the answer check-email gave for
+  // the last account
+  process(ctx) {
+    delete ctx.data.checkEmail
+  }
+}
+
+// "Use a different email address to sign in" signs out, as the header's
+// Sign out does, and journey.yaml goes back to "How do you want to sign
+// in?". An opened invitation email still counts, and the answer itself
+// stays until that page is answered again
+const KEPT_SIGNING_IN_AGAIN = ['checkEmail', 'employeeInvited']
+
+const checkEmail = {
+  process(ctx) {
+    const { data } = ctx
+    if (data.checkEmail === 'different-email') {
+      for (const key of SIGN_IN_KEYS) {
+        if (!KEPT_SIGNING_IN_AGAIN.includes(key)) {
+          delete data[key]
+        }
+      }
+    }
   }
 }
 
@@ -852,8 +897,14 @@ const commitmentCertificate = {
   }
 }
 
-// The pages each kind of account gives its details on
-const ACCOUNT_PAGES = ['individual-address', 'org-address', 'developer-details']
+// The pages each kind of account gives its details on, and check-email,
+// whose Continue goes straight to them
+const ACCOUNT_PAGES = [
+  'check-email',
+  'individual-address',
+  'org-address',
+  'developer-details'
+]
 
 // A page opened from the screen wall (`?preview=1`) shows its sample
 // account, but Confirm carries on with the session's. So on the details
@@ -886,6 +937,7 @@ module.exports = {
   'defra-account-user-type': defraAccountUserType,
   'defra-account-employee-email': defraAccountEmployeeEmail,
   'sign-in-method': signInMethod,
+  'check-email': checkEmail,
   'one-login-password': oneLoginSignIn,
   'one-login-created': oneLoginSignIn,
   'government-gateway-sign-in': governmentGatewaySignIn,

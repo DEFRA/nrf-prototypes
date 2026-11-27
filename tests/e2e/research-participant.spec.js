@@ -3,6 +3,7 @@ const { copyOf } = require('./helpers/journey')
 const {
   reachSignIn,
   signIn,
+  continueWithEmail,
   chooseOrganisation
 } = require('./helpers/request-to-use')
 
@@ -186,6 +187,7 @@ test.describe('participant details', () => {
       defraName: { firstName: 'Ada' }
     })
     await followLink(page, 'defra-registered-individual', './$next')
+    await continueWithEmail(page, 'new-individual@example.com')
     await expect(page).toHaveURL(`${base}/individual-address`)
     await fillField(
       page,
@@ -293,6 +295,7 @@ test.describe('participant details', () => {
     await describeParticipant(page)
     await reachSignIn(page, 'agent')
     await signIn(page, 'agent@example.com')
+    await continueWithEmail(page, 'agent@example.com')
     // The organisation given is the last choice of who to represent
     await expect(page).toHaveURL(`${base}/defra-choose-organisation`)
     const participant = { researchParticipant: PARTICIPANT }
@@ -320,6 +323,7 @@ test.describe('participant details', () => {
     await describeParticipant(page)
     await reachSignIn(page, 'agent')
     await signIn(page, 'agent@example.com')
+    await continueWithEmail(page, 'agent@example.com')
     await chooseOrganisation(page, 'greenfield')
     await expect(page).toHaveURL(`${base}/developer-details`)
     await expect(page.locator('.app-organisation-bar')).not.toContainText(

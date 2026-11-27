@@ -1152,7 +1152,9 @@ function exportScreens(journey, options = {}) {
  * Pages a user can only reach once signed in, for the header: the journey's
  * `preview.signedInFrom` pages (where signing in leads) and every page their
  * Continue buttons and links go on to. Change links and returns to a summary
- * page are left out, since they lead back to pages seen before signing in.
+ * page are left out, since they lead back to pages seen before signing in,
+ * as are the ways into `preview.signedOutAt` pages, where a user who has
+ * signed out starts signing in again.
  * Returns null when the journey does not say where signing in leads.
  */
 function signedInPages(journey) {
@@ -1160,8 +1162,12 @@ function signedInPages(journey) {
   if (!from || !from.length) {
     return null
   }
+  const signedOut = new Set(journey.preview.signedOutAt || [])
   const edges = getEdges(journey).filter(
-    (edge) => !edge.external && ['next', 'link'].includes(edge.kind)
+    (edge) =>
+      !edge.external &&
+      ['next', 'link'].includes(edge.kind) &&
+      !signedOut.has(edge.toId)
   )
   const reached = new Set(from)
   const queue = [...from]
