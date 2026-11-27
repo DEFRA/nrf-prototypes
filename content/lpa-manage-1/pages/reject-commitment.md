@@ -18,7 +18,7 @@ actions:
 text:
   commentLabel: Add a comment (optional)
   warning: Warning
-  rejectWarning: If you reject the commitment details, you will not be able to change the status of this commitment.
+  rejectWarning: If you reject the commitment, you will not be able to change the status of this commitment.
 ---
 
 # Why is this commitment being rejected?
