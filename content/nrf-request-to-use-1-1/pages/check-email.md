@@ -6,7 +6,7 @@ bodyFirst: true
 # `value` is what the journey branches on, so the labels can be reworded
 # without touching journey.yaml
 options:
-  - label: Continue with this email address {{ account.email }}
+  - label: Continue with {{ account.email }}
     value: continue
   - label: Use a different email address to sign in
     value: different-email
@@ -17,8 +17,6 @@ button: Continue
 
 # Check your email address
 
-::: inset
 The email address you have signed in with ({{ account.email }}) is different to the email address you used to get your quote ({{ retrievalEmail }}). 
 
 Your commitment certificate will be sent to {{ account.email }}.
-:::
