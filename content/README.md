@@ -169,7 +169,7 @@ Write the answer's name in double curly braces: `{{ estimateEmail }}`. The names
 | --------------- | -------------------------------------------------------------------------------------------------------------------- |
 | `start`         | `title`                                                                                                              |
 | `content`       | `title`, `actions`                                                                                                   |
-| `radios`        | `hint`, `options` (each with optional `hint`), `errors`, `button`, `bodyFirst` (body copy above the options), `legend` (a question above the options; the heading becomes a plain h1) |
+| `radios`        | `hint`, `options` (each with optional `hint`), `errors`, `button`, `bodyFirst` (body copy above the options), `legend` (a question above the options; the heading becomes a plain h1), `rows` (a summary list above the options, written as on a check-answers page) |
 | `checkboxes`    | as radios, plus `actions` of kind `link` or `destructive` beside the button (a Delete link on an agreement page)     |
 | `input`         | `hint`, `errors`, `button`, `width`, `label` (see "A label under the heading")                                       |
 | `number`        | as input                                                                                                             |

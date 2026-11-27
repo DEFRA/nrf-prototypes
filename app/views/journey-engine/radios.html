@@ -12,13 +12,16 @@
   #}
   {#
     A `legend` is a question of its own above the options, so the heading is a
-    plain h1 here too.
+    plain h1 here too, as it is when summary `rows` sit between the two.
   #}
-  {% if content.bodyFirst or content.legend %}
+  {% if content.bodyFirst or content.legend or content.rows | length %}
     <h1 class="govuk-heading-l">{% include "journey-engine/_caption.html" %}{{ content.heading }}</h1>
   {% endif %}
   {% if content.bodyFirst %}
     {{ content.html | safe }}
+  {% endif %}
+  {% if content.rows | length %}
+    {{ govukSummaryList({ rows: content.rows }) }}
   {% endif %}
 
   {{ govukRadios({
@@ -31,7 +34,7 @@
       } if content.legend else ({
         text: content.heading,
         classes: "govuk-visually-hidden"
-      } if content.bodyFirst else {
+      } if content.bodyFirst or content.rows | length else {
         html: ('<span class="govuk-caption-l">' + (content.caption | escape) + '</span> ' if content.caption else '') + (content.heading | escape),
         isPageHeading: true,
         classes: "govuk-fieldset__legend--l"
