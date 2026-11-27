@@ -64,6 +64,11 @@ header:
 research:
   - text: User tasks
     href: https://docs.google.com/document/d/1yr_CBzP0bs_Mtk9FOw2AxkzaWPAfA_NOwesU6y88wwg/edit?usp=sharing
+  # Forgets every commitment added or changed this session, keeping the
+  # officer signed in, and opens the dashboard (a route in hooks.js)
+  - text: Reset all commitments
+    href: /lpa-manage-1/reset-commitments
+    newTab: false
 
 # When this holds the header shows the officer's account dropdown
 signedIn: { key: officer, isSet: true }
@@ -329,6 +334,10 @@ pages:
         goto: records
       - goto: retrieve-commitment
     next: view-record
+    # The NRL reference over the heading, on the screen wall
+    preview:
+      data:
+        commitmentEntry: { reference: NRL-123456 }
 
   # --------------------------------------------------------------------
   # A record: view-record?ref=NRL-123456. The review options at the bottom

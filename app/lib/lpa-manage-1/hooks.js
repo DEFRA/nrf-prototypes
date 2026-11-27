@@ -693,6 +693,15 @@ function sortRecords(records, query) {
   return sorted.sort((a, b) => sign * column.compare(a, b))
 }
 
+// Where a record's NRL reference in the table leads: its page, or for a
+// commitment with no record yet, adding its planning application reference
+function recordHref(record, journey) {
+  const reference = encodeURIComponent(record.reference)
+  return record.pending
+    ? `${journey.routes.RETRIEVE_COMMITMENT}?_add=${reference}`
+    : `${journey.routes.VIEW_RECORD}?ref=${reference}`
+}
+
 // Rows of govukTable for the records, with the page's own column copy.
 // `headFor` makes a column heading sortable. `focusOnly` focuses the
 // reference link when it is the only row, so Enter opens the record. A
@@ -703,8 +712,6 @@ function sortRecords(records, query) {
 // first carries its words) and the two hover and focus together.
 function tableFor(records, text, journey, headFor, focusOnly) {
   const autofocus = focusOnly && records.length === 1 ? ' autofocus' : ''
-  const viewPath = journey.routes.VIEW_RECORD
-  const addPath = journey.routes.RETRIEVE_COMMITMENT
   const columns = text.columns || {}
   const statusCell = (record) => ({
     html:
@@ -717,7 +724,7 @@ function tableFor(records, text, journey, headFor, focusOnly) {
       `href="${href}"${autofocus}>${escapeHtml(record.reference)}</a>`
   })
   const pendingRow = (record) => {
-    const href = `${addPath}?_add=${encodeURIComponent(record.reference)}`
+    const href = recordHref(record, journey)
     const link =
       'govuk-link govuk-link--no-visited-state app-staff-pending-link'
     return [
@@ -750,10 +757,7 @@ function tableFor(records, text, journey, headFor, focusOnly) {
 
   function recordRow(record) {
     return [
-      referenceLink(
-        record,
-        `${viewPath}?ref=${encodeURIComponent(record.reference)}`
-      ),
+      referenceLink(record, recordHref(record, journey)),
       { text: record.developer },
       { text: record.planningStage.label },
       { text: record.planningTypeShort },
@@ -1036,15 +1040,36 @@ function preview(ctx) {
 
 // Sign out, registered once at boot; the header's `$signOut` link. It
 // returns to the start page.
+//
+// Reset all commitments (the footer's user research link): forgets every
+// record added or changed and every answer this session (the journey's
+// `session:` keys), keeping the officer signed in and the participant's
+// details, and opens the dashboard as records.yaml has it.
 const signOut = {
   routes(router, journey) {
-    const routes = { SIGN_OUT: `${journey.basePath}/sign-out` }
+    const routes = {
+      SIGN_OUT: `${journey.basePath}/sign-out`,
+      RESET: `${journey.basePath}/reset-commitments`
+    }
     router.get(routes.SIGN_OUT, (req, res) => {
       const data = (req.session && req.session.data) || {}
       for (const key of SESSION_KEYS) {
         delete data[key]
       }
       res.redirect(`${journey.basePath}/start`)
+    })
+    router.get(routes.RESET, (req, res, next) => {
+      try {
+        const data = (req.session && req.session.data) || {}
+        for (const key of loadJourney(journey.id).session) {
+          if (!SESSION_KEYS.includes(key)) {
+            delete data[key]
+          }
+        }
+        res.redirect(`${journey.basePath}/dashboard`)
+      } catch (error) {
+        next(error)
+      }
     })
     return routes
   }
@@ -1960,9 +1985,21 @@ function fillTable(ctx, model, path, store, all, query) {
 }
 
 // A council with no records yet adds its first one instead
+// A search for an NRL reference the table has opens it straight away, as
+// its link in the table would
 function loadRecords(ctx) {
-  if (!ctx.preview && !allEntries(ctx.data).length) {
+  if (ctx.preview) {
+    return
+  }
+  if (!allEntries(ctx.data).length) {
     return { redirect: ctx.journey.routes.RETRIEVE_COMMITMENT }
+  }
+  const reference = typedReference(ctx.query._q)
+  const found =
+    reference &&
+    tableRecords(ctx.data).find((record) => record.reference === reference)
+  if (found) {
+    return { redirect: recordHref(found, ctx.journey) }
   }
 }
 
@@ -1975,11 +2012,16 @@ const dashboard = {
     const store = loadStore()
     const { text } = model.content
     // After Confirm on a record page: "NRL-123456 has been updated"
+    // and, when the page's copy has `viewRecord`, a link back to it
     if (ctx.data.lpaFlash === 'updated') {
-      model.flash = String(text.updated || '').replace(
-        '{reference}',
-        String(ctx.data.recordReference || '')
-      )
+      const reference = String(ctx.data.recordReference || '')
+      model.flash = String(text.updated || '').replace('{reference}', reference)
+      if (text.viewRecord) {
+        model.flashLink = {
+          text: text.viewRecord,
+          href: `${ctx.journey.routes.VIEW_RECORD}?ref=${encodeURIComponent(reference)}`
+        }
+      }
       delete ctx.data.lpaFlash
     }
     const path = ctx.journey.routes.DASHBOARD
@@ -2004,33 +2046,53 @@ const dashboard = {
         query.overdue === Boolean(filters.overdue)
     })
     const isStatus = (status) => (r) => r.status.shown === status
-    model.cards = [
-      // Commitments waiting for a record and records waiting for review
+    // With an `inReviewCount` card in the page's copy, "for review" counts
+    // only the commitments waiting for a record and "in review" the records
+    // waiting to be reviewed, and rejected comes last. Without one (the
+    // `table` copy variant) one card counts both, in the earlier order.
+    const split = Boolean(text.inReviewCount)
+    const forReview = split
+      ? card(
+          text.forReviewCount,
+          text.forReviewCaption,
+          { status: [PENDING_STATUS] },
+          isStatus(PENDING_STATUS)
+        )
+      : card(
+          text.forReviewCount,
+          text.forReviewCaption,
+          { status: [PENDING_STATUS, ADDED_STATUS] },
+          (r) => isStatus(PENDING_STATUS)(r) || isStatus(ADDED_STATUS)(r)
+        )
+    const inReview =
+      split &&
       card(
-        text.forReviewCount,
-        text.forReviewCaption,
-        { status: [PENDING_STATUS, ADDED_STATUS] },
-        (r) => isStatus(PENDING_STATUS)(r) || isStatus(ADDED_STATUS)(r)
-      ),
-      card(
-        text.rejectedCount,
-        text.rejectedCaption,
-        { status: ['rejected'] },
-        isStatus('rejected')
-      ),
-      card(
-        text.reviewedActiveCount,
-        text.reviewedActiveCaption,
-        { status: ['reviewed'], stage: ['applied'] },
-        (r) => isStatus('reviewed')(r) && r.planningStage.value === 'applied'
-      ),
-      card(
-        text.overdueCount,
-        text.overdueCaption,
-        { overdue: true },
-        (r) => r.overdue
+        text.inReviewCount,
+        text.inReviewCaption,
+        { status: [ADDED_STATUS] },
+        isStatus(ADDED_STATUS)
       )
-    ]
+    const rejected = card(
+      text.rejectedCount,
+      text.rejectedCaption,
+      { status: ['rejected'] },
+      isStatus('rejected')
+    )
+    const active = card(
+      text.reviewedActiveCount,
+      text.reviewedActiveCaption,
+      { status: ['reviewed'], stage: ['applied'] },
+      (r) => isStatus('reviewed')(r) && r.planningStage.value === 'applied'
+    )
+    const overdue = card(
+      text.overdueCount,
+      text.overdueCaption,
+      { overdue: true },
+      (r) => r.overdue
+    )
+    model.cards = split
+      ? [forReview, inReview, active, overdue, rejected]
+      : [forReview, rejected, active, overdue]
     model.recordsPath = recordsPath
     fillTable(ctx, model, path, store, all, query)
   }

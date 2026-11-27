@@ -9,17 +9,24 @@ text:
   # The banner after Confirm on a record page; {reference} is its NRL reference
   successTitle: Success
   updated: '{reference} has been updated'
+  # The link under it, opening that commitment
+  viewRecord: View commitment
   searchLabel: Search commitments
   searchButton: Search
-  # The count cards: the number, then a link, then a caption under it
+  # The count cards, in this order: the number, then a link, then a
+  # caption under it. For review: sent to the council with no planning
+  # application reference yet. In review: added, waiting to be reviewed.
+  # Active: reviewed, with the planning application applied for.
   forReviewCount: Commitments for review
-  forReviewCaption: Caption text here
+  forReviewCaption: Add a planning application reference and compare the commitment certificate with the planning application.
+  inReviewCount: Commitments in review
+  inReviewCaption: Compare the commitment certificate with the planning application.
+  reviewedActiveCount: Active commitments
+  reviewedActiveCaption: Update these commitments with the progress of the planning application.
+  overdueCount: Commitments with an overdue action
+  overdueCaption: View and update this commitment.
   rejectedCount: Rejected commitments
   rejectedCaption: Caption text here
-  reviewedActiveCount: Commitments with active planning applications
-  reviewedActiveCaption: Caption text here
-  overdueCount: Overdue actions
-  overdueCaption: Caption text here
   # Under the cards, opening the records page
   viewAll: View all commitments
 ---

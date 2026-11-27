@@ -454,6 +454,12 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(page.locator('.govuk-notification-banner')).toContainText(
       text('dashboard', 'updated').replace('{reference}', forReview.reference)
     )
+    // with a link back to it
+    await expect(
+      page
+        .locator('.govuk-notification-banner')
+        .getByRole('link', { name: text('dashboard', 'viewRecord') })
+    ).toHaveAttribute('href', viewPath)
     // and it leads the table of every record
     await page.goto(`${base}/records`)
     const row = page.locator('.app-staff-table tbody tr').first()
@@ -901,24 +907,24 @@ test.describe('lpa-manage-1: manage commitments', () => {
 
     const records = tableRecords({})
     const counted = [
-      records.filter((r) =>
-        ['for-review', 'in-review'].includes(r.status.shown)
-      ),
-      records.filter((r) => r.status.shown === 'rejected'),
+      records.filter((r) => r.status.shown === 'for-review'),
+      records.filter((r) => r.status.shown === 'in-review'),
       records.filter(
         (r) =>
           r.status.shown === 'reviewed' && r.planningStage.value === 'applied'
       ),
-      records.filter((r) => r.overdue)
+      records.filter((r) => r.overdue),
+      records.filter((r) => r.status.shown === 'rejected')
     ]
     const labels = [
       'forReviewCount',
-      'rejectedCount',
+      'inReviewCount',
       'reviewedActiveCount',
-      'overdueCount'
+      'overdueCount',
+      'rejectedCount'
     ]
     const cards = page.locator('.app-staff-card')
-    await expect(cards).toHaveCount(4)
+    await expect(cards).toHaveCount(5)
     for (const [index, matching] of counted.entries()) {
       await expect(cards.nth(index)).toContainText(String(matching.length))
       await expect(cards.nth(index)).toContainText(
@@ -1022,21 +1028,37 @@ test.describe('lpa-manage-1: manage commitments', () => {
         .length
     )
 
-    // Searching from the dashboard opens the records page; searching for
-    // one record focuses its link, so Enter opens it
+    // Searching from the dashboard for an NRL reference, typed however,
+    // opens that commitment straight away
+    const added = records.find((record) => !record.pending)
     await page.goto(`${base}/dashboard`)
     await page
       .getByLabel(text('dashboard', 'searchLabel'), { exact: true })
-      .fill(records[0].reference)
+      .fill(added.reference.replace('-', ' ').toLowerCase())
+    await page.keyboard.press('Enter')
+    await expect(page).toHaveURL(
+      `${base}/view-record?ref=${encodeURIComponent(added.reference)}`
+    )
+
+    // Any other search that finds one record focuses its link, so Enter
+    // opens it
+    const only = records.find(
+      (record) =>
+        !record.pending &&
+        records.filter((other) => other.developer === record.developer)
+          .length === 1
+    )
+    await page.goto(`${base}/dashboard`)
+    await page
+      .getByLabel(text('dashboard', 'searchLabel'), { exact: true })
+      .fill(only.developer)
     await page.keyboard.press('Enter')
     await expectHeading(page, 'records')
     await expect(rows).toHaveCount(1)
-    await expect(
-      page.getByRole('link', { name: records[0].reference })
-    ).toBeFocused()
+    await expect(page.getByRole('link', { name: only.reference })).toBeFocused()
     await page.keyboard.press('Enter')
     await expect(page).toHaveURL(
-      new RegExp(`ref=${encodeURIComponent(records[0].reference)}`)
+      new RegExp(`ref=${encodeURIComponent(only.reference)}`)
     )
 
     await page.goto(`${base}/records?_q=no-such-record`)
@@ -1057,24 +1079,28 @@ test.describe('lpa-manage-1: manage commitments', () => {
     const pending = store.commitments.find(
       (entry) => entry.listed && !entry.record
     )
-    // Found by its reference, typed however: for review, saying its
-    // planning application reference is needed
+    // For review, saying its planning application reference is needed
+    await page.goto(`${base}/records?_status=for-review`)
+    const row = page
+      .locator('.app-staff-table tbody tr')
+      .filter({ hasText: pending.reference })
+    await expect(row).toContainText(text('records', 'addPlanningReference'))
+    await expect(row).toContainText(store.statuses['for-review'].label)
+    await expect(
+      row.getByRole('link', { name: pending.reference })
+    ).toHaveAttribute('href', new RegExp('/retrieve-commitment\\?_add='))
+
+    // Searching for its reference, typed however, goes straight to its
+    // planning application reference, whose Back returns to the records
+    // page
     await page.goto(
       `${base}/records?_q=${encodeURIComponent(pending.reference.replace('-', ' '))}`
     )
-    const rows = page.locator('.app-staff-table tbody tr')
-    await expect(rows).toHaveCount(1)
-    await expect(rows.first()).toContainText(
-      text('records', 'addPlanningReference')
-    )
-    await expect(rows.first()).toContainText(store.statuses['for-review'].label)
-    const add = rows.first().getByRole('link', { name: pending.reference })
-    await expect(add).toBeFocused()
-
-    // Its reference goes straight to the planning application reference,
-    // whose Back returns to the records page
-    await add.click()
     await expectHeading(page, 'planning-reference')
+    // with its NRL reference over the heading
+    await expect(page.locator('h1 .govuk-caption-l')).toHaveText(
+      pending.reference
+    )
     await expect(page.locator('.govuk-back-link')).toHaveAttribute(
       'href',
       `${base}/records`
@@ -1085,17 +1111,21 @@ test.describe('lpa-manage-1: manage commitments', () => {
       new RegExp(`ref=${encodeURIComponent(pending.reference)}`)
     )
 
-    // Now it is a record, In review, its reference opening it
+    // Now it is a record, In review, and searching for it opens it
+    await page.goto(`${base}/records?_status=in-review`)
+    const added = page
+      .locator('.app-staff-table tbody tr')
+      .filter({ hasText: pending.reference })
+    await expect(added).not.toContainText(
+      text('records', 'addPlanningReference')
+    )
+    await expect(added).toContainText(store.statuses['in-review'].label)
     await page.goto(
       `${base}/records?_q=${encodeURIComponent(pending.reference)}`
     )
-    await expect(
-      rows.first().getByRole('link', { name: pending.reference })
-    ).toHaveAttribute('href', new RegExp('/view-record\\?ref='))
-    await expect(rows.first()).not.toContainText(
-      text('records', 'addPlanningReference')
+    await expect(page).toHaveURL(
+      `${base}/view-record?ref=${encodeURIComponent(pending.reference)}`
     )
-    await expect(rows.first()).toContainText(store.statuses['in-review'].label)
   })
 
   test('the dashboard’s "Cards and table" copy variant keeps the table below the cards', async ({
@@ -1137,6 +1167,30 @@ test.describe('lpa-manage-1: manage commitments', () => {
     const rows = page.locator('.app-staff-table tbody tr')
     await expect(rows).toHaveCount(1)
     await expect(rows.first()).toContainText(recorded.reference)
+  })
+
+  test('the footer’s Reset all commitments forgets the session’s changes', async ({
+    page
+  }) => {
+    await signIn(page)
+    await page.goto(`${base}/retrieve-commitment`)
+    await retrieve(page, waiting.reference)
+    await fillAnswer(page, 'planning-reference', '26/00004/FUL')
+    await submit(page, 'planning-reference')
+    await expectHeading(page, 'view-record', { record: waiting })
+
+    const reset = journey.research.find((link) =>
+      link.href.endsWith('/reset-commitments')
+    )
+    await page.getByRole('link', { name: reset.text }).click()
+    // Still signed in, on the dashboard, and the commitment is gone again
+    await expectHeading(page, 'dashboard')
+    await page.goto(`${base}/records?_q=${waiting.reference}`)
+    await expect(page.locator('.app-staff-table tbody tr')).not.toContainText(
+      '26/00004/FUL'
+    )
+    await page.goto(`${base}/view-record?ref=${waiting.reference}`)
+    await expect(page.locator('main')).not.toContainText('26/00004/FUL')
   })
 
   test('signing out returns to the start page', async ({ page }) => {

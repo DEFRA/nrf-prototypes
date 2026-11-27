@@ -4,8 +4,9 @@
   and caption, three to a row), each card a link opening the records page
   filtered to them, and a link to every commitment on the records page.
   Model extras from app/lib/lpa-manage-1/hooks.js: flash (the banner after
-  Confirm on a record page), cards [{ count, label, caption, href,
-  recordsHref, active }], recordsPath, and the table's (see
+  Confirm on a record page) and flashLink { text, href } (to that record),
+  cards [{ count, label, caption, href, recordsHref, active }],
+  recordsPath, and the table's (see
   _records-table.html).
 
   The `table` copy variant (pages/dashboard~table.md) is the earlier
@@ -23,7 +24,8 @@
     {{ govukNotificationBanner({
       type: "success",
       titleText: text.successTitle,
-      html: '<p class="govuk-notification-banner__heading">' + (flash | escape) + '</p>'
+      html: '<p class="govuk-notification-banner__heading">' + (flash | escape) + '</p>' +
+        ('<p class="govuk-body"><a class="govuk-link" href="' + (flashLink.href | escape) + '">' + (flashLink.text | escape) + '</a></p>' if flashLink else '')
     }) }}
   </div>
 </div>
