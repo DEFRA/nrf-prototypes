@@ -1,16 +1,16 @@
 {#
-  The landing page (content/lpa-manage-1/pages/dashboard.md): counts of the
-  council's records (each opening the table filtered to them) and the
-  records table (_records-table.html). Model extras from
-  app/lib/lpa-manage-1/hooks.js: flash (the banner after Confirm on a
-  record page), cards [{ count, label, caption, href, recordsHref, active }],
-  recordsPath, and the table's (see _records-table.html).
+  The landing page (content/lpa-manage-1/pages/dashboard.md): the heading,
+  a search box, counts of the council's commitments as cards (count, label
+  and caption, three to a row), each card a link opening the records page
+  filtered to them, and a link to every commitment on the records page.
+  Model extras from app/lib/lpa-manage-1/hooks.js: flash (the banner after
+  Confirm on a record page), cards [{ count, label, caption, href,
+  recordsHref, active }], recordsPath, and the table's (see
+  _records-table.html).
 
-  The `cards` copy variant (pages/dashboard~cards.md) is laid out
-  differently: the heading, a search box, the counts as cards (count,
-  label and caption, three to a row), each card a link opening the records
-  page filtered to them, and a link to every record on the records page in
-  place of the table.
+  The `table` copy variant (pages/dashboard~table.md) is the earlier
+  layout: the cards above the records table (_records-table.html), each
+  card filtering the table on the same page.
 #}
 {% extends "journey-engine/_page.html" %}
 
@@ -35,7 +35,20 @@
   {{ content.html | safe }}
 </div>
 
-{% if copy == "cards" %}
+{% if copy == "table" %}
+<ul class="app-staff-cards" id="record-counts">
+  {% for card in cards %}
+  <li class="app-staff-card">
+    <a class="app-staff-card__link{% if card.active %} app-staff-card__link--active{% endif %}" href="{{ card.href }}"{% if card.active %} aria-current="true"{% endif %}>
+      <span class="app-staff-card__count">{{ card.count }}</span>
+      <span class="app-staff-card__label">{{ card.label }}</span>
+    </a>
+  </li>
+  {% endfor %}
+</ul>
+
+{% include "lpa-manage-1/_records-table.html" %}
+{% else %}
 <form class="app-staff-search app-staff-search--lead" action="{{ recordsPath }}" method="get" role="search">
   {% set searchValue = "" %}
   {% include "lpa-manage-1/_search.html" %}
@@ -56,25 +69,12 @@
 <p class="govuk-body">
   <a class="govuk-link govuk-link--no-visited-state" href="{{ recordsPath }}">{{ text.viewAll }}</a>
 </p>
-{% else %}
-<ul class="app-staff-cards" id="record-counts">
-  {% for card in cards %}
-  <li class="app-staff-card">
-    <a class="app-staff-card__link{% if card.active %} app-staff-card__link--active{% endif %}" href="{{ card.href }}"{% if card.active %} aria-current="true"{% endif %}>
-      <span class="app-staff-card__count">{{ card.count }}</span>
-      <span class="app-staff-card__label">{{ card.label }}</span>
-    </a>
-  </li>
-  {% endfor %}
-</ul>
-
-{% include "lpa-manage-1/_records-table.html" %}
 {% endif %}
 {% endblock %}
 
 {% block pageScripts %}
 {{ super() }}
-{% if copy != "cards" %}
+{% if copy == "table" %}
   {% include "lpa-manage-1/_records-table-script.html" %}
 {% endif %}
 {% endblock %}

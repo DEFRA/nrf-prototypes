@@ -11,7 +11,7 @@
 //                           button to create a record
 //   .app-staff-table-controls  the search with the filter's button to its right
 //   .app-staff-cards        the dashboard's count cards, each a link
-//   .app-staff-cards--captioned  the "Search and cards" variant's cards:
+//   .app-staff-cards--captioned  the dashboard's cards (pages/dashboard.md):
 //                           count, label and caption, left-aligned, three
 //                           to a row, each a link
 //   .app-staff-search       search box with its lens button
@@ -455,8 +455,8 @@ $app-staff-grey: govuk-colour('black', $variant: 'tint-95');
   }
 }
 
-// The dashboard's "Search and cards" variant (pages/dashboard~cards.md):
-// the search under the heading, then cards holding a count, a link to the
+// The dashboard (pages/dashboard.md; its "Cards and table" variant uses
+// the cards above): the search under the heading, then cards holding a count, a link to the
 // records it counts and a caption, left-aligned and three to a row from
 // desktop
 .app-staff-search--lead {

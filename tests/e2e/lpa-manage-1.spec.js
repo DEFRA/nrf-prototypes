@@ -11,7 +11,7 @@ const {
  * lpa-manage-1: a planning officer signs in with the mock GOV.UK One Login,
  * adds a commitment from an NRL reference, reviews it and sets its
  * planning application's stage, and
- * finds it in the dashboard’s table of records.
+ * finds it in the table of records.
  *
  * Headings, labels, buttons and errors come from content/lpa-manage-1
  * through the helpers; references and names come from records.yaml.
@@ -209,9 +209,12 @@ test.describe('lpa-manage-1: manage commitments', () => {
       0
     )
 
-    // The new record leads the dashboard's table
+    // The new record leads the table of every record, a link from the
+    // dashboard
     await actionLocator(page, 'view-record', 'link').click()
     await expectHeading(page, 'dashboard')
+    await page.getByRole('link', { name: text('dashboard', 'viewAll') }).click()
+    await expectHeading(page, 'records')
     await expect(
       page.locator('.app-staff-table tbody tr').first()
     ).toContainText(waiting.reference)
@@ -451,6 +454,8 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(page.locator('.govuk-notification-banner')).toContainText(
       text('dashboard', 'updated').replace('{reference}', forReview.reference)
     )
+    // and it leads the table of every record
+    await page.goto(`${base}/records`)
     const row = page.locator('.app-staff-table tbody tr').first()
     await expect(row).toContainText(forReview.reference)
     await expect(row).toContainText(store.statuses['in-review'].label)
@@ -486,6 +491,7 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await submit(page, 'view-record')
     await expectHeading(page, 'dashboard')
     const stage = store.planningStages.refused
+    await page.goto(`${base}/records`)
     await expect(row).toContainText(stage)
     await page.goto(viewPath)
     await expect(items).toHaveCount(entries + 3)
@@ -886,7 +892,7 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(items.first()).toContainText('2026/0610/VAR')
   })
 
-  test('the dashboard’s cards open the table filtered to them', async ({
+  test('the dashboard’s cards open the records filtered to them', async ({
     page
   }) => {
     await signIn(page)
@@ -920,25 +926,23 @@ test.describe('lpa-manage-1: manage commitments', () => {
       )
     }
 
-    // Overdue actions: the table filtered to them
+    // Overdue actions: the records page filtered to them
     await cards.nth(3).getByRole('link').click()
-    await expectHeading(page, 'dashboard')
+    await expectHeading(page, 'records')
     const rows = page.locator('.app-staff-table tbody tr')
     await expect(rows).toHaveCount(counted[3].length)
 
     // The filter's button counts the filters set; clearing them shows
     // every record again
     const summary = page.locator('.app-staff-table-controls__filter')
-    await expect(summary).toHaveText(
-      `${text('dashboard', 'filterSummary')} (1)`
-    )
+    await expect(summary).toHaveText(`${text('records', 'filterSummary')} (1)`)
     // Clear filters sits beside the count (the filter's own is in its
     // closed popover)
     const clear = page
       .locator('.app-staff-table-footer')
-      .getByRole('link', { name: text('dashboard', 'clearFilters') })
+      .getByRole('link', { name: text('records', 'clearFilters') })
     await clear.click()
-    await expect(summary).toHaveText(text('dashboard', 'filterSummary'))
+    await expect(summary).toHaveText(text('records', 'filterSummary'))
     await expect(clear).toHaveCount(0)
     await expect(rows).toHaveCount(Math.min(records.length, RECORDS_PER_PAGE))
 
@@ -946,9 +950,7 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await page.goto(`${base}/dashboard`)
     await cards.nth(2).getByRole('link').click()
     await expect(rows).toHaveCount(counted[2].length)
-    await expect(summary).toHaveText(
-      `${text('dashboard', 'filterSummary')} (2)`
-    )
+    await expect(summary).toHaveText(`${text('records', 'filterSummary')} (2)`)
     await expect(
       page.getByLabel(store.statuses.reviewed.label, { exact: true })
     ).toBeChecked()
@@ -957,19 +959,19 @@ test.describe('lpa-manage-1: manage commitments', () => {
     ).toBeChecked()
   })
 
-  test('the dashboard’s table searches, filters, sorts and pages the records', async ({
+  test('the records page searches, filters, sorts and pages the records', async ({
     page
   }) => {
     await signIn(page)
-    await page.goto(`${base}/dashboard`)
-    await expectHeading(page, 'dashboard')
+    await page.goto(`${base}/records`)
+    await expectHeading(page, 'records')
     const records = tableRecords({})
     const rows = page.locator('.app-staff-table tbody tr')
     await expect(rows).toHaveCount(Math.min(records.length, RECORDS_PER_PAGE))
 
     // Sorting by a heading, then the other way; the pages keep the sort
     const heading = page.locator('.app-staff-table th', {
-      hasText: text('dashboard', 'columns').reference
+      hasText: text('records', 'columns').reference
     })
     await heading.getByRole('link').click()
     await expect(heading).toHaveAttribute('aria-sort', 'ascending')
@@ -980,7 +982,7 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await expect(rows.first()).toContainText(references[references.length - 1])
     await page.locator('.govuk-pagination__next a').click()
     await expect(page).toHaveURL(
-      `${base}/dashboard?_sort=reference&_dir=desc&_page=2`
+      `${base}/records?_sort=reference&_dir=desc&_page=2`
     )
     const second = references
       .slice()
@@ -995,13 +997,13 @@ test.describe('lpa-manage-1: manage commitments', () => {
     const filter = page.locator('#record-filters')
     await expect(filter).toBeVisible()
     await filter
-      .getByRole('button', { name: text('dashboard', 'filterClose') })
+      .getByRole('button', { name: text('records', 'filterClose') })
       .click()
     await expect(filter).toBeHidden()
     await page.locator('.app-staff-table-controls__filter').click()
     await page.getByLabel(store.planningStages.refused, { exact: true }).check()
     await page
-      .getByRole('button', { name: text('dashboard', 'applyFilters') })
+      .getByRole('button', { name: text('records', 'applyFilters') })
       .click()
     const refused = records.filter(
       (record) => record.planningStage.value === 'refused'
@@ -1010,23 +1012,24 @@ test.describe('lpa-manage-1: manage commitments', () => {
 
     // Searching keeps the filter
     await page
-      .getByLabel(text('dashboard', 'searchLabel'), { exact: true })
+      .getByLabel(text('records', 'searchLabel'), { exact: true })
       .fill(refused[0].developer)
     await page
-      .getByRole('button', { name: text('dashboard', 'searchButton') })
+      .getByRole('button', { name: text('records', 'searchButton') })
       .click()
     await expect(rows).toHaveCount(
       refused.filter((record) => record.developer === refused[0].developer)
         .length
     )
 
-    // Searching for one record focuses its link, so Enter opens it
+    // Searching from the dashboard opens the records page; searching for
+    // one record focuses its link, so Enter opens it
     await page.goto(`${base}/dashboard`)
     await page
       .getByLabel(text('dashboard', 'searchLabel'), { exact: true })
       .fill(records[0].reference)
     await page.keyboard.press('Enter')
-    await expect(page).toHaveURL(/#record-search$/)
+    await expectHeading(page, 'records')
     await expect(rows).toHaveCount(1)
     await expect(
       page.getByRole('link', { name: records[0].reference })
@@ -1036,14 +1039,14 @@ test.describe('lpa-manage-1: manage commitments', () => {
       new RegExp(`ref=${encodeURIComponent(records[0].reference)}`)
     )
 
-    await page.goto(`${base}/dashboard?_q=no-such-record`)
+    await page.goto(`${base}/records?_q=no-such-record`)
     await expect(page.locator('main')).toContainText(
-      text('dashboard', 'noResults')
+      text('records', 'noResults')
     )
     // An NRL reference nobody sent the council finds nothing too
-    await page.goto(`${base}/dashboard?_q=nrl%20999999`)
+    await page.goto(`${base}/records?_q=nrl%20999999`)
     await expect(page.locator('main')).toContainText(
-      text('dashboard', 'noResults')
+      text('records', 'noResults')
     )
   })
 
@@ -1057,24 +1060,24 @@ test.describe('lpa-manage-1: manage commitments', () => {
     // Found by its reference, typed however: for review, saying its
     // planning application reference is needed
     await page.goto(
-      `${base}/dashboard?_q=${encodeURIComponent(pending.reference.replace('-', ' '))}`
+      `${base}/records?_q=${encodeURIComponent(pending.reference.replace('-', ' '))}`
     )
     const rows = page.locator('.app-staff-table tbody tr')
     await expect(rows).toHaveCount(1)
     await expect(rows.first()).toContainText(
-      text('dashboard', 'addPlanningReference')
+      text('records', 'addPlanningReference')
     )
     await expect(rows.first()).toContainText(store.statuses['for-review'].label)
     const add = rows.first().getByRole('link', { name: pending.reference })
     await expect(add).toBeFocused()
 
     // Its reference goes straight to the planning application reference,
-    // whose Back returns to the dashboard
+    // whose Back returns to the records page
     await add.click()
     await expectHeading(page, 'planning-reference')
     await expect(page.locator('.govuk-back-link')).toHaveAttribute(
       'href',
-      `${base}/dashboard`
+      `${base}/records`
     )
     await fillAnswer(page, 'planning-reference', '26/00003/FUL')
     await submit(page, 'planning-reference')
@@ -1084,15 +1087,33 @@ test.describe('lpa-manage-1: manage commitments', () => {
 
     // Now it is a record, In review, its reference opening it
     await page.goto(
-      `${base}/dashboard?_q=${encodeURIComponent(pending.reference)}`
+      `${base}/records?_q=${encodeURIComponent(pending.reference)}`
     )
     await expect(
       rows.first().getByRole('link', { name: pending.reference })
     ).toHaveAttribute('href', new RegExp('/view-record\\?ref='))
     await expect(rows.first()).not.toContainText(
-      text('dashboard', 'addPlanningReference')
+      text('records', 'addPlanningReference')
     )
     await expect(rows.first()).toContainText(store.statuses['in-review'].label)
+  })
+
+  test('the dashboard’s "Cards and table" copy variant keeps the table below the cards', async ({
+    page
+  }) => {
+    await signIn(page)
+    await page.goto(`${base}/dashboard?copy=table`)
+    await expectHeading(page, 'dashboard')
+    const records = tableRecords({})
+    await expect(page.locator('.app-staff-table tbody tr')).toHaveCount(
+      Math.min(records.length, RECORDS_PER_PAGE)
+    )
+    // Its overdue card filters the table on the same page
+    await page.locator('.app-staff-card').nth(3).getByRole('link').click()
+    await expect(page).toHaveURL(new RegExp(`${base}/dashboard\\?_overdue=1`))
+    await expect(page.locator('.app-staff-table tbody tr')).toHaveCount(
+      records.filter((r) => r.overdue).length
+    )
   })
 
   test('a council with no records yet goes straight to adding one', async ({
@@ -1105,14 +1126,14 @@ test.describe('lpa-manage-1: manage commitments', () => {
     await page.goto(`${base}/dashboard`)
     await expectOnPage(page, 'retrieve-commitment')
 
-    // The council's first record is the only one on the dashboard
+    // The council's first record is the only one in the table
     await retrieve(page, recorded.reference)
     await expectHeading(page, 'planning-reference')
     await fillAnswer(page, 'planning-reference', '26/00002/FUL')
     await submit(page, 'planning-reference')
     await expectHeading(page, 'view-record', { record: recorded })
-    await page.goto(`${base}/dashboard`)
-    await expectHeading(page, 'dashboard')
+    await page.goto(`${base}/records`)
+    await expectHeading(page, 'records')
     const rows = page.locator('.app-staff-table tbody tr')
     await expect(rows).toHaveCount(1)
     await expect(rows.first()).toContainText(recorded.reference)

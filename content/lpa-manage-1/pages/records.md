@@ -1,8 +1,8 @@
 ---
 # Every record the council has (app/views/lpa-manage-1/records.html): the
-# dashboard's table on a page of its own, searched, filtered, sorted by its
-# column headings and paged. Opened from the dashboard's "Search and cards"
-# variant (pages/dashboard~cards.md).
+# table on a page of its own, searched, filtered, sorted by its column
+# headings and paged. Opened from the dashboard's search, its cards
+# (filtered to the commitments each counts) and "View all".
 type: custom
 text:
   searchLabel: Search commitments

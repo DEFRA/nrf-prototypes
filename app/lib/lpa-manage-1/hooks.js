@@ -1966,10 +1966,9 @@ function loadRecords(ctx) {
   }
 }
 
-// The landing page: counts that open the table filtered to them, and the
-// records table. Its `cards` copy variant shows the counts as cards with a
-// caption, each opening the records page filtered to them, and links to
-// that page for the table.
+// The landing page: counts as cards with a caption, each opening the
+// records page filtered to them (`recordsHref`). Its `table` copy variant
+// has the records table below the cards, each card filtering it (`href`).
 const dashboard = {
   load: loadRecords,
   get(ctx, model) {
@@ -2037,8 +2036,8 @@ const dashboard = {
   }
 }
 
-// Every record on a page of its own: the dashboard's table without the
-// cards, opened from the dashboard's `cards` copy variant
+// Every record on a page of its own: the table without the cards, opened
+// from the dashboard's search, cards and View all
 const records = {
   load: loadRecords,
   get(ctx, model) {

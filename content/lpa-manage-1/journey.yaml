@@ -111,7 +111,7 @@ homepage:
     - an NRL reference already in the records for an outline application asks whether reserved matters are being added; Yes opens "Add a reserved matters application" and returns to the record with a success banner
     - adding a reserved matters application is a question per page (reference, matters, number of units when layout or scale is ticked, a description that is no longer optional) with a check answers page before saving
     - granting no longer asks for the address of the relevant development; the planning decision details show in the record's planning details
-    - the dashboard has a "Search and cards" copy variant: a search, then cards with a caption, and every commitment on a page of its own
+    - the dashboard is a search, then cards with a caption (each a link with a blue border on hover), and "View all commitments" opens the table on a page of its own; the cards above the table are a copy variant
     - '"developer record" is now "commitment" throughout, and the service is Manage commitments for the nature restoration levy'
 
 # The answers the copy can show, as {{ name }} (see content/README.md).
@@ -317,8 +317,8 @@ pages:
   # Continuing adds the record to the session's records and opens its page.
   # A variation the developer made a commitment for says which existing
   # record it is linked with. Also opened from the NRL reference of a
-  # commitment with no record yet in the dashboard's table, whose Back
-  # returns to the dashboard.
+  # commitment with no record yet in the records table, whose Back
+  # returns to the records page.
   - id: planning-reference
     field: planning-reference
     sessionKey: planningReference
@@ -326,7 +326,7 @@ pages:
     handler: custom # adds the record, see hooks.js
     back:
       - when: { key: commitmentFromTable, truthy: true }
-        goto: dashboard
+        goto: records
       - goto: retrieve-commitment
     next: view-record
 
@@ -626,8 +626,8 @@ pages:
     template: lpa-manage-1/dashboard
     guard: *signed-in
     back: []
-    # The "Search and cards" copy variant (dashboard~cards.md) leaves the
-    # table to the records page
+    # The table is on the records page (the "Cards and table" copy
+    # variant, dashboard~table.md, has it below the cards)
     links:
       - goto: records
         text: View all commitments
@@ -647,9 +647,9 @@ pages:
             A search that matches no records
           data: { lpaSearch: Kestrel Homes }
 
-  # Every record on a page of its own: the dashboard's table without the
-  # cards, opened from the dashboard's "Search and cards" copy variant (its
-  # search, a card's link filtered to the records it counts, or View all).
+  # Every record on a page of its own: the table, searched, filtered,
+  # sorted and paged, opened from the dashboard's search, a card (filtered
+  # to the records it counts) or View all.
   # A council with no records yet is sent to "Enter an NRL reference".
   - id: records
     template: lpa-manage-1/records
