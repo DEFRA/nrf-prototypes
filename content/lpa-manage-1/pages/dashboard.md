@@ -26,7 +26,7 @@ text:
   overdueCount: Commitments with an overdue action
   overdueCaption: View and update this commitment.
   rejectedCount: Rejected commitments
-  rejectedCaption: Caption text here
+  rejectedCaption: View commitments that have been rejected and sent back to the developer.
   # Under the cards, opening the records page
   viewAll: View all commitments
 ---
