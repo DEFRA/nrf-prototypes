@@ -37,7 +37,7 @@ rows:
       - when: { key: account.accountType, equals: agent }
         goto: developer-details
     changeHidden: full name
-  - key: Developer business name
+  - key: Business name
     value: '{{ account.organisationName or account.businessName }}'
     when: { key: account.accountType, in: [agent, company] }
   - key: Address

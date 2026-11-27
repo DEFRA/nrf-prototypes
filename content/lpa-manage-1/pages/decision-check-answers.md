@@ -33,4 +33,6 @@ actions:
 
 # Check the planning decision details
 
+::: warning
 Confirming will update the commitment to show planning permission as granted.
+:::

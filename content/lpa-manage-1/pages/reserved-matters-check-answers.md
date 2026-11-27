@@ -31,8 +31,3 @@ actions:
 
 # Check the reserved matters application details
 
-## Submitting these details
-
-:::warning
-Submitting these details will change the planning application stage to granted. It will also send an email to the developer that will allow them to assume liability to pay the nature restoration levy.
-:::
